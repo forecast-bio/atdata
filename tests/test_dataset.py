@@ -51,7 +51,7 @@ test_cases = [
     },
     {
         'SampleType': NumpyTestSample,
-        'sample_data': 
+        'sample_data':
         {
             'label': 9_001,
             'image': np.random.randn( 1024, 1024 ),
@@ -86,6 +86,35 @@ def test_create_sample(
             cur_assertion = getattr( sample, k ) == v
         assert cur_assertion, \
             f'Did not properly incorporate property {k} of test type {SampleType}'
+
+#
+
+def test_decorator_syntax():
+    """Test use of decorator syntax for sample types"""
+    
+    @atdata.packable
+    class BasicTestSampleDecorated:
+        name: str
+        position: int
+        value: float
+
+    @atdata.packable
+    class NumpyTestSampleDecorated:
+        label: int
+        image: NDArray
+    
+    ##
+    
+    test_create_sample( BasicTestSampleDecorated, {
+        'name': 'Hello, world!',
+        'position': 42,
+        'value': 1024.768,
+    } )
+
+    test_create_sample( NumpyTestSampleDecorated, {
+        'label': 9_001,
+        'image': np.random.randn( 1024, 1024 ),
+    } )
 
 #
 
