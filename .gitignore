@@ -1,5 +1,7 @@
 ## Custom
 
+# mac garbage
+**/.DS_Store
 # Don't commit any .env files
 **/*.env
 # Don't commit `uv` lockfiles

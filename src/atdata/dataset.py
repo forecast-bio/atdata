@@ -57,38 +57,38 @@ DT = TypeVar( 'DT' )
 
 MsgpackRawSample: TypeAlias = Dict[str, Any]
 
-@dataclass
-class ArrayBytes:
-    """Annotates bytes that should be interpreted as the raw contents of a
-    numpy NDArray"""
+# @dataclass
+# class ArrayBytes:
+#     """Annotates bytes that should be interpreted as the raw contents of a
+#     numpy NDArray"""
     
-    raw_bytes: bytes
-    """The raw bytes of the corresponding NDArray"""
+#     raw_bytes: bytes
+#     """The raw bytes of the corresponding NDArray"""
 
-    def __init__( self,
-            array: Optional[ArrayLike] = None,  
-            raw: Optional[bytes] = None,
-        ):
-        """TODO"""
+#     def __init__( self,
+#             array: Optional[ArrayLike] = None,  
+#             raw: Optional[bytes] = None,
+#         ):
+#         """TODO"""
 
-        if array is not None:
-            array = np.array( array )
-            self.raw_bytes = eh.array_to_bytes( array )
+#         if array is not None:
+#             array = np.array( array )
+#             self.raw_bytes = eh.array_to_bytes( array )
         
-        elif raw is not None:
-            self.raw_bytes = raw
+#         elif raw is not None:
+#             self.raw_bytes = raw
         
-        else:
-            raise ValueError( 'Must provide either `array` or `raw` bytes' )
+#         else:
+#             raise ValueError( 'Must provide either `array` or `raw` bytes' )
 
-    @property
-    def to_numpy( self ) -> NDArray:
-        """Return the `raw_bytes` data as an NDArray"""
-        return eh.bytes_to_array( self.raw_bytes )
+#     @property
+#     def to_numpy( self ) -> NDArray:
+#         """Return the `raw_bytes` data as an NDArray"""
+#         return eh.bytes_to_array( self.raw_bytes )
 
 def _make_packable( x ):
-    if isinstance( x, ArrayBytes ):
-        return x.raw_bytes
+    # if isinstance( x, ArrayBytes ):
+    #     return x.raw_bytes
     if isinstance( x, np.ndarray ):
         return eh.array_to_bytes( x )
     return x
@@ -114,8 +114,8 @@ class PackableSample( ABC ):
                     # we're good!
                     pass
 
-                elif isinstance( var_cur_value, ArrayBytes ):
-                    setattr( self, var_name, var_cur_value.to_numpy )
+                # elif isinstance( var_cur_value, ArrayBytes ):
+                #     setattr( self, var_name, var_cur_value.to_numpy )
 
                 elif isinstance( var_cur_value, bytes ):
                     setattr( self, var_name, eh.bytes_to_array( var_cur_value ) )
@@ -172,7 +172,7 @@ def _batch_aggregate( xs: Sequence ):
 
     return list( xs )
 
-class SamlpeBatch( Generic[DT] ):
+class SampleBatch( Generic[DT] ):
 
     def __init__( self, samples: Sequence[DT] ):
         """TODO"""
@@ -233,7 +233,7 @@ class Dataset( Generic[ST] ):
     def batch_type( self ) -> Type:
         """The type of a batch built from `sample_class`"""
         # return self.__orig_class__.__args__[1]
-        return SamlpeBatch[self.sample_type]
+        return SampleBatch[self.sample_type]
 
 
     # _schema_registry_sample: dict[str, Type]
@@ -396,7 +396,7 @@ class Dataset( Generic[ST] ):
                 value = sample,
             )
 
-    def wrap_batch( self, batch: WDSRawBatch ) -> SamlpeBatch[ST]:
+    def wrap_batch( self, batch: WDSRawBatch ) -> SampleBatch[ST]:
         """Wrap a `batch` of samples into the appropriate dataset-specific type
        
         This default implementation simply creates a list one sample at a time
@@ -405,7 +405,7 @@ class Dataset( Generic[ST] ):
         assert 'msgpack' in batch
         batch_unpacked = [ self.sample_type.from_bytes( bs )
                            for bs in batch['msgpack'] ]
-        return SamlpeBatch[self.sample_type]( batch_unpacked )
+        return SampleBatch[self.sample_type]( batch_unpacked )
 
 
     # # @classmethod

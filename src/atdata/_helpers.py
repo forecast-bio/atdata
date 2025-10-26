@@ -1,30 +1,22 @@
-"""Assorted helper methods for `ekumen`"""
+"""Assorted helper methods for `atdata`"""
 
 ##
 # Imports
 
 from io import BytesIO
-import ormsgpack as omp
 
 import numpy as np
 
 
 ##
-# 
 
-def pack_instance( x ) -> bytes:
-    return omp.packb( x )
-
-def unpack( bs: bytes ):
-    return omp.unpackb( bs )
-
-##
-
-def array_to_bytes(x: np.ndarray) -> bytes:
+def array_to_bytes( x: np.ndarray ) -> bytes:
+    """Convert `numpy` array to a format suitable for packing"""
     np_bytes = BytesIO()
-    np.save(np_bytes, x, allow_pickle=True)
+    np.save( np_bytes, x, allow_pickle = True )
     return np_bytes.getvalue()
 
-def bytes_to_array(b: bytes) -> np.ndarray:
-    np_bytes = BytesIO(b)
-    return np.load(np_bytes, allow_pickle=True)
+def bytes_to_array( b: bytes ) -> np.ndarray:
+    """Convert packed bytes back to a `numpy` array"""
+    np_bytes = BytesIO( b )
+    return np.load( np_bytes, allow_pickle = True )

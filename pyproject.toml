@@ -1,6 +1,6 @@
 [project]
 name = "atdata"
-version = "0.1.1a2"
+version = "0.1.1a3"
 description = "A loose federation of distributed, typed datasets"
 readme = "README.md"
 authors = [
@@ -22,7 +22,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
-addopts = "--cov=atdata"
+addopts = "--cov=atdata --cov-report=html"
 
 [dependency-groups]
 dev = [

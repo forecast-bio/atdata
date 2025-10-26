@@ -1,0 +1,46 @@
+#
+
+name: Build and upload package to PyPI
+
+on:
+  release:
+    types:
+      - published
+
+permissions:
+  contents: read
+
+jobs:
+
+  uv-build-release-pypi-publish:
+    name: "Build release distribution and publish to PyPI"
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+    
+    steps:
+      - uses: actions/checkout@v5
+      
+      - name: "Set up Python"
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: "pyproject.toml"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+      
+      - name: Install project
+        run: uv sync --all-extras --dev
+        # TODO Better to use --locked for author control over versions?
+        # run: uv sync --locked --all-extras --dev
+        
+      - name: Build release distributions
+        run: uv build
+        
+      - name: Publish to PyPI
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.UV_PUBLISH_TOKEN }}
+        run: uv publish
+
+
+##
