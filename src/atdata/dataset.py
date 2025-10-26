@@ -5,6 +5,7 @@
 
 import webdataset as wds
 
+import functools
 from dataclasses import dataclass
 import uuid
 
@@ -416,3 +417,39 @@ class Dataset( Generic[ST] ):
     #     """
     #     assert cls.batch_class is not None, 'No batch class specified'
     #     return cls.batch_class( **batch )
+
+
+##
+# Shortcut decorators
+
+# def packable( cls ):
+#     """TODO"""
+
+#     def decorator( cls ):
+#         # Create a new class dynamically
+#         # The new class inherits from the new_parent_class first, then the original cls
+#         new_bases = (PackableSample,) + cls.__bases__
+#         new_cls = type(cls.__name__, new_bases, dict(cls.__dict__))
+
+#         # Optionally, update __module__ and __qualname__ for better introspection
+#         new_cls.__module__ = cls.__module__
+#         new_cls.__qualname__ = cls.__qualname__
+
+#         return new_cls
+#     return decorator
+
+def packable( cls ):
+    """TODO"""
+    
+    ##
+
+    as_dataclass = dataclass( cls )
+
+    class as_packable( as_dataclass, PackableSample ):
+        pass
+    
+    as_packable.__name__ = cls.__name__
+
+    ##
+
+    return as_packable

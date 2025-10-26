@@ -7,6 +7,7 @@ from .dataset import (
     PackableSample,
     SampleBatch,
     Dataset,
+    packable,
 )
 
 
