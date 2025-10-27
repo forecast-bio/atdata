@@ -39,6 +39,17 @@ class NumpyTestSample( atdata.PackableSample ):
     label: int
     image: NDArray
 
+@atdata.packable
+class BasicTestSampleDecorated:
+    name: str
+    position: int
+    value: float
+
+@atdata.packable
+class NumpyTestSampleDecorated:
+    label: int
+    image: NDArray
+
 test_cases = [
     {
         'SampleType': BasicTestSample,
@@ -57,6 +68,24 @@ test_cases = [
             'image': np.random.randn( 1024, 1024 ),
         },
         'sample_wds_stem': 'numpy_test',
+    },
+    {
+        'SampleType': BasicTestSampleDecorated,
+        'sample_data': {
+            'name': 'Hello, world!',
+            'position': 42,
+            'value': 1024.768,
+        },
+        'sample_wds_stem': 'basic_test_decorated',
+    },
+    {
+        'SampleType': NumpyTestSampleDecorated,
+        'sample_data':
+        {
+            'label': 9_001,
+            'image': np.random.randn( 1024, 1024 ),
+        },
+        'sample_wds_stem': 'numpy_test_decorated',
     },
 ]
 
@@ -89,32 +118,32 @@ def test_create_sample(
 
 #
 
-def test_decorator_syntax():
-    """Test use of decorator syntax for sample types"""
+# def test_decorator_syntax():
+#     """Test use of decorator syntax for sample types"""
     
-    @atdata.packable
-    class BasicTestSampleDecorated:
-        name: str
-        position: int
-        value: float
+#     @atdata.packable
+#     class BasicTestSampleDecorated:
+#         name: str
+#         position: int
+#         value: float
 
-    @atdata.packable
-    class NumpyTestSampleDecorated:
-        label: int
-        image: NDArray
+#     @atdata.packable
+#     class NumpyTestSampleDecorated:
+#         label: int
+#         image: NDArray
     
-    ##
+#     ##
     
-    test_create_sample( BasicTestSampleDecorated, {
-        'name': 'Hello, world!',
-        'position': 42,
-        'value': 1024.768,
-    } )
+#     test_create_sample( BasicTestSampleDecorated, {
+#         'name': 'Hello, world!',
+#         'position': 42,
+#         'value': 1024.768,
+#     } )
 
-    test_create_sample( NumpyTestSampleDecorated, {
-        'label': 9_001,
-        'image': np.random.randn( 1024, 1024 ),
-    } )
+#     test_create_sample( NumpyTestSampleDecorated, {
+#         'label': 9_001,
+#         'image': np.random.randn( 1024, 1024 ),
+#     } )
 
 #
 
@@ -137,7 +166,6 @@ def test_wds(
     shard_maxcount = 10
     batch_size = 4
     n_iterate = 10
-
 
     ## Write sharded dataset
 
@@ -169,7 +197,7 @@ def test_wds(
 
     iterations_run = 0
     for i_iterate, cur_sample in enumerate( dataset.ordered( batch_size = None ) ):
-        
+
         assert isinstance( cur_sample, SampleType ), \
             f'Single sample for {SampleType} written to `wds` is of wrong type'
         
@@ -181,7 +209,7 @@ def test_wds(
             else:
                 is_correct = getattr( cur_sample, k ) == v
             assert is_correct, \
-                f'{SampleType}: Incorrect sample value found for {k}'
+                f'{SampleType}: Incorrect sample value found for {k} - {type( getattr( cur_sample, k ) )}'
 
         iterations_run += 1
         if iterations_run >= n_iterate:
@@ -195,7 +223,6 @@ def test_wds(
     start_id = f'{0:06d}'
     end_id = f'{9:06d}'
     first_filename = file_pattern.format( shard_id = '{' + start_id + '..' + end_id + '}' )
-    print( first_filename )
     dataset = atdata.Dataset[SampleType]( first_filename )
 
     iterations_run = 0
@@ -270,7 +297,6 @@ def test_wds(
     start_id = f'{0:06d}'
     end_id = f'{9:06d}'
     first_filename = file_pattern.format( shard_id = '{' + start_id + '..' + end_id + '}' )
-    print( first_filename )
     dataset = atdata.Dataset[SampleType]( first_filename )
 
     iterations_run = 0
