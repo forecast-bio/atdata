@@ -449,9 +449,12 @@ def packable( cls ):
     
     ##
 
+    # Add in dataclass niceness to original class
     as_dataclass = dataclass( cls )
 
-    class as_packable( PackableSample, as_dataclass ):
+    # This triggers a bunch of behind-the-scenes stuff for the newly annotated class
+    @dataclass
+    class as_packable( as_dataclass, PackableSample ):
         def __post_init__( self ):
             return PackableSample.__post_init__( self )
     
@@ -459,5 +462,5 @@ def packable( cls ):
     as_packable.__annotations__ = cls.__annotations__
 
     ##
-    
+
     return as_packable
