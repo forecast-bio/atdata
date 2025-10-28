@@ -375,4 +375,69 @@ def test_create_sample(
     
     # TODO
 
+def test_lens():
+    """Test a lens between sample types"""
+
+    # Set up the lens scenario
+
+    @atdata.packable
+    class Source:
+        name: str
+        age: int
+        height: float
+
+    @atdata.packable
+    class View:
+        name: str
+        height: float
+    
+    @atdata.lens
+    def polite( s: Source ) -> View:
+        return View(
+            name = s.name,
+            height = s.height,
+        )
+    
+    @polite.putter
+    def polite_update( v: View, s: Source ) -> Source:
+        return Source(
+            name = v.name,
+            height = v.height,
+            #
+            age = s.age,
+        )
+    
+    # Test with an example sample
+
+    test_source = Source(
+        name = 'Hello World',
+        age = 42,
+        height = 182.9,
+    )
+    correct_view = View(
+        name = test_source.name,
+        height = test_source.height,
+    )
+
+    test_view = polite( test_source )
+    assert test_view == correct_view, \
+        f'Incorrect lens behavior: {test_view}, and not {correct_view}'
+
+    # This lens should be well-behaved
+
+    update_view = View(
+        name = 'Now Taller',
+        height = 192.9,
+    )
+
+    x = polite( polite.put( update_view, test_source ) )
+    assert x == update_view, \
+        f'Violation of GetPut: {x} =/= {update_view}'
+    
+    y = polite.put( polite( test_source ), test_source )
+    assert y == test_source, \
+        f'Violation of PutGet: {y} =/= {test_source}'
+    
+    # TODO Test PutPut
+
 ##
