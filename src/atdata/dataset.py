@@ -522,6 +522,9 @@ def packable( cls ):
     
     ##
 
+    class_name = cls.__name__
+    class_annotations = cls.__annotations__
+
     # Add in dataclass niceness to original class
     as_dataclass = dataclass( cls )
 
@@ -531,8 +534,9 @@ def packable( cls ):
         def __post_init__( self ):
             return PackableSample.__post_init__( self )
     
-    as_packable.__name__ = cls.__name__
-    as_packable.__annotations__ = cls.__annotations__
+    # TODO This doesn't properly carry over the original
+    as_packable.__name__ = class_name
+    as_packable.__annotations__ = class_annotations
 
     ##
 
