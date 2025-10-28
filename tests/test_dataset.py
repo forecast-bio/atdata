@@ -59,6 +59,7 @@ test_cases = [
             'value': 1024.768,
         },
         'sample_wds_stem': 'basic_test',
+        'test_parquet': True,
     },
     {
         'SampleType': NumpyTestSample,
@@ -68,6 +69,7 @@ test_cases = [
             'image': np.random.randn( 1024, 1024 ),
         },
         'sample_wds_stem': 'numpy_test',
+        'test_parquet': False,
     },
     {
         'SampleType': BasicTestSampleDecorated,
@@ -77,6 +79,7 @@ test_cases = [
             'value': 1024.768,
         },
         'sample_wds_stem': 'basic_test_decorated',
+        'test_parquet': True,
     },
     {
         'SampleType': NumpyTestSampleDecorated,
@@ -86,6 +89,7 @@ test_cases = [
             'image': np.random.randn( 1024, 1024 ),
         },
         'sample_wds_stem': 'numpy_test_decorated',
+        'test_parquet': False,
     },
 ]
 
@@ -323,5 +327,49 @@ def test_wds(
     assert iterations_run == n_iterate, \
         "Only found {iterations_run} samples, not {n_iterate}"
 
+#
+
+@pytest.mark.parametrize(
+    ('SampleType', 'sample_data', 'sample_wds_stem', 'test_parquet'),
+    [ (
+        case['SampleType'],
+        case['sample_data'],
+        case['sample_wds_stem'],
+        case['test_parquet']
+      )
+      for case in test_cases ]
+)
+def test_create_sample(
+            SampleType: Type[atdata.PackableSample],
+            sample_data: atds.MsgpackRawSample,
+            sample_wds_stem: str,
+            test_parquet: bool,
+            tmp_path
+        ):
+    """Test our ability to export a dataset to `parquet` format"""
+
+
+    ## Testing hyperparameters
+
+    n_copies_dataset = 1_000
+    n_per_file = 100
+
+    ## Start out by writing tar dataset
+
+    wds_filename = tmp_path / f'{sample_wds_stem}.tar'
+    with wds.TarWriter( wds_filename ) as sink:
+        for _ in range( n_copies_dataset ):
+            new_sample = SampleType.from_data( sample_data )
+            sink.write( new_sample.as_wds )
+    
+    ## Now export to `parquet`
+
+    dataset = atdata.Dataset[SampleType]( wds_filename )
+    parquet_filename = tmp_path / f'{sample_wds_stem}.parquet'
+    dataset.to_parquet( parquet_filename )
+
+    ## Double-check our `parquet` export
+    
+    # TODO
 
 ##
