@@ -97,7 +97,8 @@ def _make_packable( x ):
 class PackableSample( ABC ):
     """A sample that can be packed and unpacked with msgpack"""
 
-    def __post_init__( self ):
+    def _ensure_good( self ):
+        """TODO Stupid kludge because of __post_init__ nonsense for wrapped classes"""
 
         # Auto-convert known types when annotated
         for var_name, var_type in vars( self.__class__ )['__annotations__'].items():
@@ -121,12 +122,17 @@ class PackableSample( ABC ):
                 elif isinstance( var_cur_value, bytes ):
                     setattr( self, var_name, eh.bytes_to_array( var_cur_value ) )
 
+    def __post_init__( self ):
+        self._ensure_good()
+
     ##
 
     @classmethod
     def from_data( cls, data: MsgpackRawSample ) -> Self:
         """Create a sample instance from unpacked msgpack data"""
-        return cls( **data )
+        ret = cls( **data )
+        ret._ensure_good()
+        return ret
     
     @classmethod
     def from_bytes( cls, bs: bytes ) -> Self:
@@ -443,12 +449,17 @@ def packable( cls ):
     
     ##
 
+    # Add in dataclass niceness to original class
     as_dataclass = dataclass( cls )
 
+    # This triggers a bunch of behind-the-scenes stuff for the newly annotated class
+    @dataclass
     class as_packable( as_dataclass, PackableSample ):
-        pass
+        def __post_init__( self ):
+            return PackableSample.__post_init__( self )
     
     as_packable.__name__ = cls.__name__
+    as_packable.__annotations__ = cls.__annotations__
 
     ##
 
