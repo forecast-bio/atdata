@@ -8,6 +8,7 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
+    "fastparquet>=2024.11.0",
     "msgpack>=1.1.2",
     "numpy>=2.3.4",
     "ormsgpack>=1.11.0",
