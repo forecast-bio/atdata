@@ -48,7 +48,7 @@ class Lens( Generic[S, V] ):
         functools.update_wrapper( self, get )
 
         # Store the getter
-        self.get = get
+        self._getter = get
         
         # Determine and store the putter
         if put is None:
@@ -57,7 +57,7 @@ class Lens( Generic[S, V] ):
                 return s
             put = _trivial_put
         
-        self.put = put
+        self._putter = put
 
         # Register this lens for this type signature
     
@@ -73,9 +73,29 @@ class Lens( Generic[S, V] ):
         print( _registered_lenses )
     
     #
+
+    def putter( self, put: LensPutter[S, V] ) -> LensPutter[S, V]:
+        """TODO"""
+        ##
+        self._putter = put
+        return put
+    
+    def put( self, v: V, s: S ) -> S:
+        """TODO"""
+        return self._putter( v, s )
+
+    def get( self, s: S ) -> V:
+        """TODO"""
+        return self( s )
+
+    #
     
     def __call__( self, s: S ) -> V:
-        return self.get( s )
+        return self._getter( s )
+
+def lens( f: LensGetter[S, V] ) -> Lens[S, V]:
+    """Register the annotated function `f` as the getter of a sample lens"""
+    return Lens[S, V]( f )
 
 
 ##
