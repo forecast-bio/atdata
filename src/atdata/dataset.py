@@ -20,6 +20,7 @@ from typing import (
     Optional,
     Dict,
     Sequence,
+    Iterable,
     #
     Self,
     Generic,
@@ -235,6 +236,7 @@ class Dataset( Generic[ST] ):
     @property
     def sample_type( self ) -> Type:
         """The type of each returned sample from this `Dataset`'s iterator"""
+        # TODO Figure out why linting fails here
         return self.__orig_class__.__args__[0]
     @property
     def batch_type( self ) -> Type:
@@ -286,7 +288,7 @@ class Dataset( Generic[ST] ):
     
     def ordered( self,
                 batch_size: int | None = 1,
-            ) -> wds.DataPipeline:
+            ) -> Iterable[ST]:
         """Iterate over the dataset in order
         
         Args:
@@ -325,7 +327,7 @@ class Dataset( Generic[ST] ):
                 buffer_shards: int = 100,
                 buffer_samples: int = 10_000,
                 batch_size: int | None = 1,
-            ) -> wds.DataPipeline:
+            ) -> Iterable[ST]:
         """Iterate over the dataset in random order
         
         Args:
@@ -366,6 +368,11 @@ class Dataset( Generic[ST] ):
             wds.batched( batch_size ),
             wds.map( self.wrap_batch ),
         )
+    
+    def to_parquet( self,
+                sample_map = None,
+            ):
+        """"""
 
     # Implemented by specific subclasses
 
@@ -390,18 +397,18 @@ class Dataset( Generic[ST] ):
         
         return self.sample_type.from_bytes( sample['msgpack'] )
     
-        try:
-            assert type( sample ) == dict
-            return cls.sample_class( **{
-                k: v
-                for k, v in sample.items() if k != '__key__'
-            } )
+        # try:
+        #     assert type( sample ) == dict
+        #     return cls.sample_class( **{
+        #         k: v
+        #         for k, v in sample.items() if k != '__key__'
+        #     } )
         
-        except Exception as e:
-            # Sample constructor failed -- revert to default
-            return AnySample(
-                value = sample,
-            )
+        # except Exception as e:
+        #     # Sample constructor failed -- revert to default
+        #     return AnySample(
+        #         value = sample,
+        #     )
 
     def wrap_batch( self, batch: WDSRawBatch ) -> SampleBatch[ST]:
         """Wrap a `batch` of samples into the appropriate dataset-specific type
