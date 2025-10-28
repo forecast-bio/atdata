@@ -5,22 +5,29 @@
 
 import webdataset as wds
 
-import functools
-from dataclasses import dataclass
+from pathlib import Path
 import uuid
-
-import numpy as np
-
+import functools
+from dataclasses import (
+    dataclass,
+    asdict,
+)
 from abc import (
     ABC,
     abstractmethod,
 )
+
+from tqdm import tqdm
+import numpy as np
+import pandas as pd
+
 from typing import (
     Any,
     Optional,
     Dict,
     Sequence,
     Iterable,
+    Callable,
     #
     Self,
     Generic,
@@ -46,8 +53,13 @@ from . import _helpers as eh
 ##
 # Typing help
 
+Pathlike = str | Path
+
 WDSRawSample: TypeAlias = Dict[str, Any]
 WDSRawBatch: TypeAlias = Dict[str, Any]
+
+SampleExportRow: TypeAlias = Dict[str, Any]
+SampleExportMap: TypeAlias = Callable[['PackableSample'], SampleExportRow]
 
 
 ##
@@ -95,6 +107,7 @@ def _make_packable( x ):
         return eh.array_to_bytes( x )
     return x
 
+@dataclass
 class PackableSample( ABC ):
     """A sample that can be packed and unpacked with msgpack"""
 
@@ -369,10 +382,63 @@ class Dataset( Generic[ST] ):
             wds.map( self.wrap_batch ),
         )
     
-    def to_parquet( self,
-                sample_map = None,
+    # TODO Rewrite to eliminate `pandas` dependency directly calling
+    # `fastparquet`
+    def to_parquet( self, path: Pathlike,
+                sample_map: Optional[SampleExportMap] = None,
+                maxcount: Optional[int] = None,
+                **kwargs,
             ):
-        """"""
+        """Save dataset contents to a `parquet` file at `path`
+
+        `kwargs` sent to `pandas.to_parquet`
+        """
+        ##
+
+        # Normalize args
+        path = Path( path )
+        if sample_map is None:
+            sample_map = asdict
+        
+        verbose = kwargs.get( 'verbose', False )
+
+        it = self.ordered( batch_size = None )
+        if verbose:
+            it = tqdm( it )
+
+        #
+
+        if maxcount is None:
+            # Load and save full dataset
+            df = pd.DataFrame( [ sample_map( x )
+                                 for x in self.ordered( batch_size = None ) ] )
+            df.to_parquet( path, **kwargs )
+        
+        else:
+            # Load and save dataset in segments of size `maxcount`
+
+            cur_segment = 0
+            cur_buffer = []
+            path_template = (path.parent / f'{path.stem}-%06d.{path.suffix}').as_posix()
+
+            for x in self.ordered( batch_size = None ):
+                cur_buffer.append( sample_map( x ) )
+                
+                if len( cur_buffer ) >= maxcount:
+                    # Write current segment
+                    cur_path = path_template.format( cur_segment )
+                    df = pd.DataFrame( cur_buffer )
+                    df.to_parquet( cur_path, **kwargs )
+
+                    cur_segment += 1
+                    cur_buffer = []
+                
+            if len( cur_buffer ) > 0:
+                # Write one last segment with remainder
+                cur_path = path_template.format( cur_segment )
+                df = pd.DataFrame( cur_buffer )
+                df.to_parquet( cur_path, **kwargs )
+
 
     # Implemented by specific subclasses
 

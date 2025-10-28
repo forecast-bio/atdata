@@ -11,6 +11,8 @@ dependencies = [
     "msgpack>=1.1.2",
     "numpy>=2.3.4",
     "ormsgpack>=1.11.0",
+    "pandas>=2.3.3",
+    "tqdm>=4.67.1",
     "webdataset>=1.0.2",
 ]
 
