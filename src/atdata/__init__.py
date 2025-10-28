@@ -10,5 +10,10 @@ from .dataset import (
     packable,
 )
 
+from .lens import (
+    Lens,
+    lens,
+)
+
 
 #
