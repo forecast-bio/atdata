@@ -5,21 +5,29 @@
 
 import webdataset as wds
 
-import functools
-from dataclasses import dataclass
+from pathlib import Path
 import uuid
-
-import numpy as np
-
+import functools
+from dataclasses import (
+    dataclass,
+    asdict,
+)
 from abc import (
     ABC,
     abstractmethod,
 )
+
+from tqdm import tqdm
+import numpy as np
+import pandas as pd
+
 from typing import (
     Any,
     Optional,
     Dict,
     Sequence,
+    Iterable,
+    Callable,
     #
     Self,
     Generic,
@@ -45,8 +53,13 @@ from . import _helpers as eh
 ##
 # Typing help
 
+Pathlike = str | Path
+
 WDSRawSample: TypeAlias = Dict[str, Any]
 WDSRawBatch: TypeAlias = Dict[str, Any]
+
+SampleExportRow: TypeAlias = Dict[str, Any]
+SampleExportMap: TypeAlias = Callable[['PackableSample'], SampleExportRow]
 
 
 ##
@@ -94,6 +107,7 @@ def _make_packable( x ):
         return eh.array_to_bytes( x )
     return x
 
+@dataclass
 class PackableSample( ABC ):
     """A sample that can be packed and unpacked with msgpack"""
 
@@ -235,6 +249,7 @@ class Dataset( Generic[ST] ):
     @property
     def sample_type( self ) -> Type:
         """The type of each returned sample from this `Dataset`'s iterator"""
+        # TODO Figure out why linting fails here
         return self.__orig_class__.__args__[0]
     @property
     def batch_type( self ) -> Type:
@@ -286,7 +301,7 @@ class Dataset( Generic[ST] ):
     
     def ordered( self,
                 batch_size: int | None = 1,
-            ) -> wds.DataPipeline:
+            ) -> Iterable[ST]:
         """Iterate over the dataset in order
         
         Args:
@@ -325,7 +340,7 @@ class Dataset( Generic[ST] ):
                 buffer_shards: int = 100,
                 buffer_samples: int = 10_000,
                 batch_size: int | None = 1,
-            ) -> wds.DataPipeline:
+            ) -> Iterable[ST]:
         """Iterate over the dataset in random order
         
         Args:
@@ -366,6 +381,64 @@ class Dataset( Generic[ST] ):
             wds.batched( batch_size ),
             wds.map( self.wrap_batch ),
         )
+    
+    # TODO Rewrite to eliminate `pandas` dependency directly calling
+    # `fastparquet`
+    def to_parquet( self, path: Pathlike,
+                sample_map: Optional[SampleExportMap] = None,
+                maxcount: Optional[int] = None,
+                **kwargs,
+            ):
+        """Save dataset contents to a `parquet` file at `path`
+
+        `kwargs` sent to `pandas.to_parquet`
+        """
+        ##
+
+        # Normalize args
+        path = Path( path )
+        if sample_map is None:
+            sample_map = asdict
+        
+        verbose = kwargs.get( 'verbose', False )
+
+        it = self.ordered( batch_size = None )
+        if verbose:
+            it = tqdm( it )
+
+        #
+
+        if maxcount is None:
+            # Load and save full dataset
+            df = pd.DataFrame( [ sample_map( x )
+                                 for x in self.ordered( batch_size = None ) ] )
+            df.to_parquet( path, **kwargs )
+        
+        else:
+            # Load and save dataset in segments of size `maxcount`
+
+            cur_segment = 0
+            cur_buffer = []
+            path_template = (path.parent / f'{path.stem}-%06d.{path.suffix}').as_posix()
+
+            for x in self.ordered( batch_size = None ):
+                cur_buffer.append( sample_map( x ) )
+                
+                if len( cur_buffer ) >= maxcount:
+                    # Write current segment
+                    cur_path = path_template.format( cur_segment )
+                    df = pd.DataFrame( cur_buffer )
+                    df.to_parquet( cur_path, **kwargs )
+
+                    cur_segment += 1
+                    cur_buffer = []
+                
+            if len( cur_buffer ) > 0:
+                # Write one last segment with remainder
+                cur_path = path_template.format( cur_segment )
+                df = pd.DataFrame( cur_buffer )
+                df.to_parquet( cur_path, **kwargs )
+
 
     # Implemented by specific subclasses
 
@@ -390,18 +463,18 @@ class Dataset( Generic[ST] ):
         
         return self.sample_type.from_bytes( sample['msgpack'] )
     
-        try:
-            assert type( sample ) == dict
-            return cls.sample_class( **{
-                k: v
-                for k, v in sample.items() if k != '__key__'
-            } )
+        # try:
+        #     assert type( sample ) == dict
+        #     return cls.sample_class( **{
+        #         k: v
+        #         for k, v in sample.items() if k != '__key__'
+        #     } )
         
-        except Exception as e:
-            # Sample constructor failed -- revert to default
-            return AnySample(
-                value = sample,
-            )
+        # except Exception as e:
+        #     # Sample constructor failed -- revert to default
+        #     return AnySample(
+        #         value = sample,
+        #     )
 
     def wrap_batch( self, batch: WDSRawBatch ) -> SampleBatch[ST]:
         """Wrap a `batch` of samples into the appropriate dataset-specific type
@@ -449,6 +522,9 @@ def packable( cls ):
     
     ##
 
+    class_name = cls.__name__
+    class_annotations = cls.__annotations__
+
     # Add in dataclass niceness to original class
     as_dataclass = dataclass( cls )
 
@@ -458,8 +534,9 @@ def packable( cls ):
         def __post_init__( self ):
             return PackableSample.__post_init__( self )
     
-    as_packable.__name__ = cls.__name__
-    as_packable.__annotations__ = cls.__annotations__
+    # TODO This doesn't properly carry over the original
+    as_packable.__name__ = class_name
+    as_packable.__annotations__ = class_annotations
 
     ##
 

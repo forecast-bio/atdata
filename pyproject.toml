@@ -1,6 +1,6 @@
 [project]
 name = "atdata"
-version = "0.1.2a4"
+version = "0.1.2b1"
 description = "A loose federation of distributed, typed datasets"
 readme = "README.md"
 authors = [
@@ -8,9 +8,12 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
+    "fastparquet>=2024.11.0",
     "msgpack>=1.1.2",
     "numpy>=2.3.4",
     "ormsgpack>=1.11.0",
+    "pandas>=2.3.3",
+    "tqdm>=4.67.1",
     "webdataset>=1.0.2",
 ]
 
