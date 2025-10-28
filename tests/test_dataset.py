@@ -348,6 +348,9 @@ def test_create_sample(
         ):
     """Test our ability to export a dataset to `parquet` format"""
 
+    # Skip irrelevant test cases
+    if not test_parquet:
+        return
 
     ## Testing hyperparameters
 
@@ -356,7 +359,7 @@ def test_create_sample(
 
     ## Start out by writing tar dataset
 
-    wds_filename = tmp_path / f'{sample_wds_stem}.tar'
+    wds_filename = (tmp_path / f'{sample_wds_stem}.tar').as_posix()
     with wds.TarWriter( wds_filename ) as sink:
         for _ in range( n_copies_dataset ):
             new_sample = SampleType.from_data( sample_data )
