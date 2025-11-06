@@ -501,10 +501,17 @@ class Dataset( Generic[ST] ):
         """
 
         assert 'msgpack' in batch
-        batch_unpacked = [ self.sample_type.from_bytes( bs )
-                           for bs in batch['msgpack'] ]
-        return SampleBatch[self.sample_type]( batch_unpacked )
 
+        if self._output_lens is None:
+            batch_unpacked = [ self.sample_type.from_bytes( bs )
+                               for bs in batch['msgpack'] ]
+            return SampleBatch[self.sample_type]( batch_unpacked )
+
+        batch_source = [ self._output_lens.source_type.from_bytes( bs )
+                         for bs in batch['msgpack'] ]
+        batch_view = [ self._output_lens( s )
+                       for s in batch_source ]
+        return SampleBatch[self.sample_type]( batch_view )
 
     # # @classmethod
     # def wrap_batch( self, batch: WDSRawBatch ) -> BT:
