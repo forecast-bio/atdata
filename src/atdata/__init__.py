@@ -12,6 +12,7 @@ from .dataset import (
 
 from .lens import (
     Lens,
+    LensNetwork,
     lens,
 )
 
