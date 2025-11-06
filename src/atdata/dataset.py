@@ -48,6 +48,7 @@ from numpy.typing import (
 import msgpack
 import ormsgpack
 from . import _helpers as eh
+from .lens import Lens, LensNetwork
 
 
 ##
@@ -231,6 +232,8 @@ class SampleBatch( Generic[DT] ):
 ST = TypeVar( 'ST', bound = PackableSample )
 # BT = TypeVar( 'BT' )
 
+RT = TypeVar( 'RT', bound = PackableSample )
+
 # TODO For python 3.13
 # BT = TypeVar( 'BT', default = None )
 # IT = TypeVar( 'IT', default = Any )
@@ -268,6 +271,17 @@ class Dataset( Generic[ST] ):
         super().__init__()
         self.url = url
 
+        # Allow addition of automatic transformation of raw underlying data
+        self._output_lens: Lens | None = None
+
+    def as_type( self, other: Type[RT] ) -> 'Dataset[RT]':
+        """TODO"""
+        ret = Dataset[other]( self.url )
+        # Get the singleton lens registry
+        lenses = LensNetwork()
+        ret._output_lens = lenses.transform( self.sample_type, ret.sample_type )
+        return ret
+
     # @classmethod
     # def register( cls, uri: str,
     #             sample_class: Type,
@@ -293,9 +307,9 @@ class Dataset( Generic[ST] ):
             A full (non-lazy) list of the individual ``tar`` files within the
             source WebDataset.
         """
-        pipe = wds.DataPipeline(
-            wds.SimpleShardList( self.url ),
-            wds.map( lambda x: x['url'] )
+        pipe = wds.pipeline.DataPipeline(
+            wds.shardlists.SimpleShardList( self.url ),
+            wds.filters.map( lambda x: x['url'] )
         )
         return list( pipe )
     
@@ -317,23 +331,23 @@ class Dataset( Generic[ST] ):
 
         if batch_size is None:
             # TODO Duplication here
-            return wds.DataPipeline(
-                wds.SimpleShardList( self.url ),
-                wds.split_by_worker,
+            return wds.pipeline.DataPipeline(
+                wds.shardlists.SimpleShardList( self.url ),
+                wds.shardlists.split_by_worker,
                 #
-                wds.tarfile_to_samples(),
+                wds.tariterators.tarfile_to_samples(),
                 # wds.map( self.preprocess ),
-                wds.map( self.wrap ),
+                wds.filters.map( self.wrap ),
             )
 
-        return wds.DataPipeline(
-            wds.SimpleShardList( self.url ),
-            wds.split_by_worker,
+        return wds.pipeline.DataPipeline(
+            wds.shardlists.SimpleShardList( self.url ),
+            wds.shardlists.split_by_worker,
             #
-            wds.tarfile_to_samples(),
+            wds.tariterators.tarfile_to_samples(),
             # wds.map( self.preprocess ),
-            wds.batched( batch_size ),
-            wds.map( self.wrap_batch ),
+            wds.filters.batched( batch_size ),
+            wds.filters.map( self.wrap_batch ),
         )
 
     def shuffled( self,
@@ -461,7 +475,11 @@ class Dataset( Generic[ST] ):
         assert 'msgpack' in sample
         assert type( sample['msgpack'] ) == bytes
         
-        return self.sample_type.from_bytes( sample['msgpack'] )
+        if self._output_lens is None:
+            return self.sample_type.from_bytes( sample['msgpack'] )
+
+        source_sample = self._output_lens.source_type.from_bytes( sample['msgpack'] )
+        return self._output_lens( source_sample )
     
         # try:
         #     assert type( sample ) == dict

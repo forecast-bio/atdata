@@ -179,7 +179,7 @@ def test_wds(
     ).as_posix()
     file_wds_pattern = file_pattern.format( shard_id = '%06d' )
 
-    with wds.ShardWriter(
+    with wds.writer.ShardWriter(
         pattern = file_wds_pattern,
         maxcount = shard_maxcount,
     ) as sink:
@@ -339,7 +339,7 @@ def test_wds(
       )
       for case in test_cases ]
 )
-def test_create_sample(
+def test_parquet_export(
             SampleType: Type[atdata.PackableSample],
             sample_data: atds.MsgpackRawSample,
             sample_wds_stem: str,
@@ -360,7 +360,7 @@ def test_create_sample(
     ## Start out by writing tar dataset
 
     wds_filename = (tmp_path / f'{sample_wds_stem}.tar').as_posix()
-    with wds.TarWriter( wds_filename ) as sink:
+    with wds.writer.TarWriter( wds_filename ) as sink:
         for _ in range( n_copies_dataset ):
             new_sample = SampleType.from_data( sample_data )
             sink.write( new_sample.as_wds )
@@ -371,73 +371,12 @@ def test_create_sample(
     parquet_filename = tmp_path / f'{sample_wds_stem}.parquet'
     dataset.to_parquet( parquet_filename )
 
+    parquet_filename = tmp_path / f'{sample_wds_stem}-segments.parquet'
+    dataset.to_parquet( parquet_filename, maxcount = n_per_file )
+
     ## Double-check our `parquet` export
     
     # TODO
 
-def test_lens():
-    """Test a lens between sample types"""
-
-    # Set up the lens scenario
-
-    @atdata.packable
-    class Source:
-        name: str
-        age: int
-        height: float
-
-    @atdata.packable
-    class View:
-        name: str
-        height: float
-    
-    @atdata.lens
-    def polite( s: Source ) -> View:
-        return View(
-            name = s.name,
-            height = s.height,
-        )
-    
-    @polite.putter
-    def polite_update( v: View, s: Source ) -> Source:
-        return Source(
-            name = v.name,
-            height = v.height,
-            #
-            age = s.age,
-        )
-    
-    # Test with an example sample
-
-    test_source = Source(
-        name = 'Hello World',
-        age = 42,
-        height = 182.9,
-    )
-    correct_view = View(
-        name = test_source.name,
-        height = test_source.height,
-    )
-
-    test_view = polite( test_source )
-    assert test_view == correct_view, \
-        f'Incorrect lens behavior: {test_view}, and not {correct_view}'
-
-    # This lens should be well-behaved
-
-    update_view = View(
-        name = 'Now Taller',
-        height = 192.9,
-    )
-
-    x = polite( polite.put( update_view, test_source ) )
-    assert x == update_view, \
-        f'Violation of GetPut: {x} =/= {update_view}'
-    
-    y = polite.put( polite( test_source ), test_source )
-    assert y == test_source, \
-        f'Violation of PutGet: {y} =/= {test_source}'
-    
-    # TODO Test PutPut
 
 ##
