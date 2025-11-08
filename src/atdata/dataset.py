@@ -8,6 +8,9 @@ import webdataset as wds
 from pathlib import Path
 import uuid
 import functools
+
+import dataclasses
+import types
 from dataclasses import (
     dataclass,
     asdict,
@@ -109,21 +112,20 @@ def _make_packable( x ):
         return eh.array_to_bytes( x )
     return x
 
-def _is_possibly_ndarray_type( annotation ):
+def _is_possibly_ndarray_type( t ):
     """Checks if a type annotation is possibly an NDArray."""
-    
+
     # Directly an NDArray
-    if annotation == NDArray:
+    if t == NDArray:
+        print( 'is an NDArray' )
         return True
     
     # Check for Optionals (i.e., NDArray | None)
-    if (
-        hasattr( annotation, '__origin__' )
-        and annotation.__origin__ is Union
-        and type( None ) in annotation.__args__
-        and NDArray in annotation.__args__
-    ):
-        return True
+    if isinstance( t, types.UnionType ):
+        t_parts = t.__args__
+        if any( x == NDArray
+                for x in t_parts ):
+            return True
     
     # Not an NDArray
     return False
@@ -136,7 +138,10 @@ class PackableSample( ABC ):
         """TODO Stupid kludge because of __post_init__ nonsense for wrapped classes"""
 
         # Auto-convert known types when annotated
-        for var_name, var_type in vars( self.__class__ )['__annotations__'].items():
+        # for var_name, var_type in vars( self.__class__ )['__annotations__'].items():
+        for field in dataclasses.fields( self ):
+            var_name = field.name
+            var_type = field.type
 
             # Annotation for this variable is to be an NDArray
             if _is_possibly_ndarray_type( var_type ):
@@ -155,6 +160,9 @@ class PackableSample( ABC ):
                 #     setattr( self, var_name, var_cur_value.to_numpy )
 
                 elif isinstance( var_cur_value, bytes ):
+                    # TODO This does create a constraint that serialized bytes
+                    # in a field that might be an NDArray are always interpreted
+                    # as being the NDArray interpretation
                     setattr( self, var_name, eh.bytes_to_array( var_cur_value ) )
 
     def __post_init__( self ):
