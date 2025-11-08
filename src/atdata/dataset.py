@@ -24,6 +24,7 @@ from tqdm import tqdm
 import numpy as np
 import pandas as pd
 
+import typing
 from typing import (
     Any,
     Optional,
@@ -232,7 +233,7 @@ class SampleBatch( Generic[DT] ):
     @property
     def sample_type( self ) -> Type:
         """The type of each sample in this batch"""
-        return self.__orig_class__.__args__[0]
+        return typing.get_args( self.__orig_class__)[0]
 
     def __getattr__( self, name ):
         # Aggregate named params of sample type
@@ -281,7 +282,7 @@ class Dataset( Generic[ST] ):
     def sample_type( self ) -> Type:
         """The type of each returned sample from this `Dataset`'s iterator"""
         # TODO Figure out why linting fails here
-        return self.__orig_class__.__args__[0]
+        return typing.get_args( self.__orig_class__ )[0]
     @property
     def batch_type( self ) -> Type:
         """The type of a batch built from `sample_class`"""
@@ -399,29 +400,29 @@ class Dataset( Generic[ST] ):
 
         if batch_size is None:
             # TODO Duplication here
-            return wds.DataPipeline(
-                wds.SimpleShardList( self.url ),
-                wds.shuffle( buffer_shards ),
-                wds.split_by_worker,
+            return wds.pipeline.DataPipeline(
+                wds.shardlists.SimpleShardList( self.url ),
+                wds.filters.shuffle( buffer_shards ),
+                wds.shardlists.split_by_worker,
                 #
-                wds.tarfile_to_samples(),
+                wds.tariterators.tarfile_to_samples(),
                 # wds.shuffle( buffer_samples ),
                 # wds.map( self.preprocess ),
-                wds.shuffle( buffer_samples ),
-                wds.map( self.wrap ),
+                wds.filters.shuffle( buffer_samples ),
+                wds.filters.map( self.wrap ),
             )
 
-        return wds.DataPipeline(
-            wds.SimpleShardList( self.url ),
-            wds.shuffle( buffer_shards ),
-            wds.split_by_worker,
+        return wds.pipeline.DataPipeline(
+            wds.shardlists.SimpleShardList( self.url ),
+            wds.filters.shuffle( buffer_shards ),
+            wds.shardlists.split_by_worker,
             #
-            wds.tarfile_to_samples(),
+            wds.tariterators.tarfile_to_samples(),
             # wds.shuffle( buffer_samples ),
             # wds.map( self.preprocess ),
-            wds.shuffle( buffer_samples ),
-            wds.batched( batch_size ),
-            wds.map( self.wrap_batch ),
+            wds.filters.shuffle( buffer_samples ),
+            wds.filters.batched( batch_size ),
+            wds.filters.map( self.wrap_batch ),
         )
     
     # TODO Rewrite to eliminate `pandas` dependency directly calling
