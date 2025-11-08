@@ -8,6 +8,9 @@ import webdataset as wds
 from pathlib import Path
 import uuid
 import functools
+
+import dataclasses
+import types
 from dataclasses import (
     dataclass,
     asdict,
@@ -21,6 +24,7 @@ from tqdm import tqdm
 import numpy as np
 import pandas as pd
 
+import typing
 from typing import (
     Any,
     Optional,
@@ -28,6 +32,7 @@ from typing import (
     Sequence,
     Iterable,
     Callable,
+    Union,
     #
     Self,
     Generic,
@@ -108,6 +113,24 @@ def _make_packable( x ):
         return eh.array_to_bytes( x )
     return x
 
+def _is_possibly_ndarray_type( t ):
+    """Checks if a type annotation is possibly an NDArray."""
+
+    # Directly an NDArray
+    if t == NDArray:
+        print( 'is an NDArray' )
+        return True
+    
+    # Check for Optionals (i.e., NDArray | None)
+    if isinstance( t, types.UnionType ):
+        t_parts = t.__args__
+        if any( x == NDArray
+                for x in t_parts ):
+            return True
+    
+    # Not an NDArray
+    return False
+
 @dataclass
 class PackableSample( ABC ):
     """A sample that can be packed and unpacked with msgpack"""
@@ -116,10 +139,13 @@ class PackableSample( ABC ):
         """TODO Stupid kludge because of __post_init__ nonsense for wrapped classes"""
 
         # Auto-convert known types when annotated
-        for var_name, var_type in vars( self.__class__ )['__annotations__'].items():
+        # for var_name, var_type in vars( self.__class__ )['__annotations__'].items():
+        for field in dataclasses.fields( self ):
+            var_name = field.name
+            var_type = field.type
 
             # Annotation for this variable is to be an NDArray
-            if var_type == NDArray:
+            if _is_possibly_ndarray_type( var_type ):
                 # ... so, we'll always auto-convert to numpy
 
                 var_cur_value = getattr( self, var_name )
@@ -135,6 +161,9 @@ class PackableSample( ABC ):
                 #     setattr( self, var_name, var_cur_value.to_numpy )
 
                 elif isinstance( var_cur_value, bytes ):
+                    # TODO This does create a constraint that serialized bytes
+                    # in a field that might be an NDArray are always interpreted
+                    # as being the NDArray interpretation
                     setattr( self, var_name, eh.bytes_to_array( var_cur_value ) )
 
     def __post_init__( self ):
@@ -204,7 +233,7 @@ class SampleBatch( Generic[DT] ):
     @property
     def sample_type( self ) -> Type:
         """The type of each sample in this batch"""
-        return self.__orig_class__.__args__[0]
+        return typing.get_args( self.__orig_class__)[0]
 
     def __getattr__( self, name ):
         # Aggregate named params of sample type
@@ -253,7 +282,7 @@ class Dataset( Generic[ST] ):
     def sample_type( self ) -> Type:
         """The type of each returned sample from this `Dataset`'s iterator"""
         # TODO Figure out why linting fails here
-        return self.__orig_class__.__args__[0]
+        return typing.get_args( self.__orig_class__ )[0]
     @property
     def batch_type( self ) -> Type:
         """The type of a batch built from `sample_class`"""
@@ -371,29 +400,29 @@ class Dataset( Generic[ST] ):
 
         if batch_size is None:
             # TODO Duplication here
-            return wds.DataPipeline(
-                wds.SimpleShardList( self.url ),
-                wds.shuffle( buffer_shards ),
-                wds.split_by_worker,
+            return wds.pipeline.DataPipeline(
+                wds.shardlists.SimpleShardList( self.url ),
+                wds.filters.shuffle( buffer_shards ),
+                wds.shardlists.split_by_worker,
                 #
-                wds.tarfile_to_samples(),
+                wds.tariterators.tarfile_to_samples(),
                 # wds.shuffle( buffer_samples ),
                 # wds.map( self.preprocess ),
-                wds.shuffle( buffer_samples ),
-                wds.map( self.wrap ),
+                wds.filters.shuffle( buffer_samples ),
+                wds.filters.map( self.wrap ),
             )
 
-        return wds.DataPipeline(
-            wds.SimpleShardList( self.url ),
-            wds.shuffle( buffer_shards ),
-            wds.split_by_worker,
+        return wds.pipeline.DataPipeline(
+            wds.shardlists.SimpleShardList( self.url ),
+            wds.filters.shuffle( buffer_shards ),
+            wds.shardlists.split_by_worker,
             #
-            wds.tarfile_to_samples(),
+            wds.tariterators.tarfile_to_samples(),
             # wds.shuffle( buffer_samples ),
             # wds.map( self.preprocess ),
-            wds.shuffle( buffer_samples ),
-            wds.batched( batch_size ),
-            wds.map( self.wrap_batch ),
+            wds.filters.shuffle( buffer_samples ),
+            wds.filters.batched( batch_size ),
+            wds.filters.map( self.wrap_batch ),
         )
     
     # TODO Rewrite to eliminate `pandas` dependency directly calling

@@ -50,6 +50,12 @@ class NumpyTestSampleDecorated:
     label: int
     image: NDArray
 
+@atdata.packable
+class NumpyOptionalSampleDecorated:
+    label: int
+    image: NDArray
+    embeddings: NDArray | None = None
+
 test_cases = [
     {
         'SampleType': BasicTestSample,
@@ -89,6 +95,28 @@ test_cases = [
             'image': np.random.randn( 1024, 1024 ),
         },
         'sample_wds_stem': 'numpy_test_decorated',
+        'test_parquet': False,
+    },
+    {
+        'SampleType': NumpyOptionalSampleDecorated,
+        'sample_data':
+        {
+            'label': 9_001,
+            'image': np.random.randn( 1024, 1024 ),
+            'embeddings': np.random.randn( 512 ),
+        },
+        'sample_wds_stem': 'numpy_optional_decorated',
+        'test_parquet': False,
+    },
+    {
+        'SampleType': NumpyOptionalSampleDecorated,
+        'sample_data':
+        {
+            'label': 9_001,
+            'image': np.random.randn( 1024, 1024 ),
+            'embeddings': None,
+        },
+        'sample_wds_stem': 'numpy_optional_decorated_none',
         'test_parquet': False,
     },
 ]
