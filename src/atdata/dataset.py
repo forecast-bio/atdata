@@ -28,6 +28,7 @@ from typing import (
     Sequence,
     Iterable,
     Callable,
+    Union,
     #
     Self,
     Generic,
@@ -108,6 +109,25 @@ def _make_packable( x ):
         return eh.array_to_bytes( x )
     return x
 
+def _is_possibly_ndarray_type( annotation ):
+    """Checks if a type annotation is possibly an NDArray."""
+    
+    # Directly an NDArray
+    if annotation == NDArray:
+        return True
+    
+    # Check for Optionals (i.e., NDArray | None)
+    if (
+        hasattr( annotation, '__origin__' )
+        and annotation.__origin__ is Union
+        and type( None ) in annotation.__args__
+        and NDArray in annotation.__args__
+    ):
+        return True
+    
+    # Not an NDArray
+    return False
+
 @dataclass
 class PackableSample( ABC ):
     """A sample that can be packed and unpacked with msgpack"""
@@ -119,7 +139,7 @@ class PackableSample( ABC ):
         for var_name, var_type in vars( self.__class__ )['__annotations__'].items():
 
             # Annotation for this variable is to be an NDArray
-            if var_type == NDArray:
+            if _is_possibly_ndarray_type( var_type ):
                 # ... so, we'll always auto-convert to numpy
 
                 var_cur_value = getattr( self, var_name )
