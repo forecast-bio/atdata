@@ -118,7 +118,7 @@ def _is_possibly_ndarray_type( t ):
 
     # Directly an NDArray
     if t == NDArray:
-        print( 'is an NDArray' )
+        # print( 'is an NDArray' )
         return True
     
     # Check for Optionals (i.e., NDArray | None)
