@@ -165,7 +165,7 @@ class LensNetwork:
         # output_type = sig.return_annotation
 
         # self._registry[input_type, output_type] = _lens
-        print( _lens.source_type )
+        # print( _lens.source_type )
         self._registry[_lens.source_type, _lens.view_type] = _lens
     
     def transform( self, source: DatasetType, view: DatasetType ) -> Lens:
