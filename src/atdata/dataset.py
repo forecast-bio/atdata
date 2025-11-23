@@ -107,6 +107,15 @@ MsgpackRawSample: TypeAlias = Dict[str, Any]
 #         return eh.bytes_to_array( self.raw_bytes )
 
 def _make_packable( x ):
+    """Convert a value to a msgpack-compatible format.
+
+    Args:
+        x: A value to convert. If it's a numpy array, converts to bytes.
+            Otherwise returns the value unchanged.
+
+    Returns:
+        The value in a format suitable for msgpack serialization.
+    """
     # if isinstance( x, ArrayBytes ):
     #     return x.raw_bytes
     if isinstance( x, np.ndarray ):
@@ -136,7 +145,17 @@ class PackableSample( ABC ):
     """A sample that can be packed and unpacked with msgpack"""
 
     def _ensure_good( self ):
-        """TODO Stupid kludge because of __post_init__ nonsense for wrapped classes"""
+        """Auto-convert annotated NDArray fields from bytes to numpy arrays.
+
+        This method scans all dataclass fields and for any field annotated as
+        ``NDArray`` or ``NDArray | None``, automatically converts bytes values
+        to numpy arrays using the helper deserialization function. This enables
+        transparent handling of array serialization in msgpack data.
+
+        Note:
+            This is called during ``__post_init__`` to ensure proper type
+            conversion after deserialization.
+        """
 
         # Auto-convert known types when annotated
         # for var_name, var_type in vars( self.__class__ )['__annotations__'].items():
@@ -204,7 +223,15 @@ class PackableSample( ABC ):
     # TODO Expand to allow for specifying explicit __key__
     @property
     def as_wds( self ) -> WDSRawSample:
-        """Pack this sample's data for writing to webdataset"""
+        """Pack this sample's data for writing to WebDataset.
+
+        Returns:
+            A dictionary with ``__key__`` (UUID v1 for sortable keys) and
+            ``msgpack`` (packed sample data) fields suitable for WebDataset.
+
+        Note:
+            TODO: Expand to allow specifying explicit ``__key__`` values.
+        """
         return {
             # Generates a UUID that is timelike-sortable
             '__key__': str( uuid.uuid1( 0, 0 ) ),
@@ -212,12 +239,22 @@ class PackableSample( ABC ):
         }
 
 def _batch_aggregate( xs: Sequence ):
+    """Aggregate a sequence of values into a batch-appropriate format.
+
+    Args:
+        xs: A sequence of values to aggregate. If the first element is a numpy
+            array, all elements are stacked into a single array. Otherwise,
+            returns a list.
+
+    Returns:
+        A numpy array (if elements are arrays) or a list (otherwise).
+    """
 
     if not xs:
         # Empty sequence
         return []
 
-    # Aggregate 
+    # Aggregate
     if isinstance( xs[0], np.ndarray ):
         return np.array( list( xs ) )
 
@@ -226,13 +263,23 @@ def _batch_aggregate( xs: Sequence ):
 class SampleBatch( Generic[DT] ):
 
     def __init__( self, samples: Sequence[DT] ):
-        """TODO"""
+        """Create a batch from a sequence of samples.
+
+        Args:
+            samples: A sequence of sample instances to aggregate into a batch.
+                Each sample must be an instance of a type derived from
+                ``PackableSample``.
+        """
         self.samples = list( samples )
         self._aggregate_cache = dict()
 
     @property
     def sample_type( self ) -> Type:
-        """The type of each sample in this batch"""
+        """The type of each sample in this batch.
+
+        Returns:
+            The type parameter ``DT`` used when creating this ``SampleBatch[DT]``.
+        """
         return typing.get_args( self.__orig_class__)[0]
 
     def __getattr__( self, name ):
@@ -296,7 +343,13 @@ class Dataset( Generic[ST] ):
     #
 
     def __init__( self, url: str ) -> None:
-        """TODO"""
+        """Create a dataset from a WebDataset URL.
+
+        Args:
+            url: WebDataset brace-notation URL pointing to tar files, e.g.,
+                ``"path/to/file-{000000..000009}.tar"`` for multiple shards or
+                ``"path/to/file-000000.tar"`` for a single shard.
+        """
         super().__init__()
         self.url = url
 
@@ -304,7 +357,21 @@ class Dataset( Generic[ST] ):
         self._output_lens: Lens | None = None
 
     def as_type( self, other: Type[RT] ) -> 'Dataset[RT]':
-        """TODO"""
+        """View this dataset through a different sample type using a registered lens.
+
+        Args:
+            other: The target sample type to transform into. Must be a type
+                derived from ``PackableSample``.
+
+        Returns:
+            A new ``Dataset`` instance that yields samples of type ``other``
+            by applying the appropriate lens transformation from the global
+            ``LensNetwork`` registry.
+
+        Raises:
+            ValueError: If no registered lens exists between the current
+                sample type and the target type.
+        """
         ret = Dataset[other]( self.url )
         # Get the singleton lens registry
         lenses = LensNetwork()
@@ -500,7 +567,16 @@ class Dataset( Generic[ST] ):
     # @classmethod
     # TODO replace Any with IT
     def wrap( self, sample: MsgpackRawSample ) -> ST:
-        """Wrap a `sample` into the appropriate dataset-specific type"""
+        """Wrap a raw msgpack sample into the appropriate dataset-specific type.
+
+        Args:
+            sample: A dictionary containing at minimum a ``'msgpack'`` key with
+                serialized sample bytes.
+
+        Returns:
+            A deserialized sample of type ``ST``, optionally transformed through
+            a lens if ``as_type()`` was called.
+        """
         assert 'msgpack' in sample
         assert type( sample['msgpack'] ) == bytes
         
@@ -524,9 +600,19 @@ class Dataset( Generic[ST] ):
         #     )
 
     def wrap_batch( self, batch: WDSRawBatch ) -> SampleBatch[ST]:
-        """Wrap a `batch` of samples into the appropriate dataset-specific type
-       
-        This default implementation simply creates a list one sample at a time
+        """Wrap a batch of raw msgpack samples into a typed SampleBatch.
+
+        Args:
+            batch: A dictionary containing a ``'msgpack'`` key with a list of
+                serialized sample bytes.
+
+        Returns:
+            A ``SampleBatch[ST]`` containing deserialized samples, optionally
+            transformed through a lens if ``as_type()`` was called.
+
+        Note:
+            This implementation deserializes samples one at a time, then
+            aggregates them into a batch.
         """
 
         assert 'msgpack' in batch
@@ -572,8 +658,30 @@ class Dataset( Generic[ST] ):
 #     return decorator
 
 def packable( cls ):
-    """TODO"""
-    
+    """Decorator to convert a regular class into a ``PackableSample``.
+
+    This decorator transforms a class into a dataclass that inherits from
+    ``PackableSample``, enabling automatic msgpack serialization/deserialization
+    with special handling for NDArray fields.
+
+    Args:
+        cls: The class to convert. Should have type annotations for its fields.
+
+    Returns:
+        A new dataclass that inherits from ``PackableSample`` with the same
+        name and annotations as the original class.
+
+    Example:
+        >>> @packable
+        ... class MyData:
+        ...     name: str
+        ...     values: NDArray
+        ...
+        >>> sample = MyData(name="test", values=np.array([1, 2, 3]))
+        >>> bytes_data = sample.packed
+        >>> restored = MyData.from_bytes(bytes_data)
+    """
+
     ##
 
     class_name = cls.__name__
