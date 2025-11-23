@@ -1,4 +1,42 @@
-"""Lenses between typed datasets"""
+"""Lens-based type transformations for datasets.
+
+This module implements a lens system for bidirectional transformations between
+different sample types. Lenses enable viewing a dataset through different type
+schemas without duplicating the underlying data.
+
+Key components:
+
+- ``Lens``: Bidirectional transformation with getter (S -> V) and optional
+  putter (V, S -> S)
+- ``LensNetwork``: Global singleton registry for lens transformations
+- ``@lens``: Decorator to create and register lens transformations
+
+Lenses support the functional programming concept of composable, well-behaved
+transformations that satisfy lens laws (GetPut and PutGet).
+
+Example:
+    >>> @packable
+    ... class FullData:
+    ...     name: str
+    ...     age: int
+    ...     embedding: NDArray
+    ...
+    >>> @packable
+    ... class NameOnly:
+    ...     name: str
+    ...
+    >>> @lens
+    ... def name_view(full: FullData) -> NameOnly:
+    ...     return NameOnly(name=full.name)
+    ...
+    >>> @name_view.putter
+    ... def name_view_put(view: NameOnly, source: FullData) -> FullData:
+    ...     return FullData(name=view.name, age=source.age,
+    ...                     embedding=source.embedding)
+    ...
+    >>> ds = Dataset[FullData]("data.tar")
+    >>> ds_names = ds.as_type(NameOnly)  # Uses registered lens
+"""
 
 ##
 # Imports
@@ -151,8 +189,16 @@ class Lens( Generic[S, V] ):
         return self( s )
 
     # Convenience to enable calling the lens as its getter
-    
+
     def __call__( self, s: S ) -> V:
+        """Apply the lens transformation (same as ``get()``).
+
+        Args:
+            s: The source sample of type ``S``.
+
+        Returns:
+            A view of the source as type ``V``.
+        """
         return self._getter( s )
 
 # TODO Figure out how to properly parameterize this
@@ -223,12 +269,14 @@ class LensNetwork:
     """The singleton instance"""
 
     def __new__(cls, *args, **kwargs):
+        """Ensure only one instance of LensNetwork exists (singleton pattern)."""
         if cls._instance is None:
             # If no instance exists, create a new one
             cls._instance = super().__new__(cls)
         return cls._instance  # Return the existing (or newly created) instance
 
     def __init__(self):
+        """Initialize the lens registry (only on first instantiation)."""
         if not hasattr(self, '_initialized'):  # Check if already initialized
             self._registry: Dict[LensSignature, Lens] = dict()
             self._initialized = True

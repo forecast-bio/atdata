@@ -1,4 +1,29 @@
-"""Schematized WebDatasets"""
+"""Core dataset and sample infrastructure for typed WebDatasets.
+
+This module provides the core components for working with typed, msgpack-serialized
+samples in WebDataset format:
+
+- ``PackableSample``: Base class for msgpack-serializable samples with automatic
+  NDArray handling
+- ``SampleBatch``: Automatic batching with attribute aggregation
+- ``Dataset``: Generic typed dataset wrapper for WebDataset tar files
+- ``@packable``: Decorator to convert regular classes into PackableSample subclasses
+
+The implementation handles automatic conversion between numpy arrays and bytes
+during serialization, enabling efficient storage of numerical data in WebDataset
+archives.
+
+Example:
+    >>> @packable
+    ... class ImageSample:
+    ...     image: NDArray
+    ...     label: str
+    ...
+    >>> ds = Dataset[ImageSample]("data-{000000..000009}.tar")
+    >>> for batch in ds.shuffled(batch_size=32):
+    ...     images = batch.image  # Stacked numpy array (32, H, W, C)
+    ...     labels = batch.label  # List of 32 strings
+"""
 
 ##
 # Imports
@@ -123,7 +148,15 @@ def _make_packable( x ):
     return x
 
 def _is_possibly_ndarray_type( t ):
-    """Checks if a type annotation is possibly an NDArray."""
+    """Check if a type annotation is or contains NDArray.
+
+    Args:
+        t: A type annotation to check.
+
+    Returns:
+        ``True`` if the type is ``NDArray`` or a union containing ``NDArray``
+        (e.g., ``NDArray | None``), ``False`` otherwise.
+    """
 
     # Directly an NDArray
     if t == NDArray:
@@ -142,7 +175,27 @@ def _is_possibly_ndarray_type( t ):
 
 @dataclass
 class PackableSample( ABC ):
-    """A sample that can be packed and unpacked with msgpack"""
+    """Base class for samples that can be serialized with msgpack.
+
+    This abstract base class provides automatic serialization/deserialization
+    for dataclass-based samples. Fields annotated as ``NDArray`` or
+    ``NDArray | None`` are automatically converted between numpy arrays and
+    bytes during packing/unpacking.
+
+    Subclasses should be defined either by:
+    1. Direct inheritance with the ``@dataclass`` decorator
+    2. Using the ``@packable`` decorator (recommended)
+
+    Example:
+        >>> @packable
+        ... class MyData:
+        ...     name: str
+        ...     embeddings: NDArray
+        ...
+        >>> sample = MyData(name="test", embeddings=np.array([1.0, 2.0]))
+        >>> packed = sample.packed  # Serialize to bytes
+        >>> restored = MyData.from_bytes(packed)  # Deserialize
+    """
 
     def _ensure_good( self ):
         """Auto-convert annotated NDArray fields from bytes to numpy arrays.
@@ -192,19 +245,45 @@ class PackableSample( ABC ):
 
     @classmethod
     def from_data( cls, data: MsgpackRawSample ) -> Self:
-        """Create a sample instance from unpacked msgpack data"""
+        """Create a sample instance from unpacked msgpack data.
+
+        Args:
+            data: A dictionary of unpacked msgpack data with keys matching
+                the sample's field names.
+
+        Returns:
+            A new instance of this sample class with fields populated from
+            the data dictionary and NDArray fields auto-converted from bytes.
+        """
         ret = cls( **data )
         ret._ensure_good()
         return ret
     
     @classmethod
     def from_bytes( cls, bs: bytes ) -> Self:
-        """Create a sample instance from raw msgpack bytes"""
+        """Create a sample instance from raw msgpack bytes.
+
+        Args:
+            bs: Raw bytes from a msgpack-serialized sample.
+
+        Returns:
+            A new instance of this sample class deserialized from the bytes.
+        """
         return cls.from_data( ormsgpack.unpackb( bs ) )
 
     @property
     def packed( self ) -> bytes:
-        """Pack this sample's data into msgpack bytes"""
+        """Pack this sample's data into msgpack bytes.
+
+        NDArray fields are automatically converted to bytes before packing.
+        All other fields are packed as-is if they're msgpack-compatible.
+
+        Returns:
+            Raw msgpack bytes representing this sample's data.
+
+        Raises:
+            RuntimeError: If msgpack serialization fails.
+        """
 
         # Make sure that all of our (possibly unpackable) data is in a packable
         # format
@@ -261,6 +340,27 @@ def _batch_aggregate( xs: Sequence ):
     return list( xs )
 
 class SampleBatch( Generic[DT] ):
+    """A batch of samples with automatic attribute aggregation.
+
+    This class wraps a sequence of samples and provides magic ``__getattr__``
+    access to aggregate sample attributes. When you access an attribute that
+    exists on the sample type, it automatically aggregates values across all
+    samples in the batch.
+
+    NDArray fields are stacked into a numpy array with a batch dimension.
+    Other fields are aggregated into a list.
+
+    Type Parameters:
+        DT: The sample type, must derive from ``PackableSample``.
+
+    Attributes:
+        samples: The list of sample instances in this batch.
+
+    Example:
+        >>> batch = SampleBatch[MyData]([sample1, sample2, sample3])
+        >>> batch.embeddings  # Returns stacked numpy array of shape (3, ...)
+        >>> batch.names  # Returns list of names
+    """
 
     def __init__( self, samples: Sequence[DT] ):
         """Create a batch from a sequence of samples.
@@ -283,6 +383,21 @@ class SampleBatch( Generic[DT] ):
         return typing.get_args( self.__orig_class__)[0]
 
     def __getattr__( self, name ):
+        """Aggregate an attribute across all samples in the batch.
+
+        This magic method enables attribute-style access to aggregated sample
+        fields. Results are cached for efficiency.
+
+        Args:
+            name: The attribute name to aggregate across samples.
+
+        Returns:
+            For NDArray fields: a stacked numpy array with batch dimension.
+            For other fields: a list of values from each sample.
+
+        Raises:
+            AttributeError: If the attribute doesn't exist on the sample type.
+        """
         # Aggregate named params of sample type
         if name in vars( self.sample_type )['__annotations__']:
             if name not in self._aggregate_cache:
@@ -290,9 +405,9 @@ class SampleBatch( Generic[DT] ):
                     [ getattr( x, name )
                       for x in self.samples ]
                 )
-            
+
             return self._aggregate_cache[name]
-        
+
         raise AttributeError( f'No sample attribute named {name}' )
 
 
@@ -315,9 +430,32 @@ RT = TypeVar( 'RT', bound = PackableSample )
 # IT = TypeVar( 'IT', default = Any )
 
 class Dataset( Generic[ST] ):
-    """A dataset that ingests and formats raw samples from a WebDataset
-    
-    (Abstract base for subclassing)
+    """A typed dataset built on WebDataset with lens transformations.
+
+    This class wraps WebDataset tar archives and provides type-safe iteration
+    over samples of a specific ``PackableSample`` type. Samples are stored as
+    msgpack-serialized data within WebDataset shards.
+
+    The dataset supports:
+    - Ordered and shuffled iteration
+    - Automatic batching with ``SampleBatch``
+    - Type transformations via the lens system (``as_type()``)
+    - Export to parquet format
+
+    Type Parameters:
+        ST: The sample type for this dataset, must derive from ``PackableSample``.
+
+    Attributes:
+        url: WebDataset brace-notation URL for the tar file(s).
+
+    Example:
+        >>> ds = Dataset[MyData]("path/to/data-{000000..000009}.tar")
+        >>> for sample in ds.ordered(batch_size=32):
+        ...     # sample is SampleBatch[MyData] with batch_size samples
+        ...     embeddings = sample.embeddings  # shape: (32, ...)
+        ...
+        >>> # Transform to a different view
+        >>> ds_view = ds.as_type(MyDataView)
     """
 
     # sample_class: Type = get_parameters( )
@@ -327,12 +465,23 @@ class Dataset( Generic[ST] ):
 
     @property
     def sample_type( self ) -> Type:
-        """The type of each returned sample from this `Dataset`'s iterator"""
-        # TODO Figure out why linting fails here
+        """The type of each returned sample from this dataset's iterator.
+
+        Returns:
+            The type parameter ``ST`` used when creating this ``Dataset[ST]``.
+
+        Note:
+            Extracts the type parameter at runtime using ``__orig_class__``.
+        """
+        # NOTE: Linting may fail here due to __orig_class__ being a runtime attribute
         return typing.get_args( self.__orig_class__ )[0]
     @property
     def batch_type( self ) -> Type:
-        """The type of a batch built from `sample_class`"""
+        """The type of batches produced by this dataset.
+
+        Returns:
+            ``SampleBatch[ST]`` where ``ST`` is this dataset's sample type.
+        """
         # return self.__orig_class__.__args__[1]
         return SampleBatch[self.sample_type]
 
@@ -451,18 +600,23 @@ class Dataset( Generic[ST] ):
                 buffer_samples: int = 10_000,
                 batch_size: int | None = 1,
             ) -> Iterable[ST]:
-        """Iterate over the dataset in random order
-        
+        """Iterate over the dataset in random order.
+
         Args:
-            buffer_shards (int): Asdf
-            batch_size (:obj:`int`, optional) The size of iterated batches.
-                Default: 1. If ``None``, iterates over one sample at a time
-                with no batch dimension.
-        
+            buffer_shards: Number of shards to buffer for shuffling at the
+                shard level. Larger values increase randomness but use more
+                memory. Default: 100.
+            buffer_samples: Number of samples to buffer for shuffling within
+                shards. Larger values increase randomness but use more memory.
+                Default: 10,000.
+            batch_size: The size of iterated batches. Default: 1. If ``None``,
+                iterates over one sample at a time with no batch dimension.
+
         Returns:
-            :obj:`webdataset.DataPipeline` A data pipeline that iterates over
-                the dataset in its original sample order
-        
+            A WebDataset data pipeline that iterates over the dataset in
+            randomized order. If ``batch_size`` is not ``None``, yields
+            ``SampleBatch[ST]`` instances; otherwise yields individual ``ST``
+            samples.
         """
 
         if batch_size is None:
