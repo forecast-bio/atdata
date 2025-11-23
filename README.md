@@ -71,7 +71,7 @@ def preprocess(sample: ImageSample) -> ProcessedSample:
 # Apply lens to view dataset as ProcessedSample
 processed_ds = dataset.as_type(ProcessedSample)
 
-for sample in processed_ds:
+for sample in processed_ds.ordered(batch_size=None):
     # sample is now a ProcessedSample
     print(sample.features.shape)
 ```
