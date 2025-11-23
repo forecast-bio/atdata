@@ -3,6 +3,8 @@
         "atdata",
         "getattr",
         "msgpack",
+        "pypi",
+        "pyproject",
         "pytest"
     ]
 }
