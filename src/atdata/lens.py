@@ -60,18 +60,6 @@ class Lens( Generic[S, V] ):
         ...     return FullData(name=view.name, age=source.age)
     """
 
-    # @property
-    # def source_type( self ) -> Type[S]:
-    #     """The source type (S) for the lens; what is put to"""
-    #     # TODO Figure out why linting fails here
-    #     return self.__orig_class__.__args__[0]
-
-    # @property
-    # def view_type( self ) -> Type[V]:
-    #     """The view type (V) for the lens; what is get'd from"""
-    #     # TODO FIgure out why linting fails here
-    #     return self.__orig_class__.__args__[1]
-
     def __init__( self, get: LensGetter[S, V],
                 put: Optional[LensPutter[S, V]] = None
             ) -> None:
@@ -103,7 +91,7 @@ class Lens( Generic[S, V] ):
         functools.update_wrapper( self, get )
 
         self.source_type: Type[PackableSample] = input_types[0].annotation
-        self.view_type = sig.return_annotation
+        self.view_type: Type[PackableSample] = sig.return_annotation
 
         # Store the getter
         self._getter = get
