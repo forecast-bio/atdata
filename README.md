@@ -42,12 +42,12 @@ class ImageSample:
 # Create a dataset
 dataset = atdata.Dataset[ImageSample]("path/to/data-{000000..000009}.tar")
 
-# Iterate over samples
-for sample in dataset:
+# Iterate over samples in order
+for sample in dataset.ordered(batch_size=None):
     print(f"Label: {sample.label}, Image shape: {sample.image.shape}")
 
-# Get batches
-for batch in dataset.batches(batch_size=32):
+# Iterate with shuffling and batching
+for batch in dataset.shuffled(batch_size=32):
     # batch.image is automatically stacked into shape (32, ...)
     # batch.label is a list of 32 labels
     process_batch(batch.image, batch.label)
