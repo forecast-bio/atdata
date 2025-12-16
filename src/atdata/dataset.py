@@ -48,6 +48,7 @@ from abc import (
 from tqdm import tqdm
 import numpy as np
 import pandas as pd
+import requests
 
 import typing
 from typing import (
@@ -456,6 +457,8 @@ class Dataset( Generic[ST] ):
         ...
         >>> # Transform to a different view
         >>> ds_view = ds.as_type(MyDataView)
+    
+    TODO Expand this to show information on the `metadata_url` field
     """
 
     # sample_class: Type = get_parameters( )
@@ -501,6 +504,15 @@ class Dataset( Generic[ST] ):
         """
         super().__init__()
         self.url = url
+        """WebDataset brace-notation URL pointing to tar files, e.g.,
+                ``"path/to/file-{000000..000009}.tar"`` for multiple shards or
+                ``"path/to/file-000000.tar"`` for a single shard.
+        """
+
+        self._metadata: dict[str, Any] | None = None
+
+        self.metadata_url: str | None = None
+        """TODO"""
 
         # Allow addition of automatic transformation of raw underlying data
         self._output_lens: Lens | None = None
@@ -557,6 +569,21 @@ class Dataset( Generic[ST] ):
             wds.filters.map( lambda x: x['url'] )
         )
         return list( pipe )
+
+    @property
+    def metadata( self ) -> dict[str, Any] | None:
+        """TODO"""
+
+        if self.metadata_url is None:
+            return None
+
+        if self._metadata is None:
+            with requests.get( self.metadata_url, stream = True ) as response:
+                response.raise_for_status()
+                self._metadata = msgpack.unpackb( response.content, raw = False )
+        
+        # Use our cached values
+        return self._metadata
     
     def ordered( self,
                 batch_size: int | None = 1,

@@ -13,6 +13,9 @@ dependencies = [
     "numpy>=2.3.4",
     "ormsgpack>=1.11.0",
     "pandas>=2.3.3",
+    "pydantic>=2.12.5",
+    "redis-om>=0.3.5",
+    "schemamodels>=0.9.1",
     "tqdm>=4.67.1",
     "webdataset>=1.0.2",
 ]
@@ -29,6 +32,7 @@ addopts = "--cov=atdata --cov-report=html"
 
 [dependency-groups]
 dev = [
+    "jupyter>=1.1.1",
     "pytest>=8.4.2",
     "pytest-cov>=7.0.0",
 ]

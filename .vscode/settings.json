@@ -2,9 +2,12 @@
     "cSpell.words": [
         "atdata",
         "getattr",
+        "hgetall",
         "msgpack",
         "pypi",
         "pyproject",
-        "pytest"
+        "pytest",
+        "schemamodels",
+        "unpackb"
     ]
 }
