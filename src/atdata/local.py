@@ -8,9 +8,11 @@ from atdata import (
     Dataset,
 )
 
+import os
 from pathlib import Path
 from uuid import uuid4
 from tempfile import TemporaryDirectory
+import shutil
 import subprocess
 from dotenv import dotenv_values
 import msgpack
@@ -42,7 +44,8 @@ from typing import (
     Optional,
     Dict,
     Type,
-    TypeVar
+    TypeVar,
+    Generator,
 )
 
 T = TypeVar( 'T', bound = PackableSample )
@@ -54,6 +57,13 @@ T = TypeVar( 'T', bound = PackableSample )
 def _kind_str_for_sample_type( st: Type[PackableSample] ) -> str:
     """TODO"""
     return f'{st.__module__}.{st.__name__}'
+
+def _decode_bytes_dict( d: dict[bytes, bytes] ) -> dict[str, str]:
+    """TODO"""
+    return {
+        k.decode('utf-8'): v.decode('utf-8')
+        for k, v in d.items()
+    }
 
 
 ##
@@ -159,64 +169,139 @@ class Repo:
     ##
 
     def insert( self, ds: Dataset[T],
+               #
+               cache_local: bool = False,
+               #
                 **kwargs
-            ) -> Dataset[T]:
+            ) -> tuple[BasicIndexEntry, Dataset[T]]:
         """TODO"""
         
+        assert self.s3_credentials is not None
         assert self.hive_bucket is not None
         assert self.hive_path is not None
 
-        with TemporaryDirectory() as tmpdir:
+        new_uuid = str( uuid4() )
 
-            # Mount S3 filesystem
-            mount_path = Path( tmpdir ) / 'atdata-local' / self.hive_bucket
-            mount_cmd = [
-                's3fs',
-                self.hive_bucket,
-                mount_path.as_posix()
-            ]
-            subprocess.run( mount_cmd, env = self.s3_credentials )
+        hive_fs = _s3_from_credentials( self.s3_credentials )
 
-            new_uuid = uuid4()
+        # Write metadata
+        metadata_path = (
+            self.hive_path
+            / 'metadata'
+            / f'atdata-metadata--{new_uuid}.msgpack'
+        )
+        metadata_path.parent.mkdir( parents = True, exist_ok = True )
 
-            # Write metadata
-            metadata_path = (
-                mount_path
-                / 'metadata'
-                / f'atdata-metadata--{new_uuid}.msgpack'
-            )
-            with open( metadata_path, 'wb' ) as f:
-                if ds.metadata is not None:
-                    # TODO Figure out how to make linting work better here
-                    f.write( msgpack.packb( ds.metadata ) )
+        if ds.metadata is not None:
+            with hive_fs.open( metadata_path, 'wb' ) as f:
+                # TODO Figure out how to make linting work better here
+                f.write( msgpack.packb( ds.metadata ) )
 
-            # Write data
-            shard_pattern = (mount_path / f'atdata--{new_uuid}--%06d.tar').as_posix()
+
+        # Write data
+        shard_pattern = (
+            self.hive_path
+            / f'atdata--{new_uuid}--%06d.tar'
+        ).as_posix()
+
+        with TemporaryDirectory() as temp_dir:
+
+            if cache_local:
+                def _writer_opener( p: str ):
+                    local_cache_path = Path( temp_dir ) / p
+                    local_cache_path.parent.mkdir( parents = True, exist_ok = True )
+                    return open( local_cache_path, 'wb' )
+                writer_opener = _writer_opener
+
+                def _writer_post( p: str ):
+                    local_cache_path = Path( temp_dir ) / p
+
+                    # Copy to S3
+                    print( 'Copying file to s3 ...', end = '' )
+                    with open( local_cache_path, 'rb' ) as f_in:
+                        with hive_fs.open( p, 'wb' ) as f_out:
+                            # TODO Linting issues
+                            f_out.write( f_in.read() )
+                    print( ' done.' )
+
+                    # Delete local cache file
+                    print( 'Deleting local cache file ...', end = '' )
+                    os.remove( local_cache_path )
+                    print( ' done.' )
+                writer_post = _writer_post
+
+            else:
+                writer_opener = lambda s: hive_fs.open( s, 'wb' )
+                writer_post = lambda s: written_shards.append( s )
+
             written_shards = []
             with wds.writer.ShardWriter( shard_pattern,
-                post = lambda s: written_shards.append( s ),
+                # opener = lambda s: hive_fs.open( s, 'wb' ),
+                # post = lambda s: written_shards.append( s ),
+                opener = writer_opener,
+                post = writer_post,
                 **kwargs
             ) as sink:
                 for sample in ds.ordered( batch_size = None ):
                     sink.write( sample.as_wds )
-        
-        # Return created dataset
+
+        # with TemporaryDirectory() as tmpdir:
+
+        #     # Mount S3 filesystem
+        #     mount_path = Path( tmpdir ) / 'atdata-s3' / self.hive_bucket
+        #     mount_path.mkdir( parents = True, exist_ok = True )
+        #     s3fs_cmd = shutil.which( 's3fs' )
+        #     mount_cmd = [
+        #         s3fs_cmd,
+        #         self.hive_bucket,
+        #         mount_path.as_posix()
+        #     ]
+        #     result = subprocess.run( mount_cmd, env = self.s3_credentials )
+        #     print( result )
+
+        #     new_uuid = str( uuid4() )
+
+        #     # Write metadata
+        #     metadata_path = (
+        #         mount_path
+        #         / 'metadata'
+        #         / f'atdata-metadata--{new_uuid}.msgpack'
+        #     )
+        #     metadata_path.parent.mkdir( parents = True, exist_ok = True )
+        #     with open( metadata_path, 'wb' ) as f:
+        #         if ds.metadata is not None:
+        #             # TODO Figure out how to make linting work better here
+        #             f.write( msgpack.packb( ds.metadata ) )
+
+        #     # Write data
+        #     shard_pattern = (Path( tmpdir ) / 'atdata-cache' / f'atdata--{new_uuid}--%06d.tar').as_posix()
+        #     written_shards = []
+        #     with wds.writer.ShardWriter( shard_pattern,
+        #         opener = lambda s: 
+        #         post = lambda s: written_shards.append( s ),
+        #         **kwargs
+        #     ) as sink:
+        #         for sample in ds.ordered( batch_size = None ):
+        #             sink.write( sample.as_wds )
+
+        # Make a new Dataset object for the written dataset copy
         shard_s3_format = (
             (
                 self.hive_path
                 / f'atdata--{new_uuid}'
             ).as_posix()
         ) + '--{shard_id}.tar'
-        metadata_s3_path = (
-            self.hive_path
-            / 'metadata'
-            / f'atdata-metadata--{new_uuid}.msgpack'
-        )
         shard_id_braced = '{' + f'{0:06d}..{len( written_shards ) - 1:06d}' + '}'
-        return Dataset(
+
+        new_dataset = Dataset[ds.sample_type](
             url = shard_s3_format.format( shard_id = shard_id_braced ),
             metadata_url = metadata_path.as_posix(),
         )
+
+        # Add to index
+        new_entry = self.index.add_entry( new_dataset, uuid = new_uuid )
+
+        return new_entry, new_dataset
 
 
 class Index:
@@ -240,13 +325,22 @@ class Index:
         # TODO this only works / is necessary for `redis_om``
         # Migrator().run()
 
-    def list( self ):
+    @property
+    def all_entries( self ) -> list[BasicIndexEntry]:
+        """TODO"""
+        return list( self.entries )
+
+    @property
+    def entries( self ) -> Generator[BasicIndexEntry, None, None]:
         """TODO"""
         ##
-        ret = []
         for key in self._redis.scan_iter( match = 'BasicIndexEntry:*' ):
-            ret.append( self._redis.hgetall( key ) )
-        return ret
+            # TODO typing issue for `redis`
+            cur_entry_data = _decode_bytes_dict( self._redis.hgetall( key ) )
+            cur_entry = BasicIndexEntry( **cur_entry_data )
+            yield cur_entry
+        
+        return
 
     def add_entry( self, ds: Dataset,
                 uuid: str | None = None,
