@@ -494,7 +494,9 @@ class Dataset( Generic[ST] ):
 
     #
 
-    def __init__( self, url: str ) -> None:
+    def __init__( self, url: str,
+                 metadata_url: str | None = None,
+             ) -> None:
         """Create a dataset from a WebDataset URL.
 
         Args:
@@ -510,8 +512,7 @@ class Dataset( Generic[ST] ):
         """
 
         self._metadata: dict[str, Any] | None = None
-
-        self.metadata_url: str | None = None
+        self.metadata_url: str | None = metadata_url
         """TODO"""
 
         # Allow addition of automatic transformation of raw underlying data
