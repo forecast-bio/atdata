@@ -1,6 +1,7 @@
 {
     "cSpell.words": [
         "atdata",
+        "creds",
         "getattr",
         "hgetall",
         "msgpack",
