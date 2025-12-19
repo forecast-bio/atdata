@@ -228,6 +228,8 @@ class Repo:
                     print( 'Deleting local cache file ...', end = '' )
                     os.remove( local_cache_path )
                     print( ' done.' )
+
+                    written_shards.append( s )
                 writer_post = _writer_post
 
             else:
@@ -285,16 +287,27 @@ class Repo:
         #             sink.write( sample.as_wds )
 
         # Make a new Dataset object for the written dataset copy
-        shard_s3_format = (
-            (
+        if len( written_shards ) == 0:
+            raise RuntimeError( 'Cannot form new dataset entry -- did not write any shards' )
+        
+        elif len( written_shards ) < 2:
+            new_dataset_url = (
                 self.hive_path
-                / f'atdata--{new_uuid}'
+                / ( Path( written_shards[0] ).name )
             ).as_posix()
-        ) + '--{shard_id}.tar'
-        shard_id_braced = '{' + f'{0:06d}..{len( written_shards ) - 1:06d}' + '}'
+
+        else:
+            shard_s3_format = (
+                (
+                    self.hive_path
+                    / f'atdata--{new_uuid}'
+                ).as_posix()
+            ) + '--{shard_id}.tar'
+            shard_id_braced = '{' + f'{0:06d}..{len( written_shards ) - 1:06d}' + '}'
+            new_dataset_url = shard_s3_format.format( shard_id = shard_id_braced )
 
         new_dataset = Dataset[ds.sample_type](
-            url = shard_s3_format.format( shard_id = shard_id_braced ),
+            url = new_dataset_url,
             metadata_url = metadata_path.as_posix(),
         )
 
