@@ -229,7 +229,7 @@ class Repo:
                     os.remove( local_cache_path )
                     print( ' done.' )
 
-                    written_shards.append( s )
+                    written_shards.append( p )
                 writer_post = _writer_post
 
             else:
