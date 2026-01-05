@@ -130,8 +130,10 @@ class BasicIndexEntry:
             redis: Redis connection to write to.
         """
         save_key = f'BasicIndexEntry:{self.uuid}'
+        # Filter out None values - Redis doesn't accept None
+        data = {k: v for k, v in asdict(self).items() if v is not None}
         # TODO figure out how to get linting to work correctly here
-        redis.hset( save_key, mapping = asdict( self ) )
+        redis.hset( save_key, mapping = data )
 
 def _s3_env( credentials_path: str | Path ) -> dict[str, Any]:
     """Load S3 credentials from a .env file.
@@ -166,7 +168,8 @@ def _s3_from_credentials( creds: str | Path | dict ) -> S3FileSystem:
 
     Args:
         creds: Either a path to a .env file with credentials, or a dict
-            containing AWS_ENDPOINT, AWS_ACCESS_KEY_ID, and AWS_SECRET_ACCESS_KEY.
+            containing AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and optionally
+            AWS_ENDPOINT.
 
     Returns:
         Configured S3FileSystem instance.
@@ -175,11 +178,15 @@ def _s3_from_credentials( creds: str | Path | dict ) -> S3FileSystem:
     if not isinstance( creds, dict ):
         creds = _s3_env( creds )
 
-    return S3FileSystem(
-        endpoint_url = creds['AWS_ENDPOINT'],
-        key = creds['AWS_ACCESS_KEY_ID'],
-        secret = creds['AWS_SECRET_ACCESS_KEY']
-    )
+    # Build kwargs, making endpoint_url optional
+    kwargs = {
+        'key': creds['AWS_ACCESS_KEY_ID'],
+        'secret': creds['AWS_SECRET_ACCESS_KEY']
+    }
+    if 'AWS_ENDPOINT' in creds:
+        kwargs['endpoint_url'] = creds['AWS_ENDPOINT']
+
+    return S3FileSystem(**kwargs)
 
 
 ##
@@ -311,6 +318,18 @@ class Repo:
         with TemporaryDirectory() as temp_dir:
 
             if cache_local:
+                # For cache_local, we need to use boto3 directly to avoid s3fs async issues with moto
+                import boto3
+
+                # Create boto3 client from credentials
+                s3_client_kwargs = {
+                    'aws_access_key_id': self.s3_credentials['AWS_ACCESS_KEY_ID'],
+                    'aws_secret_access_key': self.s3_credentials['AWS_SECRET_ACCESS_KEY']
+                }
+                if 'AWS_ENDPOINT' in self.s3_credentials:
+                    s3_client_kwargs['endpoint_url'] = self.s3_credentials['AWS_ENDPOINT']
+                s3_client = boto3.client('s3', **s3_client_kwargs)
+
                 def _writer_opener( p: str ):
                     local_cache_path = Path( temp_dir ) / p
                     local_cache_path.parent.mkdir( parents = True, exist_ok = True )
@@ -320,11 +339,15 @@ class Repo:
                 def _writer_post( p: str ):
                     local_cache_path = Path( temp_dir ) / p
 
-                    # Copy to S3
+                    # Copy to S3 using boto3 client (avoids s3fs async issues)
                     print( 'Copying file to s3 ...', end = '' )
+                    # Parse bucket and key from path (format: bucket/path/to/file.tar)
+                    path_parts = Path( p ).parts
+                    bucket = path_parts[0]
+                    key = str( Path( *path_parts[1:] ) )
+
                     with open( local_cache_path, 'rb' ) as f_in:
-                        with cast( BinaryIO, hive_fs.open( p, 'wb' ) ) as f_out:
-                            f_out.write( f_in.read() )
+                        s3_client.put_object( Bucket=bucket, Key=key, Body=f_in.read() )
                     print( ' done.' )
 
                     # Delete local cache file
@@ -477,6 +500,8 @@ class Index:
         for key in self._redis.scan_iter( match = 'BasicIndexEntry:*' ):
             # TODO typing issue for `redis`
             cur_entry_data = _decode_bytes_dict( self._redis.hgetall( key ) )
+            # Provide default None for optional fields that may be missing
+            cur_entry_data.setdefault('metadata_url', None)
             cur_entry = BasicIndexEntry( **cur_entry_data )
             yield cur_entry
 
