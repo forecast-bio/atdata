@@ -59,6 +59,8 @@ from typing import (
     Type,
     TypeVar,
     Generator,
+    BinaryIO,
+    cast,
 )
 
 T = TypeVar( 'T', bound = PackableSample )
@@ -294,9 +296,10 @@ class Repo:
         metadata_path.parent.mkdir( parents = True, exist_ok = True )
 
         if ds.metadata is not None:
-            with hive_fs.open( metadata_path, 'wb' ) as f:
-                # TODO Figure out how to make linting work better here
-                f.write( msgpack.packb( ds.metadata ) )
+            with cast( BinaryIO, hive_fs.open( metadata_path, 'wb' ) ) as f:
+                meta_packed = msgpack.packb( ds.metadata )
+                assert meta_packed is not None
+                f.write( cast( bytes, meta_packed ) )
 
 
         # Write data
@@ -320,8 +323,7 @@ class Repo:
                     # Copy to S3
                     print( 'Copying file to s3 ...', end = '' )
                     with open( local_cache_path, 'rb' ) as f_in:
-                        with hive_fs.open( p, 'wb' ) as f_out:
-                            # TODO Linting issues
+                        with cast( BinaryIO, hive_fs.open( p, 'wb' ) ) as f_out:
                             f_out.write( f_in.read() )
                     print( ' done.' )
 
@@ -334,7 +336,7 @@ class Repo:
                 writer_post = _writer_post
 
             else:
-                writer_opener = lambda s: hive_fs.open( s, 'wb' )
+                writer_opener = lambda s: cast( BinaryIO, hive_fs.open( s, 'wb' ) )
                 writer_post = lambda s: written_shards.append( s )
 
             written_shards = []
