@@ -147,3 +147,12 @@ The codebase uses Python 3.12+ generics heavily:
 - Temporary WebDataset tar files created in `tmp_path` fixture
 - Tests verify both serialization and batch aggregation behavior
 - Lens tests verify well-behavedness (GetPut/PutGet laws)
+
+## Git Workflow
+
+### Committing Changes
+
+When using the `/commit` command or creating commits:
+- **Always include `.chainlink/issues.db`** in commits alongside code changes
+- This ensures issue tracking history is preserved across sessions
+- The issues.db file tracks all chainlink issues, comments, and status changes
