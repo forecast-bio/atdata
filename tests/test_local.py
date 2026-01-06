@@ -92,7 +92,7 @@ def sample_dataset(tmp_path):
     # Create a temporary WebDataset
     dataset_path = tmp_path / "test-dataset-000000.tar"
 
-    with wds.TarWriter(str(dataset_path)) as sink:
+    with wds.writer.TarWriter(str(dataset_path)) as sink:
         for i in range(10):
             sample = SimpleTestSample(name=f"sample_{i}", value=i * 10)
             sink.write(sample.as_wds)
@@ -118,7 +118,7 @@ class ArrayTestSample(atdata.PackableSample):
 def make_simple_dataset(tmp_path: Path, num_samples: int = 10, name: str = "test") -> atdata.Dataset:
     """Create a SimpleTestSample dataset for testing."""
     dataset_path = tmp_path / f"{name}-dataset-000000.tar"
-    with wds.TarWriter(str(dataset_path)) as sink:
+    with wds.writer.TarWriter(str(dataset_path)) as sink:
         for i in range(num_samples):
             sample = SimpleTestSample(name=f"sample_{i}", value=i * 10)
             sink.write(sample.as_wds)
@@ -128,7 +128,7 @@ def make_simple_dataset(tmp_path: Path, num_samples: int = 10, name: str = "test
 def make_array_dataset(tmp_path: Path, num_samples: int = 3, array_shape: tuple = (10, 10)) -> atdata.Dataset:
     """Create an ArrayTestSample dataset for testing."""
     dataset_path = tmp_path / "array-dataset-000000.tar"
-    with wds.TarWriter(str(dataset_path)) as sink:
+    with wds.writer.TarWriter(str(dataset_path)) as sink:
         for i in range(num_samples):
             arr = np.random.randn(*array_shape)
             sample = ArrayTestSample(label=f"array_{i}", data=arr)
@@ -279,7 +279,7 @@ def test_basic_index_entry_default_uuid():
     """Test that BasicIndexEntry generates a valid UUID by default.
 
     Should auto-generate a unique UUID when none is provided, and it should be
-    parseable as a valid UUID.
+    parsable as a valid UUID.
     """
     entry = atlocal.BasicIndexEntry(
         wds_url="s3://bucket/dataset.tar",
@@ -800,7 +800,7 @@ def test_repo_insert_empty_dataset(mock_s3, clean_redis, tmp_path):
     RuntimeError.
     """
     dataset_path = tmp_path / "empty-dataset-000000.tar"
-    with wds.TarWriter(str(dataset_path)) as sink:
+    with wds.writer.TarWriter(str(dataset_path)) as sink:
         pass  # Write no samples
 
     ds = atdata.Dataset[SimpleTestSample](url=str(dataset_path))

@@ -136,7 +136,9 @@ The codebase uses Python 3.12+ generics heavily:
 
 **WebDataset Integration**
 
-- Uses `wds.ShardWriter` / `wds.TarWriter` for writing
+- Uses `wds.writer.ShardWriter` / `wds.writer.TarWriter` for writing
+  - **Important:** Always import from `wds.writer` (e.g., `wds.writer.TarWriter`) instead of `wds.TarWriter`
+  - This avoids linting issues while functionally equivalent
 - Dataset iteration via `wds.DataPipeline` with custom `wrap()` / `wrap_batch()` methods
 - Supports `ordered()` and `shuffled()` iteration modes
 
