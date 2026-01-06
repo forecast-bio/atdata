@@ -5,6 +5,13 @@
 
 # Tests
 import pytest
+import warnings
+
+# Suppress s3fs/moto async incompatibility warnings early
+# These occur during test cleanup and coverage instrumentation
+# Use simplefilter to ensure it applies to all contexts including pytest internals
+warnings.simplefilter("ignore", category=RuntimeWarning)
+warnings.simplefilter("ignore", category=pytest.PytestUnraisableExceptionWarning)
 
 # System
 from dataclasses import dataclass
@@ -58,7 +65,15 @@ def clean_redis(redis_connection):
 
 @pytest.fixture
 def mock_s3():
-    """Provide a mock S3 environment using moto."""
+    """Provide a mock S3 environment using moto.
+
+    Note: Tests using this fixture may generate warnings due to s3fs/moto async
+    incompatibility. These are expected and suppressed via warnings.filterwarnings.
+    """
+    # Suppress s3fs/moto async incompatibility warnings
+    warnings.filterwarnings("ignore", message="coroutine.*was never awaited")
+    warnings.filterwarnings("ignore", category=pytest.PytestUnraisableExceptionWarning)
+
     with mock_aws():
         # Create S3 credentials dict (no endpoint_url for moto)
         creds = {
@@ -631,6 +646,8 @@ def test_repo_insert_without_s3():
         repo.insert(ds)
 
 
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+@pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 def test_repo_insert_single_shard(mock_s3, clean_redis, sample_dataset):
     """Test inserting a small dataset that fits in a single shard.
 
@@ -653,6 +670,8 @@ def test_repo_insert_single_shard(mock_s3, clean_redis, sample_dataset):
     assert new_ds.url.startswith(mock_s3['hive_path'])
 
 
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+@pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 def test_repo_insert_multiple_shards(mock_s3, clean_redis, tmp_path):
     """Test inserting a large dataset that spans multiple shards.
 
@@ -673,6 +692,8 @@ def test_repo_insert_multiple_shards(mock_s3, clean_redis, tmp_path):
     assert '{' in new_ds.url and '}' in new_ds.url
 
 
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+@pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 def test_repo_insert_with_metadata(mock_s3, clean_redis, tmp_path):
     """Test inserting a dataset with metadata.
 
@@ -695,6 +716,8 @@ def test_repo_insert_with_metadata(mock_s3, clean_redis, tmp_path):
     assert 'metadata' in entry.metadata_url
 
 
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+@pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 def test_repo_insert_without_metadata(mock_s3, clean_redis, tmp_path):
     """Test inserting a dataset without metadata.
 
@@ -713,6 +736,8 @@ def test_repo_insert_without_metadata(mock_s3, clean_redis, tmp_path):
     assert len(repo.index.all_entries) == 1
 
 
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+@pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 def test_repo_insert_cache_local_false(mock_s3, clean_redis, sample_dataset):
     """Test inserting with cache_local=False (direct S3 write).
 
@@ -730,6 +755,8 @@ def test_repo_insert_cache_local_false(mock_s3, clean_redis, sample_dataset):
     assert entry.wds_url is not None
 
 
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+@pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 def test_repo_insert_cache_local_true(mock_s3, clean_redis, sample_dataset):
     """Test inserting with cache_local=True (local cache then copy).
 
@@ -748,6 +775,8 @@ def test_repo_insert_cache_local_true(mock_s3, clean_redis, sample_dataset):
     assert entry.wds_url is not None
 
 
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+@pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 def test_repo_insert_creates_index_entry(mock_s3, clean_redis, sample_dataset):
     """Test that insert() creates a valid index entry.
 
@@ -771,6 +800,8 @@ def test_repo_insert_creates_index_entry(mock_s3, clean_redis, sample_dataset):
     assert all_entries[0].uuid == entry.uuid
 
 
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+@pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 def test_repo_insert_uuid_generation(mock_s3, clean_redis, sample_dataset):
     """Test that insert() generates a unique UUID for each dataset.
 
@@ -792,6 +823,8 @@ def test_repo_insert_uuid_generation(mock_s3, clean_redis, sample_dataset):
     assert len(repo.index.all_entries) == 2
 
 
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+@pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 def test_repo_insert_empty_dataset(mock_s3, clean_redis, tmp_path):
     """Test inserting an empty dataset.
 
@@ -816,6 +849,8 @@ def test_repo_insert_empty_dataset(mock_s3, clean_redis, tmp_path):
     assert '.tar' in new_ds.url
 
 
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+@pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 def test_repo_insert_preserves_sample_type(mock_s3, clean_redis, sample_dataset):
     """Test that the returned Dataset preserves the original sample type.
 
@@ -833,6 +868,8 @@ def test_repo_insert_preserves_sample_type(mock_s3, clean_redis, sample_dataset)
     assert entry.sample_kind == f"{SimpleTestSample.__module__}.SimpleTestSample"
 
 
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+@pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 def test_repo_insert_round_trip(mock_s3, clean_redis, tmp_path):
     """Test full round-trip: insert dataset, then load and compare samples.
 
@@ -842,6 +879,8 @@ def test_repo_insert_round_trip(mock_s3, clean_redis, tmp_path):
     pytest.skip("Reading from moto-mocked S3 requires additional s3fs/WebDataset configuration")
 
 
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+@pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 def test_repo_insert_with_shard_writer_kwargs(mock_s3, clean_redis, tmp_path):
     """Test that insert() passes additional kwargs to ShardWriter.
 
@@ -859,6 +898,8 @@ def test_repo_insert_with_shard_writer_kwargs(mock_s3, clean_redis, tmp_path):
     assert '{' in new_ds.url and '}' in new_ds.url
 
 
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+@pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 def test_repo_insert_numpy_arrays(mock_s3, clean_redis, tmp_path):
     """Test inserting a dataset containing samples with numpy arrays.
 
@@ -880,6 +921,8 @@ def test_repo_insert_numpy_arrays(mock_s3, clean_redis, tmp_path):
 ##
 # Integration tests
 
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+@pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 def test_repo_index_integration(mock_s3, clean_redis, sample_dataset):
     """Test that Repo and Index work together correctly.
 
@@ -900,6 +943,8 @@ def test_repo_index_integration(mock_s3, clean_redis, sample_dataset):
     assert all_entries[0].wds_url == entry.wds_url
 
 
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+@pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 def test_multiple_datasets_same_type(mock_s3, clean_redis, sample_dataset):
     """Test inserting multiple datasets of the same sample type.
 
@@ -926,6 +971,8 @@ def test_multiple_datasets_same_type(mock_s3, clean_redis, sample_dataset):
         assert entry.sample_kind == f"{SimpleTestSample.__module__}.SimpleTestSample"
 
 
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+@pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 def test_multiple_datasets_different_types(mock_s3, clean_redis, tmp_path):
     """Test inserting datasets with different sample types.
 
