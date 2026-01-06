@@ -1,14 +1,19 @@
 {
     "cSpell.words": [
         "atdata",
+        "atlocal",
         "atproto",
         "creds",
         "getattr",
         "hgetall",
+        "hset",
+        "maxcount",
+        "minioadmin",
         "msgpack",
         "pypi",
         "pyproject",
         "pytest",
+        "randn",
         "schemamodels",
         "unpackb"
     ]
