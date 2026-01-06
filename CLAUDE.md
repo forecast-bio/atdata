@@ -136,7 +136,9 @@ The codebase uses Python 3.12+ generics heavily:
 
 **WebDataset Integration**
 
-- Uses `wds.ShardWriter` / `wds.TarWriter` for writing
+- Uses `wds.writer.ShardWriter` / `wds.writer.TarWriter` for writing
+  - **Important:** Always import from `wds.writer` (e.g., `wds.writer.TarWriter`) instead of `wds.TarWriter`
+  - This avoids linting issues while functionally equivalent
 - Dataset iteration via `wds.DataPipeline` with custom `wrap()` / `wrap_batch()` methods
 - Supports `ordered()` and `shuffled()` iteration modes
 
@@ -147,3 +149,12 @@ The codebase uses Python 3.12+ generics heavily:
 - Temporary WebDataset tar files created in `tmp_path` fixture
 - Tests verify both serialization and batch aggregation behavior
 - Lens tests verify well-behavedness (GetPut/PutGet laws)
+
+## Git Workflow
+
+### Committing Changes
+
+When using the `/commit` command or creating commits:
+- **Always include `.chainlink/issues.db`** in commits alongside code changes
+- This ensures issue tracking history is preserved across sessions
+- The issues.db file tracks all chainlink issues, comments, and status changes

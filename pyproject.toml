@@ -35,6 +35,7 @@ addopts = "--cov=atdata --cov-report=html"
 [dependency-groups]
 dev = [
     "jupyter>=1.1.1",
+    "moto[s3]>=5.0.29",
     "pytest>=8.4.2",
     "pytest-cov>=7.0.0",
 ]
