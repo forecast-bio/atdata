@@ -118,7 +118,7 @@ class BasicIndexEntry:
     metadata_url: str | None
     """S3 URL to the dataset's metadata msgpack file, if any."""
 
-    uuid: str | None = field( default_factory = lambda: str( uuid4() ) )
+    uuid: str = field( default_factory = lambda: str( uuid4() ) )
     """Unique identifier for this dataset entry. Defaults to a new UUID if not provided."""
 
     def write_to( self, redis: Redis ):
@@ -132,8 +132,8 @@ class BasicIndexEntry:
         save_key = f'BasicIndexEntry:{self.uuid}'
         # Filter out None values - Redis doesn't accept None
         data = {k: v for k, v in asdict(self).items() if v is not None}
-        # TODO figure out how to get linting to work correctly here
-        redis.hset( save_key, mapping = data )
+        # redis-py typing uses untyped dict, so type checker complains about dict[str, Any]
+        redis.hset( save_key, mapping = data )  # type: ignore[arg-type]
 
 def _s3_env( credentials_path: str | Path ) -> dict[str, Any]:
     """Load S3 credentials from a .env file.
@@ -373,45 +373,6 @@ class Repo:
                 for sample in ds.ordered( batch_size = None ):
                     sink.write( sample.as_wds )
 
-        # with TemporaryDirectory() as tmpdir:
-
-        #     # Mount S3 filesystem
-        #     mount_path = Path( tmpdir ) / 'atdata-s3' / self.hive_bucket
-        #     mount_path.mkdir( parents = True, exist_ok = True )
-        #     s3fs_cmd = shutil.which( 's3fs' )
-        #     mount_cmd = [
-        #         s3fs_cmd,
-        #         self.hive_bucket,
-        #         mount_path.as_posix()
-        #     ]
-        #     result = subprocess.run( mount_cmd, env = self.s3_credentials )
-        #     print( result )
-
-        #     new_uuid = str( uuid4() )
-
-        #     # Write metadata
-        #     metadata_path = (
-        #         mount_path
-        #         / 'metadata'
-        #         / f'atdata-metadata--{new_uuid}.msgpack'
-        #     )
-        #     metadata_path.parent.mkdir( parents = True, exist_ok = True )
-        #     with open( metadata_path, 'wb' ) as f:
-        #         if ds.metadata is not None:
-        #             # TODO Figure out how to make linting work better here
-        #             f.write( msgpack.packb( ds.metadata ) )
-
-        #     # Write data
-        #     shard_pattern = (Path( tmpdir ) / 'atdata-cache' / f'atdata--{new_uuid}--%06d.tar').as_posix()
-        #     written_shards = []
-        #     with wds.writer.ShardWriter( shard_pattern,
-        #         opener = lambda s: 
-        #         post = lambda s: written_shards.append( s ),
-        #         **kwargs
-        #     ) as sink:
-        #         for sample in ds.ordered( batch_size = None ):
-        #             sink.write( sample.as_wds )
-
         # Make a new Dataset object for the written dataset copy
         if len( written_shards ) == 0:
             raise RuntimeError( 'Cannot form new dataset entry -- did not write any shards' )
@@ -472,11 +433,7 @@ class Index:
         if redis is not None:
             self._redis = redis
         else:
-            self._redis = Redis( **kwargs )
-
-        # needed before we can do anything with `redis`
-        # TODO this only works / is necessary for `redis_om``
-        # Migrator().run()
+            self._redis: Redis = Redis( **kwargs )
 
     @property
     def all_entries( self ) -> list[BasicIndexEntry]:
@@ -498,10 +455,14 @@ class Index:
         """
         ##
         for key in self._redis.scan_iter( match = 'BasicIndexEntry:*' ):
-            # TODO typing issue for `redis`
-            cur_entry_data = _decode_bytes_dict( self._redis.hgetall( key ) )
+            # hgetall returns dict[bytes, bytes] which we decode to dict[str, str]
+            cur_entry_data = _decode_bytes_dict( cast(dict[bytes, bytes], self._redis.hgetall( key )) )
+            
             # Provide default None for optional fields that may be missing
+            # Type checker complains about None in dict[str, str], but BasicIndexEntry accepts it
+            cur_entry_data: dict[str, Any] = dict( **cur_entry_data )
             cur_entry_data.setdefault('metadata_url', None)
+            
             cur_entry = BasicIndexEntry( **cur_entry_data )
             yield cur_entry
 
