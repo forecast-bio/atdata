@@ -12,6 +12,7 @@
         "minioadmin",
         "msgpack",
         "ndarray",
+        "NSID",
         "pypi",
         "pyproject",
         "pytest",

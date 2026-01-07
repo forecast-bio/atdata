@@ -7,7 +7,14 @@
 
 ## DECISION
 
-...
+Let's go with Option 1, using external repositories. We can actually make this work for
+
+* GitHub
+* tangled.org (the native ATProto git repository system)
+
+Additionally, we'll want to keep track of metadata for lenses giving the language the referenced code is implemented in.
+
+Longer-term, it will also be good to add another Lexicon specification for attestation of `Lens` formal correctness (where possible), as this will enable filtering lens implementations by provability. We'll also want to add our own `verification` records that give attestation of individual atproto DIDs (user identities) as being "trusted" for creating `Lens`es, etc.
 
 ---
 

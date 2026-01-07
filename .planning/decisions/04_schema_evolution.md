@@ -5,6 +5,18 @@
 **Blocks**: #50 (Lexicon validation), #39 (Type validation)
 **Priority**: High
 
+## DECISION
+
+For this, let's take the following approach:
+
+1. Let's make the `rkey` for the `ac.foundation.dataset.sampleSchema` records be of type `any`.
+2. Then, we can have our own standard for the `rkey` being of the format `{NSID}@{semver}`, where `{NSID}` gives an NSID for the permanent identifier of this sample schema type.
+    * This allows us to bookkeep on the version updates
+    * We can make a `ac.foundation.dataset.getLatestSchema` `query` Lexicon that will provide the record for the latest version of a given schema, as well
+3. We can build into the `atdata` SDK that whenever users update their own sample schema types, they can pass in optional `Lens`es between the two versions that give transformations to downgrade / upgrade records, so that there's an easy dev-facing way to auto-update any existing datasets using an older schema and maintain compatibility with older code for newer data.
+
+---
+
 ## Problem Statement
 
 We need to define how PackableSample schemas can evolve over time without breaking existing datasets or code. This includes:

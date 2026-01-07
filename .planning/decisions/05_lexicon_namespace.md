@@ -10,7 +10,15 @@
 We're going to use an org NSID for the steward organization as the base:
 
 ```
-ac.foundation.data.*
+ac.foundation.dataset.*
+```
+
+The choices we have then are
+
+```
+ac.foundation.dataset.sampleSchema
+ac.foundation.dataset.record
+ac.foundation.dataset.lens
 ```
 
 ---
