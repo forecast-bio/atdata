@@ -4,17 +4,20 @@
         "atlocal",
         "atproto",
         "creds",
+        "dtype",
         "getattr",
         "hgetall",
         "hset",
         "maxcount",
         "minioadmin",
         "msgpack",
+        "ndarray",
         "pypi",
         "pyproject",
         "pytest",
         "randn",
         "schemamodels",
-        "unpackb"
+        "unpackb",
+        "webdataset"
     ]
 }
