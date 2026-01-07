@@ -18,7 +18,7 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "Human-readable name for this sample type",
+            "description": "Human-readable display name for this sample type. Used for documentation and UI. The NSID in the record URI provides unique identification; name collisions across NSIDs are acceptable.",
             "maxLength": 100
           },
           "version": {
@@ -65,24 +65,46 @@
           },
           "metadata": {
             "type": "object",
-            "description": "Arbitrary metadata (author, license, tags, etc.)"
+            "description": "Optional metadata about this schema. Common fields include author, license, and tags, but any additional fields are permitted.",
+            "maxProperties": 50,
+            "properties": {
+              "author": {
+                "type": "string",
+                "description": "Creator of this schema (DID, handle, or name)",
+                "maxLength": 200
+              },
+              "license": {
+                "type": "string",
+                "description": "License identifier (e.g., MIT, Apache-2.0, CC-BY-4.0)",
+                "maxLength": 100
+              },
+              "tags": {
+                "type": "array",
+                "description": "Categorization tags for discovery",
+                "items": {
+                  "type": "string",
+                  "maxLength": 50
+                },
+                "maxLength": 20
+              }
+            }
           },
           "previousVersion": {
             "type": "string",
             "format": "at-uri",
-            "description": "AT-URI reference to the previous version of this schema (if any)",
+            "description": "AT-URI reference to the previous version of this schema. Used to track schema evolution history. May exist without migrationLens if changes are backward-compatible.",
             "maxLength": 500
           },
           "migrationLens": {
             "type": "string",
             "format": "at-uri",
-            "description": "AT-URI reference to a Lens for migrating from previous version (if applicable)",
+            "description": "AT-URI reference to a Lens for migrating data from previousVersion to this version. Required only for breaking changes; optional for backward-compatible updates.",
             "maxLength": 500
           },
           "createdAt": {
             "type": "string",
             "format": "datetime",
-            "description": "Timestamp when this schema version was created"
+            "description": "Timestamp when this schema version was created. Immutable once set (ATProto records are permanent)."
           }
         }
       }
