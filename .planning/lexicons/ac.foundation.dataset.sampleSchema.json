@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "record",
-      "description": "Definition of a PackableSample-compatible sample type using JSON Schema. Supports versioning via rkey format: {NSID}@{semver}",
+      "description": "Definition of a PackableSample-compatible sample type. Supports versioning via rkey format: {NSID}@{semver}. Schema format is extensible via union type.",
       "key": "any",
       "record": {
         "type": "object",
@@ -12,7 +12,7 @@
           "name",
           "version",
           "schemaType",
-          "jsonSchema",
+          "schema",
           "createdAt"
         ],
         "properties": {
@@ -28,40 +28,20 @@
             "maxLength": 100
           },
           "schemaType": {
-            "type": "string",
-            "description": "Type of schema definition (currently only 'jsonschema' supported)",
-            "enum": ["jsonschema"],
-            "default": "jsonschema"
+            "type": "ref",
+            "ref": "ac.foundation.dataset.schemaType",
+            "description": "Type of schema definition. This field indicates which union member is present in the schema field."
           },
-          "jsonSchema": {
-            "type": "object",
-            "description": "JSON Schema Draft 7 definition for this sample type. Use standard JSON Schema with NDArray shim for array types.",
-            "required": ["$schema", "type", "properties"],
-            "properties": {
-              "$schema": {
-                "type": "string",
-                "const": "http://json-schema.org/draft-07/schema#"
-              },
-              "type": {
-                "type": "string",
-                "const": "object"
-              },
-              "properties": {
-                "type": "object",
-                "minProperties": 1
-              }
-            }
+          "schema": {
+            "type": "union",
+            "refs": ["ac.foundation.dataset.sampleSchema#jsonSchemaFormat"],
+            "closed": false,
+            "description": "Schema definition for this sample type. Currently supports JSON Schema Draft 7. Union allows for future schema formats (Avro, Protobuf, etc.) without breaking changes."
           },
           "description": {
             "type": "string",
             "description": "Human-readable description of what this sample type represents",
             "maxLength": 5000
-          },
-          "ndarrayShimUri": {
-            "type": "string",
-            "format": "uri",
-            "description": "URI to the NDArray JSON Schema shim definition (optional, defaults to standard shim at https://foundation.ac/schemas/atdata-ndarray-bytes/1.0.0)",
-            "maxLength": 500
           },
           "metadata": {
             "type": "object",
@@ -94,6 +74,38 @@
             "format": "datetime",
             "description": "Timestamp when this schema version was created. Immutable once set (ATProto records are permanent)."
           }
+        }
+      }
+    },
+    "jsonSchemaFormat": {
+      "type": "object",
+      "description": "JSON Schema Draft 7 format for sample type definitions. Used with NDArray shim for array types.",
+      "required": ["$type", "$schema", "type", "properties"],
+      "properties": {
+        "$type": {
+          "type": "string",
+          "const": "ac.foundation.dataset.sampleSchema#jsonSchemaFormat"
+        },
+        "$schema": {
+          "type": "string",
+          "const": "http://json-schema.org/draft-07/schema#",
+          "description": "JSON Schema version identifier"
+        },
+        "type": {
+          "type": "string",
+          "const": "object",
+          "description": "Sample types must be objects"
+        },
+        "properties": {
+          "type": "object",
+          "description": "Field definitions for the sample type",
+          "minProperties": 1
+        },
+        "ndarrayShimUri": {
+          "type": "string",
+          "format": "uri",
+          "description": "URI to the NDArray JSON Schema shim definition. Optional, defaults to https://foundation.ac/schemas/atdata-ndarray-bytes/1.0.0",
+          "maxLength": 500
         }
       }
     }

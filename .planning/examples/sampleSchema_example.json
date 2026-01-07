@@ -2,8 +2,9 @@
   "$type": "ac.foundation.dataset.sampleSchema",
   "name": "ImageSample",
   "version": "1.0.0",
-  "schemaType": "jsonschema",
-  "jsonSchema": {
+  "schemaType": "jsonSchema",
+  "schema": {
+    "$type": "ac.foundation.dataset.sampleSchema#jsonSchemaFormat",
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "ImageSample",
     "type": "object",
