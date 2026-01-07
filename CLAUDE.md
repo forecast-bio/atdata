@@ -164,3 +164,9 @@ When using the `/commit` command or creating commits:
 - **Track `.planning/` directory in git** - Do not ignore planning documents
 - Planning documents in `.planning/` should be committed to preserve design history
 - This includes architecture notes, implementation plans, and design decisions
+
+### Reference Materials
+
+- **Track `.reference/` directory in git** - Include reference documentation in commits
+- The `.reference/` directory contains external specifications and reference materials
+- This includes API specs, lexicon definitions, and other reference documentation used for development
