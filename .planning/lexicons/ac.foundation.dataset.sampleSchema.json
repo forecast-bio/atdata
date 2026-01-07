@@ -1,0 +1,91 @@
+{
+  "lexicon": 1,
+  "id": "ac.foundation.dataset.sampleSchema",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "Definition of a PackableSample-compatible sample type using JSON Schema. Supports versioning via rkey format: {NSID}@{semver}",
+      "key": "any",
+      "record": {
+        "type": "object",
+        "required": [
+          "name",
+          "version",
+          "schemaType",
+          "jsonSchema",
+          "createdAt"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for this sample type",
+            "maxLength": 100
+          },
+          "version": {
+            "type": "string",
+            "description": "Semantic version (e.g., '1.0.0')",
+            "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
+            "maxLength": 100
+          },
+          "schemaType": {
+            "type": "string",
+            "description": "Type of schema definition (currently only 'jsonschema' supported)",
+            "enum": ["jsonschema"],
+            "default": "jsonschema"
+          },
+          "jsonSchema": {
+            "type": "object",
+            "description": "JSON Schema Draft 7 definition for this sample type. Use standard JSON Schema with NDArray shim for array types.",
+            "required": ["$schema", "type", "properties"],
+            "properties": {
+              "$schema": {
+                "type": "string",
+                "const": "http://json-schema.org/draft-07/schema#"
+              },
+              "type": {
+                "type": "string",
+                "const": "object"
+              },
+              "properties": {
+                "type": "object",
+                "minProperties": 1
+              }
+            }
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable description of what this sample type represents",
+            "maxLength": 5000
+          },
+          "ndarrayShimUri": {
+            "type": "string",
+            "format": "uri",
+            "description": "URI to the NDArray JSON Schema shim definition (optional, defaults to standard shim at https://foundation.ac/schemas/atdata-ndarray-bytes/1.0.0)",
+            "maxLength": 500
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Arbitrary metadata (author, license, tags, etc.)"
+          },
+          "previousVersion": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "AT-URI reference to the previous version of this schema (if any)",
+            "maxLength": 500
+          },
+          "migrationLens": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "AT-URI reference to a Lens for migrating from previous version (if applicable)",
+            "maxLength": 500
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Timestamp when this schema version was created"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "lexicon": 1,
+  "id": "ac.foundation.dataset.getLatestSchema",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get the latest version of a sample schema by its permanent NSID identifier",
+      "parameters": {
+        "type": "params",
+        "required": [
+          "schemaId"
+        ],
+        "properties": {
+          "schemaId": {
+            "type": "string",
+            "description": "The permanent NSID identifier for the schema (the {NSID} part of the rkey {NSID}@{semver})",
+            "maxLength": 500
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "uri",
+            "version",
+            "record"
+          ],
+          "properties": {
+            "uri": {
+              "type": "string",
+              "description": "AT-URI of the latest schema version",
+              "maxLength": 500
+            },
+            "version": {
+              "type": "string",
+              "description": "Semantic version of the latest schema",
+              "maxLength": 20
+            },
+            "record": {
+              "type": "ref",
+              "ref": "ac.foundation.dataset.sampleSchema",
+              "description": "The full schema record"
+            },
+            "allVersions": {
+              "type": "array",
+              "description": "All available versions (optional, sorted by semver descending)",
+              "items": {
+                "type": "object",
+                "required": [
+                  "uri",
+                  "version"
+                ],
+                "properties": {
+                  "uri": {
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "version": {
+                    "type": "string",
+                    "maxLength": 20
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "SchemaNotFound",
+          "description": "No schema found with the given NSID"
+        }
+      ]
+    }
+  }
+}
