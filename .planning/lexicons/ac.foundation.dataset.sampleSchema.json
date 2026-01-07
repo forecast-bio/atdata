@@ -89,18 +89,6 @@
               }
             }
           },
-          "previousVersion": {
-            "type": "string",
-            "format": "at-uri",
-            "description": "AT-URI reference to the previous version of this schema. Used to track schema evolution history. May exist without migrationLens if changes are backward-compatible.",
-            "maxLength": 500
-          },
-          "migrationLens": {
-            "type": "string",
-            "format": "at-uri",
-            "description": "AT-URI reference to a Lens for migrating data from previousVersion to this version. Required only for breaking changes; optional for backward-compatible updates.",
-            "maxLength": 500
-          },
           "createdAt": {
             "type": "string",
             "format": "datetime",
