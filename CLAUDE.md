@@ -158,3 +158,9 @@ When using the `/commit` command or creating commits:
 - **Always include `.chainlink/issues.db`** in commits alongside code changes
 - This ensures issue tracking history is preserved across sessions
 - The issues.db file tracks all chainlink issues, comments, and status changes
+
+### Planning Documents
+
+- **Track `.planning/` directory in git** - Do not ignore planning documents
+- Planning documents in `.planning/` should be committed to preserve design history
+- This includes architecture notes, implementation plans, and design decisions
