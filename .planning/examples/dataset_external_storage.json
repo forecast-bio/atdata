@@ -3,7 +3,7 @@
   "name": "CIFAR-10 Training Set",
   "schemaRef": "at://did:plc:abc123/ac.foundation.dataset.sampleSchema/imageclassification@1.0.0",
   "storage": {
-    "type": "external",
+    "$type": "ac.foundation.dataset.storageExternal",
     "urls": [
       "s3://my-bucket/cifar10-train-{000000..000049}.tar"
     ]

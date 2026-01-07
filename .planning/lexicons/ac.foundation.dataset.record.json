@@ -22,6 +22,7 @@
           },
           "schemaRef": {
             "type": "string",
+            "format": "at-uri",
             "description": "AT-URI reference to the sampleSchema record for this dataset's samples",
             "maxLength": 500
           },
@@ -29,8 +30,8 @@
             "type": "union",
             "description": "Storage location for dataset files (WebDataset tar archives)",
             "refs": [
-              "#storageExternal",
-              "#storageBlobs"
+              "ac.foundation.dataset.storageExternal",
+              "ac.foundation.dataset.storageBlobs"
             ]
           },
           "description": {
@@ -40,17 +41,17 @@
           },
           "metadata": {
             "type": "bytes",
-            "description": "Msgpack-encoded metadata dict (arbitrary key-value pairs)",
+            "description": "Msgpack-encoded metadata dict for arbitrary extended key-value pairs. Use this for additional metadata beyond the core top-level fields (license, tags, size). Top-level fields are preferred for discoverable/searchable metadata.",
             "maxLength": 100000
           },
           "tags": {
             "type": "array",
-            "description": "Searchable tags for dataset discovery",
+            "description": "Searchable tags for dataset discovery. Aligns with Schema.org keywords property.",
             "items": {
               "type": "string",
-              "maxLength": 50
+              "maxLength": 150
             },
-            "maxLength": 20
+            "maxLength": 30
           },
           "size": {
             "type": "ref",
@@ -59,61 +60,14 @@
           },
           "license": {
             "type": "string",
-            "description": "License (SPDX identifier preferred)",
-            "maxLength": 100
+            "description": "License identifier or URL. SPDX identifiers recommended (e.g., MIT, Apache-2.0, CC-BY-4.0) or full SPDX URLs (e.g., http://spdx.org/licenses/MIT). Aligns with Schema.org license property.",
+            "maxLength": 200
           },
           "createdAt": {
             "type": "string",
             "format": "datetime",
             "description": "Timestamp when this dataset record was created"
           }
-        }
-      }
-    },
-    "storageExternal": {
-      "type": "object",
-      "description": "External storage via URLs (S3, HTTP, IPFS, etc.)",
-      "required": [
-        "type",
-        "urls"
-      ],
-      "properties": {
-        "type": {
-          "type": "string",
-          "const": "external"
-        },
-        "urls": {
-          "type": "array",
-          "description": "WebDataset URLs (supports brace notation like 'data-{000000..000099}.tar')",
-          "items": {
-            "type": "string",
-            "format": "uri",
-            "maxLength": 1000
-          },
-          "minLength": 1
-        }
-      }
-    },
-    "storageBlobs": {
-      "type": "object",
-      "description": "Storage via ATProto PDS blobs",
-      "required": [
-        "type",
-        "blobs"
-      ],
-      "properties": {
-        "type": {
-          "type": "string",
-          "const": "blobs"
-        },
-        "blobs": {
-          "type": "array",
-          "description": "Array of blob references for WebDataset tar files",
-          "items": {
-            "type": "blob",
-            "description": "Blob reference to a WebDataset tar archive"
-          },
-          "minLength": 1
         }
       }
     },

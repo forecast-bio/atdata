@@ -3,7 +3,7 @@
   "name": "Small Sample Dataset",
   "schemaRef": "at://did:plc:def456/ac.foundation.dataset.sampleSchema/textsample@2.1.0",
   "storage": {
-    "type": "blobs",
+    "$type": "ac.foundation.dataset.storageBlobs",
     "blobs": [
       {
         "$type": "blob",
