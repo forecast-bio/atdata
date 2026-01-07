@@ -45,27 +45,22 @@
           },
           "metadata": {
             "type": "object",
-            "description": "Optional metadata about this schema. Common fields include author, license, and tags, but any additional fields are permitted.",
+            "description": "Optional metadata about this schema. Common fields include license and tags, but any additional fields are permitted.",
             "maxProperties": 50,
             "properties": {
-              "author": {
-                "type": "string",
-                "description": "Creator of this schema (DID, handle, or name)",
-                "maxLength": 200
-              },
               "license": {
                 "type": "string",
-                "description": "License identifier (e.g., MIT, Apache-2.0, CC-BY-4.0)",
-                "maxLength": 100
+                "description": "License identifier or URL. SPDX identifiers recommended (e.g., MIT, Apache-2.0, CC-BY-4.0) or full SPDX URLs (e.g., http://spdx.org/licenses/MIT). Aligns with Schema.org license property.",
+                "maxLength": 200
               },
               "tags": {
                 "type": "array",
-                "description": "Categorization tags for discovery",
+                "description": "Categorization keywords for discovery. Aligns with Schema.org keywords property.",
                 "items": {
                   "type": "string",
-                  "maxLength": 50
+                  "maxLength": 150
                 },
-                "maxLength": 20
+                "maxLength": 30
               }
             }
           },
@@ -101,11 +96,10 @@
           "description": "Field definitions for the sample type",
           "minProperties": 1
         },
-        "ndarrayShimUri": {
-          "type": "string",
-          "format": "uri",
-          "description": "URI to the NDArray JSON Schema shim definition. Optional, defaults to https://foundation.ac/schemas/atdata-ndarray-bytes/1.0.0",
-          "maxLength": 500
+        "arrayFormatVersions": {
+          "type": "object",
+          "description": "Mapping from array format identifiers to semantic versions. Keys are ac.foundation.dataset.arrayFormat values (e.g., 'ndarrayBytes'), values are semver strings (e.g., '1.0.0'). Foundation.ac maintains canonical shim schemas at https://foundation.ac/schemas/atdata-{format}-bytes/{version}/.",
+          "maxProperties": 10
         }
       }
     }
