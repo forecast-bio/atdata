@@ -32,7 +32,6 @@ import webdataset as wds
 
 from pathlib import Path
 import uuid
-import functools
 
 import dataclasses
 import types
@@ -40,10 +39,7 @@ from dataclasses import (
     dataclass,
     asdict,
 )
-from abc import (
-    ABC,
-    abstractmethod,
-)
+from abc import ABC
 
 from tqdm import tqdm
 import numpy as np
@@ -66,15 +62,7 @@ from typing import (
     TypeVar,
     TypeAlias,
 )
-# from typing_inspect import get_bound, get_parameters
-from numpy.typing import (
-    NDArray,
-    ArrayLike,
-)
-
-#
-
-# import ekumen.atmosphere as eat
+from numpy.typing import NDArray
 
 import msgpack
 import ormsgpack
@@ -97,40 +85,10 @@ SampleExportMap: TypeAlias = Callable[['PackableSample'], SampleExportRow]
 ##
 # Main base classes
 
-# TODO Check for best way to ensure this typevar is used as a dataclass type
-# DT = TypeVar( 'DT', bound = dataclass.__class__ )
 DT = TypeVar( 'DT' )
 
 MsgpackRawSample: TypeAlias = Dict[str, Any]
 
-# @dataclass
-# class ArrayBytes:
-#     """Annotates bytes that should be interpreted as the raw contents of a
-#     numpy NDArray"""
-    
-#     raw_bytes: bytes
-#     """The raw bytes of the corresponding NDArray"""
-
-#     def __init__( self,
-#             array: Optional[ArrayLike] = None,  
-#             raw: Optional[bytes] = None,
-#         ):
-#         """TODO"""
-
-#         if array is not None:
-#             array = np.array( array )
-#             self.raw_bytes = eh.array_to_bytes( array )
-        
-#         elif raw is not None:
-#             self.raw_bytes = raw
-        
-#         else:
-#             raise ValueError( 'Must provide either `array` or `raw` bytes' )
-
-#     @property
-#     def to_numpy( self ) -> NDArray:
-#         """Return the `raw_bytes` data as an NDArray"""
-#         return eh.bytes_to_array( self.raw_bytes )
 
 def _make_packable( x ):
     """Convert a value to a msgpack-compatible format.
@@ -142,8 +100,6 @@ def _make_packable( x ):
     Returns:
         The value in a format suitable for msgpack serialization.
     """
-    # if isinstance( x, ArrayBytes ):
-    #     return x.raw_bytes
     if isinstance( x, np.ndarray ):
         return eh.array_to_bytes( x )
     return x
@@ -227,11 +183,8 @@ class PackableSample( ABC ):
                 # based on what is provided
 
                 if isinstance( var_cur_value, np.ndarray ):
-                    # we're good!
-                    pass
-
-                # elif isinstance( var_cur_value, ArrayBytes ):
-                #     setattr( self, var_name, var_cur_value.to_numpy )
+                    # Already the correct type, no conversion needed
+                    continue
 
                 elif isinstance( var_cur_value, bytes ):
                     # TODO This does create a constraint that serialized bytes
@@ -412,23 +365,8 @@ class SampleBatch( Generic[DT] ):
         raise AttributeError( f'No sample attribute named {name}' )
 
 
-# class AnySample( BaseModel ):
-#     """A sample that can hold anything"""
-#     value: Any
-
-# class AnyBatch( BaseModel ):
-#     """A batch of `AnySample`s"""
-#     values: list[AnySample]
-
-
 ST = TypeVar( 'ST', bound = PackableSample )
-# BT = TypeVar( 'BT' )
-
 RT = TypeVar( 'RT', bound = PackableSample )
-
-# TODO For python 3.13
-# BT = TypeVar( 'BT', default = None )
-# IT = TypeVar( 'IT', default = Any )
 
 class Dataset( Generic[ST] ):
     """A typed dataset built on WebDataset with lens transformations.
@@ -458,13 +396,7 @@ class Dataset( Generic[ST] ):
         >>> # Transform to a different view
         >>> ds_view = ds.as_type(MyDataView)
     
-    TODO Expand this to show information on the `metadata_url` field
     """
-
-    # sample_class: Type = get_parameters( )
-    # """The type of each returned sample from this `Dataset`'s iterator"""
-    # batch_class: Type = get_bound( BT )
-    # """The type of a batch built from `sample_class`"""
 
     @property
     def sample_type( self ) -> Type:
@@ -485,14 +417,7 @@ class Dataset( Generic[ST] ):
         Returns:
             ``SampleBatch[ST]`` where ``ST`` is this dataset's sample type.
         """
-        # return self.__orig_class__.__args__[1]
         return SampleBatch[self.sample_type]
-
-
-    # _schema_registry_sample: dict[str, Type]
-    # _schema_registry_batch: dict[str, Type | None]
-
-    #
 
     def __init__( self, url: str,
                  metadata_url: str | None = None,
@@ -513,7 +438,7 @@ class Dataset( Generic[ST] ):
 
         self._metadata: dict[str, Any] | None = None
         self.metadata_url: str | None = metadata_url
-        """TODO"""
+        """Optional URL to msgpack-encoded metadata for this dataset."""
 
         # Allow addition of automatic transformation of raw underlying data
         self._output_lens: Lens | None = None
@@ -540,23 +465,6 @@ class Dataset( Generic[ST] ):
         ret._output_lens = lenses.transform( self.sample_type, ret.sample_type )
         return ret
 
-    # @classmethod
-    # def register( cls, uri: str,
-    #             sample_class: Type,
-    #             batch_class: Optional[Type] = None,
-    #         ):
-    #     """Register an `ekumen` schema to use a particular dataset sample class"""
-    #     cls._schema_registry_sample[uri] = sample_class
-    #     cls._schema_registry_batch[uri] = batch_class
-
-    # @classmethod
-    # def at( cls, uri: str ) -> 'Dataset':
-    #     """Create a Dataset for the `ekumen` index entry at `uri`"""
-    #     client = eat.Client()
-    #     return cls( )
-    
-    # Common functionality
-
     @property
     def shard_list( self ) -> list[str]:
         """List of individual dataset shards
@@ -573,8 +481,14 @@ class Dataset( Generic[ST] ):
 
     @property
     def metadata( self ) -> dict[str, Any] | None:
-        """TODO"""
+        """Fetch and cache metadata from metadata_url.
 
+        Returns:
+            Deserialized metadata dictionary, or None if no metadata_url is set.
+
+        Raises:
+            requests.HTTPError: If metadata fetch fails.
+        """
         if self.metadata_url is None:
             return None
 
@@ -603,22 +517,17 @@ class Dataset( Generic[ST] ):
         """
 
         if batch_size is None:
-            # TODO Duplication here
             return wds.pipeline.DataPipeline(
                 wds.shardlists.SimpleShardList( self.url ),
                 wds.shardlists.split_by_worker,
-                #
                 wds.tariterators.tarfile_to_samples(),
-                # wds.map( self.preprocess ),
                 wds.filters.map( self.wrap ),
             )
 
         return wds.pipeline.DataPipeline(
             wds.shardlists.SimpleShardList( self.url ),
             wds.shardlists.split_by_worker,
-            #
             wds.tariterators.tarfile_to_samples(),
-            # wds.map( self.preprocess ),
             wds.filters.batched( batch_size ),
             wds.filters.map( self.wrap_batch ),
         )
@@ -646,17 +555,12 @@ class Dataset( Generic[ST] ):
             ``SampleBatch[ST]`` instances; otherwise yields individual ``ST``
             samples.
         """
-
         if batch_size is None:
-            # TODO Duplication here
             return wds.pipeline.DataPipeline(
                 wds.shardlists.SimpleShardList( self.url ),
                 wds.filters.shuffle( buffer_shards ),
                 wds.shardlists.split_by_worker,
-                #
                 wds.tariterators.tarfile_to_samples(),
-                # wds.shuffle( buffer_samples ),
-                # wds.map( self.preprocess ),
                 wds.filters.shuffle( buffer_samples ),
                 wds.filters.map( self.wrap ),
             )
@@ -665,10 +569,7 @@ class Dataset( Generic[ST] ):
             wds.shardlists.SimpleShardList( self.url ),
             wds.filters.shuffle( buffer_shards ),
             wds.shardlists.split_by_worker,
-            #
             wds.tariterators.tarfile_to_samples(),
-            # wds.shuffle( buffer_samples ),
-            # wds.map( self.preprocess ),
             wds.filters.shuffle( buffer_samples ),
             wds.filters.batched( batch_size ),
             wds.filters.map( self.wrap_batch ),
@@ -731,23 +632,6 @@ class Dataset( Generic[ST] ):
                 df = pd.DataFrame( cur_buffer )
                 df.to_parquet( cur_path, **kwargs )
 
-
-    # Implemented by specific subclasses
-
-    # @property
-    # @abstractmethod
-    # def url( self ) -> str:
-    #     """str: Brace-notation URL of the underlying full WebDataset"""
-    #     pass
-
-    # @classmethod
-    # # TODO replace Any with IT
-    # def preprocess( cls, sample: WDSRawSample ) -> Any:
-    #     """Pre-built preprocessor for a raw `sample` from the given dataset"""
-    #     return sample
-
-    # @classmethod
-    # TODO replace Any with IT
     def wrap( self, sample: MsgpackRawSample ) -> ST:
         """Wrap a raw msgpack sample into the appropriate dataset-specific type.
 
@@ -767,19 +651,6 @@ class Dataset( Generic[ST] ):
 
         source_sample = self._output_lens.source_type.from_bytes( sample['msgpack'] )
         return self._output_lens( source_sample )
-    
-        # try:
-        #     assert type( sample ) == dict
-        #     return cls.sample_class( **{
-        #         k: v
-        #         for k, v in sample.items() if k != '__key__'
-        #     } )
-        
-        # except Exception as e:
-        #     # Sample constructor failed -- revert to default
-        #     return AnySample(
-        #         value = sample,
-        #     )
 
     def wrap_batch( self, batch: WDSRawBatch ) -> SampleBatch[ST]:
         """Wrap a batch of raw msgpack samples into a typed SampleBatch.
@@ -810,34 +681,6 @@ class Dataset( Generic[ST] ):
                        for s in batch_source ]
         return SampleBatch[self.sample_type]( batch_view )
 
-    # # @classmethod
-    # def wrap_batch( self, batch: WDSRawBatch ) -> BT:
-    #     """Wrap a `batch` of samples into the appropriate dataset-specific type
-        
-    #     This default implementation simply creates a list one sample at a time
-    #     """
-    #     assert cls.batch_class is not None, 'No batch class specified'
-    #     return cls.batch_class( **batch )
-
-
-##
-# Shortcut decorators
-
-# def packable( cls ):
-#     """TODO"""
-
-#     def decorator( cls ):
-#         # Create a new class dynamically
-#         # The new class inherits from the new_parent_class first, then the original cls
-#         new_bases = (PackableSample,) + cls.__bases__
-#         new_cls = type(cls.__name__, new_bases, dict(cls.__dict__))
-
-#         # Optionally, update __module__ and __qualname__ for better introspection
-#         new_cls.__module__ = cls.__module__
-#         new_cls.__qualname__ = cls.__qualname__
-
-#         return new_cls
-#     return decorator
 
 def packable( cls ):
     """Decorator to convert a regular class into a ``PackableSample``.
