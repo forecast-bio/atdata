@@ -612,11 +612,11 @@ class Dataset( Generic[ST] ):
 
             cur_segment = 0
             cur_buffer = []
-            path_template = (path.parent / f'{path.stem}-%06d.{path.suffix}').as_posix()
+            path_template = (path.parent / f'{path.stem}-{{:06d}}{path.suffix}').as_posix()
 
             for x in self.ordered( batch_size = None ):
                 cur_buffer.append( sample_map( x ) )
-                
+
                 if len( cur_buffer ) >= maxcount:
                     # Write current segment
                     cur_path = path_template.format( cur_segment )

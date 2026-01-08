@@ -11,4 +11,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 ### Changed
+- Add remaining Dataset edge case tests (#104)
+- Improve test coverage for edge cases (#103)
 - Phase 1: Lexicon Design & Schema Definition (#17)
