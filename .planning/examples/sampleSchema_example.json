@@ -1,0 +1,53 @@
+{
+  "$type": "ac.foundation.dataset.sampleSchema",
+  "name": "ImageSample",
+  "version": "1.0.0",
+  "schemaType": "jsonSchema",
+  "schema": {
+    "$type": "ac.foundation.dataset.sampleSchema#jsonSchemaFormat",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "ImageSample",
+    "type": "object",
+    "arrayFormatVersions": {
+      "ndarrayBytes": "1.0.0"
+    },
+    "required": [
+      "image",
+      "label"
+    ],
+    "properties": {
+      "image": {
+        "$ref": "#/$defs/ndarray",
+        "description": "RGB image with variable height/width",
+        "x-atdata-dtype": "uint8",
+        "x-atdata-shape": [null, null, 3],
+        "x-atdata-notes": "Images must have 3 color channels (RGB)"
+      },
+      "label": {
+        "type": "string",
+        "description": "Human-readable label for the image"
+      },
+      "confidence": {
+        "type": "number",
+        "description": "Optional confidence score",
+        "minimum": 0,
+        "maximum": 1
+      }
+    },
+    "$defs": {
+      "ndarray": {
+        "type": "string",
+        "format": "byte",
+        "description": "Numpy array serialized using numpy .npy format (includes dtype and shape in binary header)",
+        "contentEncoding": "base64",
+        "contentMediaType": "application/octet-stream"
+      }
+    }
+  },
+  "description": "Sample type for images with labels, commonly used for computer vision datasets",
+  "metadata": {
+    "license": "MIT",
+    "tags": ["computer-vision", "image-classification"]
+  },
+  "createdAt": "2025-01-06T12:00:00Z"
+}

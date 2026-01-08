@@ -148,36 +148,6 @@ def test_create_sample(
         assert cur_assertion, \
             f'Did not properly incorporate property {k} of test type {SampleType}'
 
-#
-
-# def test_decorator_syntax():
-#     """Test use of decorator syntax for sample types"""
-    
-#     @atdata.packable
-#     class BasicTestSampleDecorated:
-#         name: str
-#         position: int
-#         value: float
-
-#     @atdata.packable
-#     class NumpyTestSampleDecorated:
-#         label: int
-#         image: NDArray
-    
-#     ##
-    
-#     test_create_sample( BasicTestSampleDecorated, {
-#         'name': 'Hello, world!',
-#         'position': 42,
-#         'value': 1024.768,
-#     } )
-
-#     test_create_sample( NumpyTestSampleDecorated, {
-#         'label': 9_001,
-#         'image': np.random.randn( 1024, 1024 ),
-#     } )
-
-#
 
 @pytest.mark.parametrize(
     ('SampleType', 'sample_data', 'sample_wds_stem'),
@@ -301,7 +271,7 @@ def test_wds(
             break
 
     assert iterations_run == n_iterate, \
-        "Only found {iterations_run} samples, not {n_iterate}"
+        f"Only found {iterations_run} samples, not {n_iterate}"
     
 
     ## Shuffled
@@ -353,7 +323,7 @@ def test_wds(
             break
 
     assert iterations_run == n_iterate, \
-        "Only found {iterations_run} samples, not {n_iterate}"
+        f"Only found {iterations_run} samples, not {n_iterate}"
 
 #
 
@@ -401,10 +371,6 @@ def test_parquet_export(
 
     parquet_filename = tmp_path / f'{sample_wds_stem}-segments.parquet'
     dataset.to_parquet( parquet_filename, maxcount = n_per_file )
-
-    ## Double-check our `parquet` export
-    
-    # TODO
 
 
 ##

@@ -1,0 +1,96 @@
+{
+  "lexicon": 1,
+  "id": "ac.foundation.dataset.record",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "Index record for a WebDataset-backed dataset with references to storage location and sample schema",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": [
+          "name",
+          "schemaRef",
+          "storage",
+          "createdAt"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Human-readable dataset name",
+            "maxLength": 200
+          },
+          "schemaRef": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "AT-URI reference to the sampleSchema record for this dataset's samples",
+            "maxLength": 500
+          },
+          "storage": {
+            "type": "union",
+            "description": "Storage location for dataset files (WebDataset tar archives)",
+            "refs": [
+              "ac.foundation.dataset.storageExternal",
+              "ac.foundation.dataset.storageBlobs"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable description of the dataset",
+            "maxLength": 5000
+          },
+          "metadata": {
+            "type": "bytes",
+            "description": "Msgpack-encoded metadata dict for arbitrary extended key-value pairs. Use this for additional metadata beyond the core top-level fields (license, tags, size). Top-level fields are preferred for discoverable/searchable metadata.",
+            "maxLength": 100000
+          },
+          "tags": {
+            "type": "array",
+            "description": "Searchable tags for dataset discovery. Aligns with Schema.org keywords property.",
+            "items": {
+              "type": "string",
+              "maxLength": 150
+            },
+            "maxLength": 30
+          },
+          "size": {
+            "type": "ref",
+            "ref": "#datasetSize",
+            "description": "Dataset size information (optional)"
+          },
+          "license": {
+            "type": "string",
+            "description": "License identifier or URL. SPDX identifiers recommended (e.g., MIT, Apache-2.0, CC-BY-4.0) or full SPDX URLs (e.g., http://spdx.org/licenses/MIT). Aligns with Schema.org license property.",
+            "maxLength": 200
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Timestamp when this dataset record was created"
+          }
+        }
+      }
+    },
+    "datasetSize": {
+      "type": "object",
+      "description": "Information about dataset size",
+      "properties": {
+        "samples": {
+          "type": "integer",
+          "description": "Total number of samples in the dataset",
+          "minimum": 0
+        },
+        "bytes": {
+          "type": "integer",
+          "description": "Total size in bytes",
+          "minimum": 0
+        },
+        "shards": {
+          "type": "integer",
+          "description": "Number of WebDataset shards",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

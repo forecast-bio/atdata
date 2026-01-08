@@ -1,0 +1,24 @@
+{
+  "lexicon": 1,
+  "id": "ac.foundation.dataset.storageBlobs",
+  "defs": {
+    "main": {
+      "type": "object",
+      "description": "Storage via ATProto PDS blobs for WebDataset tar archives. Each blob contains one or more tar files. Used in ac.foundation.dataset.record storage union for maximum decentralization.",
+      "required": [
+        "blobs"
+      ],
+      "properties": {
+        "blobs": {
+          "type": "array",
+          "description": "Array of blob references for WebDataset tar files",
+          "items": {
+            "type": "blob",
+            "description": "Blob reference to a WebDataset tar archive"
+          },
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

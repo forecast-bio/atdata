@@ -78,8 +78,16 @@ def test_lens():
     y = polite.put( polite( test_source ), test_source )
     assert y == test_source, \
         f'Violation of PutGet: {y} =/= {test_source}'
-    
-    # TODO Test PutPut
+
+    # PutPut law: put(v2, put(v1, s)) = put(v2, s)
+    another_view = View(
+        name = 'Different Name',
+        height = 165.0,
+    )
+    z1 = polite.put( another_view, polite.put( update_view, test_source ) )
+    z2 = polite.put( another_view, test_source )
+    assert z1 == z2, \
+        f'Violation of PutPut: {z1} =/= {z2}'
 
 def test_conversion( tmp_path ):
     """Test automatic interconversion between sample types"""
@@ -104,9 +112,6 @@ def test_conversion( tmp_path ):
             favorite_pizza = s.favorite_pizza,
             favorite_image = s.favorite_image,
         )
-    
-    lens_network = atdata.LensNetwork()
-    print( lens_network._registry )
     
     # Map a test sample through the view
     test_source = Source(
@@ -156,8 +161,6 @@ def test_conversion( tmp_path ):
 
     assert sample.name == test_view.name, \
         f'Divergence on auto-mapped dataset: `name` should be {test_view.name}, but is {sample.name}'
-    # assert sample.height == test_view.height, \
-    #     f'Divergence on auto-mapped dataset: `height` should be {test_view.height}, but is {sample.height}'
     assert sample.favorite_pizza == test_view.favorite_pizza, \
         f'Divergence on auto-mapped dataset: `favorite_pizza` should be {test_view.favorite_pizza}, but is {sample.favorite_pizza}'
     assert np.all( sample.favorite_image == test_view.favorite_image ), \

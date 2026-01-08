@@ -149,7 +149,24 @@ The codebase uses Python 3.12+ generics heavily:
 - Test cases cover both decorator and inheritance syntax
 - Temporary WebDataset tar files created in `tmp_path` fixture
 - Tests verify both serialization and batch aggregation behavior
-- Lens tests verify well-behavedness (GetPut/PutGet laws)
+- Lens tests verify well-behavedness (GetPut/PutGet/PutPut laws)
+
+### Warning Suppression Convention
+
+**Keep warning suppression local to individual tests, not global.**
+
+When tests generate expected warnings (e.g., from third-party library incompatibilities), suppress them using `@pytest.mark.filterwarnings` decorators on each affected test rather than global suppression in `conftest.py`. This:
+- Documents which specific tests have known warning behaviors
+- Makes it easier to track when warnings appear in unexpected places
+- Avoids masking genuine warnings from new code
+
+Example for s3fs/moto async incompatibility warnings:
+```python
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+@pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
+def test_repo_insert_with_s3(mock_s3, clean_redis):
+    ...
+```
 
 ## Git Workflow
 
@@ -159,3 +176,15 @@ When using the `/commit` command or creating commits:
 - **Always include `.chainlink/issues.db`** in commits alongside code changes
 - This ensures issue tracking history is preserved across sessions
 - The issues.db file tracks all chainlink issues, comments, and status changes
+
+### Planning Documents
+
+- **Track `.planning/` directory in git** - Do not ignore planning documents
+- Planning documents in `.planning/` should be committed to preserve design history
+- This includes architecture notes, implementation plans, and design decisions
+
+### Reference Materials
+
+- **Track `.reference/` directory in git** - Include reference documentation in commits
+- The `.reference/` directory contains external specifications and reference materials
+- This includes API specs, lexicon definitions, and other reference documentation used for development
