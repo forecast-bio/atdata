@@ -22,16 +22,17 @@ uv sync
 
 ### Testing
 ```bash
+# Always run tests through uv to use the correct virtual environment
 # Run all tests with coverage
-pytest
+uv run pytest
 
 # Run specific test file
-pytest tests/test_dataset.py
-pytest tests/test_lens.py
+uv run pytest tests/test_dataset.py
+uv run pytest tests/test_lens.py
 
 # Run single test
-pytest tests/test_dataset.py::test_create_sample
-pytest tests/test_lens.py::test_lens
+uv run pytest tests/test_dataset.py::test_create_sample
+uv run pytest tests/test_lens.py::test_lens
 ```
 
 ### Building
