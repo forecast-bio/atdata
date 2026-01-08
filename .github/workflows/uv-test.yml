@@ -17,6 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: test
+    strategy:
+      matrix:
+        python-version: [3.10, 3.11, 3.12, 3.13, 3.14]
+        redis-version: [6, 7]
 
     steps:
       - uses: actions/checkout@v5
@@ -24,7 +28,8 @@ jobs:
       - name: "Set up Python"
         uses: actions/setup-python@v5
         with:
-          python-version-file: "pyproject.toml"
+          python-version: ${{ matrix.python-version }}
+          # python-version-file: "pyproject.toml"
 
       - name: Install uv
         uses: astral-sh/setup-uv@v6
@@ -34,19 +39,10 @@ jobs:
         # TODO Better to use --locked for author control over versions?
         # run: uv sync --locked --all-extras --dev
 
-      - name: Set up redis-stack for testing
-        run: |
-          sudo apt install lsb-release curl gpg
-          curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
-          sudo chmod 644 /usr/share/keyrings/redis-archive-keyring.gpg
-          echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
-          sudo apt update
-          sudo apt install redis-stack-server
-      
-      - name: Start redis-stack-server
-        run: |
-          sudo systemctl enable redis-stack-server
-          sudo systemctl start redis-stack-server
+      - name: Start Redis
+        uses: supercharge/redis-github-action@1.8.1
+        with:
+          redis-version: ${{ matrix.redis-version }}
 
       - name: Run tests with coverage
         run: uv run pytest --cov=atdata --cov-report=xml --cov-report=term
