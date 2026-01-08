@@ -166,4 +166,75 @@ def test_conversion( tmp_path ):
     assert np.all( sample.favorite_image == test_view.favorite_image ), \
         f'Divergence on auto-mapped dataset: `favorite_image`'
 
+
+##
+# Edge case tests for coverage
+
+
+def test_lens_get_method():
+    """Test calling lens.get() explicitly instead of lens()."""
+    @atdata.packable
+    class GetSource:
+        value: int
+
+    @atdata.packable
+    class GetView:
+        doubled: int
+
+    @atdata.lens
+    def doubler(s: GetSource) -> GetView:
+        return GetView(doubled=s.value * 2)
+
+    source = GetSource(value=5)
+
+    # Test both calling conventions
+    result_call = doubler(source)
+    result_get = doubler.get(source)
+
+    assert result_call == result_get
+    assert result_get.doubled == 10
+
+
+def test_lens_trivial_putter():
+    """Test lens without explicit putter uses trivial putter."""
+    @atdata.packable
+    class TrivialSource:
+        a: int
+        b: str
+
+    @atdata.packable
+    class TrivialView:
+        a: int
+
+    # Create lens without putter
+    @atdata.lens
+    def extract_a(s: TrivialSource) -> TrivialView:
+        return TrivialView(a=s.a)
+
+    source = TrivialSource(a=10, b="hello")
+    view = TrivialView(a=99)
+
+    # Trivial putter should return source unchanged
+    result = extract_a.put(view, source)
+    assert result == source, "Trivial putter should return source unchanged"
+
+
+def test_lens_network_missing_lens():
+    """Test LensNetwork raises ValueError for unregistered lens."""
+    from atdata.lens import LensNetwork
+
+    @atdata.packable
+    class UnregisteredSource:
+        x: int
+
+    @atdata.packable
+    class UnregisteredView:
+        y: int
+
+    network = LensNetwork()
+
+    with pytest.raises(ValueError, match="No registered lens"):
+        network.transform(UnregisteredSource, UnregisteredView)
+
+
 ##

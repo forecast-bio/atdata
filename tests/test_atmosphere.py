@@ -1222,3 +1222,142 @@ class TestLensLoader:
 
         assert len(matches) == 1
         assert matches[0]["targetSchema"] == "at://schema/b"
+
+
+# =============================================================================
+# Additional Edge Case Tests for Coverage
+# =============================================================================
+
+
+class TestFieldTypeEdgeCases:
+    """Tests for FieldType and FieldDef edge cases."""
+
+    def test_field_with_description(self):
+        """Test FieldDef with description is included in dict output."""
+        field_type = FieldType(kind="primitive", primitive="str")
+        field_def = FieldDef(
+            name="described_field",
+            field_type=field_type,
+            optional=False,
+            description="This is a description",
+        )
+
+        # Create a SchemaRecord to test _field_to_dict
+        schema = SchemaRecord(
+            name="TestSchema",
+            version="1.0.0",
+            fields=[field_def],
+        )
+        record = schema.to_record()
+
+        # Check that description is included
+        field = record["fields"][0]
+        assert field["description"] == "This is a description"
+
+    def test_ndarray_type_with_shape(self):
+        """Test FieldType for ndarray with shape."""
+        field_type = FieldType(
+            kind="ndarray",
+            dtype="float32",
+            shape=[224, 224, 3],
+        )
+
+        schema = SchemaRecord(
+            name="ShapedArraySchema",
+            version="1.0.0",
+            fields=[FieldDef(name="image", field_type=field_type, optional=False)],
+        )
+        record = schema.to_record()
+
+        field = record["fields"][0]
+        assert field["fieldType"]["shape"] == [224, 224, 3]
+
+    def test_ref_type(self):
+        """Test FieldType for reference type."""
+        field_type = FieldType(
+            kind="ref",
+            ref="at://did:plc:abc/atdata.sampleSchema/xyz",
+        )
+
+        schema = SchemaRecord(
+            name="RefSchema",
+            version="1.0.0",
+            fields=[FieldDef(name="reference", field_type=field_type, optional=False)],
+        )
+        record = schema.to_record()
+
+        field = record["fields"][0]
+        assert "ref" in field["fieldType"]["$type"]
+        assert field["fieldType"]["ref"] == "at://did:plc:abc/atdata.sampleSchema/xyz"
+
+    def test_array_type_with_items(self):
+        """Test FieldType for array with typed items."""
+        items_type = FieldType(kind="primitive", primitive="int")
+        field_type = FieldType(kind="array", items=items_type)
+
+        schema = SchemaRecord(
+            name="ArraySchema",
+            version="1.0.0",
+            fields=[FieldDef(name="numbers", field_type=field_type, optional=False)],
+        )
+        record = schema.to_record()
+
+        field = record["fields"][0]
+        assert "array" in field["fieldType"]["$type"]
+        assert field["fieldType"]["items"]["primitive"] == "int"
+
+
+class TestSchemaPublisherEdgeCases:
+    """Additional edge case tests for SchemaPublisher."""
+
+    def test_publish_list_field(self, authenticated_client, mock_atproto_client):
+        """Publish sample type with List[str] field."""
+        from typing import List
+
+        @atdata.packable
+        class ListSample:
+            tags: List[str]
+            values: List[int]
+
+        mock_response = Mock()
+        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/abc"
+        mock_atproto_client.com.atproto.repo.create_record.return_value = mock_response
+
+        publisher = SchemaPublisher(authenticated_client)
+        publisher.publish(ListSample, version="1.0.0")
+
+        call_args = mock_atproto_client.com.atproto.repo.create_record.call_args
+        record = call_args.kwargs["data"]["record"]
+
+        # Find the tags field
+        tags_field = next(f for f in record["fields"] if f["name"] == "tags")
+        assert "array" in tags_field["fieldType"]["$type"]
+
+    def test_publish_nested_dataclass_error(self, authenticated_client):
+        """Publishing sample with nested dataclass raises error."""
+        from dataclasses import dataclass
+
+        @dataclass
+        class Inner:
+            value: int
+
+        @atdata.packable
+        class Outer:
+            nested: Inner
+
+        publisher = SchemaPublisher(authenticated_client)
+
+        with pytest.raises(TypeError, match="Nested dataclass types not yet supported"):
+            publisher.publish(Outer, version="1.0.0")
+
+    def test_publish_unsupported_type_error(self, authenticated_client):
+        """Publishing sample with unsupported type raises error."""
+
+        @atdata.packable
+        class UnsupportedSample:
+            value: complex  # complex is not a supported type
+
+        publisher = SchemaPublisher(authenticated_client)
+
+        with pytest.raises(TypeError, match="Unsupported type"):
+            publisher.publish(UnsupportedSample, version="1.0.0")

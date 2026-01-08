@@ -374,3 +374,58 @@ def test_parquet_export(
 
 
 ##
+# Edge case tests for coverage
+
+
+def test_batch_aggregate_empty():
+    """Test _batch_aggregate with empty list returns empty list."""
+    result = atds._batch_aggregate([])
+    assert result == [], "Empty input should return empty list"
+
+
+def test_sample_batch_attribute_error():
+    """Test SampleBatch raises AttributeError for non-existent attributes."""
+    @atdata.packable
+    class SimpleSample:
+        name: str
+        value: int
+
+    samples = [SimpleSample(name="test", value=1)]
+    batch = atdata.SampleBatch[SimpleSample](samples)
+
+    with pytest.raises(AttributeError, match="No sample attribute named"):
+        _ = batch.nonexistent_attribute
+
+
+def test_sample_batch_type_property():
+    """Test SampleBatch.sample_type property."""
+    @atdata.packable
+    class TypedSample:
+        data: str
+
+    samples = [TypedSample(data="hello")]
+    batch = atdata.SampleBatch[TypedSample](samples)
+
+    assert batch.sample_type == TypedSample
+
+
+def test_dataset_batch_type_property(tmp_path):
+    """Test Dataset.batch_type property."""
+    @atdata.packable
+    class BatchTypeSample:
+        value: int
+
+    # Create a simple dataset
+    wds_filename = (tmp_path / "batch_type_test.tar").as_posix()
+    with wds.writer.TarWriter(wds_filename) as sink:
+        sample = BatchTypeSample(value=42)
+        sink.write(sample.as_wds)
+
+    dataset = atdata.Dataset[BatchTypeSample](wds_filename)
+    batch_type = dataset.batch_type
+
+    # batch_type should be SampleBatch parameterized with the sample type
+    assert batch_type.__origin__ == atdata.SampleBatch
+
+
+##
