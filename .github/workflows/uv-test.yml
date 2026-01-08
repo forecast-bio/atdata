@@ -34,6 +34,20 @@ jobs:
         # TODO Better to use --locked for author control over versions?
         # run: uv sync --locked --all-extras --dev
 
+      - name: Set up redis-stack for testing
+        run: |
+          sudo apt install lsb-release curl gpg
+          curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
+          sudo chmod 644 /usr/share/keyrings/redis-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
+          sudo apt update
+          sudo apt install redis-stack-server
+      
+      - name: Start redis-stack-server
+        run: |
+          sudo systemctl enable redis-stack-server
+          sudo systemctl start redis-stack-server
+
       - name: Run tests with coverage
         run: uv run pytest --cov=atdata --cov-report=xml --cov-report=term
 

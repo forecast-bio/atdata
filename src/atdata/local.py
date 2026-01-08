@@ -292,7 +292,8 @@ class Repo:
         # Note: S3 doesn't need directories created beforehand - s3fs handles this
 
         if ds.metadata is not None:
-            with cast( BinaryIO, hive_fs.open( metadata_path, 'wb' ) ) as f:
+            # Use s3:// prefix to ensure s3fs treats this as an S3 path
+            with cast( BinaryIO, hive_fs.open( f's3://{metadata_path.as_posix()}', 'wb' ) ) as f:
                 meta_packed = msgpack.packb( ds.metadata )
                 assert meta_packed is not None
                 f.write( cast( bytes, meta_packed ) )
@@ -343,7 +344,8 @@ class Repo:
                 writer_post = _writer_post
 
             else:
-                writer_opener = lambda s: cast( BinaryIO, hive_fs.open( s, 'wb' ) )
+                # Use s3:// prefix to ensure s3fs treats paths as S3 paths
+                writer_opener = lambda s: cast( BinaryIO, hive_fs.open( f's3://{s}', 'wb' ) )
                 writer_post = lambda s: written_shards.append( s )
 
             written_shards = []
