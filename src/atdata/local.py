@@ -300,7 +300,7 @@ class Repo:
             / 'metadata'
             / f'atdata-metadata--{new_uuid}.msgpack'
         )
-        metadata_path.parent.mkdir( parents = True, exist_ok = True )
+        # Note: S3 doesn't need directories created beforehand - s3fs handles this
 
         if ds.metadata is not None:
             with cast( BinaryIO, hive_fs.open( metadata_path, 'wb' ) ) as f:
