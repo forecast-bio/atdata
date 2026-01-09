@@ -25,21 +25,10 @@ import os
 from pathlib import Path
 from uuid import uuid4
 from tempfile import TemporaryDirectory
-import shutil
-import subprocess
 from dotenv import dotenv_values
 import msgpack
 
-# from redis_om import (
-#     EmbeddedJsonModel,
-#     JsonModel,
-#     Field,
-#     Migrator,
-#     get_redis_connection,
-# )
-from redis import (
-    Redis,
-)
+from redis import Redis
 
 from s3fs import (
     S3FileSystem,
@@ -300,10 +289,11 @@ class Repo:
             / 'metadata'
             / f'atdata-metadata--{new_uuid}.msgpack'
         )
-        metadata_path.parent.mkdir( parents = True, exist_ok = True )
+        # Note: S3 doesn't need directories created beforehand - s3fs handles this
 
         if ds.metadata is not None:
-            with cast( BinaryIO, hive_fs.open( metadata_path, 'wb' ) ) as f:
+            # Use s3:// prefix to ensure s3fs treats this as an S3 path
+            with cast( BinaryIO, hive_fs.open( f's3://{metadata_path.as_posix()}', 'wb' ) ) as f:
                 meta_packed = msgpack.packb( ds.metadata )
                 assert meta_packed is not None
                 f.write( cast( bytes, meta_packed ) )
@@ -340,35 +330,30 @@ class Repo:
                     local_cache_path = Path( temp_dir ) / p
 
                     # Copy to S3 using boto3 client (avoids s3fs async issues)
-                    print( 'Copying file to s3 ...', end = '' )
-                    # Parse bucket and key from path (format: bucket/path/to/file.tar)
                     path_parts = Path( p ).parts
                     bucket = path_parts[0]
                     key = str( Path( *path_parts[1:] ) )
 
                     with open( local_cache_path, 'rb' ) as f_in:
                         s3_client.put_object( Bucket=bucket, Key=key, Body=f_in.read() )
-                    print( ' done.' )
 
                     # Delete local cache file
-                    print( 'Deleting local cache file ...', end = '' )
-                    os.remove( local_cache_path )
-                    print( ' done.' )
+                    local_cache_path.unlink()
 
                     written_shards.append( p )
                 writer_post = _writer_post
 
             else:
-                writer_opener = lambda s: cast( BinaryIO, hive_fs.open( s, 'wb' ) )
+                # Use s3:// prefix to ensure s3fs treats paths as S3 paths
+                writer_opener = lambda s: cast( BinaryIO, hive_fs.open( f's3://{s}', 'wb' ) )
                 writer_post = lambda s: written_shards.append( s )
 
             written_shards = []
-            with wds.writer.ShardWriter( shard_pattern,
-                # opener = lambda s: hive_fs.open( s, 'wb' ),
-                # post = lambda s: written_shards.append( s ),
+            with wds.writer.ShardWriter(
+                shard_pattern,
                 opener = writer_opener,
                 post = writer_post,
-                **kwargs
+                **kwargs,
             ) as sink:
                 for sample in ds.ordered( batch_size = None ):
                     sink.write( sample.as_wds )

@@ -1,0 +1,39 @@
+{
+  "$type": "ac.foundation.dataset.record",
+  "name": "Small Sample Dataset",
+  "schemaRef": "at://did:plc:def456/ac.foundation.dataset.sampleSchema/textsample@2.1.0",
+  "storage": {
+    "$type": "ac.foundation.dataset.storageBlobs",
+    "blobs": [
+      {
+        "$type": "blob",
+        "ref": {
+          "$link": "bafyreig4rvsqx3vfzdchq2qx7xr2nq2y4vjvd4w5pqtjwkqiw7h5e6vf7e"
+        },
+        "mimeType": "application/x-tar",
+        "size": 1234567
+      },
+      {
+        "$type": "blob",
+        "ref": {
+          "$link": "bafyreig5saabc3defghijklmnopqrstuvwxyz123456789abcdefghijk"
+        },
+        "mimeType": "application/x-tar",
+        "size": 2345678
+      }
+    ]
+  },
+  "description": "Small text dataset stored directly on PDS for maximum decentralization",
+  "tags": [
+    "nlp",
+    "text",
+    "small-dataset"
+  ],
+  "size": {
+    "samples": 1000,
+    "bytes": 3580245,
+    "shards": 2
+  },
+  "license": "CC-BY-4.0",
+  "createdAt": "2025-01-07T10:30:00Z"
+}

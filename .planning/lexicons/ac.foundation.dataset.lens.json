@@ -1,0 +1,99 @@
+{
+  "lexicon": 1,
+  "id": "ac.foundation.dataset.lens",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "Bidirectional transformation (Lens) between two sample types, with code stored in external repositories",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": [
+          "name",
+          "sourceSchema",
+          "targetSchema",
+          "getterCode",
+          "putterCode",
+          "createdAt"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Human-readable lens name",
+            "maxLength": 100
+          },
+          "sourceSchema": {
+            "type": "string",
+            "description": "AT-URI reference to source sampleSchema",
+            "maxLength": 500
+          },
+          "targetSchema": {
+            "type": "string",
+            "description": "AT-URI reference to target sampleSchema",
+            "maxLength": 500
+          },
+          "description": {
+            "type": "string",
+            "description": "What this transformation does",
+            "maxLength": 1000
+          },
+          "getterCode": {
+            "type": "ref",
+            "ref": "#codeReference",
+            "description": "Code reference for getter function (Source -> Target)"
+          },
+          "putterCode": {
+            "type": "ref",
+            "ref": "#codeReference",
+            "description": "Code reference for putter function (Target, Source -> Source)"
+          },
+          "language": {
+            "type": "string",
+            "description": "Programming language of the lens implementation (e.g., 'python', 'typescript')",
+            "maxLength": 50
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Arbitrary metadata (author, performance notes, etc.)"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Timestamp when this lens was created"
+          }
+        }
+      }
+    },
+    "codeReference": {
+      "type": "object",
+      "description": "Reference to code in an external repository (GitHub, tangled.org, etc.)",
+      "required": [
+        "repository",
+        "commit",
+        "path"
+      ],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "description": "Repository URL (e.g., 'https://github.com/user/repo' or 'at://did/tangled.repo/...')",
+          "maxLength": 500
+        },
+        "commit": {
+          "type": "string",
+          "description": "Git commit hash (ensures immutability)",
+          "maxLength": 40
+        },
+        "path": {
+          "type": "string",
+          "description": "Path to function within repository (e.g., 'lenses/vision.py:rgb_to_grayscale')",
+          "maxLength": 500
+        },
+        "branch": {
+          "type": "string",
+          "description": "Optional branch name (for reference, commit hash is authoritative)",
+          "maxLength": 100
+        }
+      }
+    }
+  }
+}

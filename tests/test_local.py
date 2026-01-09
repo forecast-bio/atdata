@@ -3,15 +3,7 @@
 ##
 # Imports
 
-# Tests
 import pytest
-import warnings
-
-# Suppress s3fs/moto async incompatibility warnings early
-# These occur during test cleanup and coverage instrumentation
-# Use simplefilter to ensure it applies to all contexts including pytest internals
-warnings.simplefilter("ignore", category=RuntimeWarning)
-warnings.simplefilter("ignore", category=pytest.PytestUnraisableExceptionWarning)
 
 # System
 from dataclasses import dataclass
@@ -68,12 +60,9 @@ def mock_s3():
     """Provide a mock S3 environment using moto.
 
     Note: Tests using this fixture may generate warnings due to s3fs/moto async
-    incompatibility. These are expected and suppressed via warnings.filterwarnings.
+    incompatibility. These are suppressed via @pytest.mark.filterwarnings on
+    individual tests that use this fixture.
     """
-    # Suppress s3fs/moto async incompatibility warnings
-    warnings.filterwarnings("ignore", message="coroutine.*was never awaited")
-    warnings.filterwarnings("ignore", category=pytest.PytestUnraisableExceptionWarning)
-
     with mock_aws():
         # Create S3 credentials dict (no endpoint_url for moto)
         creds = {
