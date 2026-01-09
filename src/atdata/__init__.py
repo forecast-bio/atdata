@@ -51,5 +51,8 @@ from .lens import (
     lens,
 )
 
+# ATProto integration (lazy import to avoid requiring atproto package)
+from . import atmosphere
+
 
 #

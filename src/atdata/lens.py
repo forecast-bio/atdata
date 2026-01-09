@@ -201,22 +201,6 @@ class Lens( Generic[S, V] ):
         """
         return self._getter( s )
 
-# TODO Figure out how to properly parameterize this
-# def _lens_factory[S, V]( register: bool = True ):
-#     """Register the annotated function `f` as the getter of a sample lens"""
-
-#     # The actual lens decorator taking a lens getter function to a lens object
-#     def _decorator( f: LensGetter[S, V] ) -> Lens[S, V]:
-#         ret = Lens[S, V]( f )
-#         if register:
-#             _network.register( ret )
-#         return ret
-    
-#     # Return the lens decorator
-#     return _decorator
-
-# # For convenience
-# lens = _lens_factory
 
 def lens(  f: LensGetter[S, V] ) -> Lens[S, V]:
     """Decorator to create and register a lens transformation.
@@ -245,12 +229,6 @@ def lens(  f: LensGetter[S, V] ) -> Lens[S, V]:
     _network.register( ret )
     return ret
 
-
-##
-# Global registry of used lenses
-
-# _registered_lenses: Dict[LensSignature, Lens] = dict()
-# """TODO"""
 
 class LensNetwork:
     """Global registry for lens transformations between sample types.
@@ -292,18 +270,6 @@ class LensNetwork:
             If a lens already exists for the same type pair, it will be
             overwritten.
         """
-
-        # sig = inspect.signature( _lens.get )
-        # input_types = list( sig.parameters.values() )
-        # assert len( input_types ) == 1, \
-        #     'Wrong number of input args for lens: should only have one'
-        
-        # input_type = input_types[0].annotation
-        # print( input_type )
-        # output_type = sig.return_annotation
-
-        # self._registry[input_type, output_type] = _lens
-        # print( _lens.source_type )
         self._registry[_lens.source_type, _lens.view_type] = _lens
     
     def transform( self, source: DatasetType, view: DatasetType ) -> Lens:
@@ -323,8 +289,6 @@ class LensNetwork:
             Currently only supports direct transformations. Compositional
             transformations (chaining multiple lenses) are not yet implemented.
         """
-
-        # TODO Handle compositional closure
         ret = self._registry.get( (source, view), None )
         if ret is None:
             raise ValueError( f'No registered lens from source {source} to view {view}' )
@@ -332,22 +296,5 @@ class LensNetwork:
         return ret
 
 
-# Create global singleton registry instance
+# Global singleton registry instance
 _network = LensNetwork()
-
-# def lens( f: LensPutter ) -> Lens:
-#     """Register the annotated function `f` as a sample lens"""
-#     ##
-    
-#     sig = inspect.signature( f )
-
-#     input_types = list( sig.parameters.values() )
-#     output_type = sig.return_annotation
-    
-#     _registered_lenses[]
-
-#     f.lens = Lens(
-
-#     )
-
-#     return f

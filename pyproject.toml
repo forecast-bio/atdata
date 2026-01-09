@@ -1,6 +1,6 @@
 [project]
 name = "atdata"
-version = "0.1.3b4"
+version = "0.2.0a1"
 description = "A loose federation of distributed, typed datasets"
 readme = "README.md"
 authors = [
@@ -8,13 +8,25 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
+    "atproto>=0.0.65",
     "fastparquet>=2024.11.0",
     "msgpack>=1.1.2",
     "numpy>=2.3.4",
     "ormsgpack>=1.11.0",
     "pandas>=2.3.3",
+    "pydantic>=2.12.5",
+    "python-dotenv>=1.2.1",
+    "redis-om>=0.3.5",
+    "requests>=2.32.5",
+    "s3fs>=2025.12.0",
+    "schemamodels>=0.9.1",
     "tqdm>=4.67.1",
     "webdataset>=1.0.2",
+]
+
+[project.optional-dependencies]
+atmosphere = [
+    "atproto>=0.0.55",
 ]
 
 [project.scripts]
@@ -29,6 +41,8 @@ addopts = "--cov=atdata --cov-report=html"
 
 [dependency-groups]
 dev = [
+    "jupyter>=1.1.1",
+    "moto[s3]>=5.0.29",
     "pytest>=8.4.2",
     "pytest-cov>=7.0.0",
 ]

@@ -1,10 +1,25 @@
 {
     "cSpell.words": [
         "atdata",
+        "atlocal",
+        "atproto",
+        "creds",
+        "dtype",
         "getattr",
+        "hgetall",
+        "hset",
+        "maxcount",
+        "minioadmin",
         "msgpack",
+        "ndarray",
+        "NSID",
         "pypi",
         "pyproject",
-        "pytest"
+        "pytest",
+        "randn",
+        "rkey",
+        "schemamodels",
+        "unpackb",
+        "webdataset"
     ]
 }

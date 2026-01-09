@@ -1,0 +1,26 @@
+{
+  "$type": "ac.foundation.dataset.record",
+  "name": "CIFAR-10 Training Set",
+  "schemaRef": "at://did:plc:abc123/ac.foundation.dataset.sampleSchema/imageclassification@1.0.0",
+  "storage": {
+    "$type": "ac.foundation.dataset.storageExternal",
+    "urls": [
+      "s3://my-bucket/cifar10-train-{000000..000049}.tar"
+    ]
+  },
+  "description": "CIFAR-10 training images (50,000 samples) stored as WebDataset shards on S3",
+  "metadata": "<msgpack-encoded bytes here>",
+  "tags": [
+    "computer-vision",
+    "classification",
+    "cifar10",
+    "training"
+  ],
+  "size": {
+    "samples": 50000,
+    "bytes": 178456789,
+    "shards": 50
+  },
+  "license": "MIT",
+  "createdAt": "2025-01-06T12:00:00Z"
+}

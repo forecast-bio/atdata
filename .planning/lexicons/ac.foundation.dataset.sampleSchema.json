@@ -1,0 +1,107 @@
+{
+  "lexicon": 1,
+  "id": "ac.foundation.dataset.sampleSchema",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "Definition of a PackableSample-compatible sample type. Supports versioning via rkey format: {NSID}@{semver}. Schema format is extensible via union type.",
+      "key": "any",
+      "record": {
+        "type": "object",
+        "required": [
+          "name",
+          "version",
+          "schemaType",
+          "schema",
+          "createdAt"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Human-readable display name for this sample type. Used for documentation and UI. The NSID in the record URI provides unique identification; name collisions across NSIDs are acceptable.",
+            "maxLength": 100
+          },
+          "version": {
+            "type": "string",
+            "description": "Semantic version (e.g., '1.0.0')",
+            "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
+            "maxLength": 100
+          },
+          "schemaType": {
+            "type": "ref",
+            "ref": "ac.foundation.dataset.schemaType",
+            "description": "Type of schema definition. This field indicates which union member is present in the schema field."
+          },
+          "schema": {
+            "type": "union",
+            "refs": ["ac.foundation.dataset.sampleSchema#jsonSchemaFormat"],
+            "closed": false,
+            "description": "Schema definition for this sample type. Currently supports JSON Schema Draft 7. Union allows for future schema formats (Avro, Protobuf, etc.) without breaking changes."
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable description of what this sample type represents",
+            "maxLength": 5000
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Optional metadata about this schema. Common fields include license and tags, but any additional fields are permitted.",
+            "maxProperties": 50,
+            "properties": {
+              "license": {
+                "type": "string",
+                "description": "License identifier or URL. SPDX identifiers recommended (e.g., MIT, Apache-2.0, CC-BY-4.0) or full SPDX URLs (e.g., http://spdx.org/licenses/MIT). Aligns with Schema.org license property.",
+                "maxLength": 200
+              },
+              "tags": {
+                "type": "array",
+                "description": "Categorization keywords for discovery. Aligns with Schema.org keywords property.",
+                "items": {
+                  "type": "string",
+                  "maxLength": 150
+                },
+                "maxLength": 30
+              }
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Timestamp when this schema version was created. Immutable once set (ATProto records are permanent)."
+          }
+        }
+      }
+    },
+    "jsonSchemaFormat": {
+      "type": "object",
+      "description": "JSON Schema Draft 7 format for sample type definitions. Used with NDArray shim for array types.",
+      "required": ["$type", "$schema", "type", "properties"],
+      "properties": {
+        "$type": {
+          "type": "string",
+          "const": "ac.foundation.dataset.sampleSchema#jsonSchemaFormat"
+        },
+        "$schema": {
+          "type": "string",
+          "const": "http://json-schema.org/draft-07/schema#",
+          "description": "JSON Schema version identifier"
+        },
+        "type": {
+          "type": "string",
+          "const": "object",
+          "description": "Sample types must be objects"
+        },
+        "properties": {
+          "type": "object",
+          "description": "Field definitions for the sample type",
+          "minProperties": 1
+        },
+        "arrayFormatVersions": {
+          "type": "object",
+          "description": "Mapping from array format identifiers to semantic versions. Keys are ac.foundation.dataset.arrayFormat values (e.g., 'ndarrayBytes'), values are semver strings (e.g., '1.0.0'). Foundation.ac maintains canonical shim schemas at https://foundation.ac/schemas/atdata-{format}-bytes/{version}/.",
+          "maxProperties": 10
+        }
+      }
+    }
+  }
+}

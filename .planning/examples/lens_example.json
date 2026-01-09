@@ -1,0 +1,27 @@
+{
+  "$type": "ac.foundation.dataset.lens",
+  "name": "RGB to Grayscale Conversion",
+  "sourceSchema": "at://did:plc:abc123/ac.foundation.dataset.sampleSchema/rgbimage@1.0.0",
+  "targetSchema": "at://did:plc:abc123/ac.foundation.dataset.sampleSchema/grayscaleimage@1.0.0",
+  "description": "Converts RGB images to grayscale using standard luminosity formula",
+  "getterCode": {
+    "repository": "https://github.com/alice/vision-lenses",
+    "commit": "a1b2c3d4e5f6789abcdef0123456789abcdef012",
+    "path": "lenses/color.py:rgb_to_grayscale",
+    "branch": "main"
+  },
+  "putterCode": {
+    "repository": "https://github.com/alice/vision-lenses",
+    "commit": "a1b2c3d4e5f6789abcdef0123456789abcdef012",
+    "path": "lenses/color.py:grayscale_to_rgb",
+    "branch": "main"
+  },
+  "language": "python",
+  "metadata": {
+    "author": "alice.bsky.social",
+    "performance": "O(n) where n is number of pixels",
+    "reversible": false,
+    "notes": "Putter creates approximate RGB by duplicating grayscale channel"
+  },
+  "createdAt": "2025-01-07T14:00:00Z"
+}
