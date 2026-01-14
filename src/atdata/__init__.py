@@ -62,6 +62,10 @@ from ._protocols import (
     AbstractDataStore,
 )
 
+from ._schema_codec import (
+    schema_to_type,
+)
+
 # ATProto integration (lazy import to avoid requiring atproto package)
 from . import atmosphere
 

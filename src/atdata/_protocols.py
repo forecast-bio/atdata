@@ -33,15 +33,12 @@ from typing import (
     Optional,
     Protocol,
     Type,
-    TypeVar,
     TYPE_CHECKING,
     runtime_checkable,
 )
 
 if TYPE_CHECKING:
     from .dataset import PackableSample, Dataset
-
-ST = TypeVar("ST", bound="PackableSample")
 
 
 ##
@@ -95,7 +92,7 @@ class IndexEntry(Protocol):
 # AbstractIndex Protocol
 
 
-class AbstractIndex(Protocol[ST]):
+class AbstractIndex(Protocol):
     """Protocol for index operations - implemented by LocalIndex and AtmosphereIndex.
 
     This protocol defines the common interface for managing dataset metadata:
@@ -103,25 +100,29 @@ class AbstractIndex(Protocol[ST]):
     - Inserting and listing datasets
     - (Future) Publishing and retrieving lenses
 
-    The protocol is generic over ST (sample type), allowing type-safe operations
-    when the concrete sample type is known.
+    A single index can hold datasets of many different sample types. The sample
+    type is tracked via schema references, not as a generic parameter on the index.
 
     Example:
-        >>> def publish_and_list(index: AbstractIndex, ds: Dataset[MySample]) -> None:
-        ...     # Publish schema first
-        ...     schema_ref = index.publish_schema(MySample, version="1.0.0")
-        ...     # Then insert dataset
-        ...     entry = index.insert_dataset(ds, name="my-dataset")
-        ...     # List all datasets
-        ...     for e in index.list_datasets():
-        ...         print(e.name)
+        >>> def publish_and_list(index: AbstractIndex) -> None:
+        ...     # Publish schemas for different types
+        ...     schema1 = index.publish_schema(ImageSample, version="1.0.0")
+        ...     schema2 = index.publish_schema(TextSample, version="1.0.0")
+        ...
+        ...     # Insert datasets of different types
+        ...     index.insert_dataset(image_ds, name="images")
+        ...     index.insert_dataset(text_ds, name="texts")
+        ...
+        ...     # List all datasets (mixed types)
+        ...     for entry in index.list_datasets():
+        ...         print(f"{entry.name} -> {entry.schema_ref}")
     """
 
     # Dataset operations
 
     def insert_dataset(
         self,
-        ds: "Dataset[ST]",
+        ds: "Dataset",
         *,
         name: str,
         schema_ref: Optional[str] = None,
@@ -129,8 +130,11 @@ class AbstractIndex(Protocol[ST]):
     ) -> IndexEntry:
         """Insert a dataset into the index.
 
+        The sample type is inferred from ``ds.sample_type``. If schema_ref is not
+        provided, the schema may be auto-published based on the sample type.
+
         Args:
-            ds: The Dataset to register in the index.
+            ds: The Dataset to register in the index (any sample type).
             name: Human-readable name for the dataset.
             schema_ref: Optional explicit schema reference. If not provided,
                 the schema may be auto-published or inferred from ds.sample_type.
@@ -159,7 +163,7 @@ class AbstractIndex(Protocol[ST]):
         """List all dataset entries in this index.
 
         Yields:
-            IndexEntry for each dataset.
+            IndexEntry for each dataset (may be of different sample types).
         """
         ...
 
@@ -167,7 +171,7 @@ class AbstractIndex(Protocol[ST]):
 
     def publish_schema(
         self,
-        sample_type: Type[ST],
+        sample_type: "Type[PackableSample]",
         *,
         version: str = "1.0.0",
         **kwargs,
@@ -206,6 +210,34 @@ class AbstractIndex(Protocol[ST]):
 
         Yields:
             Schema records as dictionaries.
+        """
+        ...
+
+    def decode_schema(self, ref: str) -> "Type[PackableSample]":
+        """Reconstruct a Python PackableSample type from a stored schema.
+
+        This method enables loading datasets without knowing the sample type
+        ahead of time. The index retrieves the schema record and dynamically
+        generates a PackableSample subclass matching the schema definition.
+
+        Args:
+            ref: Schema reference string (local:// or at://).
+
+        Returns:
+            A dynamically generated PackableSample subclass with fields
+            matching the schema definition. The class can be used with
+            ``Dataset[T]`` to load and iterate over samples.
+
+        Raises:
+            KeyError: If schema not found.
+            ValueError: If schema cannot be decoded (unsupported field types).
+
+        Example:
+            >>> entry = index.get_dataset("my-dataset")
+            >>> SampleType = index.decode_schema(entry.schema_ref)
+            >>> ds = Dataset[SampleType](entry.data_urls[0])
+            >>> for sample in ds.ordered():
+            ...     print(sample)  # sample is instance of SampleType
         """
         ...
 

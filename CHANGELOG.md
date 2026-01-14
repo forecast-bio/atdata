@@ -11,6 +11,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 ### Changed
+- Revise AbstractIndex: Remove single-type generic, add schema decoding (#123)
+- Implement dynamic PackableSample class generation from schema (#126)
+- Add decode_schema() method to AbstractIndex (#125)
+- Remove generic type parameter from AbstractIndex (#124)
 - Phase 1: Define Abstract Protocols (_protocols.py) (#112)
 - Export protocols from __init__.py (#122)
 - Define AbstractDataStore protocol (#121)
