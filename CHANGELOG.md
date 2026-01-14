@@ -11,6 +11,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 ### Changed
+- Phase 1: Define Abstract Protocols (_protocols.py) (#112)
+- Export protocols from __init__.py (#122)
+- Define AbstractDataStore protocol (#121)
+- Define AbstractIndex protocol (#120)
+- Define IndexEntry protocol (#119)
+- Review ATProto vs Local integration architecture convergence (#110)
 - Add HuggingFace Datasets-style API to atdata (#103)
 - Support streaming mode parameter (#108)
 - Add split parameter handling (train/test/validation) (#107)

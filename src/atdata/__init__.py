@@ -56,6 +56,12 @@ from ._hf_api import (
     DatasetDict,
 )
 
+from ._protocols import (
+    IndexEntry,
+    AbstractIndex,
+    AbstractDataStore,
+)
+
 # ATProto integration (lazy import to avoid requiring atproto package)
 from . import atmosphere
 
