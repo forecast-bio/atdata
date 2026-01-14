@@ -51,6 +51,11 @@ from .lens import (
     lens,
 )
 
+from ._hf_api import (
+    load_dataset,
+    DatasetDict,
+)
+
 # ATProto integration (lazy import to avoid requiring atproto package)
 from . import atmosphere
 
