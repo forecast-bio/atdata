@@ -11,6 +11,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 ### Changed
+- Adversarial review: Phase 4 code contraction (#148)
+- Simplify _python_type_to_field_type in local.py (#155)
+- Clean up unused imports and type: ignore comments (#153)
+- Precompile split detection regex patterns (#151)
+- Add missing error path tests for invalid msgpack data (#154)
+- Remove duplicate S3 write logic between Repo.insert and S3DataStore (#152)
+- Remove verbose docstrings that restate function signatures (#150)
+- Remove redundant _ensure_good() call in PackableSample.from_data() (#149)
+- Phase 4: Integrate with load_dataset() (@handle/dataset resolution) (#115)
+- Support auto-type resolution from index schema (#147)
+- Add @handle/dataset path resolution (#146)
+- Extend load_dataset signature with index parameter (#145)
+- Adversarial review: Phase 1 and Phase 2 implementation (#133)
 - Phase 3: Implement Concrete Classes (LocalIndex, AtmosphereIndex, S3DataStore) (#114)
 - Implement AtmosphereIndex wrapper (#144)
 - Implement S3DataStore class (#143)

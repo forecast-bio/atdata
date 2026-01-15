@@ -25,7 +25,6 @@ from atdata import (
 from atdata._cid import generate_cid
 from atdata._protocols import IndexEntry
 
-import os
 from pathlib import Path
 from uuid import uuid4
 from tempfile import TemporaryDirectory
@@ -48,14 +47,12 @@ from dataclasses import (
 from typing import (
     Any,
     Optional,
-    Dict,
     Type,
     TypeVar,
     Generator,
     Iterator,
     BinaryIO,
     Union,
-    Literal,
     cast,
     get_type_hints,
     get_origin,
@@ -73,45 +70,20 @@ T = TypeVar( 'T', bound = PackableSample )
 # Helpers
 
 def _kind_str_for_sample_type( st: Type[PackableSample] ) -> str:
-    """Convert a sample type to a fully-qualified string identifier.
-
-    Args:
-        st: The sample type class.
-
-    Returns:
-        A string in the format 'module.name' identifying the sample type.
-    """
+    """Return fully-qualified 'module.name' string for a sample type."""
     return f'{st.__module__}.{st.__name__}'
 
 ##
 # Schema helpers
 
 def _schema_ref_from_type(sample_type: Type[PackableSample], version: str = "1.0.0") -> str:
-    """Generate a local schema reference from a sample type.
-
-    Args:
-        sample_type: The PackableSample subclass.
-        version: Semantic version string.
-
-    Returns:
-        Schema reference in format 'local://schemas/{module.Class}@{version}'.
-    """
+    """Generate 'local://schemas/{module.Class}@{version}' reference."""
     kind_str = _kind_str_for_sample_type(sample_type)
     return f"local://schemas/{kind_str}@{version}"
 
 
 def _parse_schema_ref(ref: str) -> tuple[str, str]:
-    """Parse a local schema reference into module.Class and version.
-
-    Args:
-        ref: Schema reference in format 'local://schemas/{module.Class}@{version}'.
-
-    Returns:
-        Tuple of (module.Class, version).
-
-    Raises:
-        ValueError: If the reference format is invalid.
-    """
+    """Parse 'local://schemas/{module.Class}@{version}' into (module.Class, version)."""
     if not ref.startswith("local://schemas/"):
         raise ValueError(f"Invalid local schema reference: {ref}")
 
@@ -123,29 +95,16 @@ def _parse_schema_ref(ref: str) -> tuple[str, str]:
     return kind_str, version
 
 
+_PRIMITIVE_TYPE_MAP = {
+    str: "str", int: "int", float: "float", bool: "bool", bytes: "bytes",
+}
+
+
 def _python_type_to_field_type(python_type: Any) -> dict:
-    """Convert a Python type to a schema field type dict.
-
-    Args:
-        python_type: Python type annotation.
-
-    Returns:
-        Field type dict with '$type' and type-specific fields.
-
-    Raises:
-        TypeError: If the type is not supported.
-    """
+    """Convert Python type annotation to schema field type dict."""
     # Handle primitives
-    if python_type is str:
-        return {"$type": "local#primitive", "primitive": "str"}
-    elif python_type is int:
-        return {"$type": "local#primitive", "primitive": "int"}
-    elif python_type is float:
-        return {"$type": "local#primitive", "primitive": "float"}
-    elif python_type is bool:
-        return {"$type": "local#primitive", "primitive": "bool"}
-    elif python_type is bytes:
-        return {"$type": "local#primitive", "primitive": "bytes"}
+    if python_type in _PRIMITIVE_TYPE_MAP:
+        return {"$type": "local#primitive", "primitive": _PRIMITIVE_TYPE_MAP[python_type]}
 
     # Check for NDArray
     type_str = str(python_type)
@@ -179,7 +138,6 @@ def _python_type_to_field_type(python_type: Any) -> dict:
 
 
 def _numpy_dtype_to_string(dtype: Any) -> str:
-    """Convert a numpy dtype annotation to a string."""
     dtype_str = str(dtype)
     dtype_map = {
         "float16": "float16", "float32": "float32", "float64": "float64",
@@ -413,18 +371,7 @@ class LocalDatasetEntry:
 BasicIndexEntry = LocalDatasetEntry
 
 def _s3_env( credentials_path: str | Path ) -> dict[str, Any]:
-    """Load S3 credentials from a .env file.
-
-    Args:
-        credentials_path: Path to .env file containing S3 credentials.
-
-    Returns:
-        Dictionary with AWS_ENDPOINT, AWS_ACCESS_KEY_ID, and AWS_SECRET_ACCESS_KEY.
-
-    Raises:
-        AssertionError: If required credentials are missing from the file.
-    """
-    ##
+    """Load S3 credentials (AWS_ENDPOINT, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY) from .env file."""
     credentials_path = Path( credentials_path )
     env_values = dotenv_values( credentials_path )
     assert 'AWS_ENDPOINT' in env_values
@@ -441,17 +388,7 @@ def _s3_env( credentials_path: str | Path ) -> dict[str, Any]:
     }
 
 def _s3_from_credentials( creds: str | Path | dict ) -> S3FileSystem:
-    """Create an S3FileSystem from credentials.
-
-    Args:
-        creds: Either a path to a .env file with credentials, or a dict
-            containing AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and optionally
-            AWS_ENDPOINT.
-
-    Returns:
-        Configured S3FileSystem instance.
-    """
-    ##
+    """Create S3FileSystem from credentials dict or .env file path."""
     if not isinstance( creds, dict ):
         creds = _s3_env( creds )
 

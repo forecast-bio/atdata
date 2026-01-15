@@ -585,4 +585,65 @@ def test_dataset_with_lens_batched(tmp_path):
     assert batches_seen == n_samples // batch_size
 
 
+def test_from_bytes_invalid_msgpack():
+    """Test from_bytes raises on invalid msgpack data."""
+    @atdata.packable
+    class SimpleSample:
+        value: int
+
+    with pytest.raises(Exception):  # ormsgpack raises on invalid data
+        SimpleSample.from_bytes(b"not valid msgpack data")
+
+
+def test_from_bytes_missing_field():
+    """Test from_bytes raises when required field is missing."""
+    @atdata.packable
+    class RequiredFieldSample:
+        name: str
+        count: int
+
+    import ormsgpack
+    # Only provide 'name', missing 'count'
+    incomplete_data = ormsgpack.packb({"name": "test"})
+
+    with pytest.raises(TypeError):  # Missing required argument
+        RequiredFieldSample.from_bytes(incomplete_data)
+
+
+def test_wrap_missing_msgpack_key(tmp_path):
+    """Test wrap asserts on sample missing msgpack key."""
+    @atdata.packable
+    class WrapTestSample:
+        value: int
+
+    wds_filename = (tmp_path / "wrap_test.tar").as_posix()
+    with wds.writer.TarWriter(wds_filename) as sink:
+        sample = WrapTestSample(value=42)
+        sink.write(sample.as_wds)
+
+    dataset = atdata.Dataset[WrapTestSample](wds_filename)
+
+    # Directly call wrap with missing key
+    with pytest.raises(AssertionError):
+        dataset.wrap({"__key__": "test"})  # Missing 'msgpack' key
+
+
+def test_wrap_wrong_msgpack_type(tmp_path):
+    """Test wrap asserts when msgpack value is not bytes."""
+    @atdata.packable
+    class WrapTypeSample:
+        value: int
+
+    wds_filename = (tmp_path / "wrap_type_test.tar").as_posix()
+    with wds.writer.TarWriter(wds_filename) as sink:
+        sample = WrapTypeSample(value=42)
+        sink.write(sample.as_wds)
+
+    dataset = atdata.Dataset[WrapTypeSample](wds_filename)
+
+    # Directly call wrap with wrong type
+    with pytest.raises(AssertionError):
+        dataset.wrap({"__key__": "test", "msgpack": "not bytes"})
+
+
 ##

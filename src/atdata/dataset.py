@@ -54,8 +54,6 @@ from typing import (
     Sequence,
     Iterable,
     Callable,
-    Union,
-    #
     Self,
     Generic,
     Type,
@@ -202,16 +200,12 @@ class PackableSample( ABC ):
         """Create a sample instance from unpacked msgpack data.
 
         Args:
-            data: A dictionary of unpacked msgpack data with keys matching
-                the sample's field names.
+            data: Dictionary with keys matching the sample's field names.
 
         Returns:
-            A new instance of this sample class with fields populated from
-            the data dictionary and NDArray fields auto-converted from bytes.
+            New instance with NDArray fields auto-converted from bytes.
         """
-        ret = cls( **data )
-        ret._ensure_good()
-        return ret
+        return cls( **data )
     
     @classmethod
     def from_bytes( cls, bs: bytes ) -> Self:
