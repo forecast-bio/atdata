@@ -11,6 +11,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 ### Changed
+- Phase 2: Refactor local.py to use new protocols (#113)
+- Add CID utilities module (_cid.py) with ATProto-compatible CID generation (#132)
+- Rename BasicIndexEntry to LocalDatasetEntry with CID + name dual identity (#127)
+- Add LocalIndex alias for Index class (#129)
+- Update Repo.insert() to require name parameter (#130)
+- Update test_local.py for new LocalDatasetEntry API (#131)
 - Revise AbstractIndex: Remove single-type generic, add schema decoding (#123)
 - Implement dynamic PackableSample class generation from schema (#126)
 - Add decode_schema() method to AbstractIndex (#125)

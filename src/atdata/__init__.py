@@ -66,6 +66,11 @@ from ._schema_codec import (
     schema_to_type,
 )
 
+from ._cid import (
+    generate_cid,
+    verify_cid,
+)
+
 # ATProto integration (lazy import to avoid requiring atproto package)
 from . import atmosphere
 

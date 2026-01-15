@@ -6,11 +6,13 @@ This module provides a local storage backend for atdata datasets using:
 
 The main classes are:
 - Repo: Manages dataset storage in S3 with Redis indexing
-- Index: Redis-backed index for tracking dataset metadata
-- BasicIndexEntry: Index entry representing a stored dataset
+- LocalIndex: Redis-backed index for tracking dataset metadata
+- LocalDatasetEntry: Index entry representing a stored dataset
 
 This is intended for development and small-scale deployment before
-migrating to the full atproto PDS infrastructure.
+migrating to the full atproto PDS infrastructure. The implementation
+uses ATProto-compatible CIDs for content addressing, enabling seamless
+promotion from local storage to the atmosphere (ATProto network).
 """
 
 ##
@@ -20,6 +22,8 @@ from atdata import (
     PackableSample,
     Dataset,
 )
+from atdata._cid import generate_cid
+from atdata._protocols import IndexEntry
 
 import os
 from pathlib import Path
@@ -90,39 +94,160 @@ def _decode_bytes_dict( d: dict[bytes, bytes] ) -> dict[str, str]:
 # Redis object model
 
 @dataclass
-class BasicIndexEntry:
-    """Index entry for a dataset stored in the repository.
+class LocalDatasetEntry:
+    """Index entry for a dataset stored in the local repository.
 
-    Tracks metadata about a dataset stored in S3, including its location,
-    type, and unique identifier.
+    Implements the IndexEntry protocol for compatibility with AbstractIndex.
+    Uses dual identity: a content-addressable CID (ATProto-compatible) and
+    a human-readable name.
+
+    The CID is generated from the entry's content (schema_ref + data_urls),
+    ensuring the same data produces the same CID whether stored locally or
+    in the atmosphere. This enables seamless promotion from local to ATProto.
     """
     ##
 
-    wds_url: str
-    """WebDataset URL for the dataset tar files, for use with atdata.Dataset."""
+    _name: str
+    """Human-readable name for this dataset."""
 
-    sample_kind: str
-    """Fully-qualified sample type name (e.g., 'module.ClassName')."""
+    _schema_ref: str
+    """Reference to the schema for this dataset (local:// path)."""
 
-    metadata_url: str | None
-    """S3 URL to the dataset's metadata msgpack file, if any."""
+    _data_urls: list[str]
+    """WebDataset URLs for the data."""
 
-    uuid: str = field( default_factory = lambda: str( uuid4() ) )
-    """Unique identifier for this dataset entry. Defaults to a new UUID if not provided."""
+    _metadata: dict | None = None
+    """Arbitrary metadata dictionary, or None if not set."""
 
-    def write_to( self, redis: Redis ):
+    _cid: str | None = field(default=None, repr=False)
+    """Content identifier (ATProto-compatible CID). Generated from content if not provided."""
+
+    # Legacy field for backwards compatibility during migration
+    _legacy_uuid: str | None = field(default=None, repr=False)
+    """Legacy UUID for backwards compatibility with existing Redis entries."""
+
+    def __post_init__(self):
+        """Generate CID from content if not provided."""
+        if self._cid is None:
+            self._cid = self._generate_cid()
+
+    def _generate_cid(self) -> str:
+        """Generate ATProto-compatible CID from entry content."""
+        # CID is based on schema_ref and data_urls - the identity of the dataset
+        content = {
+            "schema_ref": self._schema_ref,
+            "data_urls": self._data_urls,
+        }
+        return generate_cid(content)
+
+    # IndexEntry protocol properties
+
+    @property
+    def name(self) -> str:
+        """Human-readable dataset name."""
+        return self._name
+
+    @property
+    def schema_ref(self) -> str:
+        """Reference to the schema for this dataset."""
+        return self._schema_ref
+
+    @property
+    def data_urls(self) -> list[str]:
+        """WebDataset URLs for the data."""
+        return self._data_urls
+
+    @property
+    def metadata(self) -> dict | None:
+        """Arbitrary metadata dictionary, or None if not set."""
+        return self._metadata
+
+    # Additional properties
+
+    @property
+    def cid(self) -> str:
+        """Content identifier (ATProto-compatible CID)."""
+        assert self._cid is not None
+        return self._cid
+
+    # Legacy compatibility
+
+    @property
+    def wds_url(self) -> str:
+        """Legacy property: returns first data URL for backwards compatibility."""
+        return self._data_urls[0] if self._data_urls else ""
+
+    @property
+    def sample_kind(self) -> str:
+        """Legacy property: returns schema_ref for backwards compatibility."""
+        return self._schema_ref
+
+    def write_to(self, redis: Redis):
         """Persist this index entry to Redis.
 
-        Stores the entry as a Redis hash with key 'BasicIndexEntry:{uuid}'.
+        Stores the entry as a Redis hash with key 'LocalDatasetEntry:{cid}'.
 
         Args:
             redis: Redis connection to write to.
         """
-        save_key = f'BasicIndexEntry:{self.uuid}'
-        # Filter out None values - Redis doesn't accept None
-        data = {k: v for k, v in asdict(self).items() if v is not None}
-        # redis-py typing uses untyped dict, so type checker complains about dict[str, Any]
-        redis.hset( save_key, mapping = data )  # type: ignore[arg-type]
+        save_key = f'LocalDatasetEntry:{self.cid}'
+        data = {
+            'name': self._name,
+            'schema_ref': self._schema_ref,
+            'data_urls': msgpack.packb(self._data_urls),  # Serialize list
+            'cid': self.cid,
+        }
+        if self._metadata is not None:
+            data['metadata'] = msgpack.packb(self._metadata)
+        if self._legacy_uuid is not None:
+            data['legacy_uuid'] = self._legacy_uuid
+
+        redis.hset(save_key, mapping=data)  # type: ignore[arg-type]
+
+    @classmethod
+    def from_redis(cls, redis: Redis, cid: str) -> "LocalDatasetEntry":
+        """Load an entry from Redis by CID.
+
+        Args:
+            redis: Redis connection to read from.
+            cid: Content identifier of the entry to load.
+
+        Returns:
+            LocalDatasetEntry loaded from Redis.
+
+        Raises:
+            KeyError: If entry not found.
+        """
+        save_key = f'LocalDatasetEntry:{cid}'
+        raw_data = redis.hgetall(save_key)
+        if not raw_data:
+            raise KeyError(f"LocalDatasetEntry not found: {cid}")
+
+        # Decode string fields, keep binary fields as bytes for msgpack
+        raw_data_typed = cast(dict[bytes, bytes], raw_data)
+        name = raw_data_typed[b'name'].decode('utf-8')
+        schema_ref = raw_data_typed[b'schema_ref'].decode('utf-8')
+        cid_value = raw_data_typed.get(b'cid', b'').decode('utf-8') or None
+        legacy_uuid = raw_data_typed.get(b'legacy_uuid', b'').decode('utf-8') or None
+
+        # Deserialize msgpack fields (stored as raw bytes)
+        data_urls = msgpack.unpackb(raw_data_typed[b'data_urls'])
+        metadata = None
+        if b'metadata' in raw_data_typed:
+            metadata = msgpack.unpackb(raw_data_typed[b'metadata'])
+
+        return cls(
+            _name=name,
+            _schema_ref=schema_ref,
+            _data_urls=data_urls,
+            _metadata=metadata,
+            _cid=cid_value,
+            _legacy_uuid=legacy_uuid,
+        )
+
+
+# Backwards compatibility alias
+BasicIndexEntry = LocalDatasetEntry
 
 def _s3_env( credentials_path: str | Path ) -> dict[str, Any]:
     """Load S3 credentials from a .env file.
@@ -248,12 +373,14 @@ class Repo:
 
     ##
 
-    def insert( self, ds: Dataset[T],
-               #
+    def insert(self,
+               ds: Dataset[T],
+               *,
+               name: str,
                cache_local: bool = False,
-               #
-                **kwargs
-            ) -> tuple[BasicIndexEntry, Dataset[T]]:
+               schema_ref: str | None = None,
+               **kwargs
+               ) -> tuple[LocalDatasetEntry, Dataset[T]]:
         """Insert a dataset into the repository.
 
         Writes the dataset to S3 as WebDataset tar files, stores metadata,
@@ -261,13 +388,15 @@ class Repo:
 
         Args:
             ds: The dataset to insert.
+            name: Human-readable name for the dataset.
             cache_local: If True, write to local temporary storage first, then
                 copy to S3. This can be faster for some workloads.
+            schema_ref: Optional schema reference. If None, generates from sample type.
             **kwargs: Additional arguments passed to wds.ShardWriter.
 
         Returns:
             A tuple of (index_entry, new_dataset) where:
-                - index_entry: BasicIndexEntry for the stored dataset
+                - index_entry: LocalDatasetEntry for the stored dataset
                 - new_dataset: Dataset object pointing to the stored copy
 
         Raises:
@@ -379,12 +508,17 @@ class Repo:
             new_dataset_url = shard_s3_format.format( shard_id = shard_id_braced )
 
         new_dataset = Dataset[ds.sample_type](
-            url = new_dataset_url,
-            metadata_url = metadata_path.as_posix(),
+            url=new_dataset_url,
+            metadata_url=metadata_path.as_posix(),
         )
 
-        # Add to index
-        new_entry = self.index.add_entry( new_dataset, uuid = new_uuid )
+        # Add to index (use ds._metadata to avoid network requests)
+        new_entry = self.index.add_entry(
+            new_dataset,
+            name=name,
+            schema_ref=schema_ref,
+            metadata=ds._metadata,
+        )
 
         return new_entry, new_dataset
 
@@ -392,7 +526,7 @@ class Repo:
 class Index:
     """Redis-backed index for tracking datasets in a repository.
 
-    Maintains a registry of BasicIndexEntry objects in Redis, allowing
+    Maintains a registry of LocalDatasetEntry objects in Redis, allowing
     enumeration and lookup of stored datasets.
 
     Attributes:
@@ -401,10 +535,10 @@ class Index:
 
     ##
 
-    def __init__( self,
-                redis: Redis | None = None,
-                **kwargs
-            ) -> None:
+    def __init__(self,
+                 redis: Redis | None = None,
+                 **kwargs
+                 ) -> None:
         """Initialize an index.
 
         Args:
@@ -418,75 +552,130 @@ class Index:
         if redis is not None:
             self._redis = redis
         else:
-            self._redis: Redis = Redis( **kwargs )
+            self._redis: Redis = Redis(**kwargs)
 
     @property
-    def all_entries( self ) -> list[BasicIndexEntry]:
+    def all_entries(self) -> list[LocalDatasetEntry]:
         """Get all index entries as a list.
 
         Returns:
-            List of all BasicIndexEntry objects in the index.
+            List of all LocalDatasetEntry objects in the index.
         """
-        return list( self.entries )
+        return list(self.entries)
 
     @property
-    def entries( self ) -> Generator[BasicIndexEntry, None, None]:
+    def entries(self) -> Generator[LocalDatasetEntry, None, None]:
         """Iterate over all index entries.
 
-        Scans Redis for all BasicIndexEntry keys and yields them one at a time.
+        Scans Redis for LocalDatasetEntry keys and yields them one at a time.
 
         Yields:
-            BasicIndexEntry objects from the index.
+            LocalDatasetEntry objects from the index.
         """
         ##
-        for key in self._redis.scan_iter( match = 'BasicIndexEntry:*' ):
-            # hgetall returns dict[bytes, bytes] which we decode to dict[str, str]
-            cur_entry_data = _decode_bytes_dict( cast(dict[bytes, bytes], self._redis.hgetall( key )) )
-            
-            # Provide default None for optional fields that may be missing
-            # Type checker complains about None in dict[str, str], but BasicIndexEntry accepts it
-            cur_entry_data: dict[str, Any] = dict( **cur_entry_data )
-            cur_entry_data.setdefault('metadata_url', None)
-            
-            cur_entry = BasicIndexEntry( **cur_entry_data )
+        for key in self._redis.scan_iter(match='LocalDatasetEntry:*'):
+            raw_data = cast(dict[bytes, bytes], self._redis.hgetall(key))
+
+            # Decode string fields
+            name = raw_data[b'name'].decode('utf-8')
+            schema_ref = raw_data[b'schema_ref'].decode('utf-8')
+            cid_value = raw_data.get(b'cid', b'').decode('utf-8') or None
+            legacy_uuid = raw_data.get(b'legacy_uuid', b'').decode('utf-8') or None
+
+            # Deserialize msgpack fields (stored as raw bytes)
+            data_urls = msgpack.unpackb(raw_data[b'data_urls'])
+            metadata = None
+            if b'metadata' in raw_data:
+                metadata = msgpack.unpackb(raw_data[b'metadata'])
+
+            cur_entry = LocalDatasetEntry(
+                _name=name,
+                _schema_ref=schema_ref,
+                _data_urls=data_urls,
+                _metadata=metadata,
+                _cid=cid_value,
+                _legacy_uuid=legacy_uuid,
+            )
             yield cur_entry
 
         return
 
-    def add_entry( self, ds: Dataset,
-                uuid: str | None = None,
-            ) -> BasicIndexEntry:
+    def add_entry(self,
+                  ds: Dataset,
+                  *,
+                  name: str,
+                  schema_ref: str | None = None,
+                  metadata: dict | None = None,
+                  ) -> LocalDatasetEntry:
         """Add a dataset to the index.
 
-        Creates a BasicIndexEntry for the dataset and persists it to Redis.
+        Creates a LocalDatasetEntry for the dataset and persists it to Redis.
 
         Args:
             ds: The dataset to add to the index.
-            uuid: Optional UUID for the entry. If None, a new UUID is generated.
+            name: Human-readable name for the dataset.
+            schema_ref: Optional schema reference. If None, generates from sample type.
+            metadata: Optional metadata dictionary. If None, uses ds._metadata if available.
 
         Returns:
-            The created BasicIndexEntry object.
+            The created LocalDatasetEntry object.
         """
         ##
-        temp_sample_kind = _kind_str_for_sample_type( ds.sample_type )
+        if schema_ref is None:
+            schema_ref = f"local://schemas/{_kind_str_for_sample_type(ds.sample_type)}@1.0.0"
 
-        if uuid is None:
-            ret_data = BasicIndexEntry(
-                wds_url = ds.url,
-                sample_kind = temp_sample_kind,
-                metadata_url = ds.metadata_url,
-            )
-        else:
-            ret_data = BasicIndexEntry(
-                wds_url = ds.url,
-                sample_kind = temp_sample_kind,
-                metadata_url = ds.metadata_url,
-                uuid = uuid,
-            )
+        # Normalize URL to list
+        data_urls = [ds.url]
 
-        ret_data.write_to( self._redis )
+        # Use provided metadata, or fall back to dataset's cached metadata
+        # (avoid triggering network requests via ds.metadata property)
+        entry_metadata = metadata if metadata is not None else ds._metadata
 
-        return ret_data
+        entry = LocalDatasetEntry(
+            _name=name,
+            _schema_ref=schema_ref,
+            _data_urls=data_urls,
+            _metadata=entry_metadata,
+        )
+
+        entry.write_to(self._redis)
+
+        return entry
+
+    def get_entry(self, cid: str) -> LocalDatasetEntry:
+        """Get an entry by its CID.
+
+        Args:
+            cid: Content identifier of the entry.
+
+        Returns:
+            LocalDatasetEntry for the given CID.
+
+        Raises:
+            KeyError: If entry not found.
+        """
+        return LocalDatasetEntry.from_redis(self._redis, cid)
+
+    def get_entry_by_name(self, name: str) -> LocalDatasetEntry:
+        """Get an entry by its human-readable name.
+
+        Args:
+            name: Human-readable name of the entry.
+
+        Returns:
+            LocalDatasetEntry with the given name.
+
+        Raises:
+            KeyError: If no entry with that name exists.
+        """
+        for entry in self.entries:
+            if entry.name == name:
+                return entry
+        raise KeyError(f"No entry with name: {name}")
+
+
+# Backwards compatibility alias
+LocalIndex = Index
 
 
 #

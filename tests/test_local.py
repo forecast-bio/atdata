@@ -41,12 +41,16 @@ def redis_connection():
 
 @pytest.fixture
 def clean_redis(redis_connection):
-    """Provide a Redis connection with automatic BasicIndexEntry cleanup.
+    """Provide a Redis connection with automatic LocalDatasetEntry cleanup.
 
-    Clears all BasicIndexEntry keys before and after each test to ensure
+    Clears all LocalDatasetEntry keys before and after each test to ensure
     test isolation.
     """
     def _clear_entries():
+        # Clean up new-style entries
+        for key in redis_connection.scan_iter(match='LocalDatasetEntry:*'):
+            redis_connection.delete(key)
+        # Also clean up legacy entries during migration
         for key in redis_connection.scan_iter(match='BasicIndexEntry:*'):
             redis_connection.delete(key)
 
@@ -259,94 +263,142 @@ def test_s3_from_credentials_with_path(tmp_path):
 
 
 ##
-# BasicIndexEntry tests
+# LocalDatasetEntry tests
 
-def test_basic_index_entry_creation():
-    """Test creating a BasicIndexEntry with explicit values.
+def test_local_dataset_entry_creation():
+    """Test creating a LocalDatasetEntry with explicit values.
 
-    Should create an entry with provided wds_url, sample_kind, metadata_url, and uuid.
+    Should create an entry with provided name, schema_ref, data_urls, and generate CID.
     """
-    entry = atlocal.BasicIndexEntry(
-        wds_url="s3://bucket/dataset.tar",
-        sample_kind="test_module.TestSample",
-        metadata_url="s3://bucket/metadata.msgpack",
-        uuid="12345678-1234-1234-1234-123456789abc"
+    entry = atlocal.LocalDatasetEntry(
+        _name="test-dataset",
+        _schema_ref="local://schemas/test_module.TestSample@1.0.0",
+        _data_urls=["s3://bucket/dataset.tar"],
+        _metadata={"description": "test"},
     )
 
-    assert entry.wds_url == "s3://bucket/dataset.tar"
-    assert entry.sample_kind == "test_module.TestSample"
-    assert entry.metadata_url == "s3://bucket/metadata.msgpack"
-    assert entry.uuid == "12345678-1234-1234-1234-123456789abc"
+    assert entry.name == "test-dataset"
+    assert entry.schema_ref == "local://schemas/test_module.TestSample@1.0.0"
+    assert entry.data_urls == ["s3://bucket/dataset.tar"]
+    assert entry.metadata == {"description": "test"}
+    # CID should be auto-generated
+    assert entry.cid is not None
+    assert entry.cid.startswith("bafy")
 
 
-def test_basic_index_entry_default_uuid():
-    """Test that BasicIndexEntry generates a valid UUID by default.
+def test_local_dataset_entry_cid_generation():
+    """Test that LocalDatasetEntry generates deterministic CIDs.
 
-    Should auto-generate a unique UUID when none is provided, and it should be
-    parsable as a valid UUID.
+    Same content should produce the same CID.
     """
-    entry = atlocal.BasicIndexEntry(
-        wds_url="s3://bucket/dataset.tar",
-        sample_kind="test_module.TestSample",
-        metadata_url="s3://bucket/metadata.msgpack"
+    entry1 = atlocal.LocalDatasetEntry(
+        _name="test-dataset",
+        _schema_ref="local://schemas/test_module.TestSample@1.0.0",
+        _data_urls=["s3://bucket/dataset.tar"],
+    )
+    entry2 = atlocal.LocalDatasetEntry(
+        _name="test-dataset",  # Name doesn't affect CID
+        _schema_ref="local://schemas/test_module.TestSample@1.0.0",
+        _data_urls=["s3://bucket/dataset.tar"],
     )
 
-    assert entry.uuid is not None
-    # Verify it's a valid UUID by parsing it
-    parsed_uuid = UUID(entry.uuid)
-    assert str(parsed_uuid) == entry.uuid
+    # Same schema_ref and data_urls = same CID
+    assert entry1.cid == entry2.cid
 
 
-def test_basic_index_entry_write_to_redis(clean_redis):
-    """Test persisting a BasicIndexEntry to Redis.
+def test_local_dataset_entry_different_content_different_cid():
+    """Test that different content produces different CIDs."""
+    entry1 = atlocal.LocalDatasetEntry(
+        _name="dataset1",
+        _schema_ref="local://schemas/test_module.TestSample@1.0.0",
+        _data_urls=["s3://bucket/dataset1.tar"],
+    )
+    entry2 = atlocal.LocalDatasetEntry(
+        _name="dataset2",
+        _schema_ref="local://schemas/test_module.TestSample@1.0.0",
+        _data_urls=["s3://bucket/dataset2.tar"],  # Different URL
+    )
 
-    Should write the entry to Redis as a hash with key 'BasicIndexEntry:{uuid}'
+    assert entry1.cid != entry2.cid
+
+
+def test_local_dataset_entry_write_to_redis(clean_redis):
+    """Test persisting a LocalDatasetEntry to Redis.
+
+    Should write the entry to Redis as a hash with key 'LocalDatasetEntry:{cid}'
     and all fields should be retrievable with correct values.
     """
-    test_uuid = "12345678-1234-1234-1234-123456789abc"
-
-    entry = atlocal.BasicIndexEntry(
-        wds_url="s3://bucket/dataset.tar",
-        sample_kind="test_module.TestSample",
-        metadata_url="s3://bucket/metadata.msgpack",
-        uuid=test_uuid
+    entry = atlocal.LocalDatasetEntry(
+        _name="test-dataset",
+        _schema_ref="local://schemas/test_module.TestSample@1.0.0",
+        _data_urls=["s3://bucket/dataset.tar"],
+        _metadata={"version": "1.0"},
     )
 
     entry.write_to(clean_redis)
 
-    # Retrieve and verify actual stored values
-    stored_data = atlocal._decode_bytes_dict(clean_redis.hgetall(f"BasicIndexEntry:{test_uuid}"))
-    assert stored_data['wds_url'] == "s3://bucket/dataset.tar"
-    assert stored_data['sample_kind'] == "test_module.TestSample"
-    assert stored_data['metadata_url'] == "s3://bucket/metadata.msgpack"
-    assert stored_data['uuid'] == test_uuid
+    # Verify key exists
+    assert clean_redis.exists(f"LocalDatasetEntry:{entry.cid}")
+
+    # Load back and verify
+    loaded = atlocal.LocalDatasetEntry.from_redis(clean_redis, entry.cid)
+    assert loaded.name == entry.name
+    assert loaded.schema_ref == entry.schema_ref
+    assert loaded.data_urls == entry.data_urls
+    assert loaded.metadata == entry.metadata
+    assert loaded.cid == entry.cid
 
 
-def test_basic_index_entry_round_trip_redis(clean_redis):
-    """Test writing and reading a BasicIndexEntry from Redis.
+def test_local_dataset_entry_round_trip_redis(clean_redis):
+    """Test writing and reading a LocalDatasetEntry from Redis.
 
     Should be able to write an entry to Redis and read it back with all fields
     intact and matching the original values.
     """
-    test_uuid = "12345678-1234-1234-1234-123456789abc"
-
-    original_entry = atlocal.BasicIndexEntry(
-        wds_url="s3://bucket/dataset.tar",
-        sample_kind="test_module.TestSample",
-        metadata_url="s3://bucket/metadata.msgpack",
-        uuid=test_uuid
+    original_entry = atlocal.LocalDatasetEntry(
+        _name="my-dataset",
+        _schema_ref="local://schemas/module.Sample@2.0.0",
+        _data_urls=["s3://bucket/data-{000000..000009}.tar"],
+        _metadata={"author": "test", "tags": ["a", "b"]},
     )
 
     original_entry.write_to(clean_redis)
 
     # Read back from Redis
-    stored_data = atlocal._decode_bytes_dict(clean_redis.hgetall(f"BasicIndexEntry:{test_uuid}"))
-    retrieved_entry = atlocal.BasicIndexEntry(**stored_data)
+    retrieved_entry = atlocal.LocalDatasetEntry.from_redis(clean_redis, original_entry.cid)
 
-    assert retrieved_entry.wds_url == original_entry.wds_url
-    assert retrieved_entry.sample_kind == original_entry.sample_kind
-    assert retrieved_entry.metadata_url == original_entry.metadata_url
-    assert retrieved_entry.uuid == original_entry.uuid
+    assert retrieved_entry.name == original_entry.name
+    assert retrieved_entry.schema_ref == original_entry.schema_ref
+    assert retrieved_entry.data_urls == original_entry.data_urls
+    assert retrieved_entry.metadata == original_entry.metadata
+    assert retrieved_entry.cid == original_entry.cid
+
+
+def test_local_dataset_entry_legacy_properties():
+    """Test that legacy properties work for backwards compatibility."""
+    entry = atlocal.LocalDatasetEntry(
+        _name="test-dataset",
+        _schema_ref="local://schemas/test_module.TestSample@1.0.0",
+        _data_urls=["s3://bucket/dataset.tar"],
+    )
+
+    # Legacy properties should work
+    assert entry.wds_url == "s3://bucket/dataset.tar"
+    assert entry.sample_kind == "local://schemas/test_module.TestSample@1.0.0"
+
+
+def test_local_dataset_entry_implements_index_entry_protocol():
+    """Test that LocalDatasetEntry implements the IndexEntry protocol."""
+    from atdata._protocols import IndexEntry
+
+    entry = atlocal.LocalDatasetEntry(
+        _name="test-dataset",
+        _schema_ref="local://schemas/test_module.TestSample@1.0.0",
+        _data_urls=["s3://bucket/dataset.tar"],
+    )
+
+    # Should satisfy the protocol
+    assert isinstance(entry, IndexEntry)
 
 
 ##
@@ -386,10 +438,10 @@ def test_index_init_with_redis_kwargs():
     assert isinstance(index._redis, Redis)
 
 
-def test_index_add_entry_without_uuid(clean_redis):
-    """Test adding a dataset entry to the index without specifying UUID.
+def test_index_add_entry(clean_redis):
+    """Test adding a dataset entry to the index.
 
-    Should create a BasicIndexEntry with auto-generated UUID and persist it to Redis.
+    Should create a LocalDatasetEntry with auto-generated CID and persist it to Redis.
     """
     index = atlocal.Index(redis=clean_redis)
 
@@ -398,37 +450,53 @@ def test_index_add_entry_without_uuid(clean_redis):
         metadata_url="s3://bucket/metadata.msgpack"
     )
 
-    entry = index.add_entry(ds)
+    entry = index.add_entry(ds, name="test-dataset")
 
-    assert entry.uuid is not None
-    assert entry.wds_url == ds.url
-    assert entry.sample_kind == f"{SimpleTestSample.__module__}.SimpleTestSample"
-    assert entry.metadata_url == ds.metadata_url
+    assert entry.cid is not None
+    assert entry.cid.startswith("bafy")
+    assert entry.name == "test-dataset"
+    assert entry.data_urls == ["s3://bucket/dataset.tar"]
+    assert "SimpleTestSample" in entry.schema_ref
 
     # Verify it was persisted to Redis
-    stored_data = clean_redis.hgetall(f"BasicIndexEntry:{entry.uuid}")
+    stored_data = clean_redis.hgetall(f"LocalDatasetEntry:{entry.cid}")
     assert len(stored_data) > 0
 
 
-def test_index_add_entry_with_uuid(clean_redis):
-    """Test adding a dataset entry to the index with a specified UUID.
+def test_index_add_entry_with_schema_ref(clean_redis):
+    """Test adding a dataset entry with explicit schema_ref.
 
-    Should create a BasicIndexEntry with the provided UUID and persist it to Redis.
+    Should use the provided schema_ref instead of auto-generating.
     """
     index = atlocal.Index(redis=clean_redis)
-    test_uuid = "12345678-1234-1234-1234-123456789abc"
 
-    ds = atdata.Dataset[SimpleTestSample](
-        url="s3://bucket/dataset.tar",
-        metadata_url="s3://bucket/metadata.msgpack"
+    ds = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset.tar")
+
+    entry = index.add_entry(
+        ds,
+        name="test-dataset",
+        schema_ref="local://schemas/custom.Schema@2.0.0"
     )
 
-    entry = index.add_entry(ds, uuid=test_uuid)
+    assert entry.schema_ref == "local://schemas/custom.Schema@2.0.0"
 
-    assert entry.uuid == test_uuid
-    assert entry.wds_url == ds.url
-    assert entry.sample_kind == f"{SimpleTestSample.__module__}.SimpleTestSample"
-    assert entry.metadata_url == ds.metadata_url
+
+def test_index_add_entry_with_metadata(clean_redis):
+    """Test adding a dataset entry with metadata.
+
+    Should store the provided metadata.
+    """
+    index = atlocal.Index(redis=clean_redis)
+
+    ds = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset.tar")
+
+    entry = index.add_entry(
+        ds,
+        name="test-dataset",
+        metadata={"version": "1.0", "author": "test"}
+    )
+
+    assert entry.metadata == {"version": "1.0", "author": "test"}
 
 
 def test_index_entries_generator_empty(clean_redis):
@@ -445,22 +513,22 @@ def test_index_entries_generator_empty(clean_redis):
 def test_index_entries_generator_multiple(clean_redis):
     """Test iterating over multiple entries in the index.
 
-    Should yield all BasicIndexEntry objects that have been added to the index.
+    Should yield all LocalDatasetEntry objects that have been added to the index.
     """
     index = atlocal.Index(redis=clean_redis)
 
     ds1 = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset1.tar")
     ds2 = atdata.Dataset[ArrayTestSample](url="s3://bucket/dataset2.tar")
 
-    entry1 = index.add_entry(ds1)
-    entry2 = index.add_entry(ds2)
+    entry1 = index.add_entry(ds1, name="dataset1")
+    entry2 = index.add_entry(ds2, name="dataset2")
 
     entries = list(index.entries)
     assert len(entries) == 2
 
-    uuids = {entry.uuid for entry in entries}
-    assert entry1.uuid in uuids
-    assert entry2.uuid in uuids
+    cids = {entry.cid for entry in entries}
+    assert entry1.cid in cids
+    assert entry2.cid in cids
 
 
 def test_index_all_entries_empty(clean_redis):
@@ -478,15 +546,15 @@ def test_index_all_entries_empty(clean_redis):
 def test_index_all_entries_multiple(clean_redis):
     """Test getting all entries as a list with multiple entries.
 
-    Should return a list containing all BasicIndexEntry objects in the index.
+    Should return a list containing all LocalDatasetEntry objects in the index.
     """
     index = atlocal.Index(redis=clean_redis)
 
     ds1 = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset1.tar")
     ds2 = atdata.Dataset[ArrayTestSample](url="s3://bucket/dataset2.tar")
 
-    entry1 = index.add_entry(ds1)
-    entry2 = index.add_entry(ds2)
+    index.add_entry(ds1, name="dataset1")
+    index.add_entry(ds2, name="dataset2")
 
     entries = index.all_entries
     assert isinstance(entries, list)
@@ -494,16 +562,16 @@ def test_index_all_entries_multiple(clean_redis):
 
 
 def test_index_entries_filtering(clean_redis):
-    """Test that index only returns BasicIndexEntry objects.
+    """Test that index only returns LocalDatasetEntry objects.
 
-    Should only iterate over keys matching 'BasicIndexEntry:*' pattern and
+    Should only iterate over keys matching 'LocalDatasetEntry:*' pattern and
     ignore any other Redis keys.
     """
     index = atlocal.Index(redis=clean_redis)
 
-    # Add a BasicIndexEntry
+    # Add a LocalDatasetEntry
     ds = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset.tar")
-    entry = index.add_entry(ds)
+    entry = index.add_entry(ds, name="test-dataset")
 
     # Add some other Redis keys that should be ignored
     clean_redis.set("other_key", "value")
@@ -511,11 +579,46 @@ def test_index_entries_filtering(clean_redis):
 
     entries = list(index.entries)
     assert len(entries) == 1
-    assert entries[0].uuid == entry.uuid
+    assert entries[0].cid == entry.cid
 
-    # Clean up non-BasicIndexEntry keys (fixture only cleans BasicIndexEntry:*)
+    # Clean up non-LocalDatasetEntry keys (fixture only cleans LocalDatasetEntry:*)
     clean_redis.delete("other_key")
     clean_redis.delete("other_hash")
+
+
+def test_index_get_entry_by_cid(clean_redis):
+    """Test retrieving an entry by its CID."""
+    index = atlocal.Index(redis=clean_redis)
+
+    ds = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset.tar")
+    entry = index.add_entry(ds, name="test-dataset")
+
+    retrieved = index.get_entry(entry.cid)
+
+    assert retrieved.cid == entry.cid
+    assert retrieved.name == entry.name
+    assert retrieved.data_urls == entry.data_urls
+
+
+def test_index_get_entry_by_name(clean_redis):
+    """Test retrieving an entry by its name."""
+    index = atlocal.Index(redis=clean_redis)
+
+    ds = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset.tar")
+    entry = index.add_entry(ds, name="my-special-dataset")
+
+    retrieved = index.get_entry_by_name("my-special-dataset")
+
+    assert retrieved.cid == entry.cid
+    assert retrieved.name == "my-special-dataset"
+
+
+def test_index_get_entry_by_name_not_found(clean_redis):
+    """Test that get_entry_by_name raises KeyError for unknown name."""
+    index = atlocal.Index(redis=clean_redis)
+
+    with pytest.raises(KeyError, match="No entry with name"):
+        index.get_entry_by_name("nonexistent")
 
 
 ##
@@ -632,7 +735,7 @@ def test_repo_insert_without_s3():
     ds = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset.tar")
 
     with pytest.raises(AssertionError):
-        repo.insert(ds)
+        repo.insert(ds, name="test-dataset")
 
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
@@ -649,11 +752,13 @@ def test_repo_insert_single_shard(mock_s3, clean_redis, sample_dataset):
         redis=clean_redis
     )
 
-    entry, new_ds = repo.insert(sample_dataset, maxcount=100)
+    entry, new_ds = repo.insert(sample_dataset, name="single-shard-dataset", maxcount=100)
 
-    assert entry.uuid is not None
-    assert entry.wds_url is not None
-    assert entry.sample_kind == f"{SimpleTestSample.__module__}.SimpleTestSample"
+    assert entry.cid is not None
+    assert entry.cid.startswith("bafy")
+    assert entry.name == "single-shard-dataset"
+    assert len(entry.data_urls) > 0
+    assert "SimpleTestSample" in entry.schema_ref
     assert len(repo.index.all_entries) == 1
     assert '.tar' in new_ds.url
     assert new_ds.url.startswith(mock_s3['hive_path'])
@@ -674,10 +779,10 @@ def test_repo_insert_multiple_shards(mock_s3, clean_redis, tmp_path):
         redis=clean_redis
     )
 
-    entry, new_ds = repo.insert(ds, maxcount=10)
+    entry, new_ds = repo.insert(ds, name="multi-shard-dataset", maxcount=10)
 
-    assert entry.uuid is not None
-    assert entry.wds_url is not None
+    assert entry.cid is not None
+    assert len(entry.data_urls) > 0
     assert '{' in new_ds.url and '}' in new_ds.url
 
 
@@ -686,8 +791,7 @@ def test_repo_insert_multiple_shards(mock_s3, clean_redis, tmp_path):
 def test_repo_insert_with_metadata(mock_s3, clean_redis, tmp_path):
     """Test inserting a dataset with metadata.
 
-    Should write metadata as msgpack to S3 and include metadata_url in the
-    returned Dataset and BasicIndexEntry.
+    Should write metadata as msgpack to S3 and store metadata in the entry.
     """
     ds = make_simple_dataset(tmp_path, num_samples=5)
     ds._metadata = {"description": "test dataset", "version": "1.0"}
@@ -698,11 +802,11 @@ def test_repo_insert_with_metadata(mock_s3, clean_redis, tmp_path):
         redis=clean_redis
     )
 
-    entry, new_ds = repo.insert(ds, maxcount=100)
+    entry, new_ds = repo.insert(ds, name="metadata-dataset", maxcount=100)
 
-    assert entry.metadata_url is not None
+    assert entry.metadata is not None
+    assert entry.metadata.get("description") == "test dataset"
     assert new_ds.metadata_url is not None
-    assert 'metadata' in entry.metadata_url
 
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
@@ -719,9 +823,9 @@ def test_repo_insert_without_metadata(mock_s3, clean_redis, tmp_path):
         redis=clean_redis
     )
 
-    entry, new_ds = repo.insert(ds, maxcount=100)
+    entry, new_ds = repo.insert(ds, name="no-metadata-dataset", maxcount=100)
 
-    assert entry.uuid is not None
+    assert entry.cid is not None
     assert len(repo.index.all_entries) == 1
 
 
@@ -738,10 +842,10 @@ def test_repo_insert_cache_local_false(mock_s3, clean_redis, sample_dataset):
         redis=clean_redis
     )
 
-    entry, new_ds = repo.insert(sample_dataset, cache_local=False, maxcount=100)
+    entry, new_ds = repo.insert(sample_dataset, name="direct-write", cache_local=False, maxcount=100)
 
-    assert entry.uuid is not None
-    assert entry.wds_url is not None
+    assert entry.cid is not None
+    assert len(entry.data_urls) > 0
 
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
@@ -758,10 +862,10 @@ def test_repo_insert_cache_local_true(mock_s3, clean_redis, sample_dataset):
         redis=clean_redis
     )
 
-    entry, new_ds = repo.insert(sample_dataset, cache_local=True, maxcount=100)
+    entry, new_ds = repo.insert(sample_dataset, name="cached-write", cache_local=True, maxcount=100)
 
-    assert entry.uuid is not None
-    assert entry.wds_url is not None
+    assert entry.cid is not None
+    assert len(entry.data_urls) > 0
 
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
@@ -769,8 +873,8 @@ def test_repo_insert_cache_local_true(mock_s3, clean_redis, sample_dataset):
 def test_repo_insert_creates_index_entry(mock_s3, clean_redis, sample_dataset):
     """Test that insert() creates a valid index entry.
 
-    Should add a BasicIndexEntry to the index with correct wds_url, sample_kind,
-    metadata_url, and UUID.
+    Should add a LocalDatasetEntry to the index with correct data_urls, schema_ref,
+    and CID.
     """
     repo = atlocal.Repo(
         s3_credentials=mock_s3['credentials'],
@@ -778,24 +882,23 @@ def test_repo_insert_creates_index_entry(mock_s3, clean_redis, sample_dataset):
         redis=clean_redis
     )
 
-    entry, new_ds = repo.insert(sample_dataset, maxcount=100)
+    entry, new_ds = repo.insert(sample_dataset, name="indexed-dataset", maxcount=100)
 
-    assert entry.uuid is not None
-    assert entry.wds_url == new_ds.url
-    assert entry.sample_kind == f"{SimpleTestSample.__module__}.SimpleTestSample"
+    assert entry.cid is not None
+    assert entry.data_urls == [new_ds.url]
+    assert "SimpleTestSample" in entry.schema_ref
 
     all_entries = repo.index.all_entries
     assert len(all_entries) == 1
-    assert all_entries[0].uuid == entry.uuid
+    assert all_entries[0].cid == entry.cid
 
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
-def test_repo_insert_uuid_generation(mock_s3, clean_redis, sample_dataset):
-    """Test that insert() generates a unique UUID for each dataset.
+def test_repo_insert_cid_generation(mock_s3, clean_redis, sample_dataset):
+    """Test that insert() generates unique CIDs for each dataset.
 
-    Should create a new UUID for the dataset and use it consistently in filenames,
-    index entry, and returned Dataset.
+    Should create different CIDs for datasets with different URLs.
     """
     repo = atlocal.Repo(
         s3_credentials=mock_s3['credentials'],
@@ -803,12 +906,11 @@ def test_repo_insert_uuid_generation(mock_s3, clean_redis, sample_dataset):
         redis=clean_redis
     )
 
-    entry1, new_ds1 = repo.insert(sample_dataset, maxcount=100)
-    entry2, new_ds2 = repo.insert(sample_dataset, maxcount=100)
+    entry1, new_ds1 = repo.insert(sample_dataset, name="dataset1", maxcount=100)
+    entry2, new_ds2 = repo.insert(sample_dataset, name="dataset2", maxcount=100)
 
-    assert entry1.uuid != entry2.uuid
-    assert entry1.uuid in new_ds1.url
-    assert entry2.uuid in new_ds2.url
+    # Different URLs should produce different CIDs
+    assert entry1.cid != entry2.cid
     assert len(repo.index.all_entries) == 2
 
 
@@ -833,8 +935,8 @@ def test_repo_insert_empty_dataset(mock_s3, clean_redis, tmp_path):
     )
 
     # Empty datasets succeed because WebDataset creates a shard file regardless
-    entry, new_ds = repo.insert(ds, maxcount=100)
-    assert entry.uuid is not None
+    entry, new_ds = repo.insert(ds, name="empty-dataset", maxcount=100)
+    assert entry.cid is not None
     assert '.tar' in new_ds.url
 
 
@@ -851,10 +953,10 @@ def test_repo_insert_preserves_sample_type(mock_s3, clean_redis, sample_dataset)
         redis=clean_redis
     )
 
-    entry, new_ds = repo.insert(sample_dataset, maxcount=100)
+    entry, new_ds = repo.insert(sample_dataset, name="typed-dataset", maxcount=100)
 
     assert new_ds.sample_type == SimpleTestSample
-    assert entry.sample_kind == f"{SimpleTestSample.__module__}.SimpleTestSample"
+    assert "SimpleTestSample" in entry.schema_ref
 
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
@@ -882,7 +984,7 @@ def test_repo_insert_with_shard_writer_kwargs(mock_s3, clean_redis, tmp_path):
         redis=clean_redis
     )
 
-    entry, new_ds = repo.insert(ds, maxcount=5)
+    entry, new_ds = repo.insert(ds, name="sharded-dataset", maxcount=5)
 
     assert '{' in new_ds.url and '}' in new_ds.url
 
@@ -901,10 +1003,10 @@ def test_repo_insert_numpy_arrays(mock_s3, clean_redis, tmp_path):
         redis=clean_redis
     )
 
-    entry, new_ds = repo.insert(ds, maxcount=100)
+    entry, new_ds = repo.insert(ds, name="array-dataset", maxcount=100)
 
-    assert entry.uuid is not None
-    assert entry.sample_kind == f"{ArrayTestSample.__module__}.ArrayTestSample"
+    assert entry.cid is not None
+    assert "ArrayTestSample" in entry.schema_ref
 
 
 ##
@@ -924,12 +1026,12 @@ def test_repo_index_integration(mock_s3, clean_redis, sample_dataset):
         redis=clean_redis
     )
 
-    entry, new_ds = repo.insert(sample_dataset, maxcount=100)
+    entry, new_ds = repo.insert(sample_dataset, name="integrated-dataset", maxcount=100)
 
     all_entries = repo.index.all_entries
     assert len(all_entries) == 1
-    assert all_entries[0].uuid == entry.uuid
-    assert all_entries[0].wds_url == entry.wds_url
+    assert all_entries[0].cid == entry.cid
+    assert all_entries[0].data_urls == entry.data_urls
 
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
@@ -937,7 +1039,7 @@ def test_repo_index_integration(mock_s3, clean_redis, sample_dataset):
 def test_multiple_datasets_same_type(mock_s3, clean_redis, sample_dataset):
     """Test inserting multiple datasets of the same sample type.
 
-    Should create separate entries with different UUIDs and all should be
+    Should create separate entries with different CIDs and all should be
     retrievable from the index.
     """
     repo = atlocal.Repo(
@@ -946,18 +1048,18 @@ def test_multiple_datasets_same_type(mock_s3, clean_redis, sample_dataset):
         redis=clean_redis
     )
 
-    entry1, _ = repo.insert(sample_dataset, maxcount=100)
-    entry2, _ = repo.insert(sample_dataset, maxcount=100)
-    entry3, _ = repo.insert(sample_dataset, maxcount=100)
+    entry1, _ = repo.insert(sample_dataset, name="dataset-a", maxcount=100)
+    entry2, _ = repo.insert(sample_dataset, name="dataset-b", maxcount=100)
+    entry3, _ = repo.insert(sample_dataset, name="dataset-c", maxcount=100)
 
-    uuids = {entry1.uuid, entry2.uuid, entry3.uuid}
-    assert len(uuids) == 3
+    cids = {entry1.cid, entry2.cid, entry3.cid}
+    assert len(cids) == 3
 
     all_entries = repo.index.all_entries
     assert len(all_entries) == 3
 
     for entry in all_entries:
-        assert entry.sample_kind == f"{SimpleTestSample.__module__}.SimpleTestSample"
+        assert "SimpleTestSample" in entry.schema_ref
 
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
@@ -965,7 +1067,7 @@ def test_multiple_datasets_same_type(mock_s3, clean_redis, sample_dataset):
 def test_multiple_datasets_different_types(mock_s3, clean_redis, tmp_path):
     """Test inserting datasets with different sample types.
 
-    Should correctly track sample_kind for each dataset and create distinct
+    Should correctly track schema_ref for each dataset and create distinct
     index entries.
     """
     simple_ds = make_simple_dataset(tmp_path, num_samples=3, name="simple")
@@ -977,12 +1079,12 @@ def test_multiple_datasets_different_types(mock_s3, clean_redis, tmp_path):
         redis=clean_redis
     )
 
-    entry1, _ = repo.insert(simple_ds, maxcount=100)
-    entry2, _ = repo.insert(array_ds, maxcount=100)
+    entry1, _ = repo.insert(simple_ds, name="simple-dataset", maxcount=100)
+    entry2, _ = repo.insert(array_ds, name="array-dataset", maxcount=100)
 
-    assert entry1.sample_kind == f"{SimpleTestSample.__module__}.SimpleTestSample"
-    assert entry2.sample_kind == f"{ArrayTestSample.__module__}.ArrayTestSample"
-    assert entry1.sample_kind != entry2.sample_kind
+    assert "SimpleTestSample" in entry1.schema_ref
+    assert "ArrayTestSample" in entry2.schema_ref
+    assert entry1.schema_ref != entry2.schema_ref
     assert len(repo.index.all_entries) == 2
 
 
@@ -994,14 +1096,14 @@ def test_index_persistence_across_instances(clean_redis):
     """
     index1 = atlocal.Index(redis=clean_redis)
     ds = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset.tar")
-    entry1 = index1.add_entry(ds)
+    entry1 = index1.add_entry(ds, name="persistent-dataset")
 
     index2 = atlocal.Index(redis=clean_redis)
     entries = index2.all_entries
 
     assert len(entries) == 1
-    assert entries[0].uuid == entry1.uuid
-    assert entries[0].wds_url == entry1.wds_url
+    assert entries[0].cid == entry1.cid
+    assert entries[0].data_urls == entry1.data_urls
 
 
 def test_concurrent_index_access(clean_redis):
@@ -1016,8 +1118,8 @@ def test_concurrent_index_access(clean_redis):
     ds1 = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset1.tar")
     ds2 = atdata.Dataset[ArrayTestSample](url="s3://bucket/dataset2.tar")
 
-    entry1 = index1.add_entry(ds1)
-    entry2 = index2.add_entry(ds2)
+    entry1 = index1.add_entry(ds1, name="dataset1")
+    entry2 = index2.add_entry(ds2, name="dataset2")
 
     entries1 = index1.all_entries
     entries2 = index2.all_entries
@@ -1025,8 +1127,8 @@ def test_concurrent_index_access(clean_redis):
     assert len(entries1) == 2
     assert len(entries2) == 2
 
-    uuids1 = {e.uuid for e in entries1}
-    uuids2 = {e.uuid for e in entries2}
+    cids1 = {e.cid for e in entries1}
+    cids2 = {e.cid for e in entries2}
 
-    assert entry1.uuid in uuids1 and entry2.uuid in uuids1
-    assert entry1.uuid in uuids2 and entry2.uuid in uuids2
+    assert entry1.cid in cids1 and entry2.cid in cids1
+    assert entry1.cid in cids2 and entry2.cid in cids2
