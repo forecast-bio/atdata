@@ -41,22 +41,19 @@ def redis_connection():
 
 @pytest.fixture
 def clean_redis(redis_connection):
-    """Provide a Redis connection with automatic LocalDatasetEntry cleanup.
+    """Provide a Redis connection with automatic cleanup of test keys.
 
-    Clears all LocalDatasetEntry keys before and after each test to ensure
-    test isolation.
+    Clears LocalDatasetEntry, BasicIndexEntry (legacy), and LocalSchema keys
+    before and after each test to ensure test isolation.
     """
-    def _clear_entries():
-        # Clean up new-style entries
-        for key in redis_connection.scan_iter(match='LocalDatasetEntry:*'):
-            redis_connection.delete(key)
-        # Also clean up legacy entries during migration
-        for key in redis_connection.scan_iter(match='BasicIndexEntry:*'):
-            redis_connection.delete(key)
+    def _clear_all():
+        for pattern in ('LocalDatasetEntry:*', 'BasicIndexEntry:*', 'LocalSchema:*'):
+            for key in redis_connection.scan_iter(match=pattern):
+                redis_connection.delete(key)
 
-    _clear_entries()
+    _clear_all()
     yield redis_connection
-    _clear_entries()
+    _clear_all()
 
 
 @pytest.fixture
@@ -157,30 +154,6 @@ def test_kind_str_for_sample_type():
 
     result2 = atlocal._kind_str_for_sample_type(ArrayTestSample)
     assert result2 == f"{ArrayTestSample.__module__}.ArrayTestSample"
-
-
-def test_decode_bytes_dict():
-    """Test that byte dictionaries from Redis are correctly decoded to strings.
-
-    Should handle UTF-8 decoding of both keys and values from Redis response format.
-    """
-    bytes_dict = {
-        b'wds_url': b's3://bucket/dataset.tar',
-        b'sample_kind': b'module.Sample',
-        b'metadata_url': b's3://bucket/metadata.msgpack',
-        b'uuid': b'12345678-1234-1234-1234-123456789abc'
-    }
-
-    result = atlocal._decode_bytes_dict(bytes_dict)
-
-    assert result == {
-        'wds_url': 's3://bucket/dataset.tar',
-        'sample_kind': 'module.Sample',
-        'metadata_url': 's3://bucket/metadata.msgpack',
-        'uuid': '12345678-1234-1234-1234-123456789abc'
-    }
-    assert all(isinstance(k, str) for k in result.keys())
-    assert all(isinstance(v, str) for v in result.values())
 
 
 def test_s3_env_valid_credentials(tmp_path):
@@ -1137,21 +1110,9 @@ def test_concurrent_index_access(clean_redis):
 ##
 # Schema storage tests
 
-@pytest.fixture
-def clean_redis_schemas(redis_connection):
-    """Provide a Redis connection with automatic schema cleanup."""
-    def _clear_schemas():
-        for key in redis_connection.scan_iter(match='LocalSchema:*'):
-            redis_connection.delete(key)
-
-    _clear_schemas()
-    yield redis_connection
-    _clear_schemas()
-
-
-def test_publish_schema(clean_redis_schemas):
+def test_publish_schema(clean_redis):
     """Test publishing a schema to Redis."""
-    index = atlocal.Index(redis=clean_redis_schemas)
+    index = atlocal.Index(redis=clean_redis)
 
     schema_ref = index.publish_schema(SimpleTestSample, version="1.0.0")
 
@@ -1160,9 +1121,9 @@ def test_publish_schema(clean_redis_schemas):
     assert "@1.0.0" in schema_ref
 
 
-def test_publish_schema_with_description(clean_redis_schemas):
+def test_publish_schema_with_description(clean_redis):
     """Test publishing a schema with a description."""
-    index = atlocal.Index(redis=clean_redis_schemas)
+    index = atlocal.Index(redis=clean_redis)
 
     schema_ref = index.publish_schema(
         SimpleTestSample,
@@ -1174,9 +1135,9 @@ def test_publish_schema_with_description(clean_redis_schemas):
     assert schema['description'] == "A simple test sample type"
 
 
-def test_get_schema(clean_redis_schemas):
+def test_get_schema(clean_redis):
     """Test retrieving a published schema."""
-    index = atlocal.Index(redis=clean_redis_schemas)
+    index = atlocal.Index(redis=clean_redis)
 
     schema_ref = index.publish_schema(SimpleTestSample, version="1.0.0")
     schema = index.get_schema(schema_ref)
@@ -1187,33 +1148,33 @@ def test_get_schema(clean_redis_schemas):
     assert schema['$ref'] == schema_ref
 
 
-def test_get_schema_not_found(clean_redis_schemas):
+def test_get_schema_not_found(clean_redis):
     """Test that get_schema raises KeyError for missing schema."""
-    index = atlocal.Index(redis=clean_redis_schemas)
+    index = atlocal.Index(redis=clean_redis)
 
     with pytest.raises(KeyError, match="Schema not found"):
         index.get_schema("local://schemas/nonexistent.Sample@1.0.0")
 
 
-def test_get_schema_invalid_ref(clean_redis_schemas):
+def test_get_schema_invalid_ref(clean_redis):
     """Test that get_schema raises ValueError for invalid reference."""
-    index = atlocal.Index(redis=clean_redis_schemas)
+    index = atlocal.Index(redis=clean_redis)
 
     with pytest.raises(ValueError, match="Invalid local schema reference"):
         index.get_schema("invalid://schemas/Sample@1.0.0")
 
 
-def test_list_schemas_empty(clean_redis_schemas):
+def test_list_schemas_empty(clean_redis):
     """Test listing schemas when none exist."""
-    index = atlocal.Index(redis=clean_redis_schemas)
+    index = atlocal.Index(redis=clean_redis)
 
     schemas = list(index.list_schemas())
     assert len(schemas) == 0
 
 
-def test_list_schemas_multiple(clean_redis_schemas):
+def test_list_schemas_multiple(clean_redis):
     """Test listing multiple schemas."""
-    index = atlocal.Index(redis=clean_redis_schemas)
+    index = atlocal.Index(redis=clean_redis)
 
     index.publish_schema(SimpleTestSample, version="1.0.0")
     index.publish_schema(ArrayTestSample, version="1.0.0")
@@ -1226,9 +1187,9 @@ def test_list_schemas_multiple(clean_redis_schemas):
     assert 'ArrayTestSample' in names
 
 
-def test_schema_field_types(clean_redis_schemas):
+def test_schema_field_types(clean_redis):
     """Test that schema correctly captures field types."""
-    index = atlocal.Index(redis=clean_redis_schemas)
+    index = atlocal.Index(redis=clean_redis)
 
     schema_ref = index.publish_schema(SimpleTestSample, version="1.0.0")
     schema = index.get_schema(schema_ref)
@@ -1243,9 +1204,9 @@ def test_schema_field_types(clean_redis_schemas):
     assert value_field['fieldType']['primitive'] == 'int'
 
 
-def test_schema_ndarray_field(clean_redis_schemas):
+def test_schema_ndarray_field(clean_redis):
     """Test that schema correctly captures NDArray fields."""
-    index = atlocal.Index(redis=clean_redis_schemas)
+    index = atlocal.Index(redis=clean_redis)
 
     schema_ref = index.publish_schema(ArrayTestSample, version="1.0.0")
     schema = index.get_schema(schema_ref)
@@ -1256,9 +1217,9 @@ def test_schema_ndarray_field(clean_redis_schemas):
     assert data_field['fieldType']['dtype'] == 'float32'
 
 
-def test_decode_schema(clean_redis_schemas):
+def test_decode_schema(clean_redis):
     """Test reconstructing a Python type from a schema."""
-    index = atlocal.Index(redis=clean_redis_schemas)
+    index = atlocal.Index(redis=clean_redis)
 
     schema_ref = index.publish_schema(SimpleTestSample, version="1.0.0")
     ReconstructedType = index.decode_schema(schema_ref)
@@ -1269,9 +1230,9 @@ def test_decode_schema(clean_redis_schemas):
     assert instance.value == 42
 
 
-def test_decode_schema_preserves_structure(clean_redis_schemas):
+def test_decode_schema_preserves_structure(clean_redis):
     """Test that decoded schema matches original type structure."""
-    index = atlocal.Index(redis=clean_redis_schemas)
+    index = atlocal.Index(redis=clean_redis)
 
     schema_ref = index.publish_schema(ArrayTestSample, version="1.0.0")
     ReconstructedType = index.decode_schema(schema_ref)
@@ -1283,9 +1244,9 @@ def test_decode_schema_preserves_structure(clean_redis_schemas):
     assert instance.data.shape == (3, 3)
 
 
-def test_schema_version_handling(clean_redis_schemas):
+def test_schema_version_handling(clean_redis):
     """Test publishing multiple versions of the same schema."""
-    index = atlocal.Index(redis=clean_redis_schemas)
+    index = atlocal.Index(redis=clean_redis)
 
     ref_v1 = index.publish_schema(SimpleTestSample, version="1.0.0")
     ref_v2 = index.publish_schema(SimpleTestSample, version="2.0.0")
@@ -1300,3 +1261,32 @@ def test_schema_version_handling(clean_redis_schemas):
 
     assert schema_v1['version'] == '1.0.0'
     assert schema_v2['version'] == '2.0.0'
+
+
+##
+# Schema codec cache tests
+
+def test_schema_codec_type_caching():
+    """Test that schema_to_type caches generated types."""
+    from atdata._schema_codec import schema_to_type, clear_type_cache, get_cached_types
+
+    clear_type_cache()
+    assert len(get_cached_types()) == 0
+
+    schema = {
+        "name": "CacheTestSample",
+        "version": "1.0.0",
+        "fields": [{"name": "value", "fieldType": {"$type": "local#primitive", "primitive": "int"}, "optional": False}],
+    }
+
+    # First call creates and caches type
+    Type1 = schema_to_type(schema)
+    cached = get_cached_types()
+    assert len(cached) == 1
+
+    # Second call returns cached type
+    Type2 = schema_to_type(schema)
+    assert Type1 is Type2
+
+    clear_type_cache()
+    assert len(get_cached_types()) == 0

@@ -82,23 +82,6 @@ def _kind_str_for_sample_type( st: Type[PackableSample] ) -> str:
     """
     return f'{st.__module__}.{st.__name__}'
 
-def _decode_bytes_dict( d: dict[bytes, bytes] ) -> dict[str, str]:
-    """Decode a dictionary with byte keys and values to strings.
-
-    Redis returns dictionaries with bytes keys/values, this converts them to strings.
-
-    Args:
-        d: Dictionary with bytes keys and values.
-
-    Returns:
-        Dictionary with UTF-8 decoded string keys and values.
-    """
-    return {
-        k.decode('utf-8'): v.decode('utf-8')
-        for k, v in d.items()
-    }
-
-
 ##
 # Schema helpers
 
@@ -751,33 +734,10 @@ class Index:
         Yields:
             LocalDatasetEntry objects from the index.
         """
-        ##
         for key in self._redis.scan_iter(match='LocalDatasetEntry:*'):
-            raw_data = cast(dict[bytes, bytes], self._redis.hgetall(key))
-
-            # Decode string fields
-            name = raw_data[b'name'].decode('utf-8')
-            schema_ref = raw_data[b'schema_ref'].decode('utf-8')
-            cid_value = raw_data.get(b'cid', b'').decode('utf-8') or None
-            legacy_uuid = raw_data.get(b'legacy_uuid', b'').decode('utf-8') or None
-
-            # Deserialize msgpack fields (stored as raw bytes)
-            data_urls = msgpack.unpackb(raw_data[b'data_urls'])
-            metadata = None
-            if b'metadata' in raw_data:
-                metadata = msgpack.unpackb(raw_data[b'metadata'])
-
-            cur_entry = LocalDatasetEntry(
-                _name=name,
-                _schema_ref=schema_ref,
-                _data_urls=data_urls,
-                _metadata=metadata,
-                _cid=cid_value,
-                _legacy_uuid=legacy_uuid,
-            )
-            yield cur_entry
-
-        return
+            key_str = key.decode('utf-8') if isinstance(key, bytes) else key
+            cid = key_str[len('LocalDatasetEntry:'):]
+            yield LocalDatasetEntry.from_redis(self._redis, cid)
 
     def add_entry(self,
                   ds: Dataset,

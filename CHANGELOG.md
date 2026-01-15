@@ -11,6 +11,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 ### Changed
+- Adversarial review: Phase 1 & 2 implementation (#135)
+- Add test coverage for _schema_codec utility functions (#141)
+- Add missing test for parse_cid with malformed input (#140)
+- Merge clean_redis and clean_redis_schemas fixtures (#139)
+- Remove redundant return statement in Index.entries (#137)
+- DRY: Consolidate Redis deserialization in Index.entries vs LocalDatasetEntry.from_redis (#138)
+- Remove unused _decode_bytes_dict function from local.py (#136)
+- Adversarial review: Phase 1 & 2 implementation (#134)
 - Phase 2: Align Local with ATProto Record Formats (#113)
 - Add schema storage to local (LocalSchemaRecord in Redis) (#128)
 - Rename BasicIndexEntry to LocalDatasetEntry and implement IndexEntry protocol (#127)
