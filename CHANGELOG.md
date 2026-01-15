@@ -11,6 +11,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 ### Changed
+- Local-ATProto Reconciliation Refactor (#111)
+- Phase 7: Documentation and Examples (#118)
+- Review and update docstrings for new public API (#164)
+- Create examples/promote_workflow.py demonstration (#163)
+- Create examples/local_workflow.py demonstration (#162)
+- Phase 6: Testing (protocols, integration, property tests) (#117)
+- Add schema deduplication integration test (#161)
+- Add integration test for local to atmosphere round-trip (#160)
+- Create test_protocols.py for protocol compliance tests (#159)
 - Phase 5: Local to Atmosphere Promotion Workflow (#116)
 - Add tests for promote.py (#158)
 - Implement schema deduplication helper (#157)
