@@ -11,6 +11,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 ### Changed
+- Phase 5: Local to Atmosphere Promotion Workflow (#116)
+- Add tests for promote.py (#158)
+- Implement schema deduplication helper (#157)
+- Create promote.py module with promote_to_atmosphere function (#156)
 - Adversarial review: Phase 4 code contraction (#148)
 - Simplify _python_type_to_field_type in local.py (#155)
 - Clean up unused imports and type: ignore comments (#153)

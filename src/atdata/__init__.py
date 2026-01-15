@@ -71,6 +71,10 @@ from ._cid import (
     verify_cid,
 )
 
+from .promote import (
+    promote_to_atmosphere,
+)
+
 # ATProto integration (lazy import to avoid requiring atproto package)
 from . import atmosphere
 
