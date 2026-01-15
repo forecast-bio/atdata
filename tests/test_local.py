@@ -374,6 +374,25 @@ def test_local_dataset_entry_implements_index_entry_protocol():
     assert isinstance(entry, IndexEntry)
 
 
+def test_index_implements_abstract_index_protocol():
+    """Test that Index has all AbstractIndex protocol methods."""
+    index = atlocal.Index()
+
+    # Check protocol methods exist
+    assert hasattr(index, 'insert_dataset')
+    assert hasattr(index, 'get_dataset')
+    assert hasattr(index, 'list_datasets')
+    assert hasattr(index, 'publish_schema')
+    assert hasattr(index, 'get_schema')
+    assert hasattr(index, 'list_schemas')
+    assert hasattr(index, 'decode_schema')
+
+    # Check they are callable
+    assert callable(index.insert_dataset)
+    assert callable(index.get_dataset)
+    assert callable(index.list_datasets)
+
+
 ##
 # Index tests
 
@@ -592,6 +611,55 @@ def test_index_get_entry_by_name_not_found(clean_redis):
 
     with pytest.raises(KeyError, match="No entry with name"):
         index.get_entry_by_name("nonexistent")
+
+
+##
+# AbstractIndex protocol method tests
+
+def test_index_insert_dataset(clean_redis):
+    """Test insert_dataset protocol method."""
+    index = atlocal.Index(redis=clean_redis)
+    ds = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset.tar")
+
+    entry = index.insert_dataset(ds, name="protocol-test")
+
+    assert entry.name == "protocol-test"
+    assert entry.cid is not None
+
+
+def test_index_get_dataset(clean_redis):
+    """Test get_dataset protocol method."""
+    index = atlocal.Index(redis=clean_redis)
+    ds = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset.tar")
+    index.insert_dataset(ds, name="my-dataset")
+
+    entry = index.get_dataset("my-dataset")
+
+    assert entry.name == "my-dataset"
+
+
+def test_index_get_dataset_not_found(clean_redis):
+    """Test get_dataset raises KeyError for unknown name."""
+    index = atlocal.Index(redis=clean_redis)
+
+    with pytest.raises(KeyError):
+        index.get_dataset("nonexistent")
+
+
+def test_index_list_datasets(clean_redis):
+    """Test list_datasets protocol method."""
+    index = atlocal.Index(redis=clean_redis)
+    ds1 = atdata.Dataset[SimpleTestSample](url="s3://bucket/ds1.tar")
+    ds2 = atdata.Dataset[SimpleTestSample](url="s3://bucket/ds2.tar")
+
+    index.insert_dataset(ds1, name="dataset-1")
+    index.insert_dataset(ds2, name="dataset-2")
+
+    datasets = list(index.list_datasets())
+
+    assert len(datasets) == 2
+    names = {d.name for d in datasets}
+    assert names == {"dataset-1", "dataset-2"}
 
 
 ##
@@ -1105,6 +1173,84 @@ def test_concurrent_index_access(clean_redis):
 
     assert entry1.cid in cids1 and entry2.cid in cids1
     assert entry1.cid in cids2 and entry2.cid in cids2
+
+
+##
+# S3DataStore tests
+
+def test_s3_datastore_init():
+    """Test creating an S3DataStore."""
+    creds = {
+        'AWS_ENDPOINT': 'http://localhost:9000',
+        'AWS_ACCESS_KEY_ID': 'minioadmin',
+        'AWS_SECRET_ACCESS_KEY': 'minioadmin'
+    }
+
+    store = atlocal.S3DataStore(credentials=creds, bucket="test-bucket")
+
+    assert store.bucket == "test-bucket"
+    assert store.credentials == creds
+    assert store._fs is not None
+
+
+def test_s3_datastore_supports_streaming():
+    """Test that S3DataStore reports streaming support."""
+    creds = {
+        'AWS_ACCESS_KEY_ID': 'test',
+        'AWS_SECRET_ACCESS_KEY': 'test'
+    }
+
+    store = atlocal.S3DataStore(credentials=creds, bucket="test")
+
+    assert store.supports_streaming() is True
+
+
+def test_s3_datastore_read_url():
+    """Test that read_url returns URL unchanged."""
+    creds = {
+        'AWS_ACCESS_KEY_ID': 'test',
+        'AWS_SECRET_ACCESS_KEY': 'test'
+    }
+
+    store = atlocal.S3DataStore(credentials=creds, bucket="test")
+
+    url = "s3://bucket/path/to/data.tar"
+    assert store.read_url(url) == url
+
+
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+@pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
+def test_s3_datastore_write_shards(mock_s3, tmp_path):
+    """Test writing shards with S3DataStore."""
+    ds = make_simple_dataset(tmp_path, num_samples=5)
+
+    store = atlocal.S3DataStore(
+        credentials=mock_s3['credentials'],
+        bucket=mock_s3['bucket']
+    )
+
+    urls = store.write_shards(ds, prefix="test/data", maxcount=100)
+
+    assert len(urls) >= 1
+    assert all(url.startswith("s3://") for url in urls)
+    assert all(mock_s3['bucket'] in url for url in urls)
+
+
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+@pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
+def test_s3_datastore_write_shards_cache_local(mock_s3, tmp_path):
+    """Test writing shards with cache_local=True."""
+    ds = make_simple_dataset(tmp_path, num_samples=5)
+
+    store = atlocal.S3DataStore(
+        credentials=mock_s3['credentials'],
+        bucket=mock_s3['bucket']
+    )
+
+    urls = store.write_shards(ds, prefix="cached/data", cache_local=True, maxcount=100)
+
+    assert len(urls) >= 1
+    assert all(url.startswith("s3://") for url in urls)
 
 
 ##

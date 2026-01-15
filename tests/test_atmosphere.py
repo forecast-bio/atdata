@@ -19,6 +19,8 @@ from numpy.typing import NDArray
 import atdata
 from atdata.atmosphere import (
     AtmosphereClient,
+    AtmosphereIndex,
+    AtmosphereIndexEntry,
     SchemaPublisher,
     SchemaLoader,
     DatasetPublisher,
@@ -1361,3 +1363,91 @@ class TestSchemaPublisherEdgeCases:
 
         with pytest.raises(TypeError, match="Unsupported type"):
             publisher.publish(UnsupportedSample, version="1.0.0")
+
+
+# =============================================================================
+# AtmosphereIndex Tests
+# =============================================================================
+
+class TestAtmosphereIndexEntry:
+    """Tests for AtmosphereIndexEntry wrapper."""
+
+    def test_entry_properties(self):
+        """Entry exposes record properties correctly."""
+        record = {
+            "name": "test-dataset",
+            "schemaRef": "at://did:plc:abc/schema/xyz",
+            "storage": {
+                "$type": f"{LEXICON_NAMESPACE}.storageExternal",
+                "urls": ["s3://bucket/data.tar"],
+            },
+        }
+
+        entry = AtmosphereIndexEntry("at://did:plc:abc/record/123", record)
+
+        assert entry.name == "test-dataset"
+        assert entry.schema_ref == "at://did:plc:abc/schema/xyz"
+        assert entry.data_urls == ["s3://bucket/data.tar"]
+        assert entry.uri == "at://did:plc:abc/record/123"
+
+    def test_entry_empty_storage(self):
+        """Entry handles missing storage gracefully."""
+        record = {"name": "no-storage"}
+
+        entry = AtmosphereIndexEntry("at://uri", record)
+
+        assert entry.data_urls == []
+
+
+class TestAtmosphereIndex:
+    """Tests for AtmosphereIndex unified interface."""
+
+    def test_init(self, authenticated_client):
+        """Index initializes with client and creates publishers/loaders."""
+        index = AtmosphereIndex(authenticated_client)
+
+        assert index.client is authenticated_client
+        assert index._schema_publisher is not None
+        assert index._schema_loader is not None
+        assert index._dataset_publisher is not None
+        assert index._dataset_loader is not None
+
+    def test_has_protocol_methods(self, authenticated_client):
+        """Index has all AbstractIndex protocol methods."""
+        index = AtmosphereIndex(authenticated_client)
+
+        assert hasattr(index, 'insert_dataset')
+        assert hasattr(index, 'get_dataset')
+        assert hasattr(index, 'list_datasets')
+        assert hasattr(index, 'publish_schema')
+        assert hasattr(index, 'get_schema')
+        assert hasattr(index, 'list_schemas')
+        assert hasattr(index, 'decode_schema')
+
+    def test_publish_schema(self, authenticated_client, mock_atproto_client):
+        """publish_schema delegates to SchemaPublisher."""
+        mock_response = Mock()
+        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/abc"
+        mock_atproto_client.com.atproto.repo.create_record.return_value = mock_response
+
+        index = AtmosphereIndex(authenticated_client)
+        uri = index.publish_schema(BasicSample, version="2.0.0")
+
+        assert uri == str(mock_response.uri)
+        mock_atproto_client.com.atproto.repo.create_record.assert_called_once()
+
+    def test_get_schema(self, authenticated_client, mock_atproto_client):
+        """get_schema delegates to SchemaLoader."""
+        mock_response = Mock()
+        mock_response.value = {
+            "$type": f"{LEXICON_NAMESPACE}.sampleSchema",
+            "name": "TestSchema",
+            "version": "1.0.0",
+            "fields": [],
+        }
+        mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
+
+        index = AtmosphereIndex(authenticated_client)
+        schema = index.get_schema("at://did:plc:test/schema/abc")
+
+        assert schema["name"] == "TestSchema"

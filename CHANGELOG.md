@@ -11,6 +11,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 ### Changed
+- Phase 3: Implement Concrete Classes (LocalIndex, AtmosphereIndex, S3DataStore) (#114)
+- Implement AtmosphereIndex wrapper (#144)
+- Implement S3DataStore class (#143)
+- Add AbstractIndex protocol methods to Index class (#142)
 - Adversarial review: Phase 1 & 2 implementation (#135)
 - Add test coverage for _schema_codec utility functions (#141)
 - Add missing test for parse_cid with malformed input (#140)

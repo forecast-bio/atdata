@@ -52,6 +52,7 @@ from typing import (
     Type,
     TypeVar,
     Generator,
+    Iterator,
     BinaryIO,
     Union,
     Literal,
@@ -812,6 +813,52 @@ class Index:
                 return entry
         raise KeyError(f"No entry with name: {name}")
 
+    # AbstractIndex protocol methods
+
+    def insert_dataset(
+        self,
+        ds: Dataset,
+        *,
+        name: str,
+        schema_ref: str | None = None,
+        **kwargs,
+    ) -> LocalDatasetEntry:
+        """Insert a dataset into the index (AbstractIndex protocol).
+
+        Args:
+            ds: The Dataset to register.
+            name: Human-readable name for the dataset.
+            schema_ref: Optional schema reference.
+            **kwargs: Additional options (metadata supported).
+
+        Returns:
+            IndexEntry for the inserted dataset.
+        """
+        metadata = kwargs.get('metadata')
+        return self.add_entry(ds, name=name, schema_ref=schema_ref, metadata=metadata)
+
+    def get_dataset(self, ref: str) -> LocalDatasetEntry:
+        """Get a dataset entry by name (AbstractIndex protocol).
+
+        Args:
+            ref: Dataset name.
+
+        Returns:
+            IndexEntry for the dataset.
+
+        Raises:
+            KeyError: If dataset not found.
+        """
+        return self.get_entry_by_name(ref)
+
+    def list_datasets(self) -> Iterator[LocalDatasetEntry]:
+        """List all dataset entries (AbstractIndex protocol).
+
+        Yields:
+            IndexEntry for each dataset.
+        """
+        return self.entries
+
     # Schema operations
 
     def publish_schema(
@@ -926,6 +973,137 @@ class Index:
 
 # Backwards compatibility alias
 LocalIndex = Index
+
+
+class S3DataStore:
+    """S3-compatible data store implementing AbstractDataStore protocol.
+
+    Handles writing dataset shards to S3-compatible object storage and
+    resolving URLs for reading.
+
+    Attributes:
+        credentials: S3 credentials dictionary.
+        bucket: Target bucket name.
+        _fs: S3FileSystem instance.
+    """
+
+    def __init__(
+        self,
+        credentials: str | Path | dict[str, Any],
+        *,
+        bucket: str,
+    ) -> None:
+        """Initialize an S3 data store.
+
+        Args:
+            credentials: Path to .env file or dict with AWS_ACCESS_KEY_ID,
+                AWS_SECRET_ACCESS_KEY, and optionally AWS_ENDPOINT.
+            bucket: Name of the S3 bucket for storage.
+        """
+        if isinstance(credentials, dict):
+            self.credentials = credentials
+        else:
+            self.credentials = _s3_env(credentials)
+
+        self.bucket = bucket
+        self._fs = _s3_from_credentials(self.credentials)
+
+    def write_shards(
+        self,
+        ds: Dataset,
+        *,
+        prefix: str,
+        cache_local: bool = False,
+        **kwargs,
+    ) -> list[str]:
+        """Write dataset shards to S3.
+
+        Args:
+            ds: The Dataset to write.
+            prefix: Path prefix within bucket (e.g., 'datasets/mnist/v1').
+            cache_local: If True, write locally first then copy to S3.
+            **kwargs: Additional args passed to wds.ShardWriter (e.g., maxcount).
+
+        Returns:
+            List of S3 URLs for the written shards.
+
+        Raises:
+            RuntimeError: If no shards were written.
+        """
+        new_uuid = str(uuid4())
+        shard_pattern = f"{self.bucket}/{prefix}/data--{new_uuid}--%06d.tar"
+
+        written_shards: list[str] = []
+
+        with TemporaryDirectory() as temp_dir:
+            if cache_local:
+                import boto3
+
+                s3_client_kwargs = {
+                    'aws_access_key_id': self.credentials['AWS_ACCESS_KEY_ID'],
+                    'aws_secret_access_key': self.credentials['AWS_SECRET_ACCESS_KEY']
+                }
+                if 'AWS_ENDPOINT' in self.credentials:
+                    s3_client_kwargs['endpoint_url'] = self.credentials['AWS_ENDPOINT']
+                s3_client = boto3.client('s3', **s3_client_kwargs)
+
+                def _writer_opener(p: str):
+                    local_path = Path(temp_dir) / p
+                    local_path.parent.mkdir(parents=True, exist_ok=True)
+                    return open(local_path, 'wb')
+
+                def _writer_post(p: str):
+                    local_path = Path(temp_dir) / p
+                    path_parts = Path(p).parts
+                    bucket = path_parts[0]
+                    key = str(Path(*path_parts[1:]))
+
+                    with open(local_path, 'rb') as f_in:
+                        s3_client.put_object(Bucket=bucket, Key=key, Body=f_in.read())
+
+                    local_path.unlink()
+                    written_shards.append(f"s3://{p}")
+
+                writer_opener = _writer_opener
+                writer_post = _writer_post
+            else:
+                writer_opener = lambda s: cast(BinaryIO, self._fs.open(f's3://{s}', 'wb'))
+                writer_post = lambda s: written_shards.append(f"s3://{s}")
+
+            with wds.writer.ShardWriter(
+                shard_pattern,
+                opener=writer_opener,
+                post=writer_post,
+                **kwargs,
+            ) as sink:
+                for sample in ds.ordered(batch_size=None):
+                    sink.write(sample.as_wds)
+
+        if len(written_shards) == 0:
+            raise RuntimeError("No shards written")
+
+        return written_shards
+
+    def read_url(self, url: str) -> str:
+        """Resolve an S3 URL for reading.
+
+        For S3, URLs are returned as-is (WebDataset handles s3:// directly).
+
+        Args:
+            url: S3 URL to resolve.
+
+        Returns:
+            The URL unchanged.
+        """
+        return url
+
+    def supports_streaming(self) -> bool:
+        """S3 supports streaming reads.
+
+        Returns:
+            True.
+        """
+        return True
 
 
 #
