@@ -11,6 +11,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 ### Changed
+- Phase 2: Align Local with ATProto Record Formats (#113)
+- Add schema storage to local (LocalSchemaRecord in Redis) (#128)
+- Rename BasicIndexEntry to LocalDatasetEntry and implement IndexEntry protocol (#127)
+- Rename Index to LocalIndex and implement AbstractIndex protocol (#129)
+- Update Repo to use new LocalIndex API (#130)
+- Update test_local.py for renamed classes and new API (#131)
+- Add libipld dependency for CID generation (#132)
 - Phase 2: Refactor local.py to use new protocols (#113)
 - Add CID utilities module (_cid.py) with ATProto-compatible CID generation (#132)
 - Rename BasicIndexEntry to LocalDatasetEntry with CID + name dual identity (#127)

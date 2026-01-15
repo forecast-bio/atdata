@@ -1132,3 +1132,171 @@ def test_concurrent_index_access(clean_redis):
 
     assert entry1.cid in cids1 and entry2.cid in cids1
     assert entry1.cid in cids2 and entry2.cid in cids2
+
+
+##
+# Schema storage tests
+
+@pytest.fixture
+def clean_redis_schemas(redis_connection):
+    """Provide a Redis connection with automatic schema cleanup."""
+    def _clear_schemas():
+        for key in redis_connection.scan_iter(match='LocalSchema:*'):
+            redis_connection.delete(key)
+
+    _clear_schemas()
+    yield redis_connection
+    _clear_schemas()
+
+
+def test_publish_schema(clean_redis_schemas):
+    """Test publishing a schema to Redis."""
+    index = atlocal.Index(redis=clean_redis_schemas)
+
+    schema_ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+
+    assert schema_ref.startswith("local://schemas/")
+    assert "SimpleTestSample" in schema_ref
+    assert "@1.0.0" in schema_ref
+
+
+def test_publish_schema_with_description(clean_redis_schemas):
+    """Test publishing a schema with a description."""
+    index = atlocal.Index(redis=clean_redis_schemas)
+
+    schema_ref = index.publish_schema(
+        SimpleTestSample,
+        version="2.0.0",
+        description="A simple test sample type"
+    )
+
+    schema = index.get_schema(schema_ref)
+    assert schema['description'] == "A simple test sample type"
+
+
+def test_get_schema(clean_redis_schemas):
+    """Test retrieving a published schema."""
+    index = atlocal.Index(redis=clean_redis_schemas)
+
+    schema_ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+    schema = index.get_schema(schema_ref)
+
+    assert schema['name'] == 'SimpleTestSample'
+    assert schema['version'] == '1.0.0'
+    assert len(schema['fields']) == 2  # name and value fields
+    assert schema['$ref'] == schema_ref
+
+
+def test_get_schema_not_found(clean_redis_schemas):
+    """Test that get_schema raises KeyError for missing schema."""
+    index = atlocal.Index(redis=clean_redis_schemas)
+
+    with pytest.raises(KeyError, match="Schema not found"):
+        index.get_schema("local://schemas/nonexistent.Sample@1.0.0")
+
+
+def test_get_schema_invalid_ref(clean_redis_schemas):
+    """Test that get_schema raises ValueError for invalid reference."""
+    index = atlocal.Index(redis=clean_redis_schemas)
+
+    with pytest.raises(ValueError, match="Invalid local schema reference"):
+        index.get_schema("invalid://schemas/Sample@1.0.0")
+
+
+def test_list_schemas_empty(clean_redis_schemas):
+    """Test listing schemas when none exist."""
+    index = atlocal.Index(redis=clean_redis_schemas)
+
+    schemas = list(index.list_schemas())
+    assert len(schemas) == 0
+
+
+def test_list_schemas_multiple(clean_redis_schemas):
+    """Test listing multiple schemas."""
+    index = atlocal.Index(redis=clean_redis_schemas)
+
+    index.publish_schema(SimpleTestSample, version="1.0.0")
+    index.publish_schema(ArrayTestSample, version="1.0.0")
+
+    schemas = list(index.list_schemas())
+    assert len(schemas) == 2
+
+    names = {s['name'] for s in schemas}
+    assert 'SimpleTestSample' in names
+    assert 'ArrayTestSample' in names
+
+
+def test_schema_field_types(clean_redis_schemas):
+    """Test that schema correctly captures field types."""
+    index = atlocal.Index(redis=clean_redis_schemas)
+
+    schema_ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+    schema = index.get_schema(schema_ref)
+
+    # Find name field (should be str)
+    name_field = next(f for f in schema['fields'] if f['name'] == 'name')
+    assert name_field['fieldType']['primitive'] == 'str'
+    assert name_field['optional'] is False
+
+    # Find value field (should be int)
+    value_field = next(f for f in schema['fields'] if f['name'] == 'value')
+    assert value_field['fieldType']['primitive'] == 'int'
+
+
+def test_schema_ndarray_field(clean_redis_schemas):
+    """Test that schema correctly captures NDArray fields."""
+    index = atlocal.Index(redis=clean_redis_schemas)
+
+    schema_ref = index.publish_schema(ArrayTestSample, version="1.0.0")
+    schema = index.get_schema(schema_ref)
+
+    # Find data field (should be ndarray)
+    data_field = next(f for f in schema['fields'] if f['name'] == 'data')
+    assert 'ndarray' in data_field['fieldType']['$type']
+    assert data_field['fieldType']['dtype'] == 'float32'
+
+
+def test_decode_schema(clean_redis_schemas):
+    """Test reconstructing a Python type from a schema."""
+    index = atlocal.Index(redis=clean_redis_schemas)
+
+    schema_ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+    ReconstructedType = index.decode_schema(schema_ref)
+
+    # Should be able to create instances
+    instance = ReconstructedType(name="test", value=42)
+    assert instance.name == "test"
+    assert instance.value == 42
+
+
+def test_decode_schema_preserves_structure(clean_redis_schemas):
+    """Test that decoded schema matches original type structure."""
+    index = atlocal.Index(redis=clean_redis_schemas)
+
+    schema_ref = index.publish_schema(ArrayTestSample, version="1.0.0")
+    ReconstructedType = index.decode_schema(schema_ref)
+
+    # Check fields exist
+    import numpy as np
+    instance = ReconstructedType(label="test", data=np.zeros((3, 3)))
+    assert instance.label == "test"
+    assert instance.data.shape == (3, 3)
+
+
+def test_schema_version_handling(clean_redis_schemas):
+    """Test publishing multiple versions of the same schema."""
+    index = atlocal.Index(redis=clean_redis_schemas)
+
+    ref_v1 = index.publish_schema(SimpleTestSample, version="1.0.0")
+    ref_v2 = index.publish_schema(SimpleTestSample, version="2.0.0")
+
+    assert ref_v1 != ref_v2
+    assert "@1.0.0" in ref_v1
+    assert "@2.0.0" in ref_v2
+
+    # Both should be retrievable
+    schema_v1 = index.get_schema(ref_v1)
+    schema_v2 = index.get_schema(ref_v2)
+
+    assert schema_v1['version'] == '1.0.0'
+    assert schema_v2['version'] == '2.0.0'

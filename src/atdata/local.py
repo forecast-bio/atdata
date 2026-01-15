@@ -53,8 +53,17 @@ from typing import (
     TypeVar,
     Generator,
     BinaryIO,
+    Union,
+    Literal,
     cast,
+    get_type_hints,
+    get_origin,
+    get_args,
 )
+import types
+from dataclasses import fields, is_dataclass
+from datetime import datetime, timezone
+import json
 
 T = TypeVar( 'T', bound = PackableSample )
 
@@ -87,6 +96,176 @@ def _decode_bytes_dict( d: dict[bytes, bytes] ) -> dict[str, str]:
     return {
         k.decode('utf-8'): v.decode('utf-8')
         for k, v in d.items()
+    }
+
+
+##
+# Schema helpers
+
+def _schema_ref_from_type(sample_type: Type[PackableSample], version: str = "1.0.0") -> str:
+    """Generate a local schema reference from a sample type.
+
+    Args:
+        sample_type: The PackableSample subclass.
+        version: Semantic version string.
+
+    Returns:
+        Schema reference in format 'local://schemas/{module.Class}@{version}'.
+    """
+    kind_str = _kind_str_for_sample_type(sample_type)
+    return f"local://schemas/{kind_str}@{version}"
+
+
+def _parse_schema_ref(ref: str) -> tuple[str, str]:
+    """Parse a local schema reference into module.Class and version.
+
+    Args:
+        ref: Schema reference in format 'local://schemas/{module.Class}@{version}'.
+
+    Returns:
+        Tuple of (module.Class, version).
+
+    Raises:
+        ValueError: If the reference format is invalid.
+    """
+    if not ref.startswith("local://schemas/"):
+        raise ValueError(f"Invalid local schema reference: {ref}")
+
+    path = ref[len("local://schemas/"):]
+    if "@" not in path:
+        raise ValueError(f"Schema reference must include version (@version): {ref}")
+
+    kind_str, version = path.rsplit("@", 1)
+    return kind_str, version
+
+
+def _python_type_to_field_type(python_type: Any) -> dict:
+    """Convert a Python type to a schema field type dict.
+
+    Args:
+        python_type: Python type annotation.
+
+    Returns:
+        Field type dict with '$type' and type-specific fields.
+
+    Raises:
+        TypeError: If the type is not supported.
+    """
+    # Handle primitives
+    if python_type is str:
+        return {"$type": "local#primitive", "primitive": "str"}
+    elif python_type is int:
+        return {"$type": "local#primitive", "primitive": "int"}
+    elif python_type is float:
+        return {"$type": "local#primitive", "primitive": "float"}
+    elif python_type is bool:
+        return {"$type": "local#primitive", "primitive": "bool"}
+    elif python_type is bytes:
+        return {"$type": "local#primitive", "primitive": "bytes"}
+
+    # Check for NDArray
+    type_str = str(python_type)
+    if "NDArray" in type_str or "ndarray" in type_str.lower():
+        dtype = "float32"  # Default
+        args = get_args(python_type)
+        if args:
+            dtype_arg = args[-1] if args else None
+            if dtype_arg is not None:
+                dtype = _numpy_dtype_to_string(dtype_arg)
+        return {"$type": "local#ndarray", "dtype": dtype}
+
+    # Check for list/array types
+    origin = get_origin(python_type)
+    if origin is list:
+        args = get_args(python_type)
+        if args:
+            items = _python_type_to_field_type(args[0])
+            return {"$type": "local#array", "items": items}
+        else:
+            return {"$type": "local#array", "items": {"$type": "local#primitive", "primitive": "str"}}
+
+    # Check for nested dataclass (not yet supported)
+    if is_dataclass(python_type):
+        raise TypeError(
+            f"Nested dataclass types not yet supported: {python_type.__name__}. "
+            "Publish nested types separately and use references."
+        )
+
+    raise TypeError(f"Unsupported type for schema field: {python_type}")
+
+
+def _numpy_dtype_to_string(dtype: Any) -> str:
+    """Convert a numpy dtype annotation to a string."""
+    dtype_str = str(dtype)
+    dtype_map = {
+        "float16": "float16", "float32": "float32", "float64": "float64",
+        "int8": "int8", "int16": "int16", "int32": "int32", "int64": "int64",
+        "uint8": "uint8", "uint16": "uint16", "uint32": "uint32", "uint64": "uint64",
+        "bool": "bool", "complex64": "complex64", "complex128": "complex128",
+    }
+    for key, value in dtype_map.items():
+        if key in dtype_str:
+            return value
+    return "float32"
+
+
+def _build_schema_record(
+    sample_type: Type[PackableSample],
+    *,
+    version: str = "1.0.0",
+    description: str | None = None,
+) -> dict:
+    """Build a schema record dict from a PackableSample type.
+
+    Args:
+        sample_type: The PackableSample subclass to introspect.
+        version: Semantic version string.
+        description: Optional human-readable description.
+
+    Returns:
+        Schema record dict suitable for Redis storage.
+
+    Raises:
+        ValueError: If sample_type is not a dataclass.
+        TypeError: If a field type is not supported.
+    """
+    if not is_dataclass(sample_type):
+        raise ValueError(f"{sample_type.__name__} must be a dataclass (use @packable)")
+
+    field_defs = []
+    type_hints = get_type_hints(sample_type)
+
+    for f in fields(sample_type):
+        field_type = type_hints.get(f.name, f.type)
+
+        # Check for Optional types (Union with None)
+        is_optional = False
+        origin = get_origin(field_type)
+
+        if origin is Union or isinstance(field_type, types.UnionType):
+            args = get_args(field_type)
+            non_none_args = [a for a in args if a is not type(None)]
+            if type(None) in args or len(non_none_args) < len(args):
+                is_optional = True
+            if len(non_none_args) == 1:
+                field_type = non_none_args[0]
+            elif len(non_none_args) > 1:
+                raise TypeError(f"Complex union types not supported: {field_type}")
+
+        field_type_dict = _python_type_to_field_type(field_type)
+
+        field_defs.append({
+            "name": f.name,
+            "fieldType": field_type_dict,
+            "optional": is_optional,
+        })
+
+    return {
+        "name": sample_type.__name__,
+        "version": version,
+        "fields": field_defs,
+        "description": description,
+        "createdAt": datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -672,6 +851,117 @@ class Index:
             if entry.name == name:
                 return entry
         raise KeyError(f"No entry with name: {name}")
+
+    # Schema operations
+
+    def publish_schema(
+        self,
+        sample_type: Type[PackableSample],
+        *,
+        version: str = "1.0.0",
+        description: str | None = None,
+    ) -> str:
+        """Publish a schema for a sample type to Redis.
+
+        Args:
+            sample_type: The PackableSample subclass to publish.
+            version: Semantic version string (e.g., '1.0.0').
+            description: Optional human-readable description.
+
+        Returns:
+            Schema reference string: 'local://schemas/{module.Class}@{version}'.
+
+        Raises:
+            ValueError: If sample_type is not a dataclass.
+            TypeError: If a field type is not supported.
+        """
+        schema_record = _build_schema_record(
+            sample_type,
+            version=version,
+            description=description,
+        )
+
+        schema_ref = _schema_ref_from_type(sample_type, version)
+        kind_str, _ = _parse_schema_ref(schema_ref)
+
+        # Store in Redis
+        redis_key = f"LocalSchema:{kind_str}@{version}"
+        schema_json = json.dumps(schema_record)
+        self._redis.set(redis_key, schema_json)
+
+        return schema_ref
+
+    def get_schema(self, ref: str) -> dict:
+        """Get a schema record by reference.
+
+        Args:
+            ref: Schema reference string (local://schemas/...).
+
+        Returns:
+            Schema record as a dictionary.
+
+        Raises:
+            KeyError: If schema not found.
+            ValueError: If reference format is invalid.
+        """
+        kind_str, version = _parse_schema_ref(ref)
+        redis_key = f"LocalSchema:{kind_str}@{version}"
+
+        schema_json = self._redis.get(redis_key)
+        if schema_json is None:
+            raise KeyError(f"Schema not found: {ref}")
+
+        if isinstance(schema_json, bytes):
+            schema_json = schema_json.decode('utf-8')
+
+        schema = json.loads(schema_json)
+        # Add $ref for decode_schema compatibility
+        schema['$ref'] = ref
+        return schema
+
+    def list_schemas(self) -> Generator[dict, None, None]:
+        """List all schema records in this index.
+
+        Yields:
+            Schema records as dictionaries.
+        """
+        for key in self._redis.scan_iter(match='LocalSchema:*'):
+            key_str = key.decode('utf-8') if isinstance(key, bytes) else key
+            # Extract kind_str@version from key
+            schema_id = key_str[len('LocalSchema:'):]
+
+            schema_json = self._redis.get(key)
+            if schema_json is None:
+                continue
+
+            if isinstance(schema_json, bytes):
+                schema_json = schema_json.decode('utf-8')
+
+            schema = json.loads(schema_json)
+            schema['$ref'] = f"local://schemas/{schema_id}"
+            yield schema
+
+    def decode_schema(self, ref: str) -> Type[PackableSample]:
+        """Reconstruct a Python PackableSample type from a stored schema.
+
+        This method enables loading datasets without knowing the sample type
+        ahead of time. The index retrieves the schema record and dynamically
+        generates a PackableSample subclass matching the schema definition.
+
+        Args:
+            ref: Schema reference string (local://schemas/...).
+
+        Returns:
+            A dynamically generated PackableSample subclass.
+
+        Raises:
+            KeyError: If schema not found.
+            ValueError: If schema cannot be decoded.
+        """
+        from atdata._schema_codec import schema_to_type
+
+        schema = self.get_schema(ref)
+        return schema_to_type(schema)
 
 
 # Backwards compatibility alias
