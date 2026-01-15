@@ -24,6 +24,7 @@ from atdata import (
 )
 from atdata._cid import generate_cid
 from atdata._protocols import IndexEntry
+from atdata._type_utils import numpy_dtype_to_string, PRIMITIVE_TYPE_MAP
 
 from pathlib import Path
 from uuid import uuid4
@@ -95,16 +96,11 @@ def _parse_schema_ref(ref: str) -> tuple[str, str]:
     return kind_str, version
 
 
-_PRIMITIVE_TYPE_MAP = {
-    str: "str", int: "int", float: "float", bool: "bool", bytes: "bytes",
-}
-
-
 def _python_type_to_field_type(python_type: Any) -> dict:
     """Convert Python type annotation to schema field type dict."""
     # Handle primitives
-    if python_type in _PRIMITIVE_TYPE_MAP:
-        return {"$type": "local#primitive", "primitive": _PRIMITIVE_TYPE_MAP[python_type]}
+    if python_type in PRIMITIVE_TYPE_MAP:
+        return {"$type": "local#primitive", "primitive": PRIMITIVE_TYPE_MAP[python_type]}
 
     # Check for NDArray
     type_str = str(python_type)
@@ -114,7 +110,7 @@ def _python_type_to_field_type(python_type: Any) -> dict:
         if args:
             dtype_arg = args[-1] if args else None
             if dtype_arg is not None:
-                dtype = _numpy_dtype_to_string(dtype_arg)
+                dtype = numpy_dtype_to_string(dtype_arg)
         return {"$type": "local#ndarray", "dtype": dtype}
 
     # Check for list/array types
@@ -135,20 +131,6 @@ def _python_type_to_field_type(python_type: Any) -> dict:
         )
 
     raise TypeError(f"Unsupported type for schema field: {python_type}")
-
-
-def _numpy_dtype_to_string(dtype: Any) -> str:
-    dtype_str = str(dtype)
-    dtype_map = {
-        "float16": "float16", "float32": "float32", "float64": "float64",
-        "int8": "int8", "int16": "int16", "int32": "int32", "int64": "int64",
-        "uint8": "uint8", "uint16": "uint16", "uint32": "uint32", "uint64": "uint64",
-        "bool": "bool", "complex64": "complex64", "complex128": "complex128",
-    }
-    for key, value in dtype_map.items():
-        if key in dtype_str:
-            return value
-    return "float32"
 
 
 def _build_schema_record(

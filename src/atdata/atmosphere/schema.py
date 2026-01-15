@@ -17,6 +17,7 @@ from ._types import (
     FieldType,
     LEXICON_NAMESPACE,
 )
+from .._type_utils import numpy_dtype_to_string
 
 # Import for type checking only to avoid circular imports
 from typing import TYPE_CHECKING
@@ -205,30 +206,7 @@ class SchemaPublisher:
 
     def _numpy_dtype_to_string(self, dtype) -> str:
         """Convert a numpy dtype annotation to a string."""
-        dtype_str = str(dtype)
-        # Handle common numpy dtypes
-        dtype_map = {
-            "float16": "float16",
-            "float32": "float32",
-            "float64": "float64",
-            "int8": "int8",
-            "int16": "int16",
-            "int32": "int32",
-            "int64": "int64",
-            "uint8": "uint8",
-            "uint16": "uint16",
-            "uint32": "uint32",
-            "uint64": "uint64",
-            "bool": "bool",
-            "complex64": "complex64",
-            "complex128": "complex128",
-        }
-
-        for key, value in dtype_map.items():
-            if key in dtype_str:
-                return value
-
-        return "float32"  # Default fallback
+        return numpy_dtype_to_string(dtype)
 
 
 class SchemaLoader:

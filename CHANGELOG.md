@@ -11,6 +11,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 ### Changed
+- Adversarial review: Post Local-ATProto Reconciliation (#165)
+- Add error path tests for Dataset with invalid tar files (#170)
+- Convert TODO comment to design note in dataset.py (#169)
+- Replace O(n²) string prefix extraction with os.path.commonprefix (#168)
+- Remove unused Lens import from dataset.py (#167)
+- Extract shared dtype/type conversion to _type_utils.py (#166)
 - Local-ATProto Reconciliation Refactor (#111)
 - Phase 7: Documentation and Examples (#118)
 - Review and update docstrings for new public API (#164)

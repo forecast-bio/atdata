@@ -185,9 +185,9 @@ class PackableSample( ABC ):
                     continue
 
                 elif isinstance( var_cur_value, bytes ):
-                    # TODO This does create a constraint that serialized bytes
-                    # in a field that might be an NDArray are always interpreted
-                    # as being the NDArray interpretation
+                    # Design note: bytes in NDArray-typed fields are always interpreted
+                    # as serialized arrays. This means raw bytes fields must not be
+                    # annotated as NDArray.
                     setattr( self, var_name, eh.bytes_to_array( var_cur_value ) )
 
     def __post_init__( self ):

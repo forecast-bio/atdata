@@ -321,25 +321,20 @@ def _shards_to_wds_url(shards: list[str]) -> str:
         >>> _shards_to_wds_url(["train.tar"])
         "train.tar"
     """
+    import os.path
+
     if len(shards) == 0:
         raise ValueError("Cannot create URL from empty shard list")
 
     if len(shards) == 1:
         return shards[0]
 
-    # Find common prefix across ALL shards
-    prefix = shards[0]
-    for s in shards[1:]:
-        # Shorten prefix until it matches
-        while not s.startswith(prefix) and prefix:
-            prefix = prefix[:-1]
+    # Find common prefix using os.path.commonprefix (O(n) vs O(n²))
+    prefix = os.path.commonprefix(shards)
 
-    # Find common suffix across ALL shards
-    suffix = shards[0]
-    for s in shards[1:]:
-        # Shorten suffix until it matches
-        while not s.endswith(suffix) and suffix:
-            suffix = suffix[1:]
+    # Find common suffix by reversing strings
+    reversed_shards = [s[::-1] for s in shards]
+    suffix = os.path.commonprefix(reversed_shards)[::-1]
 
     prefix_len = len(prefix)
     suffix_len = len(suffix)

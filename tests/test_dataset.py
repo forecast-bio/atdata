@@ -646,4 +646,38 @@ def test_wrap_wrong_msgpack_type(tmp_path):
         dataset.wrap({"__key__": "test", "msgpack": "not bytes"})
 
 
+def test_dataset_nonexistent_file():
+    """Test Dataset raises on nonexistent tar file during iteration."""
+    @atdata.packable
+    class NonexistentSample:
+        value: int
+
+    dataset = atdata.Dataset[NonexistentSample]("/nonexistent/path/data.tar")
+
+    # Dataset creation succeeds (lazy loading)
+    assert dataset is not None
+
+    # Iteration fails when file doesn't exist
+    with pytest.raises(Exception):  # FileNotFoundError or similar
+        list(dataset.ordered(batch_size=None))
+
+
+def test_dataset_invalid_batch_size(tmp_path):
+    """Test Dataset raises on invalid batch_size values."""
+    @atdata.packable
+    class BatchSizeSample:
+        value: int
+
+    wds_filename = (tmp_path / "batch_test.tar").as_posix()
+    with wds.writer.TarWriter(wds_filename) as sink:
+        sample = BatchSizeSample(value=42)
+        sink.write(sample.as_wds)
+
+    dataset = atdata.Dataset[BatchSizeSample](wds_filename)
+
+    # batch_size=0 produces empty batches, causing IndexError in webdataset
+    with pytest.raises((ValueError, AssertionError, IndexError)):
+        list(dataset.ordered(batch_size=0))
+
+
 ##
