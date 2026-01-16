@@ -31,10 +31,12 @@ from __future__ import annotations
 import re
 from pathlib import Path
 from typing import (
+    TYPE_CHECKING,
     Any,
     Generic,
     Iterator,
     Mapping,
+    Optional,
     Type,
     TypeVar,
     Union,
@@ -42,6 +44,9 @@ from typing import (
 )
 
 from .dataset import Dataset, PackableSample
+
+if TYPE_CHECKING:
+    from ._protocols import AbstractIndex
 
 ##
 # Type variables
@@ -134,54 +139,22 @@ class DatasetDict(Generic[ST], dict):
 
 
 def _is_brace_pattern(path: str) -> bool:
-    """Check if path contains WebDataset brace expansion notation.
-
-    Examples:
-        >>> _is_brace_pattern("data-{000000..000099}.tar")
-        True
-        >>> _is_brace_pattern("data-{train,test}.tar")
-        True
-        >>> _is_brace_pattern("data-000000.tar")
-        False
-    """
+    """Check if path contains WebDataset brace expansion notation like {000..099}."""
     return bool(re.search(r"\{[^}]+\}", path))
 
 
 def _is_glob_pattern(path: str) -> bool:
-    """Check if path contains glob wildcards.
-
-    Examples:
-        >>> _is_glob_pattern("data-*.tar")
-        True
-        >>> _is_glob_pattern("data-000000.tar")
-        False
-    """
+    """Check if path contains glob wildcards (* or ?)."""
     return "*" in path or "?" in path
 
 
 def _is_remote_url(path: str) -> bool:
-    """Check if path is a remote URL (s3, http, etc.).
-
-    Examples:
-        >>> _is_remote_url("s3://bucket/path")
-        True
-        >>> _is_remote_url("https://example.com/data.tar")
-        True
-        >>> _is_remote_url("/local/path/data.tar")
-        False
-    """
+    """Check if path is a remote URL (s3://, gs://, http://, https://, az://)."""
     return path.startswith(("s3://", "gs://", "http://", "https://", "az://"))
 
 
 def _expand_local_glob(pattern: str) -> list[str]:
-    """Expand a local glob pattern to list of paths.
-
-    Args:
-        pattern: Glob pattern like "path/to/*.tar"
-
-    Returns:
-        Sorted list of matching file paths.
-    """
+    """Expand local glob pattern to sorted list of matching file paths."""
     base_path = Path(pattern).parent
     glob_part = Path(pattern).name
 
@@ -192,53 +165,45 @@ def _expand_local_glob(pattern: str) -> list[str]:
     return [str(p) for p in matches if p.is_file()]
 
 
-# Common split name patterns in filenames
-_SPLIT_PATTERNS = [
+# Pre-compiled split name patterns (pattern, split_name)
+_SPLIT_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     # Patterns like "dataset-train-000000.tar" (split in middle with delimiters)
-    (r"[_-](train|training)[_-]", "train"),
-    (r"[_-](test|testing)[_-]", "test"),
-    (r"[_-](val|valid|validation)[_-]", "validation"),
-    (r"[_-](dev|development)[_-]", "validation"),
+    (re.compile(r"[_-](train|training)[_-]"), "train"),
+    (re.compile(r"[_-](test|testing)[_-]"), "test"),
+    (re.compile(r"[_-](val|valid|validation)[_-]"), "validation"),
+    (re.compile(r"[_-](dev|development)[_-]"), "validation"),
     # Patterns at start of filename like "train-000.tar" or "test_data.tar"
-    (r"^(train|training)[_-]", "train"),
-    (r"^(test|testing)[_-]", "test"),
-    (r"^(val|valid|validation)[_-]", "validation"),
-    (r"^(dev|development)[_-]", "validation"),
+    (re.compile(r"^(train|training)[_-]"), "train"),
+    (re.compile(r"^(test|testing)[_-]"), "test"),
+    (re.compile(r"^(val|valid|validation)[_-]"), "validation"),
+    (re.compile(r"^(dev|development)[_-]"), "validation"),
     # Patterns in directory path like "/path/train/shard-000.tar"
-    (r"[/\\](train|training)[/\\]", "train"),
-    (r"[/\\](test|testing)[/\\]", "test"),
-    (r"[/\\](val|valid|validation)[/\\]", "validation"),
-    (r"[/\\](dev|development)[/\\]", "validation"),
+    (re.compile(r"[/\\](train|training)[/\\]"), "train"),
+    (re.compile(r"[/\\](test|testing)[/\\]"), "test"),
+    (re.compile(r"[/\\](val|valid|validation)[/\\]"), "validation"),
+    (re.compile(r"[/\\](dev|development)[/\\]"), "validation"),
     # Patterns at start of path like "train/shard-000.tar"
-    (r"^(train|training)[/\\]", "train"),
-    (r"^(test|testing)[/\\]", "test"),
-    (r"^(val|valid|validation)[/\\]", "validation"),
-    (r"^(dev|development)[/\\]", "validation"),
+    (re.compile(r"^(train|training)[/\\]"), "train"),
+    (re.compile(r"^(test|testing)[/\\]"), "test"),
+    (re.compile(r"^(val|valid|validation)[/\\]"), "validation"),
+    (re.compile(r"^(dev|development)[/\\]"), "validation"),
 ]
 
 
 def _detect_split_from_path(path: str) -> str | None:
-    """Attempt to detect split name from a file path.
-
-    Args:
-        path: File path to analyze.
-
-    Returns:
-        Detected split name ("train", "test", "validation") or None.
-    """
-    # Extract just the filename for pattern matching on full paths
+    """Detect split name (train/test/validation) from file path."""
     filename = Path(path).name
     path_lower = path.lower()
     filename_lower = filename.lower()
 
     # Check filename first (more specific)
     for pattern, split_name in _SPLIT_PATTERNS:
-        if re.search(pattern, filename_lower):
+        if pattern.search(filename_lower):
             return split_name
 
-    # Fall back to full path (catches directory patterns like "train/...")
+    # Fall back to full path (catches directory patterns)
     for pattern, split_name in _SPLIT_PATTERNS:
-        if re.search(pattern, path_lower):
+        if pattern.search(path_lower):
             return split_name
 
     return None
@@ -356,25 +321,20 @@ def _shards_to_wds_url(shards: list[str]) -> str:
         >>> _shards_to_wds_url(["train.tar"])
         "train.tar"
     """
+    import os.path
+
     if len(shards) == 0:
         raise ValueError("Cannot create URL from empty shard list")
 
     if len(shards) == 1:
         return shards[0]
 
-    # Find common prefix across ALL shards
-    prefix = shards[0]
-    for s in shards[1:]:
-        # Shorten prefix until it matches
-        while not s.startswith(prefix) and prefix:
-            prefix = prefix[:-1]
+    # Find common prefix using os.path.commonprefix (O(n) vs O(n²))
+    prefix = os.path.commonprefix(shards)
 
-    # Find common suffix across ALL shards
-    suffix = shards[0]
-    for s in shards[1:]:
-        # Shorten suffix until it matches
-        while not s.endswith(suffix) and suffix:
-            suffix = suffix[1:]
+    # Find common suffix by reversing strings
+    reversed_shards = [s[::-1] for s in shards]
+    suffix = os.path.commonprefix(reversed_shards)[::-1]
 
     prefix_len = len(prefix)
     suffix_len = len(suffix)
@@ -427,6 +387,83 @@ def _group_shards_by_split(shards: list[str]) -> dict[str, list[str]]:
 
 
 ##
+# Index-based path resolution
+
+
+def _is_indexed_path(path: str) -> bool:
+    """Check if path uses @handle/dataset notation for index lookup.
+
+    Examples:
+        >>> _is_indexed_path("@maxine.science/mnist")
+        True
+        >>> _is_indexed_path("@did:plc:abc123/my-dataset")
+        True
+        >>> _is_indexed_path("s3://bucket/data.tar")
+        False
+    """
+    return path.startswith("@")
+
+
+def _parse_indexed_path(path: str) -> tuple[str, str]:
+    """Parse @handle/dataset path into (handle_or_did, dataset_name).
+
+    Args:
+        path: Path in format "@handle/dataset" or "@did:plc:xxx/dataset"
+
+    Returns:
+        Tuple of (handle_or_did, dataset_name)
+
+    Raises:
+        ValueError: If path format is invalid.
+    """
+    if not path.startswith("@"):
+        raise ValueError(f"Not an indexed path: {path}")
+
+    # Remove leading @
+    rest = path[1:]
+
+    # Split on first / (handle can contain . but dataset name is after /)
+    if "/" not in rest:
+        raise ValueError(
+            f"Invalid indexed path format: {path}. "
+            "Expected @handle/dataset or @did:plc:xxx/dataset"
+        )
+
+    # Find the split point - for DIDs, the format is did:plc:xxx/dataset
+    # For handles, it's handle.domain/dataset
+    parts = rest.split("/", 1)
+    if len(parts) != 2 or not parts[0] or not parts[1]:
+        raise ValueError(f"Invalid indexed path: {path}")
+
+    return parts[0], parts[1]
+
+
+def _resolve_indexed_path(
+    path: str,
+    index: "AbstractIndex",
+) -> tuple[list[str], str]:
+    """Resolve @handle/dataset path to URLs and schema_ref via index lookup.
+
+    Args:
+        path: Path in @handle/dataset format.
+        index: Index to use for lookup.
+
+    Returns:
+        Tuple of (data_urls, schema_ref).
+
+    Raises:
+        KeyError: If dataset not found in index.
+    """
+    handle_or_did, dataset_name = _parse_indexed_path(path)
+
+    # For AtmosphereIndex, we need to resolve handle to DID first
+    # For LocalIndex, the handle is ignored and we just look up by name
+    entry = index.get_dataset(dataset_name)
+
+    return entry.data_urls, entry.schema_ref
+
+
+##
 # Main load_dataset function
 
 
@@ -438,6 +475,7 @@ def load_dataset(
     split: str,
     data_files: str | list[str] | dict[str, str | list[str]] | None = None,
     streaming: bool = False,
+    index: Optional["AbstractIndex"] = None,
 ) -> Dataset[ST]: ...
 
 
@@ -449,18 +487,44 @@ def load_dataset(
     split: None = None,
     data_files: str | list[str] | dict[str, str | list[str]] | None = None,
     streaming: bool = False,
+    index: Optional["AbstractIndex"] = None,
 ) -> DatasetDict[ST]: ...
+
+
+@overload
+def load_dataset(
+    path: str,
+    sample_type: None = None,
+    *,
+    split: str,
+    data_files: str | list[str] | dict[str, str | list[str]] | None = None,
+    streaming: bool = False,
+    index: "AbstractIndex",
+) -> Dataset[PackableSample]: ...
+
+
+@overload
+def load_dataset(
+    path: str,
+    sample_type: None = None,
+    *,
+    split: None = None,
+    data_files: str | list[str] | dict[str, str | list[str]] | None = None,
+    streaming: bool = False,
+    index: "AbstractIndex",
+) -> DatasetDict[PackableSample]: ...
 
 
 def load_dataset(
     path: str,
-    sample_type: Type[ST],
+    sample_type: Type[ST] | None = None,
     *,
     split: str | None = None,
     data_files: str | list[str] | dict[str, str | list[str]] | None = None,
     streaming: bool = False,
+    index: Optional["AbstractIndex"] = None,
 ) -> Dataset[ST] | DatasetDict[ST]:
-    """Load a dataset from local files or remote URLs.
+    """Load a dataset from local files, remote URLs, or an index.
 
     This function provides a HuggingFace Datasets-style interface for loading
     atdata typed datasets. It handles path resolution, split detection, and
@@ -469,15 +533,16 @@ def load_dataset(
 
     Args:
         path: Path to dataset. Can be:
+            - Index lookup: "@handle/dataset-name" or "@local/dataset-name"
             - WebDataset brace notation: "path/to/{train,test}-{000..099}.tar"
             - Local directory: "./data/" (scans for .tar files)
             - Glob pattern: "path/to/*.tar"
             - Remote URL: "s3://bucket/path/data-*.tar"
             - Single file: "path/to/data.tar"
 
-        sample_type: The PackableSample subclass defining the schema for
-            samples in this dataset. This is required (unlike HF Datasets)
-            because atdata uses typed dataclasses.
+        sample_type: The PackableSample subclass defining the schema. Can be
+            None if index is provided - the type will be resolved from the
+            schema stored in the index.
 
         split: Which split to load. If None, returns a DatasetDict with all
             detected splits. If specified (e.g., "train", "test"), returns
@@ -490,37 +555,65 @@ def load_dataset(
 
         streaming: If True, explicitly marks the dataset for streaming mode.
             Note: atdata Datasets are already lazy/streaming via WebDataset
-            pipelines, so this parameter primarily signals intent. When True,
-            shard list precomputation is skipped. Default False.
+            pipelines, so this parameter primarily signals intent.
+
+        index: Optional AbstractIndex for dataset lookup. Required when using
+            @handle/dataset syntax or when sample_type is None. Can be a
+            LocalIndex or AtmosphereIndex.
 
     Returns:
         If split is None: DatasetDict[ST] with all detected splits.
         If split is specified: Dataset[ST] for that split.
 
     Raises:
-        ValueError: If the specified split is not found.
+        ValueError: If the specified split is not found, or if sample_type
+            is None without an index.
         FileNotFoundError: If no data files are found at the path.
+        KeyError: If dataset not found in index.
 
     Example:
-        >>> @atdata.packable
-        ... class TextData:
-        ...     text: str
-        ...     label: int
-        >>>
-        >>> # Load single split
+        >>> # Load from local path with explicit type
         >>> train_ds = load_dataset("./data/train-*.tar", TextData, split="train")
+        >>>
+        >>> # Load from index with auto-type resolution
+        >>> index = LocalIndex()
+        >>> ds = load_dataset("@local/my-dataset", index=index, split="train")
         >>>
         >>> # Load all splits
         >>> ds_dict = load_dataset("./data/", TextData)
         >>> train_ds = ds_dict["train"]
-        >>> test_ds = ds_dict["test"]
-        >>>
-        >>> # Explicit data files
-        >>> ds_dict = load_dataset("./data/", TextData, data_files={
-        ...     "train": "train-*.tar",
-        ...     "test": "test-*.tar",
-        ... })
     """
+    # Handle @handle/dataset indexed path resolution
+    if _is_indexed_path(path):
+        if index is None:
+            raise ValueError(
+                f"Index required for indexed path: {path}. "
+                "Pass index=LocalIndex() or index=AtmosphereIndex(client)."
+            )
+
+        data_urls, schema_ref = _resolve_indexed_path(path, index)
+
+        # Resolve sample_type from schema if not provided
+        if sample_type is None:
+            sample_type = index.decode_schema(schema_ref)
+
+        # For indexed datasets, we treat all URLs as a single "train" split
+        url = _shards_to_wds_url(data_urls)
+        ds = Dataset[sample_type](url)
+
+        if split is not None:
+            # Indexed datasets are single-split by default
+            return ds
+
+        return DatasetDict({"train": ds}, sample_type=sample_type, streaming=streaming)
+
+    # Validate sample_type for non-indexed paths
+    if sample_type is None:
+        raise ValueError(
+            "sample_type is required for non-indexed paths. "
+            "Use @handle/dataset with an index for auto-type resolution."
+        )
+
     # Resolve path to split -> shard URL mapping
     splits_shards = _resolve_shards(path, data_files)
 

@@ -23,7 +23,10 @@ from atdata._hf_api import (
     _resolve_shards,
     _resolve_data_files,
     _group_shards_by_split,
+    _is_indexed_path,
+    _parse_indexed_path,
 )
+from unittest.mock import Mock, MagicMock
 
 from numpy.typing import NDArray
 
@@ -643,3 +646,131 @@ class TestLoadDatasetIntegration:
         # Aggregated attributes
         labels = first_batch.label
         assert len(labels) == 4
+
+
+##
+# Indexed path tests
+
+
+class TestIsIndexedPath:
+    """Tests for _is_indexed_path function."""
+
+    def test_at_handle_path(self):
+        """@handle/dataset is indexed."""
+        assert _is_indexed_path("@maxine.science/mnist") is True
+
+    def test_at_did_path(self):
+        """@did:plc:abc/dataset is indexed."""
+        assert _is_indexed_path("@did:plc:abc123/my-dataset") is True
+
+    def test_local_path(self):
+        """Local paths are not indexed."""
+        assert _is_indexed_path("/path/to/data.tar") is False
+
+    def test_s3_path(self):
+        """S3 URLs are not indexed."""
+        assert _is_indexed_path("s3://bucket/data.tar") is False
+
+    def test_relative_path(self):
+        """Relative paths are not indexed."""
+        assert _is_indexed_path("./data/train.tar") is False
+
+
+class TestParseIndexedPath:
+    """Tests for _parse_indexed_path function."""
+
+    def test_parse_handle_dataset(self):
+        """Parse @handle/dataset format."""
+        handle, name = _parse_indexed_path("@maxine.science/mnist")
+        assert handle == "maxine.science"
+        assert name == "mnist"
+
+    def test_parse_did_dataset(self):
+        """Parse @did:plc:xxx/dataset format."""
+        handle, name = _parse_indexed_path("@did:plc:abc123/my-dataset")
+        assert handle == "did:plc:abc123"
+        assert name == "my-dataset"
+
+    def test_parse_invalid_no_slash(self):
+        """Invalid path without slash raises ValueError."""
+        with pytest.raises(ValueError, match="Invalid indexed path format"):
+            _parse_indexed_path("@handle-only")
+
+    def test_parse_invalid_no_at(self):
+        """Path without @ raises ValueError."""
+        with pytest.raises(ValueError, match="Not an indexed path"):
+            _parse_indexed_path("handle/dataset")
+
+    def test_parse_invalid_empty_parts(self):
+        """Empty handle or dataset raises ValueError."""
+        with pytest.raises(ValueError, match="Invalid indexed path"):
+            _parse_indexed_path("@/dataset")
+
+
+class TestLoadDatasetWithIndex:
+    """Tests for load_dataset with index parameter."""
+
+    def test_indexed_path_requires_index(self):
+        """@handle/dataset without index raises ValueError."""
+        with pytest.raises(ValueError, match="Index required"):
+            load_dataset("@handle/dataset", SimpleTestSample)
+
+    def test_none_sample_type_requires_index(self):
+        """sample_type=None without index raises ValueError."""
+        with pytest.raises(ValueError, match="sample_type is required"):
+            load_dataset("/path/to/data.tar", None)
+
+    def test_indexed_path_with_mock_index(self):
+        """load_dataset with indexed path uses index lookup."""
+        mock_index = Mock()
+        mock_entry = Mock()
+        mock_entry.data_urls = ["s3://bucket/data.tar"]
+        mock_entry.schema_ref = "local://schemas/test@1.0.0"
+        mock_index.get_dataset.return_value = mock_entry
+
+        # Need to mock decode_schema since sample_type is provided
+        ds = load_dataset(
+            "@local/my-dataset",
+            SimpleTestSample,
+            index=mock_index,
+            split="train",
+        )
+
+        mock_index.get_dataset.assert_called_once_with("my-dataset")
+        assert ds.url == "s3://bucket/data.tar"
+
+    def test_indexed_path_auto_type_resolution(self):
+        """load_dataset with sample_type=None uses decode_schema."""
+        mock_index = Mock()
+        mock_entry = Mock()
+        mock_entry.data_urls = ["s3://bucket/data.tar"]
+        mock_entry.schema_ref = "local://schemas/test@1.0.0"
+        mock_index.get_dataset.return_value = mock_entry
+        mock_index.decode_schema.return_value = SimpleTestSample
+
+        ds = load_dataset(
+            "@local/my-dataset",
+            None,
+            index=mock_index,
+            split="train",
+        )
+
+        mock_index.decode_schema.assert_called_once_with("local://schemas/test@1.0.0")
+        assert ds.sample_type == SimpleTestSample
+
+    def test_indexed_path_returns_datasetdict_without_split(self):
+        """load_dataset with indexed path returns DatasetDict when split=None."""
+        mock_index = Mock()
+        mock_entry = Mock()
+        mock_entry.data_urls = ["s3://bucket/data.tar"]
+        mock_entry.schema_ref = "local://schemas/test@1.0.0"
+        mock_index.get_dataset.return_value = mock_entry
+
+        result = load_dataset(
+            "@local/my-dataset",
+            SimpleTestSample,
+            index=mock_index,
+        )
+
+        assert isinstance(result, DatasetDict)
+        assert "train" in result

@@ -56,6 +56,25 @@ from ._hf_api import (
     DatasetDict,
 )
 
+from ._protocols import (
+    IndexEntry,
+    AbstractIndex,
+    AbstractDataStore,
+)
+
+from ._schema_codec import (
+    schema_to_type,
+)
+
+from ._cid import (
+    generate_cid,
+    verify_cid,
+)
+
+from .promote import (
+    promote_to_atmosphere,
+)
+
 # ATProto integration (lazy import to avoid requiring atproto package)
 from . import atmosphere
 

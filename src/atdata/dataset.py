@@ -54,8 +54,6 @@ from typing import (
     Sequence,
     Iterable,
     Callable,
-    Union,
-    #
     Self,
     Generic,
     Type,
@@ -187,9 +185,9 @@ class PackableSample( ABC ):
                     continue
 
                 elif isinstance( var_cur_value, bytes ):
-                    # TODO This does create a constraint that serialized bytes
-                    # in a field that might be an NDArray are always interpreted
-                    # as being the NDArray interpretation
+                    # Design note: bytes in NDArray-typed fields are always interpreted
+                    # as serialized arrays. This means raw bytes fields must not be
+                    # annotated as NDArray.
                     setattr( self, var_name, eh.bytes_to_array( var_cur_value ) )
 
     def __post_init__( self ):
@@ -202,16 +200,12 @@ class PackableSample( ABC ):
         """Create a sample instance from unpacked msgpack data.
 
         Args:
-            data: A dictionary of unpacked msgpack data with keys matching
-                the sample's field names.
+            data: Dictionary with keys matching the sample's field names.
 
         Returns:
-            A new instance of this sample class with fields populated from
-            the data dictionary and NDArray fields auto-converted from bytes.
+            New instance with NDArray fields auto-converted from bytes.
         """
-        ret = cls( **data )
-        ret._ensure_good()
-        return ret
+        return cls( **data )
     
     @classmethod
     def from_bytes( cls, bs: bytes ) -> Self:
@@ -253,7 +247,6 @@ class PackableSample( ABC ):
 
         return ret
     
-    # TODO Expand to allow for specifying explicit __key__
     @property
     def as_wds( self ) -> WDSRawSample:
         """Pack this sample's data for writing to WebDataset.
@@ -263,7 +256,8 @@ class PackableSample( ABC ):
             ``msgpack`` (packed sample data) fields suitable for WebDataset.
 
         Note:
-            TODO: Expand to allow specifying explicit ``__key__`` values.
+            Keys are auto-generated as UUID v1 for time-sortable ordering.
+            Custom key specification is not currently supported.
         """
         return {
             # Generates a UUID that is timelike-sortable
@@ -575,8 +569,8 @@ class Dataset( Generic[ST] ):
             wds.filters.map( self.wrap_batch ),
         )
     
-    # TODO Rewrite to eliminate `pandas` dependency directly calling
-    # `fastparquet`
+    # Design note: Uses pandas for parquet export. Could be replaced with
+    # direct fastparquet calls to reduce dependencies if needed.
     def to_parquet( self, path: Pathlike,
                 sample_map: Optional[SampleExportMap] = None,
                 maxcount: Optional[int] = None,
@@ -721,7 +715,7 @@ def packable( cls ):
         def __post_init__( self ):
             return PackableSample.__post_init__( self )
     
-    # TODO This doesn't properly carry over the original
+    # Restore original class identity for better repr/debugging
     as_packable.__name__ = class_name
     as_packable.__annotations__ = class_annotations
 
