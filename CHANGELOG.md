@@ -11,6 +11,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 ### Changed
+- Adversarial review: Test suite and codebase comprehensive assessment (#181)
+- Consolidate test sample type definitions into conftest.py (#184)
+- Trim verbose docstrings that restate function signatures (#189)
+- Replace assertions with explicit ValueError in Repo.insert (#187)
+- Add Redis key prefix constants to eliminate magic strings (#186)
+- Convert TODO comments to tracked issues or design notes (#185)
+- Add tests for schema_to_type with malformed/edge-case schemas (#183)
+- Remove duplicate shard writing logic between Repo.insert and S3DataStore (#182)
+- Remove unused Lens import from dataset.py (#188)
 - Build comprehensive markdown documentation for atdata (#171)
 - Write docs/protocols.md - Abstract protocols reference (#180)
 - Write docs/load-dataset.md - HuggingFace-style API (#179)

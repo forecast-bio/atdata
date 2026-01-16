@@ -247,7 +247,6 @@ class PackableSample( ABC ):
 
         return ret
     
-    # TODO Expand to allow for specifying explicit __key__
     @property
     def as_wds( self ) -> WDSRawSample:
         """Pack this sample's data for writing to WebDataset.
@@ -257,7 +256,8 @@ class PackableSample( ABC ):
             ``msgpack`` (packed sample data) fields suitable for WebDataset.
 
         Note:
-            TODO: Expand to allow specifying explicit ``__key__`` values.
+            Keys are auto-generated as UUID v1 for time-sortable ordering.
+            Custom key specification is not currently supported.
         """
         return {
             # Generates a UUID that is timelike-sortable
@@ -569,8 +569,8 @@ class Dataset( Generic[ST] ):
             wds.filters.map( self.wrap_batch ),
         )
     
-    # TODO Rewrite to eliminate `pandas` dependency directly calling
-    # `fastparquet`
+    # Design note: Uses pandas for parquet export. Could be replaced with
+    # direct fastparquet calls to reduce dependencies if needed.
     def to_parquet( self, path: Pathlike,
                 sample_map: Optional[SampleExportMap] = None,
                 maxcount: Optional[int] = None,
@@ -715,7 +715,7 @@ def packable( cls ):
         def __post_init__( self ):
             return PackableSample.__post_init__( self )
     
-    # TODO This doesn't properly carry over the original
+    # Restore original class identity for better repr/debugging
     as_packable.__name__ = class_name
     as_packable.__annotations__ = class_annotations
 

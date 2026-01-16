@@ -66,6 +66,10 @@ import json
 
 T = TypeVar( 'T', bound = PackableSample )
 
+# Redis key prefixes for index entries and schemas
+REDIS_KEY_DATASET_ENTRY = "LocalDatasetEntry"
+REDIS_KEY_SCHEMA = "LocalSchema"
+
 
 ##
 # Helpers
@@ -73,6 +77,74 @@ T = TypeVar( 'T', bound = PackableSample )
 def _kind_str_for_sample_type( st: Type[PackableSample] ) -> str:
     """Return fully-qualified 'module.name' string for a sample type."""
     return f'{st.__module__}.{st.__name__}'
+
+
+def _create_s3_write_callbacks(
+    credentials: dict[str, Any],
+    temp_dir: str,
+    written_shards: list[str],
+    fs: S3FileSystem | None,
+    cache_local: bool,
+    add_s3_prefix: bool = False,
+) -> tuple:
+    """Create opener and post callbacks for ShardWriter with S3 upload.
+
+    Args:
+        credentials: S3 credentials dict.
+        temp_dir: Temporary directory for local caching.
+        written_shards: List to append written shard paths to.
+        fs: S3FileSystem for direct writes (used when cache_local=False).
+        cache_local: If True, write locally then copy to S3.
+        add_s3_prefix: If True, prepend 's3://' to shard paths.
+
+    Returns:
+        Tuple of (writer_opener, writer_post) callbacks.
+    """
+    if cache_local:
+        import boto3
+
+        s3_client_kwargs = {
+            'aws_access_key_id': credentials['AWS_ACCESS_KEY_ID'],
+            'aws_secret_access_key': credentials['AWS_SECRET_ACCESS_KEY']
+        }
+        if 'AWS_ENDPOINT' in credentials:
+            s3_client_kwargs['endpoint_url'] = credentials['AWS_ENDPOINT']
+        s3_client = boto3.client('s3', **s3_client_kwargs)
+
+        def _writer_opener(p: str):
+            local_path = Path(temp_dir) / p
+            local_path.parent.mkdir(parents=True, exist_ok=True)
+            return open(local_path, 'wb')
+
+        def _writer_post(p: str):
+            local_path = Path(temp_dir) / p
+            path_parts = Path(p).parts
+            bucket = path_parts[0]
+            key = str(Path(*path_parts[1:]))
+
+            with open(local_path, 'rb') as f_in:
+                s3_client.put_object(Bucket=bucket, Key=key, Body=f_in.read())
+
+            local_path.unlink()
+            if add_s3_prefix:
+                written_shards.append(f"s3://{p}")
+            else:
+                written_shards.append(p)
+
+        return _writer_opener, _writer_post
+    else:
+        assert fs is not None, "S3FileSystem required when cache_local=False"
+
+        def _direct_opener(s: str):
+            return cast(BinaryIO, fs.open(f's3://{s}', 'wb'))
+
+        def _direct_post(s: str):
+            if add_s3_prefix:
+                written_shards.append(f"s3://{s}")
+            else:
+                written_shards.append(s)
+
+        return _direct_opener, _direct_post
 
 ##
 # Schema helpers
@@ -288,12 +360,12 @@ class LocalDatasetEntry:
     def write_to(self, redis: Redis):
         """Persist this index entry to Redis.
 
-        Stores the entry as a Redis hash with key 'LocalDatasetEntry:{cid}'.
+        Stores the entry as a Redis hash with key '{REDIS_KEY_DATASET_ENTRY}:{cid}'.
 
         Args:
             redis: Redis connection to write to.
         """
-        save_key = f'LocalDatasetEntry:{self.cid}'
+        save_key = f'{REDIS_KEY_DATASET_ENTRY}:{self.cid}'
         data = {
             'name': self._name,
             'schema_ref': self._schema_ref,
@@ -321,10 +393,10 @@ class LocalDatasetEntry:
         Raises:
             KeyError: If entry not found.
         """
-        save_key = f'LocalDatasetEntry:{cid}'
+        save_key = f'{REDIS_KEY_DATASET_ENTRY}:{cid}'
         raw_data = redis.hgetall(save_key)
         if not raw_data:
-            raise KeyError(f"LocalDatasetEntry not found: {cid}")
+            raise KeyError(f"{REDIS_KEY_DATASET_ENTRY} not found: {cid}")
 
         # Decode string fields, keep binary fields as bytes for msgpack
         raw_data_typed = cast(dict[bytes, bytes], raw_data)
@@ -482,13 +554,13 @@ class Repo:
                 - new_dataset: Dataset object pointing to the stored copy
 
         Raises:
-            AssertionError: If S3 credentials or hive_path are not configured.
+            ValueError: If S3 credentials or hive_path are not configured.
             RuntimeError: If no shards were written.
         """
-        
-        assert self.s3_credentials is not None
-        assert self.hive_bucket is not None
-        assert self.hive_path is not None
+        if self.s3_credentials is None:
+            raise ValueError("S3 credentials required for insert(). Initialize Repo with s3_credentials.")
+        if self.hive_bucket is None or self.hive_path is None:
+            raise ValueError("hive_path required for insert(). Initialize Repo with hive_path.")
 
         new_uuid = str( uuid4() )
 
@@ -516,58 +588,25 @@ class Repo:
             / f'atdata--{new_uuid}--%06d.tar'
         ).as_posix()
 
+        written_shards: list[str] = []
         with TemporaryDirectory() as temp_dir:
+            writer_opener, writer_post = _create_s3_write_callbacks(
+                credentials=self.s3_credentials,
+                temp_dir=temp_dir,
+                written_shards=written_shards,
+                fs=hive_fs,
+                cache_local=cache_local,
+                add_s3_prefix=False,
+            )
 
-            if cache_local:
-                # For cache_local, we need to use boto3 directly to avoid s3fs async issues with moto
-                import boto3
-
-                # Create boto3 client from credentials
-                s3_client_kwargs = {
-                    'aws_access_key_id': self.s3_credentials['AWS_ACCESS_KEY_ID'],
-                    'aws_secret_access_key': self.s3_credentials['AWS_SECRET_ACCESS_KEY']
-                }
-                if 'AWS_ENDPOINT' in self.s3_credentials:
-                    s3_client_kwargs['endpoint_url'] = self.s3_credentials['AWS_ENDPOINT']
-                s3_client = boto3.client('s3', **s3_client_kwargs)
-
-                def _writer_opener( p: str ):
-                    local_cache_path = Path( temp_dir ) / p
-                    local_cache_path.parent.mkdir( parents = True, exist_ok = True )
-                    return open( local_cache_path, 'wb' )
-                writer_opener = _writer_opener
-
-                def _writer_post( p: str ):
-                    local_cache_path = Path( temp_dir ) / p
-
-                    # Copy to S3 using boto3 client (avoids s3fs async issues)
-                    path_parts = Path( p ).parts
-                    bucket = path_parts[0]
-                    key = str( Path( *path_parts[1:] ) )
-
-                    with open( local_cache_path, 'rb' ) as f_in:
-                        s3_client.put_object( Bucket=bucket, Key=key, Body=f_in.read() )
-
-                    # Delete local cache file
-                    local_cache_path.unlink()
-
-                    written_shards.append( p )
-                writer_post = _writer_post
-
-            else:
-                # Use s3:// prefix to ensure s3fs treats paths as S3 paths
-                writer_opener = lambda s: cast( BinaryIO, hive_fs.open( f's3://{s}', 'wb' ) )
-                writer_post = lambda s: written_shards.append( s )
-
-            written_shards = []
             with wds.writer.ShardWriter(
                 shard_pattern,
-                opener = writer_opener,
-                post = writer_post,
+                opener=writer_opener,
+                post=writer_post,
                 **kwargs,
             ) as sink:
-                for sample in ds.ordered( batch_size = None ):
-                    sink.write( sample.as_wds )
+                for sample in ds.ordered(batch_size=None):
+                    sink.write(sample.as_wds)
 
         # Make a new Dataset object for the written dataset copy
         if len( written_shards ) == 0:
@@ -654,9 +693,10 @@ class Index:
         Yields:
             LocalDatasetEntry objects from the index.
         """
-        for key in self._redis.scan_iter(match='LocalDatasetEntry:*'):
+        prefix = f'{REDIS_KEY_DATASET_ENTRY}:'
+        for key in self._redis.scan_iter(match=f'{prefix}*'):
             key_str = key.decode('utf-8') if isinstance(key, bytes) else key
-            cid = key_str[len('LocalDatasetEntry:'):]
+            cid = key_str[len(prefix):]
             yield LocalDatasetEntry.from_redis(self._redis, cid)
 
     def add_entry(self,
@@ -811,7 +851,7 @@ class Index:
         kind_str, _ = _parse_schema_ref(schema_ref)
 
         # Store in Redis
-        redis_key = f"LocalSchema:{kind_str}@{version}"
+        redis_key = f"{REDIS_KEY_SCHEMA}:{kind_str}@{version}"
         schema_json = json.dumps(schema_record)
         self._redis.set(redis_key, schema_json)
 
@@ -831,7 +871,7 @@ class Index:
             ValueError: If reference format is invalid.
         """
         kind_str, version = _parse_schema_ref(ref)
-        redis_key = f"LocalSchema:{kind_str}@{version}"
+        redis_key = f"{REDIS_KEY_SCHEMA}:{kind_str}@{version}"
 
         schema_json = self._redis.get(redis_key)
         if schema_json is None:
@@ -851,10 +891,11 @@ class Index:
         Yields:
             Schema records as dictionaries.
         """
-        for key in self._redis.scan_iter(match='LocalSchema:*'):
+        prefix = f'{REDIS_KEY_SCHEMA}:'
+        for key in self._redis.scan_iter(match=f'{prefix}*'):
             key_str = key.decode('utf-8') if isinstance(key, bytes) else key
             # Extract kind_str@version from key
-            schema_id = key_str[len('LocalSchema:'):]
+            schema_id = key_str[len(prefix):]
 
             schema_json = self._redis.get(key)
             if schema_json is None:
@@ -955,39 +996,14 @@ class S3DataStore:
         written_shards: list[str] = []
 
         with TemporaryDirectory() as temp_dir:
-            if cache_local:
-                import boto3
-
-                s3_client_kwargs = {
-                    'aws_access_key_id': self.credentials['AWS_ACCESS_KEY_ID'],
-                    'aws_secret_access_key': self.credentials['AWS_SECRET_ACCESS_KEY']
-                }
-                if 'AWS_ENDPOINT' in self.credentials:
-                    s3_client_kwargs['endpoint_url'] = self.credentials['AWS_ENDPOINT']
-                s3_client = boto3.client('s3', **s3_client_kwargs)
-
-                def _writer_opener(p: str):
-                    local_path = Path(temp_dir) / p
-                    local_path.parent.mkdir(parents=True, exist_ok=True)
-                    return open(local_path, 'wb')
-
-                def _writer_post(p: str):
-                    local_path = Path(temp_dir) / p
-                    path_parts = Path(p).parts
-                    bucket = path_parts[0]
-                    key = str(Path(*path_parts[1:]))
-
-                    with open(local_path, 'rb') as f_in:
-                        s3_client.put_object(Bucket=bucket, Key=key, Body=f_in.read())
-
-                    local_path.unlink()
-                    written_shards.append(f"s3://{p}")
-
-                writer_opener = _writer_opener
-                writer_post = _writer_post
-            else:
-                writer_opener = lambda s: cast(BinaryIO, self._fs.open(f's3://{s}', 'wb'))
-                writer_post = lambda s: written_shards.append(f"s3://{s}")
+            writer_opener, writer_post = _create_s3_write_callbacks(
+                credentials=self.credentials,
+                temp_dir=temp_dir,
+                written_shards=written_shards,
+                fs=self._fs,
+                cache_local=cache_local,
+                add_s3_prefix=True,
+            )
 
             with wds.writer.ShardWriter(
                 shard_pattern,

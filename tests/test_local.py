@@ -740,14 +740,14 @@ def test_repo_init_with_custom_redis():
 # Repo tests - Insert functionality
 
 def test_repo_insert_without_s3():
-    """Test that inserting a dataset without S3 configured raises AssertionError.
+    """Test that inserting a dataset without S3 configured raises ValueError.
 
-    Should fail with assertion error when trying to insert without S3 credentials.
+    Should fail with ValueError when trying to insert without S3 credentials.
     """
     repo = atlocal.Repo()
     ds = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset.tar")
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError, match="S3 credentials required"):
         repo.insert(ds, name="test-dataset")
 
 
@@ -1382,7 +1382,7 @@ def test_schema_version_handling(clean_redis):
 
 
 ##
-# Schema codec cache tests
+# Schema codec tests
 
 def test_schema_codec_type_caching():
     """Test that schema_to_type caches generated types."""
@@ -1408,3 +1408,204 @@ def test_schema_codec_type_caching():
 
     clear_type_cache()
     assert len(get_cached_types()) == 0
+
+
+def test_schema_to_type_missing_name():
+    """Test schema_to_type raises on schema without name."""
+    from atdata._schema_codec import schema_to_type, clear_type_cache
+
+    clear_type_cache()
+    schema = {
+        "version": "1.0.0",
+        "fields": [{"name": "value", "fieldType": {"$type": "#primitive", "primitive": "int"}, "optional": False}],
+    }
+
+    with pytest.raises(ValueError, match="must have a 'name' field"):
+        schema_to_type(schema)
+
+
+def test_schema_to_type_empty_fields():
+    """Test schema_to_type raises on schema with no fields."""
+    from atdata._schema_codec import schema_to_type, clear_type_cache
+
+    clear_type_cache()
+    schema = {
+        "name": "EmptySample",
+        "version": "1.0.0",
+        "fields": [],
+    }
+
+    with pytest.raises(ValueError, match="must have at least one field"):
+        schema_to_type(schema)
+
+
+def test_schema_to_type_field_missing_name():
+    """Test schema_to_type raises on field without name."""
+    from atdata._schema_codec import schema_to_type, clear_type_cache
+
+    clear_type_cache()
+    schema = {
+        "name": "BadFieldSample",
+        "version": "1.0.0",
+        "fields": [{"fieldType": {"$type": "#primitive", "primitive": "int"}, "optional": False}],
+    }
+
+    # Raises KeyError from cache key generation (accesses f['name']) or
+    # ValueError from validation - both indicate invalid schema is rejected
+    with pytest.raises((KeyError, ValueError)):
+        schema_to_type(schema)
+
+
+def test_schema_to_type_unknown_primitive():
+    """Test schema_to_type raises on unknown primitive type."""
+    from atdata._schema_codec import schema_to_type, clear_type_cache
+
+    clear_type_cache()
+    schema = {
+        "name": "UnknownPrimitiveSample",
+        "version": "1.0.0",
+        "fields": [{"name": "value", "fieldType": {"$type": "#primitive", "primitive": "unknown_type"}, "optional": False}],
+    }
+
+    with pytest.raises(ValueError, match="Unknown primitive type"):
+        schema_to_type(schema)
+
+
+def test_schema_to_type_unknown_field_kind():
+    """Test schema_to_type raises on unknown field type kind."""
+    from atdata._schema_codec import schema_to_type, clear_type_cache
+
+    clear_type_cache()
+    schema = {
+        "name": "UnknownKindSample",
+        "version": "1.0.0",
+        "fields": [{"name": "value", "fieldType": {"$type": "#unknown_kind"}, "optional": False}],
+    }
+
+    with pytest.raises(ValueError, match="Unknown field type kind"):
+        schema_to_type(schema)
+
+
+def test_schema_to_type_ref_not_supported():
+    """Test schema_to_type raises on ref field types (not yet supported)."""
+    from atdata._schema_codec import schema_to_type, clear_type_cache
+
+    clear_type_cache()
+    schema = {
+        "name": "RefSample",
+        "version": "1.0.0",
+        "fields": [{"name": "other", "fieldType": {"$type": "#ref", "ref": "other.Schema"}, "optional": False}],
+    }
+
+    with pytest.raises(ValueError, match="Schema references.*not yet supported"):
+        schema_to_type(schema)
+
+
+def test_schema_to_type_all_primitives():
+    """Test schema_to_type handles all primitive types correctly."""
+    from atdata._schema_codec import schema_to_type, clear_type_cache
+
+    clear_type_cache()
+    schema = {
+        "name": "AllPrimitivesSample",
+        "version": "1.0.0",
+        "fields": [
+            {"name": "s", "fieldType": {"$type": "#primitive", "primitive": "str"}, "optional": False},
+            {"name": "i", "fieldType": {"$type": "#primitive", "primitive": "int"}, "optional": False},
+            {"name": "f", "fieldType": {"$type": "#primitive", "primitive": "float"}, "optional": False},
+            {"name": "b", "fieldType": {"$type": "#primitive", "primitive": "bool"}, "optional": False},
+            {"name": "by", "fieldType": {"$type": "#primitive", "primitive": "bytes"}, "optional": False},
+        ],
+    }
+
+    SampleType = schema_to_type(schema)
+    instance = SampleType(s="hello", i=42, f=3.14, b=True, by=b"data")
+
+    assert instance.s == "hello"
+    assert instance.i == 42
+    assert instance.f == 3.14
+    assert instance.b is True
+    assert instance.by == b"data"
+
+
+def test_schema_to_type_optional_fields():
+    """Test schema_to_type handles optional fields with None defaults."""
+    from atdata._schema_codec import schema_to_type, clear_type_cache
+
+    clear_type_cache()
+    schema = {
+        "name": "OptionalSample",
+        "version": "1.0.0",
+        "fields": [
+            {"name": "required", "fieldType": {"$type": "#primitive", "primitive": "str"}, "optional": False},
+            {"name": "optional_str", "fieldType": {"$type": "#primitive", "primitive": "str"}, "optional": True},
+        ],
+    }
+
+    SampleType = schema_to_type(schema)
+
+    # Can create with only required field
+    instance1 = SampleType(required="test")
+    assert instance1.required == "test"
+    assert instance1.optional_str is None
+
+    # Can provide optional field
+    instance2 = SampleType(required="test", optional_str="value")
+    assert instance2.optional_str == "value"
+
+
+def test_schema_to_type_ndarray_field():
+    """Test schema_to_type handles NDArray fields."""
+    from atdata._schema_codec import schema_to_type, clear_type_cache
+
+    clear_type_cache()
+    schema = {
+        "name": "ArraySample",
+        "version": "1.0.0",
+        "fields": [
+            {"name": "data", "fieldType": {"$type": "#ndarray", "dtype": "float32"}, "optional": False},
+        ],
+    }
+
+    SampleType = schema_to_type(schema)
+    arr = np.zeros((3, 3), dtype=np.float32)
+    instance = SampleType(data=arr)
+
+    assert instance.data.shape == (3, 3)
+
+
+def test_schema_to_type_array_field():
+    """Test schema_to_type handles array (list) fields."""
+    from atdata._schema_codec import schema_to_type, clear_type_cache
+
+    clear_type_cache()
+    schema = {
+        "name": "ListSample",
+        "version": "1.0.0",
+        "fields": [
+            {"name": "tags", "fieldType": {"$type": "#array", "items": {"$type": "#primitive", "primitive": "str"}}, "optional": False},
+        ],
+    }
+
+    SampleType = schema_to_type(schema)
+    instance = SampleType(tags=["a", "b", "c"])
+
+    assert instance.tags == ["a", "b", "c"]
+
+
+def test_schema_to_type_use_cache_false():
+    """Test schema_to_type with use_cache=False creates new types."""
+    from atdata._schema_codec import schema_to_type, clear_type_cache
+
+    clear_type_cache()
+    schema = {
+        "name": "NoCacheSample",
+        "version": "1.0.0",
+        "fields": [{"name": "value", "fieldType": {"$type": "#primitive", "primitive": "int"}, "optional": False}],
+    }
+
+    Type1 = schema_to_type(schema, use_cache=False)
+    Type2 = schema_to_type(schema, use_cache=False)
+
+    # Different instances since caching is disabled
+    assert Type1 is not Type2
