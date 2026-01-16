@@ -11,6 +11,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 ### Changed
+- Build comprehensive markdown documentation for atdata (#171)
+- Write docs/protocols.md - Abstract protocols reference (#180)
+- Write docs/load-dataset.md - HuggingFace-style API (#179)
+- Write docs/promotion.md - Local to atmosphere workflow (#178)
+- Write docs/atmosphere.md - ATProto publishing and loading (#177)
+- Write docs/local-storage.md - LocalIndex, Repo, S3DataStore (#176)
+- Write docs/lenses.md - Lens transformations (#175)
+- Write docs/datasets.md - Dataset iteration and batching (#174)
+- Write docs/packable-samples.md - PackableSample and @packable (#173)
+- Write docs/index.md - overview and quick start guide (#172)
 - Adversarial review: Post Local-ATProto Reconciliation (#165)
 - Add error path tests for Dataset with invalid tar files (#170)
 - Convert TODO comment to design note in dataset.py (#169)
