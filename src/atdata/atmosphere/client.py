@@ -337,6 +337,9 @@ class AtmosphereClient:
     ) -> bytes:
         """Download a blob from a PDS.
 
+        This resolves the PDS endpoint from the DID document and fetches
+        the blob directly from the PDS.
+
         Args:
             did: The DID of the repository containing the blob.
             cid: The CID of the blob.
@@ -345,12 +348,68 @@ class AtmosphereClient:
             The blob data as bytes.
 
         Raises:
-            atproto.exceptions.AtProtocolError: If blob not found.
+            ValueError: If PDS endpoint cannot be resolved.
+            requests.HTTPError: If blob fetch fails.
         """
-        response = self._client.com.atproto.sync.get_blob(
-            params={"did": did, "cid": cid}
-        )
-        return response
+        import requests
+
+        # Resolve PDS endpoint from DID document
+        pds_endpoint = self._resolve_pds_endpoint(did)
+        if not pds_endpoint:
+            raise ValueError(f"Could not resolve PDS endpoint for {did}")
+
+        # Fetch blob from PDS
+        url = f"{pds_endpoint}/xrpc/com.atproto.sync.getBlob"
+        response = requests.get(url, params={"did": did, "cid": cid})
+        response.raise_for_status()
+        return response.content
+
+    def _resolve_pds_endpoint(self, did: str) -> Optional[str]:
+        """Resolve the PDS endpoint for a DID.
+
+        Args:
+            did: The DID to resolve.
+
+        Returns:
+            The PDS service endpoint URL, or None if not found.
+        """
+        import requests
+
+        # For did:plc, query the PLC directory
+        if did.startswith("did:plc:"):
+            try:
+                response = requests.get(f"https://plc.directory/{did}")
+                response.raise_for_status()
+                did_doc = response.json()
+
+                for service in did_doc.get("service", []):
+                    if service.get("type") == "AtprotoPersonalDataServer":
+                        return service.get("serviceEndpoint")
+            except requests.RequestException:
+                return None
+
+        # For did:web, would need different resolution (not implemented)
+        return None
+
+    def get_blob_url(self, did: str, cid: str) -> str:
+        """Get the direct URL for fetching a blob.
+
+        This is useful for passing to WebDataset or other HTTP clients.
+
+        Args:
+            did: The DID of the repository containing the blob.
+            cid: The CID of the blob.
+
+        Returns:
+            The full URL for fetching the blob.
+
+        Raises:
+            ValueError: If PDS endpoint cannot be resolved.
+        """
+        pds_endpoint = self._resolve_pds_endpoint(did)
+        if not pds_endpoint:
+            raise ValueError(f"Could not resolve PDS endpoint for {did}")
+        return f"{pds_endpoint}/xrpc/com.atproto.sync.getBlob?did={did}&cid={cid}"
 
     def list_records(
         self,

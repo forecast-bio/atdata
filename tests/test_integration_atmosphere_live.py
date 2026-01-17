@@ -464,6 +464,89 @@ class TestLiveDatasetOperations:
         assert samples[2].name == ["test_sample_2"]
         assert samples[2].value == [20]
 
+    def test_blob_storage_roundtrip(self, live_client, unique_name):
+        """Full E2E: upload blob, publish dataset, retrieve and iterate.
+
+        This tests the complete blob storage workflow:
+        1. Create a WebDataset tar in memory
+        2. Upload as blob to PDS
+        3. Publish dataset record with blob storage
+        4. Retrieve record and get blob URLs
+        5. Load data via to_dataset() and iterate
+        6. Verify samples match original data
+        """
+        import tarfile
+        import io
+        import msgpack
+
+        # Define sample type
+        @atdata.packable
+        class BlobTestSample:
+            id: int
+            message: str
+
+        BlobTestSample.__module__ = f"{TEST_PREFIX}.{unique_name}"
+
+        # 1. Create WebDataset tar in memory
+        expected_samples = [
+            {"id": 0, "message": "hello from blob"},
+            {"id": 1, "message": "blob storage works"},
+            {"id": 2, "message": "atproto is cool"},
+        ]
+
+        tar_buffer = io.BytesIO()
+        with tarfile.open(fileobj=tar_buffer, mode="w") as tar:
+            for i, sample in enumerate(expected_samples):
+                packed = msgpack.packb(sample)
+                info = tarfile.TarInfo(name=f"sample_{i:06d}.msgpack")
+                info.size = len(packed)
+                tar.addfile(info, io.BytesIO(packed))
+
+        tar_data = tar_buffer.getvalue()
+
+        # 2. Publish schema
+        schema_pub = SchemaPublisher(live_client)
+        schema_uri = schema_pub.publish(BlobTestSample, version="1.0.0")
+
+        # 3. Publish dataset with blob storage
+        dataset_pub = DatasetPublisher(live_client)
+        dataset_uri = dataset_pub.publish_with_blobs(
+            blobs=[tar_data],
+            schema_uri=str(schema_uri),
+            name=unique_name,
+            description="E2E blob storage test",
+        )
+
+        assert dataset_uri is not None
+        assert "at://" in str(dataset_uri)
+
+        # 4. Retrieve and verify storage type
+        loader = DatasetLoader(live_client)
+        storage_type = loader.get_storage_type(str(dataset_uri))
+        assert storage_type == "blobs"
+
+        # 5. Get blob URLs
+        blob_urls = loader.get_blob_urls(str(dataset_uri))
+        assert len(blob_urls) == 1
+        assert "getBlob" in blob_urls[0]
+
+        # 6. Load and iterate
+        ds = loader.to_dataset(str(dataset_uri), BlobTestSample)
+        samples = list(ds.ordered())
+
+        # 7. Verify data (3 samples)
+        assert len(samples) == 3
+
+        # Check sample values (batched as lists)
+        assert samples[0].id == [0]
+        assert samples[0].message == ["hello from blob"]
+
+        assert samples[1].id == [1]
+        assert samples[1].message == ["blob storage works"]
+
+        assert samples[2].id == [2]
+        assert samples[2].message == ["atproto is cool"]
+
 
 ##
 # AtmosphereIndex Tests

@@ -11,6 +11,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 ### Changed
+- Implement full blob storage support for atmosphere datasets (#211)
+- Add E2E blob roundtrip test (#215)
+- Implement get_blobs() and blob URL generation in DatasetLoader (#214)
+- Implement publish_with_blobs() in DatasetPublisher (#213)
+- Fix get_blob() - investigate 500 error and fix (#212)
 - Add live data retrieval tests with PDS blob upload (#206)
 - Add live E2E test with blob upload and data iteration (#210)
 - Add get_blobs() to DatasetLoader (#209)

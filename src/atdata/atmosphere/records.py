@@ -187,6 +187,76 @@ class DatasetPublisher:
             validate=False,
         )
 
+    def publish_with_blobs(
+        self,
+        blobs: list[bytes],
+        schema_uri: str,
+        *,
+        name: str,
+        description: Optional[str] = None,
+        tags: Optional[list[str]] = None,
+        license: Optional[str] = None,
+        metadata: Optional[dict] = None,
+        mime_type: str = "application/x-tar",
+        rkey: Optional[str] = None,
+    ) -> AtUri:
+        """Publish a dataset with data stored as ATProto blobs.
+
+        This method uploads the provided data as blobs to the PDS and creates
+        a dataset record referencing them. Suitable for smaller datasets that
+        fit within blob size limits (typically 50MB per blob, configurable).
+
+        Args:
+            blobs: List of binary data (e.g., tar shards) to upload as blobs.
+            schema_uri: AT URI of the schema record.
+            name: Human-readable dataset name.
+            description: Human-readable description.
+            tags: Searchable tags for discovery.
+            license: SPDX license identifier.
+            metadata: Arbitrary metadata dictionary.
+            mime_type: MIME type for the blobs (default: application/x-tar).
+            rkey: Optional explicit record key.
+
+        Returns:
+            The AT URI of the created dataset record.
+
+        Note:
+            Blobs are only retained by the PDS when referenced in a committed
+            record. This method handles that automatically.
+        """
+        # Upload all blobs
+        blob_refs = []
+        for blob_data in blobs:
+            blob_ref = self.client.upload_blob(blob_data, mime_type=mime_type)
+            blob_refs.append(blob_ref)
+
+        # Create storage location with blob references
+        storage = StorageLocation(
+            kind="blobs",
+            blob_refs=blob_refs,
+        )
+
+        metadata_bytes: Optional[bytes] = None
+        if metadata is not None:
+            metadata_bytes = msgpack.packb(metadata)
+
+        dataset_record = DatasetRecord(
+            name=name,
+            schema_ref=schema_uri,
+            storage=storage,
+            description=description,
+            tags=tags or [],
+            license=license,
+            metadata=metadata_bytes,
+        )
+
+        return self.client.create_record(
+            collection=f"{LEXICON_NAMESPACE}.record",
+            record=dataset_record.to_record(),
+            rkey=rkey,
+            validate=False,
+        )
+
 
 class DatasetLoader:
     """Loads dataset records from ATProto.
@@ -255,6 +325,29 @@ class DatasetLoader:
         """
         return self.client.list_datasets(repo=repo, limit=limit)
 
+    def get_storage_type(self, uri: str | AtUri) -> str:
+        """Get the storage type of a dataset record.
+
+        Args:
+            uri: The AT URI of the dataset record.
+
+        Returns:
+            Either "external" or "blobs".
+
+        Raises:
+            ValueError: If storage type is unknown.
+        """
+        record = self.get(uri)
+        storage = record.get("storage", {})
+        storage_type = storage.get("$type", "")
+
+        if "storageExternal" in storage_type:
+            return "external"
+        elif "storageBlobs" in storage_type:
+            return "blobs"
+        else:
+            raise ValueError(f"Unknown storage type: {storage_type}")
+
     def get_urls(self, uri: str | AtUri) -> list[str]:
         """Get the WebDataset URLs from a dataset record.
 
@@ -276,10 +369,70 @@ class DatasetLoader:
         elif "storageBlobs" in storage_type:
             raise ValueError(
                 "Dataset uses blob storage, not external URLs. "
-                "Use get_blobs() instead."
+                "Use get_blob_urls() instead."
             )
         else:
             raise ValueError(f"Unknown storage type: {storage_type}")
+
+    def get_blobs(self, uri: str | AtUri) -> list[dict]:
+        """Get the blob references from a dataset record.
+
+        Args:
+            uri: The AT URI of the dataset record.
+
+        Returns:
+            List of blob reference dicts with keys: $type, ref, mimeType, size.
+
+        Raises:
+            ValueError: If the storage type is not blobs.
+        """
+        record = self.get(uri)
+        storage = record.get("storage", {})
+
+        storage_type = storage.get("$type", "")
+        if "storageBlobs" in storage_type:
+            return storage.get("blobs", [])
+        elif "storageExternal" in storage_type:
+            raise ValueError(
+                "Dataset uses external URL storage, not blobs. "
+                "Use get_urls() instead."
+            )
+        else:
+            raise ValueError(f"Unknown storage type: {storage_type}")
+
+    def get_blob_urls(self, uri: str | AtUri) -> list[str]:
+        """Get fetchable URLs for blob-stored dataset shards.
+
+        This resolves the PDS endpoint and constructs URLs that can be
+        used to fetch the blob data directly.
+
+        Args:
+            uri: The AT URI of the dataset record.
+
+        Returns:
+            List of URLs for fetching the blob data.
+
+        Raises:
+            ValueError: If storage type is not blobs or PDS cannot be resolved.
+        """
+        if isinstance(uri, str):
+            parsed_uri = AtUri.parse(uri)
+        else:
+            parsed_uri = uri
+
+        blobs = self.get_blobs(uri)
+        did = parsed_uri.authority
+
+        urls = []
+        for blob in blobs:
+            # Extract CID from blob reference
+            ref = blob.get("ref", {})
+            cid = ref.get("$link") if isinstance(ref, dict) else str(ref)
+            if cid:
+                url = self.client.get_blob_url(did, cid)
+                urls.append(url)
+
+        return urls
 
     def get_metadata(self, uri: str | AtUri) -> Optional[dict]:
         """Get the metadata from a dataset record.
@@ -309,6 +462,8 @@ class DatasetLoader:
         You must provide the sample type class, which should match the
         schema referenced by the record.
 
+        Supports both external URL storage and ATProto blob storage.
+
         Args:
             uri: The AT URI of the dataset record.
             sample_type: The Python class for the sample type.
@@ -317,7 +472,7 @@ class DatasetLoader:
             A Dataset instance configured from the record.
 
         Raises:
-            ValueError: If the storage type is not external URLs.
+            ValueError: If no storage URLs can be resolved.
 
         Example:
             >>> loader = DatasetLoader(client)
@@ -328,9 +483,15 @@ class DatasetLoader:
         # Import here to avoid circular import
         from ..dataset import Dataset
 
-        urls = self.get_urls(uri)
+        storage_type = self.get_storage_type(uri)
+
+        if storage_type == "external":
+            urls = self.get_urls(uri)
+        else:
+            urls = self.get_blob_urls(uri)
+
         if not urls:
-            raise ValueError("Dataset record has no URLs")
+            raise ValueError("Dataset record has no storage URLs")
 
         # Use the first URL (multi-URL support could be added later)
         url = urls[0]
