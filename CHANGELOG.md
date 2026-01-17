@@ -11,6 +11,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 ### Changed
+- Add live data retrieval tests with PDS blob upload (#206)
+- Add live E2E test with blob upload and data iteration (#210)
+- Add get_blobs() to DatasetLoader (#209)
+- Add publish_with_blobs() to DatasetPublisher (#208)
+- Add upload_blob() wrapper to AtmosphereClient (#207)
+- Add live data retrieval tests with PDS blob upload (#206)
 - Comprehensive integration test suite for atdata (#190)
 - Integration test: Error handling and recovery (#198)
 - Integration test: Edge cases and data type coverage (#199)

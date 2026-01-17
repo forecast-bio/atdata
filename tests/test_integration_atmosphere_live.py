@@ -362,6 +362,108 @@ class TestLiveDatasetOperations:
         assert dataset["name"] == unique_name
         assert dataset["description"] == "Retrievable test dataset"
 
+    def test_to_dataset_with_fake_urls_fails_on_iteration(self, live_client, unique_name):
+        """Attempting to iterate a dataset with fake URLs should fail.
+
+        This test documents a known limitation: we can publish and retrieve
+        dataset *metadata* with fake URLs, but actual data iteration fails.
+        For true E2E tests, we need either:
+        1. Real external URLs (e.g., S3 with test data)
+        2. ATProto blob storage support (not yet implemented)
+        """
+        @atdata.packable
+        class IterationTestSample:
+            value: int
+
+        IterationTestSample.__module__ = f"{TEST_PREFIX}.{unique_name}"
+
+        # Publish schema
+        schema_pub = SchemaPublisher(live_client)
+        schema_uri = schema_pub.publish(IterationTestSample, version="1.0.0")
+
+        # Publish dataset with fake URL
+        dataset_pub = DatasetPublisher(live_client)
+        dataset_uri = dataset_pub.publish_with_urls(
+            urls=["https://example.com/fake-shard-000000.tar"],
+            schema_uri=str(schema_uri),
+            name=unique_name,
+            description="Dataset with fake URLs",
+        )
+
+        # Can retrieve metadata just fine
+        loader = DatasetLoader(live_client)
+        urls = loader.get_urls(str(dataset_uri))
+        assert urls == ["https://example.com/fake-shard-000000.tar"]
+
+        # But creating a Dataset and iterating should fail
+        # (the URL doesn't actually exist)
+        with pytest.raises(Exception):
+            ds = loader.to_dataset(str(dataset_uri), IterationTestSample)
+            # Attempt to iterate - this should fail when trying to fetch data
+            # Consume the iterator to trigger the network request
+            list(ds.ordered())
+
+    def test_full_e2e_with_local_fixture(self, live_client, unique_name):
+        """Full E2E: publish schema + dataset, retrieve, iterate over real data.
+
+        This test uses a local file:// URL to test the complete flow:
+        1. Publish schema to ATProto
+        2. Publish dataset record with local file URL
+        3. Retrieve dataset record
+        4. Load data via to_dataset() and iterate
+        5. Verify we get the expected samples
+        """
+        from pathlib import Path
+
+        # Define sample type matching the fixture
+        @atdata.packable
+        class FixtureSample:
+            id: int
+            name: str
+            value: int
+
+        FixtureSample.__module__ = f"{TEST_PREFIX}.{unique_name}"
+
+        # Get absolute path to test fixture
+        fixture_path = Path(__file__).parent / "fixtures" / "test_samples.tar"
+        if not fixture_path.exists():
+            pytest.skip("Test fixture not found")
+        fixture_url = f"file://{fixture_path.absolute()}"
+
+        # 1. Publish schema
+        schema_pub = SchemaPublisher(live_client)
+        schema_uri = schema_pub.publish(FixtureSample, version="1.0.0")
+
+        # 2. Publish dataset with local file URL
+        dataset_pub = DatasetPublisher(live_client)
+        dataset_uri = dataset_pub.publish_with_urls(
+            urls=[fixture_url],
+            schema_uri=str(schema_uri),
+            name=unique_name,
+            description="E2E test with real data",
+        )
+
+        # 3. Retrieve dataset record
+        loader = DatasetLoader(live_client)
+        record = loader.get(str(dataset_uri))
+        assert record["name"] == unique_name
+
+        # 4. Load and iterate
+        ds = loader.to_dataset(str(dataset_uri), FixtureSample)
+        samples = list(ds.ordered())
+
+        # 5. Verify data (3 samples in fixture)
+        assert len(samples) == 3
+
+        # Check sample values (batched as lists)
+        assert samples[0].id == [0]
+        assert samples[0].name == ["test_sample_0"]
+        assert samples[0].value == [0]
+
+        assert samples[2].id == [2]
+        assert samples[2].name == ["test_sample_2"]
+        assert samples[2].value == [20]
+
 
 ##
 # AtmosphereIndex Tests

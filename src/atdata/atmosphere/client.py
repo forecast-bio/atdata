@@ -298,6 +298,60 @@ class AtmosphereClient:
 
         self._client.com.atproto.repo.delete_record(data=data)
 
+    def upload_blob(
+        self,
+        data: bytes,
+        mime_type: str = "application/octet-stream",
+    ) -> dict:
+        """Upload binary data as a blob to the PDS.
+
+        Args:
+            data: Binary data to upload.
+            mime_type: MIME type of the data (for reference, not enforced by PDS).
+
+        Returns:
+            A blob reference dict with keys: '$type', 'ref', 'mimeType', 'size'.
+            This can be embedded directly in record fields.
+
+        Raises:
+            ValueError: If not authenticated.
+            atproto.exceptions.AtProtocolError: If upload fails.
+        """
+        self._ensure_authenticated()
+
+        response = self._client.upload_blob(data)
+        blob_ref = response.blob
+
+        # Convert to dict format suitable for embedding in records
+        return {
+            "$type": "blob",
+            "ref": {"$link": blob_ref.ref.link if hasattr(blob_ref.ref, "link") else str(blob_ref.ref)},
+            "mimeType": blob_ref.mime_type,
+            "size": blob_ref.size,
+        }
+
+    def get_blob(
+        self,
+        did: str,
+        cid: str,
+    ) -> bytes:
+        """Download a blob from a PDS.
+
+        Args:
+            did: The DID of the repository containing the blob.
+            cid: The CID of the blob.
+
+        Returns:
+            The blob data as bytes.
+
+        Raises:
+            atproto.exceptions.AtProtocolError: If blob not found.
+        """
+        response = self._client.com.atproto.sync.get_blob(
+            params={"did": did, "cid": cid}
+        )
+        return response
+
     def list_records(
         self,
         collection: str,
