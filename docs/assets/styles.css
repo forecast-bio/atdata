@@ -101,3 +101,19 @@ table {
 .quarto-dark .hero .tagline {
   color: #adb5bd;
 }
+
+/* Install box in dark mode - cool cyan/teal gradient */
+.quarto-dark .install-box {
+  background: linear-gradient(135deg, #0d9488 0%, #0891b2 100%);
+}
+
+.quarto-dark .install-box code {
+  background: rgba(0, 0, 0, 0.3);
+  color: #e2e8f0;
+}
+
+/* Fix comment color in install-box code blocks */
+.quarto-dark .install-box .co,
+.quarto-dark .install-box .sourceCode .co {
+  color: #94a3b8;
+}
