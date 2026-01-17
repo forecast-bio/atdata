@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix dark theme styling for callouts and code blocks in Quarto docs (#229)
 
 ### Changed
+- Fix dark mode styling issues in Quarto docs (#230)
 - Set up Quarto documentation site with tutorials, reference docs, and API reference (#224)
 - Add shared sample type definitions to conftest.py (#219)
 - Add blob operation tests for DatasetLoader and DatasetPublisher (#220)
