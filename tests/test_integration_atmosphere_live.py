@@ -466,16 +466,15 @@ class TestLiveDatasetOperations:
         """Full E2E: upload blob, publish dataset, retrieve and iterate.
 
         This tests the complete blob storage workflow:
-        1. Create a WebDataset tar in memory
+        1. Create a WebDataset tar in memory using as_wds
         2. Upload as blob to PDS
         3. Publish dataset record with blob storage
         4. Retrieve record and get blob URLs
         5. Load data via to_dataset() and iterate
         6. Verify samples match original data
         """
-        import tarfile
         import io
-        import msgpack
+        import webdataset as wds
 
         # Define sample type
         @atdata.packable
@@ -485,20 +484,17 @@ class TestLiveDatasetOperations:
 
         BlobTestSample.__module__ = f"{TEST_PREFIX}.{unique_name}"
 
-        # 1. Create WebDataset tar in memory
+        # 1. Create WebDataset tar in memory using proper as_wds pattern
         expected_samples = [
-            {"id": 0, "message": "hello from blob"},
-            {"id": 1, "message": "blob storage works"},
-            {"id": 2, "message": "atproto is cool"},
+            BlobTestSample(id=0, message="hello from blob"),
+            BlobTestSample(id=1, message="blob storage works"),
+            BlobTestSample(id=2, message="atproto is cool"),
         ]
 
         tar_buffer = io.BytesIO()
-        with tarfile.open(fileobj=tar_buffer, mode="w") as tar:
-            for i, sample in enumerate(expected_samples):
-                packed = msgpack.packb(sample)
-                info = tarfile.TarInfo(name=f"sample_{i:06d}.msgpack")
-                info.size = len(packed)
-                tar.addfile(info, io.BytesIO(packed))
+        with wds.writer.TarWriter(tar_buffer) as sink:
+            for sample in expected_samples:
+                sink.write(sample.as_wds)
 
         tar_data = tar_buffer.getvalue()
 

@@ -287,8 +287,7 @@ def demo_blob_storage(handle: str, password: str):
         password: App-specific password
     """
     import io
-    import tarfile
-    import msgpack
+    import webdataset as wds
 
     print("\n" + "=" * 60)
     print("Blob Storage Demo")
@@ -306,21 +305,19 @@ def demo_blob_storage(handle: str, password: str):
         id: int
         text: str
 
-    # Create a small WebDataset tar in memory
-    print("\nCreating small dataset in memory...")
+    # Create sample instances using the @packable type
     samples = [
-        {"id": 0, "text": "Hello from blob storage!"},
-        {"id": 1, "text": "ATProto is decentralized."},
-        {"id": 2, "text": "atdata makes ML data easy."},
+        DemoSample(id=0, text="Hello from blob storage!"),
+        DemoSample(id=1, text="ATProto is decentralized."),
+        DemoSample(id=2, text="atdata makes ML data easy."),
     ]
 
+    # Create a WebDataset tar in memory using proper as_wds serialization
+    print("\nCreating small dataset in memory...")
     tar_buffer = io.BytesIO()
-    with tarfile.open(fileobj=tar_buffer, mode="w") as tar:
-        for i, sample in enumerate(samples):
-            packed = msgpack.packb(sample)
-            info = tarfile.TarInfo(name=f"sample_{i:06d}.msgpack")
-            info.size = len(packed)
-            tar.addfile(info, io.BytesIO(packed))
+    with wds.writer.TarWriter(tar_buffer) as sink:
+        for sample in samples:
+            sink.write(sample.as_wds)
 
     tar_data = tar_buffer.getvalue()
     print(f"  Created tar with {len(samples)} samples ({len(tar_data):,} bytes)")

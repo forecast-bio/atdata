@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 ### Changed
+- Review and fix tar writing in examples to use as_wds pattern (#217)
 - Add blob storage demo to atmosphere_demo.py example (#216)
 - Implement full blob storage support for atmosphere datasets (#211)
 - Add E2E blob roundtrip test (#215)
