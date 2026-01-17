@@ -254,7 +254,18 @@ class AtmosphereClient:
             }
         )
 
-        return response.value
+        # Convert ATProto model to dict if needed
+        value = response.value
+        # DotDict and similar ATProto models have to_dict()
+        if hasattr(value, "to_dict") and callable(value.to_dict):
+            return value.to_dict()
+        elif isinstance(value, dict):
+            return dict(value)
+        elif hasattr(value, "model_dump") and callable(value.model_dump):
+            return value.model_dump()
+        elif hasattr(value, "__dict__"):
+            return dict(value.__dict__)
+        return value
 
     def delete_record(
         self,
@@ -324,7 +335,21 @@ class AtmosphereClient:
             }
         )
 
-        records = [r.value for r in response.records]
+        # Convert ATProto models to dicts if needed
+        records = []
+        for r in response.records:
+            value = r.value
+            # DotDict and similar ATProto models have to_dict()
+            if hasattr(value, "to_dict") and callable(value.to_dict):
+                records.append(value.to_dict())
+            elif isinstance(value, dict):
+                records.append(dict(value))
+            elif hasattr(value, "model_dump") and callable(value.model_dump):
+                records.append(value.model_dump())
+            elif hasattr(value, "__dict__"):
+                records.append(dict(value.__dict__))
+            else:
+                records.append(value)
         return records, response.cursor
 
     # Convenience methods for atdata collections

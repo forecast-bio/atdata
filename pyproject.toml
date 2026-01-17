@@ -39,6 +39,10 @@ build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
 addopts = "--cov=atdata --cov-report=html"
+markers = [
+    "network: marks tests as requiring network access (deselect with '-m \"not network\"')",
+    "slow: marks tests as slow running",
+]
 
 [dependency-groups]
 dev = [
