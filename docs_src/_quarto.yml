@@ -84,6 +84,7 @@ format:
       light: cosmo
       dark: darkly
     css: assets/styles.css
+    include-in-header: assets/theme-color.html
     toc: true
     toc-depth: 3
     code-copy: true

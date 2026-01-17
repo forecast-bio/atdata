@@ -1,0 +1,39 @@
+<meta name="theme-color" content="#212529" id="theme-color-meta">
+<script>
+// Update theme-color meta tag when Quarto toggles dark mode
+// This affects Safari's browser chrome color
+(function() {
+  const updateThemeColor = () => {
+    const meta = document.querySelector('#theme-color-meta');
+    if (meta) {
+      const isDark = document.body.classList.contains('quarto-dark');
+      meta.setAttribute('content', isDark ? '#212529' : '#ffffff');
+    }
+  };
+
+  // Update on page load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', updateThemeColor);
+  } else {
+    updateThemeColor();
+  }
+
+  // Watch for class changes on body (Quarto adds/removes quarto-dark)
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      if (mutation.attributeName === 'class') {
+        updateThemeColor();
+      }
+    }
+  });
+
+  if (document.body) {
+    observer.observe(document.body, { attributes: true });
+  } else {
+    document.addEventListener('DOMContentLoaded', () => {
+      observer.observe(document.body, { attributes: true });
+      updateThemeColor();
+    });
+  }
+})();
+</script>

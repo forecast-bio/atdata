@@ -5,7 +5,6 @@
 <meta name="generator" content="quarto-1.7.34">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<meta name="theme-color" content="#212529" id="theme-color-meta">
 
 <meta name="description" content="HuggingFace-style dataset loading interface">
 
@@ -108,6 +107,45 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Search"
   }
 }</script>
+<meta name="theme-color" content="#212529" id="theme-color-meta">
+<script>
+// Update theme-color meta tag when Quarto toggles dark mode
+// This affects Safari's browser chrome color
+(function() {
+  const updateThemeColor = () => {
+    const meta = document.querySelector('#theme-color-meta');
+    if (meta) {
+      const isDark = document.body.classList.contains('quarto-dark');
+      meta.setAttribute('content', isDark ? '#212529' : '#ffffff');
+    }
+  };
+
+  // Update on page load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', updateThemeColor);
+  } else {
+    updateThemeColor();
+  }
+
+  // Watch for class changes on body (Quarto adds/removes quarto-dark)
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      if (mutation.attributeName === 'class') {
+        updateThemeColor();
+      }
+    }
+  });
+
+  if (document.body) {
+    observer.observe(document.body, { attributes: true });
+  } else {
+    document.addEventListener('DOMContentLoaded', () => {
+      observer.observe(document.body, { attributes: true });
+      updateThemeColor();
+    });
+  }
+})();
+</script>
 
 
 <link rel="stylesheet" href="../assets/styles.css">
@@ -165,11 +203,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       manageTransitions('#quarto-margin-sidebar .nav-link', true);
       // Switch the toggles
       setColorSchemeToggle(alternate)
-// Update browser theme-color meta for Safari toolbar
-      const themeColorMeta = document.querySelector('#theme-color-meta');
-      if (themeColorMeta) {
-        themeColorMeta.setAttribute('content', alternate ? '#212529' : '#ffffff');
-      }
       // Hack to workaround the fact that safari doesn't
       // properly recolor the scrollbar when toggling (#1455)
       if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
@@ -587,7 +620,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="basic-usage" class="level2">
 <h2 class="anchored" data-anchor-id="basic-usage">Basic Usage</h2>
-<div id="5ecb3749" class="cell">
+<div id="98b8e18d" class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata <span class="im">import</span> load_dataset</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
@@ -610,7 +643,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="path-formats">Path Formats</h2>
 <section id="webdataset-brace-notation" class="level3">
 <h3 class="anchored" data-anchor-id="webdataset-brace-notation">WebDataset Brace Notation</h3>
-<div id="ece59496" class="cell">
+<div id="f11cff5f" class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Range notation</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"data-{000000..000099}.tar"</span>, MySample, split<span class="op">=</span><span class="st">"train"</span>)</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -620,7 +653,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="glob-patterns" class="level3">
 <h3 class="anchored" data-anchor-id="glob-patterns">Glob Patterns</h3>
-<div id="b71ecdd0" class="cell">
+<div id="08870633" class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Match all tar files</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"path/to/*.tar"</span>, MySample)</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -630,14 +663,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="local-directory" class="level3">
 <h3 class="anchored" data-anchor-id="local-directory">Local Directory</h3>
-<div id="daf1f3e7" class="cell">
+<div id="73a7afae" class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Scans for .tar files</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"./my-dataset/"</span>, MySample)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="remote-urls" class="level3">
 <h3 class="anchored" data-anchor-id="remote-urls">Remote URLs</h3>
-<div id="f166ef50" class="cell">
+<div id="27df7388" class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># S3</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"s3://bucket/data-{000..099}.tar"</span>, MySample, split<span class="op">=</span><span class="st">"train"</span>)</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -650,7 +683,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="index-lookup" class="level3">
 <h3 class="anchored" data-anchor-id="index-lookup">Index Lookup</h3>
-<div id="9b7e84a9" class="cell">
+<div id="0f9cdf60" class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> LocalIndex</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> LocalIndex()</span>
@@ -717,7 +750,7 @@ Note
 <section id="datasetdict" class="level2">
 <h2 class="anchored" data-anchor-id="datasetdict">DatasetDict</h2>
 <p>When loading without <code>split=</code>, returns a <code>DatasetDict</code>:</p>
-<div id="db8bf134" class="cell">
+<div id="cc816eea" class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>ds_dict <span class="op">=</span> load_dataset(<span class="st">"path/to/data/"</span>, MySample)</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Access splits</span></span>
@@ -737,7 +770,7 @@ Note
 <section id="explicit-data-files" class="level2">
 <h2 class="anchored" data-anchor-id="explicit-data-files">Explicit Data Files</h2>
 <p>Override automatic detection with <code>data_files</code>:</p>
-<div id="a8ace4a8" class="cell">
+<div id="582adf37" class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Single pattern</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"path/to/"</span>,</span>
@@ -766,7 +799,7 @@ Note
 <section id="streaming-mode" class="level2">
 <h2 class="anchored" data-anchor-id="streaming-mode">Streaming Mode</h2>
 <p>The <code>streaming</code> parameter signals intent for streaming mode:</p>
-<div id="b4adfe80" class="cell">
+<div id="033dcf5b" class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Mark as streaming</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>ds_dict <span class="op">=</span> load_dataset(<span class="st">"path/to/data.tar"</span>, MySample, streaming<span class="op">=</span><span class="va">True</span>)</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -791,7 +824,7 @@ Tip
 <section id="auto-type-resolution" class="level2">
 <h2 class="anchored" data-anchor-id="auto-type-resolution">Auto Type Resolution</h2>
 <p>When using index lookup, the sample type can be resolved automatically:</p>
-<div id="ef1853c2" class="cell">
+<div id="75bf173a" class="cell">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> LocalIndex</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> LocalIndex()</span>
@@ -805,7 +838,7 @@ Tip
 </section>
 <section id="error-handling" class="level2">
 <h2 class="anchored" data-anchor-id="error-handling">Error Handling</h2>
-<div id="c7b85275" class="cell">
+<div id="8a23c89e" class="cell">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    ds <span class="op">=</span> load_dataset(<span class="st">"path/to/data.tar"</span>, MySample, split<span class="op">=</span><span class="st">"train"</span>)</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> <span class="pp">FileNotFoundError</span>:</span>
@@ -821,7 +854,7 @@ Tip
 </section>
 <section id="complete-example" class="level2">
 <h2 class="anchored" data-anchor-id="complete-example">Complete Example</h2>
-<div id="164b4e80" class="cell">
+<div id="2c21edab" class="cell">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
