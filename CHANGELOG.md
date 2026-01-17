@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 ### Fixed
+- Fix dark theme styling for callouts and code blocks in Quarto docs (#229)
 
 ### Changed
 - Set up Quarto documentation site with tutorials, reference docs, and API reference (#224)

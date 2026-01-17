@@ -580,7 +580,7 @@ local://schemas/...             at://did:plc:.../schema/...</code></pre>
 </section>
 <section id="setup" class="level2">
 <h2 class="anchored" data-anchor-id="setup">Setup</h2>
-<div id="311e132e" class="cell">
+<div id="315d6801" class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
@@ -593,7 +593,7 @@ local://schemas/...             at://did:plc:.../schema/...</code></pre>
 <section id="prepare-a-local-dataset" class="level2">
 <h2 class="anchored" data-anchor-id="prepare-a-local-dataset">Prepare a Local Dataset</h2>
 <p>First, set up a dataset in local storage:</p>
-<div id="c9acb951" class="cell">
+<div id="96942ceb" class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Define sample type</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ExperimentSample:</span>
@@ -642,7 +642,7 @@ local://schemas/...             at://did:plc:.../schema/...</code></pre>
 <section id="basic-promotion" class="level2">
 <h2 class="anchored" data-anchor-id="basic-promotion">Basic Promotion</h2>
 <p>Promote the dataset to ATProto:</p>
-<div id="444dd405" class="cell">
+<div id="8986dcf0" class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Connect to atmosphere</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> AtmosphereClient()</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>client.login(<span class="st">"myhandle.bsky.social"</span>, <span class="st">"app-password"</span>)</span>
@@ -655,7 +655,7 @@ local://schemas/...             at://did:plc:.../schema/...</code></pre>
 <section id="promotion-with-metadata" class="level2">
 <h2 class="anchored" data-anchor-id="promotion-with-metadata">Promotion with Metadata</h2>
 <p>Add description, tags, and license:</p>
-<div id="a42494ea" class="cell">
+<div id="d444d286" class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>at_uri <span class="op">=</span> promote_to_atmosphere(</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    local_entry,</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    local_index,</span>
@@ -671,7 +671,7 @@ local://schemas/...             at://did:plc:.../schema/...</code></pre>
 <section id="schema-deduplication" class="level2">
 <h2 class="anchored" data-anchor-id="schema-deduplication">Schema Deduplication</h2>
 <p>The promotion workflow automatically checks for existing schemas:</p>
-<div id="ce83eaf3" class="cell">
+<div id="1b905a07" class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.promote <span class="im">import</span> _find_existing_schema</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Check if schema already exists</span></span>
@@ -683,7 +683,7 @@ local://schemas/...             at://did:plc:.../schema/...</code></pre>
 <span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"No existing schema found, will publish new one"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>When you promote multiple datasets with the same sample type:</p>
-<div id="1bbd12a9" class="cell">
+<div id="ca3f1b25" class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># First promotion: publishes schema</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>uri1 <span class="op">=</span> promote_to_atmosphere(entry1, local_index, client)</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -698,7 +698,7 @@ local://schemas/...             at://did:plc:.../schema/...</code></pre>
 <div class="tab-content">
 <div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
 <p>By default, promotion keeps the original data URLs:</p>
-<div id="b777724e" class="cell">
+<div id="11ca1702" class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Data stays in original S3 location</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>at_uri <span class="op">=</span> promote_to_atmosphere(local_entry, local_index, client)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -711,7 +711,7 @@ local://schemas/...             at://did:plc:.../schema/...</code></pre>
 </div>
 <div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
 <p>To copy data to a different storage location:</p>
-<div id="3a43d006" class="cell">
+<div id="cd32fb5d" class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> S3DataStore</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create new data store</span></span>
@@ -741,7 +741,7 @@ local://schemas/...             at://did:plc:.../schema/...</code></pre>
 <section id="verify-on-atmosphere" class="level2">
 <h2 class="anchored" data-anchor-id="verify-on-atmosphere">Verify on Atmosphere</h2>
 <p>After promotion, verify the dataset is accessible:</p>
-<div id="eda05805" class="cell">
+<div id="3224902e" class="cell">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> AtmosphereIndex</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>atm_index <span class="op">=</span> AtmosphereIndex(client)</span>
@@ -762,7 +762,7 @@ local://schemas/...             at://did:plc:.../schema/...</code></pre>
 </section>
 <section id="error-handling" class="level2">
 <h2 class="anchored" data-anchor-id="error-handling">Error Handling</h2>
-<div id="14e711c0" class="cell">
+<div id="99396631" class="cell">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    at_uri <span class="op">=</span> promote_to_atmosphere(local_entry, local_index, client)</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> <span class="pp">KeyError</span> <span class="im">as</span> e:</span>
@@ -786,7 +786,7 @@ local://schemas/...             at://did:plc:.../schema/...</code></pre>
 </section>
 <section id="complete-workflow" class="level2">
 <h2 class="anchored" data-anchor-id="complete-workflow">Complete Workflow</h2>
-<div id="96e62e88" class="cell">
+<div id="ff0aa5d0" class="cell">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Complete local-to-atmosphere workflow</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>

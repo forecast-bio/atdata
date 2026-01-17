@@ -1,13 +1,13 @@
 /* Custom styles for atdata documentation */
 
+/* ===========================================
+   LIGHT THEME STYLES
+   =========================================== */
+
 /* Code block styling */
 .sourceCode {
   background-color: #f8f9fa;
   border-radius: 4px;
-}
-
-.dark .sourceCode {
-  background-color: #1e1e1e;
 }
 
 /* Callout styling */
@@ -22,10 +22,6 @@
   padding: 0.5rem 1rem;
   border-radius: 4px;
   margin-bottom: 1rem;
-}
-
-.dark .api-signature {
-  background-color: #2d2d2d;
 }
 
 /* Table styling */
@@ -71,11 +67,6 @@ table {
   background: #fff;
 }
 
-.dark .feature-card {
-  background: #2d2d2d;
-  border-color: #444;
-}
-
 .feature-card h3 {
   margin-top: 0;
   font-size: 1.1rem;
@@ -94,4 +85,136 @@ table {
   background: rgba(255, 255, 255, 0.2);
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
+}
+
+/* ===========================================
+   DARK THEME STYLES
+   Quarto uses [data-bs-theme="dark"] on html element
+   =========================================== */
+
+/* Code blocks in dark mode */
+[data-bs-theme="dark"] .sourceCode {
+  background-color: #1e1e1e;
+  border: 1px solid #444;
+}
+
+[data-bs-theme="dark"] .sourceCode pre {
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+}
+
+[data-bs-theme="dark"] pre > code.sourceCode {
+  background-color: transparent;
+}
+
+[data-bs-theme="dark"] code {
+  background-color: #2d2d2d;
+  color: #e0e0e0;
+}
+
+/* Inline code in dark mode */
+[data-bs-theme="dark"] p code,
+[data-bs-theme="dark"] li code {
+  background-color: #3d3d3d;
+  color: #e0e0e0;
+  padding: 0.125rem 0.25rem;
+  border-radius: 3px;
+}
+
+/* API reference styling in dark mode */
+[data-bs-theme="dark"] .api-signature {
+  background-color: #2d2d2d;
+  border: 1px solid #444;
+}
+
+/* Feature cards in dark mode */
+[data-bs-theme="dark"] .feature-card {
+  background: #2d2d2d;
+  border-color: #444;
+}
+
+/* Hero tagline in dark mode */
+[data-bs-theme="dark"] .hero .tagline {
+  color: #adb5bd;
+}
+
+/* Callout boxes in dark mode */
+[data-bs-theme="dark"] .callout {
+  border-left-width: 4px;
+}
+
+[data-bs-theme="dark"] .callout-note {
+  background-color: rgba(13, 110, 253, 0.15);
+  border-color: #0d6efd;
+}
+
+[data-bs-theme="dark"] .callout-tip {
+  background-color: rgba(25, 135, 84, 0.15);
+  border-color: #198754;
+}
+
+[data-bs-theme="dark"] .callout-warning {
+  background-color: rgba(255, 193, 7, 0.15);
+  border-color: #ffc107;
+}
+
+[data-bs-theme="dark"] .callout-caution {
+  background-color: rgba(253, 126, 20, 0.15);
+  border-color: #fd7e14;
+}
+
+[data-bs-theme="dark"] .callout-important {
+  background-color: rgba(220, 53, 69, 0.15);
+  border-color: #dc3545;
+}
+
+[data-bs-theme="dark"] .callout .callout-title-container {
+  color: inherit;
+}
+
+[data-bs-theme="dark"] .callout-body-container {
+  color: #e0e0e0;
+}
+
+/* Table styling in dark mode */
+[data-bs-theme="dark"] table {
+  color: #e0e0e0;
+}
+
+[data-bs-theme="dark"] table th {
+  background-color: #2d2d2d;
+  border-color: #444;
+}
+
+[data-bs-theme="dark"] table td {
+  border-color: #444;
+}
+
+[data-bs-theme="dark"] table tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Panel tabset in dark mode */
+[data-bs-theme="dark"] .panel-tabset .nav-link {
+  color: #adb5bd;
+}
+
+[data-bs-theme="dark"] .panel-tabset .nav-link.active {
+  color: #fff;
+  background-color: #375a7f;
+  border-color: #375a7f;
+}
+
+/* Sidebar in dark mode */
+[data-bs-theme="dark"] .sidebar {
+  background-color: #222;
+}
+
+/* Links in dark mode for better visibility */
+[data-bs-theme="dark"] a {
+  color: #6ea8fe;
+}
+
+[data-bs-theme="dark"] a:hover {
+  color: #9ec5fe;
 }
