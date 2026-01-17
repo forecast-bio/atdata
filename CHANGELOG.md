@@ -13,6 +13,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Fix browser theme-color not updating on light/dark mode switch (#233)
+- Commit docs cleanup and dark mode improvements (#234)
+- Fix browser theme-color not updating on light/dark mode switch (#233)
 - Add dark mode styling for install-box callout on home page (#232)
 - Commit CSS selector fix for dark mode (#231)
 - Fix dark theme issues in Quarto docs (callouts and code blocks) (#229)
