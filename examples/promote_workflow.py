@@ -21,9 +21,8 @@ Note:
 
 import argparse
 from datetime import datetime
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 
-import numpy as np
 from numpy.typing import NDArray
 
 import atdata
@@ -99,7 +98,7 @@ def demo_mock_promotion():
         },
     )
 
-    print(f"\nLocal entry to promote:")
+    print("\nLocal entry to promote:")
     print(f"  Name: {local_entry.name}")
     print(f"  Schema: {local_entry.schema_ref}")
     print(f"  URLs: {len(local_entry.data_urls)} shards")
@@ -147,11 +146,11 @@ def demo_mock_promotion():
                     license="CC-BY-4.0",
                 )
 
-    print(f"\nPromotion result:")
+    print("\nPromotion result:")
     print(f"  AT URI: {result}")
-    print(f"\nPublished:")
-    print(f"  Schema: at://did:plc:demo123456789/.../exp001")
-    print(f"  Dataset: at://did:plc:demo123456789/.../exp2024001")
+    print("\nPublished:")
+    print("  Schema: at://did:plc:demo123456789/.../exp001")
+    print("  Dataset: at://did:plc:demo123456789/.../exp2024001")
 
 
 def demo_schema_deduplication():
@@ -180,9 +179,9 @@ def demo_schema_deduplication():
         ]
 
         result = _find_existing_schema(mock_client, "mymodule.MySample", "1.0.0")
-        print(f"  Looking for: mymodule.MySample@1.0.0")
+        print("  Looking for: mymodule.MySample@1.0.0")
         print(f"  Found: {result}")
-        print(f"  Action: Reuse existing schema (no republish)")
+        print("  Action: Reuse existing schema (no republish)")
 
     # Scenario 2: Different version
     print("\nScenario 2: Same name but different version")
@@ -199,9 +198,9 @@ def demo_schema_deduplication():
         ]
 
         result = _find_existing_schema(mock_client, "mymodule.MySample", "2.0.0")  # Looking for v2.0.0
-        print(f"  Looking for: mymodule.MySample@2.0.0")
+        print("  Looking for: mymodule.MySample@2.0.0")
         print(f"  Found: {result}")
-        print(f"  Action: Publish new schema record")
+        print("  Action: Publish new schema record")
 
 
 def demo_data_migration_options():
@@ -286,9 +285,9 @@ def demo_live_promotion(handle: str, password: str):
         license="MIT",
     )
 
-    print(f"\nPromotion successful!")
+    print("\nPromotion successful!")
     print(f"  AT URI: {result}")
-    print(f"\nYou can now discover this dataset via:")
+    print("\nYou can now discover this dataset via:")
     print(f"  atdata.load_dataset('@{handle}/demo-promoted-dataset')")
 
 

@@ -32,14 +32,11 @@ import re
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
-    Any,
     Generic,
-    Iterator,
     Mapping,
     Optional,
     Type,
     TypeVar,
-    Union,
     overload,
 )
 

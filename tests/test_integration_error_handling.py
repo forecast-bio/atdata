@@ -8,18 +8,13 @@ Tests error conditions and graceful failure including:
 """
 
 import pytest
-from pathlib import Path
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock, MagicMock
 import tarfile
-import tempfile
 
-import numpy as np
-from numpy.typing import NDArray
 
 import atdata
 from atdata.local import LocalIndex, LocalDatasetEntry
 from atdata.atmosphere import AtmosphereClient, AtUri
-from atdata.atmosphere._types import LEXICON_NAMESPACE
 
 
 ##

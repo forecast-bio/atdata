@@ -9,10 +9,7 @@ Tests boundary conditions and unusual data patterns including:
 - All primitive type variations
 """
 
-import pytest
 from pathlib import Path
-from dataclasses import dataclass
-from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -450,7 +447,7 @@ class TestNDArrayTypes:
 
     def test_multidimensional_arrays(self, tmp_path):
         """Multidimensional arrays should preserve shape."""
-        tar_path = tmp_path / "multidim-000000.tar"
+        tmp_path / "multidim-000000.tar"
 
         shapes = [(3, 4), (2, 3, 4), (2, 2, 2, 2)]
 

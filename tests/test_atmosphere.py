@@ -8,7 +8,6 @@ This module contains comprehensive tests for ATProto integration including:
 - Lens publishing/loading (lens.py)
 """
 
-from datetime import datetime, timezone
 from typing import Optional
 from unittest.mock import Mock, MagicMock, patch
 import pytest
@@ -521,7 +520,7 @@ class TestAtmosphereClient:
             mock_class = Mock()
             mock_get.return_value = mock_class
 
-            client = AtmosphereClient(base_url="https://custom.pds.example")
+            AtmosphereClient(base_url="https://custom.pds.example")
 
             mock_class.assert_called_once_with(base_url="https://custom.pds.example")
 
@@ -668,7 +667,7 @@ class TestAtmosphereClient:
         mock_response.cursor = None
         mock_atproto_client.com.atproto.repo.list_records.return_value = mock_response
 
-        schemas = authenticated_client.list_schemas()
+        authenticated_client.list_schemas()
 
         call_args = mock_atproto_client.com.atproto.repo.list_records.call_args
         assert f"{LEXICON_NAMESPACE}.sampleSchema" in str(call_args)
@@ -883,7 +882,7 @@ class TestDatasetPublisher:
         mock_dataset.metadata = None
 
         publisher = DatasetPublisher(authenticated_client)
-        uri = publisher.publish(
+        publisher.publish(
             mock_dataset,
             name="AutoSchemaDataset",
             auto_publish_schema=True,
@@ -1098,7 +1097,7 @@ class TestLensPublisher:
         mock_atproto_client.com.atproto.repo.create_record.return_value = mock_response
 
         publisher = LensPublisher(authenticated_client)
-        uri = publisher.publish(
+        publisher.publish(
             name="MetadataOnlyLens",
             source_schema_uri="at://source",
             target_schema_uri="at://target",
@@ -1124,7 +1123,7 @@ class TestLensPublisher:
             )
 
         publisher = LensPublisher(authenticated_client)
-        uri = publisher.publish_from_lens(
+        publisher.publish_from_lens(
             test_lens,
             name="FromObjectLens",
             source_schema_uri="at://source",

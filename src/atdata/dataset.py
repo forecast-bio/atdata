@@ -638,7 +638,7 @@ class Dataset( Generic[ST] ):
             a lens if ``as_type()`` was called.
         """
         assert 'msgpack' in sample
-        assert type( sample['msgpack'] ) == bytes
+        assert isinstance(sample['msgpack'], bytes)
         
         if self._output_lens is None:
             return self.sample_type.from_bytes( sample['msgpack'] )

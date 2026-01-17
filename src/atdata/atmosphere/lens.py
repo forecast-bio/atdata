@@ -9,7 +9,7 @@ Note:
     implementations.
 """
 
-from typing import Optional, Callable
+from typing import Optional
 
 from .client import AtmosphereClient
 from ._types import (

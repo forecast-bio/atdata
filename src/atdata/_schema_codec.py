@@ -22,8 +22,8 @@ Example:
     >>> sample = ImageSample(image=np.zeros((64, 64)), label="cat")
 """
 
-from dataclasses import dataclass, field, make_dataclass
-from typing import Any, Optional, Type, Union, get_origin
+from dataclasses import field, make_dataclass
+from typing import Any, Optional, Type
 import hashlib
 
 from numpy.typing import NDArray

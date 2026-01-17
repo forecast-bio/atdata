@@ -23,8 +23,7 @@ from typing import TYPE_CHECKING, Type
 
 if TYPE_CHECKING:
     from .local import LocalDatasetEntry, Index as LocalIndex
-    from .atmosphere import AtmosphereClient, AtUri
-    from .atmosphere._types import AtUri as AtUriType
+    from .atmosphere import AtmosphereClient
     from .dataset import PackableSample
     from ._protocols import AbstractDataStore
 

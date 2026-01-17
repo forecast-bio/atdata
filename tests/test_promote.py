@@ -1,8 +1,7 @@
 """Tests for the promote module."""
 
 import pytest
-from unittest.mock import Mock, MagicMock, patch
-from dataclasses import dataclass
+from unittest.mock import Mock, patch
 
 import atdata
 from atdata.promote import (
@@ -221,7 +220,7 @@ class TestPromoteToAtmosphere:
                 mock_publisher = MockPublisher.return_value
                 mock_publisher.publish_with_urls.return_value = Mock(__str__=lambda s: "at://result")
 
-                result = promote_to_atmosphere(
+                promote_to_atmosphere(
                     entry,
                     mock_index,
                     mock_client,
@@ -266,7 +265,7 @@ class TestPromoteToAtmosphere:
                 mock_publisher.publish_with_urls.return_value = Mock(__str__=lambda s: "at://result")
 
                 with patch("atdata.dataset.Dataset"):
-                    result = promote_to_atmosphere(
+                    promote_to_atmosphere(
                         entry,
                         mock_index,
                         mock_client,

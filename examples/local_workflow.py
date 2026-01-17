@@ -31,7 +31,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 import atdata
-from atdata.local import LocalIndex, LocalDatasetEntry, Repo, S3DataStore
+from atdata.local import LocalIndex, LocalDatasetEntry, S3DataStore
 
 
 # =============================================================================
@@ -83,7 +83,7 @@ def demo_local_dataset_entry():
         _data_urls=["s3://bucket/data-000000.tar", "s3://bucket/data-000001.tar"],
     )
 
-    print(f"\nCID comparison (same content, different name):")
+    print("\nCID comparison (same content, different name):")
     print(f"  Entry 1 CID: {entry.cid}")
     print(f"  Entry 2 CID: {entry2.cid}")
     print(f"  Match: {entry.cid == entry2.cid}")
@@ -96,7 +96,7 @@ def demo_local_index_mock():
     print("=" * 60)
 
     # LocalIndex without Redis connection works for read operations
-    index = LocalIndex()
+    _index = LocalIndex()  # noqa: F841 - demo instantiation
 
     print("\nLocalIndex created (no Redis connection)")
     print("Methods available:")
@@ -170,7 +170,7 @@ def demo_s3_datastore():
 
     store = S3DataStore(creds, bucket="my-bucket")
 
-    print(f"\nS3DataStore created:")
+    print("\nS3DataStore created:")
     print(f"  Bucket: {store.bucket}")
     print(f"  Supports streaming: {store.supports_streaming()}")
 

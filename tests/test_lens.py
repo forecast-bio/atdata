@@ -164,7 +164,7 @@ def test_conversion( tmp_path ):
     assert sample.favorite_pizza == test_view.favorite_pizza, \
         f'Divergence on auto-mapped dataset: `favorite_pizza` should be {test_view.favorite_pizza}, but is {sample.favorite_pizza}'
     assert np.all( sample.favorite_image == test_view.favorite_image ), \
-        f'Divergence on auto-mapped dataset: `favorite_image`'
+        'Divergence on auto-mapped dataset: `favorite_image`'
 
 
 ##

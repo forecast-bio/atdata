@@ -7,16 +7,13 @@ Tests that abstract protocols work consistently across:
 """
 
 import pytest
-from dataclasses import dataclass
-from typing import Type
 from unittest.mock import Mock, MagicMock
 
-import numpy as np
 from numpy.typing import NDArray
 
 import atdata
 from atdata.local import LocalIndex, LocalDatasetEntry
-from atdata._protocols import IndexEntry, AbstractIndex
+from atdata._protocols import IndexEntry
 from atdata.atmosphere import (
     AtmosphereClient,
     AtmosphereIndex,

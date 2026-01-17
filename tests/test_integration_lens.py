@@ -10,7 +10,6 @@ Tests complex lens workflows including:
 """
 
 import pytest
-from dataclasses import dataclass
 
 import numpy as np
 from numpy.typing import NDArray

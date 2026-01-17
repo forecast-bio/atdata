@@ -4,8 +4,6 @@
 # Imports
 
 import pytest
-from dataclasses import dataclass
-from pathlib import Path
 
 import numpy as np
 import webdataset as wds
@@ -26,7 +24,7 @@ from atdata._hf_api import (
     _is_indexed_path,
     _parse_indexed_path,
 )
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 
 from numpy.typing import NDArray
 

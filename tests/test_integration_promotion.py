@@ -9,17 +9,14 @@ Tests end-to-end promotion workflows including:
 """
 
 import pytest
-from pathlib import Path
 from unittest.mock import Mock, MagicMock, patch
-from dataclasses import dataclass
 
-import numpy as np
 from numpy.typing import NDArray
 import webdataset as wds
 
 import atdata
 from atdata.local import LocalIndex, LocalDatasetEntry
-from atdata.promote import promote_to_atmosphere, _find_existing_schema
+from atdata.promote import promote_to_atmosphere
 from atdata.atmosphere import AtmosphereClient
 from atdata.atmosphere._types import LEXICON_NAMESPACE
 

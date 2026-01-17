@@ -15,12 +15,10 @@ To skip in CI: pytest -m "not network"
 """
 
 import os
-import time
 import uuid
 import pytest
 from datetime import datetime
 
-import numpy as np
 from numpy.typing import NDArray
 
 import atdata

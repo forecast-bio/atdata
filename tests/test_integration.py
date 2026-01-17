@@ -4,18 +4,12 @@ These tests verify end-to-end workflows spanning local and atmosphere
 components, using mocks for external services (Redis, ATProto PDS).
 """
 
-import pytest
-from unittest.mock import Mock, MagicMock, patch
-from dataclasses import dataclass
-import tempfile
-from pathlib import Path
+from unittest.mock import Mock, patch
 
-import numpy as np
 import webdataset as wds
 
 import atdata
-from atdata.local import LocalIndex, LocalDatasetEntry
-from atdata.atmosphere import AtmosphereIndex, AtmosphereIndexEntry
+from atdata.local import LocalDatasetEntry
 from atdata.promote import promote_to_atmosphere
 
 
@@ -62,7 +56,7 @@ class TestLocalToAtmosphereRoundTrip:
                     __str__=lambda s: "at://did:plc:test/record/xyz"
                 )
 
-                result = promote_to_atmosphere(
+                promote_to_atmosphere(
                     local_entry,
                     mock_local_index,
                     mock_client,

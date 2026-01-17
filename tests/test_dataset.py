@@ -21,7 +21,6 @@ import atdata.dataset as atds
 from numpy.typing import NDArray
 from typing import (
     Type,
-    Any,
 )
 
 
@@ -142,7 +141,7 @@ def test_create_sample(
     for k, v in sample_data.items():
         cur_assertion: bool
         if isinstance( v, np.ndarray ):
-            cur_assertion = np.all( getattr( sample, k ) == v ) == True
+            cur_assertion = np.all( getattr( sample, k ) == v )
         else:
             cur_assertion = getattr( sample, k ) == v
         assert cur_assertion, \

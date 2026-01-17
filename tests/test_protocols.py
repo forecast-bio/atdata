@@ -4,15 +4,10 @@ These tests verify that concrete implementations satisfy their protocol
 definitions, ensuring interoperability between local and atmosphere backends.
 """
 
-import pytest
-from unittest.mock import Mock, MagicMock
-from dataclasses import dataclass
+from unittest.mock import Mock
 
-import atdata
 from atdata._protocols import (
     IndexEntry,
-    AbstractIndex,
-    AbstractDataStore,
 )
 from atdata.local import LocalDatasetEntry, Index as LocalIndex, S3DataStore
 from atdata.atmosphere import AtmosphereIndex, AtmosphereIndexEntry

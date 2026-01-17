@@ -8,10 +8,8 @@ Tests end-to-end Atmosphere operations including:
 """
 
 import pytest
-from dataclasses import dataclass
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock, MagicMock
 
-import numpy as np
 from numpy.typing import NDArray
 import msgpack
 
@@ -23,7 +21,6 @@ from atdata.atmosphere import (
     SchemaPublisher,
     SchemaLoader,
     DatasetPublisher,
-    DatasetLoader,
     AtUri,
 )
 from atdata.atmosphere._types import LEXICON_NAMESPACE
@@ -346,7 +343,7 @@ class TestSchemaPublishing:
         mock_atproto_client.com.atproto.repo.create_record.return_value = mock_response
 
         publisher = SchemaPublisher(authenticated_client)
-        uri = publisher.publish(AtmoNDArraySample, version="1.0.0")
+        publisher.publish(AtmoNDArraySample, version="1.0.0")
 
         call_args = mock_atproto_client.com.atproto.repo.create_record.call_args
         record = call_args.kwargs["data"]["record"]

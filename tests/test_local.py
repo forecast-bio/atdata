@@ -8,7 +8,6 @@ import pytest
 # System
 from dataclasses import dataclass
 from pathlib import Path
-from uuid import UUID
 
 # External
 import numpy as np
@@ -22,7 +21,6 @@ import webdataset as wds
 
 # Typing
 from numpy.typing import NDArray
-from typing import Any
 
 
 ##
@@ -937,7 +935,7 @@ def test_repo_insert_empty_dataset(mock_s3, clean_redis, tmp_path):
     RuntimeError.
     """
     dataset_path = tmp_path / "empty-dataset-000000.tar"
-    with wds.writer.TarWriter(str(dataset_path)) as sink:
+    with wds.writer.TarWriter(str(dataset_path)):
         pass  # Write no samples
 
     ds = atdata.Dataset[SimpleTestSample](url=str(dataset_path))
