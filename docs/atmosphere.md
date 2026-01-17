@@ -164,6 +164,50 @@ uri = publisher.publish(
 )
 ```
 
+#### Blob Storage
+
+For smaller datasets (up to ~50MB per shard), you can store data directly in ATProto blobs instead of external URLs:
+
+```python
+import io
+import webdataset as wds
+
+# Create tar data in memory
+tar_buffer = io.BytesIO()
+with wds.writer.TarWriter(tar_buffer) as sink:
+    for i, sample in enumerate(samples):
+        sink.write({**sample.as_wds, "__key__": f"{i:06d}"})
+
+# Publish with blob storage
+uri = publisher.publish_with_blobs(
+    blobs=[tar_buffer.getvalue()],
+    schema_uri=schema_uri,
+    name="small-dataset",
+    description="Dataset stored in ATProto blobs",
+    tags=["small", "demo"],
+)
+```
+
+To load datasets with blob storage:
+
+```python
+from atdata.atmosphere import DatasetLoader
+
+loader = DatasetLoader(client)
+
+# Check storage type
+storage_type = loader.get_storage_type(uri)  # "external" or "blobs"
+
+if storage_type == "blobs":
+    # Get blob URLs for direct access
+    blob_urls = loader.get_blob_urls(uri)
+
+# to_dataset() handles both storage types automatically
+dataset = loader.to_dataset(uri, MySample)
+for batch in dataset.ordered(batch_size=32):
+    process(batch)
+```
+
 ### LensPublisher
 
 ```python
