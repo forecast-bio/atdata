@@ -11,6 +11,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 ### Changed
+- Add shared sample type definitions to conftest.py (#219)
+- Add blob operation tests for DatasetLoader and DatasetPublisher (#220)
+- Trim verbose docstrings on internal helper functions (#222)
+- Remove commented debug code from dataset.py (#221)
 - Review and fix tar writing in examples to use as_wds pattern (#217)
 - Add blob storage demo to atmosphere_demo.py example (#216)
 - Implement full blob storage support for atmosphere datasets (#211)

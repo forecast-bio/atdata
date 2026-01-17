@@ -89,43 +89,18 @@ MsgpackRawSample: TypeAlias = Dict[str, Any]
 
 
 def _make_packable( x ):
-    """Convert a value to a msgpack-compatible format.
-
-    Args:
-        x: A value to convert. If it's a numpy array, converts to bytes.
-            Otherwise returns the value unchanged.
-
-    Returns:
-        The value in a format suitable for msgpack serialization.
-    """
+    """Convert numpy arrays to bytes; pass through other values unchanged."""
     if isinstance( x, np.ndarray ):
         return eh.array_to_bytes( x )
     return x
 
+
 def _is_possibly_ndarray_type( t ):
-    """Check if a type annotation is or contains NDArray.
-
-    Args:
-        t: A type annotation to check.
-
-    Returns:
-        ``True`` if the type is ``NDArray`` or a union containing ``NDArray``
-        (e.g., ``NDArray | None``), ``False`` otherwise.
-    """
-
-    # Directly an NDArray
+    """Return True if type annotation is NDArray or Optional[NDArray]."""
     if t == NDArray:
-        # print( 'is an NDArray' )
         return True
-    
-    # Check for Optionals (i.e., NDArray | None)
     if isinstance( t, types.UnionType ):
-        t_parts = t.__args__
-        if any( x == NDArray
-                for x in t_parts ):
-            return True
-    
-    # Not an NDArray
+        return any( x == NDArray for x in t.__args__ )
     return False
 
 @dataclass
@@ -266,25 +241,11 @@ class PackableSample( ABC ):
         }
 
 def _batch_aggregate( xs: Sequence ):
-    """Aggregate a sequence of values into a batch-appropriate format.
-
-    Args:
-        xs: A sequence of values to aggregate. If the first element is a numpy
-            array, all elements are stacked into a single array. Otherwise,
-            returns a list.
-
-    Returns:
-        A numpy array (if elements are arrays) or a list (otherwise).
-    """
-
+    """Stack arrays into numpy array with batch dim; otherwise return list."""
     if not xs:
-        # Empty sequence
         return []
-
-    # Aggregate
     if isinstance( xs[0], np.ndarray ):
         return np.array( list( xs ) )
-
     return list( xs )
 
 class SampleBatch( Generic[DT] ):

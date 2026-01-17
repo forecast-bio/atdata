@@ -642,6 +642,92 @@ class TestAtmosphereClient:
 
         mock_atproto_client.com.atproto.repo.delete_record.assert_called_once()
 
+    def test_upload_blob(self, authenticated_client, mock_atproto_client):
+        """Upload blob returns proper blob reference dict."""
+        mock_blob_ref = Mock()
+        mock_blob_ref.ref = Mock(link="bafkreitest123")
+        mock_blob_ref.mime_type = "application/x-tar"
+        mock_blob_ref.size = 1024
+
+        mock_response = Mock()
+        mock_response.blob = mock_blob_ref
+        mock_atproto_client.upload_blob.return_value = mock_response
+
+        result = authenticated_client.upload_blob(b"test data", mime_type="application/x-tar")
+
+        assert result["$type"] == "blob"
+        assert result["ref"]["$link"] == "bafkreitest123"
+        assert result["mimeType"] == "application/x-tar"
+        assert result["size"] == 1024
+
+    def test_upload_blob_not_authenticated(self, mock_atproto_client):
+        """Upload blob raises when not authenticated."""
+        client = AtmosphereClient(_client=mock_atproto_client)
+
+        with pytest.raises(ValueError, match="must be authenticated"):
+            client.upload_blob(b"data")
+
+    def test_get_blob(self, authenticated_client):
+        """Get blob fetches from resolved PDS endpoint."""
+        with patch("requests.get") as mock_get:
+            mock_did_response = Mock()
+            mock_did_response.json.return_value = {
+                "service": [
+                    {"type": "AtprotoPersonalDataServer", "serviceEndpoint": "https://pds.example.com"}
+                ]
+            }
+            mock_did_response.raise_for_status = Mock()
+
+            mock_blob_response = Mock()
+            mock_blob_response.content = b"blob data here"
+            mock_blob_response.raise_for_status = Mock()
+
+            mock_get.side_effect = [mock_did_response, mock_blob_response]
+
+            result = authenticated_client.get_blob("did:plc:abc123", "bafkreitest")
+
+            assert result == b"blob data here"
+            assert mock_get.call_count == 2
+
+    def test_get_blob_pds_not_found(self, authenticated_client):
+        """Get blob raises when PDS cannot be resolved."""
+        import requests as req_module
+        with patch("requests.get") as mock_get:
+            mock_get.side_effect = req_module.RequestException("Network error")
+
+            with pytest.raises(ValueError, match="Could not resolve PDS"):
+                authenticated_client.get_blob("did:plc:unknown", "cid123")
+
+    def test_get_blob_url(self, authenticated_client):
+        """Get blob URL constructs proper URL."""
+        with patch("requests.get") as mock_get:
+            mock_response = Mock()
+            mock_response.json.return_value = {
+                "service": [
+                    {"type": "AtprotoPersonalDataServer", "serviceEndpoint": "https://pds.example.com"}
+                ]
+            }
+            mock_response.raise_for_status = Mock()
+            mock_get.return_value = mock_response
+
+            url = authenticated_client.get_blob_url("did:plc:abc", "bafkreitest")
+
+            assert url == "https://pds.example.com/xrpc/com.atproto.sync.getBlob?did=did:plc:abc&cid=bafkreitest"
+
+    def test_get_blob_url_pds_not_found(self, authenticated_client):
+        """Get blob URL raises when PDS cannot be resolved."""
+        import requests as req_module
+        with patch("requests.get") as mock_get:
+            mock_get.side_effect = req_module.RequestException("Network error")
+
+            with pytest.raises(ValueError, match="Could not resolve PDS"):
+                authenticated_client.get_blob_url("did:plc:unknown", "cid123")
+
+    def test_resolve_pds_endpoint_did_web(self, authenticated_client):
+        """PDS resolution returns None for did:web (not implemented)."""
+        result = authenticated_client._resolve_pds_endpoint("did:web:example.com")
+        assert result is None
+
     def test_list_records(self, authenticated_client, mock_atproto_client):
         """List records in a collection."""
         mock_record1 = Mock()
@@ -926,6 +1012,71 @@ class TestDatasetPublisher:
                 auto_publish_schema=False,
             )
 
+    def test_publish_with_blobs(self, authenticated_client, mock_atproto_client):
+        """Publish with blob storage uploads blobs and creates record."""
+        # Mock blob upload response
+        mock_blob_ref = Mock()
+        mock_blob_ref.ref = Mock(link="bafkreiblob123")
+        mock_blob_ref.mime_type = "application/x-tar"
+        mock_blob_ref.size = 2048
+
+        mock_upload_response = Mock()
+        mock_upload_response.blob = mock_blob_ref
+        mock_atproto_client.upload_blob.return_value = mock_upload_response
+
+        # Mock create_record response
+        mock_create_response = Mock()
+        mock_create_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.record/blobds"
+        mock_atproto_client.com.atproto.repo.create_record.return_value = mock_create_response
+
+        publisher = DatasetPublisher(authenticated_client)
+        uri = publisher.publish_with_blobs(
+            blobs=[b"tar data 1", b"tar data 2"],
+            schema_uri="at://did:plc:test/schema/xyz",
+            name="BlobStoredDataset",
+            description="Dataset stored in blobs",
+            tags=["blob", "test"],
+        )
+
+        assert isinstance(uri, AtUri)
+        # Should have uploaded 2 blobs
+        assert mock_atproto_client.upload_blob.call_count == 2
+        # Should have created one record
+        assert mock_atproto_client.com.atproto.repo.create_record.call_count == 1
+
+        # Verify record structure
+        call_args = mock_atproto_client.com.atproto.repo.create_record.call_args
+        record = call_args.kwargs["data"]["record"]
+        assert record["name"] == "BlobStoredDataset"
+        assert "storageBlobs" in record["storage"]["$type"]
+
+    def test_publish_with_blobs_with_metadata(self, authenticated_client, mock_atproto_client):
+        """Publish with blobs includes metadata when provided."""
+        mock_blob_ref = Mock()
+        mock_blob_ref.ref = Mock(link="bafkreiblob456")
+        mock_blob_ref.mime_type = "application/x-tar"
+        mock_blob_ref.size = 1024
+
+        mock_upload_response = Mock()
+        mock_upload_response.blob = mock_blob_ref
+        mock_atproto_client.upload_blob.return_value = mock_upload_response
+
+        mock_create_response = Mock()
+        mock_create_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.record/metads"
+        mock_atproto_client.com.atproto.repo.create_record.return_value = mock_create_response
+
+        publisher = DatasetPublisher(authenticated_client)
+        publisher.publish_with_blobs(
+            blobs=[b"data"],
+            schema_uri="at://schema",
+            name="MetaBlobDataset",
+            metadata={"samples": 100, "split": "train"},
+        )
+
+        call_args = mock_atproto_client.com.atproto.repo.create_record.call_args
+        record = call_args.kwargs["data"]["record"]
+        assert "metadata" in record
+
 
 class TestDatasetLoader:
     """Tests for DatasetLoader."""
@@ -1054,6 +1205,178 @@ class TestDatasetLoader:
         datasets = loader.list_all()
 
         assert len(datasets) == 1
+
+    def test_get_storage_type_external(self, authenticated_client, mock_atproto_client):
+        """Get storage type returns 'external' for external storage."""
+        mock_response = Mock()
+        mock_response.value = {
+            "$type": f"{LEXICON_NAMESPACE}.record",
+            "name": "ExternalDataset",
+            "schemaRef": "at://schema",
+            "storage": {
+                "$type": f"{LEXICON_NAMESPACE}.storageExternal",
+                "urls": ["s3://bucket/data.tar"],
+            },
+        }
+        mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
+
+        loader = DatasetLoader(authenticated_client)
+        storage_type = loader.get_storage_type(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+
+        assert storage_type == "external"
+
+    def test_get_storage_type_blobs(self, authenticated_client, mock_atproto_client):
+        """Get storage type returns 'blobs' for blob storage."""
+        mock_response = Mock()
+        mock_response.value = {
+            "$type": f"{LEXICON_NAMESPACE}.record",
+            "name": "BlobDataset",
+            "schemaRef": "at://schema",
+            "storage": {
+                "$type": f"{LEXICON_NAMESPACE}.storageBlobs",
+                "blobs": [{"ref": {"$link": "bafkreitest"}}],
+            },
+        }
+        mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
+
+        loader = DatasetLoader(authenticated_client)
+        storage_type = loader.get_storage_type(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+
+        assert storage_type == "blobs"
+
+    def test_get_storage_type_unknown(self, authenticated_client, mock_atproto_client):
+        """Get storage type raises for unknown storage type."""
+        mock_response = Mock()
+        mock_response.value = {
+            "$type": f"{LEXICON_NAMESPACE}.record",
+            "name": "UnknownStorageDataset",
+            "schemaRef": "at://schema",
+            "storage": {
+                "$type": "some.unknown.storage",
+            },
+        }
+        mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
+
+        loader = DatasetLoader(authenticated_client)
+
+        with pytest.raises(ValueError, match="Unknown storage type"):
+            loader.get_storage_type(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+
+    def test_get_blobs(self, authenticated_client, mock_atproto_client):
+        """Get blobs returns blob references from storage."""
+        blob_refs = [
+            {"ref": {"$link": "bafkreitest1"}, "mimeType": "application/x-tar", "size": 1024},
+            {"ref": {"$link": "bafkreitest2"}, "mimeType": "application/x-tar", "size": 2048},
+        ]
+        mock_response = Mock()
+        mock_response.value = {
+            "$type": f"{LEXICON_NAMESPACE}.record",
+            "name": "BlobDataset",
+            "schemaRef": "at://schema",
+            "storage": {
+                "$type": f"{LEXICON_NAMESPACE}.storageBlobs",
+                "blobs": blob_refs,
+            },
+        }
+        mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
+
+        loader = DatasetLoader(authenticated_client)
+        blobs = loader.get_blobs(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+
+        assert len(blobs) == 2
+        assert blobs[0]["ref"]["$link"] == "bafkreitest1"
+        assert blobs[1]["ref"]["$link"] == "bafkreitest2"
+
+    def test_get_blobs_external_storage_error(self, authenticated_client, mock_atproto_client):
+        """Get blobs raises for external URL storage datasets."""
+        mock_response = Mock()
+        mock_response.value = {
+            "$type": f"{LEXICON_NAMESPACE}.record",
+            "name": "ExternalDataset",
+            "schemaRef": "at://schema",
+            "storage": {
+                "$type": f"{LEXICON_NAMESPACE}.storageExternal",
+                "urls": ["s3://bucket/data.tar"],
+            },
+        }
+        mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
+
+        loader = DatasetLoader(authenticated_client)
+
+        with pytest.raises(ValueError, match="external URL storage"):
+            loader.get_blobs(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+
+    def test_get_blobs_unknown_storage_error(self, authenticated_client, mock_atproto_client):
+        """Get blobs raises for unknown storage type."""
+        mock_response = Mock()
+        mock_response.value = {
+            "$type": f"{LEXICON_NAMESPACE}.record",
+            "name": "UnknownDataset",
+            "schemaRef": "at://schema",
+            "storage": {
+                "$type": "some.unknown.storage",
+            },
+        }
+        mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
+
+        loader = DatasetLoader(authenticated_client)
+
+        with pytest.raises(ValueError, match="Unknown storage type"):
+            loader.get_blobs(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+
+    def test_get_blob_urls(self, authenticated_client, mock_atproto_client):
+        """Get blob URLs resolves PDS and constructs download URLs."""
+        mock_response = Mock()
+        mock_response.value = {
+            "$type": f"{LEXICON_NAMESPACE}.record",
+            "name": "BlobDataset",
+            "schemaRef": "at://schema",
+            "storage": {
+                "$type": f"{LEXICON_NAMESPACE}.storageBlobs",
+                "blobs": [
+                    {"ref": {"$link": "bafkreitest1"}},
+                    {"ref": {"$link": "bafkreitest2"}},
+                ],
+            },
+        }
+        mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
+
+        # Mock PDS resolution
+        with patch("requests.get") as mock_get:
+            mock_did_response = Mock()
+            mock_did_response.json.return_value = {
+                "service": [
+                    {"type": "AtprotoPersonalDataServer", "serviceEndpoint": "https://pds.example.com"}
+                ]
+            }
+            mock_did_response.raise_for_status = Mock()
+            mock_get.return_value = mock_did_response
+
+            loader = DatasetLoader(authenticated_client)
+            urls = loader.get_blob_urls(f"at://did:plc:abc123/{LEXICON_NAMESPACE}.record/xyz")
+
+            assert len(urls) == 2
+            assert "bafkreitest1" in urls[0]
+            assert "bafkreitest2" in urls[1]
+            assert "did:plc:abc123" in urls[0]
+
+    def test_get_urls_unknown_storage_error(self, authenticated_client, mock_atproto_client):
+        """Get URLs raises for unknown storage type."""
+        mock_response = Mock()
+        mock_response.value = {
+            "$type": f"{LEXICON_NAMESPACE}.record",
+            "name": "UnknownDataset",
+            "schemaRef": "at://schema",
+            "storage": {
+                "$type": "some.unknown.storage",
+            },
+        }
+        mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
+
+        loader = DatasetLoader(authenticated_client)
+
+        with pytest.raises(ValueError, match="Unknown storage type"):
+            loader.get_urls(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
 
 
 # =============================================================================
