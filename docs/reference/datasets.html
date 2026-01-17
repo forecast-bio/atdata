@@ -609,7 +609,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>The <code>Dataset</code> class provides typed iteration over WebDataset tar files with automatic batching and lens transformations.</p>
 <section id="creating-a-dataset" class="level2">
 <h2 class="anchored" data-anchor-id="creating-a-dataset">Creating a Dataset</h2>
-<div id="15cffdcb" class="cell">
+<div id="310bd883" class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -631,7 +631,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="ordered-iteration" class="level3">
 <h3 class="anchored" data-anchor-id="ordered-iteration">Ordered Iteration</h3>
 <p>Iterate through samples in their original order:</p>
-<div id="55095608" class="cell">
+<div id="19130f78" class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># With batching (default batch_size=1)</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> dataset.ordered(batch_size<span class="op">=</span><span class="dv">32</span>):</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    images <span class="op">=</span> batch.image  <span class="co"># numpy array (32, H, W, C)</span></span>
@@ -645,7 +645,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="shuffled-iteration" class="level3">
 <h3 class="anchored" data-anchor-id="shuffled-iteration">Shuffled Iteration</h3>
 <p>Iterate with randomized order at both shard and sample levels:</p>
-<div id="de83e989" class="cell">
+<div id="40108599" class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> dataset.shuffled(batch_size<span class="op">=</span><span class="dv">32</span>):</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Samples are shuffled</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    process(batch)</span>
@@ -676,7 +676,7 @@ Tip
 <section id="samplebatch" class="level2">
 <h2 class="anchored" data-anchor-id="samplebatch">SampleBatch</h2>
 <p>When iterating with a <code>batch_size</code>, each iteration yields a <code>SampleBatch</code> with automatic attribute aggregation.</p>
-<div id="047bd003" class="cell">
+<div id="a92d8233" class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Sample:</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    features: NDArray  <span class="co"># shape (256,)</span></span>
@@ -696,7 +696,7 @@ Tip
 <section id="type-transformations-with-lenses" class="level2">
 <h2 class="anchored" data-anchor-id="type-transformations-with-lenses">Type Transformations with Lenses</h2>
 <p>View a dataset through a different sample type using registered lenses:</p>
-<div id="b16e25ee" class="cell">
+<div id="3a244601" class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> SimplifiedSample:</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    label: <span class="bu">str</span></span>
@@ -718,7 +718,7 @@ Tip
 <section id="shard-list" class="level3">
 <h3 class="anchored" data-anchor-id="shard-list">Shard List</h3>
 <p>Get the list of individual tar files:</p>
-<div id="d65ea7be" class="cell">
+<div id="1666d065" class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[Sample](<span class="st">"data-{000000..000009}.tar"</span>)</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>shards <span class="op">=</span> dataset.shard_list</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># ['data-000000.tar', 'data-000001.tar', ..., 'data-000009.tar']</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -727,7 +727,7 @@ Tip
 <section id="metadata" class="level3">
 <h3 class="anchored" data-anchor-id="metadata">Metadata</h3>
 <p>Datasets can have associated metadata from a URL:</p>
-<div id="9109071d" class="cell">
+<div id="1ba4b30f" class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[Sample](</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"data-{000000..000009}.tar"</span>,</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    metadata_url<span class="op">=</span><span class="st">"https://example.com/metadata.msgpack"</span></span>
@@ -741,7 +741,7 @@ Tip
 <section id="writing-datasets" class="level2">
 <h2 class="anchored" data-anchor-id="writing-datasets">Writing Datasets</h2>
 <p>Use WebDataset’s <code>TarWriter</code> or <code>ShardWriter</code> to create datasets:</p>
-<div id="e93ff330" class="cell">
+<div id="da192b64" class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> webdataset <span class="im">as</span> wds</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -764,7 +764,7 @@ Tip
 <section id="parquet-export" class="level2">
 <h2 class="anchored" data-anchor-id="parquet-export">Parquet Export</h2>
 <p>Export dataset contents to parquet format:</p>
-<div id="c8d48845" class="cell">
+<div id="c103588d" class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Export entire dataset</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>dataset.to_parquet(<span class="st">"output.parquet"</span>)</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
