@@ -1,0 +1,94 @@
+project:
+  type: website
+  output-dir: ../docs
+
+website:
+  title: "atdata"
+  description: "A loose federation of distributed, typed datasets built on WebDataset"
+  site-url: https://github.com/your-org/atdata
+  repo-url: https://github.com/your-org/atdata
+  repo-actions: [edit, issue]
+
+  navbar:
+    background: primary
+    title: "atdata"
+    left:
+      - text: "Guide"
+        href: index.qmd
+      - text: "Tutorials"
+        menu:
+          - text: "Quick Start"
+            href: tutorials/quickstart.qmd
+          - text: "Local Workflow"
+            href: tutorials/local-workflow.qmd
+          - text: "Atmosphere Publishing"
+            href: tutorials/atmosphere.qmd
+          - text: "Promotion Workflow"
+            href: tutorials/promotion.qmd
+      - text: "Reference"
+        menu:
+          - text: "Packable Samples"
+            href: reference/packable-samples.qmd
+          - text: "Datasets"
+            href: reference/datasets.qmd
+          - text: "Lenses"
+            href: reference/lenses.qmd
+          - text: "Local Storage"
+            href: reference/local-storage.qmd
+          - text: "Atmosphere"
+            href: reference/atmosphere.qmd
+          - text: "Promotion"
+            href: reference/promotion.qmd
+          - text: "load_dataset API"
+            href: reference/load-dataset.qmd
+          - text: "Protocols"
+            href: reference/protocols.qmd
+      - text: "API"
+        href: api/index.qmd
+    right:
+      - icon: github
+        href: https://github.com/your-org/atdata
+
+  sidebar:
+    - title: "Guide"
+      style: "docked"
+      contents:
+        - index.qmd
+        - section: "Getting Started"
+          contents:
+            - tutorials/quickstart.qmd
+            - tutorials/local-workflow.qmd
+            - tutorials/atmosphere.qmd
+            - tutorials/promotion.qmd
+        - section: "Reference"
+          contents:
+            - reference/packable-samples.qmd
+            - reference/datasets.qmd
+            - reference/lenses.qmd
+            - reference/local-storage.qmd
+            - reference/atmosphere.qmd
+            - reference/promotion.qmd
+            - reference/load-dataset.qmd
+            - reference/protocols.qmd
+        - section: "API Reference"
+          contents:
+            - api/index.qmd
+
+  page-footer:
+    left: "Built with [Quarto](https://quarto.org/)"
+    right: "MIT License"
+
+format:
+  html:
+    theme:
+      light: cosmo
+      dark: darkly
+    css: assets/styles.css
+    toc: true
+    toc-depth: 3
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+
+execute:
+  enabled: false

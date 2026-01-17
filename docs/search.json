@@ -1,0 +1,1674 @@
+[
+  {
+    "objectID": "reference/protocols.html",
+    "href": "reference/protocols.html",
+    "title": "Protocols",
+    "section": "",
+    "text": "The protocols module defines abstract interfaces that enable interchangeable index backends (local Redis vs ATProto) and data stores (S3 vs PDS blobs).",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Protocols"
+    ]
+  },
+  {
+    "objectID": "reference/protocols.html#overview",
+    "href": "reference/protocols.html#overview",
+    "title": "Protocols",
+    "section": "Overview",
+    "text": "Overview\nBoth local and atmosphere implementations solve the same problem: indexed dataset storage with external data URLs. These protocols formalize that common interface:\n\nIndexEntry: Common interface for dataset index entries\nAbstractIndex: Protocol for index operations\nAbstractDataStore: Protocol for data storage operations",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Protocols"
+    ]
+  },
+  {
+    "objectID": "reference/protocols.html#indexentry-protocol",
+    "href": "reference/protocols.html#indexentry-protocol",
+    "title": "Protocols",
+    "section": "IndexEntry Protocol",
+    "text": "IndexEntry Protocol\nRepresents a dataset entry in any index:\n\nfrom atdata._protocols import IndexEntry\n\ndef process_entry(entry: IndexEntry) -&gt; None:\n    print(f\"Name: {entry.name}\")\n    print(f\"Schema: {entry.schema_ref}\")\n    print(f\"URLs: {entry.data_urls}\")\n    print(f\"Metadata: {entry.metadata}\")\n\n\nProperties\n\n\n\nProperty\nType\nDescription\n\n\n\n\nname\nstr\nHuman-readable dataset name\n\n\nschema_ref\nstr\nSchema reference (local:// or at://)\n\n\ndata_urls\nlist[str]\nWebDataset URLs for the data\n\n\nmetadata\ndict \\| None\nArbitrary metadata dictionary\n\n\n\n\n\nImplementations\n\nLocalDatasetEntry (from atdata.local)\nAtmosphereIndexEntry (from atdata.atmosphere)",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Protocols"
+    ]
+  },
+  {
+    "objectID": "reference/protocols.html#abstractindex-protocol",
+    "href": "reference/protocols.html#abstractindex-protocol",
+    "title": "Protocols",
+    "section": "AbstractIndex Protocol",
+    "text": "AbstractIndex Protocol\nDefines operations for managing schemas and datasets:\n\nfrom atdata._protocols import AbstractIndex\n\ndef list_all_datasets(index: AbstractIndex) -&gt; None:\n    \"\"\"Works with LocalIndex or AtmosphereIndex.\"\"\"\n    for entry in index.list_datasets():\n        print(f\"{entry.name}: {entry.schema_ref}\")\n\n\nDataset Operations\n\n# Insert a dataset\nentry = index.insert_dataset(\n    dataset,\n    name=\"my-dataset\",\n    schema_ref=\"local://schemas/MySample@1.0.0\",  # optional\n)\n\n# Get by name/reference\nentry = index.get_dataset(\"my-dataset\")\n\n# List all datasets\nfor entry in index.list_datasets():\n    print(entry.name)\n\n\n\nSchema Operations\n\n# Publish a schema\nschema_ref = index.publish_schema(\n    MySample,\n    version=\"1.0.0\",\n)\n\n# Get schema record\nschema = index.get_schema(schema_ref)\nprint(schema[\"name\"], schema[\"version\"])\n\n# List all schemas\nfor schema in index.list_schemas():\n    print(f\"{schema['name']}@{schema['version']}\")\n\n# Decode schema to Python type\nSampleType = index.decode_schema(schema_ref)\ndataset = atdata.Dataset[SampleType](entry.data_urls[0])\n\n\n\nImplementations\n\nLocalIndex / Index (from atdata.local)\nAtmosphereIndex (from atdata.atmosphere)",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Protocols"
+    ]
+  },
+  {
+    "objectID": "reference/protocols.html#abstractdatastore-protocol",
+    "href": "reference/protocols.html#abstractdatastore-protocol",
+    "title": "Protocols",
+    "section": "AbstractDataStore Protocol",
+    "text": "AbstractDataStore Protocol\nAbstracts over different storage backends:\n\nfrom atdata._protocols import AbstractDataStore\n\ndef write_dataset(store: AbstractDataStore, dataset) -&gt; list[str]:\n    \"\"\"Works with S3DataStore or future PDS blob store.\"\"\"\n    urls = store.write_shards(dataset, prefix=\"datasets/v1\")\n    return urls\n\n\nMethods\n\n# Write dataset shards\nurls = store.write_shards(\n    dataset,\n    prefix=\"datasets/mnist/v1\",\n    maxcount=10000,  # samples per shard\n)\n\n# Resolve URL for reading\nreadable_url = store.read_url(\"s3://bucket/path.tar\")\n\n# Check streaming support\nif store.supports_streaming():\n    # Can stream directly\n    pass\n\n\n\nImplementations\n\nS3DataStore (from atdata.local)",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Protocols"
+    ]
+  },
+  {
+    "objectID": "reference/protocols.html#using-protocols-for-polymorphism",
+    "href": "reference/protocols.html#using-protocols-for-polymorphism",
+    "title": "Protocols",
+    "section": "Using Protocols for Polymorphism",
+    "text": "Using Protocols for Polymorphism\nWrite code that works with any backend:\n\nfrom atdata._protocols import AbstractIndex, IndexEntry\nfrom atdata import Dataset\n\ndef backup_all_datasets(\n    source: AbstractIndex,\n    target: AbstractIndex,\n) -&gt; None:\n    \"\"\"Copy all datasets from source index to target.\"\"\"\n    for entry in source.list_datasets():\n        # Decode schema from source\n        SampleType = source.decode_schema(entry.schema_ref)\n\n        # Publish schema to target\n        target_schema = target.publish_schema(SampleType)\n\n        # Load and re-insert dataset\n        ds = Dataset[SampleType](entry.data_urls[0])\n        target.insert_dataset(\n            ds,\n            name=entry.name,\n            schema_ref=target_schema,\n        )",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Protocols"
+    ]
+  },
+  {
+    "objectID": "reference/protocols.html#schema-reference-formats",
+    "href": "reference/protocols.html#schema-reference-formats",
+    "title": "Protocols",
+    "section": "Schema Reference Formats",
+    "text": "Schema Reference Formats\nSchema references vary by backend:\n\n\n\n\n\n\n\n\nBackend\nFormat\nExample\n\n\n\n\nLocal\nlocal://schemas/{module.Class}@{version}\nlocal://schemas/myapp.ImageSample@1.0.0\n\n\nAtmosphere\nat://{did}/{collection}/{rkey}\nat://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Protocols"
+    ]
+  },
+  {
+    "objectID": "reference/protocols.html#type-checking",
+    "href": "reference/protocols.html#type-checking",
+    "title": "Protocols",
+    "section": "Type Checking",
+    "text": "Type Checking\nProtocols are runtime-checkable:\n\nfrom atdata._protocols import IndexEntry, AbstractIndex\n\n# Check if object implements protocol\nentry = index.get_dataset(\"test\")\nassert isinstance(entry, IndexEntry)\n\n# Type hints work with protocols\ndef process(index: AbstractIndex) -&gt; None:\n    ...  # IDE provides autocomplete",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Protocols"
+    ]
+  },
+  {
+    "objectID": "reference/protocols.html#complete-example",
+    "href": "reference/protocols.html#complete-example",
+    "title": "Protocols",
+    "section": "Complete Example",
+    "text": "Complete Example\n\nimport atdata\nfrom atdata.local import LocalIndex, S3DataStore\nfrom atdata.atmosphere import AtmosphereClient, AtmosphereIndex\nfrom atdata._protocols import AbstractIndex\nimport numpy as np\nfrom numpy.typing import NDArray\n\n# Define sample type\n@atdata.packable\nclass FeatureSample:\n    features: NDArray\n    label: int\n\n# Function works with any index\ndef count_datasets(index: AbstractIndex) -&gt; int:\n    return sum(1 for _ in index.list_datasets())\n\n# Use with local index\nlocal_index = LocalIndex()\nprint(f\"Local datasets: {count_datasets(local_index)}\")\n\n# Use with atmosphere index\nclient = AtmosphereClient()\nclient.login(\"handle.bsky.social\", \"app-password\")\natm_index = AtmosphereIndex(client)\nprint(f\"Atmosphere datasets: {count_datasets(atm_index)}\")\n\n# Migrate from local to atmosphere\ndef migrate_dataset(\n    name: str,\n    source: AbstractIndex,\n    target: AbstractIndex,\n) -&gt; None:\n    entry = source.get_dataset(name)\n    SampleType = source.decode_schema(entry.schema_ref)\n\n    # Publish schema\n    schema_ref = target.publish_schema(SampleType)\n\n    # Create dataset and insert\n    ds = atdata.Dataset[SampleType](entry.data_urls[0])\n    target.insert_dataset(ds, name=name, schema_ref=schema_ref)\n\nmigrate_dataset(\"my-features\", local_index, atm_index)",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Protocols"
+    ]
+  },
+  {
+    "objectID": "reference/protocols.html#related",
+    "href": "reference/protocols.html#related",
+    "title": "Protocols",
+    "section": "Related",
+    "text": "Related\n\nLocal Storage - LocalIndex and S3DataStore\nAtmosphere - AtmosphereIndex\nPromotion - Local to atmosphere migration\nload_dataset - Using indexes with load_dataset()",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Protocols"
+    ]
+  },
+  {
+    "objectID": "reference/packable-samples.html",
+    "href": "reference/packable-samples.html",
+    "title": "Packable Samples",
+    "section": "",
+    "text": "Packable samples are typed dataclasses that can be serialized with msgpack for storage in WebDataset tar files.",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Packable Samples"
+    ]
+  },
+  {
+    "objectID": "reference/packable-samples.html#the-packable-decorator",
+    "href": "reference/packable-samples.html#the-packable-decorator",
+    "title": "Packable Samples",
+    "section": "The @packable Decorator",
+    "text": "The @packable Decorator\nThe recommended way to define a sample type is with the @packable decorator:\n\nimport numpy as np\nfrom numpy.typing import NDArray\nimport atdata\n\n@atdata.packable\nclass ImageSample:\n    image: NDArray\n    label: str\n    confidence: float\n\nThis creates a dataclass that:\n\nInherits from PackableSample\nHas automatic msgpack serialization\nHandles NDArray conversion to/from bytes",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Packable Samples"
+    ]
+  },
+  {
+    "objectID": "reference/packable-samples.html#supported-field-types",
+    "href": "reference/packable-samples.html#supported-field-types",
+    "title": "Packable Samples",
+    "section": "Supported Field Types",
+    "text": "Supported Field Types\n\nPrimitives\n\n@atdata.packable\nclass PrimitiveSample:\n    name: str\n    count: int\n    score: float\n    active: bool\n    data: bytes\n\n\n\nNumPy Arrays\nFields annotated as NDArray are automatically converted:\n\n@atdata.packable\nclass ArraySample:\n    features: NDArray          # Required array\n    embeddings: NDArray | None  # Optional array\n\n\n\n\n\n\n\nNote\n\n\n\nBytes in NDArray-typed fields are always interpreted as serialized arrays. Don’t use NDArray for raw binary data—use bytes instead.\n\n\n\n\nLists\n\n@atdata.packable\nclass ListSample:\n    tags: list[str]\n    scores: list[float]",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Packable Samples"
+    ]
+  },
+  {
+    "objectID": "reference/packable-samples.html#serialization",
+    "href": "reference/packable-samples.html#serialization",
+    "title": "Packable Samples",
+    "section": "Serialization",
+    "text": "Serialization\n\nPacking to Bytes\n\nsample = ImageSample(\n    image=np.random.rand(224, 224, 3).astype(np.float32),\n    label=\"cat\",\n    confidence=0.95,\n)\n\n# Serialize to msgpack bytes\npacked_bytes = sample.packed\nprint(f\"Size: {len(packed_bytes)} bytes\")\n\n\n\nUnpacking from Bytes\n\n# Deserialize from bytes\nrestored = ImageSample.from_bytes(packed_bytes)\n\n# Arrays are automatically restored\nassert np.array_equal(sample.image, restored.image)\nassert sample.label == restored.label\n\n\n\nWebDataset Format\nThe as_wds property returns a dict ready for WebDataset:\n\nwds_dict = sample.as_wds\n# {'__key__': '1234...', 'msgpack': b'...'}\n\nWrite samples to a tar file:\n\nimport webdataset as wds\n\nwith wds.writer.TarWriter(\"data-000000.tar\") as sink:\n    for i, sample in enumerate(samples):\n        # Use custom key or let as_wds generate one\n        sink.write({**sample.as_wds, \"__key__\": f\"sample_{i:06d}\"})",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Packable Samples"
+    ]
+  },
+  {
+    "objectID": "reference/packable-samples.html#direct-inheritance-alternative",
+    "href": "reference/packable-samples.html#direct-inheritance-alternative",
+    "title": "Packable Samples",
+    "section": "Direct Inheritance (Alternative)",
+    "text": "Direct Inheritance (Alternative)\nYou can also inherit directly from PackableSample:\n\nfrom dataclasses import dataclass\n\n@dataclass\nclass DirectSample(atdata.PackableSample):\n    name: str\n    values: NDArray\n\nThis is equivalent to using @packable but more verbose.",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Packable Samples"
+    ]
+  },
+  {
+    "objectID": "reference/packable-samples.html#how-it-works",
+    "href": "reference/packable-samples.html#how-it-works",
+    "title": "Packable Samples",
+    "section": "How It Works",
+    "text": "How It Works\n\nSerialization Flow\n\nPackingUnpacking\n\n\n\nNDArray fields → converted to bytes via array_to_bytes()\nOther fields → passed through unchanged\nAll fields → packed with msgpack\n\n\n\n\nBytes → unpacked with ormsgpack\nDict → passed to __init__\n__post_init__ → calls _ensure_good()\nNDArray fields → bytes converted back to arrays\n\n\n\n\n\n\nThe _ensure_good() Method\nThis method runs automatically after construction and handles NDArray conversion:\n\ndef _ensure_good(self):\n    for field in dataclasses.fields(self):\n        if _is_possibly_ndarray_type(field.type):\n            value = getattr(self, field.name)\n            if isinstance(value, bytes):\n                setattr(self, field.name, bytes_to_array(value))",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Packable Samples"
+    ]
+  },
+  {
+    "objectID": "reference/packable-samples.html#best-practices",
+    "href": "reference/packable-samples.html#best-practices",
+    "title": "Packable Samples",
+    "section": "Best Practices",
+    "text": "Best Practices\n\nDoDon’t\n\n\n\n@atdata.packable\nclass GoodSample:\n    features: NDArray           # Clear type annotation\n    label: str                  # Simple primitives\n    metadata: dict              # Msgpack-compatible dicts\n    scores: list[float]         # Typed lists\n\n\n\n\n@atdata.packable\nclass BadSample:\n    # DON'T: Nested dataclasses not supported\n    nested: OtherSample\n\n    # DON'T: Complex objects that aren't msgpack-serializable\n    callback: Callable\n\n    # DON'T: Use NDArray for raw bytes\n    raw_data: NDArray  # Use 'bytes' type instead",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Packable Samples"
+    ]
+  },
+  {
+    "objectID": "reference/packable-samples.html#related",
+    "href": "reference/packable-samples.html#related",
+    "title": "Packable Samples",
+    "section": "Related",
+    "text": "Related\n\nDatasets - Loading and iterating samples\nLenses - Transforming between sample types",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Packable Samples"
+    ]
+  },
+  {
+    "objectID": "reference/lenses.html",
+    "href": "reference/lenses.html",
+    "title": "Lenses",
+    "section": "",
+    "text": "Lenses provide bidirectional transformations between sample types, enabling datasets to be viewed through different schemas without duplicating data.",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Lenses"
+    ]
+  },
+  {
+    "objectID": "reference/lenses.html#overview",
+    "href": "reference/lenses.html#overview",
+    "title": "Lenses",
+    "section": "Overview",
+    "text": "Overview\nA lens consists of:\n\nGetter: Transforms source type S to view type V\nPutter: Updates source based on a modified view (optional)",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Lenses"
+    ]
+  },
+  {
+    "objectID": "reference/lenses.html#creating-a-lens",
+    "href": "reference/lenses.html#creating-a-lens",
+    "title": "Lenses",
+    "section": "Creating a Lens",
+    "text": "Creating a Lens\nUse the @lens decorator to define a getter:\n\nimport atdata\nfrom numpy.typing import NDArray\n\n@atdata.packable\nclass FullSample:\n    image: NDArray\n    label: str\n    confidence: float\n    metadata: dict\n\n@atdata.packable\nclass SimpleSample:\n    label: str\n    confidence: float\n\n@atdata.lens\ndef simplify(src: FullSample) -&gt; SimpleSample:\n    return SimpleSample(label=src.label, confidence=src.confidence)\n\nThe decorator:\n\nCreates a Lens object from the getter function\nRegisters it in the global LensNetwork registry\nExtracts source/view types from annotations",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Lenses"
+    ]
+  },
+  {
+    "objectID": "reference/lenses.html#adding-a-putter",
+    "href": "reference/lenses.html#adding-a-putter",
+    "title": "Lenses",
+    "section": "Adding a Putter",
+    "text": "Adding a Putter\nTo enable bidirectional updates, add a putter:\n\n@simplify.putter\ndef simplify_put(view: SimpleSample, source: FullSample) -&gt; FullSample:\n    return FullSample(\n        image=source.image,\n        label=view.label,\n        confidence=view.confidence,\n        metadata=source.metadata,\n    )\n\nThe putter receives:\n\nview: The modified view value\nsource: The original source value\n\nIt returns an updated source that reflects changes from the view.",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Lenses"
+    ]
+  },
+  {
+    "objectID": "reference/lenses.html#using-lenses-with-datasets",
+    "href": "reference/lenses.html#using-lenses-with-datasets",
+    "title": "Lenses",
+    "section": "Using Lenses with Datasets",
+    "text": "Using Lenses with Datasets\nLenses integrate with Dataset.as_type():\n\ndataset = atdata.Dataset[FullSample](\"data-{000000..000009}.tar\")\n\n# View through a different type\nsimple_ds = dataset.as_type(SimpleSample)\n\nfor batch in simple_ds.ordered(batch_size=32):\n    # Only SimpleSample fields available\n    labels = batch.label\n    scores = batch.confidence",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Lenses"
+    ]
+  },
+  {
+    "objectID": "reference/lenses.html#direct-lens-usage",
+    "href": "reference/lenses.html#direct-lens-usage",
+    "title": "Lenses",
+    "section": "Direct Lens Usage",
+    "text": "Direct Lens Usage\nLenses can also be called directly:\n\nimport numpy as np\n\nfull = FullSample(\n    image=np.zeros((224, 224, 3)),\n    label=\"cat\",\n    confidence=0.95,\n    metadata={\"source\": \"training\"}\n)\n\n# Apply getter\nsimple = simplify(full)\n# Or: simple = simplify.get(full)\n\n# Apply putter\nmodified_simple = SimpleSample(label=\"dog\", confidence=0.87)\nupdated_full = simplify.put(modified_simple, full)\n# updated_full has label=\"dog\", confidence=0.87, but retains\n# original image and metadata",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Lenses"
+    ]
+  },
+  {
+    "objectID": "reference/lenses.html#lens-laws",
+    "href": "reference/lenses.html#lens-laws",
+    "title": "Lenses",
+    "section": "Lens Laws",
+    "text": "Lens Laws\nWell-behaved lenses should satisfy these properties:\n\nGetPutPutGetPutPut\n\n\nIf you get a view and immediately put it back, the source is unchanged:\n\nview = lens.get(source)\nassert lens.put(view, source) == source\n\n\n\nIf you put a view, getting it back yields that view:\n\nupdated = lens.put(view, source)\nassert lens.get(updated) == view\n\n\n\nPutting twice is equivalent to putting once with the final value:\n\nresult1 = lens.put(v2, lens.put(v1, source))\nresult2 = lens.put(v2, source)\nassert result1 == result2",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Lenses"
+    ]
+  },
+  {
+    "objectID": "reference/lenses.html#trivial-putter",
+    "href": "reference/lenses.html#trivial-putter",
+    "title": "Lenses",
+    "section": "Trivial Putter",
+    "text": "Trivial Putter\nIf no putter is defined, a trivial putter is used that ignores view updates:\n\n@atdata.lens\ndef extract_label(src: FullSample) -&gt; SimpleSample:\n    return SimpleSample(label=src.label, confidence=src.confidence)\n\n# Without a putter, put() returns the original source unchanged\nview = SimpleSample(label=\"modified\", confidence=0.5)\nupdated = extract_label.put(view, original)\nassert updated == original  # No changes applied",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Lenses"
+    ]
+  },
+  {
+    "objectID": "reference/lenses.html#lensnetwork-registry",
+    "href": "reference/lenses.html#lensnetwork-registry",
+    "title": "Lenses",
+    "section": "LensNetwork Registry",
+    "text": "LensNetwork Registry\nThe LensNetwork is a singleton that stores all registered lenses:\n\nfrom atdata.lens import LensNetwork\n\nnetwork = LensNetwork()\n\n# Look up a specific lens\nlens = network.transform(FullSample, SimpleSample)\n\n# Raises ValueError if no lens exists\ntry:\n    lens = network.transform(TypeA, TypeB)\nexcept ValueError:\n    print(\"No lens registered for TypeA -&gt; TypeB\")",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Lenses"
+    ]
+  },
+  {
+    "objectID": "reference/lenses.html#example-feature-extraction",
+    "href": "reference/lenses.html#example-feature-extraction",
+    "title": "Lenses",
+    "section": "Example: Feature Extraction",
+    "text": "Example: Feature Extraction\n\n@atdata.packable\nclass RawSample:\n    audio: NDArray\n    text: str\n    speaker_id: int\n\n@atdata.packable\nclass TextFeatures:\n    text: str\n    word_count: int\n\n@atdata.lens\ndef extract_text(src: RawSample) -&gt; TextFeatures:\n    return TextFeatures(\n        text=src.text,\n        word_count=len(src.text.split())\n    )\n\n@extract_text.putter\ndef extract_text_put(view: TextFeatures, source: RawSample) -&gt; RawSample:\n    return RawSample(\n        audio=source.audio,\n        text=view.text,\n        speaker_id=source.speaker_id\n    )",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Lenses"
+    ]
+  },
+  {
+    "objectID": "reference/lenses.html#related",
+    "href": "reference/lenses.html#related",
+    "title": "Lenses",
+    "section": "Related",
+    "text": "Related\n\nDatasets - Using lenses with Dataset.as_type()\nPackable Samples - Defining sample types\nAtmosphere - Publishing lenses to ATProto federation",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Lenses"
+    ]
+  },
+  {
+    "objectID": "reference/load-dataset.html",
+    "href": "reference/load-dataset.html",
+    "title": "load_dataset API",
+    "section": "",
+    "text": "The load_dataset() function provides a HuggingFace Datasets-style interface for loading typed datasets.",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "load_dataset API"
+    ]
+  },
+  {
+    "objectID": "reference/load-dataset.html#overview",
+    "href": "reference/load-dataset.html#overview",
+    "title": "load_dataset API",
+    "section": "Overview",
+    "text": "Overview\nKey differences from HuggingFace Datasets:\n\nRequires explicit sample_type parameter (typed dataclass) unless using index\nReturns atdata.Dataset[ST] instead of HF Dataset\nBuilt on WebDataset for efficient streaming\nNo Arrow caching layer",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "load_dataset API"
+    ]
+  },
+  {
+    "objectID": "reference/load-dataset.html#basic-usage",
+    "href": "reference/load-dataset.html#basic-usage",
+    "title": "load_dataset API",
+    "section": "Basic Usage",
+    "text": "Basic Usage\n\nimport atdata\nfrom atdata import load_dataset\nfrom numpy.typing import NDArray\n\n@atdata.packable\nclass TextSample:\n    text: str\n    label: int\n\n# Load a specific split\ntrain_ds = load_dataset(\"path/to/data.tar\", TextSample, split=\"train\")\n\n# Load all splits (returns DatasetDict)\nds_dict = load_dataset(\"path/to/data/\", TextSample)\ntrain_ds = ds_dict[\"train\"]\ntest_ds = ds_dict[\"test\"]",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "load_dataset API"
+    ]
+  },
+  {
+    "objectID": "reference/load-dataset.html#path-formats",
+    "href": "reference/load-dataset.html#path-formats",
+    "title": "load_dataset API",
+    "section": "Path Formats",
+    "text": "Path Formats\n\nWebDataset Brace Notation\n\n# Range notation\nds = load_dataset(\"data-{000000..000099}.tar\", MySample, split=\"train\")\n\n# List notation\nds = load_dataset(\"data-{train,test,val}.tar\", MySample, split=\"train\")\n\n\n\nGlob Patterns\n\n# Match all tar files\nds = load_dataset(\"path/to/*.tar\", MySample)\n\n# Match pattern\nds = load_dataset(\"path/to/train-*.tar\", MySample, split=\"train\")\n\n\n\nLocal Directory\n\n# Scans for .tar files\nds = load_dataset(\"./my-dataset/\", MySample)\n\n\n\nRemote URLs\n\n# S3\nds = load_dataset(\"s3://bucket/data-{000..099}.tar\", MySample, split=\"train\")\n\n# HTTP/HTTPS\nds = load_dataset(\"https://example.com/data.tar\", MySample, split=\"train\")\n\n# Google Cloud Storage\nds = load_dataset(\"gs://bucket/data.tar\", MySample, split=\"train\")\n\n\n\nIndex Lookup\n\nfrom atdata.local import LocalIndex\n\nindex = LocalIndex()\n\n# Load from local index (auto-resolves type from schema)\nds = load_dataset(\"@local/my-dataset\", index=index, split=\"train\")\n\n# With explicit type\nds = load_dataset(\"@local/my-dataset\", MySample, index=index, split=\"train\")",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "load_dataset API"
+    ]
+  },
+  {
+    "objectID": "reference/load-dataset.html#split-detection",
+    "href": "reference/load-dataset.html#split-detection",
+    "title": "load_dataset API",
+    "section": "Split Detection",
+    "text": "Split Detection\nSplits are automatically detected from filenames and directories:\n\n\n\nPattern\nDetected Split\n\n\n\n\ntrain-*.tar, training-*.tar\ntrain\n\n\ntest-*.tar, testing-*.tar\ntest\n\n\nval-*.tar, valid-*.tar, validation-*.tar\nvalidation\n\n\ndev-*.tar, development-*.tar\nvalidation\n\n\ntrain/*.tar (directory)\ntrain\n\n\ntest/*.tar (directory)\ntest\n\n\n\n\n\n\n\n\n\nNote\n\n\n\nFiles without a detected split default to “train”.",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "load_dataset API"
+    ]
+  },
+  {
+    "objectID": "reference/load-dataset.html#datasetdict",
+    "href": "reference/load-dataset.html#datasetdict",
+    "title": "load_dataset API",
+    "section": "DatasetDict",
+    "text": "DatasetDict\nWhen loading without split=, returns a DatasetDict:\n\nds_dict = load_dataset(\"path/to/data/\", MySample)\n\n# Access splits\ntrain_ds = ds_dict[\"train\"]\ntest_ds = ds_dict[\"test\"]\n\n# Iterate splits\nfor name, dataset in ds_dict.items():\n    print(f\"{name}: {len(dataset.shard_list)} shards\")\n\n# Properties\nprint(ds_dict.num_shards)    # {'train': 10, 'test': 2}\nprint(ds_dict.sample_type)   # &lt;class 'MySample'&gt;\nprint(ds_dict.streaming)     # False",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "load_dataset API"
+    ]
+  },
+  {
+    "objectID": "reference/load-dataset.html#explicit-data-files",
+    "href": "reference/load-dataset.html#explicit-data-files",
+    "title": "load_dataset API",
+    "section": "Explicit Data Files",
+    "text": "Explicit Data Files\nOverride automatic detection with data_files:\n\n# Single pattern\nds = load_dataset(\n    \"path/to/\",\n    MySample,\n    data_files=\"custom-*.tar\",\n)\n\n# List of patterns\nds = load_dataset(\n    \"path/to/\",\n    MySample,\n    data_files=[\"shard-000.tar\", \"shard-001.tar\"],\n)\n\n# Explicit split mapping\nds = load_dataset(\n    \"path/to/\",\n    MySample,\n    data_files={\n        \"train\": \"training-shards-*.tar\",\n        \"test\": \"eval-data.tar\",\n    },\n)",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "load_dataset API"
+    ]
+  },
+  {
+    "objectID": "reference/load-dataset.html#streaming-mode",
+    "href": "reference/load-dataset.html#streaming-mode",
+    "title": "load_dataset API",
+    "section": "Streaming Mode",
+    "text": "Streaming Mode\nThe streaming parameter signals intent for streaming mode:\n\n# Mark as streaming\nds_dict = load_dataset(\"path/to/data.tar\", MySample, streaming=True)\n\n# Check streaming status\nif ds_dict.streaming:\n    print(\"Streaming mode\")\n\n\n\n\n\n\n\nTip\n\n\n\natdata datasets are always lazy/streaming via WebDataset pipelines. This parameter primarily signals intent.",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "load_dataset API"
+    ]
+  },
+  {
+    "objectID": "reference/load-dataset.html#auto-type-resolution",
+    "href": "reference/load-dataset.html#auto-type-resolution",
+    "title": "load_dataset API",
+    "section": "Auto Type Resolution",
+    "text": "Auto Type Resolution\nWhen using index lookup, the sample type can be resolved automatically:\n\nfrom atdata.local import LocalIndex\n\nindex = LocalIndex()\n\n# No sample_type needed - resolved from schema\nds = load_dataset(\"@local/my-dataset\", index=index, split=\"train\")\n\n# Type is inferred from the stored schema\nsample_type = ds.sample_type",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "load_dataset API"
+    ]
+  },
+  {
+    "objectID": "reference/load-dataset.html#error-handling",
+    "href": "reference/load-dataset.html#error-handling",
+    "title": "load_dataset API",
+    "section": "Error Handling",
+    "text": "Error Handling\n\ntry:\n    ds = load_dataset(\"path/to/data.tar\", MySample, split=\"train\")\nexcept FileNotFoundError:\n    print(\"No data files found\")\nexcept ValueError as e:\n    if \"Split\" in str(e):\n        print(\"Requested split not found\")\n    else:\n        print(f\"Invalid configuration: {e}\")\nexcept KeyError:\n    print(\"Dataset not found in index\")",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "load_dataset API"
+    ]
+  },
+  {
+    "objectID": "reference/load-dataset.html#complete-example",
+    "href": "reference/load-dataset.html#complete-example",
+    "title": "load_dataset API",
+    "section": "Complete Example",
+    "text": "Complete Example\n\nimport numpy as np\nfrom numpy.typing import NDArray\nimport atdata\nfrom atdata import load_dataset\nimport webdataset as wds\n\n# 1. Define sample type\n@atdata.packable\nclass ImageSample:\n    image: NDArray\n    label: str\n\n# 2. Create dataset files\nfor split in [\"train\", \"test\"]:\n    with wds.writer.TarWriter(f\"{split}-000.tar\") as sink:\n        for i in range(100):\n            sample = ImageSample(\n                image=np.random.rand(64, 64, 3).astype(np.float32),\n                label=f\"sample_{i}\",\n            )\n            sink.write({**sample.as_wds, \"__key__\": f\"{i:06d}\"})\n\n# 3. Load with split detection\nds_dict = load_dataset(\"./\", ImageSample)\nprint(ds_dict.keys())  # dict_keys(['train', 'test'])\n\n# 4. Iterate\nfor batch in ds_dict[\"train\"].ordered(batch_size=16):\n    print(batch.image.shape)  # (16, 64, 64, 3)\n    print(batch.label)        # ['sample_0', 'sample_1', ...]\n    break\n\n# 5. Load specific split\ntrain_ds = load_dataset(\"./\", ImageSample, split=\"train\")\nfor batch in train_ds.ordered(batch_size=32):\n    process(batch)",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "load_dataset API"
+    ]
+  },
+  {
+    "objectID": "reference/load-dataset.html#related",
+    "href": "reference/load-dataset.html#related",
+    "title": "load_dataset API",
+    "section": "Related",
+    "text": "Related\n\nDatasets - Dataset iteration and batching\nPackable Samples - Defining sample types\nLocal Storage - LocalIndex for index lookup\nProtocols - AbstractIndex interface",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "load_dataset API"
+    ]
+  },
+  {
+    "objectID": "tutorials/quickstart.html",
+    "href": "tutorials/quickstart.html",
+    "title": "Quick Start",
+    "section": "",
+    "text": "This guide walks you through the basics of atdata: defining sample types, writing datasets, and iterating over them.",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Quick Start"
+    ]
+  },
+  {
+    "objectID": "tutorials/quickstart.html#installation",
+    "href": "tutorials/quickstart.html#installation",
+    "title": "Quick Start",
+    "section": "Installation",
+    "text": "Installation\npip install atdata\n\n# With ATProto support\npip install atdata[atmosphere]",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Quick Start"
+    ]
+  },
+  {
+    "objectID": "tutorials/quickstart.html#define-a-sample-type",
+    "href": "tutorials/quickstart.html#define-a-sample-type",
+    "title": "Quick Start",
+    "section": "Define a Sample Type",
+    "text": "Define a Sample Type\nUse the @packable decorator to create a typed sample:\n\nimport numpy as np\nfrom numpy.typing import NDArray\nimport atdata\n\n@atdata.packable\nclass ImageSample:\n    \"\"\"A sample containing an image with label and confidence.\"\"\"\n    image: NDArray\n    label: str\n    confidence: float\n\nThe @packable decorator:\n\nConverts your class into a dataclass\nAdds automatic msgpack serialization\nHandles NDArray conversion to/from bytes",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Quick Start"
+    ]
+  },
+  {
+    "objectID": "tutorials/quickstart.html#create-sample-instances",
+    "href": "tutorials/quickstart.html#create-sample-instances",
+    "title": "Quick Start",
+    "section": "Create Sample Instances",
+    "text": "Create Sample Instances\n\n# Create a single sample\nsample = ImageSample(\n    image=np.random.rand(224, 224, 3).astype(np.float32),\n    label=\"cat\",\n    confidence=0.95,\n)\n\n# Check serialization\npacked_bytes = sample.packed\nprint(f\"Serialized size: {len(packed_bytes):,} bytes\")\n\n# Verify round-trip\nrestored = ImageSample.from_bytes(packed_bytes)\nassert np.allclose(sample.image, restored.image)\nprint(\"Round-trip successful!\")",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Quick Start"
+    ]
+  },
+  {
+    "objectID": "tutorials/quickstart.html#write-a-dataset",
+    "href": "tutorials/quickstart.html#write-a-dataset",
+    "title": "Quick Start",
+    "section": "Write a Dataset",
+    "text": "Write a Dataset\nUse WebDataset’s TarWriter to create dataset files:\n\nimport webdataset as wds\n\n# Create 100 samples\nsamples = [\n    ImageSample(\n        image=np.random.rand(224, 224, 3).astype(np.float32),\n        label=f\"class_{i % 10}\",\n        confidence=np.random.rand(),\n    )\n    for i in range(100)\n]\n\n# Write to tar file\nwith wds.writer.TarWriter(\"my-dataset-000000.tar\") as sink:\n    for i, sample in enumerate(samples):\n        sink.write({**sample.as_wds, \"__key__\": f\"sample_{i:06d}\"})\n\nprint(\"Wrote 100 samples to my-dataset-000000.tar\")",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Quick Start"
+    ]
+  },
+  {
+    "objectID": "tutorials/quickstart.html#load-and-iterate",
+    "href": "tutorials/quickstart.html#load-and-iterate",
+    "title": "Quick Start",
+    "section": "Load and Iterate",
+    "text": "Load and Iterate\nCreate a typed Dataset and iterate with batching:\n\n# Load dataset with type\ndataset = atdata.Dataset[ImageSample](\"my-dataset-000000.tar\")\n\n# Iterate in order with batching\nfor batch in dataset.ordered(batch_size=16):\n    # NDArray fields are stacked\n    images = batch.image        # shape: (16, 224, 224, 3)\n\n    # Other fields become lists\n    labels = batch.label        # list of 16 strings\n    confidences = batch.confidence  # list of 16 floats\n\n    print(f\"Batch shape: {images.shape}\")\n    print(f\"Labels: {labels[:3]}...\")\n    break",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Quick Start"
+    ]
+  },
+  {
+    "objectID": "tutorials/quickstart.html#shuffled-iteration",
+    "href": "tutorials/quickstart.html#shuffled-iteration",
+    "title": "Quick Start",
+    "section": "Shuffled Iteration",
+    "text": "Shuffled Iteration\nFor training, use shuffled iteration:\n\nfor batch in dataset.shuffled(batch_size=32):\n    # Samples are shuffled at shard and sample level\n    images = batch.image\n    labels = batch.label\n\n    # Train your model\n    # model.train(images, labels)\n    break",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Quick Start"
+    ]
+  },
+  {
+    "objectID": "tutorials/quickstart.html#use-lenses-for-type-transformations",
+    "href": "tutorials/quickstart.html#use-lenses-for-type-transformations",
+    "title": "Quick Start",
+    "section": "Use Lenses for Type Transformations",
+    "text": "Use Lenses for Type Transformations\nView datasets through different schemas:\n\n# Define a simplified view type\n@atdata.packable\nclass SimplifiedSample:\n    label: str\n    confidence: float\n\n# Create a lens transformation\n@atdata.lens\ndef simplify(src: ImageSample) -&gt; SimplifiedSample:\n    return SimplifiedSample(label=src.label, confidence=src.confidence)\n\n# View dataset through lens\nsimple_ds = dataset.as_type(SimplifiedSample)\n\nfor batch in simple_ds.ordered(batch_size=8):\n    print(f\"Labels: {batch.label}\")\n    print(f\"Confidences: {batch.confidence}\")\n    break",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Quick Start"
+    ]
+  },
+  {
+    "objectID": "tutorials/quickstart.html#next-steps",
+    "href": "tutorials/quickstart.html#next-steps",
+    "title": "Quick Start",
+    "section": "Next Steps",
+    "text": "Next Steps\n\nLocal Workflow - Store datasets with Redis + S3\nAtmosphere Publishing - Publish to ATProto federation\nPackable Samples - Deep dive into sample types\nDatasets - Advanced dataset operations",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Quick Start"
+    ]
+  },
+  {
+    "objectID": "tutorials/atmosphere.html",
+    "href": "tutorials/atmosphere.html",
+    "title": "Atmosphere Publishing",
+    "section": "",
+    "text": "This tutorial demonstrates how to use the atmosphere module to publish datasets to the AT Protocol network, enabling federated discovery and sharing.",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Atmosphere Publishing"
+    ]
+  },
+  {
+    "objectID": "tutorials/atmosphere.html#prerequisites",
+    "href": "tutorials/atmosphere.html#prerequisites",
+    "title": "Atmosphere Publishing",
+    "section": "Prerequisites",
+    "text": "Prerequisites\n\npip install atdata[atmosphere]\nA Bluesky account with an app-specific password\n\n\n\n\n\n\n\nWarning\n\n\n\nAlways use an app-specific password, not your main Bluesky password.",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Atmosphere Publishing"
+    ]
+  },
+  {
+    "objectID": "tutorials/atmosphere.html#setup",
+    "href": "tutorials/atmosphere.html#setup",
+    "title": "Atmosphere Publishing",
+    "section": "Setup",
+    "text": "Setup\n\nimport numpy as np\nfrom numpy.typing import NDArray\nimport atdata\nfrom atdata.atmosphere import (\n    AtmosphereClient,\n    SchemaPublisher,\n    SchemaLoader,\n    DatasetPublisher,\n    DatasetLoader,\n    AtUri,\n)\nimport webdataset as wds",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Atmosphere Publishing"
+    ]
+  },
+  {
+    "objectID": "tutorials/atmosphere.html#define-sample-types",
+    "href": "tutorials/atmosphere.html#define-sample-types",
+    "title": "Atmosphere Publishing",
+    "section": "Define Sample Types",
+    "text": "Define Sample Types\n\n@atdata.packable\nclass ImageSample:\n    \"\"\"A sample containing image data with metadata.\"\"\"\n    image: NDArray\n    label: str\n    confidence: float\n\n@atdata.packable\nclass TextEmbeddingSample:\n    \"\"\"A sample containing text with embedding vectors.\"\"\"\n    text: str\n    embedding: NDArray\n    source: str",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Atmosphere Publishing"
+    ]
+  },
+  {
+    "objectID": "tutorials/atmosphere.html#type-introspection",
+    "href": "tutorials/atmosphere.html#type-introspection",
+    "title": "Atmosphere Publishing",
+    "section": "Type Introspection",
+    "text": "Type Introspection\nSee what information is available from a PackableSample type:\n\nfrom dataclasses import fields, is_dataclass\n\nprint(f\"Sample type: {ImageSample.__name__}\")\nprint(f\"Is dataclass: {is_dataclass(ImageSample)}\")\n\nprint(\"\\nFields:\")\nfor field in fields(ImageSample):\n    print(f\"  - {field.name}: {field.type}\")\n\n# Create and serialize a sample\nsample = ImageSample(\n    image=np.random.rand(224, 224, 3).astype(np.float32),\n    label=\"cat\",\n    confidence=0.95,\n)\n\npacked = sample.packed\nprint(f\"\\nSerialized size: {len(packed):,} bytes\")\n\n# Round-trip\nrestored = ImageSample.from_bytes(packed)\nprint(f\"Round-trip successful: {np.allclose(sample.image, restored.image)}\")",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Atmosphere Publishing"
+    ]
+  },
+  {
+    "objectID": "tutorials/atmosphere.html#at-uri-parsing",
+    "href": "tutorials/atmosphere.html#at-uri-parsing",
+    "title": "Atmosphere Publishing",
+    "section": "AT URI Parsing",
+    "text": "AT URI Parsing\nATProto records are identified by AT URIs:\n\nuris = [\n    \"at://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz789\",\n    \"at://alice.bsky.social/ac.foundation.dataset.record/my-dataset\",\n]\n\nfor uri_str in uris:\n    print(f\"\\nParsing: {uri_str}\")\n    uri = AtUri.parse(uri_str)\n    print(f\"  Authority:  {uri.authority}\")\n    print(f\"  Collection: {uri.collection}\")\n    print(f\"  Rkey:       {uri.rkey}\")",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Atmosphere Publishing"
+    ]
+  },
+  {
+    "objectID": "tutorials/atmosphere.html#authentication",
+    "href": "tutorials/atmosphere.html#authentication",
+    "title": "Atmosphere Publishing",
+    "section": "Authentication",
+    "text": "Authentication\nConnect to ATProto:\n\nclient = AtmosphereClient()\nclient.login(\"your.handle.social\", \"your-app-password\")\n\nprint(f\"Authenticated as: {client.handle}\")\nprint(f\"DID: {client.did}\")",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Atmosphere Publishing"
+    ]
+  },
+  {
+    "objectID": "tutorials/atmosphere.html#publish-a-schema",
+    "href": "tutorials/atmosphere.html#publish-a-schema",
+    "title": "Atmosphere Publishing",
+    "section": "Publish a Schema",
+    "text": "Publish a Schema\n\nschema_publisher = SchemaPublisher(client)\nschema_uri = schema_publisher.publish(\n    ImageSample,\n    name=\"ImageSample\",\n    version=\"1.0.0\",\n    description=\"Demo: Image sample with label and confidence\",\n)\nprint(f\"Schema URI: {schema_uri}\")",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Atmosphere Publishing"
+    ]
+  },
+  {
+    "objectID": "tutorials/atmosphere.html#list-your-schemas",
+    "href": "tutorials/atmosphere.html#list-your-schemas",
+    "title": "Atmosphere Publishing",
+    "section": "List Your Schemas",
+    "text": "List Your Schemas\n\nschema_loader = SchemaLoader(client)\nschemas = schema_loader.list_all(limit=10)\nprint(f\"Found {len(schemas)} schema(s)\")\n\nfor schema in schemas:\n    print(f\"  - {schema.get('name', 'Unknown')}: v{schema.get('version', '?')}\")",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Atmosphere Publishing"
+    ]
+  },
+  {
+    "objectID": "tutorials/atmosphere.html#publish-a-dataset",
+    "href": "tutorials/atmosphere.html#publish-a-dataset",
+    "title": "Atmosphere Publishing",
+    "section": "Publish a Dataset",
+    "text": "Publish a Dataset\n\nWith External URLs\n\ndataset_publisher = DatasetPublisher(client)\ndataset_uri = dataset_publisher.publish_with_urls(\n    urls=[\"s3://example-bucket/demo-data-{000000..000009}.tar\"],\n    schema_uri=str(schema_uri),\n    name=\"Demo Image Dataset\",\n    description=\"Example dataset demonstrating atmosphere publishing\",\n    tags=[\"demo\", \"images\", \"atdata\"],\n    license=\"MIT\",\n)\nprint(f\"Dataset URI: {dataset_uri}\")\n\n\n\nWith Blob Storage\nFor smaller datasets, store data directly in ATProto blobs:\n\nimport io\n\n@atdata.packable\nclass DemoSample:\n    id: int\n    text: str\n\n# Create samples\nsamples = [\n    DemoSample(id=0, text=\"Hello from blob storage!\"),\n    DemoSample(id=1, text=\"ATProto is decentralized.\"),\n    DemoSample(id=2, text=\"atdata makes ML data easy.\"),\n]\n\n# Create tar in memory\ntar_buffer = io.BytesIO()\nwith wds.writer.TarWriter(tar_buffer) as sink:\n    for sample in samples:\n        sink.write(sample.as_wds)\n\ntar_data = tar_buffer.getvalue()\nprint(f\"Created tar with {len(samples)} samples ({len(tar_data):,} bytes)\")\n\n# Publish schema\nblob_schema_uri = schema_publisher.publish(DemoSample, version=\"1.0.0\")\n\n# Publish with blob storage\nblob_dataset_uri = dataset_publisher.publish_with_blobs(\n    blobs=[tar_data],\n    schema_uri=str(blob_schema_uri),\n    name=\"Blob Storage Demo Dataset\",\n    description=\"Small dataset stored directly in ATProto blobs\",\n    tags=[\"demo\", \"blob-storage\"],\n)\nprint(f\"Dataset URI: {blob_dataset_uri}\")",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Atmosphere Publishing"
+    ]
+  },
+  {
+    "objectID": "tutorials/atmosphere.html#list-and-load-datasets",
+    "href": "tutorials/atmosphere.html#list-and-load-datasets",
+    "title": "Atmosphere Publishing",
+    "section": "List and Load Datasets",
+    "text": "List and Load Datasets\n\ndataset_loader = DatasetLoader(client)\ndatasets = dataset_loader.list_all(limit=10)\nprint(f\"Found {len(datasets)} dataset(s)\")\n\nfor ds in datasets:\n    print(f\"  - {ds.get('name', 'Unknown')}\")\n    print(f\"    Schema: {ds.get('schemaRef', 'N/A')}\")\n    tags = ds.get('tags', [])\n    if tags:\n        print(f\"    Tags: {', '.join(tags)}\")",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Atmosphere Publishing"
+    ]
+  },
+  {
+    "objectID": "tutorials/atmosphere.html#load-a-dataset",
+    "href": "tutorials/atmosphere.html#load-a-dataset",
+    "title": "Atmosphere Publishing",
+    "section": "Load a Dataset",
+    "text": "Load a Dataset\n\n# Check storage type\nstorage_type = dataset_loader.get_storage_type(str(blob_dataset_uri))\nprint(f\"Storage type: {storage_type}\")\n\nif storage_type == \"blobs\":\n    blob_urls = dataset_loader.get_blob_urls(str(blob_dataset_uri))\n    print(f\"Blob URLs: {len(blob_urls)} blob(s)\")\n\n# Load and iterate (works for both storage types)\nds = dataset_loader.to_dataset(str(blob_dataset_uri), DemoSample)\nfor batch in ds.ordered():\n    print(f\"Sample id={batch.id}, text={batch.text}\")",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Atmosphere Publishing"
+    ]
+  },
+  {
+    "objectID": "tutorials/atmosphere.html#complete-publishing-workflow",
+    "href": "tutorials/atmosphere.html#complete-publishing-workflow",
+    "title": "Atmosphere Publishing",
+    "section": "Complete Publishing Workflow",
+    "text": "Complete Publishing Workflow\n\n# 1. Define and create samples\n@atdata.packable\nclass FeatureSample:\n    features: NDArray\n    label: int\n    source: str\n\nsamples = [\n    FeatureSample(\n        features=np.random.randn(128).astype(np.float32),\n        label=i % 10,\n        source=\"synthetic\",\n    )\n    for i in range(1000)\n]\n\n# 2. Write to tar\nwith wds.writer.TarWriter(\"features.tar\") as sink:\n    for i, s in enumerate(samples):\n        sink.write({**s.as_wds, \"__key__\": f\"{i:06d}\"})\n\n# 3. Authenticate\nfrom atdata.atmosphere import AtmosphereIndex\n\nclient = AtmosphereClient()\nclient.login(\"myhandle.bsky.social\", \"app-password\")\nindex = AtmosphereIndex(client)\n\n# 4. Publish schema\nschema_uri = index.publish_schema(\n    FeatureSample,\n    version=\"1.0.0\",\n    description=\"Feature vectors with labels\",\n)\n\n# 5. Publish dataset\ndataset = atdata.Dataset[FeatureSample](\"features.tar\")\nentry = index.insert_dataset(\n    dataset,\n    name=\"synthetic-features-v1\",\n    schema_ref=schema_uri,\n    tags=[\"features\", \"synthetic\"],\n)\n\nprint(f\"Published: {entry.uri}\")",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Atmosphere Publishing"
+    ]
+  },
+  {
+    "objectID": "tutorials/atmosphere.html#next-steps",
+    "href": "tutorials/atmosphere.html#next-steps",
+    "title": "Atmosphere Publishing",
+    "section": "Next Steps",
+    "text": "Next Steps\n\nPromotion Workflow - Migrate from local storage to atmosphere\nAtmosphere Reference - Complete API reference\nProtocols - Abstract interfaces",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Atmosphere Publishing"
+    ]
+  },
+  {
+    "objectID": "api/index.html",
+    "href": "api/index.html",
+    "title": "API Reference",
+    "section": "",
+    "text": "This page provides a comprehensive reference for the atdata API.",
+    "crumbs": [
+      "Guide",
+      "API Reference",
+      "API Reference"
+    ]
+  },
+  {
+    "objectID": "api/index.html#core-module-atdata",
+    "href": "api/index.html#core-module-atdata",
+    "title": "API Reference",
+    "section": "Core Module (atdata)",
+    "text": "Core Module (atdata)\n\nDecorators\n\n@packable\n@atdata.packable\nclass MySample:\n    field: str\n    array: NDArray\nConverts a class into a PackableSample with automatic msgpack serialization.\n\n\n@lens\n@atdata.lens\ndef transform(src: SourceType) -&gt; ViewType:\n    return ViewType(...)\nCreates a lens transformation and registers it in the LensNetwork.\n\n\n\nClasses\n\nPackableSample\nBase class for typed samples with serialization support.\n\n\n\nProperty/Method\nDescription\n\n\n\n\n.packed\nSerialize to msgpack bytes\n\n\n.as_wds\nGet WebDataset dict with __key__ and msgpack\n\n\n.from_bytes(data)\nClass method to deserialize from bytes\n\n\n.from_data(dict)\nClass method to create from dictionary\n\n\n\n\n\nDataset[ST]\nGeneric typed dataset wrapping WebDataset tar files.\ndataset = atdata.Dataset[MySample](\"data-{000000..000009}.tar\")\n\n\n\n\n\n\n\nProperty/Method\nDescription\n\n\n\n\n.url\nThe dataset URL pattern\n\n\n.sample_type\nThe sample type class\n\n\n.shard_list\nList of individual shard URLs\n\n\n.metadata\nMetadata dict (if metadata_url provided)\n\n\n.ordered(batch_size=1)\nIterate in order\n\n\n.shuffled(batch_size=1, buffer_shards=100, buffer_samples=10000)\nIterate shuffled\n\n\n.as_type(ViewType)\nView through a lens transformation\n\n\n.to_parquet(path, ...)\nExport to parquet format\n\n\n\n\n\nSampleBatch[DT]\nBatch of samples with automatic attribute aggregation.\n\n\n\n\n\n\n\nProperty\nDescription\n\n\n\n\n.&lt;field&gt;\nAccess aggregated field (NDArray stacked, others as list)\n\n\n.sample_type\nThe sample type class\n\n\n\n\n\nLens[S, V]\nBidirectional transformation between types.\n\n\n\nProperty/Method\nDescription\n\n\n\n\n.get(source)\nTransform source to view\n\n\n.put(view, source)\nUpdate source from view\n\n\n@lens.putter\nDecorator to add putter function\n\n\n\n\n\n\nFunctions\n\nload_dataset()\ndef load_dataset(\n    path: str,\n    sample_type: Type[ST] = None,\n    *,\n    split: str = None,\n    data_files: str | list | dict = None,\n    streaming: bool = False,\n    index: AbstractIndex = None,\n) -&gt; Dataset[ST] | DatasetDict\nHuggingFace-style dataset loading.",
+    "crumbs": [
+      "Guide",
+      "API Reference",
+      "API Reference"
+    ]
+  },
+  {
+    "objectID": "api/index.html#local-module-atdata.local",
+    "href": "api/index.html#local-module-atdata.local",
+    "title": "API Reference",
+    "section": "Local Module (atdata.local)",
+    "text": "Local Module (atdata.local)\n\nClasses\n\nLocalIndex\nindex = LocalIndex(redis=redis_connection)\n# or\nindex = LocalIndex(host=\"localhost\", port=6379)\n\n\n\nMethod\nDescription\n\n\n\n\n.add_entry(dataset, name, ...)\nAdd dataset to index\n\n\n.get_entry(cid)\nGet entry by CID\n\n\n.get_entry_by_name(name)\nGet entry by name\n\n\n.entries\nIterator over all entries\n\n\n.all_entries\nList of all entries\n\n\n.publish_schema(type, version, ...)\nPublish schema\n\n\n.get_schema(ref)\nGet schema record\n\n\n.list_schemas()\nList all schemas\n\n\n.decode_schema(ref)\nReconstruct sample type from schema\n\n\n\n\n\nLocalDatasetEntry\nentry = LocalDatasetEntry(\n    _name=\"my-dataset\",\n    _schema_ref=\"local://schemas/MySample@1.0.0\",\n    _data_urls=[\"s3://bucket/data.tar\"],\n    _metadata={\"key\": \"value\"},\n)\n\n\n\nProperty\nDescription\n\n\n\n\n.name\nDataset name\n\n\n.schema_ref\nSchema reference\n\n\n.data_urls\nList of WebDataset URLs\n\n\n.metadata\nMetadata dict or None\n\n\n.cid\nContent identifier\n\n\n\n\n\nRepo\nrepo = Repo(\n    s3_credentials={\"AWS_ENDPOINT\": \"...\", ...},\n    hive_path=\"bucket/path\",\n    index=index,\n)\n\n\n\n\n\n\n\nMethod\nDescription\n\n\n\n\n.insert(dataset, name, ...)\nInsert dataset (returns entry, stored_dataset)\n\n\n\n\n\nS3DataStore\nstore = S3DataStore(credentials, bucket)\n\n\n\nMethod\nDescription\n\n\n\n\n.write_shards(dataset, prefix, ...)\nWrite dataset shards to S3\n\n\n.read_url(url)\nResolve URL for reading\n\n\n.supports_streaming()\nCheck streaming support",
+    "crumbs": [
+      "Guide",
+      "API Reference",
+      "API Reference"
+    ]
+  },
+  {
+    "objectID": "api/index.html#atmosphere-module-atdata.atmosphere",
+    "href": "api/index.html#atmosphere-module-atdata.atmosphere",
+    "title": "API Reference",
+    "section": "Atmosphere Module (atdata.atmosphere)",
+    "text": "Atmosphere Module (atdata.atmosphere)\n\nClasses\n\nAtmosphereClient\nclient = AtmosphereClient(base_url=\"https://bsky.social\")\nclient.login(handle, password)\n\n\n\nProperty/Method\nDescription\n\n\n\n\n.did\nUser DID\n\n\n.handle\nUser handle\n\n\n.login(handle, password)\nAuthenticate\n\n\n.login_with_session(session_string)\nRestore session\n\n\n.export_session()\nExport session for later\n\n\n.create_record(collection, record, ...)\nCreate ATProto record\n\n\n.get_record(uri)\nGet record by URI\n\n\n.upload_blob(data, mime_type)\nUpload blob to PDS\n\n\n.get_blob(did, cid)\nFetch blob data\n\n\n.get_blob_url(did, cid)\nGet blob download URL\n\n\n\n\n\nAtmosphereIndex\nindex = AtmosphereIndex(client)\n\n\n\nMethod\nDescription\n\n\n\n\n.publish_schema(type, version, ...)\nPublish schema\n\n\n.get_schema(uri)\nGet schema record\n\n\n.list_schemas(repo=None)\nList schemas\n\n\n.decode_schema(uri)\nReconstruct sample type\n\n\n.insert_dataset(dataset, name, ...)\nPublish dataset\n\n\n.get_dataset(uri)\nGet dataset entry\n\n\n.list_datasets(repo=None)\nList datasets\n\n\n\n\n\nSchemaPublisher\npublisher = SchemaPublisher(client)\nuri = publisher.publish(SampleType, name, version, ...)\n\n\nSchemaLoader\nloader = SchemaLoader(client)\nschemas = loader.list_all(limit=100)\nschema = loader.get(uri)\n\n\nDatasetPublisher\npublisher = DatasetPublisher(client)\nuri = publisher.publish(dataset, name, schema_uri, ...)\nuri = publisher.publish_with_urls(urls, schema_uri, name, ...)\nuri = publisher.publish_with_blobs(blobs, schema_uri, name, ...)\n\n\nDatasetLoader\nloader = DatasetLoader(client)\ndatasets = loader.list_all(limit=100)\nrecord = loader.get(uri)\nurls = loader.get_urls(uri)\nstorage_type = loader.get_storage_type(uri)  # \"external\" or \"blobs\"\nblob_urls = loader.get_blob_urls(uri)\nblobs = loader.get_blobs(uri)\ndataset = loader.to_dataset(uri, SampleType)\n\n\nAtUri\nuri = AtUri.parse(\"at://did:plc:abc/collection/rkey\")\nprint(uri.authority, uri.collection, uri.rkey)\nprint(str(uri))",
+    "crumbs": [
+      "Guide",
+      "API Reference",
+      "API Reference"
+    ]
+  },
+  {
+    "objectID": "api/index.html#promote-module-atdata.promote",
+    "href": "api/index.html#promote-module-atdata.promote",
+    "title": "API Reference",
+    "section": "Promote Module (atdata.promote)",
+    "text": "Promote Module (atdata.promote)\n\nFunctions\n\npromote_to_atmosphere()\ndef promote_to_atmosphere(\n    entry: IndexEntry,\n    local_index: AbstractIndex,\n    client: AtmosphereClient,\n    *,\n    name: str = None,\n    description: str = None,\n    tags: list[str] = None,\n    license: str = None,\n    data_store: AbstractDataStore = None,\n) -&gt; AtUri\nMigrate a local dataset to the ATProto atmosphere.",
+    "crumbs": [
+      "Guide",
+      "API Reference",
+      "API Reference"
+    ]
+  },
+  {
+    "objectID": "api/index.html#protocols-atdata._protocols",
+    "href": "api/index.html#protocols-atdata._protocols",
+    "title": "API Reference",
+    "section": "Protocols (atdata._protocols)",
+    "text": "Protocols (atdata._protocols)\n\nIndexEntry\nProtocol for dataset index entries.\n\n\n\nProperty\nType\n\n\n\n\nname\nstr\n\n\nschema_ref\nstr\n\n\ndata_urls\nlist[str]\n\n\nmetadata\ndict \\| None\n\n\n\n\n\nAbstractIndex\nProtocol for index operations.\n\n\n\nMethod\nDescription\n\n\n\n\ninsert_dataset(...)\nInsert dataset\n\n\nget_dataset(...)\nGet dataset\n\n\nlist_datasets(...)\nList datasets\n\n\npublish_schema(...)\nPublish schema\n\n\nget_schema(...)\nGet schema\n\n\nlist_schemas(...)\nList schemas\n\n\ndecode_schema(...)\nDecode schema to type\n\n\n\n\n\nAbstractDataStore\nProtocol for data storage operations.\n\n\n\nMethod\nDescription\n\n\n\n\nwrite_shards(...)\nWrite dataset shards\n\n\nread_url(...)\nResolve URL for reading\n\n\nsupports_streaming()\nCheck streaming support",
+    "crumbs": [
+      "Guide",
+      "API Reference",
+      "API Reference"
+    ]
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "atdata",
+    "section": "",
+    "text": "A loose federation of distributed, typed datasets built on WebDataset.\nGet Started View on GitHub",
+    "crumbs": [
+      "Guide",
+      "atdata"
+    ]
+  },
+  {
+    "objectID": "index.html#what-is-atdata",
+    "href": "index.html#what-is-atdata",
+    "title": "atdata",
+    "section": "What is atdata?",
+    "text": "What is atdata?\natdata provides a typed dataset abstraction for machine learning workflows with:\n\n\nTyped Samples\nDefine dataclass-based sample types with automatic msgpack serialization.\n\n\nNDArray Handling\nTransparent numpy array conversion with efficient byte serialization.\n\n\nLens Transformations\nView datasets through different schemas without duplicating data.\n\n\nBatch Aggregation\nAutomatic numpy stacking for NDArray fields during iteration.\n\n\nWebDataset Integration\nEfficient large-scale storage with streaming tar file support.\n\n\nATProto Federation\nPublish and discover datasets on the decentralized AT Protocol network.",
+    "crumbs": [
+      "Guide",
+      "atdata"
+    ]
+  },
+  {
+    "objectID": "index.html#installation",
+    "href": "index.html#installation",
+    "title": "atdata",
+    "section": "Installation",
+    "text": "Installation\n\npip install atdata\n\n# With ATProto support\npip install atdata[atmosphere]",
+    "crumbs": [
+      "Guide",
+      "atdata"
+    ]
+  },
+  {
+    "objectID": "index.html#quick-example",
+    "href": "index.html#quick-example",
+    "title": "atdata",
+    "section": "Quick Example",
+    "text": "Quick Example\n\nDefine a Sample Type\n\nimport numpy as np\nfrom numpy.typing import NDArray\nimport atdata\n\n@atdata.packable\nclass ImageSample:\n    image: NDArray\n    label: str\n    confidence: float\n\n\n\nCreate and Write Samples\n\nimport webdataset as wds\n\nsamples = [\n    ImageSample(\n        image=np.random.rand(224, 224, 3).astype(np.float32),\n        label=\"cat\",\n        confidence=0.95,\n    )\n    for _ in range(100)\n]\n\nwith wds.writer.TarWriter(\"data-000000.tar\") as sink:\n    for i, sample in enumerate(samples):\n        sink.write({**sample.as_wds, \"__key__\": f\"sample_{i:06d}\"})\n\n\n\nLoad and Iterate\n\ndataset = atdata.Dataset[ImageSample](\"data-000000.tar\")\n\n# Iterate with batching\nfor batch in dataset.shuffled(batch_size=32):\n    images = batch.image      # numpy array (32, 224, 224, 3)\n    labels = batch.label      # list of 32 strings\n    confs = batch.confidence  # list of 32 floats",
+    "crumbs": [
+      "Guide",
+      "atdata"
+    ]
+  },
+  {
+    "objectID": "index.html#huggingface-style-loading",
+    "href": "index.html#huggingface-style-loading",
+    "title": "atdata",
+    "section": "HuggingFace-Style Loading",
+    "text": "HuggingFace-Style Loading\n\n# Load from local path\nds = atdata.load_dataset(\"path/to/data-{000000..000009}.tar\", split=\"train\")\n\n# Load with split detection\nds_dict = atdata.load_dataset(\"path/to/data/\")\ntrain_ds = ds_dict[\"train\"]\ntest_ds = ds_dict[\"test\"]",
+    "crumbs": [
+      "Guide",
+      "atdata"
+    ]
+  },
+  {
+    "objectID": "index.html#local-storage-with-redis-s3",
+    "href": "index.html#local-storage-with-redis-s3",
+    "title": "atdata",
+    "section": "Local Storage with Redis + S3",
+    "text": "Local Storage with Redis + S3\n\nfrom atdata.local import LocalIndex, Repo\n\n# Set up local index\nindex = LocalIndex()  # Connects to Redis\n\n# Create repo with S3 storage\nrepo = Repo(\n    s3_credentials={\"AWS_ENDPOINT\": \"http://localhost:9000\", ...},\n    bucket=\"my-bucket\",\n    index=index,\n)\n\n# Insert dataset\nentry = repo.insert(samples, name=\"my-dataset\")\nprint(f\"Stored at: {entry.data_urls}\")",
+    "crumbs": [
+      "Guide",
+      "atdata"
+    ]
+  },
+  {
+    "objectID": "index.html#publish-to-atproto-federation",
+    "href": "index.html#publish-to-atproto-federation",
+    "title": "atdata",
+    "section": "Publish to ATProto Federation",
+    "text": "Publish to ATProto Federation\n\nfrom atdata.atmosphere import AtmosphereClient\nfrom atdata.promote import promote_to_atmosphere\n\n# Authenticate\nclient = AtmosphereClient()\nclient.login(\"handle.bsky.social\", \"app-password\")\n\n# Promote local dataset to federation\nentry = index.get_dataset(\"my-dataset\")\nat_uri = promote_to_atmosphere(entry, index, client)\nprint(f\"Published at: {at_uri}\")",
+    "crumbs": [
+      "Guide",
+      "atdata"
+    ]
+  },
+  {
+    "objectID": "index.html#next-steps",
+    "href": "index.html#next-steps",
+    "title": "atdata",
+    "section": "Next Steps",
+    "text": "Next Steps\n\nQuick Start Tutorial - Get up and running in 5 minutes\nPackable Samples - Learn about typed sample definitions\nDatasets - Master dataset iteration and batching\nAtmosphere - Publish to the ATProto federation",
+    "crumbs": [
+      "Guide",
+      "atdata"
+    ]
+  },
+  {
+    "objectID": "tutorials/promotion.html",
+    "href": "tutorials/promotion.html",
+    "title": "Promotion Workflow",
+    "section": "",
+    "text": "This tutorial demonstrates the workflow for migrating datasets from local Redis/S3 storage to the federated ATProto atmosphere network.",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Promotion Workflow"
+    ]
+  },
+  {
+    "objectID": "tutorials/promotion.html#overview",
+    "href": "tutorials/promotion.html#overview",
+    "title": "Promotion Workflow",
+    "section": "Overview",
+    "text": "Overview\nThe promotion workflow moves datasets from local storage to the atmosphere:\nLOCAL                           ATMOSPHERE\n-----                           ----------\nRedis Index                     ATProto PDS\nS3 Storage            --&gt;       (same S3 or new location)\nlocal://schemas/...             at://did:plc:.../schema/...\nKey features:\n\nSchema deduplication: Won’t republish identical schemas\nFlexible data handling: Keep existing URLs or copy to new storage\nMetadata preservation: Local metadata carries over to atmosphere",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Promotion Workflow"
+    ]
+  },
+  {
+    "objectID": "tutorials/promotion.html#setup",
+    "href": "tutorials/promotion.html#setup",
+    "title": "Promotion Workflow",
+    "section": "Setup",
+    "text": "Setup\n\nimport numpy as np\nfrom numpy.typing import NDArray\nimport atdata\nfrom atdata.local import LocalIndex, Repo, LocalDatasetEntry\nfrom atdata.atmosphere import AtmosphereClient\nfrom atdata.promote import promote_to_atmosphere\nimport webdataset as wds",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Promotion Workflow"
+    ]
+  },
+  {
+    "objectID": "tutorials/promotion.html#prepare-a-local-dataset",
+    "href": "tutorials/promotion.html#prepare-a-local-dataset",
+    "title": "Promotion Workflow",
+    "section": "Prepare a Local Dataset",
+    "text": "Prepare a Local Dataset\nFirst, set up a dataset in local storage:\n\n# 1. Define sample type\n@atdata.packable\nclass ExperimentSample:\n    \"\"\"A sample from a scientific experiment.\"\"\"\n    measurement: NDArray\n    timestamp: float\n    sensor_id: str\n\n# 2. Create samples\nsamples = [\n    ExperimentSample(\n        measurement=np.random.randn(64).astype(np.float32),\n        timestamp=float(i),\n        sensor_id=f\"sensor_{i % 4}\",\n    )\n    for i in range(1000)\n]\n\n# 3. Write to tar\nwith wds.writer.TarWriter(\"experiment.tar\") as sink:\n    for i, s in enumerate(samples):\n        sink.write({**s.as_wds, \"__key__\": f\"{i:06d}\"})\n\n# 4. Store in local repo\nrepo = Repo(\n    s3_credentials={\n        \"AWS_ENDPOINT\": \"http://localhost:9000\",\n        \"AWS_ACCESS_KEY_ID\": \"minioadmin\",\n        \"AWS_SECRET_ACCESS_KEY\": \"minioadmin\",\n    },\n    hive_path=\"datasets-bucket/experiments\",\n)\n\ndataset = atdata.Dataset[ExperimentSample](\"experiment.tar\")\nlocal_entry, _ = repo.insert(dataset, name=\"experiment-2024-001\")\n\n# 5. Publish schema to local index\nlocal_index = LocalIndex()\nlocal_index.publish_schema(ExperimentSample, version=\"1.0.0\")\n\nprint(f\"Local entry name: {local_entry.name}\")\nprint(f\"Local entry CID: {local_entry.cid}\")\nprint(f\"Data URLs: {local_entry.data_urls}\")",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Promotion Workflow"
+    ]
+  },
+  {
+    "objectID": "tutorials/promotion.html#basic-promotion",
+    "href": "tutorials/promotion.html#basic-promotion",
+    "title": "Promotion Workflow",
+    "section": "Basic Promotion",
+    "text": "Basic Promotion\nPromote the dataset to ATProto:\n\n# Connect to atmosphere\nclient = AtmosphereClient()\nclient.login(\"myhandle.bsky.social\", \"app-password\")\n\n# Promote to atmosphere\nat_uri = promote_to_atmosphere(local_entry, local_index, client)\nprint(f\"Published: {at_uri}\")",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Promotion Workflow"
+    ]
+  },
+  {
+    "objectID": "tutorials/promotion.html#promotion-with-metadata",
+    "href": "tutorials/promotion.html#promotion-with-metadata",
+    "title": "Promotion Workflow",
+    "section": "Promotion with Metadata",
+    "text": "Promotion with Metadata\nAdd description, tags, and license:\n\nat_uri = promote_to_atmosphere(\n    local_entry,\n    local_index,\n    client,\n    name=\"experiment-2024-001-v2\",   # Override name\n    description=\"Sensor measurements from Lab 302\",\n    tags=[\"experiment\", \"physics\", \"2024\"],\n    license=\"CC-BY-4.0\",\n)\nprint(f\"Published with metadata: {at_uri}\")",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Promotion Workflow"
+    ]
+  },
+  {
+    "objectID": "tutorials/promotion.html#schema-deduplication",
+    "href": "tutorials/promotion.html#schema-deduplication",
+    "title": "Promotion Workflow",
+    "section": "Schema Deduplication",
+    "text": "Schema Deduplication\nThe promotion workflow automatically checks for existing schemas:\n\nfrom atdata.promote import _find_existing_schema\n\n# Check if schema already exists\nexisting = _find_existing_schema(client, \"ExperimentSample\", \"1.0.0\")\nif existing:\n    print(f\"Found existing schema: {existing}\")\n    print(\"Will reuse instead of republishing\")\nelse:\n    print(\"No existing schema found, will publish new one\")\n\nWhen you promote multiple datasets with the same sample type:\n\n# First promotion: publishes schema\nuri1 = promote_to_atmosphere(entry1, local_index, client)\n\n# Second promotion with same schema type + version: reuses existing schema\nuri2 = promote_to_atmosphere(entry2, local_index, client)",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Promotion Workflow"
+    ]
+  },
+  {
+    "objectID": "tutorials/promotion.html#data-migration-options",
+    "href": "tutorials/promotion.html#data-migration-options",
+    "title": "Promotion Workflow",
+    "section": "Data Migration Options",
+    "text": "Data Migration Options\n\nKeep Existing URLsCopy to New Storage\n\n\nBy default, promotion keeps the original data URLs:\n\n# Data stays in original S3 location\nat_uri = promote_to_atmosphere(local_entry, local_index, client)\n\nBenefits:\n\nFastest option, no data copying\nDataset record points to existing URLs\nRequires original storage to remain accessible\n\n\n\nTo copy data to a different storage location:\n\nfrom atdata.local import S3DataStore\n\n# Create new data store\nnew_store = S3DataStore(\n    credentials=\"new-s3-creds.env\",\n    bucket=\"public-datasets\",\n)\n\n# Promote with data copy\nat_uri = promote_to_atmosphere(\n    local_entry,\n    local_index,\n    client,\n    data_store=new_store,  # Copy data to new storage\n)\n\nBenefits:\n\nData is copied to new bucket\nGood for moving from private to public storage\nOriginal storage can be retired",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Promotion Workflow"
+    ]
+  },
+  {
+    "objectID": "tutorials/promotion.html#verify-on-atmosphere",
+    "href": "tutorials/promotion.html#verify-on-atmosphere",
+    "title": "Promotion Workflow",
+    "section": "Verify on Atmosphere",
+    "text": "Verify on Atmosphere\nAfter promotion, verify the dataset is accessible:\n\nfrom atdata.atmosphere import AtmosphereIndex\n\natm_index = AtmosphereIndex(client)\nentry = atm_index.get_dataset(at_uri)\n\nprint(f\"Name: {entry.name}\")\nprint(f\"Schema: {entry.schema_ref}\")\nprint(f\"URLs: {entry.data_urls}\")\n\n# Load and iterate\nSampleType = atm_index.decode_schema(entry.schema_ref)\nds = atdata.Dataset[SampleType](entry.data_urls[0])\n\nfor batch in ds.ordered(batch_size=32):\n    print(f\"Measurement shape: {batch.measurement.shape}\")\n    break",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Promotion Workflow"
+    ]
+  },
+  {
+    "objectID": "tutorials/promotion.html#error-handling",
+    "href": "tutorials/promotion.html#error-handling",
+    "title": "Promotion Workflow",
+    "section": "Error Handling",
+    "text": "Error Handling\n\ntry:\n    at_uri = promote_to_atmosphere(local_entry, local_index, client)\nexcept KeyError as e:\n    # Schema not found in local index\n    print(f\"Missing schema: {e}\")\n    print(\"Publish schema first: local_index.publish_schema(SampleType)\")\nexcept ValueError as e:\n    # Entry has no data URLs\n    print(f\"Invalid entry: {e}\")",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Promotion Workflow"
+    ]
+  },
+  {
+    "objectID": "tutorials/promotion.html#requirements-checklist",
+    "href": "tutorials/promotion.html#requirements-checklist",
+    "title": "Promotion Workflow",
+    "section": "Requirements Checklist",
+    "text": "Requirements Checklist\nBefore promotion:\n\nDataset is in local index (via Repo.insert() or Index.add_entry())\nSchema is published to local index (via Index.publish_schema())\nAtmosphereClient is authenticated\nData URLs are publicly accessible (or will be copied)",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Promotion Workflow"
+    ]
+  },
+  {
+    "objectID": "tutorials/promotion.html#complete-workflow",
+    "href": "tutorials/promotion.html#complete-workflow",
+    "title": "Promotion Workflow",
+    "section": "Complete Workflow",
+    "text": "Complete Workflow\n\n# Complete local-to-atmosphere workflow\nimport numpy as np\nfrom numpy.typing import NDArray\nimport atdata\nfrom atdata.local import LocalIndex, Repo\nfrom atdata.atmosphere import AtmosphereClient, AtmosphereIndex\nfrom atdata.promote import promote_to_atmosphere\nimport webdataset as wds\n\n# 1. Define sample type\n@atdata.packable\nclass FeatureSample:\n    features: NDArray\n    label: int\n\n# 2. Create and store locally\nsamples = [\n    FeatureSample(\n        features=np.random.randn(128).astype(np.float32),\n        label=i % 10,\n    )\n    for i in range(1000)\n]\n\nwith wds.writer.TarWriter(\"features.tar\") as sink:\n    for i, s in enumerate(samples):\n        sink.write({**s.as_wds, \"__key__\": f\"{i:06d}\"})\n\nrepo = Repo(s3_credentials=\"creds.env\", hive_path=\"bucket/features\")\ndataset = atdata.Dataset[FeatureSample](\"features.tar\")\nlocal_entry, _ = repo.insert(dataset, name=\"feature-vectors-v1\")\n\n# 3. Publish schema locally\nlocal_index = LocalIndex()\nlocal_index.publish_schema(FeatureSample, version=\"1.0.0\")\n\n# 4. Promote to atmosphere\nclient = AtmosphereClient()\nclient.login(\"myhandle.bsky.social\", \"app-password\")\n\nat_uri = promote_to_atmosphere(\n    local_entry,\n    local_index,\n    client,\n    description=\"Feature vectors for classification\",\n    tags=[\"features\", \"embeddings\"],\n    license=\"MIT\",\n)\n\nprint(f\"Dataset published: {at_uri}\")\n\n# 5. Others can now discover and load\n# ds = atdata.load_dataset(\"@myhandle.bsky.social/feature-vectors-v1\")",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Promotion Workflow"
+    ]
+  },
+  {
+    "objectID": "tutorials/promotion.html#next-steps",
+    "href": "tutorials/promotion.html#next-steps",
+    "title": "Promotion Workflow",
+    "section": "Next Steps",
+    "text": "Next Steps\n\nAtmosphere Reference - Complete atmosphere API\nProtocols - Abstract interfaces\nLocal Storage - Local storage reference",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Promotion Workflow"
+    ]
+  },
+  {
+    "objectID": "tutorials/local-workflow.html",
+    "href": "tutorials/local-workflow.html",
+    "title": "Local Workflow",
+    "section": "",
+    "text": "This tutorial demonstrates how to use the local storage module to store and index datasets using Redis and S3-compatible storage.",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Local Workflow"
+    ]
+  },
+  {
+    "objectID": "tutorials/local-workflow.html#prerequisites",
+    "href": "tutorials/local-workflow.html#prerequisites",
+    "title": "Local Workflow",
+    "section": "Prerequisites",
+    "text": "Prerequisites\n\nRedis server running (default: localhost:6379)\nS3-compatible storage (MinIO, AWS S3, etc.)\n\n\n\n\n\n\n\nTip\n\n\n\nFor local development, you can use MinIO:\ndocker run -p 9000:9000 minio/minio server /data",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Local Workflow"
+    ]
+  },
+  {
+    "objectID": "tutorials/local-workflow.html#setup",
+    "href": "tutorials/local-workflow.html#setup",
+    "title": "Local Workflow",
+    "section": "Setup",
+    "text": "Setup\n\nimport numpy as np\nfrom numpy.typing import NDArray\nimport atdata\nfrom atdata.local import LocalIndex, Repo, LocalDatasetEntry, S3DataStore\nimport webdataset as wds",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Local Workflow"
+    ]
+  },
+  {
+    "objectID": "tutorials/local-workflow.html#define-sample-types",
+    "href": "tutorials/local-workflow.html#define-sample-types",
+    "title": "Local Workflow",
+    "section": "Define Sample Types",
+    "text": "Define Sample Types\n\n@atdata.packable\nclass TrainingSample:\n    \"\"\"A sample containing features and label for training.\"\"\"\n    features: NDArray\n    label: int\n\n@atdata.packable\nclass TextSample:\n    \"\"\"A sample containing text data.\"\"\"\n    text: str\n    category: str",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Local Workflow"
+    ]
+  },
+  {
+    "objectID": "tutorials/local-workflow.html#localdatasetentry",
+    "href": "tutorials/local-workflow.html#localdatasetentry",
+    "title": "Local Workflow",
+    "section": "LocalDatasetEntry",
+    "text": "LocalDatasetEntry\nCreate entries with content-addressable CIDs:\n\n# Create an entry manually\nentry = LocalDatasetEntry(\n    _name=\"my-dataset\",\n    _schema_ref=\"local://schemas/examples.TrainingSample@1.0.0\",\n    _data_urls=[\"s3://bucket/data-000000.tar\", \"s3://bucket/data-000001.tar\"],\n    _metadata={\"source\": \"example\", \"samples\": 10000},\n)\n\nprint(f\"Entry name: {entry.name}\")\nprint(f\"Schema ref: {entry.schema_ref}\")\nprint(f\"Data URLs: {entry.data_urls}\")\nprint(f\"Metadata: {entry.metadata}\")\nprint(f\"CID: {entry.cid}\")\n\n\n\n\n\n\n\nNote\n\n\n\nCIDs are generated from content (schema_ref + data_urls), so identical data produces identical CIDs.",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Local Workflow"
+    ]
+  },
+  {
+    "objectID": "tutorials/local-workflow.html#localindex",
+    "href": "tutorials/local-workflow.html#localindex",
+    "title": "Local Workflow",
+    "section": "LocalIndex",
+    "text": "LocalIndex\nThe index tracks datasets in Redis:\n\nfrom redis import Redis\n\n# Connect to Redis\nredis = Redis(host=\"localhost\", port=6379)\nindex = LocalIndex(redis=redis)\n\nprint(\"LocalIndex connected\")\n\n\nSchema Management\n\n# Publish a schema\nschema_ref = index.publish_schema(TrainingSample, version=\"1.0.0\")\nprint(f\"Published schema: {schema_ref}\")\n\n# List all schemas\nfor schema in index.list_schemas():\n    print(f\"  - {schema.get('name', 'Unknown')} v{schema.get('version', '?')}\")\n\n# Get schema record\nschema_record = index.get_schema(schema_ref)\nprint(f\"Schema fields: {[f['name'] for f in schema_record.get('fields', [])]}\")\n\n# Decode schema back to a PackableSample class\ndecoded_type = index.decode_schema(schema_ref)\nprint(f\"Decoded type: {decoded_type.__name__}\")",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Local Workflow"
+    ]
+  },
+  {
+    "objectID": "tutorials/local-workflow.html#s3datastore",
+    "href": "tutorials/local-workflow.html#s3datastore",
+    "title": "Local Workflow",
+    "section": "S3DataStore",
+    "text": "S3DataStore\nFor direct S3 operations:\n\ncreds = {\n    \"AWS_ENDPOINT\": \"http://localhost:9000\",\n    \"AWS_ACCESS_KEY_ID\": \"minioadmin\",\n    \"AWS_SECRET_ACCESS_KEY\": \"minioadmin\",\n}\n\nstore = S3DataStore(creds, bucket=\"my-bucket\")\n\nprint(f\"Bucket: {store.bucket}\")\nprint(f\"Supports streaming: {store.supports_streaming()}\")",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Local Workflow"
+    ]
+  },
+  {
+    "objectID": "tutorials/local-workflow.html#complete-repo-workflow",
+    "href": "tutorials/local-workflow.html#complete-repo-workflow",
+    "title": "Local Workflow",
+    "section": "Complete Repo Workflow",
+    "text": "Complete Repo Workflow\nThe Repo class combines S3 storage with Redis indexing:\n\n# 1. Create sample data\nsamples = [\n    TrainingSample(\n        features=np.random.randn(128).astype(np.float32),\n        label=i % 10\n    )\n    for i in range(1000)\n]\nprint(f\"Created {len(samples)} training samples\")\n\n# 2. Write to local tar file\nwith wds.writer.TarWriter(\"local-data-000000.tar\") as sink:\n    for i, sample in enumerate(samples):\n        sink.write({**sample.as_wds, \"__key__\": f\"sample_{i:06d}\"})\nprint(\"Wrote samples to local tar file\")\n\n# 3. Create Dataset\nds = atdata.Dataset[TrainingSample](\"local-data-000000.tar\")\n\n# 4. Create Repo and insert\nrepo = Repo(\n    s3_credentials={\n        \"AWS_ENDPOINT\": \"http://localhost:9000\",\n        \"AWS_ACCESS_KEY_ID\": \"minioadmin\",\n        \"AWS_SECRET_ACCESS_KEY\": \"minioadmin\",\n    },\n    hive_path=\"my-bucket/datasets\",\n)\n\nentry, stored_ds = repo.insert(ds, name=\"training-v1\")\nprint(f\"Stored at: {stored_ds.url}\")\nprint(f\"CID: {entry.cid}\")\n\n# 5. Retrieve later\nretrieved_entry = index.get_entry_by_name(\"training-v1\")\ndataset = atdata.Dataset[TrainingSample](retrieved_entry.data_urls[0])\n\nfor batch in dataset.ordered(batch_size=32):\n    print(f\"Batch features shape: {batch.features.shape}\")\n    break",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Local Workflow"
+    ]
+  },
+  {
+    "objectID": "tutorials/local-workflow.html#using-load_dataset-with-index",
+    "href": "tutorials/local-workflow.html#using-load_dataset-with-index",
+    "title": "Local Workflow",
+    "section": "Using load_dataset with Index",
+    "text": "Using load_dataset with Index\nThe load_dataset() function supports index lookup:\n\nfrom atdata import load_dataset\n\n# Load from local index\nds = load_dataset(\"@local/my-dataset\", index=index, split=\"train\")\n\n# The index resolves the dataset name to URLs and schema\nfor batch in ds.shuffled(batch_size=32):\n    process(batch)\n    break",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Local Workflow"
+    ]
+  },
+  {
+    "objectID": "tutorials/local-workflow.html#next-steps",
+    "href": "tutorials/local-workflow.html#next-steps",
+    "title": "Local Workflow",
+    "section": "Next Steps",
+    "text": "Next Steps\n\nAtmosphere Publishing - Publish to ATProto federation\nPromotion Workflow - Migrate from local to atmosphere\nLocal Storage Reference - Complete API reference",
+    "crumbs": [
+      "Guide",
+      "Getting Started",
+      "Local Workflow"
+    ]
+  },
+  {
+    "objectID": "reference/promotion.html",
+    "href": "reference/promotion.html",
+    "title": "Promotion Workflow",
+    "section": "",
+    "text": "The promotion workflow migrates datasets from local storage (Redis + S3) to the ATProto atmosphere network, enabling federation and discovery.",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Promotion Workflow"
+    ]
+  },
+  {
+    "objectID": "reference/promotion.html#overview",
+    "href": "reference/promotion.html#overview",
+    "title": "Promotion Workflow",
+    "section": "Overview",
+    "text": "Overview\nPromotion handles:\n\nSchema deduplication: Avoids publishing duplicate schemas\nData URL preservation: Keeps existing S3 URLs or copies to new storage\nMetadata transfer: Preserves tags, descriptions, and custom metadata",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Promotion Workflow"
+    ]
+  },
+  {
+    "objectID": "reference/promotion.html#basic-usage",
+    "href": "reference/promotion.html#basic-usage",
+    "title": "Promotion Workflow",
+    "section": "Basic Usage",
+    "text": "Basic Usage\n\nfrom atdata.local import LocalIndex\nfrom atdata.atmosphere import AtmosphereClient\nfrom atdata.promote import promote_to_atmosphere\n\n# Setup\nlocal_index = LocalIndex()\nclient = AtmosphereClient()\nclient.login(\"handle.bsky.social\", \"app-password\")\n\n# Get local entry\nentry = local_index.get_entry_by_name(\"my-dataset\")\n\n# Promote to atmosphere\nat_uri = promote_to_atmosphere(entry, local_index, client)\nprint(f\"Published: {at_uri}\")",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Promotion Workflow"
+    ]
+  },
+  {
+    "objectID": "reference/promotion.html#with-metadata",
+    "href": "reference/promotion.html#with-metadata",
+    "title": "Promotion Workflow",
+    "section": "With Metadata",
+    "text": "With Metadata\n\nat_uri = promote_to_atmosphere(\n    entry,\n    local_index,\n    client,\n    name=\"my-dataset-v2\",           # Override name\n    description=\"Training images\",  # Add description\n    tags=[\"images\", \"training\"],    # Add discovery tags\n    license=\"MIT\",                  # Specify license\n)",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Promotion Workflow"
+    ]
+  },
+  {
+    "objectID": "reference/promotion.html#schema-deduplication",
+    "href": "reference/promotion.html#schema-deduplication",
+    "title": "Promotion Workflow",
+    "section": "Schema Deduplication",
+    "text": "Schema Deduplication\nThe promotion workflow automatically checks for existing schemas:\n\n# First promotion: publishes schema\nuri1 = promote_to_atmosphere(entry1, local_index, client)\n\n# Second promotion with same schema type + version: reuses existing schema\nuri2 = promote_to_atmosphere(entry2, local_index, client)\n\nSchema matching is based on:\n\n{module}.{class_name} (e.g., mymodule.ImageSample)\nVersion string (e.g., 1.0.0)",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Promotion Workflow"
+    ]
+  },
+  {
+    "objectID": "reference/promotion.html#data-storage-options",
+    "href": "reference/promotion.html#data-storage-options",
+    "title": "Promotion Workflow",
+    "section": "Data Storage Options",
+    "text": "Data Storage Options\n\nKeep Existing URLs (Default)Copy to New Storage\n\n\nBy default, promotion keeps the original data URLs:\n\n# Data stays in original S3 location\nat_uri = promote_to_atmosphere(entry, local_index, client)\n\n\nData stays in original S3 location\nDataset record points to existing URLs\nFastest option, no data copying\nRequires original storage to remain accessible\n\n\n\nTo copy data to a different storage location:\n\nfrom atdata.local import S3DataStore\n\n# Create new data store\nnew_store = S3DataStore(\n    credentials=\"new-s3-creds.env\",\n    bucket=\"public-datasets\",\n)\n\n# Promote with data copy\nat_uri = promote_to_atmosphere(\n    entry,\n    local_index,\n    client,\n    data_store=new_store,  # Copy data to new storage\n)\n\n\nData is copied to new bucket\nDataset record points to new URLs\nGood for moving from private to public storage",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Promotion Workflow"
+    ]
+  },
+  {
+    "objectID": "reference/promotion.html#complete-workflow-example",
+    "href": "reference/promotion.html#complete-workflow-example",
+    "title": "Promotion Workflow",
+    "section": "Complete Workflow Example",
+    "text": "Complete Workflow Example\n\nimport numpy as np\nfrom numpy.typing import NDArray\nimport atdata\nfrom atdata.local import LocalIndex, Repo\nfrom atdata.atmosphere import AtmosphereClient\nfrom atdata.promote import promote_to_atmosphere\nimport webdataset as wds\n\n# 1. Define sample type\n@atdata.packable\nclass FeatureSample:\n    features: NDArray\n    label: int\n\n# 2. Create local dataset\nsamples = [\n    FeatureSample(\n        features=np.random.randn(128).astype(np.float32),\n        label=i % 10,\n    )\n    for i in range(1000)\n]\n\nwith wds.writer.TarWriter(\"features.tar\") as sink:\n    for i, s in enumerate(samples):\n        sink.write({**s.as_wds, \"__key__\": f\"{i:06d}\"})\n\n# 3. Store in local repo\nrepo = Repo(\n    s3_credentials={\n        \"AWS_ENDPOINT\": \"http://localhost:9000\",\n        \"AWS_ACCESS_KEY_ID\": \"minioadmin\",\n        \"AWS_SECRET_ACCESS_KEY\": \"minioadmin\",\n    },\n    hive_path=\"datasets-bucket/features\",\n)\n\ndataset = atdata.Dataset[FeatureSample](\"features.tar\")\nlocal_entry, _ = repo.insert(dataset, name=\"feature-vectors-v1\")\n\n# 4. Publish schema to local index\nlocal_index = LocalIndex()\nlocal_index.publish_schema(FeatureSample, version=\"1.0.0\")\n\n# 5. Promote to atmosphere\nclient = AtmosphereClient()\nclient.login(\"myhandle.bsky.social\", \"app-password\")\n\nat_uri = promote_to_atmosphere(\n    local_entry,\n    local_index,\n    client,\n    description=\"Feature vectors for classification\",\n    tags=[\"features\", \"embeddings\"],\n    license=\"MIT\",\n)\n\nprint(f\"Dataset published: {at_uri}\")\n\n# 6. Verify on atmosphere\nfrom atdata.atmosphere import AtmosphereIndex\n\natm_index = AtmosphereIndex(client)\nentry = atm_index.get_dataset(at_uri)\nprint(f\"Name: {entry.name}\")\nprint(f\"Schema: {entry.schema_ref}\")\nprint(f\"URLs: {entry.data_urls}\")",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Promotion Workflow"
+    ]
+  },
+  {
+    "objectID": "reference/promotion.html#error-handling",
+    "href": "reference/promotion.html#error-handling",
+    "title": "Promotion Workflow",
+    "section": "Error Handling",
+    "text": "Error Handling\n\ntry:\n    at_uri = promote_to_atmosphere(entry, local_index, client)\nexcept KeyError as e:\n    # Schema not found in local index\n    print(f\"Missing schema: {e}\")\nexcept ValueError as e:\n    # Entry has no data URLs\n    print(f\"Invalid entry: {e}\")",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Promotion Workflow"
+    ]
+  },
+  {
+    "objectID": "reference/promotion.html#requirements",
+    "href": "reference/promotion.html#requirements",
+    "title": "Promotion Workflow",
+    "section": "Requirements",
+    "text": "Requirements\nBefore promotion:\n\nDataset must be in local index (via Repo.insert() or Index.add_entry())\nSchema must be published to local index (via Index.publish_schema())\nAtmosphereClient must be authenticated",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Promotion Workflow"
+    ]
+  },
+  {
+    "objectID": "reference/promotion.html#related",
+    "href": "reference/promotion.html#related",
+    "title": "Promotion Workflow",
+    "section": "Related",
+    "text": "Related\n\nLocal Storage - Setting up local datasets\nAtmosphere - ATProto integration\nProtocols - AbstractIndex and AbstractDataStore",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Promotion Workflow"
+    ]
+  },
+  {
+    "objectID": "reference/local-storage.html",
+    "href": "reference/local-storage.html",
+    "title": "Local Storage",
+    "section": "",
+    "text": "The local storage module provides a Redis + S3 backend for storing and managing datasets before publishing to the ATProto federation.",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Local Storage"
+    ]
+  },
+  {
+    "objectID": "reference/local-storage.html#overview",
+    "href": "reference/local-storage.html#overview",
+    "title": "Local Storage",
+    "section": "Overview",
+    "text": "Overview\nLocal storage uses:\n\nRedis for indexing and tracking dataset metadata\nS3-compatible storage for dataset tar files\n\nThis enables development and small-scale deployment before promoting to the full ATProto infrastructure.",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Local Storage"
+    ]
+  },
+  {
+    "objectID": "reference/local-storage.html#localindex",
+    "href": "reference/local-storage.html#localindex",
+    "title": "Local Storage",
+    "section": "LocalIndex",
+    "text": "LocalIndex\nThe index tracks datasets in Redis:\n\nfrom atdata.local import LocalIndex\n\n# Default connection (localhost:6379)\nindex = LocalIndex()\n\n# Custom Redis connection\nimport redis\nr = redis.Redis(host='custom-host', port=6379)\nindex = LocalIndex(redis=r)\n\n# With connection kwargs\nindex = LocalIndex(host='custom-host', port=6379, db=1)\n\n\nAdding Entries\n\nimport atdata\nfrom numpy.typing import NDArray\n\n@atdata.packable\nclass ImageSample:\n    image: NDArray\n    label: str\n\ndataset = atdata.Dataset[ImageSample](\"data-{000000..000009}.tar\")\n\nentry = index.add_entry(\n    dataset,\n    name=\"my-dataset\",\n    schema_ref=\"local://schemas/mymodule.ImageSample@1.0.0\",  # optional\n    metadata={\"description\": \"Training images\"},              # optional\n)\n\nprint(entry.cid)        # Content identifier\nprint(entry.name)       # \"my-dataset\"\nprint(entry.data_urls)  # [\"data-{000000..000009}.tar\"]\n\n\n\nListing and Retrieving\n\n# Iterate all entries\nfor entry in index.entries:\n    print(f\"{entry.name}: {entry.cid}\")\n\n# Get as list\nall_entries = index.all_entries\n\n# Get by name\nentry = index.get_entry_by_name(\"my-dataset\")\n\n# Get by CID\nentry = index.get_entry(\"bafyrei...\")",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Local Storage"
+    ]
+  },
+  {
+    "objectID": "reference/local-storage.html#repo",
+    "href": "reference/local-storage.html#repo",
+    "title": "Local Storage",
+    "section": "Repo",
+    "text": "Repo\nThe Repo class combines S3 storage with Redis indexing:\n\nfrom atdata.local import Repo\n\n# From credentials file\nrepo = Repo(\n    s3_credentials=\"path/to/.env\",\n    hive_path=\"my-bucket/datasets\",\n)\n\n# From credentials dict\nrepo = Repo(\n    s3_credentials={\n        \"AWS_ENDPOINT\": \"http://localhost:9000\",\n        \"AWS_ACCESS_KEY_ID\": \"minioadmin\",\n        \"AWS_SECRET_ACCESS_KEY\": \"minioadmin\",\n    },\n    hive_path=\"my-bucket/datasets\",\n)\n\n\nCredentials File Format\nThe .env file should contain:\nAWS_ENDPOINT=http://localhost:9000\nAWS_ACCESS_KEY_ID=your-access-key\nAWS_SECRET_ACCESS_KEY=your-secret-key\n\n\n\n\n\n\nNote\n\n\n\nFor AWS S3, omit AWS_ENDPOINT to use the default endpoint.\n\n\n\n\nInserting Datasets\n\nimport webdataset as wds\nimport numpy as np\n\n# Create dataset from samples\nsamples = [ImageSample(\n    image=np.random.rand(224, 224, 3).astype(np.float32),\n    label=f\"sample_{i}\"\n) for i in range(1000)]\n\nwith wds.writer.TarWriter(\"temp.tar\") as sink:\n    for i, s in enumerate(samples):\n        sink.write({**s.as_wds, \"__key__\": f\"{i:06d}\"})\n\ndataset = atdata.Dataset[ImageSample](\"temp.tar\")\n\n# Insert into repo (writes to S3 + indexes in Redis)\nentry, stored_dataset = repo.insert(\n    dataset,\n    name=\"training-images-v1\",\n    cache_local=False,  # Stream directly to S3\n)\n\nprint(entry.cid)                # Content identifier\nprint(stored_dataset.url)       # S3 URL for the stored data\nprint(stored_dataset.shard_list)  # Individual shard URLs\n\n\n\nInsert Options\n\nentry, ds = repo.insert(\n    dataset,\n    name=\"my-dataset\",\n    cache_local=True,   # Write locally first, then copy (faster for some workloads)\n    maxcount=10000,     # Samples per shard\n    maxsize=100_000_000,  # Max shard size in bytes\n)",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Local Storage"
+    ]
+  },
+  {
+    "objectID": "reference/local-storage.html#localdatasetentry",
+    "href": "reference/local-storage.html#localdatasetentry",
+    "title": "Local Storage",
+    "section": "LocalDatasetEntry",
+    "text": "LocalDatasetEntry\nIndex entries provide content-addressable identification:\n\nentry = index.get_entry_by_name(\"my-dataset\")\n\n# Core properties (IndexEntry protocol)\nentry.name        # Human-readable name\nentry.schema_ref  # Schema reference\nentry.data_urls   # WebDataset URLs\nentry.metadata    # Arbitrary metadata dict or None\n\n# Content addressing\nentry.cid         # ATProto-compatible CID (content identifier)\n\n# Legacy compatibility\nentry.wds_url     # First data URL\nentry.sample_kind # Same as schema_ref\n\n\n\n\n\n\n\nTip\n\n\n\nThe CID is generated from the entry’s content (schema_ref + data_urls), ensuring identical data produces identical CIDs whether stored locally or in the atmosphere.",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Local Storage"
+    ]
+  },
+  {
+    "objectID": "reference/local-storage.html#schema-storage",
+    "href": "reference/local-storage.html#schema-storage",
+    "title": "Local Storage",
+    "section": "Schema Storage",
+    "text": "Schema Storage\nSchemas can be stored and retrieved from the index:\n\n# Publish a schema\nschema_ref = index.publish_schema(\n    ImageSample,\n    version=\"1.0.0\",\n    description=\"Image with label annotation\",\n)\n# Returns: \"local://schemas/mymodule.ImageSample@1.0.0\"\n\n# Retrieve schema record\nschema = index.get_schema(schema_ref)\n# {\n#     \"name\": \"ImageSample\",\n#     \"version\": \"1.0.0\",\n#     \"fields\": [...],\n#     \"description\": \"...\",\n#     \"createdAt\": \"...\",\n# }\n\n# List all schemas\nfor schema in index.list_schemas():\n    print(f\"{schema['name']}@{schema['version']}\")\n\n# Reconstruct sample type from schema\nSampleType = index.decode_schema(schema_ref)\ndataset = atdata.Dataset[SampleType](entry.data_urls[0])",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Local Storage"
+    ]
+  },
+  {
+    "objectID": "reference/local-storage.html#s3datastore",
+    "href": "reference/local-storage.html#s3datastore",
+    "title": "Local Storage",
+    "section": "S3DataStore",
+    "text": "S3DataStore\nFor direct S3 operations without Redis indexing:\n\nfrom atdata.local import S3DataStore\n\nstore = S3DataStore(\n    credentials=\"path/to/.env\",\n    bucket=\"my-bucket\",\n)\n\n# Write dataset shards\nurls = store.write_shards(\n    dataset,\n    prefix=\"datasets/v1\",\n    maxcount=10000,\n)\n# Returns: [\"s3://my-bucket/datasets/v1/data--uuid--000000.tar\", ...]\n\n# Check capabilities\nstore.supports_streaming()  # True",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Local Storage"
+    ]
+  },
+  {
+    "objectID": "reference/local-storage.html#complete-workflow-example",
+    "href": "reference/local-storage.html#complete-workflow-example",
+    "title": "Local Storage",
+    "section": "Complete Workflow Example",
+    "text": "Complete Workflow Example\n\nimport numpy as np\nfrom numpy.typing import NDArray\nimport atdata\nfrom atdata.local import Repo, LocalIndex\nimport webdataset as wds\n\n# 1. Define sample type\n@atdata.packable\nclass TrainingSample:\n    features: NDArray\n    label: int\n    source: str\n\n# 2. Create samples\nsamples = [\n    TrainingSample(\n        features=np.random.randn(128).astype(np.float32),\n        label=i % 10,\n        source=\"synthetic\",\n    )\n    for i in range(10000)\n]\n\n# 3. Write to local tar\nwith wds.writer.TarWriter(\"local-data.tar\") as sink:\n    for i, sample in enumerate(samples):\n        sink.write({**sample.as_wds, \"__key__\": f\"{i:06d}\"})\n\n# 4. Create repo and insert\nrepo = Repo(\n    s3_credentials={\n        \"AWS_ENDPOINT\": \"http://localhost:9000\",\n        \"AWS_ACCESS_KEY_ID\": \"minioadmin\",\n        \"AWS_SECRET_ACCESS_KEY\": \"minioadmin\",\n    },\n    hive_path=\"datasets-bucket/training\",\n)\n\nlocal_ds = atdata.Dataset[TrainingSample](\"local-data.tar\")\nentry, stored_ds = repo.insert(local_ds, name=\"training-v1\")\n\n# 5. Retrieve later\nindex = LocalIndex()\nentry = index.get_entry_by_name(\"training-v1\")\ndataset = atdata.Dataset[TrainingSample](entry.data_urls[0])\n\nfor batch in dataset.ordered(batch_size=32):\n    print(batch.features.shape)  # (32, 128)",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Local Storage"
+    ]
+  },
+  {
+    "objectID": "reference/local-storage.html#related",
+    "href": "reference/local-storage.html#related",
+    "title": "Local Storage",
+    "section": "Related",
+    "text": "Related\n\nDatasets - Dataset iteration and batching\nProtocols - AbstractIndex and IndexEntry interfaces\nPromotion - Promoting local datasets to ATProto\nAtmosphere - ATProto federation",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Local Storage"
+    ]
+  },
+  {
+    "objectID": "reference/atmosphere.html",
+    "href": "reference/atmosphere.html",
+    "title": "Atmosphere (ATProto Integration)",
+    "section": "",
+    "text": "The atmosphere module enables publishing and discovering datasets on the ATProto network, creating a federated ecosystem for typed datasets.",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Atmosphere (ATProto Integration)"
+    ]
+  },
+  {
+    "objectID": "reference/atmosphere.html#installation",
+    "href": "reference/atmosphere.html#installation",
+    "title": "Atmosphere (ATProto Integration)",
+    "section": "Installation",
+    "text": "Installation\npip install atdata[atmosphere]\n# or\npip install atproto",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Atmosphere (ATProto Integration)"
+    ]
+  },
+  {
+    "objectID": "reference/atmosphere.html#overview",
+    "href": "reference/atmosphere.html#overview",
+    "title": "Atmosphere (ATProto Integration)",
+    "section": "Overview",
+    "text": "Overview\nATProto integration publishes datasets, schemas, and lenses as records in the ac.foundation.dataset.* namespace. This enables:\n\nDiscovery through the ATProto network\nFederation across different hosts\nVerifiability through content-addressable records",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Atmosphere (ATProto Integration)"
+    ]
+  },
+  {
+    "objectID": "reference/atmosphere.html#atmosphereclient",
+    "href": "reference/atmosphere.html#atmosphereclient",
+    "title": "Atmosphere (ATProto Integration)",
+    "section": "AtmosphereClient",
+    "text": "AtmosphereClient\nThe client handles authentication and record operations:\n\nfrom atdata.atmosphere import AtmosphereClient\n\nclient = AtmosphereClient()\n\n# Login with app-specific password (not your main password!)\nclient.login(\"alice.bsky.social\", \"app-password\")\n\nprint(client.did)     # 'did:plc:...'\nprint(client.handle)  # 'alice.bsky.social'\n\n\n\n\n\n\n\nWarning\n\n\n\nAlways use an app-specific password, not your main Bluesky password. Create app passwords at bsky.app/settings/app-passwords.\n\n\n\nSession Management\nSave and restore sessions to avoid re-authentication:\n\n# Export session for later\nsession_string = client.export_session()\n\n# Later: restore session\nnew_client = AtmosphereClient()\nnew_client.login_with_session(session_string)\n\n\n\nCustom PDS\nConnect to a custom PDS instead of bsky.social:\n\nclient = AtmosphereClient(base_url=\"https://pds.example.com\")",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Atmosphere (ATProto Integration)"
+    ]
+  },
+  {
+    "objectID": "reference/atmosphere.html#atmosphereindex",
+    "href": "reference/atmosphere.html#atmosphereindex",
+    "title": "Atmosphere (ATProto Integration)",
+    "section": "AtmosphereIndex",
+    "text": "AtmosphereIndex\nThe unified interface for ATProto operations, implementing the AbstractIndex protocol:\n\nfrom atdata.atmosphere import AtmosphereClient, AtmosphereIndex\n\nclient = AtmosphereClient()\nclient.login(\"handle.bsky.social\", \"app-password\")\n\nindex = AtmosphereIndex(client)\n\n\nPublishing Schemas\n\nimport atdata\nfrom numpy.typing import NDArray\n\n@atdata.packable\nclass ImageSample:\n    image: NDArray\n    label: str\n    confidence: float\n\n# Publish schema\nschema_uri = index.publish_schema(\n    ImageSample,\n    version=\"1.0.0\",\n    description=\"Image classification sample\",\n)\n# Returns: \"at://did:plc:.../ac.foundation.dataset.sampleSchema/...\"\n\n\n\nPublishing Datasets\n\ndataset = atdata.Dataset[ImageSample](\"data-{000000..000009}.tar\")\n\nentry = index.insert_dataset(\n    dataset,\n    name=\"imagenet-subset\",\n    schema_ref=schema_uri,           # Optional - auto-publishes if omitted\n    description=\"ImageNet subset\",\n    tags=[\"images\", \"classification\"],\n    license=\"MIT\",\n)\n\nprint(entry.uri)        # AT URI of the record\nprint(entry.data_urls)  # WebDataset URLs\n\n\n\nListing and Retrieving\n\n# List your datasets\nfor entry in index.list_datasets():\n    print(f\"{entry.name}: {entry.schema_ref}\")\n\n# List from another user\nfor entry in index.list_datasets(repo=\"did:plc:other-user\"):\n    print(entry.name)\n\n# Get specific dataset\nentry = index.get_dataset(\"at://did:plc:.../ac.foundation.dataset.record/...\")\n\n# List schemas\nfor schema in index.list_schemas():\n    print(f\"{schema['name']} v{schema['version']}\")\n\n# Decode schema to Python type\nSampleType = index.decode_schema(schema_uri)",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Atmosphere (ATProto Integration)"
+    ]
+  },
+  {
+    "objectID": "reference/atmosphere.html#lower-level-publishers",
+    "href": "reference/atmosphere.html#lower-level-publishers",
+    "title": "Atmosphere (ATProto Integration)",
+    "section": "Lower-Level Publishers",
+    "text": "Lower-Level Publishers\nFor more control, use the individual publisher classes:\n\nSchemaPublisher\n\nfrom atdata.atmosphere import SchemaPublisher\n\npublisher = SchemaPublisher(client)\n\nuri = publisher.publish(\n    ImageSample,\n    name=\"ImageSample\",\n    version=\"1.0.0\",\n    description=\"Image with label\",\n    metadata={\"source\": \"training\"},\n)\n\n\n\nDatasetPublisher\n\nfrom atdata.atmosphere import DatasetPublisher\n\npublisher = DatasetPublisher(client)\n\nuri = publisher.publish(\n    dataset,\n    name=\"training-images\",\n    schema_uri=schema_uri,           # Required if auto_publish_schema=False\n    auto_publish_schema=True,        # Publish schema automatically\n    description=\"Training images\",\n    tags=[\"training\", \"images\"],\n    license=\"MIT\",\n)\n\n\nBlob Storage\nFor smaller datasets (up to ~50MB per shard), you can store data directly in ATProto blobs instead of external URLs:\n\nimport io\nimport webdataset as wds\n\n# Create tar data in memory\ntar_buffer = io.BytesIO()\nwith wds.writer.TarWriter(tar_buffer) as sink:\n    for i, sample in enumerate(samples):\n        sink.write({**sample.as_wds, \"__key__\": f\"{i:06d}\"})\n\n# Publish with blob storage\nuri = publisher.publish_with_blobs(\n    blobs=[tar_buffer.getvalue()],\n    schema_uri=schema_uri,\n    name=\"small-dataset\",\n    description=\"Dataset stored in ATProto blobs\",\n    tags=[\"small\", \"demo\"],\n)\n\nTo load datasets with blob storage:\n\nfrom atdata.atmosphere import DatasetLoader\n\nloader = DatasetLoader(client)\n\n# Check storage type\nstorage_type = loader.get_storage_type(uri)  # \"external\" or \"blobs\"\n\nif storage_type == \"blobs\":\n    # Get blob URLs for direct access\n    blob_urls = loader.get_blob_urls(uri)\n\n# to_dataset() handles both storage types automatically\ndataset = loader.to_dataset(uri, MySample)\nfor batch in dataset.ordered(batch_size=32):\n    process(batch)\n\n\n\n\nLensPublisher\n\nfrom atdata.atmosphere import LensPublisher\n\npublisher = LensPublisher(client)\n\n# With code references\nuri = publisher.publish(\n    name=\"simplify\",\n    source_schema=full_schema_uri,\n    target_schema=simple_schema_uri,\n    description=\"Extract label only\",\n    getter_code={\n        \"repository\": \"https://github.com/org/repo\",\n        \"commit\": \"abc123def...\",\n        \"path\": \"transforms/simplify.py:simplify_getter\",\n    },\n    putter_code={\n        \"repository\": \"https://github.com/org/repo\",\n        \"commit\": \"abc123def...\",\n        \"path\": \"transforms/simplify.py:simplify_putter\",\n    },\n)\n\n# Or publish from a Lens object\nfrom atdata.lens import lens\n\n@lens\ndef simplify(src: FullSample) -&gt; SimpleSample:\n    return SimpleSample(label=src.label)\n\nuri = publisher.publish_from_lens(\n    simplify,\n    source_schema=full_schema_uri,\n    target_schema=simple_schema_uri,\n)",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Atmosphere (ATProto Integration)"
+    ]
+  },
+  {
+    "objectID": "reference/atmosphere.html#at-uris",
+    "href": "reference/atmosphere.html#at-uris",
+    "title": "Atmosphere (ATProto Integration)",
+    "section": "AT URIs",
+    "text": "AT URIs\nATProto records are identified by AT URIs:\n\nfrom atdata.atmosphere import AtUri\n\n# Parse an AT URI\nuri = AtUri.parse(\"at://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz\")\n\nprint(uri.authority)   # 'did:plc:abc123'\nprint(uri.collection)  # 'ac.foundation.dataset.sampleSchema'\nprint(uri.rkey)        # 'xyz'\n\n# Format back to string\nprint(str(uri))  # 'at://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz'",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Atmosphere (ATProto Integration)"
+    ]
+  },
+  {
+    "objectID": "reference/atmosphere.html#supported-field-types",
+    "href": "reference/atmosphere.html#supported-field-types",
+    "title": "Atmosphere (ATProto Integration)",
+    "section": "Supported Field Types",
+    "text": "Supported Field Types\nSchemas support these field types:\n\n\n\nPython Type\nATProto Type\n\n\n\n\nstr\nprimitive/str\n\n\nint\nprimitive/int\n\n\nfloat\nprimitive/float\n\n\nbool\nprimitive/bool\n\n\nbytes\nprimitive/bytes\n\n\nNDArray\nndarray (default dtype: float32)\n\n\nNDArray[np.float64]\nndarray (dtype: float64)\n\n\nlist[str]\narray with items\n\n\nT \\| None\nOptional field",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Atmosphere (ATProto Integration)"
+    ]
+  },
+  {
+    "objectID": "reference/atmosphere.html#complete-example",
+    "href": "reference/atmosphere.html#complete-example",
+    "title": "Atmosphere (ATProto Integration)",
+    "section": "Complete Example",
+    "text": "Complete Example\n\nimport numpy as np\nfrom numpy.typing import NDArray\nimport atdata\nfrom atdata.atmosphere import AtmosphereClient, AtmosphereIndex\nimport webdataset as wds\n\n# 1. Define and create samples\n@atdata.packable\nclass FeatureSample:\n    features: NDArray\n    label: int\n    source: str\n\nsamples = [\n    FeatureSample(\n        features=np.random.randn(128).astype(np.float32),\n        label=i % 10,\n        source=\"synthetic\",\n    )\n    for i in range(1000)\n]\n\n# 2. Write to tar\nwith wds.writer.TarWriter(\"features.tar\") as sink:\n    for i, s in enumerate(samples):\n        sink.write({**s.as_wds, \"__key__\": f\"{i:06d}\"})\n\n# 3. Authenticate\nclient = AtmosphereClient()\nclient.login(\"myhandle.bsky.social\", \"app-password\")\n\nindex = AtmosphereIndex(client)\n\n# 4. Publish schema\nschema_uri = index.publish_schema(\n    FeatureSample,\n    version=\"1.0.0\",\n    description=\"Feature vectors with labels\",\n)\n\n# 5. Publish dataset\ndataset = atdata.Dataset[FeatureSample](\"features.tar\")\nentry = index.insert_dataset(\n    dataset,\n    name=\"synthetic-features-v1\",\n    schema_ref=schema_uri,\n    tags=[\"features\", \"synthetic\"],\n)\n\nprint(f\"Published: {entry.uri}\")\n\n# 6. Later: discover and load\nfor dataset_entry in index.list_datasets():\n    print(f\"Found: {dataset_entry.name}\")\n\n    # Reconstruct type from schema\n    SampleType = index.decode_schema(dataset_entry.schema_ref)\n\n    # Load dataset\n    ds = atdata.Dataset[SampleType](dataset_entry.data_urls[0])\n    for batch in ds.ordered(batch_size=32):\n        print(batch.features.shape)\n        break",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Atmosphere (ATProto Integration)"
+    ]
+  },
+  {
+    "objectID": "reference/atmosphere.html#related",
+    "href": "reference/atmosphere.html#related",
+    "title": "Atmosphere (ATProto Integration)",
+    "section": "Related",
+    "text": "Related\n\nLocal Storage - Redis + S3 backend\nPromotion - Promoting local datasets to ATProto\nProtocols - AbstractIndex interface\nPackable Samples - Defining sample types",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Atmosphere (ATProto Integration)"
+    ]
+  },
+  {
+    "objectID": "reference/datasets.html",
+    "href": "reference/datasets.html",
+    "title": "Datasets",
+    "section": "",
+    "text": "The Dataset class provides typed iteration over WebDataset tar files with automatic batching and lens transformations.",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Datasets"
+    ]
+  },
+  {
+    "objectID": "reference/datasets.html#creating-a-dataset",
+    "href": "reference/datasets.html#creating-a-dataset",
+    "title": "Datasets",
+    "section": "Creating a Dataset",
+    "text": "Creating a Dataset\n\nimport atdata\nfrom numpy.typing import NDArray\n\n@atdata.packable\nclass ImageSample:\n    image: NDArray\n    label: str\n\n# Single shard\ndataset = atdata.Dataset[ImageSample](\"data-000000.tar\")\n\n# Multiple shards with brace notation\ndataset = atdata.Dataset[ImageSample](\"data-{000000..000009}.tar\")\n\nThe type parameter [ImageSample] specifies what sample type the dataset contains. This enables type-safe iteration and automatic deserialization.",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Datasets"
+    ]
+  },
+  {
+    "objectID": "reference/datasets.html#iteration-modes",
+    "href": "reference/datasets.html#iteration-modes",
+    "title": "Datasets",
+    "section": "Iteration Modes",
+    "text": "Iteration Modes\n\nOrdered Iteration\nIterate through samples in their original order:\n\n# With batching (default batch_size=1)\nfor batch in dataset.ordered(batch_size=32):\n    images = batch.image  # numpy array (32, H, W, C)\n    labels = batch.label  # list of 32 strings\n\n# Without batching (raw samples)\nfor sample in dataset.ordered(batch_size=None):\n    print(sample.label)\n\n\n\nShuffled Iteration\nIterate with randomized order at both shard and sample levels:\n\nfor batch in dataset.shuffled(batch_size=32):\n    # Samples are shuffled\n    process(batch)\n\n# Control shuffle buffer sizes\nfor batch in dataset.shuffled(\n    buffer_shards=100,    # Shards to buffer (default: 100)\n    buffer_samples=10000, # Samples to buffer (default: 10,000)\n    batch_size=32,\n):\n    process(batch)\n\n\n\n\n\n\n\nTip\n\n\n\nLarger buffer sizes increase randomness but use more memory. For training, buffer_samples=10000 is usually a good balance.",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Datasets"
+    ]
+  },
+  {
+    "objectID": "reference/datasets.html#samplebatch",
+    "href": "reference/datasets.html#samplebatch",
+    "title": "Datasets",
+    "section": "SampleBatch",
+    "text": "SampleBatch\nWhen iterating with a batch_size, each iteration yields a SampleBatch with automatic attribute aggregation.\n\n@atdata.packable\nclass Sample:\n    features: NDArray  # shape (256,)\n    label: str\n    score: float\n\nfor batch in dataset.ordered(batch_size=16):\n    # NDArray fields are stacked with a batch dimension\n    features = batch.features  # numpy array (16, 256)\n\n    # Other fields become lists\n    labels = batch.label       # list of 16 strings\n    scores = batch.score       # list of 16 floats\n\nResults are cached, so accessing the same attribute multiple times is efficient.",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Datasets"
+    ]
+  },
+  {
+    "objectID": "reference/datasets.html#type-transformations-with-lenses",
+    "href": "reference/datasets.html#type-transformations-with-lenses",
+    "title": "Datasets",
+    "section": "Type Transformations with Lenses",
+    "text": "Type Transformations with Lenses\nView a dataset through a different sample type using registered lenses:\n\n@atdata.packable\nclass SimplifiedSample:\n    label: str\n\n@atdata.lens\ndef simplify(src: ImageSample) -&gt; SimplifiedSample:\n    return SimplifiedSample(label=src.label)\n\n# Transform dataset to different type\nsimple_ds = dataset.as_type(SimplifiedSample)\n\nfor batch in simple_ds.ordered(batch_size=16):\n    print(batch.label)  # Only label field available\n\nSee Lenses for details on defining transformations.",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Datasets"
+    ]
+  },
+  {
+    "objectID": "reference/datasets.html#dataset-properties",
+    "href": "reference/datasets.html#dataset-properties",
+    "title": "Datasets",
+    "section": "Dataset Properties",
+    "text": "Dataset Properties\n\nShard List\nGet the list of individual tar files:\n\ndataset = atdata.Dataset[Sample](\"data-{000000..000009}.tar\")\nshards = dataset.shard_list\n# ['data-000000.tar', 'data-000001.tar', ..., 'data-000009.tar']\n\n\n\nMetadata\nDatasets can have associated metadata from a URL:\n\ndataset = atdata.Dataset[Sample](\n    \"data-{000000..000009}.tar\",\n    metadata_url=\"https://example.com/metadata.msgpack\"\n)\n\n# Fetched and cached on first access\nmetadata = dataset.metadata  # dict or None",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Datasets"
+    ]
+  },
+  {
+    "objectID": "reference/datasets.html#writing-datasets",
+    "href": "reference/datasets.html#writing-datasets",
+    "title": "Datasets",
+    "section": "Writing Datasets",
+    "text": "Writing Datasets\nUse WebDataset’s TarWriter or ShardWriter to create datasets:\n\nimport webdataset as wds\nimport numpy as np\n\nsamples = [\n    ImageSample(image=np.random.rand(224, 224, 3).astype(np.float32), label=\"cat\")\n    for _ in range(100)\n]\n\n# Single tar file\nwith wds.writer.TarWriter(\"data-000000.tar\") as sink:\n    for i, sample in enumerate(samples):\n        sink.write({**sample.as_wds, \"__key__\": f\"sample_{i:06d}\"})\n\n# Multiple shards with automatic splitting\nwith wds.writer.ShardWriter(\"data-%06d.tar\", maxcount=1000) as sink:\n    for i, sample in enumerate(samples):\n        sink.write({**sample.as_wds, \"__key__\": f\"sample_{i:06d}\"})",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Datasets"
+    ]
+  },
+  {
+    "objectID": "reference/datasets.html#parquet-export",
+    "href": "reference/datasets.html#parquet-export",
+    "title": "Datasets",
+    "section": "Parquet Export",
+    "text": "Parquet Export\nExport dataset contents to parquet format:\n\n# Export entire dataset\ndataset.to_parquet(\"output.parquet\")\n\n# Export with custom field mapping\ndef extract_fields(sample):\n    return {\"label\": sample.label, \"score\": sample.confidence}\n\ndataset.to_parquet(\"output.parquet\", sample_map=extract_fields)\n\n# Export in segments\ndataset.to_parquet(\"output.parquet\", maxcount=10000)\n# Creates output-000000.parquet, output-000001.parquet, etc.",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Datasets"
+    ]
+  },
+  {
+    "objectID": "reference/datasets.html#url-formats",
+    "href": "reference/datasets.html#url-formats",
+    "title": "Datasets",
+    "section": "URL Formats",
+    "text": "URL Formats\nWebDataset supports various URL formats:\n\n\n\n\n\n\n\nFormat\nExample\n\n\n\n\nLocal files\n./data/file.tar, /absolute/path/file-{000000..000009}.tar\n\n\nS3\ns3://bucket/path/file-{000000..000009}.tar\n\n\nHTTP/HTTPS\nhttps://example.com/data-{000000..000009}.tar\n\n\nGoogle Cloud\ngs://bucket/path/file.tar",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Datasets"
+    ]
+  },
+  {
+    "objectID": "reference/datasets.html#related",
+    "href": "reference/datasets.html#related",
+    "title": "Datasets",
+    "section": "Related",
+    "text": "Related\n\nPackable Samples - Defining typed samples\nLenses - Type transformations\nload_dataset - HuggingFace-style loading API",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Datasets"
+    ]
+  }
+]

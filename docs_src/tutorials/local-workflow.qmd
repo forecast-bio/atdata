@@ -1,0 +1,196 @@
+---
+title: "Local Workflow"
+description: "Store and manage datasets with Redis + S3"
+---
+
+This tutorial demonstrates how to use the local storage module to store and index datasets using Redis and S3-compatible storage.
+
+## Prerequisites
+
+- Redis server running (default: `localhost:6379`)
+- S3-compatible storage (MinIO, AWS S3, etc.)
+
+::: {.callout-tip}
+For local development, you can use MinIO:
+```bash
+docker run -p 9000:9000 minio/minio server /data
+```
+:::
+
+## Setup
+
+```{python}
+#| eval: false
+import numpy as np
+from numpy.typing import NDArray
+import atdata
+from atdata.local import LocalIndex, Repo, LocalDatasetEntry, S3DataStore
+import webdataset as wds
+```
+
+## Define Sample Types
+
+```{python}
+#| eval: false
+@atdata.packable
+class TrainingSample:
+    """A sample containing features and label for training."""
+    features: NDArray
+    label: int
+
+@atdata.packable
+class TextSample:
+    """A sample containing text data."""
+    text: str
+    category: str
+```
+
+## LocalDatasetEntry
+
+Create entries with content-addressable CIDs:
+
+```{python}
+#| eval: false
+# Create an entry manually
+entry = LocalDatasetEntry(
+    _name="my-dataset",
+    _schema_ref="local://schemas/examples.TrainingSample@1.0.0",
+    _data_urls=["s3://bucket/data-000000.tar", "s3://bucket/data-000001.tar"],
+    _metadata={"source": "example", "samples": 10000},
+)
+
+print(f"Entry name: {entry.name}")
+print(f"Schema ref: {entry.schema_ref}")
+print(f"Data URLs: {entry.data_urls}")
+print(f"Metadata: {entry.metadata}")
+print(f"CID: {entry.cid}")
+```
+
+::: {.callout-note}
+CIDs are generated from content (schema_ref + data_urls), so identical data produces identical CIDs.
+:::
+
+## LocalIndex
+
+The index tracks datasets in Redis:
+
+```{python}
+#| eval: false
+from redis import Redis
+
+# Connect to Redis
+redis = Redis(host="localhost", port=6379)
+index = LocalIndex(redis=redis)
+
+print("LocalIndex connected")
+```
+
+### Schema Management
+
+```{python}
+#| eval: false
+# Publish a schema
+schema_ref = index.publish_schema(TrainingSample, version="1.0.0")
+print(f"Published schema: {schema_ref}")
+
+# List all schemas
+for schema in index.list_schemas():
+    print(f"  - {schema.get('name', 'Unknown')} v{schema.get('version', '?')}")
+
+# Get schema record
+schema_record = index.get_schema(schema_ref)
+print(f"Schema fields: {[f['name'] for f in schema_record.get('fields', [])]}")
+
+# Decode schema back to a PackableSample class
+decoded_type = index.decode_schema(schema_ref)
+print(f"Decoded type: {decoded_type.__name__}")
+```
+
+## S3DataStore
+
+For direct S3 operations:
+
+```{python}
+#| eval: false
+creds = {
+    "AWS_ENDPOINT": "http://localhost:9000",
+    "AWS_ACCESS_KEY_ID": "minioadmin",
+    "AWS_SECRET_ACCESS_KEY": "minioadmin",
+}
+
+store = S3DataStore(creds, bucket="my-bucket")
+
+print(f"Bucket: {store.bucket}")
+print(f"Supports streaming: {store.supports_streaming()}")
+```
+
+## Complete Repo Workflow
+
+The Repo class combines S3 storage with Redis indexing:
+
+```{python}
+#| eval: false
+# 1. Create sample data
+samples = [
+    TrainingSample(
+        features=np.random.randn(128).astype(np.float32),
+        label=i % 10
+    )
+    for i in range(1000)
+]
+print(f"Created {len(samples)} training samples")
+
+# 2. Write to local tar file
+with wds.writer.TarWriter("local-data-000000.tar") as sink:
+    for i, sample in enumerate(samples):
+        sink.write({**sample.as_wds, "__key__": f"sample_{i:06d}"})
+print("Wrote samples to local tar file")
+
+# 3. Create Dataset
+ds = atdata.Dataset[TrainingSample]("local-data-000000.tar")
+
+# 4. Create Repo and insert
+repo = Repo(
+    s3_credentials={
+        "AWS_ENDPOINT": "http://localhost:9000",
+        "AWS_ACCESS_KEY_ID": "minioadmin",
+        "AWS_SECRET_ACCESS_KEY": "minioadmin",
+    },
+    hive_path="my-bucket/datasets",
+)
+
+entry, stored_ds = repo.insert(ds, name="training-v1")
+print(f"Stored at: {stored_ds.url}")
+print(f"CID: {entry.cid}")
+
+# 5. Retrieve later
+retrieved_entry = index.get_entry_by_name("training-v1")
+dataset = atdata.Dataset[TrainingSample](retrieved_entry.data_urls[0])
+
+for batch in dataset.ordered(batch_size=32):
+    print(f"Batch features shape: {batch.features.shape}")
+    break
+```
+
+## Using load_dataset with Index
+
+The `load_dataset()` function supports index lookup:
+
+```{python}
+#| eval: false
+from atdata import load_dataset
+
+# Load from local index
+ds = load_dataset("@local/my-dataset", index=index, split="train")
+
+# The index resolves the dataset name to URLs and schema
+for batch in ds.shuffled(batch_size=32):
+    process(batch)
+    break
+```
+
+## Next Steps
+
+- **[Atmosphere Publishing](atmosphere.qmd)** - Publish to ATProto federation
+- **[Promotion Workflow](promotion.qmd)** - Migrate from local to atmosphere
+- **[Local Storage Reference](../reference/local-storage.qmd)** - Complete API reference
