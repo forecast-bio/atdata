@@ -168,6 +168,19 @@ def test_repo_insert_with_s3(mock_s3, clean_redis):
     ...
 ```
 
+## Issue Tracking
+
+This project uses **chainlink** for issue tracking. Chainlink commands do NOT need to be prefixed with `uv run`:
+```bash
+# Correct - run chainlink directly
+chainlink list
+chainlink close 123
+chainlink show 123
+
+# Incorrect - don't use uv run
+uv run chainlink list  # Not needed
+```
+
 ## Git Workflow
 
 ### Committing Changes

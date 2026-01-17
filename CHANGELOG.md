@@ -11,6 +11,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 ### Changed
+- Comprehensive integration test suite for atdata (#190)
+- Integration test: Error handling and recovery (#198)
+- Integration test: Edge cases and data type coverage (#199)
+- Integration test: Promotion pipeline (local to atmosphere) (#196)
+- Integration test: Cross-backend interoperability (#195)
+- Integration test: Atmosphere ATProto workflow (#194)
+- Integration test: Dynamic type loading from schemas (#197)
+- Integration test: Local storage complete workflow (#192)
+- Integration test: Lens transformation chains (#193)
+- Integration test: End-to-end data flow pipeline (#191)
 - Adversarial review: Test suite and codebase comprehensive assessment (#181)
 - Consolidate test sample type definitions into conftest.py (#184)
 - Trim verbose docstrings that restate function signatures (#189)
