@@ -23,7 +23,13 @@ from atdata import (
     Dataset,
 )
 from atdata._cid import generate_cid
-from atdata._type_utils import numpy_dtype_to_string, PRIMITIVE_TYPE_MAP
+from atdata._type_utils import (
+    numpy_dtype_to_string,
+    PRIMITIVE_TYPE_MAP,
+    unwrap_optional,
+    is_ndarray_type,
+    extract_ndarray_dtype,
+)
 from atdata._protocols import IndexEntry, AbstractDataStore
 
 from pathlib import Path
@@ -57,7 +63,6 @@ from typing import (
     get_origin,
     get_args,
 )
-import types
 from dataclasses import fields, is_dataclass
 from datetime import datetime, timezone
 import json
@@ -169,32 +174,18 @@ def _parse_schema_ref(ref: str) -> tuple[str, str]:
 
 def _python_type_to_field_type(python_type: Any) -> dict:
     """Convert Python type annotation to schema field type dict."""
-    # Handle primitives
     if python_type in PRIMITIVE_TYPE_MAP:
         return {"$type": "local#primitive", "primitive": PRIMITIVE_TYPE_MAP[python_type]}
 
-    # Check for NDArray
-    type_str = str(python_type)
-    if "NDArray" in type_str or "ndarray" in type_str.lower():
-        dtype = "float32"  # Default
-        args = get_args(python_type)
-        if args:
-            dtype_arg = args[-1] if args else None
-            if dtype_arg is not None:
-                dtype = numpy_dtype_to_string(dtype_arg)
-        return {"$type": "local#ndarray", "dtype": dtype}
+    if is_ndarray_type(python_type):
+        return {"$type": "local#ndarray", "dtype": extract_ndarray_dtype(python_type)}
 
-    # Check for list/array types
     origin = get_origin(python_type)
     if origin is list:
         args = get_args(python_type)
-        if args:
-            items = _python_type_to_field_type(args[0])
-            return {"$type": "local#array", "items": items}
-        else:
-            return {"$type": "local#array", "items": {"$type": "local#primitive", "primitive": "str"}}
+        items = _python_type_to_field_type(args[0]) if args else {"$type": "local#primitive", "primitive": "str"}
+        return {"$type": "local#array", "items": items}
 
-    # Check for nested dataclass (not yet supported)
     if is_dataclass(python_type):
         raise TypeError(
             f"Nested dataclass types not yet supported: {python_type.__name__}. "
@@ -232,21 +223,7 @@ def _build_schema_record(
 
     for f in fields(sample_type):
         field_type = type_hints.get(f.name, f.type)
-
-        # Check for Optional types (Union with None)
-        is_optional = False
-        origin = get_origin(field_type)
-
-        if origin is Union or isinstance(field_type, types.UnionType):
-            args = get_args(field_type)
-            non_none_args = [a for a in args if a is not type(None)]
-            if type(None) in args or len(non_none_args) < len(args):
-                is_optional = True
-            if len(non_none_args) == 1:
-                field_type = non_none_args[0]
-            elif len(non_none_args) > 1:
-                raise TypeError(f"Complex union types not supported: {field_type}")
-
+        field_type, is_optional = unwrap_optional(field_type)
         field_type_dict = _python_type_to_field_type(field_type)
 
         field_defs.append({
@@ -424,21 +401,27 @@ class LocalDatasetEntry:
 BasicIndexEntry = LocalDatasetEntry
 
 def _s3_env( credentials_path: str | Path ) -> dict[str, Any]:
-    """Load S3 credentials (AWS_ENDPOINT, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY) from .env file."""
+    """Load S3 credentials from .env file.
+
+    Args:
+        credentials_path: Path to .env file containing AWS_ENDPOINT,
+            AWS_ACCESS_KEY_ID, and AWS_SECRET_ACCESS_KEY.
+
+    Returns:
+        Dict with the three required credential keys.
+
+    Raises:
+        ValueError: If any required key is missing from the .env file.
+    """
     credentials_path = Path( credentials_path )
     env_values = dotenv_values( credentials_path )
-    assert 'AWS_ENDPOINT' in env_values
-    assert 'AWS_ACCESS_KEY_ID' in env_values
-    assert 'AWS_SECRET_ACCESS_KEY' in env_values
 
-    return {
-        k: env_values[k]
-        for k in (
-            'AWS_ENDPOINT',
-            'AWS_ACCESS_KEY_ID',
-            'AWS_SECRET_ACCESS_KEY',
-        )
-    }
+    required_keys = ('AWS_ENDPOINT', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY')
+    missing = [k for k in required_keys if k not in env_values]
+    if missing:
+        raise ValueError(f"Missing required keys in {credentials_path}: {', '.join(missing)}")
+
+    return {k: env_values[k] for k in required_keys}
 
 def _s3_from_credentials( creds: str | Path | dict ) -> S3FileSystem:
     """Create S3FileSystem from credentials dict or .env file path."""
@@ -482,15 +465,12 @@ class Repo:
 
     ##
 
-    def __init__( self,
-                #
-                s3_credentials: str | Path | dict[str, Any] | None = None,
-                hive_path: str | Path | None = None,
-                redis: Redis | None = None,
-                #
-                #
-                **kwargs
-            ) -> None:
+    def __init__(
+        self,
+        s3_credentials: str | Path | dict[str, Any] | None = None,
+        hive_path: str | Path | None = None,
+        redis: Redis | None = None,
+    ) -> None:
         """Initialize a repository.
 
         .. deprecated::
@@ -503,7 +483,6 @@ class Repo:
             hive_path: Path within the S3 bucket to store datasets.
                 Required if s3_credentials is provided.
             redis: Redis connection for indexing. If None, creates a new connection.
-            **kwargs: Additional arguments (reserved for future use).
 
         Raises:
             ValueError: If hive_path is not provided when s3_credentials is set.

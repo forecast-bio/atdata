@@ -156,13 +156,13 @@ def test_s3_env_valid_credentials(tmp_path):
 def test_s3_env_missing_required_field(tmp_path, missing_field, env_content):
     """Test that loading S3 credentials fails when a required field is missing.
 
-    Should raise AssertionError when .env file lacks any of the required fields:
+    Should raise ValueError when .env file lacks any of the required fields:
     AWS_ENDPOINT, AWS_ACCESS_KEY_ID, or AWS_SECRET_ACCESS_KEY.
     """
     env_file = tmp_path / ".env"
     env_file.write_text(env_content)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError, match=missing_field):
         atlocal._s3_env(env_file)
 
 

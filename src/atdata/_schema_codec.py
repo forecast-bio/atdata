@@ -33,7 +33,9 @@ from .dataset import PackableSample
 
 
 # Type cache to avoid regenerating identical types
+# Uses insertion order (Python 3.7+) for simple FIFO eviction
 _type_cache: dict[str, Type[PackableSample]] = {}
+_TYPE_CACHE_MAX_SIZE = 256
 
 
 def _schema_cache_key(schema: dict) -> str:
@@ -205,10 +207,14 @@ def schema_to_type(
         },
     )
 
-    # Cache the generated type
+    # Cache the generated type with FIFO eviction
     if use_cache:
         cache_key = _schema_cache_key(schema)
         _type_cache[cache_key] = generated_class
+        # Evict oldest entries if cache exceeds max size
+        while len(_type_cache) > _TYPE_CACHE_MAX_SIZE:
+            oldest_key = next(iter(_type_cache))
+            del _type_cache[oldest_key]
 
     return generated_class
 

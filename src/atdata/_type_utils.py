@@ -4,7 +4,8 @@ This module provides common type mapping functions used by both local.py
 and atmosphere/schema.py to avoid code duplication.
 """
 
-from typing import Any
+import types
+from typing import Any, get_origin, get_args, Union
 
 # Mapping from numpy dtype strings to schema dtype names
 NUMPY_DTYPE_MAP = {
@@ -33,4 +34,57 @@ def numpy_dtype_to_string(dtype: Any) -> str:
     for key, value in NUMPY_DTYPE_MAP.items():
         if key in dtype_str:
             return value
+    return "float32"
+
+
+def unwrap_optional(python_type: Any) -> tuple[Any, bool]:
+    """Extract the inner type from Optional/Union types.
+
+    Handles both `Optional[T]` (Union[T, None]) and `T | None` syntax.
+
+    Args:
+        python_type: A Python type annotation.
+
+    Returns:
+        Tuple of (inner_type, is_optional). If type is not Optional,
+        returns (python_type, False).
+
+    Raises:
+        TypeError: If complex union types (Union[A, B] where both are non-None).
+    """
+    origin = get_origin(python_type)
+
+    if origin is Union or isinstance(python_type, types.UnionType):
+        args = get_args(python_type)
+        non_none_args = [a for a in args if a is not type(None)]
+        is_optional = type(None) in args or len(non_none_args) < len(args)
+
+        if len(non_none_args) == 1:
+            return non_none_args[0], is_optional
+        elif len(non_none_args) > 1:
+            raise TypeError(f"Complex union types not supported: {python_type}")
+
+    return python_type, False
+
+
+def is_ndarray_type(python_type: Any) -> bool:
+    """Check if a type annotation represents an NDArray."""
+    type_str = str(python_type)
+    return "NDArray" in type_str or "ndarray" in type_str.lower()
+
+
+def extract_ndarray_dtype(python_type: Any) -> str:
+    """Extract dtype from NDArray type annotation.
+
+    Args:
+        python_type: NDArray type annotation (e.g., NDArray[np.float32]).
+
+    Returns:
+        Dtype string (e.g., "float32"). Defaults to "float32".
+    """
+    args = get_args(python_type)
+    if args:
+        dtype_arg = args[-1]
+        if dtype_arg is not None:
+            return numpy_dtype_to_string(dtype_arg)
     return "float32"

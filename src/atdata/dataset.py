@@ -281,6 +281,7 @@ class SampleBatch( Generic[DT] ):
         """
         self.samples = list( samples )
         self._aggregate_cache = dict()
+        self._sample_type_cache: Type | None = None
 
     @property
     def sample_type( self ) -> Type:
@@ -289,7 +290,9 @@ class SampleBatch( Generic[DT] ):
         Returns:
             The type parameter ``DT`` used when creating this ``SampleBatch[DT]``.
         """
-        return typing.get_args( self.__orig_class__)[0]
+        if self._sample_type_cache is None:
+            self._sample_type_cache = typing.get_args( self.__orig_class__)[0]
+        return self._sample_type_cache
 
     def __getattr__( self, name ):
         """Aggregate an attribute across all samples in the batch.
@@ -359,12 +362,10 @@ class Dataset( Generic[ST] ):
 
         Returns:
             The type parameter ``ST`` used when creating this ``Dataset[ST]``.
-
-        Note:
-            Extracts the type parameter at runtime using ``__orig_class__``.
         """
-        # NOTE: Linting may fail here due to __orig_class__ being a runtime attribute
-        return typing.get_args( self.__orig_class__ )[0]
+        if self._sample_type_cache is None:
+            self._sample_type_cache = typing.get_args( self.__orig_class__ )[0]
+        return self._sample_type_cache
     @property
     def batch_type( self ) -> Type:
         """The type of batches produced by this dataset.
@@ -386,17 +387,14 @@ class Dataset( Generic[ST] ):
         """
         super().__init__()
         self.url = url
-        """WebDataset brace-notation URL pointing to tar files, e.g.,
-                ``"path/to/file-{000000..000009}.tar"`` for multiple shards or
-                ``"path/to/file-000000.tar"`` for a single shard.
-        """
+        """WebDataset brace-notation URL pointing to tar files."""
 
         self._metadata: dict[str, Any] | None = None
         self.metadata_url: str | None = metadata_url
         """Optional URL to msgpack-encoded metadata for this dataset."""
 
-        # Allow addition of automatic transformation of raw underlying data
         self._output_lens: Lens | None = None
+        self._sample_type_cache: Type | None = None
 
     def as_type( self, other: Type[RT] ) -> 'Dataset[RT]':
         """View this dataset through a different sample type using a registered lens.

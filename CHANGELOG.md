@@ -12,6 +12,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix dark theme styling for callouts and code blocks in Quarto docs (#229)
 
 ### Changed
+- Adversarial review: Post-Index refactor assessment (#254)
+- Add protocol compliance test that actually exercises polymorphic behavior (#260)
+- Remove unused **kwargs from Repo.__init__ (#259)
+- Add bounds checking to _type_cache in _schema_codec.py (#258)
+- Replace assertions with proper ValueError in local.py credential validation (#257)
+- Cache sample_type property in Dataset and SampleBatch classes (#256)
+- Extract shared type conversion to eliminate duplication in local.py and atmosphere/schema.py (#255)
+- Count lines of code in repo (#253)
+- Commit Index refactor with optional DataStore (#252)
 - Architecture review: verify protocols are properly used across atmosphere and local implementations (#243)
 - Refactor local.py: simplify to LocalIndex with optional DataStore (#247)
 - Update tests for new LocalIndex API (#251)

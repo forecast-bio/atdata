@@ -231,3 +231,110 @@ class TestProtocolInteroperability:
         assert isinstance(atmo_entry.data_urls, list)
         assert all(isinstance(u, str) for u in local_entry.data_urls)
         assert all(isinstance(u, str) for u in atmo_entry.data_urls)
+
+
+class TestPolymorphicBehavior:
+    """Tests that verify actual polymorphic usage patterns work correctly."""
+
+    def test_process_entries_polymorphically(self):
+        """Process a mixed list of IndexEntry implementations uniformly."""
+        entries: list[IndexEntry] = [
+            LocalDatasetEntry(
+                _name="local-1",
+                _schema_ref="local://schemas/A@1.0.0",
+                _data_urls=["s3://bucket/local1.tar"],
+                _metadata={"source": "local"},
+            ),
+            AtmosphereIndexEntry(
+                "at://did:plc:test/record/1",
+                {
+                    "name": "atmo-1",
+                    "schemaRef": "at://did:plc:test/schema/A",
+                    "storage": {
+                        "$type": "ac.foundation.dataset.storageExternal",
+                        "urls": ["s3://bucket/atmo1.tar"],
+                    },
+                },
+            ),
+            LocalDatasetEntry(
+                _name="local-2",
+                _schema_ref="local://schemas/B@1.0.0",
+                _data_urls=["s3://bucket/local2.tar", "s3://bucket/local2-001.tar"],
+            ),
+        ]
+
+        # Extract all names uniformly
+        names = [e.name for e in entries]
+        assert names == ["local-1", "atmo-1", "local-2"]
+
+        # Extract all schema refs
+        schema_refs = [e.schema_ref for e in entries]
+        assert schema_refs == [
+            "local://schemas/A@1.0.0",
+            "at://did:plc:test/schema/A",
+            "local://schemas/B@1.0.0",
+        ]
+
+        # Count total shards across all entries
+        total_urls = sum(len(e.data_urls) for e in entries)
+        assert total_urls == 4
+
+        # Filter by metadata presence
+        with_metadata = [e for e in entries if e.metadata is not None]
+        assert len(with_metadata) == 1
+        assert with_metadata[0].name == "local-1"
+
+    def test_index_entry_in_dict_key(self):
+        """IndexEntry.name can be used to build lookup structures."""
+        entries: list[IndexEntry] = [
+            LocalDatasetEntry(
+                _name="dataset-a",
+                _schema_ref="local://schemas/A@1.0.0",
+                _data_urls=["url1"],
+            ),
+            AtmosphereIndexEntry(
+                "at://test",
+                {
+                    "name": "dataset-b",
+                    "schemaRef": "at://schema",
+                    "storage": {"$type": "ac.foundation.dataset.storageExternal", "urls": ["url2"]},
+                },
+            ),
+        ]
+
+        # Build a lookup by name
+        by_name: dict[str, IndexEntry] = {e.name: e for e in entries}
+
+        assert "dataset-a" in by_name
+        assert "dataset-b" in by_name
+        assert by_name["dataset-a"].data_urls == ["url1"]
+        assert by_name["dataset-b"].data_urls == ["url2"]
+
+    def test_generic_url_collector(self):
+        """A generic function can collect URLs from any IndexEntry."""
+
+        def collect_all_urls(entries: list[IndexEntry]) -> list[str]:
+            """Collect all data URLs from a list of entries."""
+            all_urls = []
+            for entry in entries:
+                all_urls.extend(entry.data_urls)
+            return all_urls
+
+        mixed_entries: list[IndexEntry] = [
+            LocalDatasetEntry(
+                _name="ds1",
+                _schema_ref="local://test@1.0.0",
+                _data_urls=["s3://a/1.tar", "s3://a/2.tar"],
+            ),
+            AtmosphereIndexEntry(
+                "at://x",
+                {
+                    "name": "ds2",
+                    "schemaRef": "at://s",
+                    "storage": {"$type": "ac.foundation.dataset.storageExternal", "urls": ["s3://b/1.tar"]},
+                },
+            ),
+        ]
+
+        urls = collect_all_urls(mixed_entries)
+        assert urls == ["s3://a/1.tar", "s3://a/2.tar", "s3://b/1.tar"]
