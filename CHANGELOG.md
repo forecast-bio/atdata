@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix dark theme styling for callouts and code blocks in Quarto docs (#229)
 
 ### Changed
+- Create PR for release/v0.2.1a1 to main (#262)
 - Commit code quality improvements from adversarial review (#261)
 - Adversarial review: Post-Index refactor assessment (#254)
 - Add protocol compliance test that actually exercises polymorphic behavior (#260)

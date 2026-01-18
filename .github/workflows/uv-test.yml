@@ -47,12 +47,12 @@ jobs:
       - name: Run tests with coverage
         run: uv run pytest --cov=atdata --cov-report=xml --cov-report=term
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          # file: ./coverage.xml # Claude hallucination -- fascinating!
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
+      # - name: Upload coverage to Codecov
+      #   uses: codecov/codecov-action@v5
+      #   with:
+      #     # file: ./coverage.xml # Claude hallucination -- fascinating!
+      #     fail_ci_if_error: false
+      #     token: ${{ secrets.CODECOV_TOKEN }}
 
 
 #
