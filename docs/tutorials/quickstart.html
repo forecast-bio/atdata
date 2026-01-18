@@ -107,53 +107,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Search"
   }
 }</script>
-<meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" id="theme-color-light">
-<meta name="theme-color" content="#212529" media="(prefers-color-scheme: dark)" id="theme-color-dark">
-<script>
-// Update theme-color meta tags when Quarto toggles dark mode
-// Uses dual meta tags with media queries, overriding both when user manually toggles
-(function() {
-  const lightMeta = document.getElementById('theme-color-light');
-  const darkMeta = document.getElementById('theme-color-dark');
-  const LIGHT_COLOR = '#ffffff';
-  const DARK_COLOR = '#212529';
-
-  const updateThemeColor = () => {
-    if (!lightMeta || !darkMeta) return;
-
-    const isDark = document.body.classList.contains('quarto-dark');
-    // Override both metas to force the color regardless of OS preference
-    // This ensures manual Quarto toggle takes precedence
-    if (isDark) {
-      lightMeta.setAttribute('content', DARK_COLOR);
-      darkMeta.setAttribute('content', DARK_COLOR);
-    } else {
-      lightMeta.setAttribute('content', LIGHT_COLOR);
-      darkMeta.setAttribute('content', LIGHT_COLOR);
-    }
-  };
-
-  const startObserving = () => {
-    // Watch for class changes on body (Quarto adds/removes quarto-dark)
-    const observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        if (mutation.attributeName === 'class') {
-          updateThemeColor();
-        }
-      }
-    });
-    observer.observe(document.body, { attributes: true });
-    updateThemeColor();
-  };
-
-  if (document.body) {
-    startObserving();
-  } else {
-    document.addEventListener('DOMContentLoaded', startObserving);
-  }
-})();
-</script>
 
 
 <link rel="stylesheet" href="../assets/styles.css">
@@ -616,7 +569,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="define-a-sample-type" class="level2">
 <h2 class="anchored" data-anchor-id="define-a-sample-type">Define a Sample Type</h2>
 <p>Use the <code>@packable</code> decorator to create a typed sample:</p>
-<div id="03968b80" class="cell">
+<div id="38f5e0a8" class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
@@ -637,7 +590,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="create-sample-instances" class="level2">
 <h2 class="anchored" data-anchor-id="create-sample-instances">Create Sample Instances</h2>
-<div id="aa10bd3b" class="cell">
+<div id="8e1c5b55" class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a single sample</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>sample <span class="op">=</span> ImageSample(</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    image<span class="op">=</span>np.random.rand(<span class="dv">224</span>, <span class="dv">224</span>, <span class="dv">3</span>).astype(np.float32),</span>
@@ -658,7 +611,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="write-a-dataset" class="level2">
 <h2 class="anchored" data-anchor-id="write-a-dataset">Write a Dataset</h2>
 <p>Use WebDataset’s <code>TarWriter</code> to create dataset files:</p>
-<div id="19023c30" class="cell">
+<div id="670b80cc" class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> webdataset <span class="im">as</span> wds</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create 100 samples</span></span>
@@ -682,7 +635,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="load-and-iterate" class="level2">
 <h2 class="anchored" data-anchor-id="load-and-iterate">Load and Iterate</h2>
 <p>Create a typed <code>Dataset</code> and iterate with batching:</p>
-<div id="9c192e68" class="cell">
+<div id="49a17eb5" class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load dataset with type</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[ImageSample](<span class="st">"my-dataset-000000.tar"</span>)</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -703,7 +656,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="shuffled-iteration" class="level2">
 <h2 class="anchored" data-anchor-id="shuffled-iteration">Shuffled Iteration</h2>
 <p>For training, use shuffled iteration:</p>
-<div id="9c51df68" class="cell">
+<div id="a08a1d72" class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> dataset.shuffled(batch_size<span class="op">=</span><span class="dv">32</span>):</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Samples are shuffled at shard and sample level</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    images <span class="op">=</span> batch.image</span>
@@ -717,7 +670,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="use-lenses-for-type-transformations" class="level2">
 <h2 class="anchored" data-anchor-id="use-lenses-for-type-transformations">Use Lenses for Type Transformations</h2>
 <p>View datasets through different schemas:</p>
-<div id="c7bb0fd1" class="cell">
+<div id="a3bca885" class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Define a simplified view type</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> SimplifiedSample:</span>

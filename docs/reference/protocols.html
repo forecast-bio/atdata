@@ -107,53 +107,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Search"
   }
 }</script>
-<meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" id="theme-color-light">
-<meta name="theme-color" content="#212529" media="(prefers-color-scheme: dark)" id="theme-color-dark">
-<script>
-// Update theme-color meta tags when Quarto toggles dark mode
-// Uses dual meta tags with media queries, overriding both when user manually toggles
-(function() {
-  const lightMeta = document.getElementById('theme-color-light');
-  const darkMeta = document.getElementById('theme-color-dark');
-  const LIGHT_COLOR = '#ffffff';
-  const DARK_COLOR = '#212529';
-
-  const updateThemeColor = () => {
-    if (!lightMeta || !darkMeta) return;
-
-    const isDark = document.body.classList.contains('quarto-dark');
-    // Override both metas to force the color regardless of OS preference
-    // This ensures manual Quarto toggle takes precedence
-    if (isDark) {
-      lightMeta.setAttribute('content', DARK_COLOR);
-      darkMeta.setAttribute('content', DARK_COLOR);
-    } else {
-      lightMeta.setAttribute('content', LIGHT_COLOR);
-      darkMeta.setAttribute('content', LIGHT_COLOR);
-    }
-  };
-
-  const startObserving = () => {
-    // Watch for class changes on body (Quarto adds/removes quarto-dark)
-    const observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        if (mutation.attributeName === 'class') {
-          updateThemeColor();
-        }
-      }
-    });
-    observer.observe(document.body, { attributes: true });
-    updateThemeColor();
-  };
-
-  if (document.body) {
-    startObserving();
-  } else {
-    document.addEventListener('DOMContentLoaded', startObserving);
-  }
-})();
-</script>
 
 
 <link rel="stylesheet" href="../assets/styles.css">
@@ -632,7 +585,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="indexentry-protocol" class="level2">
 <h2 class="anchored" data-anchor-id="indexentry-protocol">IndexEntry Protocol</h2>
 <p>Represents a dataset entry in any index:</p>
-<div id="d8d39ca9" class="cell">
+<div id="aeae853f" class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata._protocols <span class="im">import</span> IndexEntry</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> process_entry(entry: IndexEntry) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
@@ -686,7 +639,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="abstractindex-protocol" class="level2">
 <h2 class="anchored" data-anchor-id="abstractindex-protocol">AbstractIndex Protocol</h2>
 <p>Defines operations for managing schemas and datasets:</p>
-<div id="0c5d4589" class="cell">
+<div id="6e208aa1" class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata._protocols <span class="im">import</span> AbstractIndex</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> list_all_datasets(index: AbstractIndex) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
@@ -696,7 +649,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <section id="dataset-operations" class="level3">
 <h3 class="anchored" data-anchor-id="dataset-operations">Dataset Operations</h3>
-<div id="b9985078" class="cell">
+<div id="5e6036aa" class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Insert a dataset</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>entry <span class="op">=</span> index.insert_dataset(</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    dataset,</span>
@@ -714,7 +667,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="schema-operations" class="level3">
 <h3 class="anchored" data-anchor-id="schema-operations">Schema Operations</h3>
-<div id="cba51cca" class="cell">
+<div id="851bd3e6" class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Publish a schema</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>schema_ref <span class="op">=</span> index.publish_schema(</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    MySample,</span>
@@ -745,7 +698,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="abstractdatastore-protocol" class="level2">
 <h2 class="anchored" data-anchor-id="abstractdatastore-protocol">AbstractDataStore Protocol</h2>
 <p>Abstracts over different storage backends:</p>
-<div id="fc52219a" class="cell">
+<div id="6590b720" class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata._protocols <span class="im">import</span> AbstractDataStore</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> write_dataset(store: AbstractDataStore, dataset) <span class="op">-&gt;</span> <span class="bu">list</span>[<span class="bu">str</span>]:</span>
@@ -755,7 +708,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <section id="methods" class="level3">
 <h3 class="anchored" data-anchor-id="methods">Methods</h3>
-<div id="886e9dfd" class="cell">
+<div id="99ad0adb" class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Write dataset shards</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>urls <span class="op">=</span> store.write_shards(</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    dataset,</span>
@@ -782,7 +735,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="using-protocols-for-polymorphism" class="level2">
 <h2 class="anchored" data-anchor-id="using-protocols-for-polymorphism">Using Protocols for Polymorphism</h2>
 <p>Write code that works with any backend:</p>
-<div id="5bea2b79" class="cell">
+<div id="514f2df4" class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata._protocols <span class="im">import</span> AbstractIndex, IndexEntry</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata <span class="im">import</span> Dataset</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -840,7 +793,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="type-checking" class="level2">
 <h2 class="anchored" data-anchor-id="type-checking">Type Checking</h2>
 <p>Protocols are runtime-checkable:</p>
-<div id="7fe0c2f4" class="cell">
+<div id="c478e7ee" class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata._protocols <span class="im">import</span> IndexEntry, AbstractIndex</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Check if object implements protocol</span></span>
@@ -854,7 +807,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="complete-example" class="level2">
 <h2 class="anchored" data-anchor-id="complete-example">Complete Example</h2>
-<div id="b05310c9" class="cell">
+<div id="bf84504b" class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> LocalIndex, S3DataStore</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> AtmosphereClient, AtmosphereIndex</span>

@@ -24,6 +24,7 @@ from atdata import (
 )
 from atdata._cid import generate_cid
 from atdata._type_utils import numpy_dtype_to_string, PRIMITIVE_TYPE_MAP
+from atdata._protocols import IndexEntry
 
 from pathlib import Path
 from uuid import uuid4

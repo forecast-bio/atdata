@@ -107,53 +107,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Search"
   }
 }</script>
-<meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" id="theme-color-light">
-<meta name="theme-color" content="#212529" media="(prefers-color-scheme: dark)" id="theme-color-dark">
-<script>
-// Update theme-color meta tags when Quarto toggles dark mode
-// Uses dual meta tags with media queries, overriding both when user manually toggles
-(function() {
-  const lightMeta = document.getElementById('theme-color-light');
-  const darkMeta = document.getElementById('theme-color-dark');
-  const LIGHT_COLOR = '#ffffff';
-  const DARK_COLOR = '#212529';
-
-  const updateThemeColor = () => {
-    if (!lightMeta || !darkMeta) return;
-
-    const isDark = document.body.classList.contains('quarto-dark');
-    // Override both metas to force the color regardless of OS preference
-    // This ensures manual Quarto toggle takes precedence
-    if (isDark) {
-      lightMeta.setAttribute('content', DARK_COLOR);
-      darkMeta.setAttribute('content', DARK_COLOR);
-    } else {
-      lightMeta.setAttribute('content', LIGHT_COLOR);
-      darkMeta.setAttribute('content', LIGHT_COLOR);
-    }
-  };
-
-  const startObserving = () => {
-    // Watch for class changes on body (Quarto adds/removes quarto-dark)
-    const observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        if (mutation.attributeName === 'class') {
-          updateThemeColor();
-        }
-      }
-    });
-    observer.observe(document.body, { attributes: true });
-    updateThemeColor();
-  };
-
-  if (document.body) {
-    startObserving();
-  } else {
-    document.addEventListener('DOMContentLoaded', startObserving);
-  }
-})();
-</script>
 
 
 <link rel="stylesheet" href="../assets/styles.css">
