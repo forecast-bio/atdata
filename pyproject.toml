@@ -4,7 +4,8 @@ version = "0.2.1a1"
 description = "A loose federation of distributed, typed datasets"
 readme = "README.md"
 authors = [
-    { name = "Maxine Levesque", email = "hello@maxine.science" }
+    { name = "Maxine Levesque", email = "hello@maxine.science" },
+    { name = "Maxine @ Forecast Bio", email = "maxine@forecast.bio" }
 ]
 requires-python = ">=3.12"
 dependencies = [
