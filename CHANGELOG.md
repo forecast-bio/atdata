@@ -12,6 +12,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix dark theme styling for callouts and code blocks in Quarto docs (#229)
 
 ### Changed
+- Architecture review: verify protocols are properly used across atmosphere and local implementations (#243)
+- Refactor local.py: simplify to LocalIndex with optional DataStore (#247)
+- Update tests for new LocalIndex API (#251)
+- Deprecate Repo class (keep as thin wrapper for backwards compat) (#250)
+- Update insert_dataset to use data_store when provided (#249)
+- Refactor LocalIndex to accept optional AbstractDataStore (#248)
+- Commit removal of theme-color customization (#245)
 - Remove theme-color include from Quarto config (#242)
 - Remove theme-color customization, use neutral default (#241)
 - Commit improved theme-color with dual meta tags (#240)

@@ -24,7 +24,7 @@ from atdata import (
 )
 from atdata._cid import generate_cid
 from atdata._type_utils import numpy_dtype_to_string, PRIMITIVE_TYPE_MAP
-from atdata._protocols import IndexEntry
+from atdata._protocols import IndexEntry, AbstractDataStore
 
 from pathlib import Path
 from uuid import uuid4
@@ -61,6 +61,7 @@ import types
 from dataclasses import fields, is_dataclass
 from datetime import datetime, timezone
 import json
+import warnings
 
 T = TypeVar( 'T', bound = PackableSample )
 
@@ -461,6 +462,13 @@ def _s3_from_credentials( creds: str | Path | dict ) -> S3FileSystem:
 class Repo:
     """Repository for storing and managing atdata datasets.
 
+    .. deprecated::
+        Use :class:`Index` with :class:`S3DataStore` instead::
+
+            store = S3DataStore(credentials, bucket="my-bucket")
+            index = Index(redis=redis, data_store=store)
+            entry = index.insert_dataset(ds, name="my-dataset")
+
     Provides storage of datasets in S3-compatible object storage with Redis-based
     indexing. Datasets are stored as WebDataset tar files with optional metadata.
 
@@ -485,6 +493,9 @@ class Repo:
             ) -> None:
         """Initialize a repository.
 
+        .. deprecated::
+            Use Index with S3DataStore instead.
+
         Args:
             s3_credentials: Path to .env file with S3 credentials, or dict with
                 AWS_ENDPOINT, AWS_ACCESS_KEY_ID, and AWS_SECRET_ACCESS_KEY.
@@ -497,6 +508,14 @@ class Repo:
         Raises:
             ValueError: If hive_path is not provided when s3_credentials is set.
         """
+        warnings.warn(
+            "Repo is deprecated. Use Index with S3DataStore instead:\n"
+            "  store = S3DataStore(credentials, bucket='my-bucket')\n"
+            "  index = Index(redis=redis, data_store=store)\n"
+            "  entry = index.insert_dataset(ds, name='my-dataset')",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
         if s3_credentials is None:
             self.s3_credentials = None
@@ -518,7 +537,7 @@ class Repo:
         else:
             self.hive_path = None
             self.hive_bucket = None
-        
+
         #
 
         self.index = Index( redis = redis )
@@ -645,24 +664,35 @@ class Repo:
 class Index:
     """Redis-backed index for tracking datasets in a repository.
 
-    Maintains a registry of LocalDatasetEntry objects in Redis, allowing
-    enumeration and lookup of stored datasets.
+    Implements the AbstractIndex protocol. Maintains a registry of
+    LocalDatasetEntry objects in Redis, allowing enumeration and lookup
+    of stored datasets.
+
+    When initialized with a data_store, insert_dataset() will write dataset
+    shards to storage before indexing. Without a data_store, insert_dataset()
+    only indexes existing URLs.
 
     Attributes:
         _redis: Redis connection for index storage.
+        _data_store: Optional AbstractDataStore for writing dataset shards.
     """
 
     ##
 
-    def __init__(self,
-                 redis: Redis | None = None,
-                 **kwargs
-                 ) -> None:
+    def __init__(
+        self,
+        redis: Redis | None = None,
+        data_store: AbstractDataStore | None = None,
+        **kwargs,
+    ) -> None:
         """Initialize an index.
 
         Args:
             redis: Redis connection to use. If None, creates a new connection
                 using the provided kwargs.
+            data_store: Optional data store for writing dataset shards.
+                If provided, insert_dataset() will write shards to this store.
+                If None, insert_dataset() only indexes existing URLs.
             **kwargs: Additional arguments passed to Redis() constructor if
                 redis is None.
         """
@@ -672,6 +702,13 @@ class Index:
             self._redis = redis
         else:
             self._redis: Redis = Redis(**kwargs)
+
+        self._data_store = data_store
+
+    @property
+    def data_store(self) -> AbstractDataStore | None:
+        """The data store for writing shards, or None if index-only."""
+        return self._data_store
 
     @property
     def all_entries(self) -> list[LocalDatasetEntry]:
@@ -782,16 +819,51 @@ class Index:
     ) -> LocalDatasetEntry:
         """Insert a dataset into the index (AbstractIndex protocol).
 
+        If a data_store was provided at initialization, writes dataset shards
+        to storage first, then indexes the new URLs. Otherwise, indexes the
+        dataset's existing URL.
+
         Args:
             ds: The Dataset to register.
             name: Human-readable name for the dataset.
             schema_ref: Optional schema reference.
-            **kwargs: Additional options (metadata supported).
+            **kwargs: Additional options:
+                - metadata: Optional metadata dict
+                - prefix: Storage prefix (default: dataset name)
+                - cache_local: If True, cache writes locally first
 
         Returns:
             IndexEntry for the inserted dataset.
         """
         metadata = kwargs.get('metadata')
+
+        if self._data_store is not None:
+            # Write shards to data store, then index the new URLs
+            prefix = kwargs.get('prefix', name)
+            cache_local = kwargs.get('cache_local', False)
+
+            written_urls = self._data_store.write_shards(
+                ds,
+                prefix=prefix,
+                cache_local=cache_local,
+            )
+
+            # Generate schema_ref if not provided
+            if schema_ref is None:
+                schema_ref = _schema_ref_from_type(ds.sample_type)
+
+            # Create entry with the written URLs
+            entry_metadata = metadata if metadata is not None else ds._metadata
+            entry = LocalDatasetEntry(
+                _name=name,
+                _schema_ref=schema_ref,
+                _data_urls=written_urls,
+                _metadata=entry_metadata,
+            )
+            entry.write_to(self._redis)
+            return entry
+
+        # No data store - just index the existing URL
         return self.add_entry(ds, name=name, schema_ref=schema_ref, metadata=metadata)
 
     def get_dataset(self, ref: str) -> LocalDatasetEntry:

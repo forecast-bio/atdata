@@ -1224,6 +1224,87 @@ def test_s3_datastore_write_shards_cache_local(mock_s3, tmp_path):
 
 
 ##
+# Index with DataStore tests
+
+
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+@pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
+def test_index_with_datastore_insert(mock_s3, clean_redis, tmp_path):
+    """Test Index.insert_dataset with a data_store writes shards and indexes."""
+    ds = make_simple_dataset(tmp_path, num_samples=5)
+
+    store = atlocal.S3DataStore(
+        credentials=mock_s3['credentials'],
+        bucket=mock_s3['bucket']
+    )
+    index = atlocal.Index(redis=clean_redis, data_store=store)
+
+    entry = index.insert_dataset(ds, name="stored-dataset", maxcount=100)
+
+    assert entry.name == "stored-dataset"
+    assert len(entry.data_urls) >= 1
+    assert all(url.startswith("s3://") for url in entry.data_urls)
+    assert entry.schema_ref.startswith("local://schemas/")
+
+    # Verify it's in the index
+    retrieved = index.get_dataset("stored-dataset")
+    assert retrieved.cid == entry.cid
+
+
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+@pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
+def test_index_with_datastore_custom_prefix(mock_s3, clean_redis, tmp_path):
+    """Test Index.insert_dataset with custom prefix."""
+    ds = make_simple_dataset(tmp_path, num_samples=3)
+
+    store = atlocal.S3DataStore(
+        credentials=mock_s3['credentials'],
+        bucket=mock_s3['bucket']
+    )
+    index = atlocal.Index(redis=clean_redis, data_store=store)
+
+    entry = index.insert_dataset(
+        ds,
+        name="my-dataset",
+        prefix="custom/path/v1",
+        maxcount=100
+    )
+
+    assert "custom/path/v1" in entry.data_urls[0]
+
+
+def test_index_without_datastore_indexes_existing_url(clean_redis, tmp_path):
+    """Test Index.insert_dataset without data_store just indexes the URL."""
+    ds = make_simple_dataset(tmp_path, num_samples=3)
+
+    index = atlocal.Index(redis=clean_redis)  # No data_store
+
+    entry = index.insert_dataset(ds, name="indexed-only")
+
+    # Should use the original dataset URL
+    assert entry.data_urls == [ds.url]
+    assert entry.name == "indexed-only"
+
+
+def test_index_data_store_property(mock_s3, clean_redis):
+    """Test that Index.data_store property returns the data store."""
+    store = atlocal.S3DataStore(
+        credentials=mock_s3['credentials'],
+        bucket=mock_s3['bucket']
+    )
+    index = atlocal.Index(redis=clean_redis, data_store=store)
+
+    assert index.data_store is store
+
+
+def test_index_data_store_property_none(clean_redis):
+    """Test that Index.data_store property returns None when not set."""
+    index = atlocal.Index(redis=clean_redis)
+
+    assert index.data_store is None
+
+
+##
 # Schema storage tests
 
 def test_publish_schema(clean_redis):
