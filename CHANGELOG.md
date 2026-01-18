@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix dark theme styling for callouts and code blocks in Quarto docs (#229)
 
 ### Changed
+- Fix browser chrome not updating on dark mode toggle (#239)
+- Commit Quarto docs rebuild (#238)
 - Commit theme-color refactor to Quarto source (#237)
 - Move dark mode fixes to Quarto source (docs_src) (#235)
 - Commit theme-color meta tag to all docs pages (#236)

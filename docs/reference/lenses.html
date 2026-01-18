@@ -107,42 +107,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Search"
   }
 }</script>
-<meta name="theme-color" content="#212529" id="theme-color-meta">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" id="theme-color-light">
+<meta name="theme-color" content="#212529" media="(prefers-color-scheme: dark)" id="theme-color-dark">
 <script>
-// Update theme-color meta tag when Quarto toggles dark mode
-// This affects Safari's browser chrome color
+// Update theme-color meta tags when Quarto toggles dark mode
+// Uses dual meta tags with media queries, overriding both when user manually toggles
 (function() {
+  const lightMeta = document.getElementById('theme-color-light');
+  const darkMeta = document.getElementById('theme-color-dark');
+  const LIGHT_COLOR = '#ffffff';
+  const DARK_COLOR = '#212529';
+
   const updateThemeColor = () => {
-    const meta = document.querySelector('#theme-color-meta');
-    if (meta) {
-      const isDark = document.body.classList.contains('quarto-dark');
-      meta.setAttribute('content', isDark ? '#212529' : '#ffffff');
+    if (!lightMeta || !darkMeta) return;
+
+    const isDark = document.body.classList.contains('quarto-dark');
+    // Override both metas to force the color regardless of OS preference
+    // This ensures manual Quarto toggle takes precedence
+    if (isDark) {
+      lightMeta.setAttribute('content', DARK_COLOR);
+      darkMeta.setAttribute('content', DARK_COLOR);
+    } else {
+      lightMeta.setAttribute('content', LIGHT_COLOR);
+      darkMeta.setAttribute('content', LIGHT_COLOR);
     }
   };
 
-  // Update on page load
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', updateThemeColor);
-  } else {
-    updateThemeColor();
-  }
-
-  // Watch for class changes on body (Quarto adds/removes quarto-dark)
-  const observer = new MutationObserver((mutations) => {
-    for (const mutation of mutations) {
-      if (mutation.attributeName === 'class') {
-        updateThemeColor();
+  const startObserving = () => {
+    // Watch for class changes on body (Quarto adds/removes quarto-dark)
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.attributeName === 'class') {
+          updateThemeColor();
+        }
       }
-    }
-  });
+    });
+    observer.observe(document.body, { attributes: true });
+    updateThemeColor();
+  };
 
   if (document.body) {
-    observer.observe(document.body, { attributes: true });
+    startObserving();
   } else {
-    document.addEventListener('DOMContentLoaded', () => {
-      observer.observe(document.body, { attributes: true });
-      updateThemeColor();
-    });
+    document.addEventListener('DOMContentLoaded', startObserving);
   }
 })();
 </script>
@@ -611,7 +619,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="creating-a-lens" class="level2">
 <h2 class="anchored" data-anchor-id="creating-a-lens">Creating a Lens</h2>
 <p>Use the <code>@lens</code> decorator to define a getter:</p>
-<div id="7614b69e" class="cell">
+<div id="6a75be7d" class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -641,7 +649,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="adding-a-putter" class="level2">
 <h2 class="anchored" data-anchor-id="adding-a-putter">Adding a Putter</h2>
 <p>To enable bidirectional updates, add a putter:</p>
-<div id="dba0c0c2" class="cell">
+<div id="e94f5c13" class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="at">@simplify.putter</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> simplify_put(view: SimpleSample, source: FullSample) <span class="op">-&gt;</span> FullSample:</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> FullSample(</span>
@@ -661,7 +669,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="using-lenses-with-datasets" class="level2">
 <h2 class="anchored" data-anchor-id="using-lenses-with-datasets">Using Lenses with Datasets</h2>
 <p>Lenses integrate with <code>Dataset.as_type()</code>:</p>
-<div id="57113825" class="cell">
+<div id="99f0ce60" class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[FullSample](<span class="st">"data-{000000..000009}.tar"</span>)</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># View through a different type</span></span>
@@ -676,7 +684,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="direct-lens-usage" class="level2">
 <h2 class="anchored" data-anchor-id="direct-lens-usage">Direct Lens Usage</h2>
 <p>Lenses can also be called directly:</p>
-<div id="b295a5a3" class="cell">
+<div id="0ded1064" class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>full <span class="op">=</span> FullSample(</span>
@@ -705,21 +713,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="tab-content">
 <div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
 <p>If you get a view and immediately put it back, the source is unchanged:</p>
-<div id="385226be" class="cell">
+<div id="20e02abd" class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>view <span class="op">=</span> lens.get(source)</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> lens.put(view, source) <span class="op">==</span> source</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 <div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
 <p>If you put a view, getting it back yields that view:</p>
-<div id="a215aaa2" class="cell">
+<div id="97badaa7" class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>updated <span class="op">=</span> lens.put(view, source)</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> lens.get(updated) <span class="op">==</span> view</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 <div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
 <p>Putting twice is equivalent to putting once with the final value:</p>
-<div id="ee8052ca" class="cell">
+<div id="88c1e8b2" class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>result1 <span class="op">=</span> lens.put(v2, lens.put(v1, source))</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>result2 <span class="op">=</span> lens.put(v2, source)</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> result1 <span class="op">==</span> result2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -731,7 +739,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="trivial-putter" class="level2">
 <h2 class="anchored" data-anchor-id="trivial-putter">Trivial Putter</h2>
 <p>If no putter is defined, a trivial putter is used that ignores view updates:</p>
-<div id="f5f98ca1" class="cell">
+<div id="2589f38d" class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.lens</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> extract_label(src: FullSample) <span class="op">-&gt;</span> SimpleSample:</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> SimpleSample(label<span class="op">=</span>src.label, confidence<span class="op">=</span>src.confidence)</span>
@@ -745,7 +753,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="lensnetwork-registry" class="level2">
 <h2 class="anchored" data-anchor-id="lensnetwork-registry">LensNetwork Registry</h2>
 <p>The <code>LensNetwork</code> is a singleton that stores all registered lenses:</p>
-<div id="2e6c43d5" class="cell">
+<div id="baf677f9" class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.lens <span class="im">import</span> LensNetwork</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>network <span class="op">=</span> LensNetwork()</span>
@@ -762,7 +770,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="example-feature-extraction" class="level2">
 <h2 class="anchored" data-anchor-id="example-feature-extraction">Example: Feature Extraction</h2>
-<div id="14669c2f" class="cell">
+<div id="32dc3d61" class="cell">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> RawSample:</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    audio: NDArray</span>

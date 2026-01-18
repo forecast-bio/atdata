@@ -107,42 +107,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Search"
   }
 }</script>
-<meta name="theme-color" content="#212529" id="theme-color-meta">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" id="theme-color-light">
+<meta name="theme-color" content="#212529" media="(prefers-color-scheme: dark)" id="theme-color-dark">
 <script>
-// Update theme-color meta tag when Quarto toggles dark mode
-// This affects Safari's browser chrome color
+// Update theme-color meta tags when Quarto toggles dark mode
+// Uses dual meta tags with media queries, overriding both when user manually toggles
 (function() {
+  const lightMeta = document.getElementById('theme-color-light');
+  const darkMeta = document.getElementById('theme-color-dark');
+  const LIGHT_COLOR = '#ffffff';
+  const DARK_COLOR = '#212529';
+
   const updateThemeColor = () => {
-    const meta = document.querySelector('#theme-color-meta');
-    if (meta) {
-      const isDark = document.body.classList.contains('quarto-dark');
-      meta.setAttribute('content', isDark ? '#212529' : '#ffffff');
+    if (!lightMeta || !darkMeta) return;
+
+    const isDark = document.body.classList.contains('quarto-dark');
+    // Override both metas to force the color regardless of OS preference
+    // This ensures manual Quarto toggle takes precedence
+    if (isDark) {
+      lightMeta.setAttribute('content', DARK_COLOR);
+      darkMeta.setAttribute('content', DARK_COLOR);
+    } else {
+      lightMeta.setAttribute('content', LIGHT_COLOR);
+      darkMeta.setAttribute('content', LIGHT_COLOR);
     }
   };
 
-  // Update on page load
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', updateThemeColor);
-  } else {
-    updateThemeColor();
-  }
-
-  // Watch for class changes on body (Quarto adds/removes quarto-dark)
-  const observer = new MutationObserver((mutations) => {
-    for (const mutation of mutations) {
-      if (mutation.attributeName === 'class') {
-        updateThemeColor();
+  const startObserving = () => {
+    // Watch for class changes on body (Quarto adds/removes quarto-dark)
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.attributeName === 'class') {
+          updateThemeColor();
+        }
       }
-    }
-  });
+    });
+    observer.observe(document.body, { attributes: true });
+    updateThemeColor();
+  };
 
   if (document.body) {
-    observer.observe(document.body, { attributes: true });
+    startObserving();
   } else {
-    document.addEventListener('DOMContentLoaded', () => {
-      observer.observe(document.body, { attributes: true });
-      updateThemeColor();
-    });
+    document.addEventListener('DOMContentLoaded', startObserving);
   }
 })();
 </script>
@@ -610,7 +618,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="basic-usage" class="level2">
 <h2 class="anchored" data-anchor-id="basic-usage">Basic Usage</h2>
-<div id="b7d5a4e4" class="cell">
+<div id="4ff2626d" class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> LocalIndex</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> AtmosphereClient</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.promote <span class="im">import</span> promote_to_atmosphere</span>
@@ -630,7 +638,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="with-metadata" class="level2">
 <h2 class="anchored" data-anchor-id="with-metadata">With Metadata</h2>
-<div id="82287661" class="cell">
+<div id="8a048b83" class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>at_uri <span class="op">=</span> promote_to_atmosphere(</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    entry,</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    local_index,</span>
@@ -645,7 +653,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="schema-deduplication" class="level2">
 <h2 class="anchored" data-anchor-id="schema-deduplication">Schema Deduplication</h2>
 <p>The promotion workflow automatically checks for existing schemas:</p>
-<div id="11218f7e" class="cell">
+<div id="aba02cf7" class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># First promotion: publishes schema</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>uri1 <span class="op">=</span> promote_to_atmosphere(entry1, local_index, client)</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -665,7 +673,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="tab-content">
 <div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
 <p>By default, promotion keeps the original data URLs:</p>
-<div id="cafbf488" class="cell">
+<div id="72606e44" class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Data stays in original S3 location</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>at_uri <span class="op">=</span> promote_to_atmosphere(entry, local_index, client)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -678,7 +686,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
 <p>To copy data to a different storage location:</p>
-<div id="529e75b5" class="cell">
+<div id="aa57ce80" class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> S3DataStore</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create new data store</span></span>
@@ -706,7 +714,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="complete-workflow-example" class="level2">
 <h2 class="anchored" data-anchor-id="complete-workflow-example">Complete Workflow Example</h2>
-<div id="123b452f" class="cell">
+<div id="ea500637" class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
@@ -778,7 +786,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="error-handling" class="level2">
 <h2 class="anchored" data-anchor-id="error-handling">Error Handling</h2>
-<div id="59e5e7cf" class="cell">
+<div id="5bca27d9" class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    at_uri <span class="op">=</span> promote_to_atmosphere(entry, local_index, client)</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> <span class="pp">KeyError</span> <span class="im">as</span> e:</span>
