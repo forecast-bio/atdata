@@ -1,15 +1,17 @@
 [project]
 name = "atdata"
-version = "0.2.0a1"
+version = "0.2.1a1"
 description = "A loose federation of distributed, typed datasets"
 readme = "README.md"
 authors = [
-    { name = "Maxine Levesque", email = "hello@maxine.science" }
+    { name = "Maxine Levesque", email = "hello@maxine.science" },
+    { name = "Maxine @ Forecast Bio", email = "maxine@forecast.bio" }
 ]
 requires-python = ">=3.12"
 dependencies = [
     "atproto>=0.0.65",
     "fastparquet>=2024.11.0",
+    "libipld>=3.3.2",
     "msgpack>=1.1.2",
     "numpy>=2.3.4",
     "ormsgpack>=1.11.0",
@@ -38,6 +40,10 @@ build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
 addopts = "--cov=atdata --cov-report=html"
+markers = [
+    "network: marks tests as requiring network access (deselect with '-m \"not network\"')",
+    "slow: marks tests as slow running",
+]
 
 [dependency-groups]
 dev = [
@@ -45,4 +51,5 @@ dev = [
     "moto[s3]>=5.0.29",
     "pytest>=8.4.2",
     "pytest-cov>=7.0.0",
+    "ruff>=0.14.13",
 ]

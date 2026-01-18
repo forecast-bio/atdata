@@ -1,0 +1,158 @@
+---
+title: "Quick Start"
+description: "Get up and running with atdata in 5 minutes"
+---
+
+This guide walks you through the basics of atdata: defining sample types, writing datasets, and iterating over them.
+
+## Installation
+
+```bash
+pip install atdata
+
+# With ATProto support
+pip install atdata[atmosphere]
+```
+
+## Define a Sample Type
+
+Use the `@packable` decorator to create a typed sample:
+
+```{python}
+#| eval: false
+import numpy as np
+from numpy.typing import NDArray
+import atdata
+
+@atdata.packable
+class ImageSample:
+    """A sample containing an image with label and confidence."""
+    image: NDArray
+    label: str
+    confidence: float
+```
+
+The `@packable` decorator:
+
+- Converts your class into a dataclass
+- Adds automatic msgpack serialization
+- Handles NDArray conversion to/from bytes
+
+## Create Sample Instances
+
+```{python}
+#| eval: false
+# Create a single sample
+sample = ImageSample(
+    image=np.random.rand(224, 224, 3).astype(np.float32),
+    label="cat",
+    confidence=0.95,
+)
+
+# Check serialization
+packed_bytes = sample.packed
+print(f"Serialized size: {len(packed_bytes):,} bytes")
+
+# Verify round-trip
+restored = ImageSample.from_bytes(packed_bytes)
+assert np.allclose(sample.image, restored.image)
+print("Round-trip successful!")
+```
+
+## Write a Dataset
+
+Use WebDataset's `TarWriter` to create dataset files:
+
+```{python}
+#| eval: false
+import webdataset as wds
+
+# Create 100 samples
+samples = [
+    ImageSample(
+        image=np.random.rand(224, 224, 3).astype(np.float32),
+        label=f"class_{i % 10}",
+        confidence=np.random.rand(),
+    )
+    for i in range(100)
+]
+
+# Write to tar file
+with wds.writer.TarWriter("my-dataset-000000.tar") as sink:
+    for i, sample in enumerate(samples):
+        sink.write({**sample.as_wds, "__key__": f"sample_{i:06d}"})
+
+print("Wrote 100 samples to my-dataset-000000.tar")
+```
+
+## Load and Iterate
+
+Create a typed `Dataset` and iterate with batching:
+
+```{python}
+#| eval: false
+# Load dataset with type
+dataset = atdata.Dataset[ImageSample]("my-dataset-000000.tar")
+
+# Iterate in order with batching
+for batch in dataset.ordered(batch_size=16):
+    # NDArray fields are stacked
+    images = batch.image        # shape: (16, 224, 224, 3)
+
+    # Other fields become lists
+    labels = batch.label        # list of 16 strings
+    confidences = batch.confidence  # list of 16 floats
+
+    print(f"Batch shape: {images.shape}")
+    print(f"Labels: {labels[:3]}...")
+    break
+```
+
+## Shuffled Iteration
+
+For training, use shuffled iteration:
+
+```{python}
+#| eval: false
+for batch in dataset.shuffled(batch_size=32):
+    # Samples are shuffled at shard and sample level
+    images = batch.image
+    labels = batch.label
+
+    # Train your model
+    # model.train(images, labels)
+    break
+```
+
+## Use Lenses for Type Transformations
+
+View datasets through different schemas:
+
+```{python}
+#| eval: false
+# Define a simplified view type
+@atdata.packable
+class SimplifiedSample:
+    label: str
+    confidence: float
+
+# Create a lens transformation
+@atdata.lens
+def simplify(src: ImageSample) -> SimplifiedSample:
+    return SimplifiedSample(label=src.label, confidence=src.confidence)
+
+# View dataset through lens
+simple_ds = dataset.as_type(SimplifiedSample)
+
+for batch in simple_ds.ordered(batch_size=8):
+    print(f"Labels: {batch.label}")
+    print(f"Confidences: {batch.confidence}")
+    break
+```
+
+## Next Steps
+
+- **[Local Workflow](local-workflow.qmd)** - Store datasets with Redis + S3
+- **[Atmosphere Publishing](atmosphere.qmd)** - Publish to ATProto federation
+- **[Packable Samples](../reference/packable-samples.qmd)** - Deep dive into sample types
+- **[Datasets](../reference/datasets.qmd)** - Advanced dataset operations

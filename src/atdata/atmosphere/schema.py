@@ -6,8 +6,7 @@ records.
 """
 
 from dataclasses import fields, is_dataclass
-from typing import Type, TypeVar, Optional, Union, get_type_hints, get_origin, get_args
-import types
+from typing import Type, TypeVar, Optional, get_type_hints, get_origin, get_args
 
 from .client import AtmosphereClient
 from ._types import (
@@ -16,6 +15,12 @@ from ._types import (
     FieldDef,
     FieldType,
     LEXICON_NAMESPACE,
+)
+from .._type_utils import (
+    numpy_dtype_to_string,
+    unwrap_optional,
+    is_ndarray_type,
+    extract_ndarray_dtype,
 )
 
 # Import for type checking only to avoid circular imports
@@ -130,71 +135,32 @@ class SchemaPublisher:
 
     def _field_to_def(self, name: str, python_type) -> FieldDef:
         """Convert a Python field to a FieldDef."""
-        # Check for Optional types (Union with None)
-        is_optional = False
-        origin = get_origin(python_type)
-
-        # Handle Union types (including Optional which is Union[T, None])
-        if origin is Union or isinstance(python_type, types.UnionType):
-            args = get_args(python_type)
-            non_none_args = [a for a in args if a is not type(None)]
-            if type(None) in args or len(non_none_args) < len(args):
-                is_optional = True
-            if len(non_none_args) == 1:
-                python_type = non_none_args[0]
-            elif len(non_none_args) > 1:
-                # Complex union type - not fully supported yet
-                raise TypeError(f"Complex union types not supported: {python_type}")
-
+        python_type, is_optional = unwrap_optional(python_type)
         field_type = self._python_type_to_field_type(python_type)
-
-        return FieldDef(
-            name=name,
-            field_type=field_type,
-            optional=is_optional,
-        )
+        return FieldDef(name=name, field_type=field_type, optional=is_optional)
 
     def _python_type_to_field_type(self, python_type) -> FieldType:
         """Map a Python type to a FieldType."""
-        # Handle primitives
         if python_type is str:
             return FieldType(kind="primitive", primitive="str")
-        elif python_type is int:
+        if python_type is int:
             return FieldType(kind="primitive", primitive="int")
-        elif python_type is float:
+        if python_type is float:
             return FieldType(kind="primitive", primitive="float")
-        elif python_type is bool:
+        if python_type is bool:
             return FieldType(kind="primitive", primitive="bool")
-        elif python_type is bytes:
+        if python_type is bytes:
             return FieldType(kind="primitive", primitive="bytes")
 
-        # Check for NDArray
-        # NDArray from numpy.typing is a special generic alias
-        type_str = str(python_type)
-        if "NDArray" in type_str or "ndarray" in type_str.lower():
-            # Try to extract dtype info if available
-            dtype = "float32"  # Default
-            args = get_args(python_type)
-            if args:
-                # NDArray[np.float64] or similar
-                dtype_arg = args[-1] if args else None
-                if dtype_arg is not None:
-                    dtype = self._numpy_dtype_to_string(dtype_arg)
+        if is_ndarray_type(python_type):
+            return FieldType(kind="ndarray", dtype=extract_ndarray_dtype(python_type), shape=None)
 
-            return FieldType(kind="ndarray", dtype=dtype, shape=None)
-
-        # Check for list/array types
         origin = get_origin(python_type)
         if origin is list:
             args = get_args(python_type)
-            if args:
-                items = self._python_type_to_field_type(args[0])
-                return FieldType(kind="array", items=items)
-            else:
-                # Untyped list
-                return FieldType(kind="array", items=FieldType(kind="primitive", primitive="str"))
+            items = self._python_type_to_field_type(args[0]) if args else FieldType(kind="primitive", primitive="str")
+            return FieldType(kind="array", items=items)
 
-        # Check for nested PackableSample (not yet supported)
         if is_dataclass(python_type):
             raise TypeError(
                 f"Nested dataclass types not yet supported: {python_type.__name__}. "
@@ -202,33 +168,6 @@ class SchemaPublisher:
             )
 
         raise TypeError(f"Unsupported type for schema field: {python_type}")
-
-    def _numpy_dtype_to_string(self, dtype) -> str:
-        """Convert a numpy dtype annotation to a string."""
-        dtype_str = str(dtype)
-        # Handle common numpy dtypes
-        dtype_map = {
-            "float16": "float16",
-            "float32": "float32",
-            "float64": "float64",
-            "int8": "int8",
-            "int16": "int16",
-            "int32": "int32",
-            "int64": "int64",
-            "uint8": "uint8",
-            "uint16": "uint16",
-            "uint32": "uint32",
-            "uint64": "uint64",
-            "bool": "bool",
-            "complex64": "complex64",
-            "complex128": "complex128",
-        }
-
-        for key, value in dtype_map.items():
-            if key in dtype_str:
-                return value
-
-        return "float32"  # Default fallback
 
 
 class SchemaLoader:

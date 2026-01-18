@@ -20,8 +20,7 @@ Note:
 """
 
 import argparse
-import sys
-from dataclasses import asdict, fields, is_dataclass
+from dataclasses import fields, is_dataclass
 from datetime import datetime
 
 import numpy as np
@@ -83,7 +82,7 @@ def demo_type_introspection():
         confidence=0.95,
     )
 
-    print(f"\nSample instance:")
+    print("\nSample instance:")
     print(f"  image shape: {sample.image.shape}")
     print(f"  image dtype: {sample.image.dtype}")
     print(f"  label: {sample.label}")
@@ -228,7 +227,7 @@ def demo_live_connection(handle: str, password: str):
     client = AtmosphereClient()
     client.login(handle, password)
 
-    print(f"Authenticated!")
+    print("Authenticated!")
     print(f"  DID: {client.did}")
     print(f"  Handle: {client.handle}")
 
@@ -252,7 +251,7 @@ def demo_live_connection(handle: str, password: str):
         print(f"    - {schema.get('name', 'Unknown')}: v{schema.get('version', '?')}")
 
     # Publish a dataset record (pointing to example URLs)
-    print("\nPublishing dataset record...")
+    print("\nPublishing dataset record (external URL storage)...")
     dataset_publisher = DatasetPublisher(client)
     dataset_uri = dataset_publisher.publish_with_urls(
         urls=["s3://example-bucket/demo-data-{000000..000009}.tar"],
@@ -277,6 +276,92 @@ def demo_live_connection(handle: str, password: str):
             print(f"      Tags: {', '.join(tags)}")
 
 
+def demo_blob_storage(handle: str, password: str):
+    """Demonstrate blob storage for smaller datasets.
+
+    ATProto supports blob storage (up to 50MB per blob by default, configurable).
+    This is useful for smaller datasets that don't need external storage.
+
+    Args:
+        handle: Bluesky handle (e.g., 'alice.bsky.social')
+        password: App-specific password
+    """
+    import io
+    import webdataset as wds
+
+    print("\n" + "=" * 60)
+    print("Blob Storage Demo")
+    print("=" * 60)
+
+    # Create client and authenticate
+    print(f"\nConnecting as {handle}...")
+    client = AtmosphereClient()
+    client.login(handle, password)
+    print(f"Authenticated as {client.handle}")
+
+    # Define a simple sample type for this demo
+    @atdata.packable
+    class DemoSample:
+        id: int
+        text: str
+
+    # Create sample instances using the @packable type
+    samples = [
+        DemoSample(id=0, text="Hello from blob storage!"),
+        DemoSample(id=1, text="ATProto is decentralized."),
+        DemoSample(id=2, text="atdata makes ML data easy."),
+    ]
+
+    # Create a WebDataset tar in memory using proper as_wds serialization
+    print("\nCreating small dataset in memory...")
+    tar_buffer = io.BytesIO()
+    with wds.writer.TarWriter(tar_buffer) as sink:
+        for sample in samples:
+            sink.write(sample.as_wds)
+
+    tar_data = tar_buffer.getvalue()
+    print(f"  Created tar with {len(samples)} samples ({len(tar_data):,} bytes)")
+
+    # Publish schema
+    print("\nPublishing schema...")
+    schema_publisher = SchemaPublisher(client)
+    schema_uri = schema_publisher.publish(DemoSample, version="1.0.0")
+    print(f"  Schema URI: {schema_uri}")
+
+    # Publish dataset with blob storage
+    print("\nUploading data as blob and publishing dataset...")
+    dataset_publisher = DatasetPublisher(client)
+    dataset_uri = dataset_publisher.publish_with_blobs(
+        blobs=[tar_data],
+        schema_uri=str(schema_uri),
+        name="Blob Storage Demo Dataset",
+        description="Small dataset stored directly in ATProto blobs",
+        tags=["demo", "blob-storage"],
+    )
+    print(f"  Dataset URI: {dataset_uri}")
+
+    # Verify storage type
+    print("\nVerifying blob storage...")
+    dataset_loader = DatasetLoader(client)
+    storage_type = dataset_loader.get_storage_type(str(dataset_uri))
+    print(f"  Storage type: {storage_type}")
+
+    # Get blob URLs
+    blob_urls = dataset_loader.get_blob_urls(str(dataset_uri))
+    print(f"  Blob URLs: {len(blob_urls)} blob(s)")
+    for url in blob_urls:
+        # Truncate URL for display
+        print(f"    {url[:80]}...")
+
+    # Load and iterate over data
+    print("\nLoading and iterating over blob data...")
+    ds = dataset_loader.to_dataset(str(dataset_uri), DemoSample)
+    for batch in ds.ordered():
+        print(f"  Sample id={batch.id}, text={batch.text}")
+
+    print("\nBlob storage demo complete!")
+
+
 def demo_dataset_loading():
     """Demonstrate loading a dataset from an ATProto record."""
     print("\n" + "=" * 60)
@@ -296,11 +381,21 @@ Once you have published a dataset, others can load it like this:
     # Get the dataset record
     record = loader.get("at://did:plc:abc123/ac.foundation.dataset.record/xyz")
 
-    # Get the WebDataset URLs
-    urls = loader.get_urls("at://did:plc:abc123/ac.foundation.dataset.record/xyz")
-    print(f"Dataset URLs: {urls}")
+    # Check storage type (external URLs or ATProto blobs)
+    storage_type = loader.get_storage_type(uri)
+    print(f"Storage type: {storage_type}")
 
-    # If you have the sample type class, create a Dataset directly
+    # For external URL storage:
+    if storage_type == "external":
+        urls = loader.get_urls(uri)
+        print(f"Dataset URLs: {urls}")
+
+    # For blob storage:
+    elif storage_type == "blobs":
+        blob_urls = loader.get_blob_urls(uri)
+        print(f"Blob URLs: {blob_urls}")
+
+    # to_dataset() handles both storage types automatically:
     dataset = loader.to_dataset(
         "at://did:plc:abc123/ac.foundation.dataset.record/xyz",
         sample_type=ImageSample,
@@ -348,9 +443,10 @@ def main():
     demo_mock_client()
     demo_dataset_loading()
 
-    # Run live demo if credentials provided
+    # Run live demos if credentials provided
     if args.handle and args.password:
         demo_live_connection(args.handle, args.password)
+        demo_blob_storage(args.handle, args.password)
     else:
         print("\n" + "=" * 60)
         print("Live Demo Skipped")

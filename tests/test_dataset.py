@@ -21,7 +21,6 @@ import atdata.dataset as atds
 from numpy.typing import NDArray
 from typing import (
     Type,
-    Any,
 )
 
 
@@ -142,7 +141,7 @@ def test_create_sample(
     for k, v in sample_data.items():
         cur_assertion: bool
         if isinstance( v, np.ndarray ):
-            cur_assertion = np.all( getattr( sample, k ) == v ) == True
+            cur_assertion = np.all( getattr( sample, k ) == v )
         else:
             cur_assertion = getattr( sample, k ) == v
         assert cur_assertion, \
@@ -583,6 +582,101 @@ def test_dataset_with_lens_batched(tmp_path):
         batches_seen += 1
 
     assert batches_seen == n_samples // batch_size
+
+
+def test_from_bytes_invalid_msgpack():
+    """Test from_bytes raises on invalid msgpack data."""
+    @atdata.packable
+    class SimpleSample:
+        value: int
+
+    with pytest.raises(Exception):  # ormsgpack raises on invalid data
+        SimpleSample.from_bytes(b"not valid msgpack data")
+
+
+def test_from_bytes_missing_field():
+    """Test from_bytes raises when required field is missing."""
+    @atdata.packable
+    class RequiredFieldSample:
+        name: str
+        count: int
+
+    import ormsgpack
+    # Only provide 'name', missing 'count'
+    incomplete_data = ormsgpack.packb({"name": "test"})
+
+    with pytest.raises(TypeError):  # Missing required argument
+        RequiredFieldSample.from_bytes(incomplete_data)
+
+
+def test_wrap_missing_msgpack_key(tmp_path):
+    """Test wrap asserts on sample missing msgpack key."""
+    @atdata.packable
+    class WrapTestSample:
+        value: int
+
+    wds_filename = (tmp_path / "wrap_test.tar").as_posix()
+    with wds.writer.TarWriter(wds_filename) as sink:
+        sample = WrapTestSample(value=42)
+        sink.write(sample.as_wds)
+
+    dataset = atdata.Dataset[WrapTestSample](wds_filename)
+
+    # Directly call wrap with missing key
+    with pytest.raises(AssertionError):
+        dataset.wrap({"__key__": "test"})  # Missing 'msgpack' key
+
+
+def test_wrap_wrong_msgpack_type(tmp_path):
+    """Test wrap asserts when msgpack value is not bytes."""
+    @atdata.packable
+    class WrapTypeSample:
+        value: int
+
+    wds_filename = (tmp_path / "wrap_type_test.tar").as_posix()
+    with wds.writer.TarWriter(wds_filename) as sink:
+        sample = WrapTypeSample(value=42)
+        sink.write(sample.as_wds)
+
+    dataset = atdata.Dataset[WrapTypeSample](wds_filename)
+
+    # Directly call wrap with wrong type
+    with pytest.raises(AssertionError):
+        dataset.wrap({"__key__": "test", "msgpack": "not bytes"})
+
+
+def test_dataset_nonexistent_file():
+    """Test Dataset raises on nonexistent tar file during iteration."""
+    @atdata.packable
+    class NonexistentSample:
+        value: int
+
+    dataset = atdata.Dataset[NonexistentSample]("/nonexistent/path/data.tar")
+
+    # Dataset creation succeeds (lazy loading)
+    assert dataset is not None
+
+    # Iteration fails when file doesn't exist
+    with pytest.raises(Exception):  # FileNotFoundError or similar
+        list(dataset.ordered(batch_size=None))
+
+
+def test_dataset_invalid_batch_size(tmp_path):
+    """Test Dataset raises on invalid batch_size values."""
+    @atdata.packable
+    class BatchSizeSample:
+        value: int
+
+    wds_filename = (tmp_path / "batch_test.tar").as_posix()
+    with wds.writer.TarWriter(wds_filename) as sink:
+        sample = BatchSizeSample(value=42)
+        sink.write(sample.as_wds)
+
+    dataset = atdata.Dataset[BatchSizeSample](wds_filename)
+
+    # batch_size=0 produces empty batches, causing IndexError in webdataset
+    with pytest.raises((ValueError, AssertionError, IndexError)):
+        list(dataset.ordered(batch_size=0))
 
 
 ##

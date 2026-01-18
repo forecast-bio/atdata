@@ -54,8 +54,6 @@ from typing import (
     Sequence,
     Iterable,
     Callable,
-    Union,
-    #
     Self,
     Generic,
     Type,
@@ -91,43 +89,18 @@ MsgpackRawSample: TypeAlias = Dict[str, Any]
 
 
 def _make_packable( x ):
-    """Convert a value to a msgpack-compatible format.
-
-    Args:
-        x: A value to convert. If it's a numpy array, converts to bytes.
-            Otherwise returns the value unchanged.
-
-    Returns:
-        The value in a format suitable for msgpack serialization.
-    """
+    """Convert numpy arrays to bytes; pass through other values unchanged."""
     if isinstance( x, np.ndarray ):
         return eh.array_to_bytes( x )
     return x
 
+
 def _is_possibly_ndarray_type( t ):
-    """Check if a type annotation is or contains NDArray.
-
-    Args:
-        t: A type annotation to check.
-
-    Returns:
-        ``True`` if the type is ``NDArray`` or a union containing ``NDArray``
-        (e.g., ``NDArray | None``), ``False`` otherwise.
-    """
-
-    # Directly an NDArray
+    """Return True if type annotation is NDArray or Optional[NDArray]."""
     if t == NDArray:
-        # print( 'is an NDArray' )
         return True
-    
-    # Check for Optionals (i.e., NDArray | None)
     if isinstance( t, types.UnionType ):
-        t_parts = t.__args__
-        if any( x == NDArray
-                for x in t_parts ):
-            return True
-    
-    # Not an NDArray
+        return any( x == NDArray for x in t.__args__ )
     return False
 
 @dataclass
@@ -187,9 +160,9 @@ class PackableSample( ABC ):
                     continue
 
                 elif isinstance( var_cur_value, bytes ):
-                    # TODO This does create a constraint that serialized bytes
-                    # in a field that might be an NDArray are always interpreted
-                    # as being the NDArray interpretation
+                    # Design note: bytes in NDArray-typed fields are always interpreted
+                    # as serialized arrays. This means raw bytes fields must not be
+                    # annotated as NDArray.
                     setattr( self, var_name, eh.bytes_to_array( var_cur_value ) )
 
     def __post_init__( self ):
@@ -202,16 +175,12 @@ class PackableSample( ABC ):
         """Create a sample instance from unpacked msgpack data.
 
         Args:
-            data: A dictionary of unpacked msgpack data with keys matching
-                the sample's field names.
+            data: Dictionary with keys matching the sample's field names.
 
         Returns:
-            A new instance of this sample class with fields populated from
-            the data dictionary and NDArray fields auto-converted from bytes.
+            New instance with NDArray fields auto-converted from bytes.
         """
-        ret = cls( **data )
-        ret._ensure_good()
-        return ret
+        return cls( **data )
     
     @classmethod
     def from_bytes( cls, bs: bytes ) -> Self:
@@ -253,7 +222,6 @@ class PackableSample( ABC ):
 
         return ret
     
-    # TODO Expand to allow for specifying explicit __key__
     @property
     def as_wds( self ) -> WDSRawSample:
         """Pack this sample's data for writing to WebDataset.
@@ -263,7 +231,8 @@ class PackableSample( ABC ):
             ``msgpack`` (packed sample data) fields suitable for WebDataset.
 
         Note:
-            TODO: Expand to allow specifying explicit ``__key__`` values.
+            Keys are auto-generated as UUID v1 for time-sortable ordering.
+            Custom key specification is not currently supported.
         """
         return {
             # Generates a UUID that is timelike-sortable
@@ -272,25 +241,11 @@ class PackableSample( ABC ):
         }
 
 def _batch_aggregate( xs: Sequence ):
-    """Aggregate a sequence of values into a batch-appropriate format.
-
-    Args:
-        xs: A sequence of values to aggregate. If the first element is a numpy
-            array, all elements are stacked into a single array. Otherwise,
-            returns a list.
-
-    Returns:
-        A numpy array (if elements are arrays) or a list (otherwise).
-    """
-
+    """Stack arrays into numpy array with batch dim; otherwise return list."""
     if not xs:
-        # Empty sequence
         return []
-
-    # Aggregate
     if isinstance( xs[0], np.ndarray ):
         return np.array( list( xs ) )
-
     return list( xs )
 
 class SampleBatch( Generic[DT] ):
@@ -326,6 +281,7 @@ class SampleBatch( Generic[DT] ):
         """
         self.samples = list( samples )
         self._aggregate_cache = dict()
+        self._sample_type_cache: Type | None = None
 
     @property
     def sample_type( self ) -> Type:
@@ -334,7 +290,9 @@ class SampleBatch( Generic[DT] ):
         Returns:
             The type parameter ``DT`` used when creating this ``SampleBatch[DT]``.
         """
-        return typing.get_args( self.__orig_class__)[0]
+        if self._sample_type_cache is None:
+            self._sample_type_cache = typing.get_args( self.__orig_class__)[0]
+        return self._sample_type_cache
 
     def __getattr__( self, name ):
         """Aggregate an attribute across all samples in the batch.
@@ -404,12 +362,10 @@ class Dataset( Generic[ST] ):
 
         Returns:
             The type parameter ``ST`` used when creating this ``Dataset[ST]``.
-
-        Note:
-            Extracts the type parameter at runtime using ``__orig_class__``.
         """
-        # NOTE: Linting may fail here due to __orig_class__ being a runtime attribute
-        return typing.get_args( self.__orig_class__ )[0]
+        if self._sample_type_cache is None:
+            self._sample_type_cache = typing.get_args( self.__orig_class__ )[0]
+        return self._sample_type_cache
     @property
     def batch_type( self ) -> Type:
         """The type of batches produced by this dataset.
@@ -431,17 +387,14 @@ class Dataset( Generic[ST] ):
         """
         super().__init__()
         self.url = url
-        """WebDataset brace-notation URL pointing to tar files, e.g.,
-                ``"path/to/file-{000000..000009}.tar"`` for multiple shards or
-                ``"path/to/file-000000.tar"`` for a single shard.
-        """
+        """WebDataset brace-notation URL pointing to tar files."""
 
         self._metadata: dict[str, Any] | None = None
         self.metadata_url: str | None = metadata_url
         """Optional URL to msgpack-encoded metadata for this dataset."""
 
-        # Allow addition of automatic transformation of raw underlying data
         self._output_lens: Lens | None = None
+        self._sample_type_cache: Type | None = None
 
     def as_type( self, other: Type[RT] ) -> 'Dataset[RT]':
         """View this dataset through a different sample type using a registered lens.
@@ -575,8 +528,8 @@ class Dataset( Generic[ST] ):
             wds.filters.map( self.wrap_batch ),
         )
     
-    # TODO Rewrite to eliminate `pandas` dependency directly calling
-    # `fastparquet`
+    # Design note: Uses pandas for parquet export. Could be replaced with
+    # direct fastparquet calls to reduce dependencies if needed.
     def to_parquet( self, path: Pathlike,
                 sample_map: Optional[SampleExportMap] = None,
                 maxcount: Optional[int] = None,
@@ -644,7 +597,7 @@ class Dataset( Generic[ST] ):
             a lens if ``as_type()`` was called.
         """
         assert 'msgpack' in sample
-        assert type( sample['msgpack'] ) == bytes
+        assert isinstance(sample['msgpack'], bytes)
         
         if self._output_lens is None:
             return self.sample_type.from_bytes( sample['msgpack'] )
@@ -721,7 +674,7 @@ def packable( cls ):
         def __post_init__( self ):
             return PackableSample.__post_init__( self )
     
-    # TODO This doesn't properly carry over the original
+    # Restore original class identity for better repr/debugging
     as_packable.__name__ = class_name
     as_packable.__annotations__ = class_annotations
 

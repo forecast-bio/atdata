@@ -254,7 +254,18 @@ class AtmosphereClient:
             }
         )
 
-        return response.value
+        # Convert ATProto model to dict if needed
+        value = response.value
+        # DotDict and similar ATProto models have to_dict()
+        if hasattr(value, "to_dict") and callable(value.to_dict):
+            return value.to_dict()
+        elif isinstance(value, dict):
+            return dict(value)
+        elif hasattr(value, "model_dump") and callable(value.model_dump):
+            return value.model_dump()
+        elif hasattr(value, "__dict__"):
+            return dict(value.__dict__)
+        return value
 
     def delete_record(
         self,
@@ -286,6 +297,119 @@ class AtmosphereClient:
             data["swapCommit"] = swap_commit
 
         self._client.com.atproto.repo.delete_record(data=data)
+
+    def upload_blob(
+        self,
+        data: bytes,
+        mime_type: str = "application/octet-stream",
+    ) -> dict:
+        """Upload binary data as a blob to the PDS.
+
+        Args:
+            data: Binary data to upload.
+            mime_type: MIME type of the data (for reference, not enforced by PDS).
+
+        Returns:
+            A blob reference dict with keys: '$type', 'ref', 'mimeType', 'size'.
+            This can be embedded directly in record fields.
+
+        Raises:
+            ValueError: If not authenticated.
+            atproto.exceptions.AtProtocolError: If upload fails.
+        """
+        self._ensure_authenticated()
+
+        response = self._client.upload_blob(data)
+        blob_ref = response.blob
+
+        # Convert to dict format suitable for embedding in records
+        return {
+            "$type": "blob",
+            "ref": {"$link": blob_ref.ref.link if hasattr(blob_ref.ref, "link") else str(blob_ref.ref)},
+            "mimeType": blob_ref.mime_type,
+            "size": blob_ref.size,
+        }
+
+    def get_blob(
+        self,
+        did: str,
+        cid: str,
+    ) -> bytes:
+        """Download a blob from a PDS.
+
+        This resolves the PDS endpoint from the DID document and fetches
+        the blob directly from the PDS.
+
+        Args:
+            did: The DID of the repository containing the blob.
+            cid: The CID of the blob.
+
+        Returns:
+            The blob data as bytes.
+
+        Raises:
+            ValueError: If PDS endpoint cannot be resolved.
+            requests.HTTPError: If blob fetch fails.
+        """
+        import requests
+
+        # Resolve PDS endpoint from DID document
+        pds_endpoint = self._resolve_pds_endpoint(did)
+        if not pds_endpoint:
+            raise ValueError(f"Could not resolve PDS endpoint for {did}")
+
+        # Fetch blob from PDS
+        url = f"{pds_endpoint}/xrpc/com.atproto.sync.getBlob"
+        response = requests.get(url, params={"did": did, "cid": cid})
+        response.raise_for_status()
+        return response.content
+
+    def _resolve_pds_endpoint(self, did: str) -> Optional[str]:
+        """Resolve the PDS endpoint for a DID.
+
+        Args:
+            did: The DID to resolve.
+
+        Returns:
+            The PDS service endpoint URL, or None if not found.
+        """
+        import requests
+
+        # For did:plc, query the PLC directory
+        if did.startswith("did:plc:"):
+            try:
+                response = requests.get(f"https://plc.directory/{did}")
+                response.raise_for_status()
+                did_doc = response.json()
+
+                for service in did_doc.get("service", []):
+                    if service.get("type") == "AtprotoPersonalDataServer":
+                        return service.get("serviceEndpoint")
+            except requests.RequestException:
+                return None
+
+        # For did:web, would need different resolution (not implemented)
+        return None
+
+    def get_blob_url(self, did: str, cid: str) -> str:
+        """Get the direct URL for fetching a blob.
+
+        This is useful for passing to WebDataset or other HTTP clients.
+
+        Args:
+            did: The DID of the repository containing the blob.
+            cid: The CID of the blob.
+
+        Returns:
+            The full URL for fetching the blob.
+
+        Raises:
+            ValueError: If PDS endpoint cannot be resolved.
+        """
+        pds_endpoint = self._resolve_pds_endpoint(did)
+        if not pds_endpoint:
+            raise ValueError(f"Could not resolve PDS endpoint for {did}")
+        return f"{pds_endpoint}/xrpc/com.atproto.sync.getBlob?did={did}&cid={cid}"
 
     def list_records(
         self,
@@ -324,7 +448,21 @@ class AtmosphereClient:
             }
         )
 
-        records = [r.value for r in response.records]
+        # Convert ATProto models to dicts if needed
+        records = []
+        for r in response.records:
+            value = r.value
+            # DotDict and similar ATProto models have to_dict()
+            if hasattr(value, "to_dict") and callable(value.to_dict):
+                records.append(value.to_dict())
+            elif isinstance(value, dict):
+                records.append(dict(value))
+            elif hasattr(value, "model_dump") and callable(value.model_dump):
+                records.append(value.model_dump())
+            elif hasattr(value, "__dict__"):
+                records.append(dict(value.__dict__))
+            else:
+                records.append(value)
         return records, response.cursor
 
     # Convenience methods for atdata collections

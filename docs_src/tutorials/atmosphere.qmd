@@ -1,0 +1,292 @@
+---
+title: "Atmosphere Publishing"
+description: "Publish and discover datasets on the ATProto network"
+---
+
+This tutorial demonstrates how to use the atmosphere module to publish datasets to the AT Protocol network, enabling federated discovery and sharing.
+
+## Prerequisites
+
+- `pip install atdata[atmosphere]`
+- A Bluesky account with an [app-specific password](https://bsky.app/settings/app-passwords)
+
+::: {.callout-warning}
+Always use an app-specific password, not your main Bluesky password.
+:::
+
+## Setup
+
+```{python}
+#| eval: false
+import numpy as np
+from numpy.typing import NDArray
+import atdata
+from atdata.atmosphere import (
+    AtmosphereClient,
+    SchemaPublisher,
+    SchemaLoader,
+    DatasetPublisher,
+    DatasetLoader,
+    AtUri,
+)
+import webdataset as wds
+```
+
+## Define Sample Types
+
+```{python}
+#| eval: false
+@atdata.packable
+class ImageSample:
+    """A sample containing image data with metadata."""
+    image: NDArray
+    label: str
+    confidence: float
+
+@atdata.packable
+class TextEmbeddingSample:
+    """A sample containing text with embedding vectors."""
+    text: str
+    embedding: NDArray
+    source: str
+```
+
+## Type Introspection
+
+See what information is available from a PackableSample type:
+
+```{python}
+#| eval: false
+from dataclasses import fields, is_dataclass
+
+print(f"Sample type: {ImageSample.__name__}")
+print(f"Is dataclass: {is_dataclass(ImageSample)}")
+
+print("\nFields:")
+for field in fields(ImageSample):
+    print(f"  - {field.name}: {field.type}")
+
+# Create and serialize a sample
+sample = ImageSample(
+    image=np.random.rand(224, 224, 3).astype(np.float32),
+    label="cat",
+    confidence=0.95,
+)
+
+packed = sample.packed
+print(f"\nSerialized size: {len(packed):,} bytes")
+
+# Round-trip
+restored = ImageSample.from_bytes(packed)
+print(f"Round-trip successful: {np.allclose(sample.image, restored.image)}")
+```
+
+## AT URI Parsing
+
+ATProto records are identified by AT URIs:
+
+```{python}
+#| eval: false
+uris = [
+    "at://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz789",
+    "at://alice.bsky.social/ac.foundation.dataset.record/my-dataset",
+]
+
+for uri_str in uris:
+    print(f"\nParsing: {uri_str}")
+    uri = AtUri.parse(uri_str)
+    print(f"  Authority:  {uri.authority}")
+    print(f"  Collection: {uri.collection}")
+    print(f"  Rkey:       {uri.rkey}")
+```
+
+## Authentication
+
+Connect to ATProto:
+
+```{python}
+#| eval: false
+client = AtmosphereClient()
+client.login("your.handle.social", "your-app-password")
+
+print(f"Authenticated as: {client.handle}")
+print(f"DID: {client.did}")
+```
+
+## Publish a Schema
+
+```{python}
+#| eval: false
+schema_publisher = SchemaPublisher(client)
+schema_uri = schema_publisher.publish(
+    ImageSample,
+    name="ImageSample",
+    version="1.0.0",
+    description="Demo: Image sample with label and confidence",
+)
+print(f"Schema URI: {schema_uri}")
+```
+
+## List Your Schemas
+
+```{python}
+#| eval: false
+schema_loader = SchemaLoader(client)
+schemas = schema_loader.list_all(limit=10)
+print(f"Found {len(schemas)} schema(s)")
+
+for schema in schemas:
+    print(f"  - {schema.get('name', 'Unknown')}: v{schema.get('version', '?')}")
+```
+
+## Publish a Dataset
+
+### With External URLs
+
+```{python}
+#| eval: false
+dataset_publisher = DatasetPublisher(client)
+dataset_uri = dataset_publisher.publish_with_urls(
+    urls=["s3://example-bucket/demo-data-{000000..000009}.tar"],
+    schema_uri=str(schema_uri),
+    name="Demo Image Dataset",
+    description="Example dataset demonstrating atmosphere publishing",
+    tags=["demo", "images", "atdata"],
+    license="MIT",
+)
+print(f"Dataset URI: {dataset_uri}")
+```
+
+### With Blob Storage
+
+For smaller datasets, store data directly in ATProto blobs:
+
+```{python}
+#| eval: false
+import io
+
+@atdata.packable
+class DemoSample:
+    id: int
+    text: str
+
+# Create samples
+samples = [
+    DemoSample(id=0, text="Hello from blob storage!"),
+    DemoSample(id=1, text="ATProto is decentralized."),
+    DemoSample(id=2, text="atdata makes ML data easy."),
+]
+
+# Create tar in memory
+tar_buffer = io.BytesIO()
+with wds.writer.TarWriter(tar_buffer) as sink:
+    for sample in samples:
+        sink.write(sample.as_wds)
+
+tar_data = tar_buffer.getvalue()
+print(f"Created tar with {len(samples)} samples ({len(tar_data):,} bytes)")
+
+# Publish schema
+blob_schema_uri = schema_publisher.publish(DemoSample, version="1.0.0")
+
+# Publish with blob storage
+blob_dataset_uri = dataset_publisher.publish_with_blobs(
+    blobs=[tar_data],
+    schema_uri=str(blob_schema_uri),
+    name="Blob Storage Demo Dataset",
+    description="Small dataset stored directly in ATProto blobs",
+    tags=["demo", "blob-storage"],
+)
+print(f"Dataset URI: {blob_dataset_uri}")
+```
+
+## List and Load Datasets
+
+```{python}
+#| eval: false
+dataset_loader = DatasetLoader(client)
+datasets = dataset_loader.list_all(limit=10)
+print(f"Found {len(datasets)} dataset(s)")
+
+for ds in datasets:
+    print(f"  - {ds.get('name', 'Unknown')}")
+    print(f"    Schema: {ds.get('schemaRef', 'N/A')}")
+    tags = ds.get('tags', [])
+    if tags:
+        print(f"    Tags: {', '.join(tags)}")
+```
+
+## Load a Dataset
+
+```{python}
+#| eval: false
+# Check storage type
+storage_type = dataset_loader.get_storage_type(str(blob_dataset_uri))
+print(f"Storage type: {storage_type}")
+
+if storage_type == "blobs":
+    blob_urls = dataset_loader.get_blob_urls(str(blob_dataset_uri))
+    print(f"Blob URLs: {len(blob_urls)} blob(s)")
+
+# Load and iterate (works for both storage types)
+ds = dataset_loader.to_dataset(str(blob_dataset_uri), DemoSample)
+for batch in ds.ordered():
+    print(f"Sample id={batch.id}, text={batch.text}")
+```
+
+## Complete Publishing Workflow
+
+```{python}
+#| eval: false
+# 1. Define and create samples
+@atdata.packable
+class FeatureSample:
+    features: NDArray
+    label: int
+    source: str
+
+samples = [
+    FeatureSample(
+        features=np.random.randn(128).astype(np.float32),
+        label=i % 10,
+        source="synthetic",
+    )
+    for i in range(1000)
+]
+
+# 2. Write to tar
+with wds.writer.TarWriter("features.tar") as sink:
+    for i, s in enumerate(samples):
+        sink.write({**s.as_wds, "__key__": f"{i:06d}"})
+
+# 3. Authenticate
+from atdata.atmosphere import AtmosphereIndex
+
+client = AtmosphereClient()
+client.login("myhandle.bsky.social", "app-password")
+index = AtmosphereIndex(client)
+
+# 4. Publish schema
+schema_uri = index.publish_schema(
+    FeatureSample,
+    version="1.0.0",
+    description="Feature vectors with labels",
+)
+
+# 5. Publish dataset
+dataset = atdata.Dataset[FeatureSample]("features.tar")
+entry = index.insert_dataset(
+    dataset,
+    name="synthetic-features-v1",
+    schema_ref=schema_uri,
+    tags=["features", "synthetic"],
+)
+
+print(f"Published: {entry.uri}")
+```
+
+## Next Steps
+
+- **[Promotion Workflow](promotion.qmd)** - Migrate from local storage to atmosphere
+- **[Atmosphere Reference](../reference/atmosphere.qmd)** - Complete API reference
+- **[Protocols](../reference/protocols.qmd)** - Abstract interfaces
