@@ -12,6 +12,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix dark theme styling for callouts and code blocks in Quarto docs (#229)
 
 ### Changed
+- Review and update all examples/docs for current architecture (#263)
+- Add deprecation notes to Repo documentation (#269)
+- Fix incorrect Repo API in docs_src/index.qmd (#268)
+- Fix incorrect Repo API in examples/promote_workflow.py (#267)
 - Create PR for release/v0.2.1a1 to main (#262)
 - Commit code quality improvements from adversarial review (#261)
 - Adversarial review: Post-Index refactor assessment (#254)

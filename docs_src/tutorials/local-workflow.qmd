@@ -24,7 +24,7 @@ docker run -p 9000:9000 minio/minio server /data
 import numpy as np
 from numpy.typing import NDArray
 import atdata
-from atdata.local import LocalIndex, Repo, LocalDatasetEntry, S3DataStore
+from atdata.local import LocalIndex, LocalDatasetEntry, S3DataStore
 import webdataset as wds
 ```
 
@@ -124,9 +124,9 @@ print(f"Bucket: {store.bucket}")
 print(f"Supports streaming: {store.supports_streaming()}")
 ```
 
-## Complete Repo Workflow
+## Complete Index Workflow
 
-The Repo class combines S3 storage with Redis indexing:
+Use `LocalIndex` with `S3DataStore` to store datasets with S3 storage and Redis indexing:
 
 ```{python}
 #| eval: false
@@ -149,18 +149,21 @@ print("Wrote samples to local tar file")
 # 3. Create Dataset
 ds = atdata.Dataset[TrainingSample]("local-data-000000.tar")
 
-# 4. Create Repo and insert
-repo = Repo(
-    s3_credentials={
+# 4. Set up index with S3 data store and insert
+store = S3DataStore(
+    credentials={
         "AWS_ENDPOINT": "http://localhost:9000",
         "AWS_ACCESS_KEY_ID": "minioadmin",
         "AWS_SECRET_ACCESS_KEY": "minioadmin",
     },
-    hive_path="my-bucket/datasets",
+    bucket="my-bucket",
 )
+index = LocalIndex(redis=redis, data_store=store)
 
-entry, stored_ds = repo.insert(ds, name="training-v1")
-print(f"Stored at: {stored_ds.url}")
+# Publish schema and insert dataset
+index.publish_schema(TrainingSample, version="1.0.0")
+entry = index.insert_dataset(ds, name="training-v1", prefix="datasets")
+print(f"Stored at: {entry.data_urls}")
 print(f"CID: {entry.cid}")
 
 # 5. Retrieve later

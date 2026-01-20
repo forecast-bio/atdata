@@ -122,7 +122,7 @@ at_uri = promote_to_atmosphere(
 import numpy as np
 from numpy.typing import NDArray
 import atdata
-from atdata.local import LocalIndex, Repo
+from atdata.local import LocalIndex, S3DataStore
 from atdata.atmosphere import AtmosphereClient
 from atdata.promote import promote_to_atmosphere
 import webdataset as wds
@@ -146,22 +146,21 @@ with wds.writer.TarWriter("features.tar") as sink:
     for i, s in enumerate(samples):
         sink.write({**s.as_wds, "__key__": f"{i:06d}"})
 
-# 3. Store in local repo
-repo = Repo(
-    s3_credentials={
+# 3. Set up index with S3 data store
+store = S3DataStore(
+    credentials={
         "AWS_ENDPOINT": "http://localhost:9000",
         "AWS_ACCESS_KEY_ID": "minioadmin",
         "AWS_SECRET_ACCESS_KEY": "minioadmin",
     },
-    hive_path="datasets-bucket/features",
+    bucket="datasets-bucket",
 )
+local_index = LocalIndex(data_store=store)
 
-dataset = atdata.Dataset[FeatureSample]("features.tar")
-local_entry, _ = repo.insert(dataset, name="feature-vectors-v1")
-
-# 4. Publish schema to local index
-local_index = LocalIndex()
+# 4. Publish schema and insert dataset
 local_index.publish_schema(FeatureSample, version="1.0.0")
+dataset = atdata.Dataset[FeatureSample]("features.tar")
+local_entry = local_index.insert_dataset(dataset, name="feature-vectors-v1", prefix="features")
 
 # 5. Promote to atmosphere
 client = AtmosphereClient()
@@ -206,7 +205,7 @@ except ValueError as e:
 
 Before promotion:
 
-1. Dataset must be in local index (via `Repo.insert()` or `Index.add_entry()`)
+1. Dataset must be in local index (via `Index.insert_dataset()` or `Index.add_entry()`)
 2. Schema must be published to local index (via `Index.publish_schema()`)
 3. AtmosphereClient must be authenticated
 

@@ -301,9 +301,10 @@ def demo_full_workflow():
 Here's a complete example of the local-to-atmosphere workflow:
 
     import atdata
-    from atdata.local import LocalIndex, Repo
+    from atdata.local import LocalIndex, S3DataStore
     from atdata.atmosphere import AtmosphereClient
     from atdata.promote import promote_to_atmosphere
+    import webdataset as wds
 
     # 1. Define your sample type
     @atdata.packable
@@ -311,18 +312,30 @@ Here's a complete example of the local-to-atmosphere workflow:
         features: NDArray
         label: str
 
-    # 2. Create and index local dataset
-    local_index = LocalIndex()  # Connects to Redis
-    repo = Repo(s3_creds, bucket='my-bucket', index=local_index)
-
-    # Insert dataset (writes to S3, indexes in Redis)
+    # 2. Create samples and write to local tar
     samples = [MySample(features=..., label=...) for ...]
-    entry = repo.insert(samples, name='my-dataset')
+    with wds.writer.TarWriter("local-data.tar") as sink:
+        for i, sample in enumerate(samples):
+            sink.write({**sample.as_wds, "__key__": f"{i:06d}"})
+
+    # 3. Set up index with S3 data store and insert dataset
+    s3_creds = {
+        "AWS_ENDPOINT": "http://localhost:9000",
+        "AWS_ACCESS_KEY_ID": "minioadmin",
+        "AWS_SECRET_ACCESS_KEY": "minioadmin",
+    }
+    store = S3DataStore(s3_creds, bucket='my-bucket')
+    local_index = LocalIndex(data_store=store)  # Connects to Redis
+
+    # Publish schema and insert dataset
+    local_index.publish_schema(MySample, version="1.0.0")
+    dataset = atdata.Dataset[MySample]("local-data.tar")
+    entry = local_index.insert_dataset(dataset, name='my-dataset')
 
     print(f"Local CID: {entry.cid}")
     print(f"Local URLs: {entry.data_urls}")
 
-    # 3. When ready to share, promote to atmosphere
+    # 4. When ready to share, promote to atmosphere
     client = AtmosphereClient()
     client.login('myhandle.bsky.social', 'app-password')
 
@@ -336,7 +349,7 @@ Here's a complete example of the local-to-atmosphere workflow:
 
     print(f"Published at: {at_uri}")
 
-    # 4. Others can now discover and load your dataset
+    # 5. Others can now discover and load your dataset
     # ds = atdata.load_dataset('@myhandle.bsky.social/my-dataset')
 """)
 
