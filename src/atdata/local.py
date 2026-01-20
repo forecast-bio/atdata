@@ -169,6 +169,23 @@ class SchemaField:
             "optional": self.optional,
         }
 
+    def __getitem__(self, key: str) -> Any:
+        """Dict-style access for backwards compatibility."""
+        if key == "name":
+            return self.name
+        elif key == "fieldType":
+            return self.field_type.to_dict()
+        elif key == "optional":
+            return self.optional
+        raise KeyError(key)
+
+    def get(self, key: str, default: Any = None) -> Any:
+        """Dict-style get() for backwards compatibility."""
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
 
 @dataclass
 class LocalSchemaRecord:
@@ -228,6 +245,33 @@ class LocalSchemaRecord:
         if self.created_at:
             result["createdAt"] = self.created_at.isoformat()
         return result
+
+    def __getitem__(self, key: str) -> Any:
+        """Dict-style access for backwards compatibility."""
+        if key == "name":
+            return self.name
+        elif key == "version":
+            return self.version
+        elif key == "fields":
+            return self.fields  # Returns list of SchemaField (also subscriptable)
+        elif key == "$ref":
+            return self.ref
+        elif key == "description":
+            return self.description
+        elif key == "createdAt":
+            return self.created_at.isoformat() if self.created_at else None
+        raise KeyError(key)
+
+    def __contains__(self, key: str) -> bool:
+        """Support 'in' operator for backwards compatibility."""
+        return key in ("name", "version", "fields", "$ref", "description", "createdAt")
+
+    def get(self, key: str, default: Any = None) -> Any:
+        """Dict-style get() for backwards compatibility."""
+        try:
+            return self[key]
+        except KeyError:
+            return default
 
 
 ##

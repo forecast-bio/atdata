@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Abstract interfaces for index backends and data stores">
+<meta name="description" content="The atdata:// URI scheme for addressing resources">
 
-<title>Protocols – atdata</title>
+<title>URI Specification – atdata</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -384,7 +384,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/packable-samples.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/protocols.html">Protocols</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/packable-samples.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/uri-spec.html">URI Specification</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -490,13 +490,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../reference/protocols.html" class="sidebar-item-text sidebar-link active">
+  <a href="../reference/protocols.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Protocols</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../reference/uri-spec.html" class="sidebar-item-text sidebar-link">
+  <a href="../reference/uri-spec.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">URI Specification</span></a>
   </div>
 </li>
@@ -530,42 +530,34 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
-  <li><a href="#indexentry-protocol" id="toc-indexentry-protocol" class="nav-link" data-scroll-target="#indexentry-protocol">IndexEntry Protocol</a>
+  <li><a href="#uri-format" id="toc-uri-format" class="nav-link" data-scroll-target="#uri-format">URI Format</a>
   <ul class="collapse">
-  <li><a href="#properties" id="toc-properties" class="nav-link" data-scroll-target="#properties">Properties</a></li>
-  <li><a href="#implementations" id="toc-implementations" class="nav-link" data-scroll-target="#implementations">Implementations</a></li>
+  <li><a href="#authority" id="toc-authority" class="nav-link" data-scroll-target="#authority">Authority</a></li>
+  <li><a href="#resource-types" id="toc-resource-types" class="nav-link" data-scroll-target="#resource-types">Resource Types</a></li>
+  <li><a href="#version-specifiers" id="toc-version-specifiers" class="nav-link" data-scroll-target="#version-specifiers">Version Specifiers</a></li>
   </ul></li>
-  <li><a href="#abstractindex-protocol" id="toc-abstractindex-protocol" class="nav-link" data-scroll-target="#abstractindex-protocol">AbstractIndex Protocol</a>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a>
   <ul class="collapse">
-  <li><a href="#dataset-operations" id="toc-dataset-operations" class="nav-link" data-scroll-target="#dataset-operations">Dataset Operations</a></li>
-  <li><a href="#schema-operations" id="toc-schema-operations" class="nav-link" data-scroll-target="#schema-operations">Schema Operations</a></li>
-  <li><a href="#implementations-1" id="toc-implementations-1" class="nav-link" data-scroll-target="#implementations-1">Implementations</a></li>
+  <li><a href="#local-development" id="toc-local-development" class="nav-link" data-scroll-target="#local-development">Local Development</a></li>
+  <li><a href="#atmosphere-atproto-federation" id="toc-atmosphere-atproto-federation" class="nav-link" data-scroll-target="#atmosphere-atproto-federation">Atmosphere (ATProto Federation)</a></li>
   </ul></li>
-  <li><a href="#abstractdatastore-protocol" id="toc-abstractdatastore-protocol" class="nav-link" data-scroll-target="#abstractdatastore-protocol">AbstractDataStore Protocol</a>
-  <ul class="collapse">
-  <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a></li>
-  <li><a href="#implementations-2" id="toc-implementations-2" class="nav-link" data-scroll-target="#implementations-2">Implementations</a></li>
-  </ul></li>
-  <li><a href="#using-protocols-for-polymorphism" id="toc-using-protocols-for-polymorphism" class="nav-link" data-scroll-target="#using-protocols-for-polymorphism">Using Protocols for Polymorphism</a></li>
-  <li><a href="#schema-reference-formats" id="toc-schema-reference-formats" class="nav-link" data-scroll-target="#schema-reference-formats">Schema Reference Formats</a></li>
-  <li><a href="#type-checking" id="toc-type-checking" class="nav-link" data-scroll-target="#type-checking">Type Checking</a></li>
-  <li><a href="#complete-example" id="toc-complete-example" class="nav-link" data-scroll-target="#complete-example">Complete Example</a></li>
-  <li><a href="#related" id="toc-related" class="nav-link" data-scroll-target="#related">Related</a></li>
+  <li><a href="#relationship-to-at-protocol-uris" id="toc-relationship-to-at-protocol-uris" class="nav-link" data-scroll-target="#relationship-to-at-protocol-uris">Relationship to AT Protocol URIs</a></li>
+  <li><a href="#legacy-format" id="toc-legacy-format" class="nav-link" data-scroll-target="#legacy-format">Legacy Format</a></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/your-org/atdata/edit/main/reference/protocols.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/your-org/atdata/edit/main/reference/uri-spec.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/packable-samples.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/protocols.html">Protocols</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/packable-samples.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/uri-spec.html">URI Specification</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">Protocols</h1>
+<h1 class="title">URI Specification</h1>
 </div>
 
 <div>
   <div class="description">
-    Abstract interfaces for index backends and data stores
+    The atdata:// URI scheme for addressing resources
   </div>
 </div>
 
@@ -582,296 +574,170 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>The protocols module defines abstract interfaces that enable interchangeable index backends (local Redis vs ATProto) and data stores (S3 vs PDS blobs).</p>
+<p>The <code>atdata://</code> URI scheme provides a unified way to address atdata resources across local development and the ATProto federation.</p>
 <section id="overview" class="level2">
 <h2 class="anchored" data-anchor-id="overview">Overview</h2>
-<p>Both local and atmosphere implementations solve the same problem: indexed dataset storage with external data URLs. These protocols formalize that common interface:</p>
+<p>The atdata URI scheme:</p>
 <ul>
-<li><strong>IndexEntry</strong>: Common interface for dataset index entries</li>
-<li><strong>AbstractIndex</strong>: Protocol for index operations</li>
-<li><strong>AbstractDataStore</strong>: Protocol for data storage operations</li>
+<li>Follows <a href="https://datatracker.ietf.org/doc/html/rfc3986">RFC 3986</a> syntax</li>
+<li>Provides consistent addressing for local and atmosphere resources</li>
+<li>Enables seamless promotion from development to production</li>
 </ul>
 </section>
-<section id="indexentry-protocol" class="level2">
-<h2 class="anchored" data-anchor-id="indexentry-protocol">IndexEntry Protocol</h2>
-<p>Represents a dataset entry in any index:</p>
-<div id="b80470f8" class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata._protocols <span class="im">import</span> IndexEntry</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> process_entry(entry: IndexEntry) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Name: </span><span class="sc">{</span>entry<span class="sc">.</span>name<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Schema: </span><span class="sc">{</span>entry<span class="sc">.</span>schema_ref<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"URLs: </span><span class="sc">{</span>entry<span class="sc">.</span>data_urls<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Metadata: </span><span class="sc">{</span>entry<span class="sc">.</span>metadata<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<section id="properties" class="level3">
-<h3 class="anchored" data-anchor-id="properties">Properties</h3>
+<section id="uri-format" class="level2">
+<h2 class="anchored" data-anchor-id="uri-format">URI Format</h2>
+<pre><code>atdata://{authority}/{resource_type}/{name}@{version}</code></pre>
+<section id="authority" class="level3">
+<h3 class="anchored" data-anchor-id="authority">Authority</h3>
+<p>The authority identifies where the resource is stored:</p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
-<th>Property</th>
-<th>Type</th>
+<th>Authority</th>
 <th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>name</code></td>
-<td><code>str</code></td>
-<td>Human-readable dataset name</td>
-</tr>
-<tr class="even">
-<td><code>schema_ref</code></td>
-<td><code>str</code></td>
-<td>Schema reference (local:// or at://)</td>
-</tr>
-<tr class="odd">
-<td><code>data_urls</code></td>
-<td><code>list[str]</code></td>
-<td>WebDataset URLs for the data</td>
-</tr>
-<tr class="even">
-<td><code>metadata</code></td>
-<td><code>dict \| None</code></td>
-<td>Arbitrary metadata dictionary</td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="implementations" class="level3">
-<h3 class="anchored" data-anchor-id="implementations">Implementations</h3>
-<ul>
-<li><code>LocalDatasetEntry</code> (from <code>atdata.local</code>)</li>
-<li><code>AtmosphereIndexEntry</code> (from <code>atdata.atmosphere</code>)</li>
-</ul>
-</section>
-</section>
-<section id="abstractindex-protocol" class="level2">
-<h2 class="anchored" data-anchor-id="abstractindex-protocol">AbstractIndex Protocol</h2>
-<p>Defines operations for managing schemas and datasets:</p>
-<div id="9ce60bb7" class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata._protocols <span class="im">import</span> AbstractIndex</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> list_all_datasets(index: AbstractIndex) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Works with LocalIndex or AtmosphereIndex."""</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> entry <span class="kw">in</span> index.list_datasets():</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>entry<span class="sc">.</span>name<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>entry<span class="sc">.</span>schema_ref<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<section id="dataset-operations" class="level3">
-<h3 class="anchored" data-anchor-id="dataset-operations">Dataset Operations</h3>
-<div id="836121ad" class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Insert a dataset</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>entry <span class="op">=</span> index.insert_dataset(</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    dataset,</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">"my-dataset"</span>,</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    schema_ref<span class="op">=</span><span class="st">"local://schemas/MySample@1.0.0"</span>,  <span class="co"># optional</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Get by name/reference</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>entry <span class="op">=</span> index.get_dataset(<span class="st">"my-dataset"</span>)</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co"># List all datasets</span></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> entry <span class="kw">in</span> index.list_datasets():</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(entry.name)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="schema-operations" class="level3">
-<h3 class="anchored" data-anchor-id="schema-operations">Schema Operations</h3>
-<div id="b16e4682" class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Publish a schema</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>schema_ref <span class="op">=</span> index.publish_schema(</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    MySample,</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    version<span class="op">=</span><span class="st">"1.0.0"</span>,</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Get schema record</span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>schema <span class="op">=</span> index.get_schema(schema_ref)</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(schema[<span class="st">"name"</span>], schema[<span class="st">"version"</span>])</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co"># List all schemas</span></span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> schema <span class="kw">in</span> index.list_schemas():</span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>schema[<span class="st">'name'</span>]<span class="sc">}</span><span class="ss">@</span><span class="sc">{</span>schema[<span class="st">'version'</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Decode schema to Python type</span></span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>SampleType <span class="op">=</span> index.decode_schema(schema_ref)</span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[SampleType](entry.data_urls[<span class="dv">0</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="implementations-1" class="level3">
-<h3 class="anchored" data-anchor-id="implementations-1">Implementations</h3>
-<ul>
-<li><code>LocalIndex</code> / <code>Index</code> (from <code>atdata.local</code>)</li>
-<li><code>AtmosphereIndex</code> (from <code>atdata.atmosphere</code>)</li>
-</ul>
-</section>
-</section>
-<section id="abstractdatastore-protocol" class="level2">
-<h2 class="anchored" data-anchor-id="abstractdatastore-protocol">AbstractDataStore Protocol</h2>
-<p>Abstracts over different storage backends:</p>
-<div id="e6324332" class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata._protocols <span class="im">import</span> AbstractDataStore</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> write_dataset(store: AbstractDataStore, dataset) <span class="op">-&gt;</span> <span class="bu">list</span>[<span class="bu">str</span>]:</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Works with S3DataStore or future PDS blob store."""</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    urls <span class="op">=</span> store.write_shards(dataset, prefix<span class="op">=</span><span class="st">"datasets/v1"</span>)</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> urls</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<section id="methods" class="level3">
-<h3 class="anchored" data-anchor-id="methods">Methods</h3>
-<div id="4babad57" class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Write dataset shards</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>urls <span class="op">=</span> store.write_shards(</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    dataset,</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    prefix<span class="op">=</span><span class="st">"datasets/mnist/v1"</span>,</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    maxcount<span class="op">=</span><span class="dv">10000</span>,  <span class="co"># samples per shard</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Resolve URL for reading</span></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>readable_url <span class="op">=</span> store.read_url(<span class="st">"s3://bucket/path.tar"</span>)</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Check streaming support</span></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> store.supports_streaming():</span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Can stream directly</span></span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">pass</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="implementations-2" class="level3">
-<h3 class="anchored" data-anchor-id="implementations-2">Implementations</h3>
-<ul>
-<li><code>S3DataStore</code> (from <code>atdata.local</code>)</li>
-</ul>
-</section>
-</section>
-<section id="using-protocols-for-polymorphism" class="level2">
-<h2 class="anchored" data-anchor-id="using-protocols-for-polymorphism">Using Protocols for Polymorphism</h2>
-<p>Write code that works with any backend:</p>
-<div id="8df3b05a" class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata._protocols <span class="im">import</span> AbstractIndex, IndexEntry</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata <span class="im">import</span> Dataset</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> backup_all_datasets(</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    source: AbstractIndex,</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    target: AbstractIndex,</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Copy all datasets from source index to target."""</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> entry <span class="kw">in</span> source.list_datasets():</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Decode schema from source</span></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        SampleType <span class="op">=</span> source.decode_schema(entry.schema_ref)</span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Publish schema to target</span></span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>        target_schema <span class="op">=</span> target.publish_schema(SampleType)</span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Load and re-insert dataset</span></span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>        ds <span class="op">=</span> Dataset[SampleType](entry.data_urls[<span class="dv">0</span>])</span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>        target.insert_dataset(</span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>            ds,</span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>            name<span class="op">=</span>entry.name,</span>
-<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>            schema_ref<span class="op">=</span>target_schema,</span>
-<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>        )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="schema-reference-formats" class="level2">
-<h2 class="anchored" data-anchor-id="schema-reference-formats">Schema Reference Formats</h2>
-<p>Schema references vary by backend:</p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 34%">
-<col style="width: 30%">
-<col style="width: 34%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Backend</th>
-<th>Format</th>
 <th>Example</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Local</td>
-<td><code>local://schemas/{module.Class}@{version}</code></td>
-<td><code>local://schemas/myapp.ImageSample@1.0.0</code></td>
+<td><code>local</code></td>
+<td>Local Redis/S3 storage</td>
+<td><code>atdata://local/...</code></td>
 </tr>
 <tr class="even">
-<td>Atmosphere</td>
-<td><code>at://{did}/{collection}/{rkey}</code></td>
-<td><code>at://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz</code></td>
+<td><code>{handle}</code></td>
+<td>ATProto handle</td>
+<td><code>atdata://alice.bsky.social/...</code></td>
+</tr>
+<tr class="odd">
+<td><code>{did}</code></td>
+<td>ATProto DID</td>
+<td><code>atdata://did:plc:abc123/...</code></td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="type-checking" class="level2">
-<h2 class="anchored" data-anchor-id="type-checking">Type Checking</h2>
-<p>Protocols are runtime-checkable:</p>
-<div id="da4358ab" class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata._protocols <span class="im">import</span> IndexEntry, AbstractIndex</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Check if object implements protocol</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>entry <span class="op">=</span> index.get_dataset(<span class="st">"test"</span>)</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="bu">isinstance</span>(entry, IndexEntry)</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Type hints work with protocols</span></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> process(index: AbstractIndex) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    ...  <span class="co"># IDE provides autocomplete</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="resource-types" class="level3">
+<h3 class="anchored" data-anchor-id="resource-types">Resource Types</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Resource Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>sampleSchema</code></td>
+<td>PackableSample type definitions</td>
+</tr>
+<tr class="even">
+<td><code>dataset</code></td>
+<td>Dataset entries (future)</td>
+</tr>
+<tr class="odd">
+<td><code>lens</code></td>
+<td>Lens transformations (future)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="version-specifiers" class="level3">
+<h3 class="anchored" data-anchor-id="version-specifiers">Version Specifiers</h3>
+<p>Versions follow semantic versioning and are specified with <code>@</code>:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Specifier</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>@{major}.{minor}.{patch}</code></td>
+<td>Exact version</td>
+<td><code>@1.0.0</code>, <code>@2.1.3</code></td>
+</tr>
+<tr class="even">
+<td>(none)</td>
+<td>Latest version</td>
+<td>Resolves to highest semver</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="examples" class="level2">
+<h2 class="anchored" data-anchor-id="examples">Examples</h2>
+<section id="local-development" class="level3">
+<h3 class="anchored" data-anchor-id="local-development">Local Development</h3>
+<div id="c5764d5f" class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> Index</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> Index()</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Publish a schema (returns atdata:// URI)</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>ref <span class="op">=</span> index.publish_schema(MySample, version<span class="op">=</span><span class="st">"1.0.0"</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"># =&gt; "atdata://local/sampleSchema/MySample@1.0.0"</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Auto-increment version</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>ref <span class="op">=</span> index.publish_schema(MySample)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co"># =&gt; "atdata://local/sampleSchema/MySample@1.0.1"</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Retrieve by URI</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>schema <span class="op">=</span> index.get_schema(<span class="st">"atdata://local/sampleSchema/MySample@1.0.0"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="complete-example" class="level2">
-<h2 class="anchored" data-anchor-id="complete-example">Complete Example</h2>
-<div id="5ada8d68" class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> LocalIndex, S3DataStore</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> AtmosphereClient, AtmosphereIndex</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata._protocols <span class="im">import</span> AbstractIndex</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Define sample type</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> FeatureSample:</span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    features: NDArray</span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    label: <span class="bu">int</span></span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Function works with any index</span></span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> count_datasets(index: AbstractIndex) <span class="op">-&gt;</span> <span class="bu">int</span>:</span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">sum</span>(<span class="dv">1</span> <span class="cf">for</span> _ <span class="kw">in</span> index.list_datasets())</span>
-<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Use with local index</span></span>
-<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>local_index <span class="op">=</span> LocalIndex()</span>
-<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Local datasets: </span><span class="sc">{</span>count_datasets(local_index)<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Use with atmosphere index</span></span>
-<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> AtmosphereClient()</span>
-<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>client.login(<span class="st">"handle.bsky.social"</span>, <span class="st">"app-password"</span>)</span>
-<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>atm_index <span class="op">=</span> AtmosphereIndex(client)</span>
-<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Atmosphere datasets: </span><span class="sc">{</span>count_datasets(atm_index)<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Migrate from local to atmosphere</span></span>
-<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> migrate_dataset(</span>
-<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>    name: <span class="bu">str</span>,</span>
-<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>    source: AbstractIndex,</span>
-<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>    target: AbstractIndex,</span>
-<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
-<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a>    entry <span class="op">=</span> source.get_dataset(name)</span>
-<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a>    SampleType <span class="op">=</span> source.decode_schema(entry.schema_ref)</span>
-<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Publish schema</span></span>
-<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a>    schema_ref <span class="op">=</span> target.publish_schema(SampleType)</span>
-<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-40"><a href="#cb9-40" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Create dataset and insert</span></span>
-<span id="cb9-41"><a href="#cb9-41" aria-hidden="true" tabindex="-1"></a>    ds <span class="op">=</span> atdata.Dataset[SampleType](entry.data_urls[<span class="dv">0</span>])</span>
-<span id="cb9-42"><a href="#cb9-42" aria-hidden="true" tabindex="-1"></a>    target.insert_dataset(ds, name<span class="op">=</span>name, schema_ref<span class="op">=</span>schema_ref)</span>
-<span id="cb9-43"><a href="#cb9-43" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-44"><a href="#cb9-44" aria-hidden="true" tabindex="-1"></a>migrate_dataset(<span class="st">"my-features"</span>, local_index, atm_index)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="atmosphere-atproto-federation" class="level3">
+<h3 class="anchored" data-anchor-id="atmosphere-atproto-federation">Atmosphere (ATProto Federation)</h3>
+<div id="93d168a2" class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> Client</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> Client()</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Publish returns at:// URI that maps to atdata://</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>ref <span class="op">=</span> client.publish_schema(MySample)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co"># =&gt; "at://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz"</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Can also be addressed as:</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co"># =&gt; "atdata://did:plc:abc123/sampleSchema/MySample@1.0.0"</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co"># =&gt; "atdata://alice.bsky.social/sampleSchema/MySample@1.0.0"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="related" class="level2">
-<h2 class="anchored" data-anchor-id="related">Related</h2>
-<ul>
-<li><a href="../reference/local-storage.html">Local Storage</a> - LocalIndex and S3DataStore</li>
-<li><a href="../reference/atmosphere.html">Atmosphere</a> - AtmosphereIndex</li>
-<li><a href="../reference/promotion.html">Promotion</a> - Local to atmosphere migration</li>
-<li><a href="../reference/load-dataset.html">load_dataset</a> - Using indexes with load_dataset()</li>
-</ul>
+</section>
+<section id="relationship-to-at-protocol-uris" class="level2">
+<h2 class="anchored" data-anchor-id="relationship-to-at-protocol-uris">Relationship to AT Protocol URIs</h2>
+<p>The <code>atdata://</code> scheme is inspired by and maps to ATProto’s <code>at://</code> scheme:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 61%">
+<col style="width: 38%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>atdata://</th>
+<th>at://</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>atdata://{did}/sampleSchema/{name}@{version}</code></td>
+<td><code>at://{did}/ac.foundation.dataset.sampleSchema/{rkey}</code></td>
+</tr>
+<tr class="even">
+<td><code>atdata://local/...</code></td>
+<td>(local only, no at:// equivalent)</td>
+</tr>
+</tbody>
+</table>
+<p>When publishing to the atmosphere, atdata URIs are automatically resolved to their corresponding <code>at://</code> URIs for federation compatibility.</p>
+</section>
+<section id="legacy-format" class="level2">
+<h2 class="anchored" data-anchor-id="legacy-format">Legacy Format</h2>
+<p>For backwards compatibility, the local index also accepts the legacy format:</p>
+<pre><code>local://schemas/{module.Class}@{version}</code></pre>
+<p>This format is deprecated and will be removed in a future version. Use <code>atdata://local/sampleSchema/{name}@{version}</code> instead.</p>
 
 
 </section>
@@ -1297,7 +1163,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/your-org/atdata/edit/main/reference/protocols.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/your-org/atdata/edit/main/reference/uri-spec.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
     <div class="nav-footer-right">
 <p>MIT License</p>
 </div>

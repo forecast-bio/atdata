@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Improve decoded_type dynamic typing/signatures (#279)
 - Document atdata URI specification (#280)
 - Create proper SampleSchema Python type (#278)
 - Fix @atdata.packable decorator class identity (#275)

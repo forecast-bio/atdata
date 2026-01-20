@@ -351,11 +351,11 @@ class TestCrossBackendSchemaResolution:
     """Tests for schema resolution across different backends."""
 
     def test_local_schema_ref_format(self, local_index):
-        """Local schema refs should use local:// URI scheme."""
+        """Local schema refs should use atdata://local/sampleSchema/ URI scheme."""
         schema_ref = local_index.publish_schema(CrossBackendSample, version="1.0.0")
 
-        assert schema_ref.startswith("local://")
-        assert "schemas" in schema_ref
+        assert schema_ref.startswith("atdata://local/sampleSchema/")
+        assert "CrossBackendSample" in schema_ref
 
     def test_atmosphere_schema_ref_format(
         self, atmosphere_index, mock_atproto_client
