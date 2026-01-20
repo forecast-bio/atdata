@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix dark theme styling for callouts and code blocks in Quarto docs (#229)
 
 ### Changed
+- Commit deprecation warning suppression for Repo tests (#272)
 - Add deprecation warning suppression to Repo tests (#271)
 - Commit docs update for new Index + S3DataStore API (#270)
 - Review and update all examples/docs for current architecture (#263)
