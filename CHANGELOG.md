@@ -25,6 +25,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Auto-generate stubs on schema access (#281)
+- Add tests for auto-stub functionality (#284)
+- Integrate auto-stub into Index class (#283)
+- Add StubManager class for stub file management (#282)
 - Improve decoded_type dynamic typing/signatures (#279)
 - Document atdata URI specification (#280)
 - Create proper SampleSchema Python type (#278)

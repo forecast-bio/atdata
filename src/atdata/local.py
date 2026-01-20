@@ -894,6 +894,8 @@ class Index:
         self,
         redis: Redis | None = None,
         data_store: AbstractDataStore | None = None,
+        auto_stubs: bool = False,
+        stub_dir: Path | str | None = None,
         **kwargs,
     ) -> None:
         """Initialize an index.
@@ -904,6 +906,12 @@ class Index:
             data_store: Optional data store for writing dataset shards.
                 If provided, insert_dataset() will write shards to this store.
                 If None, insert_dataset() only indexes existing URLs.
+            auto_stubs: If True, automatically generate .pyi stub files when
+                schemas are accessed via get_schema() or decode_schema().
+                This enables IDE autocomplete for dynamically decoded types.
+            stub_dir: Directory to write stub files. Only used if auto_stubs
+                is True or if this parameter is provided (which implies auto_stubs).
+                Defaults to ~/.atdata/stubs/ if not specified.
             **kwargs: Additional arguments passed to Redis() constructor if
                 redis is None.
         """
@@ -916,10 +924,31 @@ class Index:
 
         self._data_store = data_store
 
+        # Initialize stub manager if auto-stubs enabled
+        # Providing stub_dir implies auto_stubs=True
+        if auto_stubs or stub_dir is not None:
+            from ._stub_manager import StubManager
+            self._stub_manager: StubManager | None = StubManager(stub_dir=stub_dir)
+        else:
+            self._stub_manager = None
+
     @property
     def data_store(self) -> AbstractDataStore | None:
         """The data store for writing shards, or None if index-only."""
         return self._data_store
+
+    @property
+    def stub_dir(self) -> Path | None:
+        """Directory where stub files are written, or None if auto-stubs disabled.
+
+        Use this path to configure your IDE for type checking support:
+        - VS Code/Pylance: Add to python.analysis.extraPaths in settings.json
+        - PyCharm: Mark as Sources Root
+        - mypy: Add to mypy_path in mypy.ini
+        """
+        if self._stub_manager is not None:
+            return self._stub_manager.stub_dir
+        return None
 
     @property
     def all_entries(self) -> list[LocalDatasetEntry]:
@@ -1208,7 +1237,13 @@ class Index:
         schema = json.loads(schema_json)
         # Add $ref in canonical format
         schema['$ref'] = f"{_ATDATA_URI_PREFIX}{name}@{version}"
-        return LocalSchemaRecord.from_dict(schema)
+        record = LocalSchemaRecord.from_dict(schema)
+
+        # Auto-generate stub if enabled
+        if self._stub_manager is not None:
+            self._stub_manager.ensure_stub(record)
+
+        return record
 
     def get_schema_dict(self, ref: str) -> dict:
         """Get a schema record as raw dict (for decode_schema compatibility).
@@ -1282,6 +1317,9 @@ class Index:
         ahead of time. The index retrieves the schema record and dynamically
         generates a PackableSample subclass matching the schema definition.
 
+        If auto_stubs is enabled, a .pyi stub file will be generated for the
+        decoded type to provide IDE autocomplete support.
+
         Args:
             ref: Schema reference string (atdata://local/sampleSchema/... or
                 legacy local://schemas/...).
@@ -1296,7 +1334,24 @@ class Index:
         from atdata._schema_codec import schema_to_type
 
         schema_dict = self.get_schema_dict(ref)
+
+        # Auto-generate stub if enabled
+        if self._stub_manager is not None:
+            self._stub_manager.ensure_stub(schema_dict)
+
         return schema_to_type(schema_dict)
+
+    def clear_stubs(self) -> int:
+        """Remove all auto-generated stub files.
+
+        Only works if auto_stubs was enabled when creating the Index.
+
+        Returns:
+            Number of stub files removed, or 0 if auto_stubs is disabled.
+        """
+        if self._stub_manager is not None:
+            return self._stub_manager.clear_stubs()
+        return 0
 
 
 # Backwards compatibility alias

@@ -1750,3 +1750,122 @@ def test_schema_to_type_use_cache_false():
 
     # Different instances since caching is disabled
     assert Type1 is not Type2
+
+
+##
+# Auto-Stub Tests
+
+
+class TestAutoStubs:
+    """Tests for automatic stub file generation on schema access."""
+
+    def test_auto_stubs_disabled_by_default(self, clean_redis):
+        """Index should not generate stubs unless explicitly enabled."""
+        index = atlocal.Index(redis=clean_redis)
+        assert index.stub_dir is None
+
+    def test_auto_stubs_enabled_with_flag(self, clean_redis, tmp_path):
+        """Index should generate stubs when auto_stubs=True."""
+        stub_dir = tmp_path / "stubs"
+        index = atlocal.Index(redis=clean_redis, stub_dir=stub_dir)
+
+        assert index.stub_dir == stub_dir
+
+    def test_stub_generated_on_get_schema(self, clean_redis, tmp_path):
+        """Stub should be generated when get_schema is called."""
+        stub_dir = tmp_path / "stubs"
+        index = atlocal.Index(redis=clean_redis, stub_dir=stub_dir)
+
+        # Publish a schema
+        ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+
+        # Get schema should trigger stub generation
+        schema = index.get_schema(ref)
+
+        # Check stub was created
+        stub_path = stub_dir / "SimpleTestSample_1_0_0.pyi"
+        assert stub_path.exists()
+
+        # Verify content
+        content = stub_path.read_text()
+        assert "class SimpleTestSample(PackableSample):" in content
+        assert "name: str" in content
+
+    def test_stub_generated_on_decode_schema(self, clean_redis, tmp_path):
+        """Stub should be generated when decode_schema is called."""
+        stub_dir = tmp_path / "stubs"
+        index = atlocal.Index(redis=clean_redis, stub_dir=stub_dir)
+
+        # Publish a schema
+        ref = index.publish_schema(SimpleTestSample, version="2.0.0")
+
+        # Decode schema should trigger stub generation
+        DecodedType = index.decode_schema(ref)
+
+        # Check stub was created
+        stub_path = stub_dir / "SimpleTestSample_2_0_0.pyi"
+        assert stub_path.exists()
+        assert DecodedType.__name__ == "SimpleTestSample"
+
+    def test_stub_not_regenerated_if_current(self, clean_redis, tmp_path):
+        """Stub should not be regenerated if already current."""
+        stub_dir = tmp_path / "stubs"
+        index = atlocal.Index(redis=clean_redis, stub_dir=stub_dir)
+
+        ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+
+        # First call generates stub
+        index.get_schema(ref)
+        stub_path = stub_dir / "SimpleTestSample_1_0_0.pyi"
+        mtime1 = stub_path.stat().st_mtime
+
+        # Small delay to ensure different mtime if regenerated
+        import time
+        time.sleep(0.01)
+
+        # Second call should not regenerate
+        index.get_schema(ref)
+        mtime2 = stub_path.stat().st_mtime
+
+        assert mtime1 == mtime2
+
+    def test_clear_stubs(self, clean_redis, tmp_path):
+        """clear_stubs should remove generated stub files."""
+        stub_dir = tmp_path / "stubs"
+        index = atlocal.Index(redis=clean_redis, stub_dir=stub_dir)
+
+        # Generate some stubs
+        ref1 = index.publish_schema(SimpleTestSample, version="1.0.0")
+        ref2 = index.publish_schema(SimpleTestSample, version="2.0.0")
+        index.get_schema(ref1)
+        index.get_schema(ref2)
+
+        # Verify stubs exist
+        assert (stub_dir / "SimpleTestSample_1_0_0.pyi").exists()
+        assert (stub_dir / "SimpleTestSample_2_0_0.pyi").exists()
+
+        # Clear stubs
+        removed = index.clear_stubs()
+        assert removed == 2
+
+        # Verify stubs removed
+        assert not (stub_dir / "SimpleTestSample_1_0_0.pyi").exists()
+        assert not (stub_dir / "SimpleTestSample_2_0_0.pyi").exists()
+
+    def test_clear_stubs_disabled_returns_zero(self, clean_redis):
+        """clear_stubs should return 0 when auto_stubs is disabled."""
+        index = atlocal.Index(redis=clean_redis)
+        assert index.clear_stubs() == 0
+
+    def test_stub_dir_implies_auto_stubs(self, clean_redis, tmp_path):
+        """Providing stub_dir should enable auto_stubs implicitly."""
+        stub_dir = tmp_path / "stubs"
+        # Only provide stub_dir, not auto_stubs=True
+        index = atlocal.Index(redis=clean_redis, stub_dir=stub_dir)
+
+        ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+        index.get_schema(ref)
+
+        # Stub should still be generated
+        stub_path = stub_dir / "SimpleTestSample_1_0_0.pyi"
+        assert stub_path.exists()
