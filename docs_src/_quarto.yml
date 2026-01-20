@@ -43,6 +43,8 @@ website:
             href: reference/load-dataset.qmd
           - text: "Protocols"
             href: reference/protocols.qmd
+          - text: "URI Specification"
+            href: reference/uri-spec.qmd
       - text: "API"
         href: api/index.qmd
     right:
@@ -70,6 +72,7 @@ website:
             - reference/promotion.qmd
             - reference/load-dataset.qmd
             - reference/protocols.qmd
+            - reference/uri-spec.qmd
         - section: "API Reference"
           contents:
             - api/index.qmd

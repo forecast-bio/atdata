@@ -25,6 +25,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Document atdata URI specification (#280)
+- Create proper SampleSchema Python type (#278)
+- Fix @atdata.packable decorator class identity (#275)
+- Fix @atdata.packable decorator class identity (#275)
+- Fix @atdata.packable decorator class identity (#275)
 - Improve index.publish_schema API (#276)
 - Improve list_schemas API semantics (#277)
 - Fix @atdata.packable decorator class identity (#275)

@@ -59,6 +59,7 @@ from typing import (
     Type,
     TypeVar,
     TypeAlias,
+    dataclass_transform,
 )
 from numpy.typing import NDArray
 
@@ -635,7 +636,11 @@ class Dataset( Generic[ST] ):
         return SampleBatch[self.sample_type]( batch_view )
 
 
-def packable( cls ):
+_T = TypeVar('_T')
+
+
+@dataclass_transform()
+def packable( cls: type[_T] ) -> type[_T]:
     """Decorator to convert a regular class into a ``PackableSample``.
 
     This decorator transforms a class into a dataclass that inherits from
@@ -681,6 +686,17 @@ def packable( cls ):
     as_packable.__annotations__ = class_annotations
     if cls.__doc__:
         as_packable.__doc__ = cls.__doc__
+
+    # Fix qualnames of dataclass-generated methods so they don't show
+    # 'packable.<locals>.as_packable' in help() and IDE hints
+    old_qualname_prefix = 'packable.<locals>.as_packable'
+    for attr_name in ('__init__', '__repr__', '__eq__', '__post_init__'):
+        attr = getattr(as_packable, attr_name, None)
+        if attr is not None and hasattr(attr, '__qualname__'):
+            if attr.__qualname__.startswith(old_qualname_prefix):
+                attr.__qualname__ = attr.__qualname__.replace(
+                    old_qualname_prefix, class_name, 1
+                )
 
     ##
 

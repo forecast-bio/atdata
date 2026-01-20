@@ -1354,7 +1354,7 @@ def test_publish_schema_with_description(clean_redis):
     )
 
     schema = index.get_schema(schema_ref)
-    assert schema['description'] == "A simple test sample type"
+    assert schema.description == "A simple test sample type"
 
 
 def test_publish_schema_auto_increment(clean_redis):
@@ -1391,7 +1391,7 @@ def test_publish_schema_docstring_fallback(clean_redis):
     schema = index.get_schema(schema_ref)
 
     # Should use the class docstring
-    assert schema['description'] == SimpleTestSample.__doc__
+    assert schema.description == SimpleTestSample.__doc__
 
 
 def test_get_schema(clean_redis):
@@ -1401,10 +1401,10 @@ def test_get_schema(clean_redis):
     schema_ref = index.publish_schema(SimpleTestSample, version="1.0.0")
     schema = index.get_schema(schema_ref)
 
-    assert schema['name'] == 'SimpleTestSample'
-    assert schema['version'] == '1.0.0'
-    assert len(schema['fields']) == 2  # name and value fields
-    assert schema['$ref'] == schema_ref
+    assert schema.name == 'SimpleTestSample'
+    assert schema.version == '1.0.0'
+    assert len(schema.fields) == 2  # name and value fields
+    assert schema.ref == schema_ref
 
 
 def test_get_schema_not_found(clean_redis):
@@ -1441,7 +1441,7 @@ def test_list_schemas_multiple(clean_redis):
     schemas = list(index.list_schemas())
     assert len(schemas) == 2
 
-    names = {s['name'] for s in schemas}
+    names = {s.name for s in schemas}
     assert 'SimpleTestSample' in names
     assert 'ArrayTestSample' in names
 
@@ -1454,13 +1454,13 @@ def test_schema_field_types(clean_redis):
     schema = index.get_schema(schema_ref)
 
     # Find name field (should be str)
-    name_field = next(f for f in schema['fields'] if f['name'] == 'name')
-    assert name_field['fieldType']['primitive'] == 'str'
-    assert name_field['optional'] is False
+    name_field = next(f for f in schema.fields if f.name == 'name')
+    assert name_field.field_type.primitive == 'str'
+    assert name_field.optional is False
 
     # Find value field (should be int)
-    value_field = next(f for f in schema['fields'] if f['name'] == 'value')
-    assert value_field['fieldType']['primitive'] == 'int'
+    value_field = next(f for f in schema.fields if f.name == 'value')
+    assert value_field.field_type.primitive == 'int'
 
 
 def test_schema_ndarray_field(clean_redis):
@@ -1471,9 +1471,9 @@ def test_schema_ndarray_field(clean_redis):
     schema = index.get_schema(schema_ref)
 
     # Find data field (should be ndarray)
-    data_field = next(f for f in schema['fields'] if f['name'] == 'data')
-    assert 'ndarray' in data_field['fieldType']['$type']
-    assert data_field['fieldType']['dtype'] == 'float32'
+    data_field = next(f for f in schema.fields if f.name == 'data')
+    assert data_field.field_type.kind == 'ndarray'
+    assert data_field.field_type.dtype == 'float32'
 
 
 def test_decode_schema(clean_redis):
@@ -1518,8 +1518,8 @@ def test_schema_version_handling(clean_redis):
     schema_v1 = index.get_schema(ref_v1)
     schema_v2 = index.get_schema(ref_v2)
 
-    assert schema_v1['version'] == '1.0.0'
-    assert schema_v2['version'] == '2.0.0'
+    assert schema_v1.version == '1.0.0'
+    assert schema_v2.version == '2.0.0'
 
 
 ##

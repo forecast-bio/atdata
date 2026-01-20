@@ -58,6 +58,8 @@ from typing import (
     Iterator,
     BinaryIO,
     Union,
+    Optional,
+    Literal,
     cast,
     get_type_hints,
     get_origin,
@@ -73,6 +75,159 @@ T = TypeVar( 'T', bound = PackableSample )
 # Redis key prefixes for index entries and schemas
 REDIS_KEY_DATASET_ENTRY = "LocalDatasetEntry"
 REDIS_KEY_SCHEMA = "LocalSchema"
+
+
+##
+# Schema types
+
+
+@dataclass
+class SchemaFieldType:
+    """Schema field type definition for local storage.
+
+    Represents a type in the schema type system, supporting primitives,
+    ndarrays, arrays, and references to other schemas.
+    """
+
+    kind: Literal["primitive", "ndarray", "ref", "array"]
+    """The category of type."""
+
+    primitive: Optional[str] = None
+    """For kind='primitive': one of 'str', 'int', 'float', 'bool', 'bytes'."""
+
+    dtype: Optional[str] = None
+    """For kind='ndarray': numpy dtype string (e.g., 'float32')."""
+
+    ref: Optional[str] = None
+    """For kind='ref': URI of referenced schema."""
+
+    items: Optional["SchemaFieldType"] = None
+    """For kind='array': type of array elements."""
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "SchemaFieldType":
+        """Create from a dictionary (e.g., from Redis storage)."""
+        type_str = data.get("$type", "")
+        if "#" in type_str:
+            kind = type_str.split("#")[-1]
+        else:
+            kind = data.get("kind", "primitive")
+
+        items = None
+        if "items" in data and data["items"]:
+            items = cls.from_dict(data["items"])
+
+        return cls(
+            kind=kind,  # type: ignore[arg-type]
+            primitive=data.get("primitive"),
+            dtype=data.get("dtype"),
+            ref=data.get("ref"),
+            items=items,
+        )
+
+    def to_dict(self) -> dict:
+        """Convert to dictionary for storage."""
+        result: dict[str, Any] = {"$type": f"local#{self.kind}"}
+        if self.kind == "primitive":
+            result["primitive"] = self.primitive
+        elif self.kind == "ndarray":
+            result["dtype"] = self.dtype
+        elif self.kind == "ref":
+            result["ref"] = self.ref
+        elif self.kind == "array" and self.items:
+            result["items"] = self.items.to_dict()
+        return result
+
+
+@dataclass
+class SchemaField:
+    """Schema field definition for local storage."""
+
+    name: str
+    """Field name."""
+
+    field_type: SchemaFieldType
+    """Type of this field."""
+
+    optional: bool = False
+    """Whether this field can be None."""
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "SchemaField":
+        """Create from a dictionary."""
+        return cls(
+            name=data["name"],
+            field_type=SchemaFieldType.from_dict(data["fieldType"]),
+            optional=data.get("optional", False),
+        )
+
+    def to_dict(self) -> dict:
+        """Convert to dictionary for storage."""
+        return {
+            "name": self.name,
+            "fieldType": self.field_type.to_dict(),
+            "optional": self.optional,
+        }
+
+
+@dataclass
+class LocalSchemaRecord:
+    """Schema record for local storage.
+
+    Represents a PackableSample schema stored in the local index.
+    Aligns with the atmosphere SchemaRecord structure for seamless promotion.
+    """
+
+    name: str
+    """Schema name (typically the class name)."""
+
+    version: str
+    """Semantic version string (e.g., '1.0.0')."""
+
+    fields: list[SchemaField]
+    """List of field definitions."""
+
+    ref: str
+    """Schema reference URI (atdata://local/sampleSchema/{name}@{version})."""
+
+    description: Optional[str] = None
+    """Human-readable description."""
+
+    created_at: Optional[datetime] = None
+    """When this schema was published."""
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "LocalSchemaRecord":
+        """Create from a dictionary (e.g., from Redis storage)."""
+        created_at = None
+        if "createdAt" in data:
+            try:
+                created_at = datetime.fromisoformat(data["createdAt"])
+            except (ValueError, TypeError):
+                created_at = None  # Invalid datetime format, leave as None
+
+        return cls(
+            name=data["name"],
+            version=data["version"],
+            fields=[SchemaField.from_dict(f) for f in data.get("fields", [])],
+            ref=data.get("$ref", ""),
+            description=data.get("description"),
+            created_at=created_at,
+        )
+
+    def to_dict(self) -> dict:
+        """Convert to dictionary for storage."""
+        result: dict[str, Any] = {
+            "name": self.name,
+            "version": self.version,
+            "fields": [f.to_dict() for f in self.fields],
+            "$ref": self.ref,
+        }
+        if self.description:
+            result["description"] = self.description
+        if self.created_at:
+            result["createdAt"] = self.created_at.isoformat()
+        return result
 
 
 ##
@@ -981,13 +1136,41 @@ class Index:
 
         return schema_ref
 
-    def get_schema(self, ref: str) -> dict:
+    def get_schema(self, ref: str) -> LocalSchemaRecord:
         """Get a schema record by reference.
 
         Args:
             ref: Schema reference string. Supports both new format
                 (atdata://local/sampleSchema/{name}@{version}) and legacy
                 format (local://schemas/{module.Class}@{version}).
+
+        Returns:
+            LocalSchemaRecord with schema details.
+
+        Raises:
+            KeyError: If schema not found.
+            ValueError: If reference format is invalid.
+        """
+        name, version = _parse_schema_ref(ref)
+        redis_key = f"{REDIS_KEY_SCHEMA}:{name}@{version}"
+
+        schema_json = self._redis.get(redis_key)
+        if schema_json is None:
+            raise KeyError(f"Schema not found: {ref}")
+
+        if isinstance(schema_json, bytes):
+            schema_json = schema_json.decode('utf-8')
+
+        schema = json.loads(schema_json)
+        # Add $ref in canonical format
+        schema['$ref'] = f"{_ATDATA_URI_PREFIX}{name}@{version}"
+        return LocalSchemaRecord.from_dict(schema)
+
+    def get_schema_dict(self, ref: str) -> dict:
+        """Get a schema record as raw dict (for decode_schema compatibility).
+
+        Args:
+            ref: Schema reference string.
 
         Returns:
             Schema record as a dictionary.
@@ -1007,16 +1190,15 @@ class Index:
             schema_json = schema_json.decode('utf-8')
 
         schema = json.loads(schema_json)
-        # Add $ref in canonical format for decode_schema compatibility
         schema['$ref'] = f"{_ATDATA_URI_PREFIX}{name}@{version}"
         return schema
 
     @property
-    def schemas(self) -> Generator[dict, None, None]:
+    def schemas(self) -> Generator[LocalSchemaRecord, None, None]:
         """Iterate over all schema records in this index.
 
         Yields:
-            Schema records as dictionaries.
+            LocalSchemaRecord for each schema.
         """
         prefix = f'{REDIS_KEY_SCHEMA}:'
         for key in self._redis.scan_iter(match=f'{prefix}*'):
@@ -1039,13 +1221,13 @@ class Index:
                 schema['$ref'] = f"{_ATDATA_URI_PREFIX}{name}@{version}"
             else:
                 schema['$ref'] = f"{_ATDATA_URI_PREFIX}{schema_id}"
-            yield schema
+            yield LocalSchemaRecord.from_dict(schema)
 
-    def list_schemas(self) -> list[dict]:
+    def list_schemas(self) -> list[LocalSchemaRecord]:
         """Get all schema records as a list.
 
         Returns:
-            List of all schema records in this index.
+            List of all LocalSchemaRecord objects in this index.
         """
         return list(self.schemas)
 
@@ -1057,7 +1239,8 @@ class Index:
         generates a PackableSample subclass matching the schema definition.
 
         Args:
-            ref: Schema reference string (local://schemas/...).
+            ref: Schema reference string (atdata://local/sampleSchema/... or
+                legacy local://schemas/...).
 
         Returns:
             A dynamically generated PackableSample subclass.
@@ -1068,8 +1251,8 @@ class Index:
         """
         from atdata._schema_codec import schema_to_type
 
-        schema = self.get_schema(ref)
-        return schema_to_type(schema)
+        schema_dict = self.get_schema_dict(ref)
+        return schema_to_type(schema_dict)
 
 
 # Backwards compatibility alias
