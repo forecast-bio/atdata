@@ -1269,7 +1269,7 @@ def test_index_with_datastore_insert(mock_s3, clean_redis, tmp_path):
     assert entry.name == "stored-dataset"
     assert len(entry.data_urls) >= 1
     assert all(url.startswith("s3://") for url in entry.data_urls)
-    assert entry.schema_ref.startswith("local://schemas/")
+    assert entry.schema_ref.startswith("atdata://local/sampleSchema/")
 
     # Verify it's in the index
     retrieved = index.get_dataset("stored-dataset")
@@ -1338,7 +1338,7 @@ def test_publish_schema(clean_redis):
 
     schema_ref = index.publish_schema(SimpleTestSample, version="1.0.0")
 
-    assert schema_ref.startswith("local://schemas/")
+    assert schema_ref.startswith("atdata://local/sampleSchema/")
     assert "SimpleTestSample" in schema_ref
     assert "@1.0.0" in schema_ref
 
@@ -1355,6 +1355,43 @@ def test_publish_schema_with_description(clean_redis):
 
     schema = index.get_schema(schema_ref)
     assert schema['description'] == "A simple test sample type"
+
+
+def test_publish_schema_auto_increment(clean_redis):
+    """Test that publish_schema auto-increments version when not specified."""
+    index = atlocal.Index(redis=clean_redis)
+
+    # First publish should default to 1.0.0
+    ref1 = index.publish_schema(SimpleTestSample)
+    assert "@1.0.0" in ref1
+
+    # Second publish should auto-increment to 1.0.1
+    ref2 = index.publish_schema(SimpleTestSample)
+    assert "@1.0.1" in ref2
+
+    # Third publish should auto-increment to 1.0.2
+    ref3 = index.publish_schema(SimpleTestSample)
+    assert "@1.0.2" in ref3
+
+    # Explicit version should override
+    ref4 = index.publish_schema(SimpleTestSample, version="2.0.0")
+    assert "@2.0.0" in ref4
+
+    # Next auto-increment should be from 2.0.0
+    ref5 = index.publish_schema(SimpleTestSample)
+    assert "@2.0.1" in ref5
+
+
+def test_publish_schema_docstring_fallback(clean_redis):
+    """Test that publish_schema uses class docstring as description fallback."""
+    index = atlocal.Index(redis=clean_redis)
+
+    # SimpleTestSample has a docstring defined
+    schema_ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+    schema = index.get_schema(schema_ref)
+
+    # Should use the class docstring
+    assert schema['description'] == SimpleTestSample.__doc__
 
 
 def test_get_schema(clean_redis):
@@ -1375,14 +1412,14 @@ def test_get_schema_not_found(clean_redis):
     index = atlocal.Index(redis=clean_redis)
 
     with pytest.raises(KeyError, match="Schema not found"):
-        index.get_schema("local://schemas/nonexistent.Sample@1.0.0")
+        index.get_schema("atdata://local/sampleSchema/NonexistentSample@1.0.0")
 
 
 def test_get_schema_invalid_ref(clean_redis):
     """Test that get_schema raises ValueError for invalid reference."""
     index = atlocal.Index(redis=clean_redis)
 
-    with pytest.raises(ValueError, match="Invalid local schema reference"):
+    with pytest.raises(ValueError, match="Invalid schema reference"):
         index.get_schema("invalid://schemas/Sample@1.0.0")
 
 

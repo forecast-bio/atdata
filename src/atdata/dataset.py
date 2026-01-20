@@ -676,7 +676,11 @@ def packable( cls ):
     
     # Restore original class identity for better repr/debugging
     as_packable.__name__ = class_name
+    as_packable.__qualname__ = class_name
+    as_packable.__module__ = cls.__module__
     as_packable.__annotations__ = class_annotations
+    if cls.__doc__:
+        as_packable.__doc__ = cls.__doc__
 
     ##
 

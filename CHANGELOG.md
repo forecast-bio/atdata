@@ -25,6 +25,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Improve index.publish_schema API (#276)
+- Improve list_schemas API semantics (#277)
+- Fix @atdata.packable decorator class identity (#275)
 - **Architecture refactor**: `LocalIndex` + `S3DataStore` composable pattern
   - `LocalIndex` now accepts optional `data_store` parameter
   - `S3DataStore` implements `AbstractDataStore` for S3 operations

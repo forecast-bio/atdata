@@ -153,23 +153,51 @@ def _create_s3_write_callbacks(
 ##
 # Schema helpers
 
-def _schema_ref_from_type(sample_type: Type[PackableSample], version: str = "1.0.0") -> str:
-    """Generate 'local://schemas/{module.Class}@{version}' reference."""
-    kind_str = _kind_str_for_sample_type(sample_type)
-    return f"local://schemas/{kind_str}@{version}"
+# URI scheme prefixes
+_ATDATA_URI_PREFIX = "atdata://local/sampleSchema/"
+_LEGACY_URI_PREFIX = "local://schemas/"
+
+
+def _schema_ref_from_type(sample_type: Type[PackableSample], version: str) -> str:
+    """Generate 'atdata://local/sampleSchema/{name}@{version}' reference."""
+    return f"{_ATDATA_URI_PREFIX}{sample_type.__name__}@{version}"
 
 
 def _parse_schema_ref(ref: str) -> tuple[str, str]:
-    """Parse 'local://schemas/{module.Class}@{version}' into (module.Class, version)."""
-    if not ref.startswith("local://schemas/"):
-        raise ValueError(f"Invalid local schema reference: {ref}")
+    """Parse schema reference into (name, version).
 
-    path = ref[len("local://schemas/"):]
+    Supports both new format: 'atdata://local/sampleSchema/{name}@{version}'
+    and legacy format: 'local://schemas/{module.Class}@{version}'
+    """
+    if ref.startswith(_ATDATA_URI_PREFIX):
+        path = ref[len(_ATDATA_URI_PREFIX):]
+    elif ref.startswith(_LEGACY_URI_PREFIX):
+        path = ref[len(_LEGACY_URI_PREFIX):]
+    else:
+        raise ValueError(f"Invalid schema reference: {ref}")
+
     if "@" not in path:
         raise ValueError(f"Schema reference must include version (@version): {ref}")
 
-    kind_str, version = path.rsplit("@", 1)
-    return kind_str, version
+    name, version = path.rsplit("@", 1)
+    # For legacy format, extract just the class name from module.Class
+    if "." in name:
+        name = name.rsplit(".", 1)[1]
+    return name, version
+
+
+def _parse_semver(version: str) -> tuple[int, int, int]:
+    """Parse semantic version string into (major, minor, patch) tuple."""
+    parts = version.split(".")
+    if len(parts) != 3:
+        raise ValueError(f"Invalid semver format: {version}")
+    return int(parts[0]), int(parts[1]), int(parts[2])
+
+
+def _increment_patch(version: str) -> str:
+    """Increment patch version: 1.0.0 -> 1.0.1"""
+    major, minor, patch = _parse_semver(version)
+    return f"{major}.{minor}.{patch + 1}"
 
 
 def _python_type_to_field_type(python_type: Any) -> dict:
@@ -198,7 +226,7 @@ def _python_type_to_field_type(python_type: Any) -> dict:
 def _build_schema_record(
     sample_type: Type[PackableSample],
     *,
-    version: str = "1.0.0",
+    version: str,
     description: str | None = None,
 ) -> dict:
     """Build a schema record dict from a PackableSample type.
@@ -206,7 +234,8 @@ def _build_schema_record(
     Args:
         sample_type: The PackableSample subclass to introspect.
         version: Semantic version string.
-        description: Optional human-readable description.
+        description: Optional human-readable description. If None, uses the
+            class docstring.
 
     Returns:
         Schema record dict suitable for Redis storage.
@@ -217,6 +246,10 @@ def _build_schema_record(
     """
     if not is_dataclass(sample_type):
         raise ValueError(f"{sample_type.__name__} must be a dataclass (use @packable)")
+
+    # Use docstring as fallback for description
+    if description is None:
+        description = sample_type.__doc__
 
     field_defs = []
     type_hints = get_type_hints(sample_type)
@@ -829,7 +862,7 @@ class Index:
 
             # Generate schema_ref if not provided
             if schema_ref is None:
-                schema_ref = _schema_ref_from_type(ds.sample_type)
+                schema_ref = _schema_ref_from_type(ds.sample_type, version="1.0.0")
 
             # Create entry with the written URLs
             entry_metadata = metadata if metadata is not None else ds._metadata
@@ -869,27 +902,69 @@ class Index:
 
     # Schema operations
 
+    def _get_latest_schema_version(self, name: str) -> str | None:
+        """Get the latest version for a schema by name, or None if not found."""
+        latest_version: tuple[int, int, int] | None = None
+        latest_version_str: str | None = None
+
+        prefix = f'{REDIS_KEY_SCHEMA}:'
+        for key in self._redis.scan_iter(match=f'{prefix}*'):
+            key_str = key.decode('utf-8') if isinstance(key, bytes) else key
+            schema_id = key_str[len(prefix):]
+
+            if "@" not in schema_id:
+                continue
+
+            schema_name, version_str = schema_id.rsplit("@", 1)
+            # Handle legacy format: module.Class -> Class
+            if "." in schema_name:
+                schema_name = schema_name.rsplit(".", 1)[1]
+
+            if schema_name != name:
+                continue
+
+            try:
+                version_tuple = _parse_semver(version_str)
+                if latest_version is None or version_tuple > latest_version:
+                    latest_version = version_tuple
+                    latest_version_str = version_str
+            except ValueError:
+                continue
+
+        return latest_version_str
+
     def publish_schema(
         self,
         sample_type: Type[PackableSample],
         *,
-        version: str = "1.0.0",
+        version: str | None = None,
         description: str | None = None,
     ) -> str:
         """Publish a schema for a sample type to Redis.
 
         Args:
             sample_type: The PackableSample subclass to publish.
-            version: Semantic version string (e.g., '1.0.0').
-            description: Optional human-readable description.
+            version: Semantic version string (e.g., '1.0.0'). If None,
+                auto-increments from the latest published version (patch bump),
+                or starts at '1.0.0' if no previous version exists.
+            description: Optional human-readable description. If None, uses
+                the class docstring.
 
         Returns:
-            Schema reference string: 'local://schemas/{module.Class}@{version}'.
+            Schema reference string: 'atdata://local/sampleSchema/{name}@{version}'.
 
         Raises:
             ValueError: If sample_type is not a dataclass.
             TypeError: If a field type is not supported.
         """
+        # Auto-increment version if not specified
+        if version is None:
+            latest = self._get_latest_schema_version(sample_type.__name__)
+            if latest is None:
+                version = "1.0.0"
+            else:
+                version = _increment_patch(latest)
+
         schema_record = _build_schema_record(
             sample_type,
             version=version,
@@ -897,10 +972,10 @@ class Index:
         )
 
         schema_ref = _schema_ref_from_type(sample_type, version)
-        kind_str, _ = _parse_schema_ref(schema_ref)
+        name, _ = _parse_schema_ref(schema_ref)
 
         # Store in Redis
-        redis_key = f"{REDIS_KEY_SCHEMA}:{kind_str}@{version}"
+        redis_key = f"{REDIS_KEY_SCHEMA}:{name}@{version}"
         schema_json = json.dumps(schema_record)
         self._redis.set(redis_key, schema_json)
 
@@ -910,7 +985,9 @@ class Index:
         """Get a schema record by reference.
 
         Args:
-            ref: Schema reference string (local://schemas/...).
+            ref: Schema reference string. Supports both new format
+                (atdata://local/sampleSchema/{name}@{version}) and legacy
+                format (local://schemas/{module.Class}@{version}).
 
         Returns:
             Schema record as a dictionary.
@@ -919,8 +996,8 @@ class Index:
             KeyError: If schema not found.
             ValueError: If reference format is invalid.
         """
-        kind_str, version = _parse_schema_ref(ref)
-        redis_key = f"{REDIS_KEY_SCHEMA}:{kind_str}@{version}"
+        name, version = _parse_schema_ref(ref)
+        redis_key = f"{REDIS_KEY_SCHEMA}:{name}@{version}"
 
         schema_json = self._redis.get(redis_key)
         if schema_json is None:
@@ -930,12 +1007,13 @@ class Index:
             schema_json = schema_json.decode('utf-8')
 
         schema = json.loads(schema_json)
-        # Add $ref for decode_schema compatibility
-        schema['$ref'] = ref
+        # Add $ref in canonical format for decode_schema compatibility
+        schema['$ref'] = f"{_ATDATA_URI_PREFIX}{name}@{version}"
         return schema
 
-    def list_schemas(self) -> Generator[dict, None, None]:
-        """List all schema records in this index.
+    @property
+    def schemas(self) -> Generator[dict, None, None]:
+        """Iterate over all schema records in this index.
 
         Yields:
             Schema records as dictionaries.
@@ -943,7 +1021,7 @@ class Index:
         prefix = f'{REDIS_KEY_SCHEMA}:'
         for key in self._redis.scan_iter(match=f'{prefix}*'):
             key_str = key.decode('utf-8') if isinstance(key, bytes) else key
-            # Extract kind_str@version from key
+            # Extract name@version from key
             schema_id = key_str[len(prefix):]
 
             schema_json = self._redis.get(key)
@@ -954,8 +1032,22 @@ class Index:
                 schema_json = schema_json.decode('utf-8')
 
             schema = json.loads(schema_json)
-            schema['$ref'] = f"local://schemas/{schema_id}"
+            # Handle legacy keys that have module.Class format
+            if "." in schema_id.split("@")[0]:
+                name = schema_id.split("@")[0].rsplit(".", 1)[1]
+                version = schema_id.split("@")[1]
+                schema['$ref'] = f"{_ATDATA_URI_PREFIX}{name}@{version}"
+            else:
+                schema['$ref'] = f"{_ATDATA_URI_PREFIX}{schema_id}"
             yield schema
+
+    def list_schemas(self) -> list[dict]:
+        """Get all schema records as a list.
+
+        Returns:
+            List of all schema records in this index.
+        """
+        return list(self.schemas)
 
     def decode_schema(self, ref: str) -> Type[PackableSample]:
         """Reconstruct a Python PackableSample type from a stored schema.
