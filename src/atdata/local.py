@@ -77,6 +77,61 @@ REDIS_KEY_DATASET_ENTRY = "LocalDatasetEntry"
 REDIS_KEY_SCHEMA = "LocalSchema"
 
 
+class SchemaNamespace:
+    """Namespace for accessing loaded schema types as attributes.
+
+    This class provides a module-like interface for accessing dynamically
+    loaded schema types. After calling ``index.load_schema(uri)``, the
+    schema's class becomes available as an attribute on this namespace.
+
+    Example:
+        >>> index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
+        >>> MyType = index.types.MySample
+        >>> sample = MyType(field1="hello", field2=42)
+
+    The namespace supports:
+    - Attribute access: ``index.types.MySample``
+    - Iteration: ``for name in index.types: ...``
+    - Length: ``len(index.types)``
+    - Contains check: ``"MySample" in index.types``
+    """
+
+    def __init__(self) -> None:
+        self._types: dict[str, Type[PackableSample]] = {}
+
+    def _register(self, name: str, cls: Type[PackableSample]) -> None:
+        """Register a schema type in the namespace."""
+        self._types[name] = cls
+
+    def __getattr__(self, name: str) -> Type[PackableSample]:
+        if name.startswith("_"):
+            raise AttributeError(f"'{type(self).__name__}' has no attribute '{name}'")
+        if name not in self._types:
+            raise AttributeError(
+                f"Schema '{name}' not loaded. "
+                f"Call index.load_schema() first to load the schema."
+            )
+        return self._types[name]
+
+    def __dir__(self) -> list[str]:
+        return list(self._types.keys()) + ["_types", "_register"]
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._types)
+
+    def __len__(self) -> int:
+        return len(self._types)
+
+    def __contains__(self, name: str) -> bool:
+        return name in self._types
+
+    def __repr__(self) -> str:
+        if not self._types:
+            return "SchemaNamespace(empty)"
+        names = ", ".join(sorted(self._types.keys()))
+        return f"SchemaNamespace({names})"
+
+
 ##
 # Schema types
 
@@ -932,6 +987,9 @@ class Index:
         else:
             self._stub_manager = None
 
+        # Initialize schema namespace for load_schema/schemas API
+        self._schema_namespace = SchemaNamespace()
+
     @property
     def data_store(self) -> AbstractDataStore | None:
         """The data store for writing shards, or None if index-only."""
@@ -949,6 +1007,59 @@ class Index:
         if self._stub_manager is not None:
             return self._stub_manager.stub_dir
         return None
+
+    @property
+    def types(self) -> SchemaNamespace:
+        """Namespace for accessing loaded schema types.
+
+        After calling :meth:`load_schema`, schema types become available
+        as attributes on this namespace.
+
+        Example:
+            >>> index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
+            >>> MyType = index.types.MySample
+            >>> sample = MyType(name="hello", value=42)
+
+        Returns:
+            SchemaNamespace containing all loaded schema types.
+        """
+        return self._schema_namespace
+
+    def load_schema(self, ref: str) -> Type[PackableSample]:
+        """Load a schema and make it available in the types namespace.
+
+        This method decodes the schema, optionally generates a Python module
+        for IDE support (if auto_stubs is enabled), and registers the type
+        in the :attr:`types` namespace for easy access.
+
+        Args:
+            ref: Schema reference string (atdata://local/sampleSchema/... or
+                legacy local://schemas/...).
+
+        Returns:
+            The decoded PackableSample subclass. Also available via
+            ``index.types.<ClassName>`` after this call.
+
+        Raises:
+            KeyError: If schema not found.
+            ValueError: If schema cannot be decoded.
+
+        Example:
+            >>> # Load and use immediately
+            >>> MyType = index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
+            >>> sample = MyType(name="hello", value=42)
+            >>>
+            >>> # Or access later via namespace
+            >>> index.load_schema("atdata://local/sampleSchema/OtherType@1.0.0")
+            >>> other = index.types.OtherType(data="test")
+        """
+        # Decode the schema (uses generated module if auto_stubs enabled)
+        cls = self.decode_schema(ref)
+
+        # Register in namespace using the class name
+        self._schema_namespace._register(cls.__name__, cls)
+
+        return cls
 
     @property
     def all_entries(self) -> list[LocalDatasetEntry]:

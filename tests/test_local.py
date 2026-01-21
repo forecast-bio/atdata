@@ -1928,3 +1928,101 @@ class TestAutoStubs:
 
         # Should return the same class (from cache)
         assert Type1 is Type2
+
+
+class TestSchemaNamespace:
+    """Tests for load_schema() and schemas namespace API."""
+
+    def test_load_schema_returns_class(self, clean_redis):
+        """load_schema returns the decoded class."""
+        index = atlocal.Index(redis=clean_redis)
+        ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+
+        cls = index.load_schema(ref)
+
+        assert cls.__name__ == "SimpleTestSample"
+        sample = cls(name="test", value=123)
+        assert sample.name == "test"
+        assert sample.value == 123
+
+    def test_schemas_namespace_access(self, clean_redis):
+        """After load_schema, type is accessible via schemas namespace."""
+        index = atlocal.Index(redis=clean_redis)
+        ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+
+        index.load_schema(ref)
+
+        # Access via namespace
+        MyType = index.types.SimpleTestSample
+        assert MyType.__name__ == "SimpleTestSample"
+
+        # Create instance
+        sample = MyType(name="hello", value=42)
+        assert sample.name == "hello"
+        assert sample.value == 42
+
+    def test_schemas_namespace_not_loaded_error(self, clean_redis):
+        """Accessing unloaded schema raises AttributeError."""
+        index = atlocal.Index(redis=clean_redis)
+
+        with pytest.raises(AttributeError) as exc_info:
+            _ = index.types.NotLoadedType
+
+        assert "not loaded" in str(exc_info.value)
+        assert "load_schema" in str(exc_info.value)
+
+    def test_schemas_namespace_contains(self, clean_redis):
+        """schemas namespace supports 'in' operator."""
+        index = atlocal.Index(redis=clean_redis)
+        ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+
+        assert "SimpleTestSample" not in index.types
+        index.load_schema(ref)
+        assert "SimpleTestSample" in index.types
+
+    def test_schemas_namespace_iteration(self, clean_redis):
+        """schemas namespace supports iteration."""
+        index = atlocal.Index(redis=clean_redis)
+        ref1 = index.publish_schema(SimpleTestSample, version="1.0.0")
+
+        index.load_schema(ref1)
+
+        names = list(index.types)
+        assert "SimpleTestSample" in names
+
+    def test_schemas_namespace_len(self, clean_redis):
+        """schemas namespace supports len()."""
+        index = atlocal.Index(redis=clean_redis)
+        ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+
+        assert len(index.types) == 0
+        index.load_schema(ref)
+        assert len(index.types) == 1
+
+    def test_schemas_namespace_repr(self, clean_redis):
+        """schemas namespace has useful repr."""
+        index = atlocal.Index(redis=clean_redis)
+        ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+
+        assert "empty" in repr(index.types)
+        index.load_schema(ref)
+        assert "SimpleTestSample" in repr(index.types)
+
+    def test_load_schema_with_auto_stubs(self, clean_redis, tmp_path):
+        """load_schema works with auto_stubs enabled."""
+        stub_dir = tmp_path / "stubs"
+        index = atlocal.Index(redis=clean_redis, auto_stubs=True, stub_dir=stub_dir)
+
+        ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+        cls = index.load_schema(ref)
+
+        # Class works
+        sample = cls(name="test", value=99)
+        assert sample.name == "test"
+
+        # Module was generated
+        module_path = stub_dir / "local" / "SimpleTestSample_1_0_0.py"
+        assert module_path.exists()
+
+        # Accessible via namespace
+        assert index.types.SimpleTestSample is cls

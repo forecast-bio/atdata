@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Schema namespace API: index.load_schema() + index.schemas.MyType (#288)
 - Auto-typed get_schema/decode_schema return type (#287)
 - Improve decode_schema typing for IDE support (#286)
 - Fix stub filename collisions with authority-based namespacing (#285)
