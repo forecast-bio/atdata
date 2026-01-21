@@ -1782,8 +1782,8 @@ class TestAutoStubs:
         # Get schema should trigger stub generation
         schema = index.get_schema(ref)
 
-        # Check stub was created
-        stub_path = stub_dir / "SimpleTestSample_1_0_0.pyi"
+        # Check stub was created (in local/ subdirectory for namespacing)
+        stub_path = stub_dir / "local" / "SimpleTestSample_1_0_0.pyi"
         assert stub_path.exists()
 
         # Verify content
@@ -1802,8 +1802,8 @@ class TestAutoStubs:
         # Decode schema should trigger stub generation
         DecodedType = index.decode_schema(ref)
 
-        # Check stub was created
-        stub_path = stub_dir / "SimpleTestSample_2_0_0.pyi"
+        # Check stub was created (in local/ subdirectory for namespacing)
+        stub_path = stub_dir / "local" / "SimpleTestSample_2_0_0.pyi"
         assert stub_path.exists()
         assert DecodedType.__name__ == "SimpleTestSample"
 
@@ -1816,7 +1816,7 @@ class TestAutoStubs:
 
         # First call generates stub
         index.get_schema(ref)
-        stub_path = stub_dir / "SimpleTestSample_1_0_0.pyi"
+        stub_path = stub_dir / "local" / "SimpleTestSample_1_0_0.pyi"
         mtime1 = stub_path.stat().st_mtime
 
         # Small delay to ensure different mtime if regenerated
@@ -1840,17 +1840,17 @@ class TestAutoStubs:
         index.get_schema(ref1)
         index.get_schema(ref2)
 
-        # Verify stubs exist
-        assert (stub_dir / "SimpleTestSample_1_0_0.pyi").exists()
-        assert (stub_dir / "SimpleTestSample_2_0_0.pyi").exists()
+        # Verify stubs exist (in local/ subdirectory)
+        assert (stub_dir / "local" / "SimpleTestSample_1_0_0.pyi").exists()
+        assert (stub_dir / "local" / "SimpleTestSample_2_0_0.pyi").exists()
 
         # Clear stubs
         removed = index.clear_stubs()
         assert removed == 2
 
         # Verify stubs removed
-        assert not (stub_dir / "SimpleTestSample_1_0_0.pyi").exists()
-        assert not (stub_dir / "SimpleTestSample_2_0_0.pyi").exists()
+        assert not (stub_dir / "local" / "SimpleTestSample_1_0_0.pyi").exists()
+        assert not (stub_dir / "local" / "SimpleTestSample_2_0_0.pyi").exists()
 
     def test_clear_stubs_disabled_returns_zero(self, clean_redis):
         """clear_stubs should return 0 when auto_stubs is disabled."""
@@ -1866,6 +1866,6 @@ class TestAutoStubs:
         ref = index.publish_schema(SimpleTestSample, version="1.0.0")
         index.get_schema(ref)
 
-        # Stub should still be generated
-        stub_path = stub_dir / "SimpleTestSample_1_0_0.pyi"
+        # Stub should still be generated (in local/ subdirectory)
+        stub_path = stub_dir / "local" / "SimpleTestSample_1_0_0.pyi"
         assert stub_path.exists()

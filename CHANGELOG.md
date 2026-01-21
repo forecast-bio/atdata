@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Fix stub filename collisions with authority-based namespacing (#285)
 - Auto-generate stubs on schema access (#281)
 - Add tests for auto-stub functionality (#284)
 - Integrate auto-stub into Index class (#283)
