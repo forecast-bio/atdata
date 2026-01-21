@@ -1503,6 +1503,24 @@ def test_decode_schema_preserves_structure(clean_redis):
     assert instance.data.shape == (3, 3)
 
 
+def test_decode_schema_as_typed_helper(clean_redis):
+    """Test decode_schema_as returns properly typed result."""
+    index = atlocal.Index(redis=clean_redis)
+
+    schema_ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+
+    # decode_schema_as should work like decode_schema but with type hint
+    DecodedType = index.decode_schema_as(schema_ref, SimpleTestSample)
+
+    # Should be able to create instances
+    instance = DecodedType(name="test", value=42)
+    assert instance.name == "test"
+    assert instance.value == 42
+
+    # The returned type should be the actual decoded type (not the hint)
+    assert DecodedType.__name__ == "SimpleTestSample"
+
+
 def test_schema_version_handling(clean_redis):
     """Test publishing multiple versions of the same schema."""
     index = atlocal.Index(redis=clean_redis)
@@ -1783,7 +1801,7 @@ class TestAutoStubs:
         schema = index.get_schema(ref)
 
         # Check stub was created (in local/ subdirectory for namespacing)
-        stub_path = stub_dir / "local" / "SimpleTestSample_1_0_0.pyi"
+        stub_path = stub_dir / "local" / "SimpleTestSample_1_0_0.py"
         assert stub_path.exists()
 
         # Verify content
@@ -1803,7 +1821,7 @@ class TestAutoStubs:
         DecodedType = index.decode_schema(ref)
 
         # Check stub was created (in local/ subdirectory for namespacing)
-        stub_path = stub_dir / "local" / "SimpleTestSample_2_0_0.pyi"
+        stub_path = stub_dir / "local" / "SimpleTestSample_2_0_0.py"
         assert stub_path.exists()
         assert DecodedType.__name__ == "SimpleTestSample"
 
@@ -1816,7 +1834,7 @@ class TestAutoStubs:
 
         # First call generates stub
         index.get_schema(ref)
-        stub_path = stub_dir / "local" / "SimpleTestSample_1_0_0.pyi"
+        stub_path = stub_dir / "local" / "SimpleTestSample_1_0_0.py"
         mtime1 = stub_path.stat().st_mtime
 
         # Small delay to ensure different mtime if regenerated
@@ -1841,16 +1859,16 @@ class TestAutoStubs:
         index.get_schema(ref2)
 
         # Verify stubs exist (in local/ subdirectory)
-        assert (stub_dir / "local" / "SimpleTestSample_1_0_0.pyi").exists()
-        assert (stub_dir / "local" / "SimpleTestSample_2_0_0.pyi").exists()
+        assert (stub_dir / "local" / "SimpleTestSample_1_0_0.py").exists()
+        assert (stub_dir / "local" / "SimpleTestSample_2_0_0.py").exists()
 
         # Clear stubs
         removed = index.clear_stubs()
         assert removed == 2
 
         # Verify stubs removed
-        assert not (stub_dir / "local" / "SimpleTestSample_1_0_0.pyi").exists()
-        assert not (stub_dir / "local" / "SimpleTestSample_2_0_0.pyi").exists()
+        assert not (stub_dir / "local" / "SimpleTestSample_1_0_0.py").exists()
+        assert not (stub_dir / "local" / "SimpleTestSample_2_0_0.py").exists()
 
     def test_clear_stubs_disabled_returns_zero(self, clean_redis):
         """clear_stubs should return 0 when auto_stubs is disabled."""
@@ -1867,5 +1885,46 @@ class TestAutoStubs:
         index.get_schema(ref)
 
         # Stub should still be generated (in local/ subdirectory)
-        stub_path = stub_dir / "local" / "SimpleTestSample_1_0_0.pyi"
+        stub_path = stub_dir / "local" / "SimpleTestSample_1_0_0.py"
         assert stub_path.exists()
+
+    def test_decode_schema_returns_importable_class(self, clean_redis, tmp_path):
+        """decode_schema with auto_stubs returns a class from the generated module."""
+        stub_dir = tmp_path / "stubs"
+        index = atlocal.Index(redis=clean_redis, auto_stubs=True, stub_dir=stub_dir)
+
+        ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+        DecodedType = index.decode_schema(ref)
+
+        # The decoded type should be usable
+        assert DecodedType.__name__ == "SimpleTestSample"
+
+        # Should be able to instantiate it (SimpleTestSample has 'name' and 'value')
+        sample = DecodedType(name="hello", value=42)
+        assert sample.name == "hello"
+        assert sample.value == 42
+
+        # The class should be a PackableSample subclass
+        assert isinstance(sample, atdata.PackableSample)
+
+        # Verify the module was generated
+        module_path = stub_dir / "local" / "SimpleTestSample_1_0_0.py"
+        assert module_path.exists()
+
+        # Verify __init__.py files were created
+        assert (stub_dir / "__init__.py").exists()
+        assert (stub_dir / "local" / "__init__.py").exists()
+
+    def test_decode_schema_class_caching(self, clean_redis, tmp_path):
+        """decode_schema returns the same class on subsequent calls."""
+        stub_dir = tmp_path / "stubs"
+        index = atlocal.Index(redis=clean_redis, auto_stubs=True, stub_dir=stub_dir)
+
+        ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+
+        # Decode twice
+        Type1 = index.decode_schema(ref)
+        Type2 = index.decode_schema(ref)
+
+        # Should return the same class (from cache)
+        assert Type1 is Type2

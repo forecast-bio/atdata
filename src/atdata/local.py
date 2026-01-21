@@ -1317,29 +1317,64 @@ class Index:
         ahead of time. The index retrieves the schema record and dynamically
         generates a PackableSample subclass matching the schema definition.
 
-        If auto_stubs is enabled, a .pyi stub file will be generated for the
-        decoded type to provide IDE autocomplete support.
+        If auto_stubs is enabled, a Python module will be generated and the
+        class will be imported from it, providing full IDE autocomplete support.
+        The returned class has proper type information that IDEs can understand.
 
         Args:
             ref: Schema reference string (atdata://local/sampleSchema/... or
                 legacy local://schemas/...).
 
         Returns:
-            A dynamically generated PackableSample subclass.
+            A PackableSample subclass - either imported from a generated module
+            (if auto_stubs is enabled) or dynamically created.
 
         Raises:
             KeyError: If schema not found.
             ValueError: If schema cannot be decoded.
         """
-        from atdata._schema_codec import schema_to_type
-
         schema_dict = self.get_schema_dict(ref)
 
-        # Auto-generate stub if enabled
+        # If auto_stubs is enabled, generate module and import class from it
         if self._stub_manager is not None:
-            self._stub_manager.ensure_stub(schema_dict)
+            cls = self._stub_manager.ensure_module(schema_dict)
+            if cls is not None:
+                return cls
 
+        # Fall back to dynamic type generation
+        from atdata._schema_codec import schema_to_type
         return schema_to_type(schema_dict)
+
+    def decode_schema_as(self, ref: str, type_hint: type[T]) -> type[T]:
+        """Decode a schema with explicit type hint for IDE support.
+
+        This is a typed wrapper around decode_schema() that preserves the
+        type information for IDE autocomplete. Use this when you have a
+        stub file for the schema and want full IDE support.
+
+        Args:
+            ref: Schema reference string.
+            type_hint: The stub type to use for type hints. Import this from
+                the generated stub file.
+
+        Returns:
+            The decoded type, cast to match the type_hint for IDE support.
+
+        Example:
+            >>> # After enabling auto_stubs and configuring IDE extraPaths:
+            >>> from local.MySample_1_0_0 import MySample
+            >>>
+            >>> # This gives full IDE autocomplete:
+            >>> DecodedType = index.decode_schema_as(ref, MySample)
+            >>> sample = DecodedType(text="hello", value=42)  # IDE knows signature!
+
+        Note:
+            The type_hint is only used for static type checking - at runtime,
+            the actual decoded type from the schema is returned. Ensure the
+            stub matches the schema to avoid runtime surprises.
+        """
+        from typing import cast
+        return cast(type[T], self.decode_schema(ref))
 
     def clear_stubs(self) -> int:
         """Remove all auto-generated stub files.
