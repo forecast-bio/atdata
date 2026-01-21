@@ -2026,3 +2026,22 @@ class TestSchemaNamespace:
 
         # Accessible via namespace
         assert index.types.SimpleTestSample is cls
+
+    def test_get_import_path(self, clean_redis, tmp_path):
+        """get_import_path returns the module import path."""
+        stub_dir = tmp_path / "stubs"
+        index = atlocal.Index(redis=clean_redis, auto_stubs=True, stub_dir=stub_dir)
+
+        ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+        index.load_schema(ref)
+
+        import_path = index.get_import_path(ref)
+        assert import_path == "local.SimpleTestSample_1_0_0"
+
+    def test_get_import_path_disabled(self, clean_redis):
+        """get_import_path returns None when auto_stubs is disabled."""
+        index = atlocal.Index(redis=clean_redis)
+
+        ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+
+        assert index.get_import_path(ref) is None

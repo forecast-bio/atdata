@@ -94,6 +94,15 @@ class SchemaNamespace:
     - Iteration: ``for name in index.types: ...``
     - Length: ``len(index.types)``
     - Contains check: ``"MySample" in index.types``
+
+    Note:
+        For full IDE autocomplete support, import from the generated module::
+
+            # After load_schema with auto_stubs=True
+            from local.MySample_1_0_0 import MySample
+            sample = MySample(name="hello", value=42)  # IDE knows signature!
+
+        Add ``index.stub_dir`` to your IDE's extraPaths for imports to resolve.
     """
 
     def __init__(self) -> None:
@@ -103,7 +112,9 @@ class SchemaNamespace:
         """Register a schema type in the namespace."""
         self._types[name] = cls
 
-    def __getattr__(self, name: str) -> Type[PackableSample]:
+    def __getattr__(self, name: str) -> Any:
+        # Returns Any to avoid IDE complaints about unknown attributes.
+        # For full IDE support, import from the generated module instead.
         if name.startswith("_"):
             raise AttributeError(f"'{type(self).__name__}' has no attribute '{name}'")
         if name not in self._types:
@@ -114,7 +125,7 @@ class SchemaNamespace:
         return self._types[name]
 
     def __dir__(self) -> list[str]:
-        return list(self._types.keys()) + ["_types", "_register"]
+        return list(self._types.keys()) + ["_types", "_register", "get"]
 
     def __iter__(self) -> Iterator[str]:
         return iter(self._types)
@@ -130,6 +141,18 @@ class SchemaNamespace:
             return "SchemaNamespace(empty)"
         names = ", ".join(sorted(self._types.keys()))
         return f"SchemaNamespace({names})"
+
+    def get(self, name: str, default: T | None = None) -> Type[PackableSample] | T | None:
+        """Get a type by name, returning default if not found.
+
+        Args:
+            name: The schema class name to look up.
+            default: Value to return if not found (default: None).
+
+        Returns:
+            The schema class, or default if not loaded.
+        """
+        return self._types.get(name, default)
 
 
 ##
@@ -1060,6 +1083,42 @@ class Index:
         self._schema_namespace._register(cls.__name__, cls)
 
         return cls
+
+    def get_import_path(self, ref: str) -> str | None:
+        """Get the import path for a schema's generated module.
+
+        When auto_stubs is enabled, this returns the import path that can
+        be used to import the schema type with full IDE support.
+
+        Args:
+            ref: Schema reference string.
+
+        Returns:
+            Import path like "local.MySample_1_0_0", or None if auto_stubs
+            is disabled.
+
+        Example:
+            >>> index = LocalIndex(auto_stubs=True)
+            >>> ref = index.publish_schema(MySample, version="1.0.0")
+            >>> index.load_schema(ref)
+            >>> print(index.get_import_path(ref))
+            local.MySample_1_0_0
+            >>> # Then in your code:
+            >>> # from local.MySample_1_0_0 import MySample
+        """
+        if self._stub_manager is None:
+            return None
+
+        from ._stub_manager import _extract_authority
+
+        name, version = _parse_schema_ref(ref)
+        schema_dict = self.get_schema_dict(ref)
+        authority = _extract_authority(schema_dict.get("$ref"))
+
+        safe_version = version.replace(".", "_")
+        module_name = f"{name}_{safe_version}"
+
+        return f"{authority}.{module_name}"
 
     @property
     def all_entries(self) -> list[LocalDatasetEntry]:
