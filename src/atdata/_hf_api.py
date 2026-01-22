@@ -40,7 +40,7 @@ from typing import (
     overload,
 )
 
-from .dataset import Dataset, PackableSample
+from .dataset import Dataset, PackableSample, DictSample
 
 if TYPE_CHECKING:
     from ._protocols import AbstractIndex
@@ -472,6 +472,7 @@ def _resolve_indexed_path(
 # Main load_dataset function
 
 
+# Overload: explicit type with split -> Dataset[ST]
 @overload
 def load_dataset(
     path: str,
@@ -484,6 +485,7 @@ def load_dataset(
 ) -> Dataset[ST]: ...
 
 
+# Overload: explicit type without split -> DatasetDict[ST]
 @overload
 def load_dataset(
     path: str,
@@ -496,6 +498,7 @@ def load_dataset(
 ) -> DatasetDict[ST]: ...
 
 
+# Overload: no type with split -> Dataset[DictSample]
 @overload
 def load_dataset(
     path: str,
@@ -504,10 +507,11 @@ def load_dataset(
     split: str,
     data_files: str | list[str] | dict[str, str | list[str]] | None = None,
     streaming: bool = False,
-    index: "AbstractIndex",
-) -> Dataset[PackableSample]: ...
+    index: Optional["AbstractIndex"] = None,
+) -> Dataset[DictSample]: ...
 
 
+# Overload: no type without split -> DatasetDict[DictSample]
 @overload
 def load_dataset(
     path: str,
@@ -516,8 +520,8 @@ def load_dataset(
     split: None = None,
     data_files: str | list[str] | dict[str, str | list[str]] | None = None,
     streaming: bool = False,
-    index: "AbstractIndex",
-) -> DatasetDict[PackableSample]: ...
+    index: Optional["AbstractIndex"] = None,
+) -> DatasetDict[DictSample]: ...
 
 
 def load_dataset(
@@ -536,6 +540,10 @@ def load_dataset(
     returns either a single Dataset or a DatasetDict depending on the split
     parameter.
 
+    When no ``sample_type`` is provided, returns a ``Dataset[DictSample]`` that
+    provides dynamic dict-like access to fields. Use ``.as_type(MyType)`` to
+    convert to a typed schema.
+
     Args:
         path: Path to dataset. Can be:
             - Index lookup: "@handle/dataset-name" or "@local/dataset-name"
@@ -545,9 +553,9 @@ def load_dataset(
             - Remote URL: "s3://bucket/path/data-*.tar"
             - Single file: "path/to/data.tar"
 
-        sample_type: The PackableSample subclass defining the schema. Can be
-            None if index is provided - the type will be resolved from the
-            schema stored in the index.
+        sample_type: The PackableSample subclass defining the schema. If None,
+            returns ``Dataset[DictSample]`` with dynamic field access. Can also
+            be resolved from an index when using @handle/dataset syntax.
 
         split: Which split to load. If None, returns a DatasetDict with all
             detected splits. If specified (e.g., "train", "test"), returns
@@ -563,30 +571,36 @@ def load_dataset(
             pipelines, so this parameter primarily signals intent.
 
         index: Optional AbstractIndex for dataset lookup. Required when using
-            @handle/dataset syntax or when sample_type is None. Can be a
-            LocalIndex or AtmosphereIndex.
+            @handle/dataset syntax. When provided with an indexed path, the
+            schema can be auto-resolved from the index.
 
     Returns:
-        If split is None: DatasetDict[ST] with all detected splits.
-        If split is specified: Dataset[ST] for that split.
+        If split is None: DatasetDict with all detected splits.
+        If split is specified: Dataset for that split.
+        Type is ``ST`` if sample_type provided, otherwise ``DictSample``.
 
     Raises:
-        ValueError: If the specified split is not found, or if sample_type
-            is None without an index.
+        ValueError: If the specified split is not found.
         FileNotFoundError: If no data files are found at the path.
         KeyError: If dataset not found in index.
 
     Example:
-        >>> # Load from local path with explicit type
+        >>> # Load without type - get DictSample for exploration
+        >>> ds = load_dataset("./data/train.tar", split="train")
+        >>> for sample in ds.ordered():
+        ...     print(sample.keys())  # Explore fields
+        ...     print(sample["text"]) # Dict-style access
+        ...     print(sample.label)   # Attribute access
+        >>>
+        >>> # Convert to typed schema
+        >>> typed_ds = ds.as_type(TextData)
+        >>>
+        >>> # Or load with explicit type directly
         >>> train_ds = load_dataset("./data/train-*.tar", TextData, split="train")
         >>>
         >>> # Load from index with auto-type resolution
         >>> index = LocalIndex()
         >>> ds = load_dataset("@local/my-dataset", index=index, split="train")
-        >>>
-        >>> # Load all splits
-        >>> ds_dict = load_dataset("./data/", TextData)
-        >>> train_ds = ds_dict["train"]
     """
     # Handle @handle/dataset indexed path resolution
     if _is_indexed_path(path):
@@ -599,25 +613,20 @@ def load_dataset(
         data_urls, schema_ref = _resolve_indexed_path(path, index)
 
         # Resolve sample_type from schema if not provided
-        if sample_type is None:
-            sample_type = index.decode_schema(schema_ref)
+        resolved_type: Type = sample_type if sample_type is not None else index.decode_schema(schema_ref)
 
         # For indexed datasets, we treat all URLs as a single "train" split
         url = _shards_to_wds_url(data_urls)
-        ds = Dataset[sample_type](url)
+        ds = Dataset[resolved_type](url)
 
         if split is not None:
             # Indexed datasets are single-split by default
             return ds
 
-        return DatasetDict({"train": ds}, sample_type=sample_type, streaming=streaming)
+        return DatasetDict({"train": ds}, sample_type=resolved_type, streaming=streaming)
 
-    # Validate sample_type for non-indexed paths
-    if sample_type is None:
-        raise ValueError(
-            "sample_type is required for non-indexed paths. "
-            "Use @handle/dataset with an index for auto-type resolution."
-        )
+    # Use DictSample as default when no type specified
+    resolved_type = sample_type if sample_type is not None else DictSample
 
     # Resolve path to split -> shard URL mapping
     splits_shards = _resolve_shards(path, data_files)
@@ -626,10 +635,10 @@ def load_dataset(
         raise FileNotFoundError(f"No data files found at path: {path}")
 
     # Build Dataset for each split
-    datasets: dict[str, Dataset[ST]] = {}
+    datasets: dict[str, Dataset] = {}
     for split_name, shards in splits_shards.items():
         url = _shards_to_wds_url(shards)
-        ds = Dataset[sample_type](url)
+        ds = Dataset[resolved_type](url)
         datasets[split_name] = ds
 
     # Return single Dataset or DatasetDict
@@ -641,7 +650,7 @@ def load_dataset(
             )
         return datasets[split]
 
-    return DatasetDict(datasets, sample_type=sample_type, streaming=streaming)
+    return DatasetDict(datasets, sample_type=resolved_type, streaming=streaming)
 
 
 ##

@@ -25,6 +25,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Streamline Dataset API with DictSample default type (#338)
+- Add tests for DictSample and new API (#342)
+- Update load_dataset default type to DictSample (#341)
+- Update @packable to auto-register DictSample lens (#340)
+- Implement DictSample class with __getattr__ and __getitem__ (#339)
 - Fix failing tests in test_integration_error_handling.py (#337)
 - v0.2.2 beta release improvements (#326)
 - Document to_parquet() memory usage (#336)

@@ -106,6 +106,171 @@ def _is_possibly_ndarray_type( t ):
         return any( x == NDArray for x in t.__args__ )
     return False
 
+class DictSample:
+    """Dynamic sample type providing dict-like access to raw msgpack data.
+
+    This class is the default sample type for datasets when no explicit type is
+    specified. It stores the raw unpacked msgpack data and provides both
+    attribute-style (``sample.field``) and dict-style (``sample["field"]``)
+    access to fields.
+
+    ``DictSample`` is useful for:
+    - Exploring datasets without defining a schema first
+    - Working with datasets that have variable schemas
+    - Prototyping before committing to a typed schema
+
+    To convert to a typed schema, use ``Dataset.as_type()`` with a
+    ``@packable``-decorated class. Every ``@packable`` class automatically
+    registers a lens from ``DictSample``, making this conversion seamless.
+
+    Example:
+        >>> ds = load_dataset("path/to/data.tar")  # Returns Dataset[DictSample]
+        >>> for sample in ds.ordered():
+        ...     print(sample.some_field)      # Attribute access
+        ...     print(sample["other_field"])  # Dict access
+        ...     print(sample.keys())          # Inspect available fields
+        ...
+        >>> # Convert to typed schema
+        >>> typed_ds = ds.as_type(MyTypedSample)
+
+    Note:
+        NDArray fields are stored as raw bytes in DictSample. They are only
+        converted to numpy arrays when accessed through a typed sample class.
+    """
+
+    __slots__ = ('_data',)
+
+    def __init__(self, _data: dict[str, Any] | None = None, **kwargs: Any) -> None:
+        """Create a DictSample from a dictionary or keyword arguments.
+
+        Args:
+            _data: Raw data dictionary. If provided, kwargs are ignored.
+            **kwargs: Field values if _data is not provided.
+        """
+        if _data is not None:
+            object.__setattr__(self, '_data', _data)
+        else:
+            object.__setattr__(self, '_data', kwargs)
+
+    @classmethod
+    def from_data(cls, data: dict[str, Any]) -> 'DictSample':
+        """Create a DictSample from unpacked msgpack data.
+
+        Args:
+            data: Dictionary with field names as keys.
+
+        Returns:
+            New DictSample instance wrapping the data.
+        """
+        return cls(_data=data)
+
+    @classmethod
+    def from_bytes(cls, bs: bytes) -> 'DictSample':
+        """Create a DictSample from raw msgpack bytes.
+
+        Args:
+            bs: Raw bytes from a msgpack-serialized sample.
+
+        Returns:
+            New DictSample instance with the unpacked data.
+        """
+        return cls.from_data(ormsgpack.unpackb(bs))
+
+    def __getattr__(self, name: str) -> Any:
+        """Access a field by attribute name.
+
+        Args:
+            name: Field name to access.
+
+        Returns:
+            The field value.
+
+        Raises:
+            AttributeError: If the field doesn't exist.
+        """
+        # Avoid infinite recursion for _data lookup
+        if name == '_data':
+            raise AttributeError(name)
+        try:
+            return self._data[name]
+        except KeyError:
+            raise AttributeError(
+                f"'{type(self).__name__}' has no field '{name}'. "
+                f"Available fields: {list(self._data.keys())}"
+            ) from None
+
+    def __getitem__(self, key: str) -> Any:
+        """Access a field by dict key.
+
+        Args:
+            key: Field name to access.
+
+        Returns:
+            The field value.
+
+        Raises:
+            KeyError: If the field doesn't exist.
+        """
+        return self._data[key]
+
+    def __contains__(self, key: str) -> bool:
+        """Check if a field exists."""
+        return key in self._data
+
+    def keys(self) -> list[str]:
+        """Return list of field names."""
+        return list(self._data.keys())
+
+    def values(self) -> list[Any]:
+        """Return list of field values."""
+        return list(self._data.values())
+
+    def items(self) -> list[tuple[str, Any]]:
+        """Return list of (field_name, value) tuples."""
+        return list(self._data.items())
+
+    def get(self, key: str, default: Any = None) -> Any:
+        """Get a field value with optional default.
+
+        Args:
+            key: Field name to access.
+            default: Value to return if field doesn't exist.
+
+        Returns:
+            The field value or default.
+        """
+        return self._data.get(key, default)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a copy of the underlying data dictionary."""
+        return dict(self._data)
+
+    @property
+    def packed(self) -> bytes:
+        """Pack this sample's data into msgpack bytes.
+
+        Returns:
+            Raw msgpack bytes representing this sample's data.
+        """
+        return msgpack.packb(self._data)
+
+    @property
+    def as_wds(self) -> 'WDSRawSample':
+        """Pack this sample's data for writing to WebDataset.
+
+        Returns:
+            A dictionary with ``__key__`` and ``msgpack`` fields.
+        """
+        return {
+            '__key__': str(uuid.uuid1(0, 0)),
+            'msgpack': self.packed,
+        }
+
+    def __repr__(self) -> str:
+        fields = ', '.join(f'{k}=...' for k in self._data.keys())
+        return f'DictSample({fields})'
+
+
 @dataclass
 class PackableSample( ABC ):
     """Base class for samples that can be serialized with msgpack.
@@ -804,6 +969,14 @@ def packable( cls: type[_T] ) -> type[_T]:
                 attr.__qualname__ = attr.__qualname__.replace(
                     old_qualname_prefix, class_name, 1
                 )
+
+    # Auto-register lens from DictSample to this type
+    # This enables ds.as_type(MyType) when ds is Dataset[DictSample]
+    def _dict_to_typed(ds: DictSample) -> as_packable:
+        return as_packable.from_data(ds._data)
+
+    _dict_lens = Lens(_dict_to_typed)
+    LensNetwork().register(_dict_lens)
 
     ##
 

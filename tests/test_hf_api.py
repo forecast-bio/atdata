@@ -713,10 +713,27 @@ class TestLoadDatasetWithIndex:
         with pytest.raises(ValueError, match="Index required"):
             load_dataset("@handle/dataset", SimpleTestSample)
 
-    def test_none_sample_type_requires_index(self):
-        """sample_type=None without index raises ValueError."""
-        with pytest.raises(ValueError, match="sample_type is required"):
-            load_dataset("/path/to/data.tar", None)
+    def test_none_sample_type_defaults_to_dictsample(self, tmp_path):
+        """sample_type=None returns Dataset[DictSample]."""
+        from atdata import DictSample
+
+        # Create a test tar file
+        tar_path = tmp_path / "data.tar"
+        sample = SimpleTestSample(text="hello", label=42)
+        with wds.writer.TarWriter(str(tar_path)) as writer:
+            writer.write(sample.as_wds)
+
+        # Load without specifying sample_type
+        ds = load_dataset(str(tar_path), split="train")
+
+        # Should return Dataset[DictSample]
+        assert ds.sample_type == DictSample
+
+        # Should be able to iterate and access fields
+        for sample in ds.ordered():
+            assert sample["text"] == "hello"
+            assert sample.label == 42
+            break
 
     def test_indexed_path_with_mock_index(self):
         """load_dataset with indexed path uses index lookup."""

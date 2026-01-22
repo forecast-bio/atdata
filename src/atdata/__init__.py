@@ -39,6 +39,7 @@ Main Components:
 # Expose components
 
 from .dataset import (
+    DictSample as DictSample,
     PackableSample as PackableSample,
     SampleBatch as SampleBatch,
     Dataset as Dataset,
