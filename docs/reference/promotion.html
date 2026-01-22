@@ -359,6 +359,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="dropdown-item" href="../reference/uri-spec.html">
  <span class="dropdown-text">URI Specification</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="../reference/troubleshooting.html">
+ <span class="dropdown-text">Troubleshooting &amp; FAQ</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../reference/deployment.html">
+ <span class="dropdown-text">Deployment Guide</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item">
@@ -500,6 +508,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">URI Specification</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../reference/troubleshooting.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Troubleshooting &amp; FAQ</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../reference/deployment.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Deployment Guide</span></a>
+  </div>
+</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -581,7 +601,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="basic-usage" class="level2">
 <h2 class="anchored" data-anchor-id="basic-usage">Basic Usage</h2>
-<div id="9b7db9ea" class="cell">
+<div id="136db9af" class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> LocalIndex</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> AtmosphereClient</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.promote <span class="im">import</span> promote_to_atmosphere</span>
@@ -601,7 +621,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="with-metadata" class="level2">
 <h2 class="anchored" data-anchor-id="with-metadata">With Metadata</h2>
-<div id="fec408db" class="cell">
+<div id="2e4913b8" class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>at_uri <span class="op">=</span> promote_to_atmosphere(</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    entry,</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    local_index,</span>
@@ -616,7 +636,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="schema-deduplication" class="level2">
 <h2 class="anchored" data-anchor-id="schema-deduplication">Schema Deduplication</h2>
 <p>The promotion workflow automatically checks for existing schemas:</p>
-<div id="b493a780" class="cell">
+<div id="054870cb" class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># First promotion: publishes schema</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>uri1 <span class="op">=</span> promote_to_atmosphere(entry1, local_index, client)</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -636,7 +656,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="tab-content">
 <div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
 <p>By default, promotion keeps the original data URLs:</p>
-<div id="98e3c467" class="cell">
+<div id="84889b62" class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Data stays in original S3 location</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>at_uri <span class="op">=</span> promote_to_atmosphere(entry, local_index, client)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -649,7 +669,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
 <p>To copy data to a different storage location:</p>
-<div id="d1f0b29d" class="cell">
+<div id="f2a0312e" class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> S3DataStore</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create new data store</span></span>
@@ -677,7 +697,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="complete-workflow-example" class="level2">
 <h2 class="anchored" data-anchor-id="complete-workflow-example">Complete Workflow Example</h2>
-<div id="f43825cc" class="cell">
+<div id="5ebd107b" class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
@@ -748,7 +768,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="error-handling" class="level2">
 <h2 class="anchored" data-anchor-id="error-handling">Error Handling</h2>
-<div id="1d9ce394" class="cell">
+<div id="e9403122" class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    at_uri <span class="op">=</span> promote_to_atmosphere(entry, local_index, client)</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> <span class="pp">KeyError</span> <span class="im">as</span> e:</span>

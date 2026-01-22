@@ -575,50 +575,49 @@ class TestS3ErrorSimulation:
     def test_s3_access_denied_error(self):
         """S3 access denied should raise clear error."""
         from atdata import S3Source
+        from botocore.exceptions import ClientError
 
-        # Mock S3 client that raises access denied
-        with patch("boto3.client") as mock_boto:
-            from botocore.exceptions import ClientError
+        # Create source with mock credentials
+        source = S3Source(
+            bucket="test-bucket",
+            keys=["data.tar"],
+            access_key="test",
+            secret_key="test",
+        )
 
+        # Mock the client after source creation
+        with patch.object(source, "_get_client") as mock_get_client:
             mock_client = Mock()
-            mock_client.list_objects_v2.side_effect = ClientError(
+            mock_client.get_object.side_effect = ClientError(
                 {"Error": {"Code": "AccessDenied", "Message": "Access Denied"}},
-                "ListObjects",
+                "GetObject",
             )
-            mock_boto.return_value = mock_client
-
-            source = S3Source(
-                bucket="test-bucket",
-                keys=["data.tar"],
-                credentials={
-                    "AWS_ACCESS_KEY_ID": "test",
-                    "AWS_SECRET_ACCESS_KEY": "test",
-                },
-            )
+            mock_get_client.return_value = mock_client
 
             # Opening shard should propagate the error
+            # Use full S3 URI as returned by shard_list
             with pytest.raises(ClientError):
-                source.open_shard("data.tar")
+                source.open_shard("s3://test-bucket/data.tar")
 
     def test_s3_connection_timeout_simulation(self):
         """S3 connection timeout should raise appropriate error."""
         from atdata import S3Source
+        from botocore.exceptions import ConnectTimeoutError
 
-        with patch("boto3.client") as mock_boto:
-            from botocore.exceptions import ConnectTimeoutError
+        # Create source with mock credentials
+        source = S3Source(
+            bucket="test-bucket",
+            keys=["data.tar"],
+            access_key="test",
+            secret_key="test",
+        )
 
+        # Mock the client after source creation
+        with patch.object(source, "_get_client") as mock_get_client:
             mock_client = Mock()
             mock_client.get_object.side_effect = ConnectTimeoutError(endpoint_url="s3://test")
-            mock_boto.return_value = mock_client
+            mock_get_client.return_value = mock_client
 
-            source = S3Source(
-                bucket="test-bucket",
-                keys=["data.tar"],
-                credentials={
-                    "AWS_ACCESS_KEY_ID": "test",
-                    "AWS_SECRET_ACCESS_KEY": "test",
-                },
-            )
-
+            # Use full S3 URI as returned by shard_list
             with pytest.raises(ConnectTimeoutError):
-                source.open_shard("data.tar")
+                source.open_shard("s3://test-bucket/data.tar")

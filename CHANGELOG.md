@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Fix failing tests in test_integration_error_handling.py (#337)
 - v0.2.2 beta release improvements (#326)
 - Document to_parquet() memory usage (#336)
 - Evaluate splitting local.py into modules (#335)

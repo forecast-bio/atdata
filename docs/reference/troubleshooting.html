@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="HuggingFace-style dataset loading interface">
+<meta name="description" content="Common issues and frequently asked questions">
 
-<title>load_dataset API – atdata</title>
+<title>Troubleshooting &amp; FAQ – atdata</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -392,7 +392,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/packable-samples.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/load-dataset.html">load_dataset API</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/packable-samples.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/troubleshooting.html">Troubleshooting &amp; FAQ</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -492,7 +492,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../reference/load-dataset.html" class="sidebar-item-text sidebar-link active">
+  <a href="../reference/load-dataset.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">load_dataset API</span></a>
   </div>
 </li>
@@ -510,7 +510,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../reference/troubleshooting.html" class="sidebar-item-text sidebar-link">
+  <a href="../reference/troubleshooting.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">Troubleshooting &amp; FAQ</span></a>
   </div>
 </li>
@@ -549,39 +549,42 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
-  <li><a href="#basic-usage" id="toc-basic-usage" class="nav-link" data-scroll-target="#basic-usage">Basic Usage</a></li>
-  <li><a href="#path-formats" id="toc-path-formats" class="nav-link" data-scroll-target="#path-formats">Path Formats</a>
+  <li><a href="#common-errors" id="toc-common-errors" class="nav-link active" data-scroll-target="#common-errors">Common Errors</a>
   <ul class="collapse">
-  <li><a href="#webdataset-brace-notation" id="toc-webdataset-brace-notation" class="nav-link" data-scroll-target="#webdataset-brace-notation">WebDataset Brace Notation</a></li>
-  <li><a href="#glob-patterns" id="toc-glob-patterns" class="nav-link" data-scroll-target="#glob-patterns">Glob Patterns</a></li>
-  <li><a href="#local-directory" id="toc-local-directory" class="nav-link" data-scroll-target="#local-directory">Local Directory</a></li>
-  <li><a href="#remote-urls" id="toc-remote-urls" class="nav-link" data-scroll-target="#remote-urls">Remote URLs</a></li>
-  <li><a href="#index-lookup" id="toc-index-lookup" class="nav-link" data-scroll-target="#index-lookup">Index Lookup</a></li>
+  <li><a href="#typeerror-type-object-is-not-subscriptable" id="toc-typeerror-type-object-is-not-subscriptable" class="nav-link" data-scroll-target="#typeerror-type-object-is-not-subscriptable">TypeError: ‘type’ object is not subscriptable</a></li>
+  <li><a href="#attributeerror-nonetype-object-has-no-attribute" id="toc-attributeerror-nonetype-object-has-no-attribute" class="nav-link" data-scroll-target="#attributeerror-nonetype-object-has-no-attribute">AttributeError: ‘NoneType’ object has no attribute…</a></li>
+  <li><a href="#runtimeerror-msgpack-field-not-found-in-sample" id="toc-runtimeerror-msgpack-field-not-found-in-sample" class="nav-link" data-scroll-target="#runtimeerror-msgpack-field-not-found-in-sample">RuntimeError: msgpack field not found in sample</a></li>
+  <li><a href="#valueerror-field-type-not-supported" id="toc-valueerror-field-type-not-supported" class="nav-link" data-scroll-target="#valueerror-field-type-not-supported">ValueError: Field type not supported</a></li>
+  <li><a href="#keyerror-when-iterating-dataset" id="toc-keyerror-when-iterating-dataset" class="nav-link" data-scroll-target="#keyerror-when-iterating-dataset">KeyError when iterating dataset</a></li>
   </ul></li>
-  <li><a href="#split-detection" id="toc-split-detection" class="nav-link" data-scroll-target="#split-detection">Split Detection</a></li>
-  <li><a href="#datasetdict" id="toc-datasetdict" class="nav-link" data-scroll-target="#datasetdict">DatasetDict</a></li>
-  <li><a href="#explicit-data-files" id="toc-explicit-data-files" class="nav-link" data-scroll-target="#explicit-data-files">Explicit Data Files</a></li>
-  <li><a href="#streaming-mode" id="toc-streaming-mode" class="nav-link" data-scroll-target="#streaming-mode">Streaming Mode</a></li>
-  <li><a href="#auto-type-resolution" id="toc-auto-type-resolution" class="nav-link" data-scroll-target="#auto-type-resolution">Auto Type Resolution</a></li>
-  <li><a href="#error-handling" id="toc-error-handling" class="nav-link" data-scroll-target="#error-handling">Error Handling</a></li>
-  <li><a href="#complete-example" id="toc-complete-example" class="nav-link" data-scroll-target="#complete-example">Complete Example</a></li>
-  <li><a href="#related" id="toc-related" class="nav-link" data-scroll-target="#related">Related</a></li>
+  <li><a href="#faq" id="toc-faq" class="nav-link" data-scroll-target="#faq">FAQ</a>
+  <ul class="collapse">
+  <li><a href="#how-do-i-check-the-sample-type-of-a-dataset" id="toc-how-do-i-check-the-sample-type-of-a-dataset" class="nav-link" data-scroll-target="#how-do-i-check-the-sample-type-of-a-dataset">How do I check the sample type of a dataset?</a></li>
+  <li><a href="#how-do-i-convert-a-dataset-to-a-different-type" id="toc-how-do-i-convert-a-dataset-to-a-different-type" class="nav-link" data-scroll-target="#how-do-i-convert-a-dataset-to-a-different-type">How do I convert a dataset to a different type?</a></li>
+  <li><a href="#how-do-i-handle-optional-ndarray-fields" id="toc-how-do-i-handle-optional-ndarray-fields" class="nav-link" data-scroll-target="#how-do-i-handle-optional-ndarray-fields">How do I handle optional NDArray fields?</a></li>
+  <li><a href="#why-is-my-dataset-iteration-slow" id="toc-why-is-my-dataset-iteration-slow" class="nav-link" data-scroll-target="#why-is-my-dataset-iteration-slow">Why is my dataset iteration slow?</a></li>
+  <li><a href="#how-do-i-export-to-parquet" id="toc-how-do-i-export-to-parquet" class="nav-link" data-scroll-target="#how-do-i-export-to-parquet">How do I export to parquet?</a></li>
+  <li><a href="#how-do-i-handle-multiple-shards" id="toc-how-do-i-handle-multiple-shards" class="nav-link" data-scroll-target="#how-do-i-handle-multiple-shards">How do I handle multiple shards?</a></li>
+  <li><a href="#can-i-use-s3-or-other-cloud-storage" id="toc-can-i-use-s3-or-other-cloud-storage" class="nav-link" data-scroll-target="#can-i-use-s3-or-other-cloud-storage">Can I use S3 or other cloud storage?</a></li>
+  <li><a href="#how-do-i-publish-to-atprotoatmosphere" id="toc-how-do-i-publish-to-atprotoatmosphere" class="nav-link" data-scroll-target="#how-do-i-publish-to-atprotoatmosphere">How do I publish to ATProto/Atmosphere?</a></li>
+  <li><a href="#whats-the-difference-between-localindex-and-atmosphereindex" id="toc-whats-the-difference-between-localindex-and-atmosphereindex" class="nav-link" data-scroll-target="#whats-the-difference-between-localindex-and-atmosphereindex">What’s the difference between LocalIndex and AtmosphereIndex?</a></li>
+  </ul></li>
+  <li><a href="#getting-help" id="toc-getting-help" class="nav-link" data-scroll-target="#getting-help">Getting Help</a></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/your-org/atdata/edit/main/reference/load-dataset.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/your-org/atdata/edit/main/reference/troubleshooting.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/packable-samples.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/load-dataset.html">load_dataset API</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/packable-samples.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/troubleshooting.html">Troubleshooting &amp; FAQ</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">load_dataset API</h1>
+<h1 class="title">Troubleshooting &amp; FAQ</h1>
 </div>
 
 <div>
   <div class="description">
-    HuggingFace-style dataset loading interface
+    Common issues and frequently asked questions
   </div>
 </div>
 
@@ -598,312 +601,241 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>The <code>load_dataset()</code> function provides a HuggingFace Datasets-style interface for loading typed datasets.</p>
-<section id="overview" class="level2">
-<h2 class="anchored" data-anchor-id="overview">Overview</h2>
-<p>Key differences from HuggingFace Datasets:</p>
-<ul>
-<li>Requires explicit <code>sample_type</code> parameter (typed dataclass) unless using index</li>
-<li>Returns <code>atdata.Dataset[ST]</code> instead of HF Dataset</li>
-<li>Built on WebDataset for efficient streaming</li>
-<li>No Arrow caching layer</li>
-</ul>
+<p>This page covers common issues, error messages, and frequently asked questions when working with atdata.</p>
+<section id="common-errors" class="level2">
+<h2 class="anchored" data-anchor-id="common-errors">Common Errors</h2>
+<section id="typeerror-type-object-is-not-subscriptable" class="level3">
+<h3 class="anchored" data-anchor-id="typeerror-type-object-is-not-subscriptable">TypeError: ‘type’ object is not subscriptable</h3>
+<p><strong>Error:</strong></p>
+<pre><code>TypeError: 'type' object is not subscriptable</code></pre>
+<p><strong>Cause:</strong> Using <code>Dataset</code> or <code>SampleBatch</code> without subscripting the type parameter on Python &lt; 3.9, or using an unsubscripted generic.</p>
+<p><strong>Solution:</strong> Always use the subscripted form:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Correct</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> Dataset[MySample](<span class="st">"data.tar"</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>batch <span class="op">=</span> SampleBatch[MySample](samples)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Incorrect</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> Dataset(<span class="st">"data.tar"</span>)  <span class="co"># Missing type parameter</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
-<section id="basic-usage" class="level2">
-<h2 class="anchored" data-anchor-id="basic-usage">Basic Usage</h2>
-<div id="46f7c26d" class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata <span class="im">import</span> load_dataset</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> TextSample:</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    text: <span class="bu">str</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    label: <span class="bu">int</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Load a specific split</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>train_ds <span class="op">=</span> load_dataset(<span class="st">"path/to/data.tar"</span>, TextSample, split<span class="op">=</span><span class="st">"train"</span>)</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Load all splits (returns DatasetDict)</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>ds_dict <span class="op">=</span> load_dataset(<span class="st">"path/to/data/"</span>, TextSample)</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>train_ds <span class="op">=</span> ds_dict[<span class="st">"train"</span>]</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>test_ds <span class="op">=</span> ds_dict[<span class="st">"test"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
+<section id="attributeerror-nonetype-object-has-no-attribute" class="level3">
+<h3 class="anchored" data-anchor-id="attributeerror-nonetype-object-has-no-attribute">AttributeError: ‘NoneType’ object has no attribute…</h3>
+<p><strong>Error:</strong></p>
+<pre><code>AttributeError: 'NoneType' object has no attribute '__args__'</code></pre>
+<p><strong>Cause:</strong> Creating a <code>Dataset</code> or <code>SampleBatch</code> without using the subscripted syntax <code>Class[Type](...)</code>.</p>
+<p><strong>Solution:</strong> These classes use Python’s <code>__orig_class__</code> mechanism to extract type parameters at runtime. You must use:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> Dataset[MySample](url)  <span class="co"># Correct</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Not:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> Dataset(url)  <span class="co"># Wrong - no type information</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
-<section id="path-formats" class="level2">
-<h2 class="anchored" data-anchor-id="path-formats">Path Formats</h2>
-<section id="webdataset-brace-notation" class="level3">
-<h3 class="anchored" data-anchor-id="webdataset-brace-notation">WebDataset Brace Notation</h3>
-<div id="ed8498ef" class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Range notation</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"data-{000000..000099}.tar"</span>, MySample, split<span class="op">=</span><span class="st">"train"</span>)</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># List notation</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"data-{train,test,val}.tar"</span>, MySample, split<span class="op">=</span><span class="st">"train"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
+<section id="runtimeerror-msgpack-field-not-found-in-sample" class="level3">
+<h3 class="anchored" data-anchor-id="runtimeerror-msgpack-field-not-found-in-sample">RuntimeError: msgpack field not found in sample</h3>
+<p><strong>Error:</strong></p>
+<pre><code>RuntimeError: Malformed sample: 'msgpack' field not found</code></pre>
+<p><strong>Cause:</strong> The tar file contains samples that weren’t written with atdata’s serialization format.</p>
+<p><strong>Solution:</strong> Ensure samples are written using <code>sample.as_wds</code>:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> wds.writer.TarWriter(<span class="st">"data.tar"</span>) <span class="im">as</span> sink:</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> sample <span class="kw">in</span> samples:</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>        sink.write(sample.as_wds)  <span class="co"># Correct</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
-<section id="glob-patterns" class="level3">
-<h3 class="anchored" data-anchor-id="glob-patterns">Glob Patterns</h3>
-<div id="2e6503f7" class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Match all tar files</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"path/to/*.tar"</span>, MySample)</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Match pattern</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"path/to/train-*.tar"</span>, MySample, split<span class="op">=</span><span class="st">"train"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="local-directory" class="level3">
-<h3 class="anchored" data-anchor-id="local-directory">Local Directory</h3>
-<div id="35083602" class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Scans for .tar files</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"./my-dataset/"</span>, MySample)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="remote-urls" class="level3">
-<h3 class="anchored" data-anchor-id="remote-urls">Remote URLs</h3>
-<div id="9389fed0" class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># S3 (public buckets)</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"s3://bucket/data-{000..099}.tar"</span>, MySample, split<span class="op">=</span><span class="st">"train"</span>)</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># HTTP/HTTPS</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"https://example.com/data.tar"</span>, MySample, split<span class="op">=</span><span class="st">"train"</span>)</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Google Cloud Storage</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"gs://bucket/data.tar"</span>, MySample, split<span class="op">=</span><span class="st">"train"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Note
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>For private S3 buckets or S3-compatible storage with authentication, use <code>atdata.S3Source</code> with <code>Dataset</code> directly. See <a href="../reference/datasets.html">Datasets</a> for details.</p>
-</div>
-</div>
-</section>
-<section id="index-lookup" class="level3">
-<h3 class="anchored" data-anchor-id="index-lookup">Index Lookup</h3>
-<div id="060d1d0d" class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> LocalIndex</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> LocalIndex()</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Load from local index (auto-resolves type from schema)</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"@local/my-dataset"</span>, index<span class="op">=</span>index, split<span class="op">=</span><span class="st">"train"</span>)</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co"># With explicit type</span></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"@local/my-dataset"</span>, MySample, index<span class="op">=</span>index, split<span class="op">=</span><span class="st">"train"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-</section>
-<section id="split-detection" class="level2">
-<h2 class="anchored" data-anchor-id="split-detection">Split Detection</h2>
-<p>Splits are automatically detected from filenames and directories:</p>
+<section id="valueerror-field-type-not-supported" class="level3">
+<h3 class="anchored" data-anchor-id="valueerror-field-type-not-supported">ValueError: Field type not supported</h3>
+<p><strong>Error:</strong></p>
+<pre><code>TypeError: Unsupported type for schema field: &lt;class 'SomeType'&gt;</code></pre>
+<p><strong>Cause:</strong> Using an unsupported Python type in a PackableSample field.</p>
+<p><strong>Supported types:</strong></p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
-<th>Pattern</th>
-<th>Detected Split</th>
+<th>Python Type</th>
+<th>Notes</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>train-*.tar</code>, <code>training-*.tar</code></td>
-<td>train</td>
+<td><code>str</code></td>
+<td>Unicode strings</td>
 </tr>
 <tr class="even">
-<td><code>test-*.tar</code>, <code>testing-*.tar</code></td>
-<td>test</td>
+<td><code>int</code></td>
+<td>Integers</td>
 </tr>
 <tr class="odd">
-<td><code>val-*.tar</code>, <code>valid-*.tar</code>, <code>validation-*.tar</code></td>
-<td>validation</td>
+<td><code>float</code></td>
+<td>Floating point</td>
 </tr>
 <tr class="even">
-<td><code>dev-*.tar</code>, <code>development-*.tar</code></td>
-<td>validation</td>
+<td><code>bool</code></td>
+<td>Boolean</td>
 </tr>
 <tr class="odd">
-<td><code>train/*.tar</code> (directory)</td>
-<td>train</td>
+<td><code>bytes</code></td>
+<td>Binary data</td>
 </tr>
 <tr class="even">
-<td><code>test/*.tar</code> (directory)</td>
-<td>test</td>
+<td><code>NDArray</code></td>
+<td>Numpy arrays (any dtype)</td>
+</tr>
+<tr class="odd">
+<td><code>list[T]</code></td>
+<td>Lists of primitives</td>
+</tr>
+<tr class="even">
+<td><code>T \| None</code></td>
+<td>Optional fields</td>
 </tr>
 </tbody>
 </table>
-<div class="callout callout-style-default callout-note callout-titled">
+<p><strong>Not supported:</strong> Nested dataclasses, dicts, custom classes.</p>
+</section>
+<section id="keyerror-when-iterating-dataset" class="level3">
+<h3 class="anchored" data-anchor-id="keyerror-when-iterating-dataset">KeyError when iterating dataset</h3>
+<p><strong>Error:</strong></p>
+<pre><code>KeyError: 'msgpack'</code></pre>
+<p><strong>Cause:</strong> The WebDataset tar file structure doesn’t match expected format.</p>
+<p><strong>Solution:</strong> Verify your tar file was created correctly:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check tar contents</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> <span class="at">-tvf</span> data.tar <span class="kw">|</span> <span class="fu">head</span> <span class="at">-20</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Each sample should have a <code>.msgpack</code> extension in the tar file.</p>
+</section>
+</section>
+<section id="faq" class="level2">
+<h2 class="anchored" data-anchor-id="faq">FAQ</h2>
+<section id="how-do-i-check-the-sample-type-of-a-dataset" class="level3">
+<h3 class="anchored" data-anchor-id="how-do-i-check-the-sample-type-of-a-dataset">How do I check the sample type of a dataset?</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> Dataset[MySample](<span class="st">"data.tar"</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(ds.sample_type)  <span class="co"># &lt;class 'MySample'&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="how-do-i-convert-a-dataset-to-a-different-type" class="level3">
+<h3 class="anchored" data-anchor-id="how-do-i-convert-a-dataset-to-a-different-type">How do I convert a dataset to a different type?</h3>
+<p>Use the <code>as_type()</code> method with a registered lens:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.lens</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> my_lens(src: SourceType) <span class="op">-&gt;</span> TargetType:</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> TargetType(field<span class="op">=</span>src.other_field)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>ds_view <span class="op">=</span> ds.as_type(TargetType)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="how-do-i-handle-optional-ndarray-fields" class="level3">
+<h3 class="anchored" data-anchor-id="how-do-i-handle-optional-ndarray-fields">How do I handle optional NDArray fields?</h3>
+<p>Use <code>NDArray | None</code> annotation:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MySample:</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    required_array: NDArray</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    optional_array: NDArray <span class="op">|</span> <span class="va">None</span> <span class="op">=</span> <span class="va">None</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="why-is-my-dataset-iteration-slow" class="level3">
+<h3 class="anchored" data-anchor-id="why-is-my-dataset-iteration-slow">Why is my dataset iteration slow?</h3>
+<p>Common causes:</p>
+<ol type="1">
+<li><strong>Network latency</strong>: Use local caching for remote datasets</li>
+<li><strong>Small batch sizes</strong>: Increase <code>batch_size</code> in <code>ordered()</code> or <code>shuffled()</code></li>
+<li><strong>Shuffle buffer</strong>: For <code>shuffled()</code>, the <code>initial</code> parameter controls buffer size</li>
+</ol>
+<div class="sourceCode" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Larger batches = better throughput</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> ds.shuffled(batch_size<span class="op">=</span><span class="dv">64</span>, initial<span class="op">=</span><span class="dv">1000</span>):</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    ...</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="how-do-i-export-to-parquet" class="level3">
+<h3 class="anchored" data-anchor-id="how-do-i-export-to-parquet">How do I export to parquet?</h3>
+<div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> Dataset[MySample](<span class="st">"data.tar"</span>)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>ds.to_parquet(<span class="st">"output.parquet"</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># With sample limit (for large datasets)</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>ds.to_parquet(<span class="st">"output.parquet"</span>, maxcount<span class="op">=</span><span class="dv">10000</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="callout callout-style-default callout-warning callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-Note
+Warning
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Files without a detected split default to “train”.</p>
+<p><code>to_parquet()</code> loads the dataset into memory. For very large datasets, use <code>maxcount</code> to limit samples or process in chunks.</p>
 </div>
 </div>
 </section>
-<section id="datasetdict" class="level2">
-<h2 class="anchored" data-anchor-id="datasetdict">DatasetDict</h2>
-<p>When loading without <code>split=</code>, returns a <code>DatasetDict</code>:</p>
-<div id="fece2ae6" class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>ds_dict <span class="op">=</span> load_dataset(<span class="st">"path/to/data/"</span>, MySample)</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Access splits</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>train_ds <span class="op">=</span> ds_dict[<span class="st">"train"</span>]</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>test_ds <span class="op">=</span> ds_dict[<span class="st">"test"</span>]</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Iterate splits</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> name, dataset <span class="kw">in</span> ds_dict.items():</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span><span class="bu">len</span>(dataset.shard_list)<span class="sc">}</span><span class="ss"> shards"</span>)</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Properties</span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(ds_dict.num_shards)    <span class="co"># {'train': 10, 'test': 2}</span></span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(ds_dict.sample_type)   <span class="co"># &lt;class 'MySample'&gt;</span></span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(ds_dict.streaming)     <span class="co"># False</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
+<section id="how-do-i-handle-multiple-shards" class="level3">
+<h3 class="anchored" data-anchor-id="how-do-i-handle-multiple-shards">How do I handle multiple shards?</h3>
+<p>Use WebDataset brace notation:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Single shard</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> Dataset[MySample](<span class="st">"data-000000.tar"</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Multiple shards (range)</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> Dataset[MySample](<span class="st">"data-{000000..000009}.tar"</span>)</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Multiple shards (list)</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> Dataset[MySample](<span class="st">"data-{000000,000005,000009}.tar"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
-<section id="explicit-data-files" class="level2">
-<h2 class="anchored" data-anchor-id="explicit-data-files">Explicit Data Files</h2>
-<p>Override automatic detection with <code>data_files</code>:</p>
-<div id="32616278" class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Single pattern</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"path/to/"</span>,</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    MySample,</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    data_files<span class="op">=</span><span class="st">"custom-*.tar"</span>,</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co"># List of patterns</span></span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"path/to/"</span>,</span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    MySample,</span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    data_files<span class="op">=</span>[<span class="st">"shard-000.tar"</span>, <span class="st">"shard-001.tar"</span>],</span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Explicit split mapping</span></span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(</span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"path/to/"</span>,</span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    MySample,</span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    data_files<span class="op">=</span>{</span>
-<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>        <span class="st">"train"</span>: <span class="st">"training-shards-*.tar"</span>,</span>
-<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>        <span class="st">"test"</span>: <span class="st">"eval-data.tar"</span>,</span>
-<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>    },</span>
-<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
+<section id="can-i-use-s3-or-other-cloud-storage" class="level3">
+<h3 class="anchored" data-anchor-id="can-i-use-s3-or-other-cloud-storage">Can I use S3 or other cloud storage?</h3>
+<p>Yes, use <code>S3Source</code> for S3-compatible storage:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata <span class="im">import</span> S3Source, Dataset</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>source <span class="op">=</span> S3Source.from_urls(</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    [<span class="st">"s3://bucket/data-000000.tar"</span>, <span class="st">"s3://bucket/data-000001.tar"</span>],</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    endpoint_url<span class="op">=</span><span class="st">"https://s3.example.com"</span>,  <span class="co"># Optional for non-AWS S3</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> Dataset[MySample](source)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
-<section id="streaming-mode" class="level2">
-<h2 class="anchored" data-anchor-id="streaming-mode">Streaming Mode</h2>
-<p>The <code>streaming</code> parameter signals intent for streaming mode:</p>
-<div id="3b0629de" class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Mark as streaming</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>ds_dict <span class="op">=</span> load_dataset(<span class="st">"path/to/data.tar"</span>, MySample, streaming<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Check streaming status</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> ds_dict.streaming:</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"Streaming mode"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Tip
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>atdata datasets are always lazy/streaming via WebDataset pipelines. This parameter primarily signals intent.</p>
-</div>
-</div>
+<section id="how-do-i-publish-to-atprotoatmosphere" class="level3">
+<h3 class="anchored" data-anchor-id="how-do-i-publish-to-atprotoatmosphere">How do I publish to ATProto/Atmosphere?</h3>
+<div class="sourceCode" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> AtmosphereClient, AtmosphereIndex</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> AtmosphereClient()</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>client.login(<span class="st">"handle.bsky.social"</span>, <span class="st">"app-password"</span>)  <span class="co"># Use app password!</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> AtmosphereIndex(client)</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Publish schema</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>schema_uri <span class="op">=</span> index.publish_schema(MySample, version<span class="op">=</span><span class="st">"1.0.0"</span>)</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Publish dataset</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>entry <span class="op">=</span> index.insert_dataset(ds, name<span class="op">=</span><span class="st">"my-dataset"</span>, schema_ref<span class="op">=</span>schema_uri)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
-<section id="auto-type-resolution" class="level2">
-<h2 class="anchored" data-anchor-id="auto-type-resolution">Auto Type Resolution</h2>
-<p>When using index lookup, the sample type can be resolved automatically:</p>
-<div id="1775aa36" class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> LocalIndex</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> LocalIndex()</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co"># No sample_type needed - resolved from schema</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"@local/my-dataset"</span>, index<span class="op">=</span>index, split<span class="op">=</span><span class="st">"train"</span>)</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Type is inferred from the stored schema</span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>sample_type <span class="op">=</span> ds.sample_type</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
+<section id="whats-the-difference-between-localindex-and-atmosphereindex" class="level3">
+<h3 class="anchored" data-anchor-id="whats-the-difference-between-localindex-and-atmosphereindex">What’s the difference between LocalIndex and AtmosphereIndex?</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>LocalIndex</th>
+<th>AtmosphereIndex</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Storage</td>
+<td>Redis + S3</td>
+<td>ATProto PDS</td>
+</tr>
+<tr class="even">
+<td>Discovery</td>
+<td>Local only</td>
+<td>Federated network</td>
+</tr>
+<tr class="odd">
+<td>Auth</td>
+<td>None required</td>
+<td>ATProto account</td>
+</tr>
+<tr class="even">
+<td>Use case</td>
+<td>Development, private data</td>
+<td>Public distribution</td>
+</tr>
+</tbody>
+</table>
+<p>Both implement the <code>AbstractIndex</code> protocol, so code can work with either.</p>
 </section>
-<section id="error-handling" class="level2">
-<h2 class="anchored" data-anchor-id="error-handling">Error Handling</h2>
-<div id="77761582" class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    ds <span class="op">=</span> load_dataset(<span class="st">"path/to/data.tar"</span>, MySample, split<span class="op">=</span><span class="st">"train"</span>)</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> <span class="pp">FileNotFoundError</span>:</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"No data files found"</span>)</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> <span class="pp">ValueError</span> <span class="im">as</span> e:</span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="st">"Split"</span> <span class="kw">in</span> <span class="bu">str</span>(e):</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">"Requested split not found"</span>)</span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"Invalid configuration: </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> <span class="pp">KeyError</span>:</span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"Dataset not found in index"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
 </section>
-<section id="complete-example" class="level2">
-<h2 class="anchored" data-anchor-id="complete-example">Complete Example</h2>
-<div id="428d187a" class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata <span class="im">import</span> load_dataset</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> webdataset <span class="im">as</span> wds</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Define sample type</span></span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ImageSample:</span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    image: NDArray</span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    label: <span class="bu">str</span></span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Create dataset files</span></span>
-<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> split <span class="kw">in</span> [<span class="st">"train"</span>, <span class="st">"test"</span>]:</span>
-<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> wds.writer.TarWriter(<span class="ss">f"</span><span class="sc">{</span>split<span class="sc">}</span><span class="ss">-000.tar"</span>) <span class="im">as</span> sink:</span>
-<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">100</span>):</span>
-<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>            sample <span class="op">=</span> ImageSample(</span>
-<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>                image<span class="op">=</span>np.random.rand(<span class="dv">64</span>, <span class="dv">64</span>, <span class="dv">3</span>).astype(np.float32),</span>
-<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>                label<span class="op">=</span><span class="ss">f"sample_</span><span class="sc">{</span>i<span class="sc">}</span><span class="ss">"</span>,</span>
-<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>            )</span>
-<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>            sink.write({<span class="op">**</span>sample.as_wds, <span class="st">"__key__"</span>: <span class="ss">f"</span><span class="sc">{</span>i<span class="sc">:06d}</span><span class="ss">"</span>})</span>
-<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Load with split detection</span></span>
-<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>ds_dict <span class="op">=</span> load_dataset(<span class="st">"./"</span>, ImageSample)</span>
-<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(ds_dict.keys())  <span class="co"># dict_keys(['train', 'test'])</span></span>
-<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Iterate</span></span>
-<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> ds_dict[<span class="st">"train"</span>].ordered(batch_size<span class="op">=</span><span class="dv">16</span>):</span>
-<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(batch.image.shape)  <span class="co"># (16, 64, 64, 3)</span></span>
-<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(batch.label)        <span class="co"># ['sample_0', 'sample_1', ...]</span></span>
-<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">break</span></span>
-<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Load specific split</span></span>
-<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a>train_ds <span class="op">=</span> load_dataset(<span class="st">"./"</span>, ImageSample, split<span class="op">=</span><span class="st">"train"</span>)</span>
-<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> train_ds.ordered(batch_size<span class="op">=</span><span class="dv">32</span>):</span>
-<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a>    process(batch)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="related" class="level2">
-<h2 class="anchored" data-anchor-id="related">Related</h2>
+<section id="getting-help" class="level2">
+<h2 class="anchored" data-anchor-id="getting-help">Getting Help</h2>
 <ul>
-<li><a href="../reference/datasets.html">Datasets</a> - Dataset iteration and batching</li>
-<li><a href="../reference/packable-samples.html">Packable Samples</a> - Defining sample types</li>
-<li><a href="../reference/local-storage.html">Local Storage</a> - LocalIndex for index lookup</li>
-<li><a href="../reference/protocols.html">Protocols</a> - AbstractIndex interface</li>
+<li><strong>GitHub Issues</strong>: <a href="https://github.com/your-org/atdata/issues">github.com/your-org/atdata/issues</a></li>
+<li><strong>Documentation</strong>: Check the reference pages for detailed API documentation</li>
+<li><strong>Examples</strong>: See the <code>examples/</code> directory for working code samples</li>
 </ul>
 
 
@@ -1330,7 +1262,7 @@ Tip
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/your-org/atdata/edit/main/reference/load-dataset.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/your-org/atdata/edit/main/reference/troubleshooting.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
     <div class="nav-footer-right">
 <p>MIT License</p>
 </div>

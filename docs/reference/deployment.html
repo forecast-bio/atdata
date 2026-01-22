@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="HuggingFace-style dataset loading interface">
+<meta name="description" content="Production deployment for local storage and ATProto integration">
 
-<title>load_dataset API – atdata</title>
+<title>Deployment Guide – atdata</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -392,7 +392,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/packable-samples.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/load-dataset.html">load_dataset API</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/packable-samples.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/deployment.html">Deployment Guide</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -492,7 +492,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../reference/load-dataset.html" class="sidebar-item-text sidebar-link active">
+  <a href="../reference/load-dataset.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">load_dataset API</span></a>
   </div>
 </li>
@@ -516,7 +516,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../reference/deployment.html" class="sidebar-item-text sidebar-link">
+  <a href="../reference/deployment.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">Deployment Guide</span></a>
   </div>
 </li>
@@ -549,39 +549,44 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
-  <li><a href="#basic-usage" id="toc-basic-usage" class="nav-link" data-scroll-target="#basic-usage">Basic Usage</a></li>
-  <li><a href="#path-formats" id="toc-path-formats" class="nav-link" data-scroll-target="#path-formats">Path Formats</a>
+  <li><a href="#local-storage-deployment" id="toc-local-storage-deployment" class="nav-link active" data-scroll-target="#local-storage-deployment">Local Storage Deployment</a>
   <ul class="collapse">
-  <li><a href="#webdataset-brace-notation" id="toc-webdataset-brace-notation" class="nav-link" data-scroll-target="#webdataset-brace-notation">WebDataset Brace Notation</a></li>
-  <li><a href="#glob-patterns" id="toc-glob-patterns" class="nav-link" data-scroll-target="#glob-patterns">Glob Patterns</a></li>
-  <li><a href="#local-directory" id="toc-local-directory" class="nav-link" data-scroll-target="#local-directory">Local Directory</a></li>
-  <li><a href="#remote-urls" id="toc-remote-urls" class="nav-link" data-scroll-target="#remote-urls">Remote URLs</a></li>
-  <li><a href="#index-lookup" id="toc-index-lookup" class="nav-link" data-scroll-target="#index-lookup">Index Lookup</a></li>
+  <li><a href="#redis-setup" id="toc-redis-setup" class="nav-link" data-scroll-target="#redis-setup">Redis Setup</a></li>
+  <li><a href="#s3-storage-setup" id="toc-s3-storage-setup" class="nav-link" data-scroll-target="#s3-storage-setup">S3 Storage Setup</a></li>
+  <li><a href="#production-checklist" id="toc-production-checklist" class="nav-link" data-scroll-target="#production-checklist">Production Checklist</a></li>
   </ul></li>
-  <li><a href="#split-detection" id="toc-split-detection" class="nav-link" data-scroll-target="#split-detection">Split Detection</a></li>
-  <li><a href="#datasetdict" id="toc-datasetdict" class="nav-link" data-scroll-target="#datasetdict">DatasetDict</a></li>
-  <li><a href="#explicit-data-files" id="toc-explicit-data-files" class="nav-link" data-scroll-target="#explicit-data-files">Explicit Data Files</a></li>
-  <li><a href="#streaming-mode" id="toc-streaming-mode" class="nav-link" data-scroll-target="#streaming-mode">Streaming Mode</a></li>
-  <li><a href="#auto-type-resolution" id="toc-auto-type-resolution" class="nav-link" data-scroll-target="#auto-type-resolution">Auto Type Resolution</a></li>
-  <li><a href="#error-handling" id="toc-error-handling" class="nav-link" data-scroll-target="#error-handling">Error Handling</a></li>
-  <li><a href="#complete-example" id="toc-complete-example" class="nav-link" data-scroll-target="#complete-example">Complete Example</a></li>
-  <li><a href="#related" id="toc-related" class="nav-link" data-scroll-target="#related">Related</a></li>
+  <li><a href="#atproto-deployment" id="toc-atproto-deployment" class="nav-link" data-scroll-target="#atproto-deployment">ATProto Deployment</a>
+  <ul class="collapse">
+  <li><a href="#account-setup" id="toc-account-setup" class="nav-link" data-scroll-target="#account-setup">Account Setup</a></li>
+  <li><a href="#authentication-patterns" id="toc-authentication-patterns" class="nav-link" data-scroll-target="#authentication-patterns">Authentication Patterns</a></li>
+  <li><a href="#custom-pds-deployment" id="toc-custom-pds-deployment" class="nav-link" data-scroll-target="#custom-pds-deployment">Custom PDS Deployment</a></li>
+  <li><a href="#rate-limiting-considerations" id="toc-rate-limiting-considerations" class="nav-link" data-scroll-target="#rate-limiting-considerations">Rate Limiting Considerations</a></li>
+  </ul></li>
+  <li><a href="#docker-compose-example" id="toc-docker-compose-example" class="nav-link" data-scroll-target="#docker-compose-example">Docker Compose Example</a></li>
+  <li><a href="#monitoring" id="toc-monitoring" class="nav-link" data-scroll-target="#monitoring">Monitoring</a>
+  <ul class="collapse">
+  <li><a href="#redis-metrics" id="toc-redis-metrics" class="nav-link" data-scroll-target="#redis-metrics">Redis Metrics</a></li>
+  <li><a href="#s3-metrics" id="toc-s3-metrics" class="nav-link" data-scroll-target="#s3-metrics">S3 Metrics</a></li>
+  </ul></li>
+  <li><a href="#security-best-practices" id="toc-security-best-practices" class="nav-link" data-scroll-target="#security-best-practices">Security Best Practices</a>
+  <ul class="collapse">
+  <li><a href="#s3-iam-policy-example" id="toc-s3-iam-policy-example" class="nav-link" data-scroll-target="#s3-iam-policy-example">S3 IAM Policy Example</a></li>
+  </ul></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/your-org/atdata/edit/main/reference/load-dataset.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/your-org/atdata/edit/main/reference/deployment.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/packable-samples.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/load-dataset.html">load_dataset API</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/packable-samples.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/deployment.html">Deployment Guide</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">load_dataset API</h1>
+<h1 class="title">Deployment Guide</h1>
 </div>
 
 <div>
   <div class="description">
-    HuggingFace-style dataset loading interface
+    Production deployment for local storage and ATProto integration
   </div>
 </div>
 
@@ -598,79 +603,67 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>The <code>load_dataset()</code> function provides a HuggingFace Datasets-style interface for loading typed datasets.</p>
-<section id="overview" class="level2">
-<h2 class="anchored" data-anchor-id="overview">Overview</h2>
-<p>Key differences from HuggingFace Datasets:</p>
+<p>This guide covers deploying atdata in production environments, including Redis setup for LocalIndex, S3 storage configuration, and ATProto publishing considerations.</p>
+<section id="local-storage-deployment" class="level2">
+<h2 class="anchored" data-anchor-id="local-storage-deployment">Local Storage Deployment</h2>
+<p>The local storage backend uses Redis for metadata indexing and S3-compatible storage for dataset files.</p>
+<section id="redis-setup" class="level3">
+<h3 class="anchored" data-anchor-id="redis-setup">Redis Setup</h3>
+<section id="requirements" class="level4">
+<h4 class="anchored" data-anchor-id="requirements">Requirements</h4>
 <ul>
-<li>Requires explicit <code>sample_type</code> parameter (typed dataclass) unless using index</li>
-<li>Returns <code>atdata.Dataset[ST]</code> instead of HF Dataset</li>
-<li>Built on WebDataset for efficient streaming</li>
-<li>No Arrow caching layer</li>
+<li>Redis 6.0+ (for Redis-OM compatibility)</li>
+<li>Sufficient memory for index metadata (typically &lt; 100MB for most deployments)</li>
 </ul>
 </section>
-<section id="basic-usage" class="level2">
-<h2 class="anchored" data-anchor-id="basic-usage">Basic Usage</h2>
-<div id="46f7c26d" class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata <span class="im">import</span> load_dataset</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> TextSample:</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    text: <span class="bu">str</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    label: <span class="bu">int</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Load a specific split</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>train_ds <span class="op">=</span> load_dataset(<span class="st">"path/to/data.tar"</span>, TextSample, split<span class="op">=</span><span class="st">"train"</span>)</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Load all splits (returns DatasetDict)</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>ds_dict <span class="op">=</span> load_dataset(<span class="st">"path/to/data/"</span>, TextSample)</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>train_ds <span class="op">=</span> ds_dict[<span class="st">"train"</span>]</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>test_ds <span class="op">=</span> ds_dict[<span class="st">"test"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
+<section id="docker-deployment" class="level4">
+<h4 class="anchored" data-anchor-id="docker-deployment">Docker Deployment</h4>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Basic Redis</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">-d</span> <span class="dt">\</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--name</span> atdata-redis <span class="dt">\</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-p</span> 6379:6379 <span class="dt">\</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">-v</span> redis-data:/data <span class="dt">\</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  redis:7-alpine <span class="dt">\</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  redis-server <span class="at">--appendonly</span> yes</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># With password</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">-d</span> <span class="dt">\</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--name</span> atdata-redis <span class="dt">\</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">-p</span> 6379:6379 <span class="dt">\</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">-v</span> redis-data:/data <span class="dt">\</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  redis:7-alpine <span class="dt">\</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  redis-server <span class="at">--appendonly</span> yes <span class="at">--requirepass</span> yourpassword</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
-<section id="path-formats" class="level2">
-<h2 class="anchored" data-anchor-id="path-formats">Path Formats</h2>
-<section id="webdataset-brace-notation" class="level3">
-<h3 class="anchored" data-anchor-id="webdataset-brace-notation">WebDataset Brace Notation</h3>
-<div id="ed8498ef" class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Range notation</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"data-{000000..000099}.tar"</span>, MySample, split<span class="op">=</span><span class="st">"train"</span>)</span>
+<section id="configuration" class="level4">
+<h4 class="anchored" data-anchor-id="configuration">Configuration</h4>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> redis <span class="im">import</span> Redis</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> LocalIndex</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># List notation</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"data-{train,test,val}.tar"</span>, MySample, split<span class="op">=</span><span class="st">"train"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Basic connection</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>redis <span class="op">=</span> Redis(host<span class="op">=</span><span class="st">"localhost"</span>, port<span class="op">=</span><span class="dv">6379</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> LocalIndex(redis<span class="op">=</span>redis)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"># With authentication</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>redis <span class="op">=</span> Redis(</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    host<span class="op">=</span><span class="st">"redis.example.com"</span>,</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    port<span class="op">=</span><span class="dv">6379</span>,</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    password<span class="op">=</span><span class="st">"yourpassword"</span>,</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    ssl<span class="op">=</span><span class="va">True</span>,  <span class="co"># For production</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> LocalIndex(redis<span class="op">=</span>redis)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
-<section id="glob-patterns" class="level3">
-<h3 class="anchored" data-anchor-id="glob-patterns">Glob Patterns</h3>
-<div id="2e6503f7" class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Match all tar files</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"path/to/*.tar"</span>, MySample)</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Match pattern</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"path/to/train-*.tar"</span>, MySample, split<span class="op">=</span><span class="st">"train"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="local-directory" class="level3">
-<h3 class="anchored" data-anchor-id="local-directory">Local Directory</h3>
-<div id="35083602" class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Scans for .tar files</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"./my-dataset/"</span>, MySample)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="remote-urls" class="level3">
-<h3 class="anchored" data-anchor-id="remote-urls">Remote URLs</h3>
-<div id="9389fed0" class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># S3 (public buckets)</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"s3://bucket/data-{000..099}.tar"</span>, MySample, split<span class="op">=</span><span class="st">"train"</span>)</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># HTTP/HTTPS</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"https://example.com/data.tar"</span>, MySample, split<span class="op">=</span><span class="st">"train"</span>)</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Google Cloud Storage</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"gs://bucket/data.tar"</span>, MySample, split<span class="op">=</span><span class="st">"train"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
+<section id="redis-clustering" class="level4">
+<h4 class="anchored" data-anchor-id="redis-clustering">Redis Clustering</h4>
+<p>For high-availability deployments:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> redis.cluster <span class="im">import</span> RedisCluster</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Redis Cluster connection</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>redis <span class="op">=</span> RedisCluster(</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    host<span class="op">=</span><span class="st">"redis-cluster.example.com"</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    port<span class="op">=</span><span class="dv">6379</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    password<span class="op">=</span><span class="st">"yourpassword"</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> LocalIndex(redis<span class="op">=</span>redis)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -681,232 +674,256 @@ Note
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>For private S3 buckets or S3-compatible storage with authentication, use <code>atdata.S3Source</code> with <code>Dataset</code> directly. See <a href="../reference/datasets.html">Datasets</a> for details.</p>
+<p>Redis-OM (used internally) supports Redis Cluster mode. Ensure all nodes have the same configuration.</p>
 </div>
 </div>
 </section>
-<section id="index-lookup" class="level3">
-<h3 class="anchored" data-anchor-id="index-lookup">Index Lookup</h3>
-<div id="060d1d0d" class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> LocalIndex</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> LocalIndex()</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Load from local index (auto-resolves type from schema)</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"@local/my-dataset"</span>, index<span class="op">=</span>index, split<span class="op">=</span><span class="st">"train"</span>)</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co"># With explicit type</span></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"@local/my-dataset"</span>, MySample, index<span class="op">=</span>index, split<span class="op">=</span><span class="st">"train"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
+</section>
+<section id="s3-storage-setup" class="level3">
+<h3 class="anchored" data-anchor-id="s3-storage-setup">S3 Storage Setup</h3>
+<section id="aws-s3" class="level4">
+<h4 class="anchored" data-anchor-id="aws-s3">AWS S3</h4>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> S3DataStore</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Using environment credentials (recommended for AWS)</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>store <span class="op">=</span> S3DataStore(</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    bucket<span class="op">=</span><span class="st">"my-atdata-bucket"</span>,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    prefix<span class="op">=</span><span class="st">"datasets/"</span>,</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Explicit credentials</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>store <span class="op">=</span> S3DataStore(</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    bucket<span class="op">=</span><span class="st">"my-atdata-bucket"</span>,</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    prefix<span class="op">=</span><span class="st">"datasets/"</span>,</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    credentials<span class="op">=</span>{</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">"AWS_ACCESS_KEY_ID"</span>: <span class="st">"..."</span>,</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>        <span class="st">"AWS_SECRET_ACCESS_KEY"</span>: <span class="st">"..."</span>,</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>        <span class="st">"AWS_DEFAULT_REGION"</span>: <span class="st">"us-west-2"</span>,</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    },</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="s3-compatible-storage-minio-cloudflare-r2-etc." class="level4">
+<h4 class="anchored" data-anchor-id="s3-compatible-storage-minio-cloudflare-r2-etc.">S3-Compatible Storage (MinIO, Cloudflare R2, etc.)</h4>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>store <span class="op">=</span> S3DataStore(</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    bucket<span class="op">=</span><span class="st">"my-bucket"</span>,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    prefix<span class="op">=</span><span class="st">"datasets/"</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    endpoint_url<span class="op">=</span><span class="st">"https://s3.example.com"</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    credentials<span class="op">=</span>{</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">"AWS_ACCESS_KEY_ID"</span>: <span class="st">"..."</span>,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">"AWS_SECRET_ACCESS_KEY"</span>: <span class="st">"..."</span>,</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    },</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="minio-deployment" class="level4">
+<h4 class="anchored" data-anchor-id="minio-deployment">MinIO Deployment</h4>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Docker deployment</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">-d</span> <span class="dt">\</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--name</span> minio <span class="dt">\</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-p</span> 9000:9000 <span class="dt">\</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">-p</span> 9001:9001 <span class="dt">\</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">-v</span> minio-data:/data <span class="dt">\</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">-e</span> MINIO_ROOT_USER=minioadmin <span class="dt">\</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">-e</span> MINIO_ROOT_PASSWORD=minioadmin <span class="dt">\</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  minio/minio server /data <span class="at">--console-address</span> <span class="st">":9001"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>store <span class="op">=</span> S3DataStore(</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    bucket<span class="op">=</span><span class="st">"atdata"</span>,</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    endpoint_url<span class="op">=</span><span class="st">"http://localhost:9000"</span>,</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    credentials<span class="op">=</span>{</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">"AWS_ACCESS_KEY_ID"</span>: <span class="st">"minioadmin"</span>,</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">"AWS_SECRET_ACCESS_KEY"</span>: <span class="st">"minioadmin"</span>,</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    },</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
-<section id="split-detection" class="level2">
-<h2 class="anchored" data-anchor-id="split-detection">Split Detection</h2>
-<p>Splits are automatically detected from filenames and directories:</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Pattern</th>
-<th>Detected Split</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>train-*.tar</code>, <code>training-*.tar</code></td>
-<td>train</td>
-</tr>
-<tr class="even">
-<td><code>test-*.tar</code>, <code>testing-*.tar</code></td>
-<td>test</td>
-</tr>
-<tr class="odd">
-<td><code>val-*.tar</code>, <code>valid-*.tar</code>, <code>validation-*.tar</code></td>
-<td>validation</td>
-</tr>
-<tr class="even">
-<td><code>dev-*.tar</code>, <code>development-*.tar</code></td>
-<td>validation</td>
-</tr>
-<tr class="odd">
-<td><code>train/*.tar</code> (directory)</td>
-<td>train</td>
-</tr>
-<tr class="even">
-<td><code>test/*.tar</code> (directory)</td>
-<td>test</td>
-</tr>
-</tbody>
-</table>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Note
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Files without a detected split default to “train”.</p>
-</div>
-</div>
-</section>
-<section id="datasetdict" class="level2">
-<h2 class="anchored" data-anchor-id="datasetdict">DatasetDict</h2>
-<p>When loading without <code>split=</code>, returns a <code>DatasetDict</code>:</p>
-<div id="fece2ae6" class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>ds_dict <span class="op">=</span> load_dataset(<span class="st">"path/to/data/"</span>, MySample)</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Access splits</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>train_ds <span class="op">=</span> ds_dict[<span class="st">"train"</span>]</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>test_ds <span class="op">=</span> ds_dict[<span class="st">"test"</span>]</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Iterate splits</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> name, dataset <span class="kw">in</span> ds_dict.items():</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span><span class="bu">len</span>(dataset.shard_list)<span class="sc">}</span><span class="ss"> shards"</span>)</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Properties</span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(ds_dict.num_shards)    <span class="co"># {'train': 10, 'test': 2}</span></span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(ds_dict.sample_type)   <span class="co"># &lt;class 'MySample'&gt;</span></span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(ds_dict.streaming)     <span class="co"># False</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="explicit-data-files" class="level2">
-<h2 class="anchored" data-anchor-id="explicit-data-files">Explicit Data Files</h2>
-<p>Override automatic detection with <code>data_files</code>:</p>
-<div id="32616278" class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Single pattern</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"path/to/"</span>,</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    MySample,</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    data_files<span class="op">=</span><span class="st">"custom-*.tar"</span>,</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co"># List of patterns</span></span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"path/to/"</span>,</span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    MySample,</span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    data_files<span class="op">=</span>[<span class="st">"shard-000.tar"</span>, <span class="st">"shard-001.tar"</span>],</span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Explicit split mapping</span></span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(</span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"path/to/"</span>,</span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    MySample,</span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    data_files<span class="op">=</span>{</span>
-<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>        <span class="st">"train"</span>: <span class="st">"training-shards-*.tar"</span>,</span>
-<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>        <span class="st">"test"</span>: <span class="st">"eval-data.tar"</span>,</span>
-<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>    },</span>
-<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="streaming-mode" class="level2">
-<h2 class="anchored" data-anchor-id="streaming-mode">Streaming Mode</h2>
-<p>The <code>streaming</code> parameter signals intent for streaming mode:</p>
-<div id="3b0629de" class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Mark as streaming</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>ds_dict <span class="op">=</span> load_dataset(<span class="st">"path/to/data.tar"</span>, MySample, streaming<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Check streaming status</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> ds_dict.streaming:</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"Streaming mode"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Tip
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>atdata datasets are always lazy/streaming via WebDataset pipelines. This parameter primarily signals intent.</p>
-</div>
-</div>
-</section>
-<section id="auto-type-resolution" class="level2">
-<h2 class="anchored" data-anchor-id="auto-type-resolution">Auto Type Resolution</h2>
-<p>When using index lookup, the sample type can be resolved automatically:</p>
-<div id="1775aa36" class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> LocalIndex</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> LocalIndex()</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co"># No sample_type needed - resolved from schema</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"@local/my-dataset"</span>, index<span class="op">=</span>index, split<span class="op">=</span><span class="st">"train"</span>)</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Type is inferred from the stored schema</span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>sample_type <span class="op">=</span> ds.sample_type</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="error-handling" class="level2">
-<h2 class="anchored" data-anchor-id="error-handling">Error Handling</h2>
-<div id="77761582" class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    ds <span class="op">=</span> load_dataset(<span class="st">"path/to/data.tar"</span>, MySample, split<span class="op">=</span><span class="st">"train"</span>)</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> <span class="pp">FileNotFoundError</span>:</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"No data files found"</span>)</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> <span class="pp">ValueError</span> <span class="im">as</span> e:</span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="st">"Split"</span> <span class="kw">in</span> <span class="bu">str</span>(e):</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">"Requested split not found"</span>)</span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"Invalid configuration: </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> <span class="pp">KeyError</span>:</span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"Dataset not found in index"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="complete-example" class="level2">
-<h2 class="anchored" data-anchor-id="complete-example">Complete Example</h2>
-<div id="428d187a" class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata <span class="im">import</span> load_dataset</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> webdataset <span class="im">as</span> wds</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Define sample type</span></span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ImageSample:</span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    image: NDArray</span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    label: <span class="bu">str</span></span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Create dataset files</span></span>
-<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> split <span class="kw">in</span> [<span class="st">"train"</span>, <span class="st">"test"</span>]:</span>
-<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> wds.writer.TarWriter(<span class="ss">f"</span><span class="sc">{</span>split<span class="sc">}</span><span class="ss">-000.tar"</span>) <span class="im">as</span> sink:</span>
-<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">100</span>):</span>
-<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>            sample <span class="op">=</span> ImageSample(</span>
-<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>                image<span class="op">=</span>np.random.rand(<span class="dv">64</span>, <span class="dv">64</span>, <span class="dv">3</span>).astype(np.float32),</span>
-<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>                label<span class="op">=</span><span class="ss">f"sample_</span><span class="sc">{</span>i<span class="sc">}</span><span class="ss">"</span>,</span>
-<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>            )</span>
-<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>            sink.write({<span class="op">**</span>sample.as_wds, <span class="st">"__key__"</span>: <span class="ss">f"</span><span class="sc">{</span>i<span class="sc">:06d}</span><span class="ss">"</span>})</span>
-<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Load with split detection</span></span>
-<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>ds_dict <span class="op">=</span> load_dataset(<span class="st">"./"</span>, ImageSample)</span>
-<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(ds_dict.keys())  <span class="co"># dict_keys(['train', 'test'])</span></span>
-<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Iterate</span></span>
-<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> ds_dict[<span class="st">"train"</span>].ordered(batch_size<span class="op">=</span><span class="dv">16</span>):</span>
-<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(batch.image.shape)  <span class="co"># (16, 64, 64, 3)</span></span>
-<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(batch.label)        <span class="co"># ['sample_0', 'sample_1', ...]</span></span>
-<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">break</span></span>
-<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Load specific split</span></span>
-<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a>train_ds <span class="op">=</span> load_dataset(<span class="st">"./"</span>, ImageSample, split<span class="op">=</span><span class="st">"train"</span>)</span>
-<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> train_ds.ordered(batch_size<span class="op">=</span><span class="dv">32</span>):</span>
-<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a>    process(batch)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="related" class="level2">
-<h2 class="anchored" data-anchor-id="related">Related</h2>
-<ul>
-<li><a href="../reference/datasets.html">Datasets</a> - Dataset iteration and batching</li>
-<li><a href="../reference/packable-samples.html">Packable Samples</a> - Defining sample types</li>
-<li><a href="../reference/local-storage.html">Local Storage</a> - LocalIndex for index lookup</li>
-<li><a href="../reference/protocols.html">Protocols</a> - AbstractIndex interface</li>
+<section id="production-checklist" class="level3">
+<h3 class="anchored" data-anchor-id="production-checklist">Production Checklist</h3>
+<ul class="task-list">
+<li><label><input type="checkbox">Redis persistence enabled (<code>appendonly yes</code>)</label></li>
+<li><label><input type="checkbox">Redis password authentication configured</label></li>
+<li><label><input type="checkbox">Redis TLS enabled for remote connections</label></li>
+<li><label><input type="checkbox">S3 bucket access policies configured (least privilege)</label></li>
+<li><label><input type="checkbox">S3 bucket versioning enabled (for data recovery)</label></li>
+<li><label><input type="checkbox">Monitoring for Redis memory usage</label></li>
+<li><label><input type="checkbox">Backup strategy for Redis data</label></li>
 </ul>
+</section>
+</section>
+<section id="atproto-deployment" class="level2">
+<h2 class="anchored" data-anchor-id="atproto-deployment">ATProto Deployment</h2>
+<section id="account-setup" class="level3">
+<h3 class="anchored" data-anchor-id="account-setup">Account Setup</h3>
+<ol type="1">
+<li>Create a Bluesky account or use your existing account</li>
+<li>Generate an app-specific password at <a href="https://bsky.app/settings/app-passwords">bsky.app/settings/app-passwords</a></li>
+<li>Never use your main account password in code</li>
+</ol>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Security</strong>: Always use app passwords, never your main password. App passwords can be revoked without affecting your account.</p>
+</div>
+</div>
+</section>
+<section id="authentication-patterns" class="level3">
+<h3 class="anchored" data-anchor-id="authentication-patterns">Authentication Patterns</h3>
+<section id="environment-variables-recommended" class="level4">
+<h4 class="anchored" data-anchor-id="environment-variables-recommended">Environment Variables (Recommended)</h4>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> AtmosphereClient</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> AtmosphereClient()</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>client.login(</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    os.environ[<span class="st">"ATPROTO_HANDLE"</span>],</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    os.environ[<span class="st">"ATPROTO_APP_PASSWORD"</span>],</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="session-persistence" class="level4">
+<h4 class="anchored" data-anchor-id="session-persistence">Session Persistence</h4>
+<p>For long-running services, persist and reuse sessions:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>SESSION_FILE <span class="op">=</span> Path(<span class="st">"~/.atdata/session"</span>).expanduser()</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> AtmosphereClient()</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> SESSION_FILE.exists():</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Restore existing session</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    session_string <span class="op">=</span> SESSION_FILE.read_text()</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span>:</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>        client.login_with_session(session_string)</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">except</span> <span class="pp">Exception</span>:</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Session expired, re-authenticate</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>        client.login(handle, app_password)</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>        SESSION_FILE.parent.mkdir(parents<span class="op">=</span><span class="va">True</span>, exist_ok<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>        SESSION_FILE.write_text(client.export_session())</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Initial login</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>    client.login(handle, app_password)</span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>    SESSION_FILE.parent.mkdir(parents<span class="op">=</span><span class="va">True</span>, exist_ok<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>    SESSION_FILE.write_text(client.export_session())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
+<section id="custom-pds-deployment" class="level3">
+<h3 class="anchored" data-anchor-id="custom-pds-deployment">Custom PDS Deployment</h3>
+<p>For self-hosted ATProto infrastructure:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> AtmosphereClient(base_url<span class="op">=</span><span class="st">"https://pds.example.com"</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>client.login(<span class="st">"handle.example.com"</span>, <span class="st">"app-password"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>See <a href="https://github.com/bluesky-social/pds">ATProto PDS documentation</a> for self-hosting setup.</p>
+</section>
+<section id="rate-limiting-considerations" class="level3">
+<h3 class="anchored" data-anchor-id="rate-limiting-considerations">Rate Limiting Considerations</h3>
+<p>ATProto has rate limits. For bulk operations:</p>
+<ul>
+<li>Space out record creation (1-2 per second for bulk uploads)</li>
+<li>Use batch operations where available</li>
+<li>Implement exponential backoff for retries</li>
+<li>Consider blob storage limits (~50MB per blob)</li>
+</ul>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> time</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i, dataset <span class="kw">in</span> <span class="bu">enumerate</span>(datasets_to_publish):</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    index.insert_dataset(dataset, name<span class="op">=</span><span class="ss">f"dataset-</span><span class="sc">{</span>i<span class="sc">}</span><span class="ss">"</span>, ...)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    time.sleep(<span class="dv">1</span>)  <span class="co"># Rate limiting</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
+<section id="docker-compose-example" class="level2">
+<h2 class="anchored" data-anchor-id="docker-compose-example">Docker Compose Example</h2>
+<p>Complete local deployment with Redis and MinIO:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># docker-compose.yml</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">'3.8'</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">redis</span><span class="kw">:</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> redis:7-alpine</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">command</span><span class="kw">:</span><span class="at"> redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">"6379:6379"</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> redis-data:/data</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">minio</span><span class="kw">:</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> minio/minio</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">command</span><span class="kw">:</span><span class="at"> server /data --console-address ":9001"</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">"9000:9000"</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">"9001:9001"</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">MINIO_ROOT_USER</span><span class="kw">:</span><span class="at"> ${MINIO_USER}</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">MINIO_ROOT_PASSWORD</span><span class="kw">:</span><span class="at"> ${MINIO_PASSWORD}</span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> minio-data:/data</span></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">redis-data</span><span class="kw">:</span></span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">minio-data</span><span class="kw">:</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># .env</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="va">REDIS_PASSWORD</span><span class="op">=</span>your-redis-password</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="va">MINIO_USER</span><span class="op">=</span>minioadmin</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="va">MINIO_PASSWORD</span><span class="op">=</span>your-minio-password</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="monitoring" class="level2">
+<h2 class="anchored" data-anchor-id="monitoring">Monitoring</h2>
+<section id="redis-metrics" class="level3">
+<h3 class="anchored" data-anchor-id="redis-metrics">Redis Metrics</h3>
+<p>Key metrics to monitor:</p>
+<ul>
+<li><code>used_memory</code>: Memory usage</li>
+<li><code>connected_clients</code>: Active connections</li>
+<li><code>keyspace_hits/misses</code>: Cache efficiency</li>
+<li><code>aof_last_write_status</code>: Persistence health</li>
+</ul>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">redis-cli</span> INFO <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-E</span> <span class="st">"used_memory|connected_clients|keyspace"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="s3-metrics" class="level3">
+<h3 class="anchored" data-anchor-id="s3-metrics">S3 Metrics</h3>
+<ul>
+<li>Request counts and latency</li>
+<li>Error rates (4xx, 5xx)</li>
+<li>Storage usage by prefix</li>
+<li>Data transfer costs</li>
+</ul>
+</section>
+</section>
+<section id="security-best-practices" class="level2">
+<h2 class="anchored" data-anchor-id="security-best-practices">Security Best Practices</h2>
+<ol type="1">
+<li><strong>Network Isolation</strong>: Run Redis and S3 in private networks</li>
+<li><strong>TLS Everywhere</strong>: Encrypt connections to Redis and S3</li>
+<li><strong>Credential Rotation</strong>: Rotate API keys and passwords regularly</li>
+<li><strong>Access Logging</strong>: Enable S3 access logging for audit trails</li>
+<li><strong>Least Privilege</strong>: Use minimal IAM permissions for S3 access</li>
+</ol>
+<section id="s3-iam-policy-example" class="level3">
+<h3 class="anchored" data-anchor-id="s3-iam-policy-example">S3 IAM Policy Example</h3>
+<div class="sourceCode" id="cb15"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"Version"</span><span class="fu">:</span> <span class="st">"2012-10-17"</span><span class="fu">,</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"Statement"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"Effect"</span><span class="fu">:</span> <span class="st">"Allow"</span><span class="fu">,</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"Action"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">"s3:GetObject"</span><span class="ot">,</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">"s3:PutObject"</span><span class="ot">,</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">"s3:ListBucket"</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>      <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"Resource"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">"arn:aws:s3:::my-atdata-bucket"</span><span class="ot">,</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">"arn:aws:s3:::my-atdata-bucket/*"</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>      <span class="ot">]</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->
@@ -1330,7 +1347,7 @@ Tip
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/your-org/atdata/edit/main/reference/load-dataset.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/your-org/atdata/edit/main/reference/deployment.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
     <div class="nav-footer-right">
 <p>MIT License</p>
 </div>
