@@ -41,6 +41,17 @@ uv run pytest tests/test_lens.py::test_lens
 uv build
 ```
 
+### Running Python
+```bash
+# Always use uv run for Python commands to use the correct virtual environment
+uv run python -c "import atdata; print(atdata.__version__)"
+uv run python script.py
+
+# Never use bare python/python3 - it may not have project dependencies
+# BAD: python3 -c "import webdataset"
+# GOOD: uv run python -c "import webdataset"
+```
+
 ## Architecture
 
 ### Core Components

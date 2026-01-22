@@ -741,6 +741,7 @@ class TestLoadDatasetWithIndex:
     def test_indexed_path_auto_type_resolution(self):
         """load_dataset with sample_type=None uses decode_schema."""
         mock_index = Mock()
+        mock_index.data_store = None  # No data store, so no URL transformation
         mock_entry = Mock()
         mock_entry.data_urls = ["s3://bucket/data.tar"]
         mock_entry.schema_ref = "local://schemas/test@1.0.0"
@@ -760,6 +761,7 @@ class TestLoadDatasetWithIndex:
     def test_indexed_path_returns_datasetdict_without_split(self):
         """load_dataset with indexed path returns DatasetDict when split=None."""
         mock_index = Mock()
+        mock_index.data_store = None  # No data store, so no URL transformation
         mock_entry = Mock()
         mock_entry.data_urls = ["s3://bucket/data.tar"]
         mock_entry.schema_ref = "local://schemas/test@1.0.0"

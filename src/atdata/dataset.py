@@ -41,6 +41,9 @@ from dataclasses import (
 )
 from abc import ABC
 
+from ._sources import URLSource, S3Source
+from ._protocols import DataSource
+
 from tqdm import tqdm
 import numpy as np
 import pandas as pd
@@ -327,6 +330,42 @@ class SampleBatch( Generic[DT] ):
 ST = TypeVar( 'ST', bound = PackableSample )
 RT = TypeVar( 'RT', bound = PackableSample )
 
+
+class _ShardListStage(wds.PipelineStage):
+    """Pipeline stage that yields {url: shard_id} dicts from a DataSource.
+
+    This is analogous to SimpleShardList but works with any DataSource.
+    Used as the first stage before split_by_worker.
+    """
+
+    def __init__(self, source: DataSource):
+        self.source = source
+
+    def run(self):
+        """Yield {url: shard_id} dicts for each shard."""
+        for shard_id in self.source.shard_list:
+            yield {"url": shard_id}
+
+
+class _StreamOpenerStage(wds.PipelineStage):
+    """Pipeline stage that opens streams from a DataSource.
+
+    Takes {url: shard_id} dicts and adds a stream using source.open_shard().
+    This replaces WebDataset's url_opener stage.
+    """
+
+    def __init__(self, source: DataSource):
+        self.source = source
+
+    def run(self, src):
+        """Open streams for each shard dict."""
+        for sample in src:
+            shard_id = sample["url"]
+            stream = self.source.open_shard(shard_id)
+            sample["stream"] = stream
+            yield sample
+
+
 class Dataset( Generic[ST] ):
     """A typed dataset built on WebDataset with lens transformations.
 
@@ -376,19 +415,43 @@ class Dataset( Generic[ST] ):
         """
         return SampleBatch[self.sample_type]
 
-    def __init__( self, url: str,
+    def __init__( self,
+                 source: DataSource | str | None = None,
                  metadata_url: str | None = None,
+                 *,
+                 url: str | None = None,
              ) -> None:
-        """Create a dataset from a WebDataset URL.
+        """Create a dataset from a DataSource or URL.
 
         Args:
-            url: WebDataset brace-notation URL pointing to tar files, e.g.,
-                ``"path/to/file-{000000..000009}.tar"`` for multiple shards or
-                ``"path/to/file-000000.tar"`` for a single shard.
+            source: Either a DataSource implementation or a WebDataset-compatible
+                URL string. If a string is provided, it's wrapped in URLSource
+                for backward compatibility.
+
+                Examples:
+                    - String URL: ``"path/to/file-{000000..000009}.tar"``
+                    - URLSource: ``URLSource("https://example.com/data.tar")``
+                    - S3Source: ``S3Source(bucket="my-bucket", keys=["data.tar"])``
+
+            metadata_url: Optional URL to msgpack-encoded metadata for this dataset.
+            url: Deprecated. Use ``source`` instead. Kept for backward compatibility.
         """
         super().__init__()
-        self.url = url
-        """WebDataset brace-notation URL pointing to tar files."""
+
+        # Handle backward compatibility: url= keyword argument
+        if source is None and url is not None:
+            source = url
+        elif source is None:
+            raise TypeError("Dataset() missing required argument: 'source' or 'url'")
+
+        # Normalize source: strings become URLSource for backward compatibility
+        if isinstance(source, str):
+            self._source: DataSource = URLSource(source)
+            self.url = source
+        else:
+            self._source = source
+            # For compatibility, expose URL if source has shard_list
+            self.url = source.shard_list[0] if source.shard_list else ""
 
         self._metadata: dict[str, Any] | None = None
         self.metadata_url: str | None = metadata_url
@@ -396,6 +459,11 @@ class Dataset( Generic[ST] ):
 
         self._output_lens: Lens | None = None
         self._sample_type_cache: Type | None = None
+
+    @property
+    def source(self) -> DataSource:
+        """The underlying data source for this dataset."""
+        return self._source
 
     def as_type( self, other: Type[RT] ) -> 'Dataset[RT]':
         """View this dataset through a different sample type using a registered lens.
@@ -413,7 +481,7 @@ class Dataset( Generic[ST] ):
             ValueError: If no registered lens exists between the current
                 sample type and the target type.
         """
-        ret = Dataset[other]( self.url )
+        ret = Dataset[other]( self._source )
         # Get the singleton lens registry
         lenses = LensNetwork()
         ret._output_lens = lenses.transform( self.sample_type, ret.sample_type )
@@ -422,16 +490,12 @@ class Dataset( Generic[ST] ):
     @property
     def shard_list( self ) -> list[str]:
         """List of individual dataset shards
-        
+
         Returns:
             A full (non-lazy) list of the individual ``tar`` files within the
             source WebDataset.
         """
-        pipe = wds.pipeline.DataPipeline(
-            wds.shardlists.SimpleShardList( self.url ),
-            wds.filters.map( lambda x: x['url'] )
-        )
-        return list( pipe )
+        return self._source.shard_list
 
     @property
     def metadata( self ) -> dict[str, Any] | None:
@@ -458,30 +522,33 @@ class Dataset( Generic[ST] ):
                 batch_size: int | None = None,
             ) -> Iterable[ST]:
         """Iterate over the dataset in order
-        
+
         Args:
             batch_size (:obj:`int`, optional): The size of iterated batches.
                 Default: None (unbatched). If ``None``, iterates over one
                 sample at a time with no batch dimension.
-        
+
         Returns:
             :obj:`webdataset.DataPipeline` A data pipeline that iterates over
             the dataset in its original sample order
-        
-        """
 
+        """
         if batch_size is None:
             return wds.pipeline.DataPipeline(
-                wds.shardlists.SimpleShardList( self.url ),
+                _ShardListStage(self._source),
                 wds.shardlists.split_by_worker,
-                wds.tariterators.tarfile_to_samples(),
+                _StreamOpenerStage(self._source),
+                wds.tariterators.tar_file_expander,
+                wds.tariterators.group_by_keys,
                 wds.filters.map( self.wrap ),
             )
 
         return wds.pipeline.DataPipeline(
-            wds.shardlists.SimpleShardList( self.url ),
+            _ShardListStage(self._source),
             wds.shardlists.split_by_worker,
-            wds.tariterators.tarfile_to_samples(),
+            _StreamOpenerStage(self._source),
+            wds.tariterators.tar_file_expander,
+            wds.tariterators.group_by_keys,
             wds.filters.batched( batch_size ),
             wds.filters.map( self.wrap_batch ),
         )
@@ -512,19 +579,23 @@ class Dataset( Generic[ST] ):
         """
         if batch_size is None:
             return wds.pipeline.DataPipeline(
-                wds.shardlists.SimpleShardList( self.url ),
+                _ShardListStage(self._source),
                 wds.filters.shuffle( buffer_shards ),
                 wds.shardlists.split_by_worker,
-                wds.tariterators.tarfile_to_samples(),
+                _StreamOpenerStage(self._source),
+                wds.tariterators.tar_file_expander,
+                wds.tariterators.group_by_keys,
                 wds.filters.shuffle( buffer_samples ),
                 wds.filters.map( self.wrap ),
             )
 
         return wds.pipeline.DataPipeline(
-            wds.shardlists.SimpleShardList( self.url ),
+            _ShardListStage(self._source),
             wds.filters.shuffle( buffer_shards ),
             wds.shardlists.split_by_worker,
-            wds.tariterators.tarfile_to_samples(),
+            _StreamOpenerStage(self._source),
+            wds.tariterators.tar_file_expander,
+            wds.tariterators.group_by_keys,
             wds.filters.shuffle( buffer_samples ),
             wds.filters.batched( batch_size ),
             wds.filters.map( self.wrap_batch ),

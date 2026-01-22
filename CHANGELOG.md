@@ -25,6 +25,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Refactor Dataset to use DataSource abstraction (#299)
+- Research WebDataset streaming alternatives beyond HTTP/S URLs (#298)
+- Write tests for DataSource implementations (#306)
+- Update load_dataset to use DataSource (#305)
+- Update S3DataStore to create S3Source instances (#304)
+- Refactor Dataset to accept DataSource | str (#303)
+- Implement S3Source with boto3 streaming (#302)
+- Implement URLSource in new _sources.py module (#301)
+- Add DataSource protocol to _protocols.py (#300)
 - Fix S3 mock fixture regionname typo in tests (#297)
 - Human review feedback: API improvements from human-review-01 (#290)
 - AbstractIndex: Protocol vs subclass causing linting errors (#296)

@@ -30,6 +30,7 @@ Example:
 """
 
 from typing import (
+    IO,
     Any,
     ClassVar,
     Iterator,
@@ -340,6 +341,87 @@ class AbstractDataStore(Protocol):
 
 
 ##
+# DataSource Protocol
+
+
+@runtime_checkable
+class DataSource(Protocol):
+    """Protocol for data sources that provide streams to Dataset.
+
+    A DataSource abstracts over different ways of accessing dataset shards:
+    - URLSource: Standard WebDataset-compatible URLs (http, https, pipe, gs, etc.)
+    - S3Source: S3-compatible storage with explicit credentials
+    - BlobSource: ATProto blob references (future)
+
+    The key method is ``shards()``, which yields (identifier, stream) pairs.
+    These are fed directly to WebDataset's tar_file_expander, bypassing URL
+    resolution entirely. This enables:
+    - Private S3 repos with credentials
+    - Custom endpoints (Cloudflare R2, MinIO)
+    - ATProto blob streaming
+    - Any other source that can provide file-like objects
+
+    Example:
+        >>> source = S3Source(
+        ...     bucket="my-bucket",
+        ...     keys=["data-000.tar", "data-001.tar"],
+        ...     endpoint="https://r2.example.com",
+        ...     credentials=creds,
+        ... )
+        >>> ds = Dataset[MySample](source)
+        >>> for sample in ds.ordered():
+        ...     print(sample)
+    """
+
+    def shards(self) -> Iterator[tuple[str, IO[bytes]]]:
+        """Yield (identifier, stream) pairs for each shard.
+
+        The identifier is used for error messages and __url__ metadata.
+        The stream must be a file-like object that can be read by tarfile.
+
+        Yields:
+            Tuple of (shard_identifier, file_like_stream).
+
+        Example:
+            >>> for shard_id, stream in source.shards():
+            ...     print(f"Processing {shard_id}")
+            ...     data = stream.read()
+        """
+        ...
+
+    @property
+    def shard_list(self) -> list[str]:
+        """List of shard identifiers without opening streams.
+
+        Used for metadata queries like counting shards without actually
+        streaming data. Implementations should return identifiers that
+        match what shards() would yield.
+
+        Returns:
+            List of shard identifier strings.
+        """
+        ...
+
+    def open_shard(self, shard_id: str) -> IO[bytes]:
+        """Open a single shard by its identifier.
+
+        This method enables random access to individual shards, which is
+        required for PyTorch DataLoader worker splitting. Each worker opens
+        only its assigned shards rather than iterating all shards.
+
+        Args:
+            shard_id: Shard identifier from shard_list.
+
+        Returns:
+            File-like stream for reading the shard.
+
+        Raises:
+            KeyError: If shard_id is not in shard_list.
+        """
+        ...
+
+
+##
 # Module exports
 
 __all__ = [
@@ -347,4 +429,5 @@ __all__ = [
     "IndexEntry",
     "AbstractIndex",
     "AbstractDataStore",
+    "DataSource",
 ]
