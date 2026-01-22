@@ -143,9 +143,9 @@ class TestPromoteToAtmosphere:
     def test_raises_on_empty_data_urls(self):
         """Test raises ValueError when local entry has no data URLs."""
         entry = LocalDatasetEntry(
-            _name="test-dataset",
-            _schema_ref="local://schemas/test@1.0.0",
-            _data_urls=[],  # Empty!
+            name="test-dataset",
+            schema_ref="local://schemas/test@1.0.0",
+            data_urls=[],  # Empty!
         )
         mock_index = Mock()
         mock_client = Mock()
@@ -156,10 +156,10 @@ class TestPromoteToAtmosphere:
     def test_promotes_with_existing_urls(self):
         """Test promotion using existing data URLs."""
         entry = LocalDatasetEntry(
-            _name="test-dataset",
-            _schema_ref="local://schemas/test@1.0.0",
-            _data_urls=["s3://bucket/data-000000.tar"],
-            _metadata={"key": "value"},
+            name="test-dataset",
+            schema_ref="local://schemas/test@1.0.0",
+            data_urls=["s3://bucket/data-000000.tar"],
+            metadata={"key": "value"},
         )
 
         mock_index = Mock()
@@ -197,9 +197,9 @@ class TestPromoteToAtmosphere:
     def test_promotes_with_custom_name(self):
         """Test promotion with overridden name."""
         entry = LocalDatasetEntry(
-            _name="original-name",
-            _schema_ref="local://schemas/test@1.0.0",
-            _data_urls=["s3://bucket/data.tar"],
+            name="original-name",
+            schema_ref="local://schemas/test@1.0.0",
+            data_urls=["s3://bucket/data.tar"],
         )
 
         mock_index = Mock()
@@ -237,9 +237,9 @@ class TestPromoteToAtmosphere:
     def test_promotes_with_data_store(self):
         """Test promotion with data store for copying data."""
         entry = LocalDatasetEntry(
-            _name="test-dataset",
-            _schema_ref="local://schemas/test@1.0.0",
-            _data_urls=["s3://old-bucket/data.tar"],
+            name="test-dataset",
+            schema_ref="local://schemas/test@1.0.0",
+            data_urls=["s3://old-bucket/data.tar"],
         )
 
         mock_index = Mock()

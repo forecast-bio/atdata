@@ -47,7 +47,7 @@ def mock_s3():
             's3',
             aws_access_key_id=creds['AWS_ACCESS_KEY_ID'],
             aws_secret_access_key=creds['AWS_SECRET_ACCESS_KEY'],
-            regionname='us-east-1'
+            region_name='us-east-1'
         )
 
         bucket_name = 'test-bucket'

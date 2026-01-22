@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Fix S3 mock fixture regionname typo in tests (#297)
 - Human review feedback: API improvements from human-review-01 (#290)
 - AbstractIndex: Protocol vs subclass causing linting errors (#296)
 - load_dataset linting: no matching overloads error (#295)
