@@ -1623,16 +1623,28 @@ class S3DataStore:
         return written_shards
 
     def read_url(self, url: str) -> str:
-        """Resolve an S3 URL for reading.
+        """Resolve an S3 URL for reading/streaming.
 
-        For S3, URLs are returned as-is (WebDataset handles s3:// directly).
+        For S3-compatible stores with custom endpoints (like Cloudflare R2,
+        MinIO, etc.), converts s3:// URLs to HTTPS URLs that WebDataset can
+        stream directly.
+
+        For standard AWS S3 (no custom endpoint), URLs are returned unchanged
+        since WebDataset's built-in s3fs integration handles them.
 
         Args:
-            url: S3 URL to resolve.
+            url: S3 URL to resolve (e.g., 's3://bucket/path/file.tar').
 
         Returns:
-            The URL unchanged.
+            HTTPS URL if custom endpoint is configured, otherwise unchanged.
+            Example: 's3://bucket/path' -> 'https://endpoint.com/bucket/path'
         """
+        endpoint = self.credentials.get('AWS_ENDPOINT')
+        if endpoint and url.startswith('s3://'):
+            # s3://bucket/path -> https://endpoint/bucket/path
+            path = url[5:]  # Remove 's3://' prefix
+            endpoint = endpoint.rstrip('/')
+            return f"{endpoint}/{path}"
         return url
 
     def supports_streaming(self) -> bool:

@@ -149,7 +149,18 @@ class TestAbstractDataStoreProtocol:
         assert store.supports_streaming() is True
 
     def test_s3_datastore_read_url_passthrough(self):
-        """S3DataStore.read_url should return URL unchanged."""
+        """S3DataStore.read_url should return URL unchanged without custom endpoint."""
+        mock_creds = {
+            "AWS_ACCESS_KEY_ID": "test",
+            "AWS_SECRET_ACCESS_KEY": "test",
+        }
+
+        store = S3DataStore(mock_creds, bucket="test-bucket")
+        url = "s3://bucket/path/data.tar"
+        assert store.read_url(url) == url
+
+    def test_s3_datastore_read_url_transforms_with_endpoint(self):
+        """S3DataStore.read_url should transform s3:// to https:// with custom endpoint."""
         mock_creds = {
             "AWS_ENDPOINT": "http://localhost:9000",
             "AWS_ACCESS_KEY_ID": "test",
@@ -158,7 +169,8 @@ class TestAbstractDataStoreProtocol:
 
         store = S3DataStore(mock_creds, bucket="test-bucket")
         url = "s3://bucket/path/data.tar"
-        assert store.read_url(url) == url
+        # URL should be transformed to use the custom endpoint
+        assert store.read_url(url) == "http://localhost:9000/bucket/path/data.tar"
 
 
 class TestProtocolInteroperability:

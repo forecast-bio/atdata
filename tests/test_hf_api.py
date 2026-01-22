@@ -721,6 +721,7 @@ class TestLoadDatasetWithIndex:
     def test_indexed_path_with_mock_index(self):
         """load_dataset with indexed path uses index lookup."""
         mock_index = Mock()
+        mock_index.data_store = None  # No data store, so no URL transformation
         mock_entry = Mock()
         mock_entry.data_urls = ["s3://bucket/data.tar"]
         mock_entry.schema_ref = "local://schemas/test@1.0.0"
@@ -772,3 +773,46 @@ class TestLoadDatasetWithIndex:
 
         assert isinstance(result, DatasetDict)
         assert "train" in result
+
+    def test_indexed_path_transforms_urls_via_data_store(self):
+        """load_dataset transforms URLs through data_store.read_url() if available."""
+        mock_data_store = Mock()
+        mock_data_store.read_url.return_value = "https://r2.example.com/bucket/data.tar"
+
+        mock_index = Mock()
+        mock_index.data_store = mock_data_store
+        mock_entry = Mock()
+        mock_entry.data_urls = ["s3://bucket/data.tar"]
+        mock_entry.schema_ref = "local://schemas/test@1.0.0"
+        mock_index.get_dataset.return_value = mock_entry
+
+        ds = load_dataset(
+            "@local/my-dataset",
+            SimpleTestSample,
+            index=mock_index,
+            split="train",
+        )
+
+        # Verify read_url was called to transform the URL
+        mock_data_store.read_url.assert_called_once_with("s3://bucket/data.tar")
+        # Verify the transformed URL is used
+        assert ds.url == "https://r2.example.com/bucket/data.tar"
+
+    def test_indexed_path_no_transform_without_data_store(self):
+        """load_dataset uses URLs unchanged when index has no data_store."""
+        mock_index = Mock()
+        mock_index.data_store = None
+        mock_entry = Mock()
+        mock_entry.data_urls = ["s3://bucket/data.tar"]
+        mock_entry.schema_ref = "local://schemas/test@1.0.0"
+        mock_index.get_dataset.return_value = mock_entry
+
+        ds = load_dataset(
+            "@local/my-dataset",
+            SimpleTestSample,
+            index=mock_index,
+            split="train",
+        )
+
+        # URL should be unchanged
+        assert ds.url == "s3://bucket/data.tar"

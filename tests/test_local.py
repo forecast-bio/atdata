@@ -1201,7 +1201,7 @@ def test_s3_datastore_supports_streaming():
 
 
 def test_s3_datastore_read_url():
-    """Test that read_url returns URL unchanged."""
+    """Test that read_url returns URL unchanged without custom endpoint."""
     creds = {
         'AWS_ACCESS_KEY_ID': 'test',
         'AWS_SECRET_ACCESS_KEY': 'test'
@@ -1211,6 +1211,31 @@ def test_s3_datastore_read_url():
 
     url = "s3://bucket/path/to/data.tar"
     assert store.read_url(url) == url
+
+
+def test_s3_datastore_read_url_with_custom_endpoint():
+    """Test that read_url transforms s3:// to https:// with custom endpoint."""
+    creds = {
+        'AWS_ACCESS_KEY_ID': 'test',
+        'AWS_SECRET_ACCESS_KEY': 'test',
+        'AWS_ENDPOINT': 'https://abc123.r2.cloudflarestorage.com'
+    }
+
+    store = atlocal.S3DataStore(credentials=creds, bucket="test")
+
+    # s3:// URL should be transformed to https:// using the endpoint
+    url = "s3://my-bucket/path/to/data.tar"
+    expected = "https://abc123.r2.cloudflarestorage.com/my-bucket/path/to/data.tar"
+    assert store.read_url(url) == expected
+
+    # Trailing slash on endpoint should be handled
+    creds['AWS_ENDPOINT'] = 'https://endpoint.example.com/'
+    store2 = atlocal.S3DataStore(credentials=creds, bucket="test")
+    assert store2.read_url(url) == "https://endpoint.example.com/my-bucket/path/to/data.tar"
+
+    # Non-s3 URLs should be passed through unchanged
+    https_url = "https://example.com/data.tar"
+    assert store.read_url(https_url) == https_url
 
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
