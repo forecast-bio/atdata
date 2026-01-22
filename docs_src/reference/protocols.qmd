@@ -1,9 +1,9 @@
 ---
 title: "Protocols"
-description: "Abstract interfaces for index backends and data stores"
+description: "Abstract interfaces for index backends, data stores, and data sources"
 ---
 
-The protocols module defines abstract interfaces that enable interchangeable index backends (local Redis vs ATProto) and data stores (S3 vs PDS blobs).
+The protocols module defines abstract interfaces that enable interchangeable index backends (local Redis vs ATProto), data stores (S3 vs PDS blobs), and data sources (URL, S3, etc.).
 
 ## Overview
 
@@ -12,6 +12,7 @@ Both local and atmosphere implementations solve the same problem: indexed datase
 - **IndexEntry**: Common interface for dataset index entries
 - **AbstractIndex**: Protocol for index operations
 - **AbstractDataStore**: Protocol for data storage operations
+- **DataSource**: Protocol for streaming data from various backends
 
 ## IndexEntry Protocol
 
@@ -141,6 +142,83 @@ if store.supports_streaming():
 
 - `S3DataStore` (from `atdata.local`)
 
+## DataSource Protocol
+
+Abstracts over different data source backends for streaming dataset shards:
+
+```{python}
+#| eval: false
+from atdata._protocols import DataSource
+
+def load_from_source(source: DataSource) -> None:
+    """Works with URLSource, S3Source, or custom implementations."""
+    print(f"Shards: {source.shard_list}")
+
+    for shard_id, stream in source.shards():
+        print(f"Reading {shard_id}")
+        # stream is a file-like object
+```
+
+### Methods
+
+```{python}
+#| eval: false
+# Get list of shard identifiers
+shard_ids = source.shard_list  # ['data-000000.tar', 'data-000001.tar', ...]
+
+# Iterate over all shards with streams
+for shard_id, stream in source.shards():
+    # stream is IO[bytes], can be passed to tar reader
+    process_shard(stream)
+
+# Open a specific shard
+stream = source.open_shard("data-000001.tar")
+```
+
+### Implementations
+
+- `URLSource` (from `atdata`) - WebDataset-compatible URLs (local, HTTP, etc.)
+- `S3Source` (from `atdata`) - S3 and S3-compatible storage with boto3
+
+### Creating Custom Data Sources
+
+Implement the `DataSource` protocol for custom backends:
+
+```{python}
+#| eval: false
+from typing import Iterator, IO
+from atdata._protocols import DataSource
+
+class MyCustomSource:
+    """Custom data source for proprietary storage."""
+
+    def __init__(self, config: dict):
+        self._config = config
+        self._shards = ["shard-001.tar", "shard-002.tar"]
+
+    @property
+    def shard_list(self) -> list[str]:
+        return self._shards
+
+    def shards(self) -> Iterator[tuple[str, IO[bytes]]]:
+        for shard_id in self._shards:
+            stream = self._open(shard_id)
+            yield shard_id, stream
+
+    def open_shard(self, shard_id: str) -> IO[bytes]:
+        if shard_id not in self._shards:
+            raise KeyError(f"Shard not found: {shard_id}")
+        return self._open(shard_id)
+
+    def _open(self, shard_id: str) -> IO[bytes]:
+        # Implementation-specific logic
+        ...
+
+# Use with Dataset
+source = MyCustomSource({"endpoint": "..."})
+dataset = atdata.Dataset[MySample](source)
+```
+
 ## Using Protocols for Polymorphism
 
 Write code that works with any backend:
@@ -177,8 +255,12 @@ Schema references vary by backend:
 
 | Backend | Format | Example |
 |---------|--------|---------|
-| Local | `local://schemas/{module.Class}@{version}` | `local://schemas/myapp.ImageSample@1.0.0` |
+| Local | `atdata://local/sampleSchema/{Class}@{version}` | `atdata://local/sampleSchema/ImageSample@1.0.0` |
 | Atmosphere | `at://{did}/{collection}/{rkey}` | `at://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz` |
+
+::: {.callout-note}
+Legacy `local://schemas/` URIs are still supported for backward compatibility.
+:::
 
 ## Type Checking
 

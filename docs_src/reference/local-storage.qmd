@@ -51,7 +51,7 @@ dataset = atdata.Dataset[ImageSample]("data-{000000..000009}.tar")
 entry = index.add_entry(
     dataset,
     name="my-dataset",
-    schema_ref="local://schemas/mymodule.ImageSample@1.0.0",  # optional
+    schema_ref="atdata://local/sampleSchema/ImageSample@1.0.0",  # optional
     metadata={"description": "Training images"},              # optional
 )
 
@@ -223,7 +223,7 @@ schema_ref = index.publish_schema(
     version="1.0.0",
     description="Image with label annotation",
 )
-# Returns: "local://schemas/mymodule.ImageSample@1.0.0"
+# Returns: "atdata://local/sampleSchema/ImageSample@1.0.0"
 
 # Retrieve schema record
 schema = index.get_schema(schema_ref)

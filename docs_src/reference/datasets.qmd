@@ -17,7 +17,7 @@ class ImageSample:
     image: NDArray
     label: str
 
-# Single shard
+# Single shard (string URL - most common)
 dataset = atdata.Dataset[ImageSample]("data-000000.tar")
 
 # Multiple shards with brace notation
@@ -25,6 +25,49 @@ dataset = atdata.Dataset[ImageSample]("data-{000000..000009}.tar")
 ```
 
 The type parameter `[ImageSample]` specifies what sample type the dataset contains. This enables type-safe iteration and automatic deserialization.
+
+## Data Sources
+
+Datasets can be created from different data sources using the `DataSource` protocol:
+
+### URL Source (default)
+
+When you pass a string to `Dataset`, it automatically wraps it in a `URLSource`:
+
+```{python}
+#| eval: false
+# These are equivalent:
+dataset = atdata.Dataset[ImageSample]("data-{000000..000009}.tar")
+dataset = atdata.Dataset[ImageSample](atdata.URLSource("data-{000000..000009}.tar"))
+```
+
+### S3 Source
+
+For private S3 buckets or S3-compatible storage (Cloudflare R2, MinIO), use `S3Source`:
+
+```{python}
+#| eval: false
+# From explicit credentials
+source = atdata.S3Source(
+    bucket="my-bucket",
+    keys=["data-000000.tar", "data-000001.tar"],
+    endpoint="https://my-r2-account.r2.cloudflarestorage.com",
+    access_key="AKID...",
+    secret_key="SECRET...",
+)
+dataset = atdata.Dataset[ImageSample](source)
+
+# From S3 URLs
+source = atdata.S3Source.from_urls([
+    "s3://my-bucket/data-000000.tar",
+    "s3://my-bucket/data-000001.tar",
+])
+dataset = atdata.Dataset[ImageSample](source)
+```
+
+::: {.callout-note}
+`S3Source` uses boto3 for streaming, enabling authentication with private buckets. For public S3 URLs, a string URL with `URLSource` works directly.
+:::
 
 ## Iteration Modes
 
@@ -188,17 +231,43 @@ dataset.to_parquet("output.parquet", maxcount=10000)
 
 ## URL Formats
 
-WebDataset supports various URL formats:
+When using string URLs (via `URLSource`), WebDataset supports various formats:
 
 | Format | Example |
 |--------|---------|
 | Local files | `./data/file.tar`, `/absolute/path/file-{000000..000009}.tar` |
-| S3 | `s3://bucket/path/file-{000000..000009}.tar` |
 | HTTP/HTTPS | `https://example.com/data-{000000..000009}.tar` |
 | Google Cloud | `gs://bucket/path/file.tar` |
+
+For S3 with authentication, use `S3Source` instead of `s3://` URLs.
+
+## Dataset Properties
+
+### Source
+
+Access the underlying `DataSource`:
+
+```{python}
+#| eval: false
+dataset = atdata.Dataset[Sample]("data.tar")
+source = dataset.source  # URLSource instance
+print(source.shard_list)  # ['data.tar']
+```
+
+### Sample Type
+
+Get the type parameter used to create the dataset:
+
+```{python}
+#| eval: false
+dataset = atdata.Dataset[ImageSample]("data.tar")
+print(dataset.sample_type)  # <class 'ImageSample'>
+print(dataset.batch_type)   # SampleBatch[ImageSample]
+```
 
 ## Related
 
 - [Packable Samples](packable-samples.qmd) - Defining typed samples
 - [Lenses](lenses.qmd) - Type transformations
 - [load_dataset](load-dataset.qmd) - HuggingFace-style loading API
+- [Protocols](protocols.qmd) - DataSource protocol details

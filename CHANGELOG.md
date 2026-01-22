@@ -25,6 +25,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Update documentation and examples for current codebase (#316)
+- Update README.md with current API (#320)
+- Update examples/*.py files for current API (#319)
+- Update reference/protocols.qmd with DataSource protocol (#318)
+- Update reference/datasets.qmd for DataSource API (#317)
 - Adversarial review: Post-DataSource refactor assessment (#307)
 - Clean up unused TypeAlias definitions in dataset.py (#315)
 - Remove verbose docstrings that restate function signatures (#314)

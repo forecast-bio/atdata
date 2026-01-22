@@ -12,6 +12,9 @@ A loose federation of distributed, typed datasets built on WebDataset.
 - **Lens Transformations** - Bidirectional, composable transformations between different dataset views
 - **Automatic Batching** - Smart batch aggregation with numpy array stacking
 - **WebDataset Integration** - Efficient storage and streaming for large-scale datasets
+- **Flexible Data Sources** - Stream from local files, HTTP URLs, or S3-compatible storage
+- **HuggingFace-style API** - `load_dataset()` with path resolution and split handling
+- **Local & Atmosphere Storage** - Index datasets locally with Redis or publish to ATProto network
 
 ## Installation
 
@@ -108,6 +111,25 @@ def my_lens_put(view: ViewType, source: SourceType) -> SourceType:
     return SourceType(...)
 ```
 
+### Data Sources
+
+Datasets support multiple backends via the `DataSource` protocol:
+
+```python
+# String URLs (most common) - automatically wrapped in URLSource
+dataset = atdata.Dataset[ImageSample]("data-{000000..000009}.tar")
+
+# S3 with authentication (private buckets, Cloudflare R2, MinIO)
+source = atdata.S3Source(
+    bucket="my-bucket",
+    keys=["data-000000.tar", "data-000001.tar"],
+    endpoint="https://my-account.r2.cloudflarestorage.com",
+    access_key="...",
+    secret_key="...",
+)
+dataset = atdata.Dataset[ImageSample](source)
+```
+
 ### Dataset URLs
 
 Uses WebDataset brace expansion for sharded datasets:
@@ -115,6 +137,23 @@ Uses WebDataset brace expansion for sharded datasets:
 - Single file: `"data/dataset-000000.tar"`
 - Multiple shards: `"data/dataset-{000000..000099}.tar"`
 - Multiple patterns: `"data/{train,val}/dataset-{000000..000009}.tar"`
+
+### HuggingFace-style API
+
+Load datasets with a familiar interface:
+
+```python
+from atdata import load_dataset
+
+# Load from local path with glob patterns
+ds = load_dataset("./data/train-*.tar", sample_type=ImageSample)
+
+# Load from brace notation
+ds = load_dataset("s3://bucket/data-{000000..000099}.tar", sample_type=ImageSample)
+
+# Load with train/test splits
+ds = load_dataset("./data", sample_type=ImageSample, split="train")
+```
 
 ## Development
 
