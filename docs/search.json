@@ -4,7 +4,7 @@
     "href": "reference/protocols.html",
     "title": "Protocols",
     "section": "",
-    "text": "The protocols module defines abstract interfaces that enable interchangeable index backends (local Redis vs ATProto) and data stores (S3 vs PDS blobs).",
+    "text": "The protocols module defines abstract interfaces that enable interchangeable index backends (local Redis vs ATProto), data stores (S3 vs PDS blobs), and data sources (URL, S3, etc.).",
     "crumbs": [
       "Guide",
       "Reference",
@@ -16,7 +16,7 @@
     "href": "reference/protocols.html#overview",
     "title": "Protocols",
     "section": "Overview",
-    "text": "Overview\nBoth local and atmosphere implementations solve the same problem: indexed dataset storage with external data URLs. These protocols formalize that common interface:\n\nIndexEntry: Common interface for dataset index entries\nAbstractIndex: Protocol for index operations\nAbstractDataStore: Protocol for data storage operations",
+    "text": "Overview\nBoth local and atmosphere implementations solve the same problem: indexed dataset storage with external data URLs. These protocols formalize that common interface:\n\nIndexEntry: Common interface for dataset index entries\nAbstractIndex: Protocol for index operations\nAbstractDataStore: Protocol for data storage operations\nDataSource: Protocol for streaming data from various backends",
     "crumbs": [
       "Guide",
       "Reference",
@@ -60,6 +60,18 @@
     ]
   },
   {
+    "objectID": "reference/protocols.html#datasource-protocol",
+    "href": "reference/protocols.html#datasource-protocol",
+    "title": "Protocols",
+    "section": "DataSource Protocol",
+    "text": "DataSource Protocol\nAbstracts over different data source backends for streaming dataset shards:\n\nfrom atdata._protocols import DataSource\n\ndef load_from_source(source: DataSource) -&gt; None:\n    \"\"\"Works with URLSource, S3Source, or custom implementations.\"\"\"\n    print(f\"Shards: {source.shard_list}\")\n\n    for shard_id, stream in source.shards():\n        print(f\"Reading {shard_id}\")\n        # stream is a file-like object\n\n\nMethods\n\n# Get list of shard identifiers\nshard_ids = source.shard_list  # ['data-000000.tar', 'data-000001.tar', ...]\n\n# Iterate over all shards with streams\nfor shard_id, stream in source.shards():\n    # stream is IO[bytes], can be passed to tar reader\n    process_shard(stream)\n\n# Open a specific shard\nstream = source.open_shard(\"data-000001.tar\")\n\n\n\nImplementations\n\nURLSource (from atdata) - WebDataset-compatible URLs (local, HTTP, etc.)\nS3Source (from atdata) - S3 and S3-compatible storage with boto3\n\n\n\nCreating Custom Data Sources\nImplement the DataSource protocol for custom backends:\n\nfrom typing import Iterator, IO\nfrom atdata._protocols import DataSource\n\nclass MyCustomSource:\n    \"\"\"Custom data source for proprietary storage.\"\"\"\n\n    def __init__(self, config: dict):\n        self._config = config\n        self._shards = [\"shard-001.tar\", \"shard-002.tar\"]\n\n    @property\n    def shard_list(self) -&gt; list[str]:\n        return self._shards\n\n    def shards(self) -&gt; Iterator[tuple[str, IO[bytes]]]:\n        for shard_id in self._shards:\n            stream = self._open(shard_id)\n            yield shard_id, stream\n\n    def open_shard(self, shard_id: str) -&gt; IO[bytes]:\n        if shard_id not in self._shards:\n            raise KeyError(f\"Shard not found: {shard_id}\")\n        return self._open(shard_id)\n\n    def _open(self, shard_id: str) -&gt; IO[bytes]:\n        # Implementation-specific logic\n        ...\n\n# Use with Dataset\nsource = MyCustomSource({\"endpoint\": \"...\"})\ndataset = atdata.Dataset[MySample](source)",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Protocols"
+    ]
+  },
+  {
     "objectID": "reference/protocols.html#using-protocols-for-polymorphism",
     "href": "reference/protocols.html#using-protocols-for-polymorphism",
     "title": "Protocols",
@@ -76,7 +88,7 @@
     "href": "reference/protocols.html#schema-reference-formats",
     "title": "Protocols",
     "section": "Schema Reference Formats",
-    "text": "Schema Reference Formats\nSchema references vary by backend:\n\n\n\n\n\n\n\n\nBackend\nFormat\nExample\n\n\n\n\nLocal\nlocal://schemas/{module.Class}@{version}\nlocal://schemas/myapp.ImageSample@1.0.0\n\n\nAtmosphere\nat://{did}/{collection}/{rkey}\nat://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz",
+    "text": "Schema Reference Formats\nSchema references vary by backend:\n\n\n\n\n\n\n\n\nBackend\nFormat\nExample\n\n\n\n\nLocal\natdata://local/sampleSchema/{Class}@{version}\natdata://local/sampleSchema/ImageSample@1.0.0\n\n\nAtmosphere\nat://{did}/{collection}/{rkey}\nat://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz\n\n\n\n\n\n\n\n\n\nNote\n\n\n\nLegacy local://schemas/ URIs are still supported for backward compatibility.",
     "crumbs": [
       "Guide",
       "Reference",
@@ -388,7 +400,7 @@
     "href": "reference/load-dataset.html#path-formats",
     "title": "load_dataset API",
     "section": "Path Formats",
-    "text": "Path Formats\n\nWebDataset Brace Notation\n\n# Range notation\nds = load_dataset(\"data-{000000..000099}.tar\", MySample, split=\"train\")\n\n# List notation\nds = load_dataset(\"data-{train,test,val}.tar\", MySample, split=\"train\")\n\n\n\nGlob Patterns\n\n# Match all tar files\nds = load_dataset(\"path/to/*.tar\", MySample)\n\n# Match pattern\nds = load_dataset(\"path/to/train-*.tar\", MySample, split=\"train\")\n\n\n\nLocal Directory\n\n# Scans for .tar files\nds = load_dataset(\"./my-dataset/\", MySample)\n\n\n\nRemote URLs\n\n# S3\nds = load_dataset(\"s3://bucket/data-{000..099}.tar\", MySample, split=\"train\")\n\n# HTTP/HTTPS\nds = load_dataset(\"https://example.com/data.tar\", MySample, split=\"train\")\n\n# Google Cloud Storage\nds = load_dataset(\"gs://bucket/data.tar\", MySample, split=\"train\")\n\n\n\nIndex Lookup\n\nfrom atdata.local import LocalIndex\n\nindex = LocalIndex()\n\n# Load from local index (auto-resolves type from schema)\nds = load_dataset(\"@local/my-dataset\", index=index, split=\"train\")\n\n# With explicit type\nds = load_dataset(\"@local/my-dataset\", MySample, index=index, split=\"train\")",
+    "text": "Path Formats\n\nWebDataset Brace Notation\n\n# Range notation\nds = load_dataset(\"data-{000000..000099}.tar\", MySample, split=\"train\")\n\n# List notation\nds = load_dataset(\"data-{train,test,val}.tar\", MySample, split=\"train\")\n\n\n\nGlob Patterns\n\n# Match all tar files\nds = load_dataset(\"path/to/*.tar\", MySample)\n\n# Match pattern\nds = load_dataset(\"path/to/train-*.tar\", MySample, split=\"train\")\n\n\n\nLocal Directory\n\n# Scans for .tar files\nds = load_dataset(\"./my-dataset/\", MySample)\n\n\n\nRemote URLs\n\n# S3 (public buckets)\nds = load_dataset(\"s3://bucket/data-{000..099}.tar\", MySample, split=\"train\")\n\n# HTTP/HTTPS\nds = load_dataset(\"https://example.com/data.tar\", MySample, split=\"train\")\n\n# Google Cloud Storage\nds = load_dataset(\"gs://bucket/data.tar\", MySample, split=\"train\")\n\n\n\n\n\n\n\nNote\n\n\n\nFor private S3 buckets or S3-compatible storage with authentication, use atdata.S3Source with Dataset directly. See Datasets for details.\n\n\n\n\nIndex Lookup\n\nfrom atdata.local import LocalIndex\n\nindex = LocalIndex()\n\n# Load from local index (auto-resolves type from schema)\nds = load_dataset(\"@local/my-dataset\", index=index, split=\"train\")\n\n# With explicit type\nds = load_dataset(\"@local/my-dataset\", MySample, index=index, split=\"train\")",
     "crumbs": [
       "Guide",
       "Reference",
@@ -1424,7 +1436,7 @@
     "href": "reference/local-storage.html#localindex",
     "title": "Local Storage",
     "section": "LocalIndex",
-    "text": "LocalIndex\nThe index tracks datasets in Redis:\n\nfrom atdata.local import LocalIndex\n\n# Default connection (localhost:6379)\nindex = LocalIndex()\n\n# Custom Redis connection\nimport redis\nr = redis.Redis(host='custom-host', port=6379)\nindex = LocalIndex(redis=r)\n\n# With connection kwargs\nindex = LocalIndex(host='custom-host', port=6379, db=1)\n\n\nAdding Entries\n\nimport atdata\nfrom numpy.typing import NDArray\n\n@atdata.packable\nclass ImageSample:\n    image: NDArray\n    label: str\n\ndataset = atdata.Dataset[ImageSample](\"data-{000000..000009}.tar\")\n\nentry = index.add_entry(\n    dataset,\n    name=\"my-dataset\",\n    schema_ref=\"local://schemas/mymodule.ImageSample@1.0.0\",  # optional\n    metadata={\"description\": \"Training images\"},              # optional\n)\n\nprint(entry.cid)        # Content identifier\nprint(entry.name)       # \"my-dataset\"\nprint(entry.data_urls)  # [\"data-{000000..000009}.tar\"]\n\n\n\nListing and Retrieving\n\n# Iterate all entries\nfor entry in index.entries:\n    print(f\"{entry.name}: {entry.cid}\")\n\n# Get as list\nall_entries = index.all_entries\n\n# Get by name\nentry = index.get_entry_by_name(\"my-dataset\")\n\n# Get by CID\nentry = index.get_entry(\"bafyrei...\")",
+    "text": "LocalIndex\nThe index tracks datasets in Redis:\n\nfrom atdata.local import LocalIndex\n\n# Default connection (localhost:6379)\nindex = LocalIndex()\n\n# Custom Redis connection\nimport redis\nr = redis.Redis(host='custom-host', port=6379)\nindex = LocalIndex(redis=r)\n\n# With connection kwargs\nindex = LocalIndex(host='custom-host', port=6379, db=1)\n\n\nAdding Entries\n\nimport atdata\nfrom numpy.typing import NDArray\n\n@atdata.packable\nclass ImageSample:\n    image: NDArray\n    label: str\n\ndataset = atdata.Dataset[ImageSample](\"data-{000000..000009}.tar\")\n\nentry = index.add_entry(\n    dataset,\n    name=\"my-dataset\",\n    schema_ref=\"atdata://local/sampleSchema/ImageSample@1.0.0\",  # optional\n    metadata={\"description\": \"Training images\"},              # optional\n)\n\nprint(entry.cid)        # Content identifier\nprint(entry.name)       # \"my-dataset\"\nprint(entry.data_urls)  # [\"data-{000000..000009}.tar\"]\n\n\n\nListing and Retrieving\n\n# Iterate all entries\nfor entry in index.entries:\n    print(f\"{entry.name}: {entry.cid}\")\n\n# Get as list\nall_entries = index.all_entries\n\n# Get by name\nentry = index.get_entry_by_name(\"my-dataset\")\n\n# Get by CID\nentry = index.get_entry(\"bafyrei...\")",
     "crumbs": [
       "Guide",
       "Reference",
@@ -1460,7 +1472,7 @@
     "href": "reference/local-storage.html#schema-storage",
     "title": "Local Storage",
     "section": "Schema Storage",
-    "text": "Schema Storage\nSchemas can be stored and retrieved from the index:\n\n# Publish a schema\nschema_ref = index.publish_schema(\n    ImageSample,\n    version=\"1.0.0\",\n    description=\"Image with label annotation\",\n)\n# Returns: \"local://schemas/mymodule.ImageSample@1.0.0\"\n\n# Retrieve schema record\nschema = index.get_schema(schema_ref)\n# {\n#     \"name\": \"ImageSample\",\n#     \"version\": \"1.0.0\",\n#     \"fields\": [...],\n#     \"description\": \"...\",\n#     \"createdAt\": \"...\",\n# }\n\n# List all schemas\nfor schema in index.list_schemas():\n    print(f\"{schema['name']}@{schema['version']}\")\n\n# Reconstruct sample type from schema\nSampleType = index.decode_schema(schema_ref)\ndataset = atdata.Dataset[SampleType](entry.data_urls[0])",
+    "text": "Schema Storage\nSchemas can be stored and retrieved from the index:\n\n# Publish a schema\nschema_ref = index.publish_schema(\n    ImageSample,\n    version=\"1.0.0\",\n    description=\"Image with label annotation\",\n)\n# Returns: \"atdata://local/sampleSchema/ImageSample@1.0.0\"\n\n# Retrieve schema record\nschema = index.get_schema(schema_ref)\n# {\n#     \"name\": \"ImageSample\",\n#     \"version\": \"1.0.0\",\n#     \"fields\": [...],\n#     \"description\": \"...\",\n#     \"createdAt\": \"...\",\n# }\n\n# List all schemas\nfor schema in index.list_schemas():\n    print(f\"{schema['name']}@{schema['version']}\")\n\n# Reconstruct sample type from schema\nSampleType = index.decode_schema(schema_ref)\ndataset = atdata.Dataset[SampleType](entry.data_urls[0])",
     "crumbs": [
       "Guide",
       "Reference",
@@ -1640,7 +1652,19 @@
     "href": "reference/datasets.html#creating-a-dataset",
     "title": "Datasets",
     "section": "Creating a Dataset",
-    "text": "Creating a Dataset\n\nimport atdata\nfrom numpy.typing import NDArray\n\n@atdata.packable\nclass ImageSample:\n    image: NDArray\n    label: str\n\n# Single shard\ndataset = atdata.Dataset[ImageSample](\"data-000000.tar\")\n\n# Multiple shards with brace notation\ndataset = atdata.Dataset[ImageSample](\"data-{000000..000009}.tar\")\n\nThe type parameter [ImageSample] specifies what sample type the dataset contains. This enables type-safe iteration and automatic deserialization.",
+    "text": "Creating a Dataset\n\nimport atdata\nfrom numpy.typing import NDArray\n\n@atdata.packable\nclass ImageSample:\n    image: NDArray\n    label: str\n\n# Single shard (string URL - most common)\ndataset = atdata.Dataset[ImageSample](\"data-000000.tar\")\n\n# Multiple shards with brace notation\ndataset = atdata.Dataset[ImageSample](\"data-{000000..000009}.tar\")\n\nThe type parameter [ImageSample] specifies what sample type the dataset contains. This enables type-safe iteration and automatic deserialization.",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Datasets"
+    ]
+  },
+  {
+    "objectID": "reference/datasets.html#data-sources",
+    "href": "reference/datasets.html#data-sources",
+    "title": "Datasets",
+    "section": "Data Sources",
+    "text": "Data Sources\nDatasets can be created from different data sources using the DataSource protocol:\n\nURL Source (default)\nWhen you pass a string to Dataset, it automatically wraps it in a URLSource:\n\n# These are equivalent:\ndataset = atdata.Dataset[ImageSample](\"data-{000000..000009}.tar\")\ndataset = atdata.Dataset[ImageSample](atdata.URLSource(\"data-{000000..000009}.tar\"))\n\n\n\nS3 Source\nFor private S3 buckets or S3-compatible storage (Cloudflare R2, MinIO), use S3Source:\n\n# From explicit credentials\nsource = atdata.S3Source(\n    bucket=\"my-bucket\",\n    keys=[\"data-000000.tar\", \"data-000001.tar\"],\n    endpoint=\"https://my-r2-account.r2.cloudflarestorage.com\",\n    access_key=\"AKID...\",\n    secret_key=\"SECRET...\",\n)\ndataset = atdata.Dataset[ImageSample](source)\n\n# From S3 URLs\nsource = atdata.S3Source.from_urls([\n    \"s3://my-bucket/data-000000.tar\",\n    \"s3://my-bucket/data-000001.tar\",\n])\ndataset = atdata.Dataset[ImageSample](source)\n\n\n\n\n\n\n\nNote\n\n\n\nS3Source uses boto3 for streaming, enabling authentication with private buckets. For public S3 URLs, a string URL with URLSource works directly.",
     "crumbs": [
       "Guide",
       "Reference",
@@ -1724,7 +1748,19 @@
     "href": "reference/datasets.html#url-formats",
     "title": "Datasets",
     "section": "URL Formats",
-    "text": "URL Formats\nWebDataset supports various URL formats:\n\n\n\n\n\n\n\nFormat\nExample\n\n\n\n\nLocal files\n./data/file.tar, /absolute/path/file-{000000..000009}.tar\n\n\nS3\ns3://bucket/path/file-{000000..000009}.tar\n\n\nHTTP/HTTPS\nhttps://example.com/data-{000000..000009}.tar\n\n\nGoogle Cloud\ngs://bucket/path/file.tar",
+    "text": "URL Formats\nWhen using string URLs (via URLSource), WebDataset supports various formats:\n\n\n\n\n\n\n\nFormat\nExample\n\n\n\n\nLocal files\n./data/file.tar, /absolute/path/file-{000000..000009}.tar\n\n\nHTTP/HTTPS\nhttps://example.com/data-{000000..000009}.tar\n\n\nGoogle Cloud\ngs://bucket/path/file.tar\n\n\n\nFor S3 with authentication, use S3Source instead of s3:// URLs.",
+    "crumbs": [
+      "Guide",
+      "Reference",
+      "Datasets"
+    ]
+  },
+  {
+    "objectID": "reference/datasets.html#dataset-properties-1",
+    "href": "reference/datasets.html#dataset-properties-1",
+    "title": "Datasets",
+    "section": "Dataset Properties",
+    "text": "Dataset Properties\n\nSource\nAccess the underlying DataSource:\n\ndataset = atdata.Dataset[Sample](\"data.tar\")\nsource = dataset.source  # URLSource instance\nprint(source.shard_list)  # ['data.tar']\n\n\n\nSample Type\nGet the type parameter used to create the dataset:\n\ndataset = atdata.Dataset[ImageSample](\"data.tar\")\nprint(dataset.sample_type)  # &lt;class 'ImageSample'&gt;\nprint(dataset.batch_type)   # SampleBatch[ImageSample]",
     "crumbs": [
       "Guide",
       "Reference",
@@ -1736,7 +1772,7 @@
     "href": "reference/datasets.html#related",
     "title": "Datasets",
     "section": "Related",
-    "text": "Related\n\nPackable Samples - Defining typed samples\nLenses - Type transformations\nload_dataset - HuggingFace-style loading API",
+    "text": "Related\n\nPackable Samples - Defining typed samples\nLenses - Type transformations\nload_dataset - HuggingFace-style loading API\nProtocols - DataSource protocol details",
     "crumbs": [
       "Guide",
       "Reference",

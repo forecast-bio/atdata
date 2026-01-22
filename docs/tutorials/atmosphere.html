@@ -600,7 +600,7 @@ Warning
 </section>
 <section id="setup" class="level2">
 <h2 class="anchored" data-anchor-id="setup">Setup</h2>
-<div id="7ed764b4" class="cell">
+<div id="a227b908" class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
@@ -617,7 +617,7 @@ Warning
 </section>
 <section id="define-sample-types" class="level2">
 <h2 class="anchored" data-anchor-id="define-sample-types">Define Sample Types</h2>
-<div id="aea09e3d" class="cell">
+<div id="827244f1" class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ImageSample:</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""A sample containing image data with metadata."""</span></span>
@@ -636,7 +636,7 @@ Warning
 <section id="type-introspection" class="level2">
 <h2 class="anchored" data-anchor-id="type-introspection">Type Introspection</h2>
 <p>See what information is available from a PackableSample type:</p>
-<div id="12a7776a" class="cell">
+<div id="48fe4343" class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dataclasses <span class="im">import</span> fields, is_dataclass</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Sample type: </span><span class="sc">{</span>ImageSample<span class="sc">.</span><span class="va">__name__</span><span class="sc">}</span><span class="ss">"</span>)</span>
@@ -664,7 +664,7 @@ Warning
 <section id="at-uri-parsing" class="level2">
 <h2 class="anchored" data-anchor-id="at-uri-parsing">AT URI Parsing</h2>
 <p>ATProto records are identified by AT URIs:</p>
-<div id="91582008" class="cell">
+<div id="f2f4e7c0" class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>uris <span class="op">=</span> [</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"at://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz789"</span>,</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"at://alice.bsky.social/ac.foundation.dataset.record/my-dataset"</span>,</span>
@@ -681,7 +681,7 @@ Warning
 <section id="authentication" class="level2">
 <h2 class="anchored" data-anchor-id="authentication">Authentication</h2>
 <p>Connect to ATProto:</p>
-<div id="5f269993" class="cell">
+<div id="87811271" class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> AtmosphereClient()</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>client.login(<span class="st">"your.handle.social"</span>, <span class="st">"your-app-password"</span>)</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -691,7 +691,7 @@ Warning
 </section>
 <section id="publish-a-schema" class="level2">
 <h2 class="anchored" data-anchor-id="publish-a-schema">Publish a Schema</h2>
-<div id="eb992bdb" class="cell">
+<div id="3cbc4aed" class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>schema_publisher <span class="op">=</span> SchemaPublisher(client)</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>schema_uri <span class="op">=</span> schema_publisher.publish(</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    ImageSample,</span>
@@ -704,7 +704,7 @@ Warning
 </section>
 <section id="list-your-schemas" class="level2">
 <h2 class="anchored" data-anchor-id="list-your-schemas">List Your Schemas</h2>
-<div id="8d47f48c" class="cell">
+<div id="95a4b60b" class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>schema_loader <span class="op">=</span> SchemaLoader(client)</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>schemas <span class="op">=</span> schema_loader.list_all(limit<span class="op">=</span><span class="dv">10</span>)</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Found </span><span class="sc">{</span><span class="bu">len</span>(schemas)<span class="sc">}</span><span class="ss"> schema(s)"</span>)</span>
@@ -717,7 +717,7 @@ Warning
 <h2 class="anchored" data-anchor-id="publish-a-dataset">Publish a Dataset</h2>
 <section id="with-external-urls" class="level3">
 <h3 class="anchored" data-anchor-id="with-external-urls">With External URLs</h3>
-<div id="8680ca01" class="cell">
+<div id="abacd51d" class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>dataset_publisher <span class="op">=</span> DatasetPublisher(client)</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>dataset_uri <span class="op">=</span> dataset_publisher.publish_with_urls(</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    urls<span class="op">=</span>[<span class="st">"s3://example-bucket/demo-data-{000000..000009}.tar"</span>],</span>
@@ -733,7 +733,7 @@ Warning
 <section id="with-blob-storage" class="level3">
 <h3 class="anchored" data-anchor-id="with-blob-storage">With Blob Storage</h3>
 <p>For smaller datasets, store data directly in ATProto blobs:</p>
-<div id="b868342c" class="cell">
+<div id="c0ac92af" class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> io</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
@@ -774,7 +774,7 @@ Warning
 </section>
 <section id="list-and-load-datasets" class="level2">
 <h2 class="anchored" data-anchor-id="list-and-load-datasets">List and Load Datasets</h2>
-<div id="f507edb7" class="cell">
+<div id="a1b08c22" class="cell">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>dataset_loader <span class="op">=</span> DatasetLoader(client)</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>datasets <span class="op">=</span> dataset_loader.list_all(limit<span class="op">=</span><span class="dv">10</span>)</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Found </span><span class="sc">{</span><span class="bu">len</span>(datasets)<span class="sc">}</span><span class="ss"> dataset(s)"</span>)</span>
@@ -789,7 +789,7 @@ Warning
 </section>
 <section id="load-a-dataset" class="level2">
 <h2 class="anchored" data-anchor-id="load-a-dataset">Load a Dataset</h2>
-<div id="8c890cb0" class="cell">
+<div id="c4b1f1e4" class="cell">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check storage type</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>storage_type <span class="op">=</span> dataset_loader.get_storage_type(<span class="bu">str</span>(blob_dataset_uri))</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Storage type: </span><span class="sc">{</span>storage_type<span class="sc">}</span><span class="ss">"</span>)</span>
@@ -806,7 +806,7 @@ Warning
 </section>
 <section id="complete-publishing-workflow" class="level2">
 <h2 class="anchored" data-anchor-id="complete-publishing-workflow">Complete Publishing Workflow</h2>
-<div id="8e2760d4" class="cell">
+<div id="191ea1d0" class="cell">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Define and create samples</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> FeatureSample:</span>
