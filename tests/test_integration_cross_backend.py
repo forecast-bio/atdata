@@ -91,9 +91,9 @@ class TestIndexEntryProtocol:
     def test_local_entry_satisfies_protocol(self):
         """LocalDatasetEntry should satisfy IndexEntry protocol."""
         entry = LocalDatasetEntry(
-            _name="test-dataset",
-            _schema_ref="local://schemas/TestSample@1.0.0",
-            _data_urls=["s3://bucket/test.tar"],
+            name="test-dataset",
+            schema_ref="local://schemas/TestSample@1.0.0",
+            data_urls=["s3://bucket/test.tar"],
         )
 
         assert isinstance(entry, IndexEntry)
@@ -130,9 +130,9 @@ class TestIndexEntryProtocol:
             }
 
         local_entry = LocalDatasetEntry(
-            _name="local-ds",
-            _schema_ref="local://schemas/Test@1.0.0",
-            _data_urls=["s3://bucket/local.tar"],
+            name="local-ds",
+            schema_ref="local://schemas/Test@1.0.0",
+            data_urls=["s3://bucket/local.tar"],
         )
 
         atmo_record = {
@@ -160,10 +160,10 @@ class TestIndexEntryProtocol:
 
         # Local entry with metadata
         local_entry = LocalDatasetEntry(
-            _name="local-meta",
-            _schema_ref="local://schemas/Test@1.0.0",
-            _data_urls=["s3://bucket/local.tar"],
-            _metadata={"version": "1.0", "samples": 100},
+            name="local-meta",
+            schema_ref="local://schemas/Test@1.0.0",
+            data_urls=["s3://bucket/local.tar"],
+            metadata={"version": "1.0", "samples": 100},
         )
 
         # Atmosphere entry with metadata
@@ -193,9 +193,9 @@ class TestIndexEntryProtocol:
         ]
 
         local_entry = LocalDatasetEntry(
-            _name="multi-shard-local",
-            _schema_ref="local://schemas/Test@1.0.0",
-            _data_urls=urls,
+            name="multi-shard-local",
+            schema_ref="local://schemas/Test@1.0.0",
+            data_urls=urls,
         )
 
         atmo_record = {
@@ -223,9 +223,9 @@ class TestAbstractIndexProtocol:
         """LocalIndex.list_datasets should yield IndexEntry objects."""
         # Insert an entry directly via Redis for testing
         entry = LocalDatasetEntry(
-            _name="test-list",
-            _schema_ref="local://schemas/Test@1.0.0",
-            _data_urls=["s3://bucket/test.tar"],
+            name="test-list",
+            schema_ref="local://schemas/Test@1.0.0",
+            data_urls=["s3://bucket/test.tar"],
         )
         entry.write_to(clean_redis)
 
@@ -378,9 +378,9 @@ class TestIndexEntryCreation:
     def test_local_entry_has_cid(self):
         """LocalDatasetEntry should generate a CID."""
         entry = LocalDatasetEntry(
-            _name="cid-test",
-            _schema_ref="local://schemas/Test@1.0.0",
-            _data_urls=["s3://bucket/test.tar"],
+            name="cid-test",
+            schema_ref="local://schemas/Test@1.0.0",
+            data_urls=["s3://bucket/test.tar"],
         )
 
         assert entry.cid is not None
@@ -403,14 +403,14 @@ class TestIndexEntryCreation:
     def test_same_content_same_local_cid(self):
         """Same content should produce same CID in local entries."""
         entry1 = LocalDatasetEntry(
-            _name="cid-test-1",
-            _schema_ref="local://schemas/Test@1.0.0",
-            _data_urls=["s3://bucket/same.tar"],
+            name="cid-test-1",
+            schema_ref="local://schemas/Test@1.0.0",
+            data_urls=["s3://bucket/same.tar"],
         )
         entry2 = LocalDatasetEntry(
-            _name="cid-test-2",
-            _schema_ref="local://schemas/Test@1.0.0",
-            _data_urls=["s3://bucket/same.tar"],
+            name="cid-test-2",
+            schema_ref="local://schemas/Test@1.0.0",
+            data_urls=["s3://bucket/same.tar"],
         )
 
         # Different names but same content should produce same CID
@@ -419,14 +419,14 @@ class TestIndexEntryCreation:
     def test_different_content_different_local_cid(self):
         """Different content should produce different CID in local entries."""
         entry1 = LocalDatasetEntry(
-            _name="cid-diff-1",
-            _schema_ref="local://schemas/Test@1.0.0",
-            _data_urls=["s3://bucket/file1.tar"],
+            name="cid-diff-1",
+            schema_ref="local://schemas/Test@1.0.0",
+            data_urls=["s3://bucket/file1.tar"],
         )
         entry2 = LocalDatasetEntry(
-            _name="cid-diff-2",
-            _schema_ref="local://schemas/Test@1.0.0",
-            _data_urls=["s3://bucket/file2.tar"],
+            name="cid-diff-2",
+            schema_ref="local://schemas/Test@1.0.0",
+            data_urls=["s3://bucket/file2.tar"],
         )
 
         assert entry1.cid != entry2.cid
@@ -474,9 +474,9 @@ class TestGenericIndexFunction:
         # Insert some entries
         for i in range(3):
             entry = LocalDatasetEntry(
-                _name=f"count-test-{i}",
-                _schema_ref="local://schemas/Test@1.0.0",
-                _data_urls=[f"s3://bucket/test-{i}.tar"],
+                name=f"count-test-{i}",
+                schema_ref="local://schemas/Test@1.0.0",
+                data_urls=[f"s3://bucket/test-{i}.tar"],
             )
             entry.write_to(clean_redis)
 
@@ -514,9 +514,9 @@ class TestGenericIndexFunction:
         names = ["alpha", "beta", "gamma"]
         for name in names:
             entry = LocalDatasetEntry(
-                _name=name,
-                _schema_ref="local://schemas/Test@1.0.0",
-                _data_urls=[f"s3://bucket/{name}.tar"],
+                name=name,
+                schema_ref="local://schemas/Test@1.0.0",
+                data_urls=[f"s3://bucket/{name}.tar"],
             )
             entry.write_to(clean_redis)
 

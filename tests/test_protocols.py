@@ -19,10 +19,10 @@ class TestIndexEntryProtocol:
     def test_local_dataset_entry_is_index_entry(self):
         """LocalDatasetEntry should satisfy IndexEntry protocol."""
         entry = LocalDatasetEntry(
-            _name="test-dataset",
-            _schema_ref="local://schemas/test@1.0.0",
-            _data_urls=["s3://bucket/data.tar"],
-            _metadata={"key": "value"},
+            name="test-dataset",
+            schema_ref="local://schemas/test@1.0.0",
+            data_urls=["s3://bucket/data.tar"],
+            metadata={"key": "value"},
         )
 
         # Protocol compliance via isinstance (runtime_checkable)
@@ -57,10 +57,10 @@ class TestIndexEntryProtocol:
     def test_index_entry_with_none_metadata(self):
         """IndexEntry should handle None metadata."""
         entry = LocalDatasetEntry(
-            _name="no-meta",
-            _schema_ref="local://schemas/test@1.0.0",
-            _data_urls=["s3://bucket/data.tar"],
-            _metadata=None,
+            name="no-meta",
+            schema_ref="local://schemas/test@1.0.0",
+            data_urls=["s3://bucket/data.tar"],
+            metadata=None,
         )
 
         assert entry.metadata is None
@@ -172,9 +172,9 @@ class TestProtocolInteroperability:
 
         # LocalDatasetEntry
         local_entry = LocalDatasetEntry(
-            _name="local-data",
-            _schema_ref="local://schemas/test@1.0.0",
-            _data_urls=["s3://bucket/data.tar"],
+            name="local-data",
+            schema_ref="local://schemas/test@1.0.0",
+            data_urls=["s3://bucket/data.tar"],
         )
         assert get_dataset_name(local_entry) == "local-data"
 
@@ -200,10 +200,10 @@ class TestProtocolInteroperability:
     def test_index_entry_properties_consistent(self):
         """All IndexEntry implementations should have consistent property types."""
         local_entry = LocalDatasetEntry(
-            _name="test",
-            _schema_ref="local://schemas/test@1.0.0",
-            _data_urls=["url1", "url2"],
-            _metadata={"k": "v"},
+            name="test",
+            schema_ref="local://schemas/test@1.0.0",
+            data_urls=["url1", "url2"],
+            metadata={"k": "v"},
         )
 
         atmo_entry = AtmosphereIndexEntry(
@@ -240,10 +240,10 @@ class TestPolymorphicBehavior:
         """Process a mixed list of IndexEntry implementations uniformly."""
         entries: list[IndexEntry] = [
             LocalDatasetEntry(
-                _name="local-1",
-                _schema_ref="local://schemas/A@1.0.0",
-                _data_urls=["s3://bucket/local1.tar"],
-                _metadata={"source": "local"},
+                name="local-1",
+                schema_ref="local://schemas/A@1.0.0",
+                data_urls=["s3://bucket/local1.tar"],
+                metadata={"source": "local"},
             ),
             AtmosphereIndexEntry(
                 "at://did:plc:test/record/1",
@@ -257,9 +257,9 @@ class TestPolymorphicBehavior:
                 },
             ),
             LocalDatasetEntry(
-                _name="local-2",
-                _schema_ref="local://schemas/B@1.0.0",
-                _data_urls=["s3://bucket/local2.tar", "s3://bucket/local2-001.tar"],
+                name="local-2",
+                schema_ref="local://schemas/B@1.0.0",
+                data_urls=["s3://bucket/local2.tar", "s3://bucket/local2-001.tar"],
             ),
         ]
 
@@ -288,9 +288,9 @@ class TestPolymorphicBehavior:
         """IndexEntry.name can be used to build lookup structures."""
         entries: list[IndexEntry] = [
             LocalDatasetEntry(
-                _name="dataset-a",
-                _schema_ref="local://schemas/A@1.0.0",
-                _data_urls=["url1"],
+                name="dataset-a",
+                schema_ref="local://schemas/A@1.0.0",
+                data_urls=["url1"],
             ),
             AtmosphereIndexEntry(
                 "at://test",
@@ -322,9 +322,9 @@ class TestPolymorphicBehavior:
 
         mixed_entries: list[IndexEntry] = [
             LocalDatasetEntry(
-                _name="ds1",
-                _schema_ref="local://test@1.0.0",
-                _data_urls=["s3://a/1.tar", "s3://a/2.tar"],
+                name="ds1",
+                schema_ref="local://test@1.0.0",
+                data_urls=["s3://a/1.tar", "s3://a/2.tar"],
             ),
             AtmosphereIndexEntry(
                 "at://x",

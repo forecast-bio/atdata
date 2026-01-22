@@ -14,6 +14,7 @@ Note:
     AtmosphereIndex, etc.) provide the actual implementations.
 
 Protocols:
+    Packable: Structural interface for packable sample types (lens compatibility)
     IndexEntry: Common interface for dataset index entries
     AbstractIndex: Protocol for index operations (schemas, datasets, lenses)
     AbstractDataStore: Protocol for data storage operations
@@ -29,6 +30,8 @@ Example:
 """
 
 from typing import (
+    Any,
+    ClassVar,
     Iterator,
     Optional,
     Protocol,
@@ -39,6 +42,33 @@ from typing import (
 
 if TYPE_CHECKING:
     from .dataset import PackableSample, Dataset
+
+
+##
+# Packable Protocol (for lens type compatibility)
+
+
+@runtime_checkable
+class Packable(Protocol):
+    """Structural protocol for packable sample types.
+
+    This protocol allows classes decorated with ``@packable`` to be recognized
+    as valid types for lens transformations, even though the decorator doesn't
+    change the class's nominal type at static analysis time.
+
+    Both ``PackableSample`` subclasses and ``@packable``-decorated classes
+    satisfy this protocol structurally.
+
+    Note:
+        This protocol is intentionally minimal - it only requires what's needed
+        for structural compatibility. The actual ``PackableSample`` class has
+        more methods, but lenses only need to know the type is packable.
+    """
+
+    @property
+    def as_wds(self) -> dict[str, Any]:
+        """WebDataset-compatible representation."""
+        ...
 
 
 ##
@@ -313,6 +343,7 @@ class AbstractDataStore(Protocol):
 # Module exports
 
 __all__ = [
+    "Packable",
     "IndexEntry",
     "AbstractIndex",
     "AbstractDataStore",

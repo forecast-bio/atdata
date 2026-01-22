@@ -25,6 +25,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Human review feedback: API improvements from human-review-01 (#290)
+- AbstractIndex: Protocol vs subclass causing linting errors (#296)
+- load_dataset linting: no matching overloads error (#295)
+- @atdata.lens linting: LocalTextSample not recognized as PackableSample subclass (#291)
+- LocalDatasetEntry: underscore-prefixed attributes should be public (#294)
+- Default batch_size should be None for Dataset.ordered/shuffled (#292)
 - Improve SchemaNamespace typing for IDE support (#289)
 - Schema namespace API: index.load_schema() + index.schemas.MyType (#288)
 - Auto-typed get_schema/decode_schema return type (#287)

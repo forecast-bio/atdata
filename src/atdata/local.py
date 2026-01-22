@@ -565,19 +565,25 @@ class LocalDatasetEntry:
     The CID is generated from the entry's content (schema_ref + data_urls),
     ensuring the same data produces the same CID whether stored locally or
     in the atmosphere. This enables seamless promotion from local to ATProto.
+
+    Attributes:
+        name: Human-readable name for this dataset.
+        schema_ref: Reference to the schema for this dataset.
+        data_urls: WebDataset URLs for the data.
+        metadata: Arbitrary metadata dictionary, or None if not set.
     """
     ##
 
-    _name: str
+    name: str
     """Human-readable name for this dataset."""
 
-    _schema_ref: str
-    """Reference to the schema for this dataset (local:// path)."""
+    schema_ref: str
+    """Reference to the schema for this dataset."""
 
-    _data_urls: list[str]
+    data_urls: list[str]
     """WebDataset URLs for the data."""
 
-    _metadata: dict | None = None
+    metadata: dict | None = None
     """Arbitrary metadata dictionary, or None if not set."""
 
     _cid: str | None = field(default=None, repr=False)
@@ -596,34 +602,10 @@ class LocalDatasetEntry:
         """Generate ATProto-compatible CID from entry content."""
         # CID is based on schema_ref and data_urls - the identity of the dataset
         content = {
-            "schema_ref": self._schema_ref,
-            "data_urls": self._data_urls,
+            "schema_ref": self.schema_ref,
+            "data_urls": self.data_urls,
         }
         return generate_cid(content)
-
-    # IndexEntry protocol properties
-
-    @property
-    def name(self) -> str:
-        """Human-readable dataset name."""
-        return self._name
-
-    @property
-    def schema_ref(self) -> str:
-        """Reference to the schema for this dataset."""
-        return self._schema_ref
-
-    @property
-    def data_urls(self) -> list[str]:
-        """WebDataset URLs for the data."""
-        return self._data_urls
-
-    @property
-    def metadata(self) -> dict | None:
-        """Arbitrary metadata dictionary, or None if not set."""
-        return self._metadata
-
-    # Additional properties
 
     @property
     def cid(self) -> str:
@@ -636,12 +618,12 @@ class LocalDatasetEntry:
     @property
     def wds_url(self) -> str:
         """Legacy property: returns first data URL for backwards compatibility."""
-        return self._data_urls[0] if self._data_urls else ""
+        return self.data_urls[0] if self.data_urls else ""
 
     @property
     def sample_kind(self) -> str:
         """Legacy property: returns schema_ref for backwards compatibility."""
-        return self._schema_ref
+        return self.schema_ref
 
     def write_to(self, redis: Redis):
         """Persist this index entry to Redis.
@@ -653,13 +635,13 @@ class LocalDatasetEntry:
         """
         save_key = f'{REDIS_KEY_DATASET_ENTRY}:{self.cid}'
         data = {
-            'name': self._name,
-            'schema_ref': self._schema_ref,
-            'data_urls': msgpack.packb(self._data_urls),  # Serialize list
+            'name': self.name,
+            'schema_ref': self.schema_ref,
+            'data_urls': msgpack.packb(self.data_urls),  # Serialize list
             'cid': self.cid,
         }
-        if self._metadata is not None:
-            data['metadata'] = msgpack.packb(self._metadata)
+        if self.metadata is not None:
+            data['metadata'] = msgpack.packb(self.metadata)
         if self._legacy_uuid is not None:
             data['legacy_uuid'] = self._legacy_uuid
 
@@ -698,10 +680,10 @@ class LocalDatasetEntry:
             metadata = msgpack.unpackb(raw_data_typed[b'metadata'])
 
         return cls(
-            _name=name,
-            _schema_ref=schema_ref,
-            _data_urls=data_urls,
-            _metadata=metadata,
+            name=name,
+            schema_ref=schema_ref,
+            data_urls=data_urls,
+            metadata=metadata,
             _cid=cid_value,
             _legacy_uuid=legacy_uuid,
         )
@@ -1112,7 +1094,7 @@ class Index:
         from ._stub_manager import _extract_authority
 
         name, version = _parse_schema_ref(ref)
-        schema_dict = self.get_schema_dict(ref)
+        schema_dict = self.get_schema(ref)
         authority = _extract_authority(schema_dict.get("$ref"))
 
         safe_version = version.replace(".", "_")
@@ -1176,10 +1158,10 @@ class Index:
         entry_metadata = metadata if metadata is not None else ds._metadata
 
         entry = LocalDatasetEntry(
-            _name=name,
-            _schema_ref=schema_ref,
-            _data_urls=data_urls,
-            _metadata=entry_metadata,
+            name=name,
+            schema_ref=schema_ref,
+            data_urls=data_urls,
+            metadata=entry_metadata,
         )
 
         entry.write_to(self._redis)
@@ -1265,10 +1247,10 @@ class Index:
             # Create entry with the written URLs
             entry_metadata = metadata if metadata is not None else ds._metadata
             entry = LocalDatasetEntry(
-                _name=name,
-                _schema_ref=schema_ref,
-                _data_urls=written_urls,
-                _metadata=entry_metadata,
+                name=name,
+                schema_ref=schema_ref,
+                data_urls=written_urls,
+                metadata=entry_metadata,
             )
             entry.write_to(self._redis)
             return entry
@@ -1379,13 +1361,50 @@ class Index:
 
         return schema_ref
 
-    def get_schema(self, ref: str) -> LocalSchemaRecord:
-        """Get a schema record by reference.
+    def get_schema(self, ref: str) -> dict:
+        """Get a schema record by reference (AbstractIndex protocol).
 
         Args:
             ref: Schema reference string. Supports both new format
                 (atdata://local/sampleSchema/{name}@{version}) and legacy
                 format (local://schemas/{module.Class}@{version}).
+
+        Returns:
+            Schema record as a dictionary with keys 'name', 'version',
+            'fields', '$ref', etc.
+
+        Raises:
+            KeyError: If schema not found.
+            ValueError: If reference format is invalid.
+        """
+        name, version = _parse_schema_ref(ref)
+        redis_key = f"{REDIS_KEY_SCHEMA}:{name}@{version}"
+
+        schema_json = self._redis.get(redis_key)
+        if schema_json is None:
+            raise KeyError(f"Schema not found: {ref}")
+
+        if isinstance(schema_json, bytes):
+            schema_json = schema_json.decode('utf-8')
+
+        schema = json.loads(schema_json)
+        schema['$ref'] = f"{_ATDATA_URI_PREFIX}{name}@{version}"
+
+        # Auto-generate stub if enabled
+        if self._stub_manager is not None:
+            record = LocalSchemaRecord.from_dict(schema)
+            self._stub_manager.ensure_stub(record)
+
+        return schema
+
+    def get_schema_record(self, ref: str) -> LocalSchemaRecord:
+        """Get a schema record as LocalSchemaRecord object.
+
+        Use this when you need the full LocalSchemaRecord with typed properties.
+        For Protocol-compliant dict access, use get_schema() instead.
+
+        Args:
+            ref: Schema reference string.
 
         Returns:
             LocalSchemaRecord with schema details.
@@ -1394,53 +1413,8 @@ class Index:
             KeyError: If schema not found.
             ValueError: If reference format is invalid.
         """
-        name, version = _parse_schema_ref(ref)
-        redis_key = f"{REDIS_KEY_SCHEMA}:{name}@{version}"
-
-        schema_json = self._redis.get(redis_key)
-        if schema_json is None:
-            raise KeyError(f"Schema not found: {ref}")
-
-        if isinstance(schema_json, bytes):
-            schema_json = schema_json.decode('utf-8')
-
-        schema = json.loads(schema_json)
-        # Add $ref in canonical format
-        schema['$ref'] = f"{_ATDATA_URI_PREFIX}{name}@{version}"
-        record = LocalSchemaRecord.from_dict(schema)
-
-        # Auto-generate stub if enabled
-        if self._stub_manager is not None:
-            self._stub_manager.ensure_stub(record)
-
-        return record
-
-    def get_schema_dict(self, ref: str) -> dict:
-        """Get a schema record as raw dict (for decode_schema compatibility).
-
-        Args:
-            ref: Schema reference string.
-
-        Returns:
-            Schema record as a dictionary.
-
-        Raises:
-            KeyError: If schema not found.
-            ValueError: If reference format is invalid.
-        """
-        name, version = _parse_schema_ref(ref)
-        redis_key = f"{REDIS_KEY_SCHEMA}:{name}@{version}"
-
-        schema_json = self._redis.get(redis_key)
-        if schema_json is None:
-            raise KeyError(f"Schema not found: {ref}")
-
-        if isinstance(schema_json, bytes):
-            schema_json = schema_json.decode('utf-8')
-
-        schema = json.loads(schema_json)
-        schema['$ref'] = f"{_ATDATA_URI_PREFIX}{name}@{version}"
-        return schema
+        schema = self.get_schema(ref)
+        return LocalSchemaRecord.from_dict(schema)
 
     @property
     def schemas(self) -> Generator[LocalSchemaRecord, None, None]:
@@ -1472,13 +1446,14 @@ class Index:
                 schema['$ref'] = f"{_ATDATA_URI_PREFIX}{schema_id}"
             yield LocalSchemaRecord.from_dict(schema)
 
-    def list_schemas(self) -> list[LocalSchemaRecord]:
-        """Get all schema records as a list.
+    def list_schemas(self) -> Iterator[dict]:
+        """List all schema records (AbstractIndex protocol).
 
-        Returns:
-            List of all LocalSchemaRecord objects in this index.
+        Yields:
+            Schema records as dictionaries.
         """
-        return list(self.schemas)
+        for record in self.schemas:
+            yield record.to_dict()
 
     def decode_schema(self, ref: str) -> Type[PackableSample]:
         """Reconstruct a Python PackableSample type from a stored schema.
@@ -1503,7 +1478,7 @@ class Index:
             KeyError: If schema not found.
             ValueError: If schema cannot be decoded.
         """
-        schema_dict = self.get_schema_dict(ref)
+        schema_dict = self.get_schema(ref)
 
         # If auto_stubs is enabled, generate module and import class from it
         if self._stub_manager is not None:

@@ -455,14 +455,14 @@ class Dataset( Generic[ST] ):
         return self._metadata
     
     def ordered( self,
-                batch_size: int | None = 1,
+                batch_size: int | None = None,
             ) -> Iterable[ST]:
         """Iterate over the dataset in order
         
         Args:
             batch_size (:obj:`int`, optional): The size of iterated batches.
-                Default: 1. If ``None``, iterates over one sample at a time
-                with no batch dimension.
+                Default: None (unbatched). If ``None``, iterates over one
+                sample at a time with no batch dimension.
         
         Returns:
             :obj:`webdataset.DataPipeline` A data pipeline that iterates over
@@ -489,7 +489,7 @@ class Dataset( Generic[ST] ):
     def shuffled( self,
                 buffer_shards: int = 100,
                 buffer_samples: int = 10_000,
-                batch_size: int | None = 1,
+                batch_size: int | None = None,
             ) -> Iterable[ST]:
         """Iterate over the dataset in random order.
 
@@ -500,8 +500,9 @@ class Dataset( Generic[ST] ):
             buffer_samples: Number of samples to buffer for shuffling within
                 shards. Larger values increase randomness but use more memory.
                 Default: 10,000.
-            batch_size: The size of iterated batches. Default: 1. If ``None``,
-                iterates over one sample at a time with no batch dimension.
+            batch_size: The size of iterated batches. Default: None (unbatched).
+                If ``None``, iterates over one sample at a time with no batch
+                dimension.
 
         Returns:
             A WebDataset data pipeline that iterates over the dataset in

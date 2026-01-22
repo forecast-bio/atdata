@@ -47,7 +47,7 @@ def mock_s3():
             's3',
             aws_access_key_id=creds['AWS_ACCESS_KEY_ID'],
             aws_secret_access_key=creds['AWS_SECRET_ACCESS_KEY'],
-            region_name='us-east-1'
+            regionname='us-east-1'
         )
 
         bucket_name = 'test-bucket'
@@ -214,10 +214,10 @@ def test_local_dataset_entry_creation():
     Should create an entry with provided name, schema_ref, data_urls, and generate CID.
     """
     entry = atlocal.LocalDatasetEntry(
-        _name="test-dataset",
-        _schema_ref="local://schemas/test_module.TestSample@1.0.0",
-        _data_urls=["s3://bucket/dataset.tar"],
-        _metadata={"description": "test"},
+        name="test-dataset",
+        schema_ref="local://schemas/test_module.TestSample@1.0.0",
+        data_urls=["s3://bucket/dataset.tar"],
+        metadata={"description": "test"},
     )
 
     assert entry.name == "test-dataset"
@@ -235,14 +235,14 @@ def test_local_dataset_entry_cid_generation():
     Same content should produce the same CID.
     """
     entry1 = atlocal.LocalDatasetEntry(
-        _name="test-dataset",
-        _schema_ref="local://schemas/test_module.TestSample@1.0.0",
-        _data_urls=["s3://bucket/dataset.tar"],
+        name="test-dataset",
+        schema_ref="local://schemas/test_module.TestSample@1.0.0",
+        data_urls=["s3://bucket/dataset.tar"],
     )
     entry2 = atlocal.LocalDatasetEntry(
-        _name="test-dataset",  # Name doesn't affect CID
-        _schema_ref="local://schemas/test_module.TestSample@1.0.0",
-        _data_urls=["s3://bucket/dataset.tar"],
+        name="test-dataset",  # Name doesn't affect CID
+        schema_ref="local://schemas/test_module.TestSample@1.0.0",
+        data_urls=["s3://bucket/dataset.tar"],
     )
 
     # Same schema_ref and data_urls = same CID
@@ -252,14 +252,14 @@ def test_local_dataset_entry_cid_generation():
 def test_local_dataset_entry_different_content_different_cid():
     """Test that different content produces different CIDs."""
     entry1 = atlocal.LocalDatasetEntry(
-        _name="dataset1",
-        _schema_ref="local://schemas/test_module.TestSample@1.0.0",
-        _data_urls=["s3://bucket/dataset1.tar"],
+        name="dataset1",
+        schema_ref="local://schemas/test_module.TestSample@1.0.0",
+        data_urls=["s3://bucket/dataset1.tar"],
     )
     entry2 = atlocal.LocalDatasetEntry(
-        _name="dataset2",
-        _schema_ref="local://schemas/test_module.TestSample@1.0.0",
-        _data_urls=["s3://bucket/dataset2.tar"],  # Different URL
+        name="dataset2",
+        schema_ref="local://schemas/test_module.TestSample@1.0.0",
+        data_urls=["s3://bucket/dataset2.tar"],  # Different URL
     )
 
     assert entry1.cid != entry2.cid
@@ -272,10 +272,10 @@ def test_local_dataset_entry_write_to_redis(clean_redis):
     and all fields should be retrievable with correct values.
     """
     entry = atlocal.LocalDatasetEntry(
-        _name="test-dataset",
-        _schema_ref="local://schemas/test_module.TestSample@1.0.0",
-        _data_urls=["s3://bucket/dataset.tar"],
-        _metadata={"version": "1.0"},
+        name="test-dataset",
+        schema_ref="local://schemas/test_module.TestSample@1.0.0",
+        data_urls=["s3://bucket/dataset.tar"],
+        metadata={"version": "1.0"},
     )
 
     entry.write_to(clean_redis)
@@ -299,10 +299,10 @@ def test_local_dataset_entry_round_trip_redis(clean_redis):
     intact and matching the original values.
     """
     original_entry = atlocal.LocalDatasetEntry(
-        _name="my-dataset",
-        _schema_ref="local://schemas/module.Sample@2.0.0",
-        _data_urls=["s3://bucket/data-{000000..000009}.tar"],
-        _metadata={"author": "test", "tags": ["a", "b"]},
+        name="my-dataset",
+        schema_ref="local://schemas/module.Sample@2.0.0",
+        data_urls=["s3://bucket/data-{000000..000009}.tar"],
+        metadata={"author": "test", "tags": ["a", "b"]},
     )
 
     original_entry.write_to(clean_redis)
@@ -320,9 +320,9 @@ def test_local_dataset_entry_round_trip_redis(clean_redis):
 def test_local_dataset_entry_legacy_properties():
     """Test that legacy properties work for backwards compatibility."""
     entry = atlocal.LocalDatasetEntry(
-        _name="test-dataset",
-        _schema_ref="local://schemas/test_module.TestSample@1.0.0",
-        _data_urls=["s3://bucket/dataset.tar"],
+        name="test-dataset",
+        schema_ref="local://schemas/test_module.TestSample@1.0.0",
+        data_urls=["s3://bucket/dataset.tar"],
     )
 
     # Legacy properties should work
@@ -335,9 +335,9 @@ def test_local_dataset_entry_implements_index_entry_protocol():
     from atdata._protocols import IndexEntry
 
     entry = atlocal.LocalDatasetEntry(
-        _name="test-dataset",
-        _schema_ref="local://schemas/test_module.TestSample@1.0.0",
-        _data_urls=["s3://bucket/dataset.tar"],
+        name="test-dataset",
+        schema_ref="local://schemas/test_module.TestSample@1.0.0",
+        data_urls=["s3://bucket/dataset.tar"],
     )
 
     # Should satisfy the protocol
@@ -1354,7 +1354,7 @@ def test_publish_schema_with_description(clean_redis):
     )
 
     schema = index.get_schema(schema_ref)
-    assert schema.description == "A simple test sample type"
+    assert schema.get('description') == "A simple test sample type"
 
 
 def test_publish_schema_auto_increment(clean_redis):
@@ -1391,7 +1391,7 @@ def test_publish_schema_docstring_fallback(clean_redis):
     schema = index.get_schema(schema_ref)
 
     # Should use the class docstring
-    assert schema.description == SimpleTestSample.__doc__
+    assert schema.get('description') == SimpleTestSample.__doc__
 
 
 def test_get_schema(clean_redis):
@@ -1401,10 +1401,10 @@ def test_get_schema(clean_redis):
     schema_ref = index.publish_schema(SimpleTestSample, version="1.0.0")
     schema = index.get_schema(schema_ref)
 
-    assert schema.name == 'SimpleTestSample'
-    assert schema.version == '1.0.0'
-    assert len(schema.fields) == 2  # name and value fields
-    assert schema.ref == schema_ref
+    assert schema['name'] == 'SimpleTestSample'
+    assert schema['version'] == '1.0.0'
+    assert len(schema['fields']) == 2  # name and value fields
+    assert schema['$ref'] == schema_ref
 
 
 def test_get_schema_not_found(clean_redis):
@@ -1441,7 +1441,7 @@ def test_list_schemas_multiple(clean_redis):
     schemas = list(index.list_schemas())
     assert len(schemas) == 2
 
-    names = {s.name for s in schemas}
+    names = {s['name'] for s in schemas}
     assert 'SimpleTestSample' in names
     assert 'ArrayTestSample' in names
 
@@ -1454,13 +1454,13 @@ def test_schema_field_types(clean_redis):
     schema = index.get_schema(schema_ref)
 
     # Find name field (should be str)
-    name_field = next(f for f in schema.fields if f.name == 'name')
-    assert name_field.field_type.primitive == 'str'
-    assert name_field.optional is False
+    name_field = next(f for f in schema['fields'] if f['name'] == 'name')
+    assert name_field['fieldType']['primitive'] == 'str'
+    assert name_field['optional'] is False
 
     # Find value field (should be int)
-    value_field = next(f for f in schema.fields if f.name == 'value')
-    assert value_field.field_type.primitive == 'int'
+    value_field = next(f for f in schema['fields'] if f['name'] == 'value')
+    assert value_field['fieldType']['primitive'] == 'int'
 
 
 def test_schema_ndarray_field(clean_redis):
@@ -1471,9 +1471,9 @@ def test_schema_ndarray_field(clean_redis):
     schema = index.get_schema(schema_ref)
 
     # Find data field (should be ndarray)
-    data_field = next(f for f in schema.fields if f.name == 'data')
-    assert data_field.field_type.kind == 'ndarray'
-    assert data_field.field_type.dtype == 'float32'
+    data_field = next(f for f in schema['fields'] if f['name'] == 'data')
+    assert data_field['fieldType']['$type'] == 'local#ndarray'
+    assert data_field['fieldType']['dtype'] == 'float32'
 
 
 def test_decode_schema(clean_redis):
@@ -1536,8 +1536,8 @@ def test_schema_version_handling(clean_redis):
     schema_v1 = index.get_schema(ref_v1)
     schema_v2 = index.get_schema(ref_v2)
 
-    assert schema_v1.version == '1.0.0'
-    assert schema_v2.version == '2.0.0'
+    assert schema_v1['version'] == '1.0.0'
+    assert schema_v2['version'] == '2.0.0'
 
 
 ##

@@ -60,6 +60,8 @@ from typing import (
 if TYPE_CHECKING:
     from .dataset import PackableSample
 
+from ._protocols import Packable
+
 
 ##
 # Typing helpers
@@ -67,8 +69,8 @@ if TYPE_CHECKING:
 DatasetType: TypeAlias = Type['PackableSample']
 LensSignature: TypeAlias = Tuple[DatasetType, DatasetType]
 
-S = TypeVar( 'S', bound = 'PackableSample' )
-V = TypeVar( 'V', bound = 'PackableSample' )
+S = TypeVar( 'S', bound = Packable )
+V = TypeVar( 'V', bound = Packable )
 type LensGetter[S, V] = Callable[[S], V]
 type LensPutter[S, V] = Callable[[V, S], S]
 
@@ -128,8 +130,8 @@ class Lens( Generic[S, V] ):
         # Update function details for this object as returned by annotation
         functools.update_wrapper( self, get )
 
-        self.source_type: Type[PackableSample] = input_types[0].annotation
-        self.view_type: Type[PackableSample] = sig.return_annotation
+        self.source_type: Type[Packable] = input_types[0].annotation
+        self.view_type: Type[Packable] = sig.return_annotation
 
         # Store the getter
         self._getter = get
