@@ -25,6 +25,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Adversarial review: Post-DataSource refactor assessment (#307)
+- Clean up unused TypeAlias definitions in dataset.py (#315)
+- Remove verbose docstrings that restate function signatures (#314)
+- Consolidate schema reference parsing logic in local.py (#313)
+- Add error tests for corrupted msgpack data in Dataset.wrap() (#312)
+- Remove or implement skipped test_repo_insert_round_trip (#311)
+- Fix bare exception handlers in _stub_manager.py and _cid.py (#310)
+- Replace assertion with ValueError in lens.py input validation (#309)
+- Replace assertions with ValueError in dataset.py msgpack validation (#308)
 - Refactor Dataset to use DataSource abstraction (#299)
 - Research WebDataset streaming alternatives beyond HTTP/S URLs (#298)
 - Write tests for DataSource implementations (#306)

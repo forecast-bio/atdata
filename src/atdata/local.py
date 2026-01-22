@@ -437,7 +437,12 @@ _LEGACY_URI_PREFIX = "local://schemas/"
 
 def _schema_ref_from_type(sample_type: Type[PackableSample], version: str) -> str:
     """Generate 'atdata://local/sampleSchema/{name}@{version}' reference."""
-    return f"{_ATDATA_URI_PREFIX}{sample_type.__name__}@{version}"
+    return _make_schema_ref(sample_type.__name__, version)
+
+
+def _make_schema_ref(name: str, version: str) -> str:
+    """Generate schema reference URI from name and version."""
+    return f"{_ATDATA_URI_PREFIX}{name}@{version}"
 
 
 def _parse_schema_ref(ref: str) -> tuple[str, str]:
@@ -1388,7 +1393,7 @@ class Index:
             schema_json = schema_json.decode('utf-8')
 
         schema = json.loads(schema_json)
-        schema['$ref'] = f"{_ATDATA_URI_PREFIX}{name}@{version}"
+        schema['$ref'] = _make_schema_ref(name, version)
 
         # Auto-generate stub if enabled
         if self._stub_manager is not None:
@@ -1441,9 +1446,11 @@ class Index:
             if "." in schema_id.split("@")[0]:
                 name = schema_id.split("@")[0].rsplit(".", 1)[1]
                 version = schema_id.split("@")[1]
-                schema['$ref'] = f"{_ATDATA_URI_PREFIX}{name}@{version}"
+                schema['$ref'] = _make_schema_ref(name, version)
             else:
-                schema['$ref'] = f"{_ATDATA_URI_PREFIX}{schema_id}"
+                # schema_id is already "name@version"
+                name, version = schema_id.rsplit("@", 1)
+                schema['$ref'] = _make_schema_ref(name, version)
             yield LocalSchemaRecord.from_dict(schema)
 
     def list_schemas(self) -> Iterator[dict]:

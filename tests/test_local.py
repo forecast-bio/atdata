@@ -992,18 +992,6 @@ def test_repo_insert_preserves_sample_type(mock_s3, clean_redis, sample_dataset)
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
-def test_repo_insert_round_trip(mock_s3, clean_redis, tmp_path):
-    """Test full round-trip: insert dataset, then load and compare samples.
-
-    Should be able to insert a dataset and then load it back from the returned
-    URL with all samples intact and matching the original.
-    """
-    pytest.skip("Reading from moto-mocked S3 requires additional s3fs/WebDataset configuration")
-
-
-@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
-@pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
-@pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
 def test_repo_insert_with_shard_writer_kwargs(mock_s3, clean_redis, tmp_path):
     """Test that insert() passes additional kwargs to ShardWriter.
 

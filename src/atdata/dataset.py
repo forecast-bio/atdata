@@ -77,6 +77,7 @@ from .lens import Lens, LensNetwork
 
 Pathlike = str | Path
 
+# WebDataset sample/batch dictionaries (contain __key__, msgpack, etc.)
 WDSRawSample: TypeAlias = Dict[str, Any]
 WDSRawBatch: TypeAlias = Dict[str, Any]
 
@@ -88,8 +89,6 @@ SampleExportMap: TypeAlias = Callable[['PackableSample'], SampleExportRow]
 # Main base classes
 
 DT = TypeVar( 'DT' )
-
-MsgpackRawSample: TypeAlias = Dict[str, Any]
 
 
 def _make_packable( x ):
@@ -132,17 +131,7 @@ class PackableSample( ABC ):
     """
 
     def _ensure_good( self ):
-        """Auto-convert annotated NDArray fields from bytes to numpy arrays.
-
-        This method scans all dataclass fields and for any field annotated as
-        ``NDArray`` or ``NDArray | None``, automatically converts bytes values
-        to numpy arrays using the helper deserialization function. This enables
-        transparent handling of array serialization in msgpack data.
-
-        Note:
-            This is called during ``__post_init__`` to ensure proper type
-            conversion after deserialization.
-        """
+        """Convert bytes to NDArray for fields annotated as NDArray or NDArray | None."""
 
         # Auto-convert known types when annotated
         # for var_name, var_type in vars( self.__class__ )['__annotations__'].items():
@@ -175,7 +164,7 @@ class PackableSample( ABC ):
     ##
 
     @classmethod
-    def from_data( cls, data: MsgpackRawSample ) -> Self:
+    def from_data( cls, data: WDSRawSample ) -> Self:
         """Create a sample instance from unpacked msgpack data.
 
         Args:
@@ -658,7 +647,7 @@ class Dataset( Generic[ST] ):
                 df = pd.DataFrame( cur_buffer )
                 df.to_parquet( cur_path, **kwargs )
 
-    def wrap( self, sample: MsgpackRawSample ) -> ST:
+    def wrap( self, sample: WDSRawSample ) -> ST:
         """Wrap a raw msgpack sample into the appropriate dataset-specific type.
 
         Args:
@@ -669,9 +658,11 @@ class Dataset( Generic[ST] ):
             A deserialized sample of type ``ST``, optionally transformed through
             a lens if ``as_type()`` was called.
         """
-        assert 'msgpack' in sample
-        assert isinstance(sample['msgpack'], bytes)
-        
+        if 'msgpack' not in sample:
+            raise ValueError(f"Sample missing 'msgpack' key, got keys: {list(sample.keys())}")
+        if not isinstance(sample['msgpack'], bytes):
+            raise ValueError(f"Expected sample['msgpack'] to be bytes, got {type(sample['msgpack']).__name__}")
+
         if self._output_lens is None:
             return self.sample_type.from_bytes( sample['msgpack'] )
 
@@ -694,7 +685,8 @@ class Dataset( Generic[ST] ):
             aggregates them into a batch.
         """
 
-        assert 'msgpack' in batch
+        if 'msgpack' not in batch:
+            raise ValueError(f"Batch missing 'msgpack' key, got keys: {list(batch.keys())}")
 
         if self._output_lens is None:
             batch_unpacked = [ self.sample_type.from_bytes( bs )

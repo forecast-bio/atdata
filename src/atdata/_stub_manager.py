@@ -388,7 +388,7 @@ class StubManager:
             cls = getattr(module, class_name, None)
             return cls
 
-        except Exception:
+        except (ModuleNotFoundError, AttributeError, ImportError, OSError):
             # Import failed - return None and let caller fall back to dynamic generation
             return None
 
