@@ -7,8 +7,8 @@
 # Don't commit `uv` lockfiles
 **/uv.lock
 # Development tooling (keep local, not in upstream)
-.chainlink/
-.claude/
+# .chainlink/
+# .claude/
 
 ##
 

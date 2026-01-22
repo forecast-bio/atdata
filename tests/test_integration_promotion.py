@@ -85,10 +85,10 @@ def local_index_with_data(clean_redis, tmp_path):
 
     # Create entry
     entry = LocalDatasetEntry(
-        _name="promotion-test-dataset",
-        _schema_ref=schema_ref,
-        _data_urls=[str(tar_path)],
-        _metadata={"version": "1.0", "sample_count": 5},
+        name="promotion-test-dataset",
+        schema_ref=schema_ref,
+        data_urls=[str(tar_path)],
+        metadata={"version": "1.0", "sample_count": 5},
     )
     entry.write_to(clean_redis)
 
@@ -343,9 +343,9 @@ class TestMetadataPreservation:
         schema_ref = index.publish_schema(PromotionSample, version="1.0.0")
 
         entry = LocalDatasetEntry(
-            _name="no-metadata-dataset",
-            _schema_ref=schema_ref,
-            _data_urls=["s3://bucket/data.tar"],
+            name="no-metadata-dataset",
+            schema_ref=schema_ref,
+            data_urls=["s3://bucket/data.tar"],
             # No _metadata specified
         )
         entry.write_to(clean_redis)
@@ -390,9 +390,9 @@ class TestMultiDatasetPromotion:
         entries = []
         for i in range(3):
             entry = LocalDatasetEntry(
-                _name=f"dataset-{i}",
-                _schema_ref=schema_ref,
-                _data_urls=[f"s3://bucket/data-{i}.tar"],
+                name=f"dataset-{i}",
+                schema_ref=schema_ref,
+                data_urls=[f"s3://bucket/data-{i}.tar"],
             )
             entry.write_to(clean_redis)
             entries.append(entry)
@@ -452,9 +452,9 @@ class TestLargeDatasetPromotion:
         # Create entry with many shards
         shard_urls = [f"s3://bucket/shard-{i:06d}.tar" for i in range(100)]
         entry = LocalDatasetEntry(
-            _name="large-dataset",
-            _schema_ref=schema_ref,
-            _data_urls=shard_urls,
+            name="large-dataset",
+            schema_ref=schema_ref,
+            data_urls=shard_urls,
         )
         entry.write_to(clean_redis)
 
@@ -501,9 +501,9 @@ class TestPromotionErrors:
         schema_ref = index.publish_schema(PromotionSample, version="1.0.0")
 
         entry = LocalDatasetEntry(
-            _name="empty-dataset",
-            _schema_ref=schema_ref,
-            _data_urls=[],
+            name="empty-dataset",
+            schema_ref=schema_ref,
+            data_urls=[],
         )
 
         with pytest.raises(ValueError, match="has no data URLs"):
@@ -517,9 +517,9 @@ class TestPromotionErrors:
 
         # Entry references a schema that doesn't exist
         entry = LocalDatasetEntry(
-            _name="orphan-dataset",
-            _schema_ref="local://schemas/NonExistent@1.0.0",
-            _data_urls=["s3://bucket/data.tar"],
+            name="orphan-dataset",
+            schema_ref="local://schemas/NonExistent@1.0.0",
+            data_urls=["s3://bucket/data.tar"],
         )
 
         with pytest.raises(KeyError):

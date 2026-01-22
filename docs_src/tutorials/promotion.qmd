@@ -30,7 +30,7 @@ Key features:
 import numpy as np
 from numpy.typing import NDArray
 import atdata
-from atdata.local import LocalIndex, Repo, LocalDatasetEntry
+from atdata.local import LocalIndex, LocalDatasetEntry, S3DataStore
 from atdata.atmosphere import AtmosphereClient
 from atdata.promote import promote_to_atmosphere
 import webdataset as wds
@@ -65,21 +65,22 @@ with wds.writer.TarWriter("experiment.tar") as sink:
     for i, s in enumerate(samples):
         sink.write({**s.as_wds, "__key__": f"{i:06d}"})
 
-# 4. Store in local repo
-repo = Repo(
-    s3_credentials={
+# 4. Set up local index with S3 storage
+store = S3DataStore(
+    credentials={
         "AWS_ENDPOINT": "http://localhost:9000",
         "AWS_ACCESS_KEY_ID": "minioadmin",
         "AWS_SECRET_ACCESS_KEY": "minioadmin",
     },
-    hive_path="datasets-bucket/experiments",
+    bucket="datasets-bucket",
 )
+local_index = LocalIndex(data_store=store)
 
+# 5. Insert dataset into index
 dataset = atdata.Dataset[ExperimentSample]("experiment.tar")
-local_entry, _ = repo.insert(dataset, name="experiment-2024-001")
+local_entry = local_index.insert_dataset(dataset, name="experiment-2024-001", prefix="experiments")
 
-# 5. Publish schema to local index
-local_index = LocalIndex()
+# 6. Publish schema to local index
 local_index.publish_schema(ExperimentSample, version="1.0.0")
 
 print(f"Local entry name: {local_entry.name}")
@@ -242,8 +243,8 @@ except ValueError as e:
 
 Before promotion:
 
-- [ ] Dataset is in local index (via `Repo.insert()` or `Index.add_entry()`)
-- [ ] Schema is published to local index (via `Index.publish_schema()`)
+- [ ] Dataset is in local index (via `LocalIndex.insert_dataset()` or `LocalIndex.add_entry()`)
+- [ ] Schema is published to local index (via `LocalIndex.publish_schema()`)
 - [ ] AtmosphereClient is authenticated
 - [ ] Data URLs are publicly accessible (or will be copied)
 
@@ -255,7 +256,7 @@ Before promotion:
 import numpy as np
 from numpy.typing import NDArray
 import atdata
-from atdata.local import LocalIndex, Repo
+from atdata.local import LocalIndex, S3DataStore
 from atdata.atmosphere import AtmosphereClient, AtmosphereIndex
 from atdata.promote import promote_to_atmosphere
 import webdataset as wds
@@ -266,7 +267,7 @@ class FeatureSample:
     features: NDArray
     label: int
 
-# 2. Create and store locally
+# 2. Create dataset tar
 samples = [
     FeatureSample(
         features=np.random.randn(128).astype(np.float32),
@@ -279,15 +280,17 @@ with wds.writer.TarWriter("features.tar") as sink:
     for i, s in enumerate(samples):
         sink.write({**s.as_wds, "__key__": f"{i:06d}"})
 
-repo = Repo(s3_credentials="creds.env", hive_path="bucket/features")
-dataset = atdata.Dataset[FeatureSample]("features.tar")
-local_entry, _ = repo.insert(dataset, name="feature-vectors-v1")
+# 3. Store in local index with S3 backend
+store = S3DataStore(credentials="creds.env", bucket="bucket")
+local_index = LocalIndex(data_store=store)
 
-# 3. Publish schema locally
-local_index = LocalIndex()
+dataset = atdata.Dataset[FeatureSample]("features.tar")
+local_entry = local_index.insert_dataset(dataset, name="feature-vectors-v1", prefix="features")
+
+# 4. Publish schema locally
 local_index.publish_schema(FeatureSample, version="1.0.0")
 
-# 4. Promote to atmosphere
+# 5. Promote to atmosphere
 client = AtmosphereClient()
 client.login("myhandle.bsky.social", "app-password")
 
@@ -302,7 +305,7 @@ at_uri = promote_to_atmosphere(
 
 print(f"Dataset published: {at_uri}")
 
-# 5. Others can now discover and load
+# 6. Others can now discover and load
 # ds = atdata.load_dataset("@myhandle.bsky.social/feature-vectors-v1")
 ```
 

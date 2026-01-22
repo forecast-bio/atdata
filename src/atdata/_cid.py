@@ -55,7 +55,7 @@ def generate_cid(data: Any) -> str:
     # Encode data as DAG-CBOR
     try:
         cbor_bytes = libipld.encode_dag_cbor(data)
-    except Exception as e:
+    except (TypeError, ValueError, OverflowError) as e:
         raise ValueError(f"Failed to encode data as DAG-CBOR: {e}") from e
 
     # Hash with SHA-256

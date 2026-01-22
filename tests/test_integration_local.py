@@ -114,6 +114,7 @@ class TestFullRepoWorkflow:
 
     @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
     @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
+    @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
     def test_init_publish_schema_insert_query(self, mock_s3, clean_redis, tmp_path):
         """Full workflow: init repo → publish schema → insert → query entry."""
         # Initialize repo
@@ -144,6 +145,7 @@ class TestFullRepoWorkflow:
 
     @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
     @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
+    @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
     def test_multiple_datasets_same_schema(self, mock_s3, clean_redis, tmp_path):
         """Insert multiple datasets with same schema type."""
         repo = atlocal.Repo(
@@ -176,6 +178,7 @@ class TestFullRepoWorkflow:
 
     @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
     @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
+    @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
     def test_different_schema_types(self, mock_s3, clean_redis, tmp_path):
         """Insert datasets with different schema types."""
         repo = atlocal.Repo(
@@ -272,16 +275,16 @@ class TestCIDDeterminism:
     def test_same_content_same_cid(self):
         """Identical content should produce identical CIDs."""
         entry1 = atlocal.LocalDatasetEntry(
-            _name="test",
-            _schema_ref="local://schemas/Test@1.0.0",
-            _data_urls=["s3://bucket/data.tar"],
-            _metadata={"key": "value"},
+            name="test",
+            schema_ref="local://schemas/Test@1.0.0",
+            data_urls=["s3://bucket/data.tar"],
+            metadata={"key": "value"},
         )
         entry2 = atlocal.LocalDatasetEntry(
-            _name="test",
-            _schema_ref="local://schemas/Test@1.0.0",
-            _data_urls=["s3://bucket/data.tar"],
-            _metadata={"key": "value"},
+            name="test",
+            schema_ref="local://schemas/Test@1.0.0",
+            data_urls=["s3://bucket/data.tar"],
+            metadata={"key": "value"},
         )
 
         assert entry1.cid == entry2.cid
@@ -289,14 +292,14 @@ class TestCIDDeterminism:
     def test_different_urls_different_cid(self):
         """Different data URLs should produce different CIDs."""
         entry1 = atlocal.LocalDatasetEntry(
-            _name="test",
-            _schema_ref="local://schemas/Test@1.0.0",
-            _data_urls=["s3://bucket/data-v1.tar"],
+            name="test",
+            schema_ref="local://schemas/Test@1.0.0",
+            data_urls=["s3://bucket/data-v1.tar"],
         )
         entry2 = atlocal.LocalDatasetEntry(
-            _name="test",
-            _schema_ref="local://schemas/Test@1.0.0",
-            _data_urls=["s3://bucket/data-v2.tar"],
+            name="test",
+            schema_ref="local://schemas/Test@1.0.0",
+            data_urls=["s3://bucket/data-v2.tar"],
         )
 
         assert entry1.cid != entry2.cid
@@ -304,14 +307,14 @@ class TestCIDDeterminism:
     def test_different_schema_different_cid(self):
         """Different schema refs should produce different CIDs."""
         entry1 = atlocal.LocalDatasetEntry(
-            _name="test",
-            _schema_ref="local://schemas/TypeA@1.0.0",
-            _data_urls=["s3://bucket/data.tar"],
+            name="test",
+            schema_ref="local://schemas/TypeA@1.0.0",
+            data_urls=["s3://bucket/data.tar"],
         )
         entry2 = atlocal.LocalDatasetEntry(
-            _name="test",
-            _schema_ref="local://schemas/TypeB@1.0.0",
-            _data_urls=["s3://bucket/data.tar"],
+            name="test",
+            schema_ref="local://schemas/TypeB@1.0.0",
+            data_urls=["s3://bucket/data.tar"],
         )
 
         assert entry1.cid != entry2.cid
@@ -319,14 +322,14 @@ class TestCIDDeterminism:
     def test_name_does_not_affect_cid(self):
         """Dataset name should not affect CID (only content matters)."""
         entry1 = atlocal.LocalDatasetEntry(
-            _name="name-one",
-            _schema_ref="local://schemas/Test@1.0.0",
-            _data_urls=["s3://bucket/data.tar"],
+            name="name-one",
+            schema_ref="local://schemas/Test@1.0.0",
+            data_urls=["s3://bucket/data.tar"],
         )
         entry2 = atlocal.LocalDatasetEntry(
-            _name="name-two",
-            _schema_ref="local://schemas/Test@1.0.0",
-            _data_urls=["s3://bucket/data.tar"],
+            name="name-two",
+            schema_ref="local://schemas/Test@1.0.0",
+            data_urls=["s3://bucket/data.tar"],
         )
 
         # CID based on schema_ref and data_urls, not name
@@ -335,9 +338,9 @@ class TestCIDDeterminism:
     def test_cid_format_is_valid(self):
         """CIDs should have valid ATProto-compatible format."""
         entry = atlocal.LocalDatasetEntry(
-            _name="test",
-            _schema_ref="local://schemas/Test@1.0.0",
-            _data_urls=["s3://bucket/data.tar"],
+            name="test",
+            schema_ref="local://schemas/Test@1.0.0",
+            data_urls=["s3://bucket/data.tar"],
         )
 
         # CIDv1 with dag-cbor starts with 'bafy'
@@ -356,9 +359,9 @@ class TestDatasetDiscovery:
 
         # Add entries
         entry1 = atlocal.LocalDatasetEntry(
-            _name="findme",
-            _schema_ref="local://schemas/Test@1.0.0",
-            _data_urls=["s3://bucket/findme.tar"],
+            name="findme",
+            schema_ref="local://schemas/Test@1.0.0",
+            data_urls=["s3://bucket/findme.tar"],
         )
         entry1.write_to(clean_redis)
 
@@ -372,9 +375,9 @@ class TestDatasetDiscovery:
         index = atlocal.Index(redis=clean_redis)
 
         entry = atlocal.LocalDatasetEntry(
-            _name="bycid",
-            _schema_ref="local://schemas/Test@1.0.0",
-            _data_urls=["s3://bucket/bycid.tar"],
+            name="bycid",
+            schema_ref="local://schemas/Test@1.0.0",
+            data_urls=["s3://bucket/bycid.tar"],
         )
         entry.write_to(clean_redis)
 
@@ -391,9 +394,9 @@ class TestDatasetDiscovery:
         # Add multiple entries
         for i in range(5):
             entry = atlocal.LocalDatasetEntry(
-                _name=f"dataset-{i}",
-                _schema_ref="local://schemas/Test@1.0.0",
-                _data_urls=[f"s3://bucket/dataset-{i}.tar"],
+                name=f"dataset-{i}",
+                schema_ref="local://schemas/Test@1.0.0",
+                data_urls=[f"s3://bucket/dataset-{i}.tar"],
             )
             entry.write_to(clean_redis)
 
@@ -412,9 +415,9 @@ class TestDatasetDiscovery:
         # Add entries
         for i in range(10):
             entry = atlocal.LocalDatasetEntry(
-                _name=f"lazy-{i}",
-                _schema_ref="local://schemas/Test@1.0.0",
-                _data_urls=[f"s3://bucket/lazy-{i}.tar"],
+                name=f"lazy-{i}",
+                schema_ref="local://schemas/Test@1.0.0",
+                data_urls=[f"s3://bucket/lazy-{i}.tar"],
             )
             entry.write_to(clean_redis)
 
@@ -437,6 +440,7 @@ class TestMetadataPersistence:
 
     @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
     @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
+    @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
     def test_metadata_preserved_through_insert(self, mock_s3, clean_redis, tmp_path):
         """Metadata should be preserved when inserting dataset."""
         repo = atlocal.Repo(
@@ -465,10 +469,10 @@ class TestMetadataPersistence:
     def test_metadata_round_trip_redis(self, clean_redis):
         """Metadata should round-trip through Redis correctly."""
         original = atlocal.LocalDatasetEntry(
-            _name="meta-test",
-            _schema_ref="local://schemas/Test@1.0.0",
-            _data_urls=["s3://bucket/data.tar"],
-            _metadata={
+            name="meta-test",
+            schema_ref="local://schemas/Test@1.0.0",
+            data_urls=["s3://bucket/data.tar"],
+            metadata={
                 "string": "hello",
                 "number": 123,
                 "float": 3.14,
@@ -490,10 +494,10 @@ class TestMetadataPersistence:
     def test_none_metadata_handled(self, clean_redis):
         """None metadata should be handled gracefully."""
         entry = atlocal.LocalDatasetEntry(
-            _name="no-meta",
-            _schema_ref="local://schemas/Test@1.0.0",
-            _data_urls=["s3://bucket/data.tar"],
-            _metadata=None,
+            name="no-meta",
+            schema_ref="local://schemas/Test@1.0.0",
+            data_urls=["s3://bucket/data.tar"],
+            metadata=None,
         )
 
         entry.write_to(clean_redis)
@@ -508,6 +512,7 @@ class TestCacheLocalModes:
 
     @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
     @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
+    @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
     def test_cache_local_true_produces_valid_entry(self, mock_s3, clean_redis, tmp_path):
         """cache_local=True should produce valid index entry."""
         repo = atlocal.Repo(
@@ -525,6 +530,7 @@ class TestCacheLocalModes:
 
     @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
     @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
+    @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
     def test_cache_local_false_produces_valid_entry(self, mock_s3, clean_redis, tmp_path):
         """cache_local=False should produce valid index entry."""
         repo = atlocal.Repo(
@@ -542,6 +548,7 @@ class TestCacheLocalModes:
 
     @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
     @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
+    @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
     def test_both_modes_produce_same_structure(self, mock_s3, clean_redis, tmp_path):
         """Both cache modes should produce entries with same structure."""
         repo = atlocal.Repo(
@@ -569,9 +576,9 @@ class TestIndexEntryProtocol:
         from atdata._protocols import IndexEntry
 
         entry = atlocal.LocalDatasetEntry(
-            _name="protocol-test",
-            _schema_ref="local://schemas/Test@1.0.0",
-            _data_urls=["s3://bucket/data.tar"],
+            name="protocol-test",
+            schema_ref="local://schemas/Test@1.0.0",
+            data_urls=["s3://bucket/data.tar"],
         )
 
         assert isinstance(entry, IndexEntry)
@@ -579,10 +586,10 @@ class TestIndexEntryProtocol:
     def test_entry_has_required_properties(self):
         """Entry should have all required IndexEntry properties."""
         entry = atlocal.LocalDatasetEntry(
-            _name="props-test",
-            _schema_ref="local://schemas/Test@1.0.0",
-            _data_urls=["s3://bucket/data.tar"],
-            _metadata={"key": "value"},
+            name="props-test",
+            schema_ref="local://schemas/Test@1.0.0",
+            data_urls=["s3://bucket/data.tar"],
+            metadata={"key": "value"},
         )
 
         # Required properties
@@ -601,9 +608,9 @@ class TestIndexEntryProtocol:
     def test_legacy_properties_work(self):
         """Legacy properties should still work for backwards compatibility."""
         entry = atlocal.LocalDatasetEntry(
-            _name="legacy-test",
-            _schema_ref="local://schemas/Test@1.0.0",
-            _data_urls=["s3://bucket/legacy.tar"],
+            name="legacy-test",
+            schema_ref="local://schemas/Test@1.0.0",
+            data_urls=["s3://bucket/legacy.tar"],
         )
 
         # Legacy aliases
@@ -616,6 +623,7 @@ class TestMultiShardStorage:
 
     @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
     @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
+    @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
     def test_large_dataset_creates_multiple_shards(self, mock_s3, clean_redis, tmp_path):
         """Large dataset should create multiple shard files."""
         repo = atlocal.Repo(
@@ -645,6 +653,7 @@ class TestMultiShardStorage:
 
     @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
     @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
+    @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
     def test_single_shard_no_brace_notation(self, mock_s3, clean_redis, tmp_path):
         """Small dataset should result in single shard without brace notation."""
         repo = atlocal.Repo(

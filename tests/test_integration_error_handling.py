@@ -47,9 +47,9 @@ class TestMissingSchema:
         index = LocalIndex(redis=clean_redis)
 
         entry = LocalDatasetEntry(
-            _name="orphan-dataset",
-            _schema_ref="local://schemas/DoesNotExist@1.0.0",
-            _data_urls=["s3://bucket/data.tar"],
+            name="orphan-dataset",
+            schema_ref="local://schemas/DoesNotExist@1.0.0",
+            data_urls=["s3://bucket/data.tar"],
         )
         entry.write_to(clean_redis)
 
@@ -75,9 +75,9 @@ class TestMissingDataUrls:
         schema_ref = index.publish_schema(ErrorTestSample, version="1.0.0")
 
         entry = LocalDatasetEntry(
-            _name="empty-urls",
-            _schema_ref=schema_ref,
-            _data_urls=[],
+            name="empty-urls",
+            schema_ref=schema_ref,
+            data_urls=[],
         )
         entry.write_to(clean_redis)
 
@@ -194,9 +194,9 @@ class TestRedisErrors:
         # First, add an entry
         schema_ref = index.publish_schema(ErrorTestSample, version="1.0.0")
         entry = LocalDatasetEntry(
-            _name="test-entry",
-            _schema_ref=schema_ref,
-            _data_urls=["s3://bucket/data.tar"],
+            name="test-entry",
+            schema_ref=schema_ref,
+            data_urls=["s3://bucket/data.tar"],
         )
         entry.write_to(clean_redis)
 

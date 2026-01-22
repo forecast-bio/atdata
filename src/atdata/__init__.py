@@ -60,6 +60,12 @@ from ._protocols import (
     IndexEntry as IndexEntry,
     AbstractIndex as AbstractIndex,
     AbstractDataStore as AbstractDataStore,
+    DataSource as DataSource,
+)
+
+from ._sources import (
+    URLSource as URLSource,
+    S3Source as S3Source,
 )
 
 from ._schema_codec import (

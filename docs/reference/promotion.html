@@ -355,6 +355,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="dropdown-item" href="../reference/protocols.html">
  <span class="dropdown-text">Protocols</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="../reference/uri-spec.html">
+ <span class="dropdown-text">URI Specification</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item">
@@ -490,6 +494,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">Protocols</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../reference/uri-spec.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">URI Specification</span></a>
+  </div>
+</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -571,7 +581,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="basic-usage" class="level2">
 <h2 class="anchored" data-anchor-id="basic-usage">Basic Usage</h2>
-<div id="43791c4c" class="cell">
+<div id="9b7db9ea" class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> LocalIndex</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> AtmosphereClient</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.promote <span class="im">import</span> promote_to_atmosphere</span>
@@ -591,7 +601,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="with-metadata" class="level2">
 <h2 class="anchored" data-anchor-id="with-metadata">With Metadata</h2>
-<div id="66018f62" class="cell">
+<div id="fec408db" class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>at_uri <span class="op">=</span> promote_to_atmosphere(</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    entry,</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    local_index,</span>
@@ -606,7 +616,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="schema-deduplication" class="level2">
 <h2 class="anchored" data-anchor-id="schema-deduplication">Schema Deduplication</h2>
 <p>The promotion workflow automatically checks for existing schemas:</p>
-<div id="faf8fe39" class="cell">
+<div id="b493a780" class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># First promotion: publishes schema</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>uri1 <span class="op">=</span> promote_to_atmosphere(entry1, local_index, client)</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -626,7 +636,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="tab-content">
 <div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
 <p>By default, promotion keeps the original data URLs:</p>
-<div id="4210a502" class="cell">
+<div id="98e3c467" class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Data stays in original S3 location</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>at_uri <span class="op">=</span> promote_to_atmosphere(entry, local_index, client)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -639,7 +649,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
 <p>To copy data to a different storage location:</p>
-<div id="07bea3e3" class="cell">
+<div id="d1f0b29d" class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> S3DataStore</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create new data store</span></span>
@@ -667,11 +677,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="complete-workflow-example" class="level2">
 <h2 class="anchored" data-anchor-id="complete-workflow-example">Complete Workflow Example</h2>
-<div id="dbd81853" class="cell">
+<div id="f43825cc" class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> LocalIndex, Repo</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> LocalIndex, S3DataStore</span>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> AtmosphereClient</span>
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.promote <span class="im">import</span> promote_to_atmosphere</span>
 <span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> webdataset <span class="im">as</span> wds</span>
@@ -695,51 +705,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, s <span class="kw">in</span> <span class="bu">enumerate</span>(samples):</span>
 <span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>        sink.write({<span class="op">**</span>s.as_wds, <span class="st">"__key__"</span>: <span class="ss">f"</span><span class="sc">{</span>i<span class="sc">:06d}</span><span class="ss">"</span>})</span>
 <span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Store in local repo</span></span>
-<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>repo <span class="op">=</span> Repo(</span>
-<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>    s3_credentials<span class="op">=</span>{</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Set up index with S3 data store</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>store <span class="op">=</span> S3DataStore(</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>    credentials<span class="op">=</span>{</span>
 <span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>        <span class="st">"AWS_ENDPOINT"</span>: <span class="st">"http://localhost:9000"</span>,</span>
 <span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>        <span class="st">"AWS_ACCESS_KEY_ID"</span>: <span class="st">"minioadmin"</span>,</span>
 <span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>        <span class="st">"AWS_SECRET_ACCESS_KEY"</span>: <span class="st">"minioadmin"</span>,</span>
 <span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>    },</span>
-<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>    hive_path<span class="op">=</span><span class="st">"datasets-bucket/features"</span>,</span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>    bucket<span class="op">=</span><span class="st">"datasets-bucket"</span>,</span>
 <span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[FeatureSample](<span class="st">"features.tar"</span>)</span>
-<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>local_entry, _ <span class="op">=</span> repo.insert(dataset, name<span class="op">=</span><span class="st">"feature-vectors-v1"</span>)</span>
-<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Publish schema to local index</span></span>
-<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>local_index <span class="op">=</span> LocalIndex()</span>
-<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>local_index.publish_schema(FeatureSample, version<span class="op">=</span><span class="st">"1.0.0"</span>)</span>
-<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Promote to atmosphere</span></span>
-<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> AtmosphereClient()</span>
-<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>client.login(<span class="st">"myhandle.bsky.social"</span>, <span class="st">"app-password"</span>)</span>
-<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>at_uri <span class="op">=</span> promote_to_atmosphere(</span>
-<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>    local_entry,</span>
-<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>    local_index,</span>
-<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>    client,</span>
-<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a>    description<span class="op">=</span><span class="st">"Feature vectors for classification"</span>,</span>
-<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>    tags<span class="op">=</span>[<span class="st">"features"</span>, <span class="st">"embeddings"</span>],</span>
-<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a>    license<span class="op">=</span><span class="st">"MIT"</span>,</span>
-<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Dataset published: </span><span class="sc">{</span>at_uri<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a><span class="co"># 6. Verify on atmosphere</span></span>
-<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> AtmosphereIndex</span>
-<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a>atm_index <span class="op">=</span> AtmosphereIndex(client)</span>
-<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a>entry <span class="op">=</span> atm_index.get_dataset(at_uri)</span>
-<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Name: </span><span class="sc">{</span>entry<span class="sc">.</span>name<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Schema: </span><span class="sc">{</span>entry<span class="sc">.</span>schema_ref<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"URLs: </span><span class="sc">{</span>entry<span class="sc">.</span>data_urls<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>local_index <span class="op">=</span> LocalIndex(data_store<span class="op">=</span>store)</span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Publish schema and insert dataset</span></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>local_index.publish_schema(FeatureSample, version<span class="op">=</span><span class="st">"1.0.0"</span>)</span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[FeatureSample](<span class="st">"features.tar"</span>)</span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>local_entry <span class="op">=</span> local_index.insert_dataset(dataset, name<span class="op">=</span><span class="st">"feature-vectors-v1"</span>, prefix<span class="op">=</span><span class="st">"features"</span>)</span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Promote to atmosphere</span></span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> AtmosphereClient()</span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>client.login(<span class="st">"myhandle.bsky.social"</span>, <span class="st">"app-password"</span>)</span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>at_uri <span class="op">=</span> promote_to_atmosphere(</span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>    local_entry,</span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>    local_index,</span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>    client,</span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>    description<span class="op">=</span><span class="st">"Feature vectors for classification"</span>,</span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a>    tags<span class="op">=</span>[<span class="st">"features"</span>, <span class="st">"embeddings"</span>],</span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>    license<span class="op">=</span><span class="st">"MIT"</span>,</span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Dataset published: </span><span class="sc">{</span>at_uri<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a><span class="co"># 6. Verify on atmosphere</span></span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> AtmosphereIndex</span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a>atm_index <span class="op">=</span> AtmosphereIndex(client)</span>
+<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a>entry <span class="op">=</span> atm_index.get_dataset(at_uri)</span>
+<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Name: </span><span class="sc">{</span>entry<span class="sc">.</span>name<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Schema: </span><span class="sc">{</span>entry<span class="sc">.</span>schema_ref<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"URLs: </span><span class="sc">{</span>entry<span class="sc">.</span>data_urls<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="error-handling" class="level2">
 <h2 class="anchored" data-anchor-id="error-handling">Error Handling</h2>
-<div id="38de06c3" class="cell">
+<div id="1d9ce394" class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    at_uri <span class="op">=</span> promote_to_atmosphere(entry, local_index, client)</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> <span class="pp">KeyError</span> <span class="im">as</span> e:</span>
@@ -754,7 +763,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="requirements">Requirements</h2>
 <p>Before promotion:</p>
 <ol type="1">
-<li>Dataset must be in local index (via <code>Repo.insert()</code> or <code>Index.add_entry()</code>)</li>
+<li>Dataset must be in local index (via <code>Index.insert_dataset()</code> or <code>Index.add_entry()</code>)</li>
 <li>Schema must be published to local index (via <code>Index.publish_schema()</code>)</li>
 <li>AtmosphereClient must be authenticated</li>
 </ol>

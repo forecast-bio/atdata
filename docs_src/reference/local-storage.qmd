@@ -51,7 +51,7 @@ dataset = atdata.Dataset[ImageSample]("data-{000000..000009}.tar")
 entry = index.add_entry(
     dataset,
     name="my-dataset",
-    schema_ref="local://schemas/mymodule.ImageSample@1.0.0",  # optional
+    schema_ref="atdata://local/sampleSchema/ImageSample@1.0.0",  # optional
     metadata={"description": "Training images"},              # optional
 )
 
@@ -78,7 +78,11 @@ entry = index.get_entry_by_name("my-dataset")
 entry = index.get_entry("bafyrei...")
 ```
 
-## Repo
+## Repo (Deprecated)
+
+::: {.callout-warning}
+`Repo` is deprecated. Use `LocalIndex` with `S3DataStore` instead for new code.
+:::
 
 The Repo class combines S3 storage with Redis indexing:
 
@@ -101,6 +105,26 @@ repo = Repo(
     },
     hive_path="my-bucket/datasets",
 )
+```
+
+**Preferred approach** - Use `LocalIndex` with `S3DataStore`:
+
+```{python}
+#| eval: false
+from atdata.local import LocalIndex, S3DataStore
+
+store = S3DataStore(
+    credentials={
+        "AWS_ENDPOINT": "http://localhost:9000",
+        "AWS_ACCESS_KEY_ID": "minioadmin",
+        "AWS_SECRET_ACCESS_KEY": "minioadmin",
+    },
+    bucket="my-bucket",
+)
+index = LocalIndex(data_store=store)
+
+# Insert dataset
+entry = index.insert_dataset(dataset, name="my-dataset", prefix="datasets/v1")
 ```
 
 ### Credentials File Format
@@ -199,7 +223,7 @@ schema_ref = index.publish_schema(
     version="1.0.0",
     description="Image with label annotation",
 )
-# Returns: "local://schemas/mymodule.ImageSample@1.0.0"
+# Returns: "atdata://local/sampleSchema/ImageSample@1.0.0"
 
 # Retrieve schema record
 schema = index.get_schema(schema_ref)
@@ -252,7 +276,7 @@ store.supports_streaming()  # True
 import numpy as np
 from numpy.typing import NDArray
 import atdata
-from atdata.local import Repo, LocalIndex
+from atdata.local import LocalIndex, S3DataStore
 import webdataset as wds
 
 # 1. Define sample type
@@ -277,21 +301,23 @@ with wds.writer.TarWriter("local-data.tar") as sink:
     for i, sample in enumerate(samples):
         sink.write({**sample.as_wds, "__key__": f"{i:06d}"})
 
-# 4. Create repo and insert
-repo = Repo(
-    s3_credentials={
+# 4. Set up index with S3 data store and insert
+store = S3DataStore(
+    credentials={
         "AWS_ENDPOINT": "http://localhost:9000",
         "AWS_ACCESS_KEY_ID": "minioadmin",
         "AWS_SECRET_ACCESS_KEY": "minioadmin",
     },
-    hive_path="datasets-bucket/training",
+    bucket="datasets-bucket",
 )
+index = LocalIndex(data_store=store)
 
+# Publish schema and insert dataset
+index.publish_schema(TrainingSample, version="1.0.0")
 local_ds = atdata.Dataset[TrainingSample]("local-data.tar")
-entry, stored_ds = repo.insert(local_ds, name="training-v1")
+entry = index.insert_dataset(local_ds, name="training-v1", prefix="training")
 
 # 5. Retrieve later
-index = LocalIndex()
 entry = index.get_entry_by_name("training-v1")
 dataset = atdata.Dataset[TrainingSample](entry.data_urls[0])
 

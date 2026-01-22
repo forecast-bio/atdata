@@ -128,20 +128,24 @@ test_ds = ds_dict["test"]
 
 ```{python}
 #| eval: false
-from atdata.local import LocalIndex, Repo
+from atdata.local import LocalIndex, S3DataStore
+import webdataset as wds
 
-# Set up local index
-index = LocalIndex()  # Connects to Redis
+# Create samples and write to local tar
+with wds.writer.TarWriter("data.tar") as sink:
+    for i, sample in enumerate(samples):
+        sink.write({**sample.as_wds, "__key__": f"{i:06d}"})
 
-# Create repo with S3 storage
-repo = Repo(
-    s3_credentials={"AWS_ENDPOINT": "http://localhost:9000", ...},
+# Set up index with S3 data store
+store = S3DataStore(
+    credentials={"AWS_ENDPOINT": "http://localhost:9000", ...},
     bucket="my-bucket",
-    index=index,
 )
+index = LocalIndex(data_store=store)  # Connects to Redis
 
-# Insert dataset
-entry = repo.insert(samples, name="my-dataset")
+# Insert dataset (writes to S3, indexes in Redis)
+dataset = atdata.Dataset[ImageSample]("data.tar")
+entry = index.insert_dataset(dataset, name="my-dataset")
 print(f"Stored at: {entry.data_urls}")
 ```
 

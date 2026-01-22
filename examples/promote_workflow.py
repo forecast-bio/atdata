@@ -58,7 +58,7 @@ The promotion workflow moves datasets from local storage to the atmosphere:
     -----                           ----------
     Redis Index                     ATProto PDS
     S3 Storage            -->       (same S3 or new location)
-    local://schemas/...             at://did:plc:.../schema/...
+    atdata://local/sampleSchema/...             at://did:plc:.../schema/...
 
 Steps:
 1. Retrieve dataset entry from LocalIndex
@@ -86,7 +86,7 @@ def demo_mock_promotion():
     # Create a mock local entry
     local_entry = LocalDatasetEntry(
         _name="experiment-2024-001",
-        _schema_ref="local://schemas/__main__.ExperimentSample@1.0.0",
+        _schema_ref="atdata://local/sampleSchema/__main__.ExperimentSample@1.0.0",
         _data_urls=[
             "s3://research-bucket/experiments/exp-2024-001/shard-000000.tar",
             "s3://research-bucket/experiments/exp-2024-001/shard-000001.tar",
@@ -259,7 +259,7 @@ def demo_live_promotion(handle: str, password: str):
     # Create a demo local entry (simulating a real local dataset)
     local_entry = LocalDatasetEntry(
         _name="demo-promoted-dataset",
-        _schema_ref="local://schemas/__main__.ExperimentSample@1.0.0",
+        _schema_ref="atdata://local/sampleSchema/__main__.ExperimentSample@1.0.0",
         _data_urls=["s3://example-bucket/demo-data-{000000..000004}.tar"],
         _metadata={"promoted_from": "local_demo", "demo": True},
     )
@@ -301,9 +301,10 @@ def demo_full_workflow():
 Here's a complete example of the local-to-atmosphere workflow:
 
     import atdata
-    from atdata.local import LocalIndex, Repo
+    from atdata.local import LocalIndex, S3DataStore
     from atdata.atmosphere import AtmosphereClient
     from atdata.promote import promote_to_atmosphere
+    import webdataset as wds
 
     # 1. Define your sample type
     @atdata.packable
@@ -311,18 +312,30 @@ Here's a complete example of the local-to-atmosphere workflow:
         features: NDArray
         label: str
 
-    # 2. Create and index local dataset
-    local_index = LocalIndex()  # Connects to Redis
-    repo = Repo(s3_creds, bucket='my-bucket', index=local_index)
-
-    # Insert dataset (writes to S3, indexes in Redis)
+    # 2. Create samples and write to local tar
     samples = [MySample(features=..., label=...) for ...]
-    entry = repo.insert(samples, name='my-dataset')
+    with wds.writer.TarWriter("local-data.tar") as sink:
+        for i, sample in enumerate(samples):
+            sink.write({**sample.as_wds, "__key__": f"{i:06d}"})
+
+    # 3. Set up index with S3 data store and insert dataset
+    s3_creds = {
+        "AWS_ENDPOINT": "http://localhost:9000",
+        "AWS_ACCESS_KEY_ID": "minioadmin",
+        "AWS_SECRET_ACCESS_KEY": "minioadmin",
+    }
+    store = S3DataStore(s3_creds, bucket='my-bucket')
+    local_index = LocalIndex(data_store=store)  # Connects to Redis
+
+    # Publish schema and insert dataset
+    local_index.publish_schema(MySample, version="1.0.0")
+    dataset = atdata.Dataset[MySample]("local-data.tar")
+    entry = local_index.insert_dataset(dataset, name='my-dataset')
 
     print(f"Local CID: {entry.cid}")
     print(f"Local URLs: {entry.data_urls}")
 
-    # 3. When ready to share, promote to atmosphere
+    # 4. When ready to share, promote to atmosphere
     client = AtmosphereClient()
     client.login('myhandle.bsky.social', 'app-password')
 
@@ -336,7 +349,7 @@ Here's a complete example of the local-to-atmosphere workflow:
 
     print(f"Published at: {at_uri}")
 
-    # 4. Others can now discover and load your dataset
+    # 5. Others can now discover and load your dataset
     # ds = atdata.load_dataset('@myhandle.bsky.social/my-dataset')
 """)
 

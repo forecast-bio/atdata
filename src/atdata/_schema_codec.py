@@ -219,6 +219,195 @@ def schema_to_type(
     return generated_class
 
 
+def _field_type_to_stub_str(field_type: dict, optional: bool = False) -> str:
+    """Convert a schema field type to a Python type string for stub files.
+
+    Args:
+        field_type: Field type dict with '$type' and type-specific fields.
+        optional: Whether this field is optional (can be None).
+
+    Returns:
+        String representation of the Python type for use in .pyi files.
+    """
+    type_str = field_type.get("$type", "")
+
+    # Extract kind from $type
+    if "#" in type_str:
+        kind = type_str.split("#")[-1]
+    else:
+        kind = field_type.get("kind", "")
+
+    if kind == "primitive":
+        primitive = field_type.get("primitive", "str")
+        py_type = primitive  # str, int, float, bool, bytes are all valid Python type names
+    elif kind == "ndarray":
+        py_type = "NDArray[Any]"
+    elif kind == "array":
+        items = field_type.get("items")
+        if items:
+            item_type = _field_type_to_stub_str(items, optional=False)
+            py_type = f"list[{item_type}]"
+        else:
+            py_type = "list[Any]"
+    elif kind == "ref":
+        # Reference to another schema - use Any for now
+        py_type = "Any"
+    else:
+        py_type = "Any"
+
+    if optional:
+        return f"{py_type} | None"
+    return py_type
+
+
+def generate_stub(schema: dict) -> str:
+    """Generate a .pyi stub file content for a schema.
+
+    This function creates type stub content that can be saved to a .pyi file
+    to provide IDE autocomplete and type checking support for dynamically
+    decoded sample types.
+
+    Note:
+        Types created by ``schema_to_type()`` work correctly at runtime but
+        static type checkers cannot analyze dynamically generated classes.
+        Stub files bridge this gap by providing static type information.
+
+    Args:
+        schema: Schema record dict with 'name', 'version', 'fields', etc.
+
+    Returns:
+        String content for a .pyi stub file.
+
+    Example:
+        >>> schema = index.get_schema("atdata://local/sampleSchema/MySample@1.0.0")
+        >>> stub_content = generate_stub(schema.to_dict())
+        >>> # Save to a stubs directory configured in your IDE
+        >>> with open("stubs/my_sample.pyi", "w") as f:
+        ...     f.write(stub_content)
+    """
+    name = schema.get("name", "UnknownSample")
+    version = schema.get("version", "1.0.0")
+    fields = schema.get("fields", [])
+
+    lines = [
+        "# Auto-generated stub for dynamically decoded schema",
+        f"# Schema: {name}@{version}",
+        "#",
+        "# Save this file to a stubs directory and configure your IDE to include it.",
+        "# For VS Code/Pylance: add to python.analysis.extraPaths in settings.json",
+        "# For PyCharm: mark the stubs directory as Sources Root",
+        "",
+        "from typing import Any",
+        "from numpy.typing import NDArray",
+        "from atdata import PackableSample",
+        "",
+        f"class {name}(PackableSample):",
+        f'    """Dynamically decoded sample type from schema {name}@{version}."""',
+    ]
+
+    # Add field annotations
+    if fields:
+        for field_def in fields:
+            fname = field_def.get("name", "unknown")
+            ftype = _field_type_to_stub_str(
+                field_def.get("fieldType", {}),
+                field_def.get("optional", False),
+            )
+            lines.append(f"    {fname}: {ftype}")
+    else:
+        lines.append("    pass")
+
+    # Add __init__ signature
+    lines.append("")
+    init_params = ["self"]
+    for field_def in fields:
+        fname = field_def.get("name", "unknown")
+        ftype = _field_type_to_stub_str(
+            field_def.get("fieldType", {}),
+            field_def.get("optional", False),
+        )
+        if field_def.get("optional", False):
+            init_params.append(f"{fname}: {ftype} = None")
+        else:
+            init_params.append(f"{fname}: {ftype}")
+
+    lines.append(f"    def __init__({', '.join(init_params)}) -> None: ...")
+    lines.append("")
+
+    return "\n".join(lines)
+
+
+def generate_module(schema: dict) -> str:
+    """Generate an importable Python module for a schema.
+
+    This function creates a Python module that defines a PackableSample subclass
+    matching the schema. Unlike stub files, this module can be imported at runtime,
+    allowing ``decode_schema`` to return properly typed classes.
+
+    The generated class inherits from PackableSample and uses @dataclass decorator
+    for proper initialization. This provides both runtime functionality and static
+    type checking support.
+
+    Args:
+        schema: Schema record dict with 'name', 'version', 'fields', etc.
+
+    Returns:
+        String content for a .py module file.
+
+    Example:
+        >>> schema = index.get_schema("atdata://local/sampleSchema/MySample@1.0.0")
+        >>> module_content = generate_module(schema.to_dict())
+        >>> # The module can be imported after being saved
+    """
+    name = schema.get("name", "UnknownSample")
+    version = schema.get("version", "1.0.0")
+    fields = schema.get("fields", [])
+
+    lines = [
+        '"""Auto-generated module for dynamically decoded schema.',
+        "",
+        f"Schema: {name}@{version}",
+        "",
+        "This module is auto-generated by atdata to provide IDE autocomplete",
+        "and type checking support for dynamically decoded schema types.",
+        '"""',
+        "",
+        "from dataclasses import dataclass",
+        "from typing import Any",
+        "from numpy.typing import NDArray",
+        "from atdata import PackableSample",
+        "",
+        "",
+        "@dataclass",
+        f"class {name}(PackableSample):",
+        f'    """Dynamically decoded sample type from schema {name}@{version}."""',
+        "",
+    ]
+
+    # Add field annotations
+    if fields:
+        for field_def in fields:
+            fname = field_def.get("name", "unknown")
+            ftype = _field_type_to_stub_str(
+                field_def.get("fieldType", {}),
+                field_def.get("optional", False),
+            )
+            is_optional = field_def.get("optional", False)
+            if is_optional:
+                lines.append(f"    {fname}: {ftype} = None")
+            else:
+                lines.append(f"    {fname}: {ftype}")
+    else:
+        lines.append("    pass")
+
+    lines.append("")
+    lines.append("")
+    lines.append(f"__all__ = [{name!r}]")
+    lines.append("")
+
+    return "\n".join(lines)
+
+
 def clear_type_cache() -> None:
     """Clear the cached generated types.
 
@@ -238,6 +427,8 @@ def get_cached_types() -> dict[str, Type[PackableSample]]:
 
 __all__ = [
     "schema_to_type",
+    "generate_stub",
+    "generate_module",
     "clear_type_cache",
     "get_cached_types",
 ]
