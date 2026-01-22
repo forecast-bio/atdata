@@ -580,9 +580,9 @@ class TestSchemaEdgeCases:
 
         for name in names:
             entry = LocalDatasetEntry(
-                _name=name,
-                _schema_ref=schema_ref,
-                _data_urls=["s3://bucket/data.tar"],
+                name=name,
+                schema_ref=schema_ref,
+                data_urls=["s3://bucket/data.tar"],
             )
             entry.write_to(clean_redis)
 

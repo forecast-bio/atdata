@@ -130,7 +130,7 @@ test_cases = [
 )
 def test_create_sample(
             SampleType: Type[atdata.PackableSample],
-            sample_data: atds.MsgpackRawSample,
+            sample_data: atds.WDSRawSample,
         ):
     """Test our ability to create samples from semi-structured data"""
 
@@ -155,7 +155,7 @@ def test_create_sample(
 )
 def test_wds(
             SampleType: Type[atdata.PackableSample],
-            sample_data: atds.MsgpackRawSample,
+            sample_data: atds.WDSRawSample,
             sample_wds_stem: str,
             tmp_path
         ):
@@ -338,7 +338,7 @@ def test_wds(
 )
 def test_parquet_export(
             SampleType: Type[atdata.PackableSample],
-            sample_data: atds.MsgpackRawSample,
+            sample_data: atds.WDSRawSample,
             sample_wds_stem: str,
             test_parquet: bool,
             tmp_path
@@ -610,7 +610,7 @@ def test_from_bytes_missing_field():
 
 
 def test_wrap_missing_msgpack_key(tmp_path):
-    """Test wrap asserts on sample missing msgpack key."""
+    """Test wrap raises ValueError on sample missing msgpack key."""
     @atdata.packable
     class WrapTestSample:
         value: int
@@ -623,12 +623,12 @@ def test_wrap_missing_msgpack_key(tmp_path):
     dataset = atdata.Dataset[WrapTestSample](wds_filename)
 
     # Directly call wrap with missing key
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError, match="missing 'msgpack' key"):
         dataset.wrap({"__key__": "test"})  # Missing 'msgpack' key
 
 
 def test_wrap_wrong_msgpack_type(tmp_path):
-    """Test wrap asserts when msgpack value is not bytes."""
+    """Test wrap raises ValueError when msgpack value is not bytes."""
     @atdata.packable
     class WrapTypeSample:
         value: int
@@ -641,8 +641,26 @@ def test_wrap_wrong_msgpack_type(tmp_path):
     dataset = atdata.Dataset[WrapTypeSample](wds_filename)
 
     # Directly call wrap with wrong type
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError, match="to be bytes"):
         dataset.wrap({"__key__": "test", "msgpack": "not bytes"})
+
+
+def test_wrap_corrupted_msgpack(tmp_path):
+    """Test wrap raises on corrupted msgpack bytes."""
+    @atdata.packable
+    class CorruptedSample:
+        value: int
+
+    wds_filename = (tmp_path / "corrupted_test.tar").as_posix()
+    with wds.writer.TarWriter(wds_filename) as sink:
+        sample = CorruptedSample(value=42)
+        sink.write(sample.as_wds)
+
+    dataset = atdata.Dataset[CorruptedSample](wds_filename)
+
+    # Corrupted msgpack bytes should raise during deserialization
+    with pytest.raises(Exception):  # ormsgpack raises on corrupted data
+        dataset.wrap({"__key__": "test", "msgpack": b"\xff\xfe\x00\x01invalid"})
 
 
 def test_dataset_nonexistent_file():

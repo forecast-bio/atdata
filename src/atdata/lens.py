@@ -60,6 +60,8 @@ from typing import (
 if TYPE_CHECKING:
     from .dataset import PackableSample
 
+from ._protocols import Packable
+
 
 ##
 # Typing helpers
@@ -67,8 +69,8 @@ if TYPE_CHECKING:
 DatasetType: TypeAlias = Type['PackableSample']
 LensSignature: TypeAlias = Tuple[DatasetType, DatasetType]
 
-S = TypeVar( 'S', bound = 'PackableSample' )
-V = TypeVar( 'V', bound = 'PackableSample' )
+S = TypeVar( 'S', bound = Packable )
+V = TypeVar( 'V', bound = Packable )
 type LensGetter[S, V] = Callable[[S], V]
 type LensPutter[S, V] = Callable[[V, S], S]
 
@@ -113,8 +115,7 @@ class Lens( Generic[S, V] ):
                 trivial putter is used that ignores updates to the view.
 
         Raises:
-            AssertionError: If the getter function doesn't have exactly one
-                parameter.
+            ValueError: If the getter function doesn't have exactly one parameter.
         """
         ##
 
@@ -122,14 +123,17 @@ class Lens( Generic[S, V] ):
 
         sig = inspect.signature( get )
         input_types = list( sig.parameters.values() )
-        assert len( input_types ) == 1, \
-            'Wrong number of input args for lens: should only have one'
+        if len(input_types) != 1:
+            raise ValueError(
+                f"Lens getter must have exactly one parameter, got {len(input_types)}: "
+                f"{[p.name for p in input_types]}"
+            )
 
         # Update function details for this object as returned by annotation
         functools.update_wrapper( self, get )
 
-        self.source_type: Type[PackableSample] = input_types[0].annotation
-        self.view_type: Type[PackableSample] = sig.return_annotation
+        self.source_type: Type[Packable] = input_types[0].annotation
+        self.view_type: Type[Packable] = sig.return_annotation
 
         # Store the getter
         self._getter = get
@@ -188,17 +192,8 @@ class Lens( Generic[S, V] ):
         """
         return self( s )
 
-    # Convenience to enable calling the lens as its getter
-
     def __call__( self, s: S ) -> V:
-        """Apply the lens transformation (same as ``get()``).
-
-        Args:
-            s: The source sample of type ``S``.
-
-        Returns:
-            A view of the source as type ``V``.
-        """
+        """Apply the lens transformation (same as ``get()``)."""
         return self._getter( s )
 
 

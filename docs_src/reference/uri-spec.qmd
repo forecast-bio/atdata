@@ -1,0 +1,107 @@
+---
+title: "URI Specification"
+description: "The atdata:// URI scheme for addressing resources"
+---
+
+The `atdata://` URI scheme provides a unified way to address atdata resources across local development and the ATProto federation.
+
+## Overview
+
+The atdata URI scheme:
+
+- Follows [RFC 3986](https://datatracker.ietf.org/doc/html/rfc3986) syntax
+- Provides consistent addressing for local and atmosphere resources
+- Enables seamless promotion from development to production
+
+## URI Format
+
+```
+atdata://{authority}/{resource_type}/{name}@{version}
+```
+
+### Authority
+
+The authority identifies where the resource is stored:
+
+| Authority | Description | Example |
+|-----------|-------------|---------|
+| `local` | Local Redis/S3 storage | `atdata://local/...` |
+| `{handle}` | ATProto handle | `atdata://alice.bsky.social/...` |
+| `{did}` | ATProto DID | `atdata://did:plc:abc123/...` |
+
+### Resource Types
+
+| Resource Type | Description |
+|---------------|-------------|
+| `sampleSchema` | PackableSample type definitions |
+| `dataset` | Dataset entries (future) |
+| `lens` | Lens transformations (future) |
+
+### Version Specifiers
+
+Versions follow semantic versioning and are specified with `@`:
+
+| Specifier | Description | Example |
+|-----------|-------------|---------|
+| `@{major}.{minor}.{patch}` | Exact version | `@1.0.0`, `@2.1.3` |
+| (none) | Latest version | Resolves to highest semver |
+
+## Examples
+
+### Local Development
+
+```{python}
+#| eval: false
+from atdata.local import Index
+
+index = Index()
+
+# Publish a schema (returns atdata:// URI)
+ref = index.publish_schema(MySample, version="1.0.0")
+# => "atdata://local/sampleSchema/MySample@1.0.0"
+
+# Auto-increment version
+ref = index.publish_schema(MySample)
+# => "atdata://local/sampleSchema/MySample@1.0.1"
+
+# Retrieve by URI
+schema = index.get_schema("atdata://local/sampleSchema/MySample@1.0.0")
+```
+
+### Atmosphere (ATProto Federation)
+
+```{python}
+#| eval: false
+from atdata.atmosphere import Client
+
+client = Client()
+
+# Publish returns at:// URI that maps to atdata://
+ref = client.publish_schema(MySample)
+# => "at://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz"
+
+# Can also be addressed as:
+# => "atdata://did:plc:abc123/sampleSchema/MySample@1.0.0"
+# => "atdata://alice.bsky.social/sampleSchema/MySample@1.0.0"
+```
+
+## Relationship to AT Protocol URIs
+
+The `atdata://` scheme is inspired by and maps to ATProto's `at://` scheme:
+
+| atdata:// | at:// |
+|-----------|-------|
+| `atdata://{did}/sampleSchema/{name}@{version}` | `at://{did}/ac.foundation.dataset.sampleSchema/{rkey}` |
+| `atdata://local/...` | (local only, no at:// equivalent) |
+
+When publishing to the atmosphere, atdata URIs are automatically resolved to their corresponding `at://` URIs for federation compatibility.
+
+## Legacy Format
+
+For backwards compatibility, the local index also accepts the legacy format:
+
+```
+local://schemas/{module.Class}@{version}
+```
+
+This format is deprecated and will be removed in a future version. Use `atdata://local/sampleSchema/{name}@{version}` instead.

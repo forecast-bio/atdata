@@ -58,7 +58,7 @@ The promotion workflow moves datasets from local storage to the atmosphere:
     -----                           ----------
     Redis Index                     ATProto PDS
     S3 Storage            -->       (same S3 or new location)
-    local://schemas/...             at://did:plc:.../schema/...
+    atdata://local/sampleSchema/...             at://did:plc:.../schema/...
 
 Steps:
 1. Retrieve dataset entry from LocalIndex
@@ -86,7 +86,7 @@ def demo_mock_promotion():
     # Create a mock local entry
     local_entry = LocalDatasetEntry(
         _name="experiment-2024-001",
-        _schema_ref="local://schemas/__main__.ExperimentSample@1.0.0",
+        _schema_ref="atdata://local/sampleSchema/__main__.ExperimentSample@1.0.0",
         _data_urls=[
             "s3://research-bucket/experiments/exp-2024-001/shard-000000.tar",
             "s3://research-bucket/experiments/exp-2024-001/shard-000001.tar",
@@ -259,7 +259,7 @@ def demo_live_promotion(handle: str, password: str):
     # Create a demo local entry (simulating a real local dataset)
     local_entry = LocalDatasetEntry(
         _name="demo-promoted-dataset",
-        _schema_ref="local://schemas/__main__.ExperimentSample@1.0.0",
+        _schema_ref="atdata://local/sampleSchema/__main__.ExperimentSample@1.0.0",
         _data_urls=["s3://example-bucket/demo-data-{000000..000004}.tar"],
         _metadata={"promoted_from": "local_demo", "demo": True},
     )

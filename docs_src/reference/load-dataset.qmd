@@ -72,7 +72,7 @@ ds = load_dataset("./my-dataset/", MySample)
 
 ```{python}
 #| eval: false
-# S3
+# S3 (public buckets)
 ds = load_dataset("s3://bucket/data-{000..099}.tar", MySample, split="train")
 
 # HTTP/HTTPS
@@ -81,6 +81,10 @@ ds = load_dataset("https://example.com/data.tar", MySample, split="train")
 # Google Cloud Storage
 ds = load_dataset("gs://bucket/data.tar", MySample, split="train")
 ```
+
+::: {.callout-note}
+For private S3 buckets or S3-compatible storage with authentication, use `atdata.S3Source` with `Dataset` directly. See [Datasets](datasets.qmd) for details.
+:::
 
 ### Index Lookup
 

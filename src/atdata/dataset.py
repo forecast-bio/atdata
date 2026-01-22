@@ -41,6 +41,9 @@ from dataclasses import (
 )
 from abc import ABC
 
+from ._sources import URLSource, S3Source
+from ._protocols import DataSource
+
 from tqdm import tqdm
 import numpy as np
 import pandas as pd
@@ -59,6 +62,7 @@ from typing import (
     Type,
     TypeVar,
     TypeAlias,
+    dataclass_transform,
 )
 from numpy.typing import NDArray
 
@@ -73,6 +77,7 @@ from .lens import Lens, LensNetwork
 
 Pathlike = str | Path
 
+# WebDataset sample/batch dictionaries (contain __key__, msgpack, etc.)
 WDSRawSample: TypeAlias = Dict[str, Any]
 WDSRawBatch: TypeAlias = Dict[str, Any]
 
@@ -84,8 +89,6 @@ SampleExportMap: TypeAlias = Callable[['PackableSample'], SampleExportRow]
 # Main base classes
 
 DT = TypeVar( 'DT' )
-
-MsgpackRawSample: TypeAlias = Dict[str, Any]
 
 
 def _make_packable( x ):
@@ -128,17 +131,7 @@ class PackableSample( ABC ):
     """
 
     def _ensure_good( self ):
-        """Auto-convert annotated NDArray fields from bytes to numpy arrays.
-
-        This method scans all dataclass fields and for any field annotated as
-        ``NDArray`` or ``NDArray | None``, automatically converts bytes values
-        to numpy arrays using the helper deserialization function. This enables
-        transparent handling of array serialization in msgpack data.
-
-        Note:
-            This is called during ``__post_init__`` to ensure proper type
-            conversion after deserialization.
-        """
+        """Convert bytes to NDArray for fields annotated as NDArray or NDArray | None."""
 
         # Auto-convert known types when annotated
         # for var_name, var_type in vars( self.__class__ )['__annotations__'].items():
@@ -171,7 +164,7 @@ class PackableSample( ABC ):
     ##
 
     @classmethod
-    def from_data( cls, data: MsgpackRawSample ) -> Self:
+    def from_data( cls, data: WDSRawSample ) -> Self:
         """Create a sample instance from unpacked msgpack data.
 
         Args:
@@ -326,6 +319,42 @@ class SampleBatch( Generic[DT] ):
 ST = TypeVar( 'ST', bound = PackableSample )
 RT = TypeVar( 'RT', bound = PackableSample )
 
+
+class _ShardListStage(wds.PipelineStage):
+    """Pipeline stage that yields {url: shard_id} dicts from a DataSource.
+
+    This is analogous to SimpleShardList but works with any DataSource.
+    Used as the first stage before split_by_worker.
+    """
+
+    def __init__(self, source: DataSource):
+        self.source = source
+
+    def run(self):
+        """Yield {url: shard_id} dicts for each shard."""
+        for shard_id in self.source.shard_list:
+            yield {"url": shard_id}
+
+
+class _StreamOpenerStage(wds.PipelineStage):
+    """Pipeline stage that opens streams from a DataSource.
+
+    Takes {url: shard_id} dicts and adds a stream using source.open_shard().
+    This replaces WebDataset's url_opener stage.
+    """
+
+    def __init__(self, source: DataSource):
+        self.source = source
+
+    def run(self, src):
+        """Open streams for each shard dict."""
+        for sample in src:
+            shard_id = sample["url"]
+            stream = self.source.open_shard(shard_id)
+            sample["stream"] = stream
+            yield sample
+
+
 class Dataset( Generic[ST] ):
     """A typed dataset built on WebDataset with lens transformations.
 
@@ -375,19 +404,43 @@ class Dataset( Generic[ST] ):
         """
         return SampleBatch[self.sample_type]
 
-    def __init__( self, url: str,
+    def __init__( self,
+                 source: DataSource | str | None = None,
                  metadata_url: str | None = None,
+                 *,
+                 url: str | None = None,
              ) -> None:
-        """Create a dataset from a WebDataset URL.
+        """Create a dataset from a DataSource or URL.
 
         Args:
-            url: WebDataset brace-notation URL pointing to tar files, e.g.,
-                ``"path/to/file-{000000..000009}.tar"`` for multiple shards or
-                ``"path/to/file-000000.tar"`` for a single shard.
+            source: Either a DataSource implementation or a WebDataset-compatible
+                URL string. If a string is provided, it's wrapped in URLSource
+                for backward compatibility.
+
+                Examples:
+                    - String URL: ``"path/to/file-{000000..000009}.tar"``
+                    - URLSource: ``URLSource("https://example.com/data.tar")``
+                    - S3Source: ``S3Source(bucket="my-bucket", keys=["data.tar"])``
+
+            metadata_url: Optional URL to msgpack-encoded metadata for this dataset.
+            url: Deprecated. Use ``source`` instead. Kept for backward compatibility.
         """
         super().__init__()
-        self.url = url
-        """WebDataset brace-notation URL pointing to tar files."""
+
+        # Handle backward compatibility: url= keyword argument
+        if source is None and url is not None:
+            source = url
+        elif source is None:
+            raise TypeError("Dataset() missing required argument: 'source' or 'url'")
+
+        # Normalize source: strings become URLSource for backward compatibility
+        if isinstance(source, str):
+            self._source: DataSource = URLSource(source)
+            self.url = source
+        else:
+            self._source = source
+            # For compatibility, expose URL if source has shard_list
+            self.url = source.shard_list[0] if source.shard_list else ""
 
         self._metadata: dict[str, Any] | None = None
         self.metadata_url: str | None = metadata_url
@@ -395,6 +448,11 @@ class Dataset( Generic[ST] ):
 
         self._output_lens: Lens | None = None
         self._sample_type_cache: Type | None = None
+
+    @property
+    def source(self) -> DataSource:
+        """The underlying data source for this dataset."""
+        return self._source
 
     def as_type( self, other: Type[RT] ) -> 'Dataset[RT]':
         """View this dataset through a different sample type using a registered lens.
@@ -412,7 +470,7 @@ class Dataset( Generic[ST] ):
             ValueError: If no registered lens exists between the current
                 sample type and the target type.
         """
-        ret = Dataset[other]( self.url )
+        ret = Dataset[other]( self._source )
         # Get the singleton lens registry
         lenses = LensNetwork()
         ret._output_lens = lenses.transform( self.sample_type, ret.sample_type )
@@ -421,16 +479,12 @@ class Dataset( Generic[ST] ):
     @property
     def shard_list( self ) -> list[str]:
         """List of individual dataset shards
-        
+
         Returns:
             A full (non-lazy) list of the individual ``tar`` files within the
             source WebDataset.
         """
-        pipe = wds.pipeline.DataPipeline(
-            wds.shardlists.SimpleShardList( self.url ),
-            wds.filters.map( lambda x: x['url'] )
-        )
-        return list( pipe )
+        return self._source.shard_list
 
     @property
     def metadata( self ) -> dict[str, Any] | None:
@@ -454,33 +508,36 @@ class Dataset( Generic[ST] ):
         return self._metadata
     
     def ordered( self,
-                batch_size: int | None = 1,
+                batch_size: int | None = None,
             ) -> Iterable[ST]:
         """Iterate over the dataset in order
-        
+
         Args:
             batch_size (:obj:`int`, optional): The size of iterated batches.
-                Default: 1. If ``None``, iterates over one sample at a time
-                with no batch dimension.
-        
+                Default: None (unbatched). If ``None``, iterates over one
+                sample at a time with no batch dimension.
+
         Returns:
             :obj:`webdataset.DataPipeline` A data pipeline that iterates over
             the dataset in its original sample order
-        
-        """
 
+        """
         if batch_size is None:
             return wds.pipeline.DataPipeline(
-                wds.shardlists.SimpleShardList( self.url ),
+                _ShardListStage(self._source),
                 wds.shardlists.split_by_worker,
-                wds.tariterators.tarfile_to_samples(),
+                _StreamOpenerStage(self._source),
+                wds.tariterators.tar_file_expander,
+                wds.tariterators.group_by_keys,
                 wds.filters.map( self.wrap ),
             )
 
         return wds.pipeline.DataPipeline(
-            wds.shardlists.SimpleShardList( self.url ),
+            _ShardListStage(self._source),
             wds.shardlists.split_by_worker,
-            wds.tariterators.tarfile_to_samples(),
+            _StreamOpenerStage(self._source),
+            wds.tariterators.tar_file_expander,
+            wds.tariterators.group_by_keys,
             wds.filters.batched( batch_size ),
             wds.filters.map( self.wrap_batch ),
         )
@@ -488,7 +545,7 @@ class Dataset( Generic[ST] ):
     def shuffled( self,
                 buffer_shards: int = 100,
                 buffer_samples: int = 10_000,
-                batch_size: int | None = 1,
+                batch_size: int | None = None,
             ) -> Iterable[ST]:
         """Iterate over the dataset in random order.
 
@@ -499,8 +556,9 @@ class Dataset( Generic[ST] ):
             buffer_samples: Number of samples to buffer for shuffling within
                 shards. Larger values increase randomness but use more memory.
                 Default: 10,000.
-            batch_size: The size of iterated batches. Default: 1. If ``None``,
-                iterates over one sample at a time with no batch dimension.
+            batch_size: The size of iterated batches. Default: None (unbatched).
+                If ``None``, iterates over one sample at a time with no batch
+                dimension.
 
         Returns:
             A WebDataset data pipeline that iterates over the dataset in
@@ -510,19 +568,23 @@ class Dataset( Generic[ST] ):
         """
         if batch_size is None:
             return wds.pipeline.DataPipeline(
-                wds.shardlists.SimpleShardList( self.url ),
+                _ShardListStage(self._source),
                 wds.filters.shuffle( buffer_shards ),
                 wds.shardlists.split_by_worker,
-                wds.tariterators.tarfile_to_samples(),
+                _StreamOpenerStage(self._source),
+                wds.tariterators.tar_file_expander,
+                wds.tariterators.group_by_keys,
                 wds.filters.shuffle( buffer_samples ),
                 wds.filters.map( self.wrap ),
             )
 
         return wds.pipeline.DataPipeline(
-            wds.shardlists.SimpleShardList( self.url ),
+            _ShardListStage(self._source),
             wds.filters.shuffle( buffer_shards ),
             wds.shardlists.split_by_worker,
-            wds.tariterators.tarfile_to_samples(),
+            _StreamOpenerStage(self._source),
+            wds.tariterators.tar_file_expander,
+            wds.tariterators.group_by_keys,
             wds.filters.shuffle( buffer_samples ),
             wds.filters.batched( batch_size ),
             wds.filters.map( self.wrap_batch ),
@@ -585,7 +647,7 @@ class Dataset( Generic[ST] ):
                 df = pd.DataFrame( cur_buffer )
                 df.to_parquet( cur_path, **kwargs )
 
-    def wrap( self, sample: MsgpackRawSample ) -> ST:
+    def wrap( self, sample: WDSRawSample ) -> ST:
         """Wrap a raw msgpack sample into the appropriate dataset-specific type.
 
         Args:
@@ -596,9 +658,11 @@ class Dataset( Generic[ST] ):
             A deserialized sample of type ``ST``, optionally transformed through
             a lens if ``as_type()`` was called.
         """
-        assert 'msgpack' in sample
-        assert isinstance(sample['msgpack'], bytes)
-        
+        if 'msgpack' not in sample:
+            raise ValueError(f"Sample missing 'msgpack' key, got keys: {list(sample.keys())}")
+        if not isinstance(sample['msgpack'], bytes):
+            raise ValueError(f"Expected sample['msgpack'] to be bytes, got {type(sample['msgpack']).__name__}")
+
         if self._output_lens is None:
             return self.sample_type.from_bytes( sample['msgpack'] )
 
@@ -621,7 +685,8 @@ class Dataset( Generic[ST] ):
             aggregates them into a batch.
         """
 
-        assert 'msgpack' in batch
+        if 'msgpack' not in batch:
+            raise ValueError(f"Batch missing 'msgpack' key, got keys: {list(batch.keys())}")
 
         if self._output_lens is None:
             batch_unpacked = [ self.sample_type.from_bytes( bs )
@@ -635,7 +700,11 @@ class Dataset( Generic[ST] ):
         return SampleBatch[self.sample_type]( batch_view )
 
 
-def packable( cls ):
+_T = TypeVar('_T')
+
+
+@dataclass_transform()
+def packable( cls: type[_T] ) -> type[_T]:
     """Decorator to convert a regular class into a ``PackableSample``.
 
     This decorator transforms a class into a dataclass that inherits from
@@ -676,7 +745,22 @@ def packable( cls ):
     
     # Restore original class identity for better repr/debugging
     as_packable.__name__ = class_name
+    as_packable.__qualname__ = class_name
+    as_packable.__module__ = cls.__module__
     as_packable.__annotations__ = class_annotations
+    if cls.__doc__:
+        as_packable.__doc__ = cls.__doc__
+
+    # Fix qualnames of dataclass-generated methods so they don't show
+    # 'packable.<locals>.as_packable' in help() and IDE hints
+    old_qualname_prefix = 'packable.<locals>.as_packable'
+    for attr_name in ('__init__', '__repr__', '__eq__', '__post_init__'):
+        attr = getattr(as_packable, attr_name, None)
+        if attr is not None and hasattr(attr, '__qualname__'):
+            if attr.__qualname__.startswith(old_qualname_prefix):
+                attr.__qualname__ = attr.__qualname__.replace(
+                    old_qualname_prefix, class_name, 1
+                )
 
     ##
 

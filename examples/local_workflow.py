@@ -65,7 +65,7 @@ def demo_local_dataset_entry():
     # Create an entry
     entry = LocalDatasetEntry(
         _name="my-dataset",
-        _schema_ref="local://schemas/examples.TrainingSample@1.0.0",
+        _schema_ref="atdata://local/sampleSchema/TrainingSample@1.0.0",
         _data_urls=["s3://bucket/data-000000.tar", "s3://bucket/data-000001.tar"],
         _metadata={"source": "example", "samples": 10000},
     )
@@ -79,7 +79,7 @@ def demo_local_dataset_entry():
     # Demonstrate CID determinism
     entry2 = LocalDatasetEntry(
         _name="different-name",  # Name doesn't affect CID
-        _schema_ref="local://schemas/examples.TrainingSample@1.0.0",
+        _schema_ref="atdata://local/sampleSchema/TrainingSample@1.0.0",
         _data_urls=["s3://bucket/data-000000.tar", "s3://bucket/data-000001.tar"],
     )
 

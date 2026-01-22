@@ -27,10 +27,10 @@ class TestLocalToAtmosphereRoundTrip:
         """Promote should preserve data URLs when no data_store provided."""
         # Create a local dataset entry
         local_entry = LocalDatasetEntry(
-            _name="test-dataset",
-            _schema_ref="local://schemas/test_integration.IntegrationTestSample@1.0.0",
-            _data_urls=["s3://bucket/data-000000.tar", "s3://bucket/data-000001.tar"],
-            _metadata={"source": "test"},
+            name="test-dataset",
+            schema_ref="local://schemas/test_integration.IntegrationTestSample@1.0.0",
+            data_urls=["s3://bucket/data-000000.tar", "s3://bucket/data-000001.tar"],
+            metadata={"source": "test"},
         )
 
         # Mock local index with schema
@@ -75,9 +75,9 @@ class TestLocalToAtmosphereRoundTrip:
     def test_promote_transfers_schema_metadata(self, tmp_path):
         """Promote should use schema version from local index."""
         local_entry = LocalDatasetEntry(
-            _name="versioned-dataset",
-            _schema_ref="local://schemas/MySample@2.1.0",
-            _data_urls=["s3://bucket/data.tar"],
+            name="versioned-dataset",
+            schema_ref="local://schemas/MySample@2.1.0",
+            data_urls=["s3://bucket/data.tar"],
         )
 
         mock_local_index = Mock()
@@ -201,13 +201,14 @@ class TestLoadDatasetWithIndex:
 
         # Create local index entry
         local_entry = LocalDatasetEntry(
-            _name="my-dataset",
-            _schema_ref="local://schemas/IntegrationTestSample@1.0.0",
-            _data_urls=[str(wds_file)],
+            name="my-dataset",
+            schema_ref="local://schemas/IntegrationTestSample@1.0.0",
+            data_urls=[str(wds_file)],
         )
 
         # Mock index
         mock_index = Mock()
+        mock_index.data_store = None  # No data store, so no URL transformation
         mock_index.get_dataset.return_value = local_entry
         mock_index.decode_schema.return_value = IntegrationTestSample
 
@@ -235,12 +236,13 @@ class TestLoadDatasetWithIndex:
             sink.write(sample.as_wds)
 
         local_entry = LocalDatasetEntry(
-            _name="typed-dataset",
-            _schema_ref="local://schemas/IntegrationTestSample@1.0.0",
-            _data_urls=[str(wds_file)],
+            name="typed-dataset",
+            schema_ref="local://schemas/IntegrationTestSample@1.0.0",
+            data_urls=[str(wds_file)],
         )
 
         mock_index = Mock()
+        mock_index.data_store = None  # No data store, so no URL transformation
         mock_index.get_dataset.return_value = local_entry
 
         # Load with explicit type (should not call decode_schema)
@@ -265,10 +267,10 @@ class TestIndexEntryRoundTrip:
     def test_local_entry_redis_round_trip(self, clean_redis):
         """LocalDatasetEntry should round-trip through Redis correctly."""
         original = LocalDatasetEntry(
-            _name="roundtrip-test",
-            _schema_ref="local://schemas/Test@1.0.0",
-            _data_urls=["s3://bucket/shard-000.tar", "s3://bucket/shard-001.tar"],
-            _metadata={"key": "value", "count": 42},
+            name="roundtrip-test",
+            schema_ref="local://schemas/Test@1.0.0",
+            data_urls=["s3://bucket/shard-000.tar", "s3://bucket/shard-001.tar"],
+            metadata={"key": "value", "count": 42},
         )
 
         # Write to Redis
@@ -287,15 +289,15 @@ class TestIndexEntryRoundTrip:
     def test_local_entry_cid_deterministic(self):
         """Same content should produce same CID."""
         entry1 = LocalDatasetEntry(
-            _name="deterministic",
-            _schema_ref="local://schemas/Test@1.0.0",
-            _data_urls=["s3://bucket/data.tar"],
+            name="deterministic",
+            schema_ref="local://schemas/Test@1.0.0",
+            data_urls=["s3://bucket/data.tar"],
         )
 
         entry2 = LocalDatasetEntry(
-            _name="deterministic",
-            _schema_ref="local://schemas/Test@1.0.0",
-            _data_urls=["s3://bucket/data.tar"],
+            name="deterministic",
+            schema_ref="local://schemas/Test@1.0.0",
+            data_urls=["s3://bucket/data.tar"],
         )
 
         # CIDs should match (based on schema_ref and data_urls)
@@ -304,15 +306,15 @@ class TestIndexEntryRoundTrip:
     def test_local_entry_cid_differs_with_content(self):
         """Different content should produce different CID."""
         entry1 = LocalDatasetEntry(
-            _name="same-name",
-            _schema_ref="local://schemas/Test@1.0.0",
-            _data_urls=["s3://bucket/data-v1.tar"],
+            name="same-name",
+            schema_ref="local://schemas/Test@1.0.0",
+            data_urls=["s3://bucket/data-v1.tar"],
         )
 
         entry2 = LocalDatasetEntry(
-            _name="same-name",
-            _schema_ref="local://schemas/Test@1.0.0",
-            _data_urls=["s3://bucket/data-v2.tar"],  # Different URL
+            name="same-name",
+            schema_ref="local://schemas/Test@1.0.0",
+            data_urls=["s3://bucket/data-v2.tar"],  # Different URL
         )
 
         # CIDs should differ

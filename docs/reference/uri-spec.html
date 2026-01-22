@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Bidirectional transformations between sample types">
+<meta name="description" content="The atdata:// URI scheme for addressing resources">
 
-<title>Lenses – atdata</title>
+<title>URI Specification – atdata</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -384,7 +384,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/packable-samples.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/lenses.html">Lenses</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/packable-samples.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/uri-spec.html">URI Specification</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -460,7 +460,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../reference/lenses.html" class="sidebar-item-text sidebar-link active">
+  <a href="../reference/lenses.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Lenses</span></a>
   </div>
 </li>
@@ -496,7 +496,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../reference/uri-spec.html" class="sidebar-item-text sidebar-link">
+  <a href="../reference/uri-spec.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">URI Specification</span></a>
   </div>
 </li>
@@ -530,30 +530,34 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
-  <li><a href="#creating-a-lens" id="toc-creating-a-lens" class="nav-link" data-scroll-target="#creating-a-lens">Creating a Lens</a></li>
-  <li><a href="#adding-a-putter" id="toc-adding-a-putter" class="nav-link" data-scroll-target="#adding-a-putter">Adding a Putter</a></li>
-  <li><a href="#using-lenses-with-datasets" id="toc-using-lenses-with-datasets" class="nav-link" data-scroll-target="#using-lenses-with-datasets">Using Lenses with Datasets</a></li>
-  <li><a href="#direct-lens-usage" id="toc-direct-lens-usage" class="nav-link" data-scroll-target="#direct-lens-usage">Direct Lens Usage</a></li>
-  <li><a href="#lens-laws" id="toc-lens-laws" class="nav-link" data-scroll-target="#lens-laws">Lens Laws</a></li>
-  <li><a href="#trivial-putter" id="toc-trivial-putter" class="nav-link" data-scroll-target="#trivial-putter">Trivial Putter</a></li>
-  <li><a href="#lensnetwork-registry" id="toc-lensnetwork-registry" class="nav-link" data-scroll-target="#lensnetwork-registry">LensNetwork Registry</a></li>
-  <li><a href="#example-feature-extraction" id="toc-example-feature-extraction" class="nav-link" data-scroll-target="#example-feature-extraction">Example: Feature Extraction</a></li>
-  <li><a href="#related" id="toc-related" class="nav-link" data-scroll-target="#related">Related</a></li>
+  <li><a href="#uri-format" id="toc-uri-format" class="nav-link" data-scroll-target="#uri-format">URI Format</a>
+  <ul class="collapse">
+  <li><a href="#authority" id="toc-authority" class="nav-link" data-scroll-target="#authority">Authority</a></li>
+  <li><a href="#resource-types" id="toc-resource-types" class="nav-link" data-scroll-target="#resource-types">Resource Types</a></li>
+  <li><a href="#version-specifiers" id="toc-version-specifiers" class="nav-link" data-scroll-target="#version-specifiers">Version Specifiers</a></li>
+  </ul></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a>
+  <ul class="collapse">
+  <li><a href="#local-development" id="toc-local-development" class="nav-link" data-scroll-target="#local-development">Local Development</a></li>
+  <li><a href="#atmosphere-atproto-federation" id="toc-atmosphere-atproto-federation" class="nav-link" data-scroll-target="#atmosphere-atproto-federation">Atmosphere (ATProto Federation)</a></li>
+  </ul></li>
+  <li><a href="#relationship-to-at-protocol-uris" id="toc-relationship-to-at-protocol-uris" class="nav-link" data-scroll-target="#relationship-to-at-protocol-uris">Relationship to AT Protocol URIs</a></li>
+  <li><a href="#legacy-format" id="toc-legacy-format" class="nav-link" data-scroll-target="#legacy-format">Legacy Format</a></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/your-org/atdata/edit/main/reference/lenses.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/your-org/atdata/edit/main/reference/uri-spec.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/packable-samples.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/lenses.html">Lenses</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/packable-samples.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/uri-spec.html">URI Specification</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">Lenses</h1>
+<h1 class="title">URI Specification</h1>
 </div>
 
 <div>
   <div class="description">
-    Bidirectional transformations between sample types
+    The atdata:// URI scheme for addressing resources
   </div>
 </div>
 
@@ -570,204 +574,170 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>Lenses provide bidirectional transformations between sample types, enabling datasets to be viewed through different schemas without duplicating data.</p>
+<p>The <code>atdata://</code> URI scheme provides a unified way to address atdata resources across local development and the ATProto federation.</p>
 <section id="overview" class="level2">
 <h2 class="anchored" data-anchor-id="overview">Overview</h2>
-<p>A lens consists of:</p>
+<p>The atdata URI scheme:</p>
 <ul>
-<li><strong>Getter</strong>: Transforms source type <code>S</code> to view type <code>V</code></li>
-<li><strong>Putter</strong>: Updates source based on a modified view (optional)</li>
+<li>Follows <a href="https://datatracker.ietf.org/doc/html/rfc3986">RFC 3986</a> syntax</li>
+<li>Provides consistent addressing for local and atmosphere resources</li>
+<li>Enables seamless promotion from development to production</li>
 </ul>
 </section>
-<section id="creating-a-lens" class="level2">
-<h2 class="anchored" data-anchor-id="creating-a-lens">Creating a Lens</h2>
-<p>Use the <code>@lens</code> decorator to define a getter:</p>
-<div id="bb40c899" class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> FullSample:</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    image: NDArray</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    label: <span class="bu">str</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    confidence: <span class="bu">float</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    metadata: <span class="bu">dict</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> SimpleSample:</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    label: <span class="bu">str</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    confidence: <span class="bu">float</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.lens</span></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> simplify(src: FullSample) <span class="op">-&gt;</span> SimpleSample:</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> SimpleSample(label<span class="op">=</span>src.label, confidence<span class="op">=</span>src.confidence)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>The decorator:</p>
-<ol type="1">
-<li>Creates a <code>Lens</code> object from the getter function</li>
-<li>Registers it in the global <code>LensNetwork</code> registry</li>
-<li>Extracts source/view types from annotations</li>
-</ol>
+<section id="uri-format" class="level2">
+<h2 class="anchored" data-anchor-id="uri-format">URI Format</h2>
+<pre><code>atdata://{authority}/{resource_type}/{name}@{version}</code></pre>
+<section id="authority" class="level3">
+<h3 class="anchored" data-anchor-id="authority">Authority</h3>
+<p>The authority identifies where the resource is stored:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Authority</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>local</code></td>
+<td>Local Redis/S3 storage</td>
+<td><code>atdata://local/...</code></td>
+</tr>
+<tr class="even">
+<td><code>{handle}</code></td>
+<td>ATProto handle</td>
+<td><code>atdata://alice.bsky.social/...</code></td>
+</tr>
+<tr class="odd">
+<td><code>{did}</code></td>
+<td>ATProto DID</td>
+<td><code>atdata://did:plc:abc123/...</code></td>
+</tr>
+</tbody>
+</table>
 </section>
-<section id="adding-a-putter" class="level2">
-<h2 class="anchored" data-anchor-id="adding-a-putter">Adding a Putter</h2>
-<p>To enable bidirectional updates, add a putter:</p>
-<div id="320457e1" class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="at">@simplify.putter</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> simplify_put(view: SimpleSample, source: FullSample) <span class="op">-&gt;</span> FullSample:</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> FullSample(</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        image<span class="op">=</span>source.image,</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>        label<span class="op">=</span>view.label,</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        confidence<span class="op">=</span>view.confidence,</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        metadata<span class="op">=</span>source.metadata,</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>The putter receives:</p>
-<ul>
-<li><code>view</code>: The modified view value</li>
-<li><code>source</code>: The original source value</li>
-</ul>
-<p>It returns an updated source that reflects changes from the view.</p>
+<section id="resource-types" class="level3">
+<h3 class="anchored" data-anchor-id="resource-types">Resource Types</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Resource Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>sampleSchema</code></td>
+<td>PackableSample type definitions</td>
+</tr>
+<tr class="even">
+<td><code>dataset</code></td>
+<td>Dataset entries (future)</td>
+</tr>
+<tr class="odd">
+<td><code>lens</code></td>
+<td>Lens transformations (future)</td>
+</tr>
+</tbody>
+</table>
 </section>
-<section id="using-lenses-with-datasets" class="level2">
-<h2 class="anchored" data-anchor-id="using-lenses-with-datasets">Using Lenses with Datasets</h2>
-<p>Lenses integrate with <code>Dataset.as_type()</code>:</p>
-<div id="08a2bea4" class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[FullSample](<span class="st">"data-{000000..000009}.tar"</span>)</span>
+<section id="version-specifiers" class="level3">
+<h3 class="anchored" data-anchor-id="version-specifiers">Version Specifiers</h3>
+<p>Versions follow semantic versioning and are specified with <code>@</code>:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Specifier</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>@{major}.{minor}.{patch}</code></td>
+<td>Exact version</td>
+<td><code>@1.0.0</code>, <code>@2.1.3</code></td>
+</tr>
+<tr class="even">
+<td>(none)</td>
+<td>Latest version</td>
+<td>Resolves to highest semver</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="examples" class="level2">
+<h2 class="anchored" data-anchor-id="examples">Examples</h2>
+<section id="local-development" class="level3">
+<h3 class="anchored" data-anchor-id="local-development">Local Development</h3>
+<div id="2cff2485" class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> Index</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> Index()</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Publish a schema (returns atdata:// URI)</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>ref <span class="op">=</span> index.publish_schema(MySample, version<span class="op">=</span><span class="st">"1.0.0"</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"># =&gt; "atdata://local/sampleSchema/MySample@1.0.0"</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Auto-increment version</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>ref <span class="op">=</span> index.publish_schema(MySample)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co"># =&gt; "atdata://local/sampleSchema/MySample@1.0.1"</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Retrieve by URI</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>schema <span class="op">=</span> index.get_schema(<span class="st">"atdata://local/sampleSchema/MySample@1.0.0"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="atmosphere-atproto-federation" class="level3">
+<h3 class="anchored" data-anchor-id="atmosphere-atproto-federation">Atmosphere (ATProto Federation)</h3>
+<div id="6a5dabc7" class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> Client</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># View through a different type</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>simple_ds <span class="op">=</span> dataset.as_type(SimpleSample)</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> simple_ds.ordered(batch_size<span class="op">=</span><span class="dv">32</span>):</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Only SimpleSample fields available</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    labels <span class="op">=</span> batch.label</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    scores <span class="op">=</span> batch.confidence</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> Client()</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Publish returns at:// URI that maps to atdata://</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>ref <span class="op">=</span> client.publish_schema(MySample)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co"># =&gt; "at://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz"</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Can also be addressed as:</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co"># =&gt; "atdata://did:plc:abc123/sampleSchema/MySample@1.0.0"</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co"># =&gt; "atdata://alice.bsky.social/sampleSchema/MySample@1.0.0"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="direct-lens-usage" class="level2">
-<h2 class="anchored" data-anchor-id="direct-lens-usage">Direct Lens Usage</h2>
-<p>Lenses can also be called directly:</p>
-<div id="1feebfa5" class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>full <span class="op">=</span> FullSample(</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    image<span class="op">=</span>np.zeros((<span class="dv">224</span>, <span class="dv">224</span>, <span class="dv">3</span>)),</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    label<span class="op">=</span><span class="st">"cat"</span>,</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    confidence<span class="op">=</span><span class="fl">0.95</span>,</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    metadata<span class="op">=</span>{<span class="st">"source"</span>: <span class="st">"training"</span>}</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Apply getter</span></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>simple <span class="op">=</span> simplify(full)</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Or: simple = simplify.get(full)</span></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Apply putter</span></span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>modified_simple <span class="op">=</span> SimpleSample(label<span class="op">=</span><span class="st">"dog"</span>, confidence<span class="op">=</span><span class="fl">0.87</span>)</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>updated_full <span class="op">=</span> simplify.put(modified_simple, full)</span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="co"># updated_full has label="dog", confidence=0.87, but retains</span></span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="co"># original image and metadata</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
 </section>
-<section id="lens-laws" class="level2">
-<h2 class="anchored" data-anchor-id="lens-laws">Lens Laws</h2>
-<p>Well-behaved lenses should satisfy these properties:</p>
-<div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true">GetPut</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false">PutGet</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false">PutPut</a></li></ul>
-<div class="tab-content">
-<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
-<p>If you get a view and immediately put it back, the source is unchanged:</p>
-<div id="9fd0ceae" class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>view <span class="op">=</span> lens.get(source)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> lens.put(view, source) <span class="op">==</span> source</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</div>
-<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
-<p>If you put a view, getting it back yields that view:</p>
-<div id="4180490e" class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>updated <span class="op">=</span> lens.put(view, source)</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> lens.get(updated) <span class="op">==</span> view</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</div>
-<div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
-<p>Putting twice is equivalent to putting once with the final value:</p>
-<div id="b91446f8" class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>result1 <span class="op">=</span> lens.put(v2, lens.put(v1, source))</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>result2 <span class="op">=</span> lens.put(v2, source)</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> result1 <span class="op">==</span> result2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</div>
-</div>
-</div>
+<section id="relationship-to-at-protocol-uris" class="level2">
+<h2 class="anchored" data-anchor-id="relationship-to-at-protocol-uris">Relationship to AT Protocol URIs</h2>
+<p>The <code>atdata://</code> scheme is inspired by and maps to ATProto’s <code>at://</code> scheme:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 61%">
+<col style="width: 38%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>atdata://</th>
+<th>at://</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>atdata://{did}/sampleSchema/{name}@{version}</code></td>
+<td><code>at://{did}/ac.foundation.dataset.sampleSchema/{rkey}</code></td>
+</tr>
+<tr class="even">
+<td><code>atdata://local/...</code></td>
+<td>(local only, no at:// equivalent)</td>
+</tr>
+</tbody>
+</table>
+<p>When publishing to the atmosphere, atdata URIs are automatically resolved to their corresponding <code>at://</code> URIs for federation compatibility.</p>
 </section>
-<section id="trivial-putter" class="level2">
-<h2 class="anchored" data-anchor-id="trivial-putter">Trivial Putter</h2>
-<p>If no putter is defined, a trivial putter is used that ignores view updates:</p>
-<div id="04ca3e2d" class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.lens</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> extract_label(src: FullSample) <span class="op">-&gt;</span> SimpleSample:</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> SimpleSample(label<span class="op">=</span>src.label, confidence<span class="op">=</span>src.confidence)</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Without a putter, put() returns the original source unchanged</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>view <span class="op">=</span> SimpleSample(label<span class="op">=</span><span class="st">"modified"</span>, confidence<span class="op">=</span><span class="fl">0.5</span>)</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>updated <span class="op">=</span> extract_label.put(view, original)</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> updated <span class="op">==</span> original  <span class="co"># No changes applied</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="lensnetwork-registry" class="level2">
-<h2 class="anchored" data-anchor-id="lensnetwork-registry">LensNetwork Registry</h2>
-<p>The <code>LensNetwork</code> is a singleton that stores all registered lenses:</p>
-<div id="ed7f3c46" class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.lens <span class="im">import</span> LensNetwork</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>network <span class="op">=</span> LensNetwork()</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Look up a specific lens</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>lens <span class="op">=</span> network.transform(FullSample, SimpleSample)</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Raises ValueError if no lens exists</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    lens <span class="op">=</span> network.transform(TypeA, TypeB)</span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> <span class="pp">ValueError</span>:</span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"No lens registered for TypeA -&gt; TypeB"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="example-feature-extraction" class="level2">
-<h2 class="anchored" data-anchor-id="example-feature-extraction">Example: Feature Extraction</h2>
-<div id="37b2ed4a" class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> RawSample:</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    audio: NDArray</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    text: <span class="bu">str</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    speaker_id: <span class="bu">int</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> TextFeatures:</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    text: <span class="bu">str</span></span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    word_count: <span class="bu">int</span></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.lens</span></span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> extract_text(src: RawSample) <span class="op">-&gt;</span> TextFeatures:</span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> TextFeatures(</span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>        text<span class="op">=</span>src.text,</span>
-<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>        word_count<span class="op">=</span><span class="bu">len</span>(src.text.split())</span>
-<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="at">@extract_text.putter</span></span>
-<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> extract_text_put(view: TextFeatures, source: RawSample) <span class="op">-&gt;</span> RawSample:</span>
-<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> RawSample(</span>
-<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>        audio<span class="op">=</span>source.audio,</span>
-<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>        text<span class="op">=</span>view.text,</span>
-<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>        speaker_id<span class="op">=</span>source.speaker_id</span>
-<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>    )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="related" class="level2">
-<h2 class="anchored" data-anchor-id="related">Related</h2>
-<ul>
-<li><a href="../reference/datasets.html">Datasets</a> - Using lenses with Dataset.as_type()</li>
-<li><a href="../reference/packable-samples.html">Packable Samples</a> - Defining sample types</li>
-<li><a href="../reference/atmosphere.html">Atmosphere</a> - Publishing lenses to ATProto federation</li>
-</ul>
+<section id="legacy-format" class="level2">
+<h2 class="anchored" data-anchor-id="legacy-format">Legacy Format</h2>
+<p>For backwards compatibility, the local index also accepts the legacy format:</p>
+<pre><code>local://schemas/{module.Class}@{version}</code></pre>
+<p>This format is deprecated and will be removed in a future version. Use <code>atdata://local/sampleSchema/{name}@{version}</code> instead.</p>
 
 
 </section>
@@ -1193,7 +1163,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/your-org/atdata/edit/main/reference/lenses.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/your-org/atdata/edit/main/reference/uri-spec.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
     <div class="nav-footer-right">
 <p>MIT License</p>
 </div>

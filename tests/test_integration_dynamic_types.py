@@ -16,7 +16,7 @@ from numpy.typing import NDArray
 import webdataset as wds
 
 import atdata
-from atdata._schema_codec import schema_to_type, clear_type_cache, get_cached_types
+from atdata._schema_codec import schema_to_type, generate_stub, clear_type_cache, get_cached_types
 import atdata.local as atlocal
 
 
@@ -580,3 +580,156 @@ class TestComplexSchemaScenarios:
         assert Type1(name="a", value=1, score=0.5).name == "a"
         assert Type2(label="b", image=np.zeros(4)).label == "b"
         assert Type3(tags=["x"], scores=[1.0]).tags == ["x"]
+
+
+class TestGenerateStub:
+    """Tests for generate_stub() function for IDE support."""
+
+    def test_basic_stub_generation(self):
+        """Should generate valid stub content for simple schema."""
+        schema = {
+            "name": "SimpleSample",
+            "version": "1.0.0",
+            "fields": [
+                {"name": "name", "fieldType": {"$type": "local#primitive", "primitive": "str"}, "optional": False},
+                {"name": "value", "fieldType": {"$type": "local#primitive", "primitive": "int"}, "optional": False},
+            ]
+        }
+
+        stub = generate_stub(schema)
+
+        assert "class SimpleSample(PackableSample):" in stub
+        assert "name: str" in stub
+        assert "value: int" in stub
+        assert "def __init__(self, name: str, value: int) -> None: ..." in stub
+
+    def test_stub_with_ndarray_field(self):
+        """Should generate NDArray type hint in stub."""
+        schema = {
+            "name": "ArraySample",
+            "version": "1.0.0",
+            "fields": [
+                {"name": "image", "fieldType": {"$type": "local#ndarray", "dtype": "float32"}, "optional": False},
+            ]
+        }
+
+        stub = generate_stub(schema)
+
+        assert "image: NDArray[Any]" in stub
+        assert "from numpy.typing import NDArray" in stub
+
+    def test_stub_with_optional_field(self):
+        """Should generate optional type hint with default None."""
+        schema = {
+            "name": "OptionalSample",
+            "version": "1.0.0",
+            "fields": [
+                {"name": "name", "fieldType": {"$type": "local#primitive", "primitive": "str"}, "optional": False},
+                {"name": "extra", "fieldType": {"$type": "local#primitive", "primitive": "str"}, "optional": True},
+            ]
+        }
+
+        stub = generate_stub(schema)
+
+        assert "name: str" in stub
+        assert "extra: str | None" in stub
+        assert "extra: str | None = None" in stub
+
+    def test_stub_with_list_field(self):
+        """Should generate list type hint in stub."""
+        schema = {
+            "name": "ListSample",
+            "version": "1.0.0",
+            "fields": [
+                {"name": "tags", "fieldType": {"$type": "local#array", "items": {"$type": "local#primitive", "primitive": "str"}}, "optional": False},
+            ]
+        }
+
+        stub = generate_stub(schema)
+
+        assert "tags: list[str]" in stub
+
+    def test_stub_includes_header_comments(self):
+        """Stub should include helpful header comments."""
+        schema = {
+            "name": "MySample",
+            "version": "2.1.0",
+            "fields": [
+                {"name": "value", "fieldType": {"$type": "local#primitive", "primitive": "int"}, "optional": False},
+            ]
+        }
+
+        stub = generate_stub(schema)
+
+        assert "# Auto-generated stub" in stub
+        assert "# Schema: MySample@2.1.0" in stub
+        assert "VS Code/Pylance" in stub or "PyCharm" in stub
+
+    def test_stub_includes_imports(self):
+        """Stub should include necessary imports."""
+        schema = {
+            "name": "ImportSample",
+            "version": "1.0.0",
+            "fields": [
+                {"name": "value", "fieldType": {"$type": "local#primitive", "primitive": "int"}, "optional": False},
+            ]
+        }
+
+        stub = generate_stub(schema)
+
+        assert "from typing import Any" in stub
+        assert "from atdata import PackableSample" in stub
+
+    def test_stub_all_primitive_types(self):
+        """Should handle all primitive types correctly."""
+        schema = {
+            "name": "AllPrimitives",
+            "version": "1.0.0",
+            "fields": [
+                {"name": "s", "fieldType": {"$type": "local#primitive", "primitive": "str"}, "optional": False},
+                {"name": "i", "fieldType": {"$type": "local#primitive", "primitive": "int"}, "optional": False},
+                {"name": "f", "fieldType": {"$type": "local#primitive", "primitive": "float"}, "optional": False},
+                {"name": "b", "fieldType": {"$type": "local#primitive", "primitive": "bool"}, "optional": False},
+                {"name": "raw", "fieldType": {"$type": "local#primitive", "primitive": "bytes"}, "optional": False},
+            ]
+        }
+
+        stub = generate_stub(schema)
+
+        assert "s: str" in stub
+        assert "i: int" in stub
+        assert "f: float" in stub
+        assert "b: bool" in stub
+        assert "raw: bytes" in stub
+
+    def test_stub_with_nested_list(self):
+        """Should handle nested list types."""
+        schema = {
+            "name": "NestedSample",
+            "version": "1.0.0",
+            "fields": [
+                {"name": "matrix", "fieldType": {
+                    "$type": "local#array",
+                    "items": {"$type": "local#array", "items": {"$type": "local#primitive", "primitive": "int"}}
+                }, "optional": False},
+            ]
+        }
+
+        stub = generate_stub(schema)
+
+        assert "matrix: list[list[int]]" in stub
+
+    def test_stub_with_ref_field_uses_any(self):
+        """Schema ref fields should fall back to Any in stubs."""
+        schema = {
+            "name": "RefSample",
+            "version": "1.0.0",
+            "fields": [
+                {"name": "nested", "fieldType": {"$type": "local#ref", "ref": "local://schemas/Other@1.0.0"}, "optional": False},
+            ]
+        }
+
+        stub = generate_stub(schema)
+
+        # Ref types can't be resolved statically, so use Any
+        assert "nested: Any" in stub

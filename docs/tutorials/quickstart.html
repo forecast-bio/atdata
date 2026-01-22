@@ -355,6 +355,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="dropdown-item" href="../reference/protocols.html">
  <span class="dropdown-text">Protocols</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="../reference/uri-spec.html">
+ <span class="dropdown-text">URI Specification</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item">
@@ -490,6 +494,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">Protocols</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../reference/uri-spec.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">URI Specification</span></a>
+  </div>
+</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -569,7 +579,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="define-a-sample-type" class="level2">
 <h2 class="anchored" data-anchor-id="define-a-sample-type">Define a Sample Type</h2>
 <p>Use the <code>@packable</code> decorator to create a typed sample:</p>
-<div id="b31991e1" class="cell">
+<div id="c8931636" class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
@@ -590,7 +600,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="create-sample-instances" class="level2">
 <h2 class="anchored" data-anchor-id="create-sample-instances">Create Sample Instances</h2>
-<div id="fe7314da" class="cell">
+<div id="9ab76c0c" class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a single sample</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>sample <span class="op">=</span> ImageSample(</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    image<span class="op">=</span>np.random.rand(<span class="dv">224</span>, <span class="dv">224</span>, <span class="dv">3</span>).astype(np.float32),</span>
@@ -611,7 +621,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="write-a-dataset" class="level2">
 <h2 class="anchored" data-anchor-id="write-a-dataset">Write a Dataset</h2>
 <p>Use WebDataset’s <code>TarWriter</code> to create dataset files:</p>
-<div id="befbf863" class="cell">
+<div id="7a3ef6e8" class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> webdataset <span class="im">as</span> wds</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create 100 samples</span></span>
@@ -635,7 +645,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="load-and-iterate" class="level2">
 <h2 class="anchored" data-anchor-id="load-and-iterate">Load and Iterate</h2>
 <p>Create a typed <code>Dataset</code> and iterate with batching:</p>
-<div id="a0c71890" class="cell">
+<div id="ac97711e" class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load dataset with type</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[ImageSample](<span class="st">"my-dataset-000000.tar"</span>)</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -656,7 +666,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="shuffled-iteration" class="level2">
 <h2 class="anchored" data-anchor-id="shuffled-iteration">Shuffled Iteration</h2>
 <p>For training, use shuffled iteration:</p>
-<div id="834c15e8" class="cell">
+<div id="817072c1" class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> dataset.shuffled(batch_size<span class="op">=</span><span class="dv">32</span>):</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Samples are shuffled at shard and sample level</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    images <span class="op">=</span> batch.image</span>
@@ -670,7 +680,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="use-lenses-for-type-transformations" class="level2">
 <h2 class="anchored" data-anchor-id="use-lenses-for-type-transformations">Use Lenses for Type Transformations</h2>
 <p>View datasets through different schemas:</p>
-<div id="f9ebe10f" class="cell">
+<div id="235eb997" class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Define a simplified view type</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> SimplifiedSample:</span>

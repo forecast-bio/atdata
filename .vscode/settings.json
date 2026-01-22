@@ -21,5 +21,8 @@
         "schemamodels",
         "unpackb",
         "webdataset"
+    ],  
+    "python.analysis.extraPaths": [
+        "~/.atdata/stubs"
     ]
 }

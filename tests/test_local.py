@@ -214,10 +214,10 @@ def test_local_dataset_entry_creation():
     Should create an entry with provided name, schema_ref, data_urls, and generate CID.
     """
     entry = atlocal.LocalDatasetEntry(
-        _name="test-dataset",
-        _schema_ref="local://schemas/test_module.TestSample@1.0.0",
-        _data_urls=["s3://bucket/dataset.tar"],
-        _metadata={"description": "test"},
+        name="test-dataset",
+        schema_ref="local://schemas/test_module.TestSample@1.0.0",
+        data_urls=["s3://bucket/dataset.tar"],
+        metadata={"description": "test"},
     )
 
     assert entry.name == "test-dataset"
@@ -235,14 +235,14 @@ def test_local_dataset_entry_cid_generation():
     Same content should produce the same CID.
     """
     entry1 = atlocal.LocalDatasetEntry(
-        _name="test-dataset",
-        _schema_ref="local://schemas/test_module.TestSample@1.0.0",
-        _data_urls=["s3://bucket/dataset.tar"],
+        name="test-dataset",
+        schema_ref="local://schemas/test_module.TestSample@1.0.0",
+        data_urls=["s3://bucket/dataset.tar"],
     )
     entry2 = atlocal.LocalDatasetEntry(
-        _name="test-dataset",  # Name doesn't affect CID
-        _schema_ref="local://schemas/test_module.TestSample@1.0.0",
-        _data_urls=["s3://bucket/dataset.tar"],
+        name="test-dataset",  # Name doesn't affect CID
+        schema_ref="local://schemas/test_module.TestSample@1.0.0",
+        data_urls=["s3://bucket/dataset.tar"],
     )
 
     # Same schema_ref and data_urls = same CID
@@ -252,14 +252,14 @@ def test_local_dataset_entry_cid_generation():
 def test_local_dataset_entry_different_content_different_cid():
     """Test that different content produces different CIDs."""
     entry1 = atlocal.LocalDatasetEntry(
-        _name="dataset1",
-        _schema_ref="local://schemas/test_module.TestSample@1.0.0",
-        _data_urls=["s3://bucket/dataset1.tar"],
+        name="dataset1",
+        schema_ref="local://schemas/test_module.TestSample@1.0.0",
+        data_urls=["s3://bucket/dataset1.tar"],
     )
     entry2 = atlocal.LocalDatasetEntry(
-        _name="dataset2",
-        _schema_ref="local://schemas/test_module.TestSample@1.0.0",
-        _data_urls=["s3://bucket/dataset2.tar"],  # Different URL
+        name="dataset2",
+        schema_ref="local://schemas/test_module.TestSample@1.0.0",
+        data_urls=["s3://bucket/dataset2.tar"],  # Different URL
     )
 
     assert entry1.cid != entry2.cid
@@ -272,10 +272,10 @@ def test_local_dataset_entry_write_to_redis(clean_redis):
     and all fields should be retrievable with correct values.
     """
     entry = atlocal.LocalDatasetEntry(
-        _name="test-dataset",
-        _schema_ref="local://schemas/test_module.TestSample@1.0.0",
-        _data_urls=["s3://bucket/dataset.tar"],
-        _metadata={"version": "1.0"},
+        name="test-dataset",
+        schema_ref="local://schemas/test_module.TestSample@1.0.0",
+        data_urls=["s3://bucket/dataset.tar"],
+        metadata={"version": "1.0"},
     )
 
     entry.write_to(clean_redis)
@@ -299,10 +299,10 @@ def test_local_dataset_entry_round_trip_redis(clean_redis):
     intact and matching the original values.
     """
     original_entry = atlocal.LocalDatasetEntry(
-        _name="my-dataset",
-        _schema_ref="local://schemas/module.Sample@2.0.0",
-        _data_urls=["s3://bucket/data-{000000..000009}.tar"],
-        _metadata={"author": "test", "tags": ["a", "b"]},
+        name="my-dataset",
+        schema_ref="local://schemas/module.Sample@2.0.0",
+        data_urls=["s3://bucket/data-{000000..000009}.tar"],
+        metadata={"author": "test", "tags": ["a", "b"]},
     )
 
     original_entry.write_to(clean_redis)
@@ -320,9 +320,9 @@ def test_local_dataset_entry_round_trip_redis(clean_redis):
 def test_local_dataset_entry_legacy_properties():
     """Test that legacy properties work for backwards compatibility."""
     entry = atlocal.LocalDatasetEntry(
-        _name="test-dataset",
-        _schema_ref="local://schemas/test_module.TestSample@1.0.0",
-        _data_urls=["s3://bucket/dataset.tar"],
+        name="test-dataset",
+        schema_ref="local://schemas/test_module.TestSample@1.0.0",
+        data_urls=["s3://bucket/dataset.tar"],
     )
 
     # Legacy properties should work
@@ -335,9 +335,9 @@ def test_local_dataset_entry_implements_index_entry_protocol():
     from atdata._protocols import IndexEntry
 
     entry = atlocal.LocalDatasetEntry(
-        _name="test-dataset",
-        _schema_ref="local://schemas/test_module.TestSample@1.0.0",
-        _data_urls=["s3://bucket/dataset.tar"],
+        name="test-dataset",
+        schema_ref="local://schemas/test_module.TestSample@1.0.0",
+        data_urls=["s3://bucket/dataset.tar"],
     )
 
     # Should satisfy the protocol
@@ -992,18 +992,6 @@ def test_repo_insert_preserves_sample_type(mock_s3, clean_redis, sample_dataset)
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
-def test_repo_insert_round_trip(mock_s3, clean_redis, tmp_path):
-    """Test full round-trip: insert dataset, then load and compare samples.
-
-    Should be able to insert a dataset and then load it back from the returned
-    URL with all samples intact and matching the original.
-    """
-    pytest.skip("Reading from moto-mocked S3 requires additional s3fs/WebDataset configuration")
-
-
-@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
-@pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
-@pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
 def test_repo_insert_with_shard_writer_kwargs(mock_s3, clean_redis, tmp_path):
     """Test that insert() passes additional kwargs to ShardWriter.
 
@@ -1201,7 +1189,7 @@ def test_s3_datastore_supports_streaming():
 
 
 def test_s3_datastore_read_url():
-    """Test that read_url returns URL unchanged."""
+    """Test that read_url returns URL unchanged without custom endpoint."""
     creds = {
         'AWS_ACCESS_KEY_ID': 'test',
         'AWS_SECRET_ACCESS_KEY': 'test'
@@ -1211,6 +1199,31 @@ def test_s3_datastore_read_url():
 
     url = "s3://bucket/path/to/data.tar"
     assert store.read_url(url) == url
+
+
+def test_s3_datastore_read_url_with_custom_endpoint():
+    """Test that read_url transforms s3:// to https:// with custom endpoint."""
+    creds = {
+        'AWS_ACCESS_KEY_ID': 'test',
+        'AWS_SECRET_ACCESS_KEY': 'test',
+        'AWS_ENDPOINT': 'https://abc123.r2.cloudflarestorage.com'
+    }
+
+    store = atlocal.S3DataStore(credentials=creds, bucket="test")
+
+    # s3:// URL should be transformed to https:// using the endpoint
+    url = "s3://my-bucket/path/to/data.tar"
+    expected = "https://abc123.r2.cloudflarestorage.com/my-bucket/path/to/data.tar"
+    assert store.read_url(url) == expected
+
+    # Trailing slash on endpoint should be handled
+    creds['AWS_ENDPOINT'] = 'https://endpoint.example.com/'
+    store2 = atlocal.S3DataStore(credentials=creds, bucket="test")
+    assert store2.read_url(url) == "https://endpoint.example.com/my-bucket/path/to/data.tar"
+
+    # Non-s3 URLs should be passed through unchanged
+    https_url = "https://example.com/data.tar"
+    assert store.read_url(https_url) == https_url
 
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
@@ -1269,7 +1282,7 @@ def test_index_with_datastore_insert(mock_s3, clean_redis, tmp_path):
     assert entry.name == "stored-dataset"
     assert len(entry.data_urls) >= 1
     assert all(url.startswith("s3://") for url in entry.data_urls)
-    assert entry.schema_ref.startswith("local://schemas/")
+    assert entry.schema_ref.startswith("atdata://local/sampleSchema/")
 
     # Verify it's in the index
     retrieved = index.get_dataset("stored-dataset")
@@ -1338,7 +1351,7 @@ def test_publish_schema(clean_redis):
 
     schema_ref = index.publish_schema(SimpleTestSample, version="1.0.0")
 
-    assert schema_ref.startswith("local://schemas/")
+    assert schema_ref.startswith("atdata://local/sampleSchema/")
     assert "SimpleTestSample" in schema_ref
     assert "@1.0.0" in schema_ref
 
@@ -1354,7 +1367,44 @@ def test_publish_schema_with_description(clean_redis):
     )
 
     schema = index.get_schema(schema_ref)
-    assert schema['description'] == "A simple test sample type"
+    assert schema.get('description') == "A simple test sample type"
+
+
+def test_publish_schema_auto_increment(clean_redis):
+    """Test that publish_schema auto-increments version when not specified."""
+    index = atlocal.Index(redis=clean_redis)
+
+    # First publish should default to 1.0.0
+    ref1 = index.publish_schema(SimpleTestSample)
+    assert "@1.0.0" in ref1
+
+    # Second publish should auto-increment to 1.0.1
+    ref2 = index.publish_schema(SimpleTestSample)
+    assert "@1.0.1" in ref2
+
+    # Third publish should auto-increment to 1.0.2
+    ref3 = index.publish_schema(SimpleTestSample)
+    assert "@1.0.2" in ref3
+
+    # Explicit version should override
+    ref4 = index.publish_schema(SimpleTestSample, version="2.0.0")
+    assert "@2.0.0" in ref4
+
+    # Next auto-increment should be from 2.0.0
+    ref5 = index.publish_schema(SimpleTestSample)
+    assert "@2.0.1" in ref5
+
+
+def test_publish_schema_docstring_fallback(clean_redis):
+    """Test that publish_schema uses class docstring as description fallback."""
+    index = atlocal.Index(redis=clean_redis)
+
+    # SimpleTestSample has a docstring defined
+    schema_ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+    schema = index.get_schema(schema_ref)
+
+    # Should use the class docstring
+    assert schema.get('description') == SimpleTestSample.__doc__
 
 
 def test_get_schema(clean_redis):
@@ -1375,14 +1425,14 @@ def test_get_schema_not_found(clean_redis):
     index = atlocal.Index(redis=clean_redis)
 
     with pytest.raises(KeyError, match="Schema not found"):
-        index.get_schema("local://schemas/nonexistent.Sample@1.0.0")
+        index.get_schema("atdata://local/sampleSchema/NonexistentSample@1.0.0")
 
 
 def test_get_schema_invalid_ref(clean_redis):
     """Test that get_schema raises ValueError for invalid reference."""
     index = atlocal.Index(redis=clean_redis)
 
-    with pytest.raises(ValueError, match="Invalid local schema reference"):
+    with pytest.raises(ValueError, match="Invalid schema reference"):
         index.get_schema("invalid://schemas/Sample@1.0.0")
 
 
@@ -1435,7 +1485,7 @@ def test_schema_ndarray_field(clean_redis):
 
     # Find data field (should be ndarray)
     data_field = next(f for f in schema['fields'] if f['name'] == 'data')
-    assert 'ndarray' in data_field['fieldType']['$type']
+    assert data_field['fieldType']['$type'] == 'local#ndarray'
     assert data_field['fieldType']['dtype'] == 'float32'
 
 
@@ -1464,6 +1514,24 @@ def test_decode_schema_preserves_structure(clean_redis):
     instance = ReconstructedType(label="test", data=np.zeros((3, 3)))
     assert instance.label == "test"
     assert instance.data.shape == (3, 3)
+
+
+def test_decode_schema_as_typed_helper(clean_redis):
+    """Test decode_schema_as returns properly typed result."""
+    index = atlocal.Index(redis=clean_redis)
+
+    schema_ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+
+    # decode_schema_as should work like decode_schema but with type hint
+    DecodedType = index.decode_schema_as(schema_ref, SimpleTestSample)
+
+    # Should be able to create instances
+    instance = DecodedType(name="test", value=42)
+    assert instance.name == "test"
+    assert instance.value == 42
+
+    # The returned type should be the actual decoded type (not the hint)
+    assert DecodedType.__name__ == "SimpleTestSample"
 
 
 def test_schema_version_handling(clean_redis):
@@ -1713,3 +1781,280 @@ def test_schema_to_type_use_cache_false():
 
     # Different instances since caching is disabled
     assert Type1 is not Type2
+
+
+##
+# Auto-Stub Tests
+
+
+class TestAutoStubs:
+    """Tests for automatic stub file generation on schema access."""
+
+    def test_auto_stubs_disabled_by_default(self, clean_redis):
+        """Index should not generate stubs unless explicitly enabled."""
+        index = atlocal.Index(redis=clean_redis)
+        assert index.stub_dir is None
+
+    def test_auto_stubs_enabled_with_flag(self, clean_redis, tmp_path):
+        """Index should generate stubs when auto_stubs=True."""
+        stub_dir = tmp_path / "stubs"
+        index = atlocal.Index(redis=clean_redis, stub_dir=stub_dir)
+
+        assert index.stub_dir == stub_dir
+
+    def test_stub_generated_on_get_schema(self, clean_redis, tmp_path):
+        """Stub should be generated when get_schema is called."""
+        stub_dir = tmp_path / "stubs"
+        index = atlocal.Index(redis=clean_redis, stub_dir=stub_dir)
+
+        # Publish a schema
+        ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+
+        # Get schema should trigger stub generation
+        schema = index.get_schema(ref)
+
+        # Check stub was created (in local/ subdirectory for namespacing)
+        stub_path = stub_dir / "local" / "SimpleTestSample_1_0_0.py"
+        assert stub_path.exists()
+
+        # Verify content
+        content = stub_path.read_text()
+        assert "class SimpleTestSample(PackableSample):" in content
+        assert "name: str" in content
+
+    def test_stub_generated_on_decode_schema(self, clean_redis, tmp_path):
+        """Stub should be generated when decode_schema is called."""
+        stub_dir = tmp_path / "stubs"
+        index = atlocal.Index(redis=clean_redis, stub_dir=stub_dir)
+
+        # Publish a schema
+        ref = index.publish_schema(SimpleTestSample, version="2.0.0")
+
+        # Decode schema should trigger stub generation
+        DecodedType = index.decode_schema(ref)
+
+        # Check stub was created (in local/ subdirectory for namespacing)
+        stub_path = stub_dir / "local" / "SimpleTestSample_2_0_0.py"
+        assert stub_path.exists()
+        assert DecodedType.__name__ == "SimpleTestSample"
+
+    def test_stub_not_regenerated_if_current(self, clean_redis, tmp_path):
+        """Stub should not be regenerated if already current."""
+        stub_dir = tmp_path / "stubs"
+        index = atlocal.Index(redis=clean_redis, stub_dir=stub_dir)
+
+        ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+
+        # First call generates stub
+        index.get_schema(ref)
+        stub_path = stub_dir / "local" / "SimpleTestSample_1_0_0.py"
+        mtime1 = stub_path.stat().st_mtime
+
+        # Small delay to ensure different mtime if regenerated
+        import time
+        time.sleep(0.01)
+
+        # Second call should not regenerate
+        index.get_schema(ref)
+        mtime2 = stub_path.stat().st_mtime
+
+        assert mtime1 == mtime2
+
+    def test_clear_stubs(self, clean_redis, tmp_path):
+        """clear_stubs should remove generated stub files."""
+        stub_dir = tmp_path / "stubs"
+        index = atlocal.Index(redis=clean_redis, stub_dir=stub_dir)
+
+        # Generate some stubs
+        ref1 = index.publish_schema(SimpleTestSample, version="1.0.0")
+        ref2 = index.publish_schema(SimpleTestSample, version="2.0.0")
+        index.get_schema(ref1)
+        index.get_schema(ref2)
+
+        # Verify stubs exist (in local/ subdirectory)
+        assert (stub_dir / "local" / "SimpleTestSample_1_0_0.py").exists()
+        assert (stub_dir / "local" / "SimpleTestSample_2_0_0.py").exists()
+
+        # Clear stubs
+        removed = index.clear_stubs()
+        assert removed == 2
+
+        # Verify stubs removed
+        assert not (stub_dir / "local" / "SimpleTestSample_1_0_0.py").exists()
+        assert not (stub_dir / "local" / "SimpleTestSample_2_0_0.py").exists()
+
+    def test_clear_stubs_disabled_returns_zero(self, clean_redis):
+        """clear_stubs should return 0 when auto_stubs is disabled."""
+        index = atlocal.Index(redis=clean_redis)
+        assert index.clear_stubs() == 0
+
+    def test_stub_dir_implies_auto_stubs(self, clean_redis, tmp_path):
+        """Providing stub_dir should enable auto_stubs implicitly."""
+        stub_dir = tmp_path / "stubs"
+        # Only provide stub_dir, not auto_stubs=True
+        index = atlocal.Index(redis=clean_redis, stub_dir=stub_dir)
+
+        ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+        index.get_schema(ref)
+
+        # Stub should still be generated (in local/ subdirectory)
+        stub_path = stub_dir / "local" / "SimpleTestSample_1_0_0.py"
+        assert stub_path.exists()
+
+    def test_decode_schema_returns_importable_class(self, clean_redis, tmp_path):
+        """decode_schema with auto_stubs returns a class from the generated module."""
+        stub_dir = tmp_path / "stubs"
+        index = atlocal.Index(redis=clean_redis, auto_stubs=True, stub_dir=stub_dir)
+
+        ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+        DecodedType = index.decode_schema(ref)
+
+        # The decoded type should be usable
+        assert DecodedType.__name__ == "SimpleTestSample"
+
+        # Should be able to instantiate it (SimpleTestSample has 'name' and 'value')
+        sample = DecodedType(name="hello", value=42)
+        assert sample.name == "hello"
+        assert sample.value == 42
+
+        # The class should be a PackableSample subclass
+        assert isinstance(sample, atdata.PackableSample)
+
+        # Verify the module was generated
+        module_path = stub_dir / "local" / "SimpleTestSample_1_0_0.py"
+        assert module_path.exists()
+
+        # Verify __init__.py files were created
+        assert (stub_dir / "__init__.py").exists()
+        assert (stub_dir / "local" / "__init__.py").exists()
+
+    def test_decode_schema_class_caching(self, clean_redis, tmp_path):
+        """decode_schema returns the same class on subsequent calls."""
+        stub_dir = tmp_path / "stubs"
+        index = atlocal.Index(redis=clean_redis, auto_stubs=True, stub_dir=stub_dir)
+
+        ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+
+        # Decode twice
+        Type1 = index.decode_schema(ref)
+        Type2 = index.decode_schema(ref)
+
+        # Should return the same class (from cache)
+        assert Type1 is Type2
+
+
+class TestSchemaNamespace:
+    """Tests for load_schema() and schemas namespace API."""
+
+    def test_load_schema_returns_class(self, clean_redis):
+        """load_schema returns the decoded class."""
+        index = atlocal.Index(redis=clean_redis)
+        ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+
+        cls = index.load_schema(ref)
+
+        assert cls.__name__ == "SimpleTestSample"
+        sample = cls(name="test", value=123)
+        assert sample.name == "test"
+        assert sample.value == 123
+
+    def test_schemas_namespace_access(self, clean_redis):
+        """After load_schema, type is accessible via schemas namespace."""
+        index = atlocal.Index(redis=clean_redis)
+        ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+
+        index.load_schema(ref)
+
+        # Access via namespace
+        MyType = index.types.SimpleTestSample
+        assert MyType.__name__ == "SimpleTestSample"
+
+        # Create instance
+        sample = MyType(name="hello", value=42)
+        assert sample.name == "hello"
+        assert sample.value == 42
+
+    def test_schemas_namespace_not_loaded_error(self, clean_redis):
+        """Accessing unloaded schema raises AttributeError."""
+        index = atlocal.Index(redis=clean_redis)
+
+        with pytest.raises(AttributeError) as exc_info:
+            _ = index.types.NotLoadedType
+
+        assert "not loaded" in str(exc_info.value)
+        assert "load_schema" in str(exc_info.value)
+
+    def test_schemas_namespace_contains(self, clean_redis):
+        """schemas namespace supports 'in' operator."""
+        index = atlocal.Index(redis=clean_redis)
+        ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+
+        assert "SimpleTestSample" not in index.types
+        index.load_schema(ref)
+        assert "SimpleTestSample" in index.types
+
+    def test_schemas_namespace_iteration(self, clean_redis):
+        """schemas namespace supports iteration."""
+        index = atlocal.Index(redis=clean_redis)
+        ref1 = index.publish_schema(SimpleTestSample, version="1.0.0")
+
+        index.load_schema(ref1)
+
+        names = list(index.types)
+        assert "SimpleTestSample" in names
+
+    def test_schemas_namespace_len(self, clean_redis):
+        """schemas namespace supports len()."""
+        index = atlocal.Index(redis=clean_redis)
+        ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+
+        assert len(index.types) == 0
+        index.load_schema(ref)
+        assert len(index.types) == 1
+
+    def test_schemas_namespace_repr(self, clean_redis):
+        """schemas namespace has useful repr."""
+        index = atlocal.Index(redis=clean_redis)
+        ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+
+        assert "empty" in repr(index.types)
+        index.load_schema(ref)
+        assert "SimpleTestSample" in repr(index.types)
+
+    def test_load_schema_with_auto_stubs(self, clean_redis, tmp_path):
+        """load_schema works with auto_stubs enabled."""
+        stub_dir = tmp_path / "stubs"
+        index = atlocal.Index(redis=clean_redis, auto_stubs=True, stub_dir=stub_dir)
+
+        ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+        cls = index.load_schema(ref)
+
+        # Class works
+        sample = cls(name="test", value=99)
+        assert sample.name == "test"
+
+        # Module was generated
+        module_path = stub_dir / "local" / "SimpleTestSample_1_0_0.py"
+        assert module_path.exists()
+
+        # Accessible via namespace
+        assert index.types.SimpleTestSample is cls
+
+    def test_get_import_path(self, clean_redis, tmp_path):
+        """get_import_path returns the module import path."""
+        stub_dir = tmp_path / "stubs"
+        index = atlocal.Index(redis=clean_redis, auto_stubs=True, stub_dir=stub_dir)
+
+        ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+        index.load_schema(ref)
+
+        import_path = index.get_import_path(ref)
+        assert import_path == "local.SimpleTestSample_1_0_0"
+
+    def test_get_import_path_disabled(self, clean_redis):
+        """get_import_path returns None when auto_stubs is disabled."""
+        index = atlocal.Index(redis=clean_redis)
+
+        ref = index.publish_schema(SimpleTestSample, version="1.0.0")
+
+        assert index.get_import_path(ref) is None

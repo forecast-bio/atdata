@@ -58,6 +58,8 @@ from typing import (
     Iterator,
     BinaryIO,
     Union,
+    Optional,
+    Literal,
     cast,
     get_type_hints,
     get_origin,
@@ -73,6 +75,281 @@ T = TypeVar( 'T', bound = PackableSample )
 # Redis key prefixes for index entries and schemas
 REDIS_KEY_DATASET_ENTRY = "LocalDatasetEntry"
 REDIS_KEY_SCHEMA = "LocalSchema"
+
+
+class SchemaNamespace:
+    """Namespace for accessing loaded schema types as attributes.
+
+    This class provides a module-like interface for accessing dynamically
+    loaded schema types. After calling ``index.load_schema(uri)``, the
+    schema's class becomes available as an attribute on this namespace.
+
+    Example:
+        >>> index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
+        >>> MyType = index.types.MySample
+        >>> sample = MyType(field1="hello", field2=42)
+
+    The namespace supports:
+    - Attribute access: ``index.types.MySample``
+    - Iteration: ``for name in index.types: ...``
+    - Length: ``len(index.types)``
+    - Contains check: ``"MySample" in index.types``
+
+    Note:
+        For full IDE autocomplete support, import from the generated module::
+
+            # After load_schema with auto_stubs=True
+            from local.MySample_1_0_0 import MySample
+            sample = MySample(name="hello", value=42)  # IDE knows signature!
+
+        Add ``index.stub_dir`` to your IDE's extraPaths for imports to resolve.
+    """
+
+    def __init__(self) -> None:
+        self._types: dict[str, Type[PackableSample]] = {}
+
+    def _register(self, name: str, cls: Type[PackableSample]) -> None:
+        """Register a schema type in the namespace."""
+        self._types[name] = cls
+
+    def __getattr__(self, name: str) -> Any:
+        # Returns Any to avoid IDE complaints about unknown attributes.
+        # For full IDE support, import from the generated module instead.
+        if name.startswith("_"):
+            raise AttributeError(f"'{type(self).__name__}' has no attribute '{name}'")
+        if name not in self._types:
+            raise AttributeError(
+                f"Schema '{name}' not loaded. "
+                f"Call index.load_schema() first to load the schema."
+            )
+        return self._types[name]
+
+    def __dir__(self) -> list[str]:
+        return list(self._types.keys()) + ["_types", "_register", "get"]
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._types)
+
+    def __len__(self) -> int:
+        return len(self._types)
+
+    def __contains__(self, name: str) -> bool:
+        return name in self._types
+
+    def __repr__(self) -> str:
+        if not self._types:
+            return "SchemaNamespace(empty)"
+        names = ", ".join(sorted(self._types.keys()))
+        return f"SchemaNamespace({names})"
+
+    def get(self, name: str, default: T | None = None) -> Type[PackableSample] | T | None:
+        """Get a type by name, returning default if not found.
+
+        Args:
+            name: The schema class name to look up.
+            default: Value to return if not found (default: None).
+
+        Returns:
+            The schema class, or default if not loaded.
+        """
+        return self._types.get(name, default)
+
+
+##
+# Schema types
+
+
+@dataclass
+class SchemaFieldType:
+    """Schema field type definition for local storage.
+
+    Represents a type in the schema type system, supporting primitives,
+    ndarrays, arrays, and references to other schemas.
+    """
+
+    kind: Literal["primitive", "ndarray", "ref", "array"]
+    """The category of type."""
+
+    primitive: Optional[str] = None
+    """For kind='primitive': one of 'str', 'int', 'float', 'bool', 'bytes'."""
+
+    dtype: Optional[str] = None
+    """For kind='ndarray': numpy dtype string (e.g., 'float32')."""
+
+    ref: Optional[str] = None
+    """For kind='ref': URI of referenced schema."""
+
+    items: Optional["SchemaFieldType"] = None
+    """For kind='array': type of array elements."""
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "SchemaFieldType":
+        """Create from a dictionary (e.g., from Redis storage)."""
+        type_str = data.get("$type", "")
+        if "#" in type_str:
+            kind = type_str.split("#")[-1]
+        else:
+            kind = data.get("kind", "primitive")
+
+        items = None
+        if "items" in data and data["items"]:
+            items = cls.from_dict(data["items"])
+
+        return cls(
+            kind=kind,  # type: ignore[arg-type]
+            primitive=data.get("primitive"),
+            dtype=data.get("dtype"),
+            ref=data.get("ref"),
+            items=items,
+        )
+
+    def to_dict(self) -> dict:
+        """Convert to dictionary for storage."""
+        result: dict[str, Any] = {"$type": f"local#{self.kind}"}
+        if self.kind == "primitive":
+            result["primitive"] = self.primitive
+        elif self.kind == "ndarray":
+            result["dtype"] = self.dtype
+        elif self.kind == "ref":
+            result["ref"] = self.ref
+        elif self.kind == "array" and self.items:
+            result["items"] = self.items.to_dict()
+        return result
+
+
+@dataclass
+class SchemaField:
+    """Schema field definition for local storage."""
+
+    name: str
+    """Field name."""
+
+    field_type: SchemaFieldType
+    """Type of this field."""
+
+    optional: bool = False
+    """Whether this field can be None."""
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "SchemaField":
+        """Create from a dictionary."""
+        return cls(
+            name=data["name"],
+            field_type=SchemaFieldType.from_dict(data["fieldType"]),
+            optional=data.get("optional", False),
+        )
+
+    def to_dict(self) -> dict:
+        """Convert to dictionary for storage."""
+        return {
+            "name": self.name,
+            "fieldType": self.field_type.to_dict(),
+            "optional": self.optional,
+        }
+
+    def __getitem__(self, key: str) -> Any:
+        """Dict-style access for backwards compatibility."""
+        if key == "name":
+            return self.name
+        elif key == "fieldType":
+            return self.field_type.to_dict()
+        elif key == "optional":
+            return self.optional
+        raise KeyError(key)
+
+    def get(self, key: str, default: Any = None) -> Any:
+        """Dict-style get() for backwards compatibility."""
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
+
+@dataclass
+class LocalSchemaRecord:
+    """Schema record for local storage.
+
+    Represents a PackableSample schema stored in the local index.
+    Aligns with the atmosphere SchemaRecord structure for seamless promotion.
+    """
+
+    name: str
+    """Schema name (typically the class name)."""
+
+    version: str
+    """Semantic version string (e.g., '1.0.0')."""
+
+    fields: list[SchemaField]
+    """List of field definitions."""
+
+    ref: str
+    """Schema reference URI (atdata://local/sampleSchema/{name}@{version})."""
+
+    description: Optional[str] = None
+    """Human-readable description."""
+
+    created_at: Optional[datetime] = None
+    """When this schema was published."""
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "LocalSchemaRecord":
+        """Create from a dictionary (e.g., from Redis storage)."""
+        created_at = None
+        if "createdAt" in data:
+            try:
+                created_at = datetime.fromisoformat(data["createdAt"])
+            except (ValueError, TypeError):
+                created_at = None  # Invalid datetime format, leave as None
+
+        return cls(
+            name=data["name"],
+            version=data["version"],
+            fields=[SchemaField.from_dict(f) for f in data.get("fields", [])],
+            ref=data.get("$ref", ""),
+            description=data.get("description"),
+            created_at=created_at,
+        )
+
+    def to_dict(self) -> dict:
+        """Convert to dictionary for storage."""
+        result: dict[str, Any] = {
+            "name": self.name,
+            "version": self.version,
+            "fields": [f.to_dict() for f in self.fields],
+            "$ref": self.ref,
+        }
+        if self.description:
+            result["description"] = self.description
+        if self.created_at:
+            result["createdAt"] = self.created_at.isoformat()
+        return result
+
+    def __getitem__(self, key: str) -> Any:
+        """Dict-style access for backwards compatibility."""
+        if key == "name":
+            return self.name
+        elif key == "version":
+            return self.version
+        elif key == "fields":
+            return self.fields  # Returns list of SchemaField (also subscriptable)
+        elif key == "$ref":
+            return self.ref
+        elif key == "description":
+            return self.description
+        elif key == "createdAt":
+            return self.created_at.isoformat() if self.created_at else None
+        raise KeyError(key)
+
+    def __contains__(self, key: str) -> bool:
+        """Support 'in' operator for backwards compatibility."""
+        return key in ("name", "version", "fields", "$ref", "description", "createdAt")
+
+    def get(self, key: str, default: Any = None) -> Any:
+        """Dict-style get() for backwards compatibility."""
+        try:
+            return self[key]
+        except KeyError:
+            return default
 
 
 ##
@@ -153,23 +430,56 @@ def _create_s3_write_callbacks(
 ##
 # Schema helpers
 
-def _schema_ref_from_type(sample_type: Type[PackableSample], version: str = "1.0.0") -> str:
-    """Generate 'local://schemas/{module.Class}@{version}' reference."""
-    kind_str = _kind_str_for_sample_type(sample_type)
-    return f"local://schemas/{kind_str}@{version}"
+# URI scheme prefixes
+_ATDATA_URI_PREFIX = "atdata://local/sampleSchema/"
+_LEGACY_URI_PREFIX = "local://schemas/"
+
+
+def _schema_ref_from_type(sample_type: Type[PackableSample], version: str) -> str:
+    """Generate 'atdata://local/sampleSchema/{name}@{version}' reference."""
+    return _make_schema_ref(sample_type.__name__, version)
+
+
+def _make_schema_ref(name: str, version: str) -> str:
+    """Generate schema reference URI from name and version."""
+    return f"{_ATDATA_URI_PREFIX}{name}@{version}"
 
 
 def _parse_schema_ref(ref: str) -> tuple[str, str]:
-    """Parse 'local://schemas/{module.Class}@{version}' into (module.Class, version)."""
-    if not ref.startswith("local://schemas/"):
-        raise ValueError(f"Invalid local schema reference: {ref}")
+    """Parse schema reference into (name, version).
 
-    path = ref[len("local://schemas/"):]
+    Supports both new format: 'atdata://local/sampleSchema/{name}@{version}'
+    and legacy format: 'local://schemas/{module.Class}@{version}'
+    """
+    if ref.startswith(_ATDATA_URI_PREFIX):
+        path = ref[len(_ATDATA_URI_PREFIX):]
+    elif ref.startswith(_LEGACY_URI_PREFIX):
+        path = ref[len(_LEGACY_URI_PREFIX):]
+    else:
+        raise ValueError(f"Invalid schema reference: {ref}")
+
     if "@" not in path:
         raise ValueError(f"Schema reference must include version (@version): {ref}")
 
-    kind_str, version = path.rsplit("@", 1)
-    return kind_str, version
+    name, version = path.rsplit("@", 1)
+    # For legacy format, extract just the class name from module.Class
+    if "." in name:
+        name = name.rsplit(".", 1)[1]
+    return name, version
+
+
+def _parse_semver(version: str) -> tuple[int, int, int]:
+    """Parse semantic version string into (major, minor, patch) tuple."""
+    parts = version.split(".")
+    if len(parts) != 3:
+        raise ValueError(f"Invalid semver format: {version}")
+    return int(parts[0]), int(parts[1]), int(parts[2])
+
+
+def _increment_patch(version: str) -> str:
+    """Increment patch version: 1.0.0 -> 1.0.1"""
+    major, minor, patch = _parse_semver(version)
+    return f"{major}.{minor}.{patch + 1}"
 
 
 def _python_type_to_field_type(python_type: Any) -> dict:
@@ -198,7 +508,7 @@ def _python_type_to_field_type(python_type: Any) -> dict:
 def _build_schema_record(
     sample_type: Type[PackableSample],
     *,
-    version: str = "1.0.0",
+    version: str,
     description: str | None = None,
 ) -> dict:
     """Build a schema record dict from a PackableSample type.
@@ -206,7 +516,8 @@ def _build_schema_record(
     Args:
         sample_type: The PackableSample subclass to introspect.
         version: Semantic version string.
-        description: Optional human-readable description.
+        description: Optional human-readable description. If None, uses the
+            class docstring.
 
     Returns:
         Schema record dict suitable for Redis storage.
@@ -217,6 +528,10 @@ def _build_schema_record(
     """
     if not is_dataclass(sample_type):
         raise ValueError(f"{sample_type.__name__} must be a dataclass (use @packable)")
+
+    # Use docstring as fallback for description
+    if description is None:
+        description = sample_type.__doc__
 
     field_defs = []
     type_hints = get_type_hints(sample_type)
@@ -255,19 +570,25 @@ class LocalDatasetEntry:
     The CID is generated from the entry's content (schema_ref + data_urls),
     ensuring the same data produces the same CID whether stored locally or
     in the atmosphere. This enables seamless promotion from local to ATProto.
+
+    Attributes:
+        name: Human-readable name for this dataset.
+        schema_ref: Reference to the schema for this dataset.
+        data_urls: WebDataset URLs for the data.
+        metadata: Arbitrary metadata dictionary, or None if not set.
     """
     ##
 
-    _name: str
+    name: str
     """Human-readable name for this dataset."""
 
-    _schema_ref: str
-    """Reference to the schema for this dataset (local:// path)."""
+    schema_ref: str
+    """Reference to the schema for this dataset."""
 
-    _data_urls: list[str]
+    data_urls: list[str]
     """WebDataset URLs for the data."""
 
-    _metadata: dict | None = None
+    metadata: dict | None = None
     """Arbitrary metadata dictionary, or None if not set."""
 
     _cid: str | None = field(default=None, repr=False)
@@ -286,34 +607,10 @@ class LocalDatasetEntry:
         """Generate ATProto-compatible CID from entry content."""
         # CID is based on schema_ref and data_urls - the identity of the dataset
         content = {
-            "schema_ref": self._schema_ref,
-            "data_urls": self._data_urls,
+            "schema_ref": self.schema_ref,
+            "data_urls": self.data_urls,
         }
         return generate_cid(content)
-
-    # IndexEntry protocol properties
-
-    @property
-    def name(self) -> str:
-        """Human-readable dataset name."""
-        return self._name
-
-    @property
-    def schema_ref(self) -> str:
-        """Reference to the schema for this dataset."""
-        return self._schema_ref
-
-    @property
-    def data_urls(self) -> list[str]:
-        """WebDataset URLs for the data."""
-        return self._data_urls
-
-    @property
-    def metadata(self) -> dict | None:
-        """Arbitrary metadata dictionary, or None if not set."""
-        return self._metadata
-
-    # Additional properties
 
     @property
     def cid(self) -> str:
@@ -326,12 +623,12 @@ class LocalDatasetEntry:
     @property
     def wds_url(self) -> str:
         """Legacy property: returns first data URL for backwards compatibility."""
-        return self._data_urls[0] if self._data_urls else ""
+        return self.data_urls[0] if self.data_urls else ""
 
     @property
     def sample_kind(self) -> str:
         """Legacy property: returns schema_ref for backwards compatibility."""
-        return self._schema_ref
+        return self.schema_ref
 
     def write_to(self, redis: Redis):
         """Persist this index entry to Redis.
@@ -343,13 +640,13 @@ class LocalDatasetEntry:
         """
         save_key = f'{REDIS_KEY_DATASET_ENTRY}:{self.cid}'
         data = {
-            'name': self._name,
-            'schema_ref': self._schema_ref,
-            'data_urls': msgpack.packb(self._data_urls),  # Serialize list
+            'name': self.name,
+            'schema_ref': self.schema_ref,
+            'data_urls': msgpack.packb(self.data_urls),  # Serialize list
             'cid': self.cid,
         }
-        if self._metadata is not None:
-            data['metadata'] = msgpack.packb(self._metadata)
+        if self.metadata is not None:
+            data['metadata'] = msgpack.packb(self.metadata)
         if self._legacy_uuid is not None:
             data['legacy_uuid'] = self._legacy_uuid
 
@@ -388,10 +685,10 @@ class LocalDatasetEntry:
             metadata = msgpack.unpackb(raw_data_typed[b'metadata'])
 
         return cls(
-            _name=name,
-            _schema_ref=schema_ref,
-            _data_urls=data_urls,
-            _metadata=metadata,
+            name=name,
+            schema_ref=schema_ref,
+            data_urls=data_urls,
+            metadata=metadata,
             _cid=cid_value,
             _legacy_uuid=legacy_uuid,
         )
@@ -662,6 +959,8 @@ class Index:
         self,
         redis: Redis | None = None,
         data_store: AbstractDataStore | None = None,
+        auto_stubs: bool = False,
+        stub_dir: Path | str | None = None,
         **kwargs,
     ) -> None:
         """Initialize an index.
@@ -672,6 +971,12 @@ class Index:
             data_store: Optional data store for writing dataset shards.
                 If provided, insert_dataset() will write shards to this store.
                 If None, insert_dataset() only indexes existing URLs.
+            auto_stubs: If True, automatically generate .pyi stub files when
+                schemas are accessed via get_schema() or decode_schema().
+                This enables IDE autocomplete for dynamically decoded types.
+            stub_dir: Directory to write stub files. Only used if auto_stubs
+                is True or if this parameter is provided (which implies auto_stubs).
+                Defaults to ~/.atdata/stubs/ if not specified.
             **kwargs: Additional arguments passed to Redis() constructor if
                 redis is None.
         """
@@ -684,10 +989,123 @@ class Index:
 
         self._data_store = data_store
 
+        # Initialize stub manager if auto-stubs enabled
+        # Providing stub_dir implies auto_stubs=True
+        if auto_stubs or stub_dir is not None:
+            from ._stub_manager import StubManager
+            self._stub_manager: StubManager | None = StubManager(stub_dir=stub_dir)
+        else:
+            self._stub_manager = None
+
+        # Initialize schema namespace for load_schema/schemas API
+        self._schema_namespace = SchemaNamespace()
+
     @property
     def data_store(self) -> AbstractDataStore | None:
         """The data store for writing shards, or None if index-only."""
         return self._data_store
+
+    @property
+    def stub_dir(self) -> Path | None:
+        """Directory where stub files are written, or None if auto-stubs disabled.
+
+        Use this path to configure your IDE for type checking support:
+        - VS Code/Pylance: Add to python.analysis.extraPaths in settings.json
+        - PyCharm: Mark as Sources Root
+        - mypy: Add to mypy_path in mypy.ini
+        """
+        if self._stub_manager is not None:
+            return self._stub_manager.stub_dir
+        return None
+
+    @property
+    def types(self) -> SchemaNamespace:
+        """Namespace for accessing loaded schema types.
+
+        After calling :meth:`load_schema`, schema types become available
+        as attributes on this namespace.
+
+        Example:
+            >>> index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
+            >>> MyType = index.types.MySample
+            >>> sample = MyType(name="hello", value=42)
+
+        Returns:
+            SchemaNamespace containing all loaded schema types.
+        """
+        return self._schema_namespace
+
+    def load_schema(self, ref: str) -> Type[PackableSample]:
+        """Load a schema and make it available in the types namespace.
+
+        This method decodes the schema, optionally generates a Python module
+        for IDE support (if auto_stubs is enabled), and registers the type
+        in the :attr:`types` namespace for easy access.
+
+        Args:
+            ref: Schema reference string (atdata://local/sampleSchema/... or
+                legacy local://schemas/...).
+
+        Returns:
+            The decoded PackableSample subclass. Also available via
+            ``index.types.<ClassName>`` after this call.
+
+        Raises:
+            KeyError: If schema not found.
+            ValueError: If schema cannot be decoded.
+
+        Example:
+            >>> # Load and use immediately
+            >>> MyType = index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
+            >>> sample = MyType(name="hello", value=42)
+            >>>
+            >>> # Or access later via namespace
+            >>> index.load_schema("atdata://local/sampleSchema/OtherType@1.0.0")
+            >>> other = index.types.OtherType(data="test")
+        """
+        # Decode the schema (uses generated module if auto_stubs enabled)
+        cls = self.decode_schema(ref)
+
+        # Register in namespace using the class name
+        self._schema_namespace._register(cls.__name__, cls)
+
+        return cls
+
+    def get_import_path(self, ref: str) -> str | None:
+        """Get the import path for a schema's generated module.
+
+        When auto_stubs is enabled, this returns the import path that can
+        be used to import the schema type with full IDE support.
+
+        Args:
+            ref: Schema reference string.
+
+        Returns:
+            Import path like "local.MySample_1_0_0", or None if auto_stubs
+            is disabled.
+
+        Example:
+            >>> index = LocalIndex(auto_stubs=True)
+            >>> ref = index.publish_schema(MySample, version="1.0.0")
+            >>> index.load_schema(ref)
+            >>> print(index.get_import_path(ref))
+            local.MySample_1_0_0
+            >>> # Then in your code:
+            >>> # from local.MySample_1_0_0 import MySample
+        """
+        if self._stub_manager is None:
+            return None
+
+        from ._stub_manager import _extract_authority
+
+        name, version = _parse_schema_ref(ref)
+        schema_dict = self.get_schema(ref)
+        authority = _extract_authority(schema_dict.get("$ref"))
+
+        safe_version = version.replace(".", "_")
+        module_name = f"{name}_{safe_version}"
+
+        return f"{authority}.{module_name}"
 
     @property
     def all_entries(self) -> list[LocalDatasetEntry]:
@@ -745,10 +1163,10 @@ class Index:
         entry_metadata = metadata if metadata is not None else ds._metadata
 
         entry = LocalDatasetEntry(
-            _name=name,
-            _schema_ref=schema_ref,
-            _data_urls=data_urls,
-            _metadata=entry_metadata,
+            name=name,
+            schema_ref=schema_ref,
+            data_urls=data_urls,
+            metadata=entry_metadata,
         )
 
         entry.write_to(self._redis)
@@ -829,15 +1247,15 @@ class Index:
 
             # Generate schema_ref if not provided
             if schema_ref is None:
-                schema_ref = _schema_ref_from_type(ds.sample_type)
+                schema_ref = _schema_ref_from_type(ds.sample_type, version="1.0.0")
 
             # Create entry with the written URLs
             entry_metadata = metadata if metadata is not None else ds._metadata
             entry = LocalDatasetEntry(
-                _name=name,
-                _schema_ref=schema_ref,
-                _data_urls=written_urls,
-                _metadata=entry_metadata,
+                name=name,
+                schema_ref=schema_ref,
+                data_urls=written_urls,
+                metadata=entry_metadata,
             )
             entry.write_to(self._redis)
             return entry
@@ -869,27 +1287,69 @@ class Index:
 
     # Schema operations
 
+    def _get_latest_schema_version(self, name: str) -> str | None:
+        """Get the latest version for a schema by name, or None if not found."""
+        latest_version: tuple[int, int, int] | None = None
+        latest_version_str: str | None = None
+
+        prefix = f'{REDIS_KEY_SCHEMA}:'
+        for key in self._redis.scan_iter(match=f'{prefix}*'):
+            key_str = key.decode('utf-8') if isinstance(key, bytes) else key
+            schema_id = key_str[len(prefix):]
+
+            if "@" not in schema_id:
+                continue
+
+            schema_name, version_str = schema_id.rsplit("@", 1)
+            # Handle legacy format: module.Class -> Class
+            if "." in schema_name:
+                schema_name = schema_name.rsplit(".", 1)[1]
+
+            if schema_name != name:
+                continue
+
+            try:
+                version_tuple = _parse_semver(version_str)
+                if latest_version is None or version_tuple > latest_version:
+                    latest_version = version_tuple
+                    latest_version_str = version_str
+            except ValueError:
+                continue
+
+        return latest_version_str
+
     def publish_schema(
         self,
         sample_type: Type[PackableSample],
         *,
-        version: str = "1.0.0",
+        version: str | None = None,
         description: str | None = None,
     ) -> str:
         """Publish a schema for a sample type to Redis.
 
         Args:
             sample_type: The PackableSample subclass to publish.
-            version: Semantic version string (e.g., '1.0.0').
-            description: Optional human-readable description.
+            version: Semantic version string (e.g., '1.0.0'). If None,
+                auto-increments from the latest published version (patch bump),
+                or starts at '1.0.0' if no previous version exists.
+            description: Optional human-readable description. If None, uses
+                the class docstring.
 
         Returns:
-            Schema reference string: 'local://schemas/{module.Class}@{version}'.
+            Schema reference string: 'atdata://local/sampleSchema/{name}@{version}'.
 
         Raises:
             ValueError: If sample_type is not a dataclass.
             TypeError: If a field type is not supported.
         """
+        # Auto-increment version if not specified
+        if version is None:
+            latest = self._get_latest_schema_version(sample_type.__name__)
+            if latest is None:
+                version = "1.0.0"
+            else:
+                version = _increment_patch(latest)
+
         schema_record = _build_schema_record(
             sample_type,
             version=version,
@@ -897,30 +1357,33 @@ class Index:
         )
 
         schema_ref = _schema_ref_from_type(sample_type, version)
-        kind_str, _ = _parse_schema_ref(schema_ref)
+        name, _ = _parse_schema_ref(schema_ref)
 
         # Store in Redis
-        redis_key = f"{REDIS_KEY_SCHEMA}:{kind_str}@{version}"
+        redis_key = f"{REDIS_KEY_SCHEMA}:{name}@{version}"
         schema_json = json.dumps(schema_record)
         self._redis.set(redis_key, schema_json)
 
         return schema_ref
 
     def get_schema(self, ref: str) -> dict:
-        """Get a schema record by reference.
+        """Get a schema record by reference (AbstractIndex protocol).
 
         Args:
-            ref: Schema reference string (local://schemas/...).
+            ref: Schema reference string. Supports both new format
+                (atdata://local/sampleSchema/{name}@{version}) and legacy
+                format (local://schemas/{module.Class}@{version}).
 
         Returns:
-            Schema record as a dictionary.
+            Schema record as a dictionary with keys 'name', 'version',
+            'fields', '$ref', etc.
 
         Raises:
             KeyError: If schema not found.
             ValueError: If reference format is invalid.
         """
-        kind_str, version = _parse_schema_ref(ref)
-        redis_key = f"{REDIS_KEY_SCHEMA}:{kind_str}@{version}"
+        name, version = _parse_schema_ref(ref)
+        redis_key = f"{REDIS_KEY_SCHEMA}:{name}@{version}"
 
         schema_json = self._redis.get(redis_key)
         if schema_json is None:
@@ -930,20 +1393,45 @@ class Index:
             schema_json = schema_json.decode('utf-8')
 
         schema = json.loads(schema_json)
-        # Add $ref for decode_schema compatibility
-        schema['$ref'] = ref
+        schema['$ref'] = _make_schema_ref(name, version)
+
+        # Auto-generate stub if enabled
+        if self._stub_manager is not None:
+            record = LocalSchemaRecord.from_dict(schema)
+            self._stub_manager.ensure_stub(record)
+
         return schema
 
-    def list_schemas(self) -> Generator[dict, None, None]:
-        """List all schema records in this index.
+    def get_schema_record(self, ref: str) -> LocalSchemaRecord:
+        """Get a schema record as LocalSchemaRecord object.
+
+        Use this when you need the full LocalSchemaRecord with typed properties.
+        For Protocol-compliant dict access, use get_schema() instead.
+
+        Args:
+            ref: Schema reference string.
+
+        Returns:
+            LocalSchemaRecord with schema details.
+
+        Raises:
+            KeyError: If schema not found.
+            ValueError: If reference format is invalid.
+        """
+        schema = self.get_schema(ref)
+        return LocalSchemaRecord.from_dict(schema)
+
+    @property
+    def schemas(self) -> Generator[LocalSchemaRecord, None, None]:
+        """Iterate over all schema records in this index.
 
         Yields:
-            Schema records as dictionaries.
+            LocalSchemaRecord for each schema.
         """
         prefix = f'{REDIS_KEY_SCHEMA}:'
         for key in self._redis.scan_iter(match=f'{prefix}*'):
             key_str = key.decode('utf-8') if isinstance(key, bytes) else key
-            # Extract kind_str@version from key
+            # Extract name@version from key
             schema_id = key_str[len(prefix):]
 
             schema_json = self._redis.get(key)
@@ -954,8 +1442,25 @@ class Index:
                 schema_json = schema_json.decode('utf-8')
 
             schema = json.loads(schema_json)
-            schema['$ref'] = f"local://schemas/{schema_id}"
-            yield schema
+            # Handle legacy keys that have module.Class format
+            if "." in schema_id.split("@")[0]:
+                name = schema_id.split("@")[0].rsplit(".", 1)[1]
+                version = schema_id.split("@")[1]
+                schema['$ref'] = _make_schema_ref(name, version)
+            else:
+                # schema_id is already "name@version"
+                name, version = schema_id.rsplit("@", 1)
+                schema['$ref'] = _make_schema_ref(name, version)
+            yield LocalSchemaRecord.from_dict(schema)
+
+    def list_schemas(self) -> Iterator[dict]:
+        """List all schema records (AbstractIndex protocol).
+
+        Yields:
+            Schema records as dictionaries.
+        """
+        for record in self.schemas:
+            yield record.to_dict()
 
     def decode_schema(self, ref: str) -> Type[PackableSample]:
         """Reconstruct a Python PackableSample type from a stored schema.
@@ -964,20 +1469,76 @@ class Index:
         ahead of time. The index retrieves the schema record and dynamically
         generates a PackableSample subclass matching the schema definition.
 
+        If auto_stubs is enabled, a Python module will be generated and the
+        class will be imported from it, providing full IDE autocomplete support.
+        The returned class has proper type information that IDEs can understand.
+
         Args:
-            ref: Schema reference string (local://schemas/...).
+            ref: Schema reference string (atdata://local/sampleSchema/... or
+                legacy local://schemas/...).
 
         Returns:
-            A dynamically generated PackableSample subclass.
+            A PackableSample subclass - either imported from a generated module
+            (if auto_stubs is enabled) or dynamically created.
 
         Raises:
             KeyError: If schema not found.
             ValueError: If schema cannot be decoded.
         """
-        from atdata._schema_codec import schema_to_type
+        schema_dict = self.get_schema(ref)
 
-        schema = self.get_schema(ref)
-        return schema_to_type(schema)
+        # If auto_stubs is enabled, generate module and import class from it
+        if self._stub_manager is not None:
+            cls = self._stub_manager.ensure_module(schema_dict)
+            if cls is not None:
+                return cls
+
+        # Fall back to dynamic type generation
+        from atdata._schema_codec import schema_to_type
+        return schema_to_type(schema_dict)
+
+    def decode_schema_as(self, ref: str, type_hint: type[T]) -> type[T]:
+        """Decode a schema with explicit type hint for IDE support.
+
+        This is a typed wrapper around decode_schema() that preserves the
+        type information for IDE autocomplete. Use this when you have a
+        stub file for the schema and want full IDE support.
+
+        Args:
+            ref: Schema reference string.
+            type_hint: The stub type to use for type hints. Import this from
+                the generated stub file.
+
+        Returns:
+            The decoded type, cast to match the type_hint for IDE support.
+
+        Example:
+            >>> # After enabling auto_stubs and configuring IDE extraPaths:
+            >>> from local.MySample_1_0_0 import MySample
+            >>>
+            >>> # This gives full IDE autocomplete:
+            >>> DecodedType = index.decode_schema_as(ref, MySample)
+            >>> sample = DecodedType(text="hello", value=42)  # IDE knows signature!
+
+        Note:
+            The type_hint is only used for static type checking - at runtime,
+            the actual decoded type from the schema is returned. Ensure the
+            stub matches the schema to avoid runtime surprises.
+        """
+        from typing import cast
+        return cast(type[T], self.decode_schema(ref))
+
+    def clear_stubs(self) -> int:
+        """Remove all auto-generated stub files.
+
+        Only works if auto_stubs was enabled when creating the Index.
+
+        Returns:
+            Number of stub files removed, or 0 if auto_stubs is disabled.
+        """
+        if self._stub_manager is not None:
+            return self._stub_manager.clear_stubs()
+        return 0
 
 
 # Backwards compatibility alias
@@ -1069,16 +1630,28 @@ class S3DataStore:
         return written_shards
 
     def read_url(self, url: str) -> str:
-        """Resolve an S3 URL for reading.
+        """Resolve an S3 URL for reading/streaming.
 
-        For S3, URLs are returned as-is (WebDataset handles s3:// directly).
+        For S3-compatible stores with custom endpoints (like Cloudflare R2,
+        MinIO, etc.), converts s3:// URLs to HTTPS URLs that WebDataset can
+        stream directly.
+
+        For standard AWS S3 (no custom endpoint), URLs are returned unchanged
+        since WebDataset's built-in s3fs integration handles them.
 
         Args:
-            url: S3 URL to resolve.
+            url: S3 URL to resolve (e.g., 's3://bucket/path/file.tar').
 
         Returns:
-            The URL unchanged.
+            HTTPS URL if custom endpoint is configured, otherwise unchanged.
+            Example: 's3://bucket/path' -> 'https://endpoint.com/bucket/path'
         """
+        endpoint = self.credentials.get('AWS_ENDPOINT')
+        if endpoint and url.startswith('s3://'):
+            # s3://bucket/path -> https://endpoint/bucket/path
+            path = url[5:]  # Remove 's3://' prefix
+            endpoint = endpoint.rstrip('/')
+            return f"{endpoint}/{path}"
         return url
 
     def supports_streaming(self) -> bool:

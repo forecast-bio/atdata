@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://github.com/your-org/atdata/reference/protocols.html</loc>
-    <lastmod>2026-01-18T03:31:39.824Z</lastmod>
+    <lastmod>2026-01-22T19:18:54.598Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/reference/packable-samples.html</loc>
@@ -14,39 +14,43 @@
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/reference/load-dataset.html</loc>
-    <lastmod>2026-01-18T03:31:39.823Z</lastmod>
-  </url>
-  <url>
-    <loc>https://github.com/your-org/atdata/tutorials/quickstart.html</loc>
-    <lastmod>2026-01-18T03:31:39.825Z</lastmod>
-  </url>
-  <url>
-    <loc>https://github.com/your-org/atdata/tutorials/atmosphere.html</loc>
-    <lastmod>2026-01-18T03:31:39.824Z</lastmod>
-  </url>
-  <url>
-    <loc>https://github.com/your-org/atdata/api/index.html</loc>
-    <lastmod>2026-01-20T20:30:08.284Z</lastmod>
-  </url>
-  <url>
-    <loc>https://github.com/your-org/atdata/index.html</loc>
-    <lastmod>2026-01-20T00:36:22.475Z</lastmod>
-  </url>
-  <url>
-    <loc>https://github.com/your-org/atdata/tutorials/promotion.html</loc>
-    <lastmod>2026-01-20T20:29:57.798Z</lastmod>
-  </url>
-  <url>
-    <loc>https://github.com/your-org/atdata/tutorials/local-workflow.html</loc>
-    <lastmod>2026-01-20T00:37:30.604Z</lastmod>
+    <lastmod>2026-01-22T19:20:17.161Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/reference/promotion.html</loc>
     <lastmod>2026-01-20T00:37:12.561Z</lastmod>
   </url>
   <url>
+    <loc>https://github.com/your-org/atdata/tutorials/local-workflow.html</loc>
+    <lastmod>2026-01-20T00:37:30.604Z</lastmod>
+  </url>
+  <url>
+    <loc>https://github.com/your-org/atdata/tutorials/promotion.html</loc>
+    <lastmod>2026-01-20T20:29:57.798Z</lastmod>
+  </url>
+  <url>
+    <loc>https://github.com/your-org/atdata/index.html</loc>
+    <lastmod>2026-01-20T00:36:22.475Z</lastmod>
+  </url>
+  <url>
+    <loc>https://github.com/your-org/atdata/api/index.html</loc>
+    <lastmod>2026-01-20T20:30:08.284Z</lastmod>
+  </url>
+  <url>
+    <loc>https://github.com/your-org/atdata/tutorials/atmosphere.html</loc>
+    <lastmod>2026-01-18T03:31:39.824Z</lastmod>
+  </url>
+  <url>
+    <loc>https://github.com/your-org/atdata/tutorials/quickstart.html</loc>
+    <lastmod>2026-01-18T03:31:39.825Z</lastmod>
+  </url>
+  <url>
+    <loc>https://github.com/your-org/atdata/reference/uri-spec.html</loc>
+    <lastmod>2026-01-20T23:29:15.382Z</lastmod>
+  </url>
+  <url>
     <loc>https://github.com/your-org/atdata/reference/local-storage.html</loc>
-    <lastmod>2026-01-20T00:36:52.221Z</lastmod>
+    <lastmod>2026-01-22T19:20:33.675Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/reference/atmosphere.html</loc>
@@ -54,6 +58,6 @@
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/reference/datasets.html</loc>
-    <lastmod>2026-01-18T03:31:39.823Z</lastmod>
+    <lastmod>2026-01-22T19:18:20.449Z</lastmod>
   </url>
 </urlset>

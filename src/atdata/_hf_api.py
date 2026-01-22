@@ -457,7 +457,15 @@ def _resolve_indexed_path(
     # For LocalIndex, the handle is ignored and we just look up by name
     entry = index.get_dataset(dataset_name)
 
-    return entry.data_urls, entry.schema_ref
+    data_urls = entry.data_urls
+
+    # Transform URLs through data store if available.
+    # This handles S3-compatible endpoints (like Cloudflare R2, MinIO) that need
+    # URL transformation from s3:// to https:// for WebDataset streaming.
+    if hasattr(index, 'data_store') and index.data_store is not None:
+        data_urls = [index.data_store.read_url(url) for url in data_urls]
+
+    return data_urls, entry.schema_ref
 
 
 ##
