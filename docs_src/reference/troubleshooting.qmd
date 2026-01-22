@@ -1,0 +1,227 @@
+---
+title: "Troubleshooting & FAQ"
+description: "Common issues and frequently asked questions"
+---
+
+This page covers common issues, error messages, and frequently asked questions when working with atdata.
+
+## Common Errors
+
+### TypeError: 'type' object is not subscriptable
+
+**Error:**
+```
+TypeError: 'type' object is not subscriptable
+```
+
+**Cause:** Using `Dataset` or `SampleBatch` without subscripting the type parameter on Python < 3.9, or using an unsubscripted generic.
+
+**Solution:** Always use the subscripted form:
+```python
+# Correct
+ds = Dataset[MySample]("data.tar")
+batch = SampleBatch[MySample](samples)
+
+# Incorrect
+ds = Dataset("data.tar")  # Missing type parameter
+```
+
+### AttributeError: 'NoneType' object has no attribute...
+
+**Error:**
+```
+AttributeError: 'NoneType' object has no attribute '__args__'
+```
+
+**Cause:** Creating a `Dataset` or `SampleBatch` without using the subscripted syntax `Class[Type](...)`.
+
+**Solution:** These classes use Python's `__orig_class__` mechanism to extract type parameters at runtime. You must use:
+```python
+ds = Dataset[MySample](url)  # Correct
+```
+
+Not:
+```python
+ds = Dataset(url)  # Wrong - no type information
+```
+
+### RuntimeError: msgpack field not found in sample
+
+**Error:**
+```
+RuntimeError: Malformed sample: 'msgpack' field not found
+```
+
+**Cause:** The tar file contains samples that weren't written with atdata's serialization format.
+
+**Solution:** Ensure samples are written using `sample.as_wds`:
+```python
+with wds.writer.TarWriter("data.tar") as sink:
+    for sample in samples:
+        sink.write(sample.as_wds)  # Correct
+```
+
+### ValueError: Field type not supported
+
+**Error:**
+```
+TypeError: Unsupported type for schema field: <class 'SomeType'>
+```
+
+**Cause:** Using an unsupported Python type in a PackableSample field.
+
+**Supported types:**
+
+| Python Type | Notes |
+|-------------|-------|
+| `str` | Unicode strings |
+| `int` | Integers |
+| `float` | Floating point |
+| `bool` | Boolean |
+| `bytes` | Binary data |
+| `NDArray` | Numpy arrays (any dtype) |
+| `list[T]` | Lists of primitives |
+| `T \| None` | Optional fields |
+
+**Not supported:** Nested dataclasses, dicts, custom classes.
+
+### KeyError when iterating dataset
+
+**Error:**
+```
+KeyError: 'msgpack'
+```
+
+**Cause:** The WebDataset tar file structure doesn't match expected format.
+
+**Solution:** Verify your tar file was created correctly:
+```bash
+# Check tar contents
+tar -tvf data.tar | head -20
+```
+
+Each sample should have a `.msgpack` extension in the tar file.
+
+## FAQ
+
+### How do I check the sample type of a dataset?
+
+```python
+ds = Dataset[MySample]("data.tar")
+print(ds.sample_type)  # <class 'MySample'>
+```
+
+### How do I convert a dataset to a different type?
+
+Use the `as_type()` method with a registered lens:
+
+```python
+@atdata.lens
+def my_lens(src: SourceType) -> TargetType:
+    return TargetType(field=src.other_field)
+
+ds_view = ds.as_type(TargetType)
+```
+
+### How do I handle optional NDArray fields?
+
+Use `NDArray | None` annotation:
+
+```python
+@atdata.packable
+class MySample:
+    required_array: NDArray
+    optional_array: NDArray | None = None
+```
+
+### Why is my dataset iteration slow?
+
+Common causes:
+
+1. **Network latency**: Use local caching for remote datasets
+2. **Small batch sizes**: Increase `batch_size` in `ordered()` or `shuffled()`
+3. **Shuffle buffer**: For `shuffled()`, the `initial` parameter controls buffer size
+
+```python
+# Larger batches = better throughput
+for batch in ds.shuffled(batch_size=64, initial=1000):
+    ...
+```
+
+### How do I export to parquet?
+
+```python
+ds = Dataset[MySample]("data.tar")
+ds.to_parquet("output.parquet")
+
+# With sample limit (for large datasets)
+ds.to_parquet("output.parquet", maxcount=10000)
+```
+
+::: {.callout-warning}
+`to_parquet()` loads the dataset into memory. For very large datasets, use `maxcount` to limit samples or process in chunks.
+:::
+
+### How do I handle multiple shards?
+
+Use WebDataset brace notation:
+
+```python
+# Single shard
+ds = Dataset[MySample]("data-000000.tar")
+
+# Multiple shards (range)
+ds = Dataset[MySample]("data-{000000..000009}.tar")
+
+# Multiple shards (list)
+ds = Dataset[MySample]("data-{000000,000005,000009}.tar")
+```
+
+### Can I use S3 or other cloud storage?
+
+Yes, use `S3Source` for S3-compatible storage:
+
+```python
+from atdata import S3Source, Dataset
+
+source = S3Source.from_urls(
+    ["s3://bucket/data-000000.tar", "s3://bucket/data-000001.tar"],
+    endpoint_url="https://s3.example.com",  # Optional for non-AWS S3
+)
+
+ds = Dataset[MySample](source)
+```
+
+### How do I publish to ATProto/Atmosphere?
+
+```python
+from atdata.atmosphere import AtmosphereClient, AtmosphereIndex
+
+client = AtmosphereClient()
+client.login("handle.bsky.social", "app-password")  # Use app password!
+
+index = AtmosphereIndex(client)
+
+# Publish schema
+schema_uri = index.publish_schema(MySample, version="1.0.0")
+
+# Publish dataset
+entry = index.insert_dataset(ds, name="my-dataset", schema_ref=schema_uri)
+```
+
+### What's the difference between LocalIndex and AtmosphereIndex?
+
+| Feature | LocalIndex | AtmosphereIndex |
+|---------|------------|-----------------|
+| Storage | Redis + S3 | ATProto PDS |
+| Discovery | Local only | Federated network |
+| Auth | None required | ATProto account |
+| Use case | Development, private data | Public distribution |
+
+Both implement the `AbstractIndex` protocol, so code can work with either.
+
+## Getting Help
+
+- **GitHub Issues**: [github.com/your-org/atdata/issues](https://github.com/your-org/atdata/issues)
+- **Documentation**: Check the reference pages for detailed API documentation
+- **Examples**: See the `examples/` directory for working code samples

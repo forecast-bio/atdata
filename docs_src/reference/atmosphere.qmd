@@ -269,6 +269,80 @@ uri = publisher.publish_from_lens(
 )
 ```
 
+## Lower-Level Loaders
+
+For direct access to records, use the loader classes:
+
+### SchemaLoader
+
+```{python}
+#| eval: false
+from atdata.atmosphere import SchemaLoader
+
+loader = SchemaLoader(client)
+
+# Get a specific schema
+schema = loader.get("at://did:plc:abc/ac.foundation.dataset.sampleSchema/xyz")
+print(schema["name"], schema["version"])
+
+# List all schemas from a repository
+for schema in loader.list_all(repo="did:plc:other-user"):
+    print(schema["name"])
+```
+
+### DatasetLoader
+
+```{python}
+#| eval: false
+from atdata.atmosphere import DatasetLoader
+
+loader = DatasetLoader(client)
+
+# Get a specific dataset record
+record = loader.get("at://did:plc:abc/ac.foundation.dataset.record/xyz")
+
+# Check storage type
+storage_type = loader.get_storage_type(uri)  # "external" or "blobs"
+
+# Get URLs based on storage type
+if storage_type == "external":
+    urls = loader.get_urls(uri)
+else:
+    urls = loader.get_blob_urls(uri)
+
+# Get metadata
+metadata = loader.get_metadata(uri)
+
+# Create a Dataset object directly
+dataset = loader.to_dataset(uri, MySampleType)
+for batch in dataset.ordered(batch_size=32):
+    process(batch)
+```
+
+### LensLoader
+
+```{python}
+#| eval: false
+from atdata.atmosphere import LensLoader
+
+loader = LensLoader(client)
+
+# Get a specific lens record
+lens = loader.get("at://did:plc:abc/ac.foundation.dataset.lens/xyz")
+print(lens["name"])
+print(lens["sourceSchema"], "->", lens["targetSchema"])
+
+# List all lenses from a repository
+for lens in loader.list_all():
+    print(lens["name"])
+
+# Find lenses by schema
+lenses = loader.find_by_schemas(
+    source_schema_uri="at://did:plc:abc/ac.foundation.dataset.sampleSchema/source",
+    target_schema_uri="at://did:plc:abc/ac.foundation.dataset.sampleSchema/target",
+)
+```
+
 ## AT URIs
 
 ATProto records are identified by AT URIs:

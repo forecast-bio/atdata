@@ -45,6 +45,10 @@ website:
             href: reference/protocols.qmd
           - text: "URI Specification"
             href: reference/uri-spec.qmd
+          - text: "Troubleshooting & FAQ"
+            href: reference/troubleshooting.qmd
+          - text: "Deployment Guide"
+            href: reference/deployment.qmd
       - text: "API"
         href: api/index.qmd
     right:
@@ -73,6 +77,8 @@ website:
             - reference/load-dataset.qmd
             - reference/protocols.qmd
             - reference/uri-spec.qmd
+            - reference/troubleshooting.qmd
+            - reference/deployment.qmd
         - section: "API Reference"
           contents:
             - api/index.qmd

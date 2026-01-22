@@ -262,6 +262,12 @@ class SampleBatch( Generic[DT] ):
         >>> batch = SampleBatch[MyData]([sample1, sample2, sample3])
         >>> batch.embeddings  # Returns stacked numpy array of shape (3, ...)
         >>> batch.names  # Returns list of names
+
+    Note:
+        This class uses Python's ``__orig_class__`` mechanism to extract the
+        type parameter at runtime. Instances must be created using the
+        subscripted syntax ``SampleBatch[MyType](samples)`` rather than
+        calling the constructor directly with an unsubscripted class.
     """
 
     def __init__( self, samples: Sequence[DT] ):
@@ -382,7 +388,12 @@ class Dataset( Generic[ST] ):
         ...
         >>> # Transform to a different view
         >>> ds_view = ds.as_type(MyDataView)
-    
+
+    Note:
+        This class uses Python's ``__orig_class__`` mechanism to extract the
+        type parameter at runtime. Instances must be created using the
+        subscripted syntax ``Dataset[MyType](url)`` rather than calling the
+        constructor directly with an unsubscripted class.
     """
 
     @property
@@ -597,9 +608,41 @@ class Dataset( Generic[ST] ):
                 maxcount: Optional[int] = None,
                 **kwargs,
             ):
-        """Save dataset contents to a `parquet` file at `path`
+        """Export dataset contents to parquet format.
 
-        `kwargs` sent to `pandas.to_parquet`
+        Converts all samples to a pandas DataFrame and saves to parquet file(s).
+        Useful for interoperability with data analysis tools.
+
+        Args:
+            path: Output path for the parquet file. If ``maxcount`` is specified,
+                files are named ``{stem}-{segment:06d}.parquet``.
+            sample_map: Optional function to convert samples to dictionaries.
+                Defaults to ``dataclasses.asdict``.
+            maxcount: If specified, split output into multiple files with at most
+                this many samples each. Recommended for large datasets.
+            **kwargs: Additional arguments passed to ``pandas.DataFrame.to_parquet()``.
+                Common options include ``compression``, ``index``, ``engine``.
+
+        Warning:
+            **Memory Usage**: When ``maxcount=None`` (default), this method loads
+            the **entire dataset into memory** as a pandas DataFrame before writing.
+            For large datasets, this can cause memory exhaustion.
+
+            For datasets larger than available RAM, always specify ``maxcount``::
+
+                # Safe for large datasets - processes in chunks
+                ds.to_parquet("output.parquet", maxcount=10000)
+
+            This creates multiple parquet files: ``output-000000.parquet``,
+            ``output-000001.parquet``, etc.
+
+        Example:
+            >>> ds = Dataset[MySample]("data.tar")
+            >>> # Small dataset - load all at once
+            >>> ds.to_parquet("output.parquet")
+            >>>
+            >>> # Large dataset - process in chunks
+            >>> ds.to_parquet("output.parquet", maxcount=50000)
         """
         ##
 

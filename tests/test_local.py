@@ -32,7 +32,7 @@ def mock_s3():
 
     Note: Tests using this fixture may generate warnings due to s3fs/moto async
     incompatibility. These are suppressed via @pytest.mark.filterwarnings on
-    individual tests that use this fixture.
+    individual tests. See tests/EXPECTED_WARNINGS.md for details.
     """
     with mock_aws():
         # Create S3 credentials dict (no endpoint_url for moto)
@@ -78,14 +78,21 @@ def sample_dataset(tmp_path):
 
 @dataclass
 class SimpleTestSample(atdata.PackableSample):
-    """Simple test sample for repository tests."""
+    """Simple test sample for repository tests.
+
+    Note: This matches SharedBasicSample in conftest.py but is kept local
+    because tests verify class name behavior.
+    """
     name: str
     value: int
 
 
 @dataclass
 class ArrayTestSample(atdata.PackableSample):
-    """Test sample with numpy array for repository tests."""
+    """Test sample with numpy array for repository tests.
+
+    Note: Similar to SharedNumpySample but kept local for test isolation.
+    """
     label: str
     data: NDArray
 

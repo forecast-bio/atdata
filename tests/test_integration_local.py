@@ -53,7 +53,12 @@ class MetadataSample(atdata.PackableSample):
 
 @pytest.fixture
 def mock_s3():
-    """Provide mock S3 environment using moto."""
+    """Provide mock S3 environment using moto.
+
+    Note: Tests using this fixture may generate warnings due to s3fs/moto async
+    incompatibility. These are suppressed via @pytest.mark.filterwarnings on
+    individual tests. See tests/EXPECTED_WARNINGS.md for details.
+    """
     with mock_aws():
         import boto3
         creds = {

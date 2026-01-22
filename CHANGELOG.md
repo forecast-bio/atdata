@@ -25,6 +25,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- v0.2.2 beta release improvements (#326)
+- Document to_parquet() memory usage (#336)
+- Evaluate splitting local.py into modules (#335)
+- Add error path tests (timeouts, partial failures) (#334)
+- Add deployment guide to docs (#333)
+- Add troubleshooting/FAQ section to docs (#332)
+- Document __orig_class__ assumption in Dataset docstring (#331)
+- Centralize tar creation helper in test fixtures (#330)
+- Consolidate duplicate test sample types to conftest.py (#329)
+- Document expected filterwarnings in test suite (#328)
+- Complete truncated atmosphere.qmd documentation (#327)
+- Comprehensive v0.2.2 beta release review (#321)
+- Compile findings into .review/comprehensive-review.md (#325)
+- Review documentation website and examples (#324)
+- Review test suite coverage and quality (#323)
+- Review core codebase architecture and code quality (#322)
+- Human Review: Local Workflow API Improvements (#274)
 - Update documentation and examples for current codebase (#316)
 - Update README.md with current API (#320)
 - Update examples/*.py files for current API (#319)

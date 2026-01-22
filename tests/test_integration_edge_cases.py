@@ -13,10 +13,12 @@ from pathlib import Path
 
 import numpy as np
 from numpy.typing import NDArray
-import webdataset as wds
 
 import atdata
 from atdata.local import LocalIndex, LocalDatasetEntry
+
+# Use centralized tar creation helper from conftest
+from conftest import create_tar_with_samples
 
 
 ##
@@ -70,18 +72,6 @@ class NDArraySample:
     """Sample with NDArray field."""
     label: str
     data: NDArray
-
-
-##
-# Helper Functions
-
-
-def create_tar_with_samples(tar_path: Path, samples: list) -> None:
-    """Create a tar file with the given samples."""
-    tar_path.parent.mkdir(parents=True, exist_ok=True)
-    with wds.writer.TarWriter(str(tar_path)) as writer:
-        for sample in samples:
-            writer.write(sample.as_wds)
 
 
 ##
