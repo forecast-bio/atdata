@@ -201,6 +201,12 @@ When using the `/commit` command or creating commits:
 - This ensures issue tracking history is preserved across sessions
 - The issues.db file tracks all chainlink issues, comments, and status changes
 
+### CLI Module
+
+- **Track `src/atdata/cli/`** - Always include the CLI module in commits
+- The CLI provides `atdata local up/down/status` and `atdata diagnose` commands
+- Changes to CLI should be committed with the related feature changes
+
 ### Planning Documents
 
 - **Track `.planning/` directory in git** - Do not ignore planning documents
