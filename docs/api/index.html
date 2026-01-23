@@ -364,6 +364,7 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#api-reference" id="toc-api-reference" class="nav-link active" data-scroll-target="#api-reference">API Reference</a>
   <ul class="collapse">
   <li><a href="#core" id="toc-core" class="nav-link" data-scroll-target="#core">Core</a></li>
+  <li><a href="#protocols" id="toc-protocols" class="nav-link" data-scroll-target="#protocols">Protocols</a></li>
   <li><a href="#data-sources" id="toc-data-sources" class="nav-link" data-scroll-target="#data-sources">Data Sources</a></li>
   <li><a href="#local-storage" id="toc-local-storage" class="nav-link" data-scroll-target="#local-storage">Local Storage</a></li>
   <li><a href="#atmosphere" id="toc-atmosphere" class="nav-link" data-scroll-target="#atmosphere">Atmosphere</a></li>
@@ -421,6 +422,34 @@ ul.task-list li input[type="checkbox"] {
 <tr class="odd">
 <td><a href="../api/DatasetDict.html#atdata.DatasetDict">DatasetDict</a></td>
 <td>A dictionary of split names to Dataset instances.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="protocols" class="level2">
+<h2 class="anchored" data-anchor-id="protocols">Protocols</h2>
+<p>Abstract protocols for storage backends</p>
+<table class="caption-top table">
+<tbody>
+<tr class="odd">
+<td><a href="../api/Packable-protocol.html#atdata.Packable">Packable</a></td>
+<td>Structural protocol for packable sample types.</td>
+</tr>
+<tr class="even">
+<td><a href="../api/IndexEntry.html#atdata.IndexEntry">IndexEntry</a></td>
+<td>Common interface for index entries (local or atmosphere).</td>
+</tr>
+<tr class="odd">
+<td><a href="../api/AbstractIndex.html#atdata.AbstractIndex">AbstractIndex</a></td>
+<td>Protocol for index operations - implemented by LocalIndex and AtmosphereIndex.</td>
+</tr>
+<tr class="even">
+<td><a href="../api/AbstractDataStore.html#atdata.AbstractDataStore">AbstractDataStore</a></td>
+<td>Protocol for data storage operations.</td>
+</tr>
+<tr class="odd">
+<td><a href="../api/DataSource.html#atdata.DataSource">DataSource</a></td>
+<td>Protocol for data sources that provide streams to Dataset.</td>
 </tr>
 </tbody>
 </table>

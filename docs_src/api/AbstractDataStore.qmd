@@ -1,0 +1,76 @@
+# AbstractDataStore { #atdata.AbstractDataStore }
+
+```python
+AbstractDataStore()
+```
+
+Protocol for data storage operations.
+
+This protocol abstracts over different storage backends for dataset data:
+- S3DataStore: S3-compatible object storage
+- PDSBlobStore: ATProto PDS blob storage (future)
+
+The separation of index (metadata) from data store (actual files) allows
+flexible deployment: local index with S3 storage, atmosphere index with
+S3 storage, or atmosphere index with PDS blobs.
+
+Example:
+    >>> store = S3DataStore(credentials, bucket="my-bucket")
+    >>> urls = store.write_shards(dataset, prefix="training/v1")
+    >>> print(urls)
+    ['s3://my-bucket/training/v1/shard-000000.tar', ...]
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [read_url](#atdata.AbstractDataStore.read_url) | Resolve a storage URL for reading. |
+| [supports_streaming](#atdata.AbstractDataStore.supports_streaming) | Whether this store supports streaming reads. |
+| [write_shards](#atdata.AbstractDataStore.write_shards) | Write dataset shards to storage. |
+
+### read_url { #atdata.AbstractDataStore.read_url }
+
+```python
+AbstractDataStore.read_url(url)
+```
+
+Resolve a storage URL for reading.
+
+Some storage backends may need to transform URLs (e.g., signing S3 URLs
+or resolving blob references). This method returns a URL that can be
+used directly with WebDataset.
+
+Args:
+    url: Storage URL to resolve.
+
+Returns:
+    WebDataset-compatible URL for reading.
+
+### supports_streaming { #atdata.AbstractDataStore.supports_streaming }
+
+```python
+AbstractDataStore.supports_streaming()
+```
+
+Whether this store supports streaming reads.
+
+Returns:
+    True if the store supports efficient streaming (like S3),
+    False if data must be fully downloaded first.
+
+### write_shards { #atdata.AbstractDataStore.write_shards }
+
+```python
+AbstractDataStore.write_shards(ds, *, prefix, **kwargs)
+```
+
+Write dataset shards to storage.
+
+Args:
+    ds: The Dataset to write.
+    prefix: Path prefix for the shards (e.g., 'datasets/mnist/v1').
+    **kwargs: Backend-specific options (e.g., maxcount for shard size).
+
+Returns:
+    List of URLs for the written shards, suitable for use with
+    WebDataset or atdata.Dataset().

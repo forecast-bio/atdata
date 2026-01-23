@@ -30,6 +30,19 @@ quartodoc:
         - name: DatasetDict
           children: embedded
 
+    # Protocols
+    - title: Protocols
+      desc: Abstract protocols for storage backends
+      contents:
+        - kind: page
+          path: Packable-protocol
+          contents:
+            - name: Packable
+        - name: IndexEntry
+        - name: AbstractIndex
+        - name: AbstractDataStore
+        - name: DataSource
+
     # Data Sources
     - title: Data Sources
       desc: Data source implementations for streaming

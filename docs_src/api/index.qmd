@@ -16,6 +16,18 @@ Core types, decorators, and dataset classes
 | [load_dataset](load_dataset.qmd#atdata.load_dataset) | Load a dataset from local files, remote URLs, or an index. |
 | [DatasetDict](DatasetDict.qmd#atdata.DatasetDict) | A dictionary of split names to Dataset instances. |
 
+## Protocols
+
+Abstract protocols for storage backends
+
+| | |
+| --- | --- |
+| [Packable](Packable-protocol.qmd#atdata.Packable) | Structural protocol for packable sample types. |
+| [IndexEntry](IndexEntry.qmd#atdata.IndexEntry) | Common interface for index entries (local or atmosphere). |
+| [AbstractIndex](AbstractIndex.qmd#atdata.AbstractIndex) | Protocol for index operations - implemented by LocalIndex and AtmosphereIndex. |
+| [AbstractDataStore](AbstractDataStore.qmd#atdata.AbstractDataStore) | Protocol for data storage operations. |
+| [DataSource](DataSource.qmd#atdata.DataSource) | Protocol for data sources that provide streams to Dataset. |
+
 ## Data Sources
 
 Data source implementations for streaming
