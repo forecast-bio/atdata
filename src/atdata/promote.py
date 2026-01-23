@@ -24,8 +24,7 @@ from typing import TYPE_CHECKING, Type
 if TYPE_CHECKING:
     from .local import LocalDatasetEntry, Index as LocalIndex
     from .atmosphere import AtmosphereClient
-    from .dataset import PackableSample
-    from ._protocols import AbstractDataStore
+    from ._protocols import AbstractDataStore, Packable
 
 
 def _find_existing_schema(
@@ -54,7 +53,7 @@ def _find_existing_schema(
 
 
 def _find_or_publish_schema(
-    sample_type: "Type[PackableSample]",
+    sample_type: "Type[Packable]",
     version: str,
     client: "AtmosphereClient",
     description: str | None = None,

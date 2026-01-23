@@ -30,7 +30,7 @@ from atdata._type_utils import (
     is_ndarray_type,
     extract_ndarray_dtype,
 )
-from atdata._protocols import IndexEntry, AbstractDataStore
+from atdata._protocols import IndexEntry, AbstractDataStore, Packable
 
 from pathlib import Path
 from uuid import uuid4
@@ -106,9 +106,9 @@ class SchemaNamespace:
     """
 
     def __init__(self) -> None:
-        self._types: dict[str, Type[PackableSample]] = {}
+        self._types: dict[str, Type[Packable]] = {}
 
-    def _register(self, name: str, cls: Type[PackableSample]) -> None:
+    def _register(self, name: str, cls: Type[Packable]) -> None:
         """Register a schema type in the namespace."""
         self._types[name] = cls
 
@@ -142,7 +142,7 @@ class SchemaNamespace:
         names = ", ".join(sorted(self._types.keys()))
         return f"SchemaNamespace({names})"
 
-    def get(self, name: str, default: T | None = None) -> Type[PackableSample] | T | None:
+    def get(self, name: str, default: T | None = None) -> Type[Packable] | T | None:
         """Get a type by name, returning default if not found.
 
         Args:
@@ -355,7 +355,7 @@ class LocalSchemaRecord:
 ##
 # Helpers
 
-def _kind_str_for_sample_type( st: Type[PackableSample] ) -> str:
+def _kind_str_for_sample_type( st: Type[Packable] ) -> str:
     """Return fully-qualified 'module.name' string for a sample type."""
     return f'{st.__module__}.{st.__name__}'
 
@@ -435,7 +435,7 @@ _ATDATA_URI_PREFIX = "atdata://local/sampleSchema/"
 _LEGACY_URI_PREFIX = "local://schemas/"
 
 
-def _schema_ref_from_type(sample_type: Type[PackableSample], version: str) -> str:
+def _schema_ref_from_type(sample_type: Type[Packable], version: str) -> str:
     """Generate 'atdata://local/sampleSchema/{name}@{version}' reference."""
     return _make_schema_ref(sample_type.__name__, version)
 
@@ -506,7 +506,7 @@ def _python_type_to_field_type(python_type: Any) -> dict:
 
 
 def _build_schema_record(
-    sample_type: Type[PackableSample],
+    sample_type: Type[Packable],
     *,
     version: str,
     description: str | None = None,
@@ -1035,7 +1035,7 @@ class Index:
         """
         return self._schema_namespace
 
-    def load_schema(self, ref: str) -> Type[PackableSample]:
+    def load_schema(self, ref: str) -> Type[Packable]:
         """Load a schema and make it available in the types namespace.
 
         This method decodes the schema, optionally generates a Python module
@@ -1107,14 +1107,19 @@ class Index:
 
         return f"{authority}.{module_name}"
 
-    @property
-    def all_entries(self) -> list[LocalDatasetEntry]:
-        """Get all index entries as a list.
+    def list_entries(self) -> list[LocalDatasetEntry]:
+        """Get all index entries as a materialized list.
 
         Returns:
             List of all LocalDatasetEntry objects in the index.
         """
         return list(self.entries)
+
+    # Legacy alias for backwards compatibility
+    @property
+    def all_entries(self) -> list[LocalDatasetEntry]:
+        """Get all index entries as a list (deprecated, use list_entries())."""
+        return self.list_entries()
 
     @property
     def entries(self) -> Generator[LocalDatasetEntry, None, None]:
@@ -1277,13 +1282,22 @@ class Index:
         """
         return self.get_entry_by_name(ref)
 
-    def list_datasets(self) -> Iterator[LocalDatasetEntry]:
-        """List all dataset entries (AbstractIndex protocol).
+    @property
+    def datasets(self) -> Generator[LocalDatasetEntry, None, None]:
+        """Lazily iterate over all dataset entries (AbstractIndex protocol).
 
         Yields:
             IndexEntry for each dataset.
         """
         return self.entries
+
+    def list_datasets(self) -> list[LocalDatasetEntry]:
+        """Get all dataset entries as a materialized list (AbstractIndex protocol).
+
+        Returns:
+            List of IndexEntry for each dataset.
+        """
+        return self.list_entries()
 
     # Schema operations
 
@@ -1320,7 +1334,7 @@ class Index:
 
     def publish_schema(
         self,
-        sample_type: Type[PackableSample],
+        sample_type: Type[Packable],
         *,
         version: str | None = None,
         description: str | None = None,
@@ -1453,16 +1467,15 @@ class Index:
                 schema['$ref'] = _make_schema_ref(name, version)
             yield LocalSchemaRecord.from_dict(schema)
 
-    def list_schemas(self) -> Iterator[dict]:
-        """List all schema records (AbstractIndex protocol).
+    def list_schemas(self) -> list[dict]:
+        """Get all schema records as a materialized list (AbstractIndex protocol).
 
-        Yields:
-            Schema records as dictionaries.
+        Returns:
+            List of schema records as dictionaries.
         """
-        for record in self.schemas:
-            yield record.to_dict()
+        return [record.to_dict() for record in self.schemas]
 
-    def decode_schema(self, ref: str) -> Type[PackableSample]:
+    def decode_schema(self, ref: str) -> Type[Packable]:
         """Reconstruct a Python PackableSample type from a stored schema.
 
         This method enables loading datasets without knowing the sample type

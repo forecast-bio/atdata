@@ -62,13 +62,13 @@ class TestURLSource:
         ]
 
     def test_shards_yields_streams(self, tmp_path):
-        """shards() yields (url, stream) pairs."""
+        """shards property yields (url, stream) pairs."""
         # Create test tar file
         tar_path = tmp_path / "test.tar"
         create_test_tar(tar_path, [{"name": "test", "value": 42}])
 
         source = URLSource(str(tar_path))
-        shards = list(source.shards())
+        shards = list(source.shards)
 
         assert len(shards) == 1
         url, stream = shards[0]
@@ -202,7 +202,7 @@ class TestS3Source:
                 secret_key="SECRET",
             )
 
-            shards = list(source.shards())
+            shards = list(source.shards)
 
             assert len(shards) == 1
             uri, stream = shards[0]

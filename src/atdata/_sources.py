@@ -54,19 +54,25 @@ class URLSource:
 
     Example:
         >>> source = URLSource("https://example.com/train-{000..009}.tar")
-        >>> for shard_id, stream in source.shards():
+        >>> for shard_id, stream in source.shards:
         ...     print(f"Streaming {shard_id}")
     """
 
     url: str
 
-    @property
-    def shard_list(self) -> list[str]:
+    def list_shards(self) -> list[str]:
         """Expand brace pattern and return list of shard URLs."""
         return list(braceexpand.braceexpand(self.url))
 
+    # Legacy alias for backwards compatibility
+    @property
+    def shard_list(self) -> list[str]:
+        """Expand brace pattern and return list of shard URLs (deprecated, use list_shards())."""
+        return self.list_shards()
+
+    @property
     def shards(self) -> Iterator[tuple[str, IO[bytes]]]:
-        """Yield (url, stream) pairs for each shard.
+        """Lazily yield (url, stream) pairs for each shard.
 
         Uses WebDataset's gopen to open URLs, which handles various schemes:
         - http/https: via curl
@@ -78,7 +84,7 @@ class URLSource:
         Yields:
             Tuple of (url, file-like stream).
         """
-        for url in self.shard_list:
+        for url in self.list_shards():
             stream = wds.gopen(url, mode="rb")
             yield url, stream
 
@@ -92,9 +98,9 @@ class URLSource:
             File-like stream from gopen.
 
         Raises:
-            KeyError: If shard_id is not in shard_list.
+            KeyError: If shard_id is not in list_shards().
         """
-        if shard_id not in self.shard_list:
+        if shard_id not in self.list_shards():
             raise KeyError(f"Shard not found: {shard_id}")
         return wds.gopen(shard_id, mode="rb")
 
@@ -129,7 +135,7 @@ class S3Source:
         ...     access_key="AKIAIOSFODNN7EXAMPLE",
         ...     secret_key="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
         ... )
-        >>> for shard_id, stream in source.shards():
+        >>> for shard_id, stream in source.shards:
         ...     process(stream)
     """
 
@@ -166,13 +172,19 @@ class S3Source:
         self._client = boto3.client("s3", **client_kwargs)
         return self._client
 
-    @property
-    def shard_list(self) -> list[str]:
+    def list_shards(self) -> list[str]:
         """Return list of S3 URIs for the shards."""
         return [f"s3://{self.bucket}/{key}" for key in self.keys]
 
+    # Legacy alias for backwards compatibility
+    @property
+    def shard_list(self) -> list[str]:
+        """Return list of S3 URIs for the shards (deprecated, use list_shards())."""
+        return self.list_shards()
+
+    @property
     def shards(self) -> Iterator[tuple[str, IO[bytes]]]:
-        """Yield (s3_uri, stream) pairs for each shard.
+        """Lazily yield (s3_uri, stream) pairs for each shard.
 
         Uses boto3 to get streaming response bodies, which are file-like
         objects that can be read directly by tarfile.
@@ -198,9 +210,9 @@ class S3Source:
             StreamingBody for reading the object.
 
         Raises:
-            KeyError: If shard_id is not in shard_list.
+            KeyError: If shard_id is not in list_shards().
         """
-        if shard_id not in self.shard_list:
+        if shard_id not in self.list_shards():
             raise KeyError(f"Shard not found: {shard_id}")
 
         # Parse s3://bucket/key -> key

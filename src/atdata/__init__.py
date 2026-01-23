@@ -58,6 +58,7 @@ from ._hf_api import (
 )
 
 from ._protocols import (
+    Packable as Packable,
     IndexEntry as IndexEntry,
     AbstractIndex as AbstractIndex,
     AbstractDataStore as AbstractDataStore,
@@ -85,5 +86,5 @@ from .promote import (
 # ATProto integration (lazy import to avoid requiring atproto package)
 from . import atmosphere as atmosphere
 
-
-#
+# CLI entry point
+from .cli import main as main

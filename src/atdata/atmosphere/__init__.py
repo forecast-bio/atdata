@@ -44,7 +44,8 @@ from ._types import (
 )
 
 if TYPE_CHECKING:
-    from ..dataset import PackableSample, Dataset
+    from ..dataset import Dataset
+    from .._protocols import Packable
 
 
 class AtmosphereIndexEntry:
@@ -119,6 +120,8 @@ class AtmosphereIndex:
         self._schema_loader = SchemaLoader(client)
         self._dataset_publisher = DatasetPublisher(client)
         self._dataset_loader = DatasetLoader(client)
+        # AtmosphereIndex doesn't support data_store (uses PDS blobs)
+        self.data_store = None
 
     # Dataset operations
 
@@ -168,25 +171,40 @@ class AtmosphereIndex:
         record = self._dataset_loader.get(ref)
         return AtmosphereIndexEntry(ref, record)
 
-    def list_datasets(self, repo: Optional[str] = None) -> Iterator[AtmosphereIndexEntry]:
-        """List dataset entries from a repository.
+    @property
+    def datasets(self) -> Iterator[AtmosphereIndexEntry]:
+        """Lazily iterate over all dataset entries (AbstractIndex protocol).
 
-        Args:
-            repo: DID of repository. Defaults to authenticated user.
+        Uses the authenticated user's repository.
 
         Yields:
             AtmosphereIndexEntry for each dataset.
         """
-        records = self._dataset_loader.list_all(repo=repo)
+        records = self._dataset_loader.list_all()
         for rec in records:
             uri = rec.get("uri", "")
             yield AtmosphereIndexEntry(uri, rec.get("value", rec))
+
+    def list_datasets(self, repo: Optional[str] = None) -> list[AtmosphereIndexEntry]:
+        """Get all dataset entries as a materialized list (AbstractIndex protocol).
+
+        Args:
+            repo: DID of repository. Defaults to authenticated user.
+
+        Returns:
+            List of AtmosphereIndexEntry for each dataset.
+        """
+        records = self._dataset_loader.list_all(repo=repo)
+        return [
+            AtmosphereIndexEntry(rec.get("uri", ""), rec.get("value", rec))
+            for rec in records
+        ]
 
     # Schema operations
 
     def publish_schema(
         self,
-        sample_type: "Type[PackableSample]",
+        sample_type: "Type[Packable]",
         *,
         version: str = "1.0.0",
         **kwargs,
@@ -194,7 +212,7 @@ class AtmosphereIndex:
         """Publish a schema to ATProto.
 
         Args:
-            sample_type: The PackableSample subclass to publish.
+            sample_type: A Packable type (PackableSample subclass or @packable-decorated).
             version: Semantic version string.
             **kwargs: Additional options (description, metadata).
 
@@ -223,27 +241,39 @@ class AtmosphereIndex:
         """
         return self._schema_loader.get(ref)
 
-    def list_schemas(self, repo: Optional[str] = None) -> Iterator[dict]:
-        """List schema records from a repository.
+    @property
+    def schemas(self) -> Iterator[dict]:
+        """Lazily iterate over all schema records (AbstractIndex protocol).
+
+        Uses the authenticated user's repository.
+
+        Yields:
+            Schema records as dictionaries.
+        """
+        records = self._schema_loader.list_all()
+        for rec in records:
+            yield rec.get("value", rec)
+
+    def list_schemas(self, repo: Optional[str] = None) -> list[dict]:
+        """Get all schema records as a materialized list (AbstractIndex protocol).
 
         Args:
             repo: DID of repository. Defaults to authenticated user.
 
-        Yields:
-            Schema records.
+        Returns:
+            List of schema records as dictionaries.
         """
         records = self._schema_loader.list_all(repo=repo)
-        for rec in records:
-            yield rec.get("value", rec)
+        return [rec.get("value", rec) for rec in records]
 
-    def decode_schema(self, ref: str) -> "Type[PackableSample]":
+    def decode_schema(self, ref: str) -> "Type[Packable]":
         """Reconstruct a Python type from a schema record.
 
         Args:
             ref: AT URI of the schema record.
 
         Returns:
-            Dynamically generated PackableSample subclass.
+            Dynamically generated Packable type.
 
         Raises:
             ValueError: If schema cannot be decoded.

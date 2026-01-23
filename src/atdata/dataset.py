@@ -503,7 +503,7 @@ class _ShardListStage(wds.PipelineStage):
 
     def run(self):
         """Yield {url: shard_id} dicts for each shard."""
-        for shard_id in self.source.shard_list:
+        for shard_id in self.source.list_shards():
             yield {"url": shard_id}
 
 
@@ -615,8 +615,10 @@ class Dataset( Generic[ST] ):
             self.url = source
         else:
             self._source = source
-            # For compatibility, expose URL if source has shard_list
-            self.url = source.shard_list[0] if source.shard_list else ""
+            # For compatibility, expose URL if source has list_shards
+            shards = source.list_shards()
+            # TODO Expand out in brace notation the full shard list, rather than just using the first entry, in this fallback; add tests to make sure we catch this issue, as it wasn't showing up in our previous test suite.
+            self.url = shards[0] if shards else ""
 
         self._metadata: dict[str, Any] | None = None
         self.metadata_url: str | None = metadata_url
@@ -652,15 +654,20 @@ class Dataset( Generic[ST] ):
         ret._output_lens = lenses.transform( self.sample_type, ret.sample_type )
         return ret
 
-    @property
-    def shard_list( self ) -> list[str]:
-        """List of individual dataset shards
+    def list_shards( self ) -> list[str]:
+        """Get list of individual dataset shards.
 
         Returns:
             A full (non-lazy) list of the individual ``tar`` files within the
             source WebDataset.
         """
-        return self._source.shard_list
+        return self._source.list_shards()
+
+    # Legacy alias for backwards compatibility
+    @property
+    def shard_list( self ) -> list[str]:
+        """List of individual dataset shards (deprecated, use list_shards())."""
+        return self.list_shards()
 
     @property
     def metadata( self ) -> dict[str, Any] | None:
@@ -919,12 +926,17 @@ def packable( cls: type[_T] ) -> type[_T]:
     ``PackableSample``, enabling automatic msgpack serialization/deserialization
     with special handling for NDArray fields.
 
+    The resulting class satisfies the ``Packable`` protocol, making it compatible
+    with all atdata APIs that accept packable types (e.g., ``publish_schema``,
+    lens transformations, etc.).
+
     Args:
         cls: The class to convert. Should have type annotations for its fields.
 
     Returns:
         A new dataclass that inherits from ``PackableSample`` with the same
-        name and annotations as the original class.
+        name and annotations as the original class. The class satisfies the
+        ``Packable`` protocol and can be used with ``Type[Packable]`` signatures.
 
     Example:
         >>> @packable
@@ -935,6 +947,9 @@ def packable( cls: type[_T] ) -> type[_T]:
         >>> sample = MyData(name="test", values=np.array([1, 2, 3]))
         >>> bytes_data = sample.packed
         >>> restored = MyData.from_bytes(bytes_data)
+        >>>
+        >>> # Works with Packable-typed APIs
+        >>> index.publish_schema(MyData, version="1.0.0")  # Type-safe
     """
 
     ##
