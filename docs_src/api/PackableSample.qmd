@@ -1,0 +1,68 @@
+# PackableSample { #atdata.PackableSample }
+
+```python
+PackableSample()
+```
+
+Base class for samples that can be serialized with msgpack.
+
+This abstract base class provides automatic serialization/deserialization
+for dataclass-based samples. Fields annotated as ``NDArray`` or
+``NDArray | None`` are automatically converted between numpy arrays and
+bytes during packing/unpacking.
+
+Subclasses should be defined either by:
+1. Direct inheritance with the ``@dataclass`` decorator
+2. Using the ``@packable`` decorator (recommended)
+
+Example:
+    >>> @packable
+    ... class MyData:
+    ...     name: str
+    ...     embeddings: NDArray
+    ...
+    >>> sample = MyData(name="test", embeddings=np.array([1.0, 2.0]))
+    >>> packed = sample.packed  # Serialize to bytes
+    >>> restored = MyData.from_bytes(packed)  # Deserialize
+
+## Attributes
+
+| Name | Description |
+| --- | --- |
+| [as_wds](#atdata.PackableSample.as_wds) | Pack this sample's data for writing to WebDataset. |
+| [packed](#atdata.PackableSample.packed) | Pack this sample's data into msgpack bytes. |
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [from_bytes](#atdata.PackableSample.from_bytes) | Create a sample instance from raw msgpack bytes. |
+| [from_data](#atdata.PackableSample.from_data) | Create a sample instance from unpacked msgpack data. |
+
+### from_bytes { #atdata.PackableSample.from_bytes }
+
+```python
+PackableSample.from_bytes(bs)
+```
+
+Create a sample instance from raw msgpack bytes.
+
+Args:
+    bs: Raw bytes from a msgpack-serialized sample.
+
+Returns:
+    A new instance of this sample class deserialized from the bytes.
+
+### from_data { #atdata.PackableSample.from_data }
+
+```python
+PackableSample.from_data(data)
+```
+
+Create a sample instance from unpacked msgpack data.
+
+Args:
+    data: Dictionary with keys matching the sample's field names.
+
+Returns:
+    New instance with NDArray fields auto-converted from bytes.

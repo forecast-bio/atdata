@@ -1,0 +1,38 @@
+# SampleBatch { #atdata.SampleBatch }
+
+```python
+SampleBatch(samples)
+```
+
+A batch of samples with automatic attribute aggregation.
+
+This class wraps a sequence of samples and provides magic ``__getattr__``
+access to aggregate sample attributes. When you access an attribute that
+exists on the sample type, it automatically aggregates values across all
+samples in the batch.
+
+NDArray fields are stacked into a numpy array with a batch dimension.
+Other fields are aggregated into a list.
+
+Type Parameters:
+    DT: The sample type, must derive from ``PackableSample``.
+
+Attributes:
+    samples: The list of sample instances in this batch.
+
+Example:
+    >>> batch = SampleBatch[MyData]([sample1, sample2, sample3])
+    >>> batch.embeddings  # Returns stacked numpy array of shape (3, ...)
+    >>> batch.names  # Returns list of names
+
+Note:
+    This class uses Python's ``__orig_class__`` mechanism to extract the
+    type parameter at runtime. Instances must be created using the
+    subscripted syntax ``SampleBatch[MyType](samples)`` rather than
+    calling the constructor directly with an unsubscripted class.
+
+## Attributes
+
+| Name | Description |
+| --- | --- |
+| [sample_type](#atdata.SampleBatch.sample_type) | The type of each sample in this batch. |

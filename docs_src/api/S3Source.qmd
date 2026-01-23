@@ -1,0 +1,149 @@
+# S3Source { #atdata.S3Source }
+
+```python
+S3Source(
+    bucket,
+    keys,
+    endpoint=None,
+    access_key=None,
+    secret_key=None,
+    region=None,
+    _client=None,
+)
+```
+
+Data source for S3-compatible storage with explicit credentials.
+
+Uses boto3 to stream directly from S3, supporting:
+- Standard AWS S3
+- S3-compatible endpoints (Cloudflare R2, MinIO, etc.)
+- Private buckets with credentials
+- IAM role authentication (when keys not provided)
+
+Unlike URL-based approaches, this doesn't require URL transformation
+or global gopen_schemes registration. Credentials are scoped to the
+source instance.
+
+Attributes:
+    bucket: S3 bucket name.
+    keys: List of object keys (paths within bucket).
+    endpoint: Optional custom endpoint URL for S3-compatible services.
+    access_key: Optional AWS access key ID.
+    secret_key: Optional AWS secret access key.
+    region: Optional AWS region (defaults to us-east-1).
+
+Example:
+    >>> source = S3Source(
+    ...     bucket="my-datasets",
+    ...     keys=["train/shard-000.tar", "train/shard-001.tar"],
+    ...     endpoint="https://abc123.r2.cloudflarestorage.com",
+    ...     access_key="AKIAIOSFODNN7EXAMPLE",
+    ...     secret_key="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+    ... )
+    >>> for shard_id, stream in source.shards:
+    ...     process(stream)
+
+## Attributes
+
+| Name | Description |
+| --- | --- |
+| [shard_list](#atdata.S3Source.shard_list) | Return list of S3 URIs for the shards (deprecated, use list_shards()). |
+| [shards](#atdata.S3Source.shards) | Lazily yield (s3_uri, stream) pairs for each shard. |
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [from_credentials](#atdata.S3Source.from_credentials) | Create S3Source from a credentials dictionary. |
+| [from_urls](#atdata.S3Source.from_urls) | Create S3Source from s3:// URLs. |
+| [list_shards](#atdata.S3Source.list_shards) | Return list of S3 URIs for the shards. |
+| [open_shard](#atdata.S3Source.open_shard) | Open a single shard by S3 URI. |
+
+### from_credentials { #atdata.S3Source.from_credentials }
+
+```python
+S3Source.from_credentials(credentials, bucket, keys)
+```
+
+Create S3Source from a credentials dictionary.
+
+Accepts the same credential format used by S3DataStore.
+
+Args:
+    credentials: Dict with AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
+        and optionally AWS_ENDPOINT.
+    bucket: S3 bucket name.
+    keys: List of object keys.
+
+Returns:
+    Configured S3Source.
+
+Example:
+    >>> creds = {
+    ...     "AWS_ACCESS_KEY_ID": "...",
+    ...     "AWS_SECRET_ACCESS_KEY": "...",
+    ...     "AWS_ENDPOINT": "https://r2.example.com",
+    ... }
+    >>> source = S3Source.from_credentials(creds, "my-bucket", ["data.tar"])
+
+### from_urls { #atdata.S3Source.from_urls }
+
+```python
+S3Source.from_urls(
+    urls,
+    *,
+    endpoint=None,
+    access_key=None,
+    secret_key=None,
+    region=None,
+)
+```
+
+Create S3Source from s3:// URLs.
+
+Parses s3://bucket/key URLs and extracts bucket and keys.
+All URLs must be in the same bucket.
+
+Args:
+    urls: List of s3:// URLs.
+    endpoint: Optional custom endpoint.
+    access_key: Optional access key.
+    secret_key: Optional secret key.
+    region: Optional region.
+
+Returns:
+    S3Source configured for the given URLs.
+
+Raises:
+    ValueError: If URLs are not valid s3:// URLs or span multiple buckets.
+
+Example:
+    >>> source = S3Source.from_urls(
+    ...     ["s3://my-bucket/train-000.tar", "s3://my-bucket/train-001.tar"],
+    ...     endpoint="https://r2.example.com",
+    ... )
+
+### list_shards { #atdata.S3Source.list_shards }
+
+```python
+S3Source.list_shards()
+```
+
+Return list of S3 URIs for the shards.
+
+### open_shard { #atdata.S3Source.open_shard }
+
+```python
+S3Source.open_shard(shard_id)
+```
+
+Open a single shard by S3 URI.
+
+Args:
+    shard_id: S3 URI of the shard (s3://bucket/key).
+
+Returns:
+    StreamingBody for reading the object.
+
+Raises:
+    KeyError: If shard_id is not in list_shards().

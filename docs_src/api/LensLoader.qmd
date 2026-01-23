@@ -1,0 +1,81 @@
+# LensLoader { #atdata.atmosphere.LensLoader }
+
+```python
+atmosphere.LensLoader(client)
+```
+
+Loads lens records from ATProto.
+
+This class fetches lens transformation records. Note that actually
+using a lens requires installing the referenced code and importing
+it manually.
+
+Example:
+    >>> client = AtmosphereClient()
+    >>> loader = LensLoader(client)
+    >>>
+    >>> record = loader.get("at://did:plc:abc/ac.foundation.dataset.lens/xyz")
+    >>> print(record["name"])
+    >>> print(record["sourceSchema"])
+    >>> print(record.get("getterCode", {}).get("repository"))
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [find_by_schemas](#atdata.atmosphere.LensLoader.find_by_schemas) | Find lenses that transform between specific schemas. |
+| [get](#atdata.atmosphere.LensLoader.get) | Fetch a lens record by AT URI. |
+| [list_all](#atdata.atmosphere.LensLoader.list_all) | List lens records from a repository. |
+
+### find_by_schemas { #atdata.atmosphere.LensLoader.find_by_schemas }
+
+```python
+atmosphere.LensLoader.find_by_schemas(
+    source_schema_uri,
+    target_schema_uri=None,
+    repo=None,
+)
+```
+
+Find lenses that transform between specific schemas.
+
+Args:
+    source_schema_uri: AT URI of the source schema.
+    target_schema_uri: Optional AT URI of the target schema.
+        If not provided, returns all lenses from the source.
+    repo: The DID of the repository to search.
+
+Returns:
+    List of matching lens records.
+
+### get { #atdata.atmosphere.LensLoader.get }
+
+```python
+atmosphere.LensLoader.get(uri)
+```
+
+Fetch a lens record by AT URI.
+
+Args:
+    uri: The AT URI of the lens record.
+
+Returns:
+    The lens record as a dictionary.
+
+Raises:
+    ValueError: If the record is not a lens record.
+
+### list_all { #atdata.atmosphere.LensLoader.list_all }
+
+```python
+atmosphere.LensLoader.list_all(repo=None, limit=100)
+```
+
+List lens records from a repository.
+
+Args:
+    repo: The DID of the repository. Defaults to authenticated user.
+    limit: Maximum number of records to return.
+
+Returns:
+    List of lens records.

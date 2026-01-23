@@ -1,0 +1,319 @@
+# AtmosphereClient { #atdata.atmosphere.AtmosphereClient }
+
+```python
+atmosphere.AtmosphereClient(base_url=None, *, _client=None)
+```
+
+ATProto client wrapper for atdata operations.
+
+This class wraps the atproto SDK client and provides higher-level methods
+for working with atdata records (schemas, datasets, lenses).
+
+Example:
+    >>> client = AtmosphereClient()
+    >>> client.login("alice.bsky.social", "app-password")
+    >>> print(client.did)
+    'did:plc:...'
+
+Note:
+    The password should be an app-specific password, not your main account
+    password. Create app passwords in your Bluesky account settings.
+
+## Attributes
+
+| Name | Description |
+| --- | --- |
+| [did](#atdata.atmosphere.AtmosphereClient.did) | Get the DID of the authenticated user. |
+| [handle](#atdata.atmosphere.AtmosphereClient.handle) | Get the handle of the authenticated user. |
+| [is_authenticated](#atdata.atmosphere.AtmosphereClient.is_authenticated) | Check if the client has a valid session. |
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [create_record](#atdata.atmosphere.AtmosphereClient.create_record) | Create a record in the user's repository. |
+| [delete_record](#atdata.atmosphere.AtmosphereClient.delete_record) | Delete a record. |
+| [export_session](#atdata.atmosphere.AtmosphereClient.export_session) | Export the current session for later reuse. |
+| [get_blob](#atdata.atmosphere.AtmosphereClient.get_blob) | Download a blob from a PDS. |
+| [get_blob_url](#atdata.atmosphere.AtmosphereClient.get_blob_url) | Get the direct URL for fetching a blob. |
+| [get_record](#atdata.atmosphere.AtmosphereClient.get_record) | Fetch a record by AT URI. |
+| [list_datasets](#atdata.atmosphere.AtmosphereClient.list_datasets) | List dataset records. |
+| [list_lenses](#atdata.atmosphere.AtmosphereClient.list_lenses) | List lens records. |
+| [list_records](#atdata.atmosphere.AtmosphereClient.list_records) | List records in a collection. |
+| [list_schemas](#atdata.atmosphere.AtmosphereClient.list_schemas) | List schema records. |
+| [login](#atdata.atmosphere.AtmosphereClient.login) | Authenticate with the ATProto PDS. |
+| [login_with_session](#atdata.atmosphere.AtmosphereClient.login_with_session) | Authenticate using an exported session string. |
+| [put_record](#atdata.atmosphere.AtmosphereClient.put_record) | Create or update a record at a specific key. |
+| [upload_blob](#atdata.atmosphere.AtmosphereClient.upload_blob) | Upload binary data as a blob to the PDS. |
+
+### create_record { #atdata.atmosphere.AtmosphereClient.create_record }
+
+```python
+atmosphere.AtmosphereClient.create_record(
+    collection,
+    record,
+    *,
+    rkey=None,
+    validate=False,
+)
+```
+
+Create a record in the user's repository.
+
+Args:
+    collection: The NSID of the record collection
+        (e.g., 'ac.foundation.dataset.sampleSchema').
+    record: The record data. Must include a '$type' field.
+    rkey: Optional explicit record key. If not provided, a TID is generated.
+    validate: Whether to validate against the Lexicon schema. Set to False
+        for custom lexicons that the PDS doesn't know about.
+
+Returns:
+    The AT URI of the created record.
+
+Raises:
+    ValueError: If not authenticated.
+    atproto.exceptions.AtProtocolError: If record creation fails.
+
+### delete_record { #atdata.atmosphere.AtmosphereClient.delete_record }
+
+```python
+atmosphere.AtmosphereClient.delete_record(uri, *, swap_commit=None)
+```
+
+Delete a record.
+
+Args:
+    uri: The AT URI of the record to delete.
+    swap_commit: Optional CID for compare-and-swap delete.
+
+Raises:
+    ValueError: If not authenticated.
+    atproto.exceptions.AtProtocolError: If deletion fails.
+
+### export_session { #atdata.atmosphere.AtmosphereClient.export_session }
+
+```python
+atmosphere.AtmosphereClient.export_session()
+```
+
+Export the current session for later reuse.
+
+Returns:
+    Session string that can be passed to ``login_with_session()``.
+
+Raises:
+    ValueError: If not authenticated.
+
+### get_blob { #atdata.atmosphere.AtmosphereClient.get_blob }
+
+```python
+atmosphere.AtmosphereClient.get_blob(did, cid)
+```
+
+Download a blob from a PDS.
+
+This resolves the PDS endpoint from the DID document and fetches
+the blob directly from the PDS.
+
+Args:
+    did: The DID of the repository containing the blob.
+    cid: The CID of the blob.
+
+Returns:
+    The blob data as bytes.
+
+Raises:
+    ValueError: If PDS endpoint cannot be resolved.
+    requests.HTTPError: If blob fetch fails.
+
+### get_blob_url { #atdata.atmosphere.AtmosphereClient.get_blob_url }
+
+```python
+atmosphere.AtmosphereClient.get_blob_url(did, cid)
+```
+
+Get the direct URL for fetching a blob.
+
+This is useful for passing to WebDataset or other HTTP clients.
+
+Args:
+    did: The DID of the repository containing the blob.
+    cid: The CID of the blob.
+
+Returns:
+    The full URL for fetching the blob.
+
+Raises:
+    ValueError: If PDS endpoint cannot be resolved.
+
+### get_record { #atdata.atmosphere.AtmosphereClient.get_record }
+
+```python
+atmosphere.AtmosphereClient.get_record(uri)
+```
+
+Fetch a record by AT URI.
+
+Args:
+    uri: The AT URI of the record.
+
+Returns:
+    The record data as a dictionary.
+
+Raises:
+    atproto.exceptions.AtProtocolError: If record not found.
+
+### list_datasets { #atdata.atmosphere.AtmosphereClient.list_datasets }
+
+```python
+atmosphere.AtmosphereClient.list_datasets(repo=None, limit=100)
+```
+
+List dataset records.
+
+Args:
+    repo: The DID to query. Defaults to authenticated user.
+    limit: Maximum number to return.
+
+Returns:
+    List of dataset records.
+
+### list_lenses { #atdata.atmosphere.AtmosphereClient.list_lenses }
+
+```python
+atmosphere.AtmosphereClient.list_lenses(repo=None, limit=100)
+```
+
+List lens records.
+
+Args:
+    repo: The DID to query. Defaults to authenticated user.
+    limit: Maximum number to return.
+
+Returns:
+    List of lens records.
+
+### list_records { #atdata.atmosphere.AtmosphereClient.list_records }
+
+```python
+atmosphere.AtmosphereClient.list_records(
+    collection,
+    *,
+    repo=None,
+    limit=100,
+    cursor=None,
+)
+```
+
+List records in a collection.
+
+Args:
+    collection: The NSID of the record collection.
+    repo: The DID of the repository to query. Defaults to the
+        authenticated user's repository.
+    limit: Maximum number of records to return (default 100).
+    cursor: Pagination cursor from a previous call.
+
+Returns:
+    A tuple of (records, next_cursor). The cursor is None if there
+    are no more records.
+
+Raises:
+    ValueError: If repo is None and not authenticated.
+
+### list_schemas { #atdata.atmosphere.AtmosphereClient.list_schemas }
+
+```python
+atmosphere.AtmosphereClient.list_schemas(repo=None, limit=100)
+```
+
+List schema records.
+
+Args:
+    repo: The DID to query. Defaults to authenticated user.
+    limit: Maximum number to return.
+
+Returns:
+    List of schema records.
+
+### login { #atdata.atmosphere.AtmosphereClient.login }
+
+```python
+atmosphere.AtmosphereClient.login(handle, password)
+```
+
+Authenticate with the ATProto PDS.
+
+Args:
+    handle: Your Bluesky handle (e.g., 'alice.bsky.social').
+    password: App-specific password (not your main password).
+
+Raises:
+    atproto.exceptions.AtProtocolError: If authentication fails.
+
+### login_with_session { #atdata.atmosphere.AtmosphereClient.login_with_session }
+
+```python
+atmosphere.AtmosphereClient.login_with_session(session_string)
+```
+
+Authenticate using an exported session string.
+
+This allows reusing a session without re-authenticating, which helps
+avoid rate limits on session creation.
+
+Args:
+    session_string: Session string from ``export_session()``.
+
+### put_record { #atdata.atmosphere.AtmosphereClient.put_record }
+
+```python
+atmosphere.AtmosphereClient.put_record(
+    collection,
+    rkey,
+    record,
+    *,
+    validate=False,
+    swap_commit=None,
+)
+```
+
+Create or update a record at a specific key.
+
+Args:
+    collection: The NSID of the record collection.
+    rkey: The record key.
+    record: The record data. Must include a '$type' field.
+    validate: Whether to validate against the Lexicon schema.
+    swap_commit: Optional CID for compare-and-swap update.
+
+Returns:
+    The AT URI of the record.
+
+Raises:
+    ValueError: If not authenticated.
+    atproto.exceptions.AtProtocolError: If operation fails.
+
+### upload_blob { #atdata.atmosphere.AtmosphereClient.upload_blob }
+
+```python
+atmosphere.AtmosphereClient.upload_blob(
+    data,
+    mime_type='application/octet-stream',
+)
+```
+
+Upload binary data as a blob to the PDS.
+
+Args:
+    data: Binary data to upload.
+    mime_type: MIME type of the data (for reference, not enforced by PDS).
+
+Returns:
+    A blob reference dict with keys: '$type', 'ref', 'mimeType', 'size'.
+    This can be embedded directly in record fields.
+
+Raises:
+    ValueError: If not authenticated.
+    atproto.exceptions.AtProtocolError: If upload fails.

@@ -1,0 +1,36 @@
+# packable { #atdata.packable }
+
+```python
+packable(cls)
+```
+
+Decorator to convert a regular class into a ``PackableSample``.
+
+This decorator transforms a class into a dataclass that inherits from
+``PackableSample``, enabling automatic msgpack serialization/deserialization
+with special handling for NDArray fields.
+
+The resulting class satisfies the ``Packable`` protocol, making it compatible
+with all atdata APIs that accept packable types (e.g., ``publish_schema``,
+lens transformations, etc.).
+
+Args:
+    cls: The class to convert. Should have type annotations for its fields.
+
+Returns:
+    A new dataclass that inherits from ``PackableSample`` with the same
+    name and annotations as the original class. The class satisfies the
+    ``Packable`` protocol and can be used with ``Type[Packable]`` signatures.
+
+Example:
+    >>> @packable
+    ... class MyData:
+    ...     name: str
+    ...     values: NDArray
+    ...
+    >>> sample = MyData(name="test", values=np.array([1, 2, 3]))
+    >>> bytes_data = sample.packed
+    >>> restored = MyData.from_bytes(bytes_data)
+    >>>
+    >>> # Works with Packable-typed APIs
+    >>> index.publish_schema(MyData, version="1.0.0")  # Type-safe

@@ -1,0 +1,59 @@
+# SchemaLoader { #atdata.atmosphere.SchemaLoader }
+
+```python
+atmosphere.SchemaLoader(client)
+```
+
+Loads PackableSample schemas from ATProto.
+
+This class fetches schema records from ATProto and can list available
+schemas from a repository.
+
+Example:
+    >>> client = AtmosphereClient()
+    >>> client.login("handle", "password")
+    >>>
+    >>> loader = SchemaLoader(client)
+    >>> schema = loader.get("at://did:plc:.../ac.foundation.dataset.sampleSchema/...")
+    >>> print(schema["name"])
+    'MySample'
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [get](#atdata.atmosphere.SchemaLoader.get) | Fetch a schema record by AT URI. |
+| [list_all](#atdata.atmosphere.SchemaLoader.list_all) | List schema records from a repository. |
+
+### get { #atdata.atmosphere.SchemaLoader.get }
+
+```python
+atmosphere.SchemaLoader.get(uri)
+```
+
+Fetch a schema record by AT URI.
+
+Args:
+    uri: The AT URI of the schema record.
+
+Returns:
+    The schema record as a dictionary.
+
+Raises:
+    ValueError: If the record is not a schema record.
+    atproto.exceptions.AtProtocolError: If record not found.
+
+### list_all { #atdata.atmosphere.SchemaLoader.list_all }
+
+```python
+atmosphere.SchemaLoader.list_all(repo=None, limit=100)
+```
+
+List schema records from a repository.
+
+Args:
+    repo: The DID of the repository. Defaults to authenticated user.
+    limit: Maximum number of records to return.
+
+Returns:
+    List of schema records.

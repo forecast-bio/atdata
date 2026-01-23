@@ -1,0 +1,160 @@
+# AtmosphereIndex { #atdata.atmosphere.AtmosphereIndex }
+
+```python
+atmosphere.AtmosphereIndex(client)
+```
+
+ATProto index implementing AbstractIndex protocol.
+
+Wraps SchemaPublisher/Loader and DatasetPublisher/Loader to provide
+a unified interface compatible with LocalIndex.
+
+Example:
+    >>> client = AtmosphereClient()
+    >>> client.login("handle.bsky.social", "app-password")
+    >>>
+    >>> index = AtmosphereIndex(client)
+    >>> schema_ref = index.publish_schema(MySample, version="1.0.0")
+    >>> entry = index.insert_dataset(dataset, name="my-data")
+
+## Attributes
+
+| Name | Description |
+| --- | --- |
+| [datasets](#atdata.atmosphere.AtmosphereIndex.datasets) | Lazily iterate over all dataset entries (AbstractIndex protocol). |
+| [schemas](#atdata.atmosphere.AtmosphereIndex.schemas) | Lazily iterate over all schema records (AbstractIndex protocol). |
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [decode_schema](#atdata.atmosphere.AtmosphereIndex.decode_schema) | Reconstruct a Python type from a schema record. |
+| [get_dataset](#atdata.atmosphere.AtmosphereIndex.get_dataset) | Get a dataset by AT URI. |
+| [get_schema](#atdata.atmosphere.AtmosphereIndex.get_schema) | Get a schema record by AT URI. |
+| [insert_dataset](#atdata.atmosphere.AtmosphereIndex.insert_dataset) | Insert a dataset into ATProto. |
+| [list_datasets](#atdata.atmosphere.AtmosphereIndex.list_datasets) | Get all dataset entries as a materialized list (AbstractIndex protocol). |
+| [list_schemas](#atdata.atmosphere.AtmosphereIndex.list_schemas) | Get all schema records as a materialized list (AbstractIndex protocol). |
+| [publish_schema](#atdata.atmosphere.AtmosphereIndex.publish_schema) | Publish a schema to ATProto. |
+
+### decode_schema { #atdata.atmosphere.AtmosphereIndex.decode_schema }
+
+```python
+atmosphere.AtmosphereIndex.decode_schema(ref)
+```
+
+Reconstruct a Python type from a schema record.
+
+Args:
+    ref: AT URI of the schema record.
+
+Returns:
+    Dynamically generated Packable type.
+
+Raises:
+    ValueError: If schema cannot be decoded.
+
+### get_dataset { #atdata.atmosphere.AtmosphereIndex.get_dataset }
+
+```python
+atmosphere.AtmosphereIndex.get_dataset(ref)
+```
+
+Get a dataset by AT URI.
+
+Args:
+    ref: AT URI of the dataset record.
+
+Returns:
+    AtmosphereIndexEntry for the dataset.
+
+Raises:
+    ValueError: If record is not a dataset.
+
+### get_schema { #atdata.atmosphere.AtmosphereIndex.get_schema }
+
+```python
+atmosphere.AtmosphereIndex.get_schema(ref)
+```
+
+Get a schema record by AT URI.
+
+Args:
+    ref: AT URI of the schema record.
+
+Returns:
+    Schema record dictionary.
+
+Raises:
+    ValueError: If record is not a schema.
+
+### insert_dataset { #atdata.atmosphere.AtmosphereIndex.insert_dataset }
+
+```python
+atmosphere.AtmosphereIndex.insert_dataset(
+    ds,
+    *,
+    name,
+    schema_ref=None,
+    **kwargs,
+)
+```
+
+Insert a dataset into ATProto.
+
+Args:
+    ds: The Dataset to publish.
+    name: Human-readable name.
+    schema_ref: Optional schema AT URI. If None, auto-publishes schema.
+    **kwargs: Additional options (description, tags, license).
+
+Returns:
+    AtmosphereIndexEntry for the inserted dataset.
+
+### list_datasets { #atdata.atmosphere.AtmosphereIndex.list_datasets }
+
+```python
+atmosphere.AtmosphereIndex.list_datasets(repo=None)
+```
+
+Get all dataset entries as a materialized list (AbstractIndex protocol).
+
+Args:
+    repo: DID of repository. Defaults to authenticated user.
+
+Returns:
+    List of AtmosphereIndexEntry for each dataset.
+
+### list_schemas { #atdata.atmosphere.AtmosphereIndex.list_schemas }
+
+```python
+atmosphere.AtmosphereIndex.list_schemas(repo=None)
+```
+
+Get all schema records as a materialized list (AbstractIndex protocol).
+
+Args:
+    repo: DID of repository. Defaults to authenticated user.
+
+Returns:
+    List of schema records as dictionaries.
+
+### publish_schema { #atdata.atmosphere.AtmosphereIndex.publish_schema }
+
+```python
+atmosphere.AtmosphereIndex.publish_schema(
+    sample_type,
+    *,
+    version='1.0.0',
+    **kwargs,
+)
+```
+
+Publish a schema to ATProto.
+
+Args:
+    sample_type: A Packable type (PackableSample subclass or @packable-decorated).
+    version: Semantic version string.
+    **kwargs: Additional options (description, metadata).
+
+Returns:
+    AT URI of the schema record.

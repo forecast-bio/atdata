@@ -1,0 +1,44 @@
+# promote_to_atmosphere { #atdata.promote.promote_to_atmosphere }
+
+```python
+promote.promote_to_atmosphere(
+    local_entry,
+    local_index,
+    atmosphere_client,
+    *,
+    data_store=None,
+    name=None,
+    description=None,
+    tags=None,
+    license=None,
+)
+```
+
+Promote a local dataset to the atmosphere network.
+
+This function takes a locally-indexed dataset and publishes it to ATProto,
+making it discoverable on the federated atmosphere network.
+
+Args:
+    local_entry: The LocalDatasetEntry to promote.
+    local_index: Local index containing the schema for this entry.
+    atmosphere_client: Authenticated AtmosphereClient.
+    data_store: Optional data store for copying data to new location.
+        If None, the existing data_urls are used as-is.
+    name: Override name for the atmosphere record. Defaults to local name.
+    description: Optional description for the dataset.
+    tags: Optional tags for discovery.
+    license: Optional license identifier.
+
+Returns:
+    AT URI of the created atmosphere dataset record.
+
+Raises:
+    KeyError: If schema not found in local index.
+    ValueError: If local entry has no data URLs.
+
+Example:
+    >>> entry = local_index.get_dataset("mnist-train")
+    >>> uri = promote_to_atmosphere(entry, local_index, client)
+    >>> print(uri)
+    at://did:plc:abc123/ac.foundation.dataset.datasetIndex/...

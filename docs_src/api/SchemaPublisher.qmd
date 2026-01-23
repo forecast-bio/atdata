@@ -1,0 +1,61 @@
+# SchemaPublisher { #atdata.atmosphere.SchemaPublisher }
+
+```python
+atmosphere.SchemaPublisher(client)
+```
+
+Publishes PackableSample schemas to ATProto.
+
+This class introspects a PackableSample class to extract its field
+definitions and publishes them as an ATProto schema record.
+
+Example:
+    >>> @atdata.packable
+    ... class MySample:
+    ...     image: NDArray
+    ...     label: str
+    ...
+    >>> client = AtmosphereClient()
+    >>> client.login("handle", "password")
+    >>>
+    >>> publisher = SchemaPublisher(client)
+    >>> uri = publisher.publish(MySample, version="1.0.0")
+    >>> print(uri)
+    at://did:plc:.../ac.foundation.dataset.sampleSchema/...
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [publish](#atdata.atmosphere.SchemaPublisher.publish) | Publish a PackableSample schema to ATProto. |
+
+### publish { #atdata.atmosphere.SchemaPublisher.publish }
+
+```python
+atmosphere.SchemaPublisher.publish(
+    sample_type,
+    *,
+    name=None,
+    version='1.0.0',
+    description=None,
+    metadata=None,
+    rkey=None,
+)
+```
+
+Publish a PackableSample schema to ATProto.
+
+Args:
+    sample_type: The PackableSample class to publish.
+    name: Human-readable name. Defaults to the class name.
+    version: Semantic version string (e.g., '1.0.0').
+    description: Human-readable description.
+    metadata: Arbitrary metadata dictionary.
+    rkey: Optional explicit record key. If not provided, a TID is generated.
+
+Returns:
+    The AT URI of the created schema record.
+
+Raises:
+    ValueError: If sample_type is not a dataclass or client is not authenticated.
+    TypeError: If a field type is not supported.

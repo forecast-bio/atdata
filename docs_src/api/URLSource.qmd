@@ -1,0 +1,60 @@
+# URLSource { #atdata.URLSource }
+
+```python
+URLSource(url)
+```
+
+Data source for WebDataset-compatible URLs.
+
+Wraps WebDataset's gopen to open URLs using built-in handlers for
+http, https, pipe, gs, hf, sftp, etc. Supports brace expansion
+for shard patterns like "data-{000..099}.tar".
+
+This is the default source type when a string URL is passed to Dataset.
+
+Attributes:
+    url: URL or brace pattern for the shards.
+
+Example:
+    >>> source = URLSource("https://example.com/train-{000..009}.tar")
+    >>> for shard_id, stream in source.shards:
+    ...     print(f"Streaming {shard_id}")
+
+## Attributes
+
+| Name | Description |
+| --- | --- |
+| [shard_list](#atdata.URLSource.shard_list) | Expand brace pattern and return list of shard URLs (deprecated, use list_shards()). |
+| [shards](#atdata.URLSource.shards) | Lazily yield (url, stream) pairs for each shard. |
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [list_shards](#atdata.URLSource.list_shards) | Expand brace pattern and return list of shard URLs. |
+| [open_shard](#atdata.URLSource.open_shard) | Open a single shard by URL. |
+
+### list_shards { #atdata.URLSource.list_shards }
+
+```python
+URLSource.list_shards()
+```
+
+Expand brace pattern and return list of shard URLs.
+
+### open_shard { #atdata.URLSource.open_shard }
+
+```python
+URLSource.open_shard(shard_id)
+```
+
+Open a single shard by URL.
+
+Args:
+    shard_id: URL of the shard to open.
+
+Returns:
+    File-like stream from gopen.
+
+Raises:
+    KeyError: If shard_id is not in list_shards().

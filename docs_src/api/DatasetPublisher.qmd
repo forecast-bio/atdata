@@ -1,0 +1,145 @@
+# DatasetPublisher { #atdata.atmosphere.DatasetPublisher }
+
+```python
+atmosphere.DatasetPublisher(client)
+```
+
+Publishes dataset index records to ATProto.
+
+This class creates dataset records that reference a schema and point to
+external storage (WebDataset URLs) or ATProto blobs.
+
+Example:
+    >>> dataset = atdata.Dataset[MySample]("s3://bucket/data-{000000..000009}.tar")
+    >>>
+    >>> client = AtmosphereClient()
+    >>> client.login("handle", "password")
+    >>>
+    >>> publisher = DatasetPublisher(client)
+    >>> uri = publisher.publish(
+    ...     dataset,
+    ...     name="My Training Data",
+    ...     description="Training data for my model",
+    ...     tags=["computer-vision", "training"],
+    ... )
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [publish](#atdata.atmosphere.DatasetPublisher.publish) | Publish a dataset index record to ATProto. |
+| [publish_with_blobs](#atdata.atmosphere.DatasetPublisher.publish_with_blobs) | Publish a dataset with data stored as ATProto blobs. |
+| [publish_with_urls](#atdata.atmosphere.DatasetPublisher.publish_with_urls) | Publish a dataset record with explicit URLs. |
+
+### publish { #atdata.atmosphere.DatasetPublisher.publish }
+
+```python
+atmosphere.DatasetPublisher.publish(
+    dataset,
+    *,
+    name,
+    schema_uri=None,
+    description=None,
+    tags=None,
+    license=None,
+    auto_publish_schema=True,
+    schema_version='1.0.0',
+    rkey=None,
+)
+```
+
+Publish a dataset index record to ATProto.
+
+Args:
+    dataset: The Dataset to publish.
+    name: Human-readable dataset name.
+    schema_uri: AT URI of the schema record. If not provided and
+        auto_publish_schema is True, the schema will be published.
+    description: Human-readable description.
+    tags: Searchable tags for discovery.
+    license: SPDX license identifier (e.g., 'MIT', 'Apache-2.0').
+    auto_publish_schema: If True and schema_uri not provided,
+        automatically publish the schema first.
+    schema_version: Version for auto-published schema.
+    rkey: Optional explicit record key.
+
+Returns:
+    The AT URI of the created dataset record.
+
+Raises:
+    ValueError: If schema_uri is not provided and auto_publish_schema is False.
+
+### publish_with_blobs { #atdata.atmosphere.DatasetPublisher.publish_with_blobs }
+
+```python
+atmosphere.DatasetPublisher.publish_with_blobs(
+    blobs,
+    schema_uri,
+    *,
+    name,
+    description=None,
+    tags=None,
+    license=None,
+    metadata=None,
+    mime_type='application/x-tar',
+    rkey=None,
+)
+```
+
+Publish a dataset with data stored as ATProto blobs.
+
+This method uploads the provided data as blobs to the PDS and creates
+a dataset record referencing them. Suitable for smaller datasets that
+fit within blob size limits (typically 50MB per blob, configurable).
+
+Args:
+    blobs: List of binary data (e.g., tar shards) to upload as blobs.
+    schema_uri: AT URI of the schema record.
+    name: Human-readable dataset name.
+    description: Human-readable description.
+    tags: Searchable tags for discovery.
+    license: SPDX license identifier.
+    metadata: Arbitrary metadata dictionary.
+    mime_type: MIME type for the blobs (default: application/x-tar).
+    rkey: Optional explicit record key.
+
+Returns:
+    The AT URI of the created dataset record.
+
+Note:
+    Blobs are only retained by the PDS when referenced in a committed
+    record. This method handles that automatically.
+
+### publish_with_urls { #atdata.atmosphere.DatasetPublisher.publish_with_urls }
+
+```python
+atmosphere.DatasetPublisher.publish_with_urls(
+    urls,
+    schema_uri,
+    *,
+    name,
+    description=None,
+    tags=None,
+    license=None,
+    metadata=None,
+    rkey=None,
+)
+```
+
+Publish a dataset record with explicit URLs.
+
+This method allows publishing a dataset record without having a
+Dataset object, useful for registering existing WebDataset files.
+
+Args:
+    urls: List of WebDataset URLs with brace notation.
+    schema_uri: AT URI of the schema record.
+    name: Human-readable dataset name.
+    description: Human-readable description.
+    tags: Searchable tags for discovery.
+    license: SPDX license identifier.
+    metadata: Arbitrary metadata dictionary.
+    rkey: Optional explicit record key.
+
+Returns:
+    The AT URI of the created dataset record.
