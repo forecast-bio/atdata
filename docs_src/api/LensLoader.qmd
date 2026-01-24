@@ -10,7 +10,10 @@ This class fetches lens transformation records. Note that actually
 using a lens requires installing the referenced code and importing
 it manually.
 
-Example:
+## Example {.doc-section .doc-section-example}
+
+::
+
     >>> client = AtmosphereClient()
     >>> loader = LensLoader(client)
     >>>
@@ -39,14 +42,19 @@ atmosphere.LensLoader.find_by_schemas(
 
 Find lenses that transform between specific schemas.
 
-Args:
-    source_schema_uri: AT URI of the source schema.
-    target_schema_uri: Optional AT URI of the target schema.
-        If not provided, returns all lenses from the source.
-    repo: The DID of the repository to search.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    List of matching lens records.
+| Name              | Type                                          | Description                                                                                | Default    |
+|-------------------|-----------------------------------------------|--------------------------------------------------------------------------------------------|------------|
+| source_schema_uri | [str](`str`)                                  | AT URI of the source schema.                                                               | _required_ |
+| target_schema_uri | [Optional](`typing.Optional`)\[[str](`str`)\] | Optional AT URI of the target schema. If not provided, returns all lenses from the source. | `None`     |
+| repo              | [Optional](`typing.Optional`)\[[str](`str`)\] | The DID of the repository to search.                                                       | `None`     |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                             | Description                    |
+|--------|----------------------------------|--------------------------------|
+|        | [list](`list`)\[[dict](`dict`)\] | List of matching lens records. |
 
 ### get { #atdata.atmosphere.LensLoader.get }
 
@@ -56,14 +64,23 @@ atmosphere.LensLoader.get(uri)
 
 Fetch a lens record by AT URI.
 
-Args:
-    uri: The AT URI of the lens record.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    The lens record as a dictionary.
+| Name   | Type                                                      | Description                    | Default    |
+|--------|-----------------------------------------------------------|--------------------------------|------------|
+| uri    | [str](`str`) \| [AtUri](`atdata.atmosphere._types.AtUri`) | The AT URI of the lens record. | _required_ |
 
-Raises:
-    ValueError: If the record is not a lens record.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type           | Description                      |
+|--------|----------------|----------------------------------|
+|        | [dict](`dict`) | The lens record as a dictionary. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                         |
+|--------|----------------------------|-------------------------------------|
+|        | [ValueError](`ValueError`) | If the record is not a lens record. |
 
 ### list_all { #atdata.atmosphere.LensLoader.list_all }
 
@@ -73,9 +90,15 @@ atmosphere.LensLoader.list_all(repo=None, limit=100)
 
 List lens records from a repository.
 
-Args:
-    repo: The DID of the repository. Defaults to authenticated user.
-    limit: Maximum number of records to return.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    List of lens records.
+| Name   | Type                                          | Description                                                | Default   |
+|--------|-----------------------------------------------|------------------------------------------------------------|-----------|
+| repo   | [Optional](`typing.Optional`)\[[str](`str`)\] | The DID of the repository. Defaults to authenticated user. | `None`    |
+| limit  | [int](`int`)                                  | Maximum number of records to return.                       | `100`     |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                             | Description           |
+|--------|----------------------------------|-----------------------|
+|        | [list](`list`)\[[dict](`dict`)\] | List of lens records. |

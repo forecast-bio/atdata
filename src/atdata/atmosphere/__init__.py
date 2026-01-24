@@ -16,13 +16,15 @@ to work unchanged. These features are opt-in for users who want to publish
 or discover datasets on the ATProto network.
 
 Example:
-    >>> from atdata.atmosphere import AtmosphereClient, SchemaPublisher
-    >>>
-    >>> client = AtmosphereClient()
-    >>> client.login("handle.bsky.social", "app-password")
-    >>>
-    >>> publisher = SchemaPublisher(client)
-    >>> schema_uri = publisher.publish(MySampleType, version="1.0.0")
+    ::
+
+        >>> from atdata.atmosphere import AtmosphereClient, SchemaPublisher
+        >>>
+        >>> client = AtmosphereClient()
+        >>> client.login("handle.bsky.social", "app-password")
+        >>>
+        >>> publisher = SchemaPublisher(client)
+        >>> schema_uri = publisher.publish(MySampleType, version="1.0.0")
 
 Note:
     This module requires the ``atproto`` package to be installed::
@@ -101,12 +103,14 @@ class AtmosphereIndex:
     a unified interface compatible with LocalIndex.
 
     Example:
-        >>> client = AtmosphereClient()
-        >>> client.login("handle.bsky.social", "app-password")
-        >>>
-        >>> index = AtmosphereIndex(client)
-        >>> schema_ref = index.publish_schema(MySample, version="1.0.0")
-        >>> entry = index.insert_dataset(dataset, name="my-data")
+        ::
+
+            >>> client = AtmosphereClient()
+            >>> client.login("handle.bsky.social", "app-password")
+            >>>
+            >>> index = AtmosphereIndex(client)
+            >>> schema_ref = index.publish_schema(MySample, version="1.0.0")
+            >>> entry = index.insert_dataset(dataset, name="my-data")
     """
 
     def __init__(self, client: AtmosphereClient):

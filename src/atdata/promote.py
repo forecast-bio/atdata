@@ -5,18 +5,20 @@ ATProto atmosphere network. This enables sharing datasets with the broader
 federation while maintaining schema consistency.
 
 Example:
-    >>> from atdata.local import LocalIndex, Repo
-    >>> from atdata.atmosphere import AtmosphereClient, AtmosphereIndex
-    >>> from atdata.promote import promote_to_atmosphere
-    >>>
-    >>> # Setup
-    >>> local_index = LocalIndex()
-    >>> client = AtmosphereClient()
-    >>> client.login("handle.bsky.social", "app-password")
-    >>>
-    >>> # Promote a dataset
-    >>> entry = local_index.get_dataset("my-dataset")
-    >>> at_uri = promote_to_atmosphere(entry, local_index, client)
+    ::
+
+        >>> from atdata.local import LocalIndex, Repo
+        >>> from atdata.atmosphere import AtmosphereClient, AtmosphereIndex
+        >>> from atdata.promote import promote_to_atmosphere
+        >>>
+        >>> # Setup
+        >>> local_index = LocalIndex()
+        >>> client = AtmosphereClient()
+        >>> client.login("handle.bsky.social", "app-password")
+        >>>
+        >>> # Promote a dataset
+        >>> entry = local_index.get_dataset("my-dataset")
+        >>> at_uri = promote_to_atmosphere(entry, local_index, client)
 """
 
 from typing import TYPE_CHECKING, Type
@@ -127,10 +129,12 @@ def promote_to_atmosphere(
         ValueError: If local entry has no data URLs.
 
     Example:
-        >>> entry = local_index.get_dataset("mnist-train")
-        >>> uri = promote_to_atmosphere(entry, local_index, client)
-        >>> print(uri)
-        at://did:plc:abc123/ac.foundation.dataset.datasetIndex/...
+        ::
+
+            >>> entry = local_index.get_dataset("mnist-train")
+            >>> uri = promote_to_atmosphere(entry, local_index, client)
+            >>> print(uri)
+            at://did:plc:abc123/ac.foundation.dataset.datasetIndex/...
     """
     from .atmosphere import DatasetPublisher
     from ._schema_codec import schema_to_type

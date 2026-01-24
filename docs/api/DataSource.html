@@ -398,6 +398,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#atdata.DataSource" id="toc-atdata.DataSource" class="nav-link active" data-scroll-target="#atdata.DataSource">DataSource</a>
   <ul class="collapse">
+  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
   <li><a href="#attributes" id="toc-attributes" class="nav-link" data-scroll-target="#attributes">Attributes</a></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
@@ -421,7 +422,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Protocol for data sources that provide streams to Dataset.</p>
 <p>A DataSource abstracts over different ways of accessing dataset shards: - URLSource: Standard WebDataset-compatible URLs (http, https, pipe, gs, etc.) - S3Source: S3-compatible storage with explicit credentials - BlobSource: ATProto blob references (future)</p>
 <p>The key method is <code>shards()</code>, which yields (identifier, stream) pairs. These are fed directly to WebDataset’s tar_file_expander, bypassing URL resolution entirely. This enables: - Private S3 repos with credentials - Custom endpoints (Cloudflare R2, MinIO) - ATProto blob streaming - Any other source that can provide file-like objects</p>
-<p>Example: &gt;&gt;&gt; source = S3Source( … bucket=“my-bucket”, … keys=[“data-000.tar”, “data-001.tar”], … endpoint=“https://r2.example.com”, … credentials=creds, … ) &gt;&gt;&gt; ds = Dataset<a href="source">MySample</a> &gt;&gt;&gt; for sample in ds.ordered(): … print(sample)</p>
+<section id="example" class="level2 doc-section doc-section-example">
+<h2 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h2>
+<p>::</p>
+<pre><code>&gt;&gt;&gt; source = S3Source(
+...     bucket="my-bucket",
+...     keys=["data-000.tar", "data-001.tar"],
+...     endpoint="https://r2.example.com",
+...     credentials=creds,
+... )
+&gt;&gt;&gt; ds = Dataset[MySample](source)
+&gt;&gt;&gt; for sample in ds.ordered():
+...     print(sample)</code></pre>
+</section>
 <section id="attributes" class="level2">
 <h2 class="anchored" data-anchor-id="attributes">Attributes</h2>
 <table class="caption-top table">
@@ -461,21 +474,95 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="atdata.DataSource.list_shards" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.DataSource.list_shards">list_shards</h3>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>DataSource.list_shards()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>DataSource.list_shards()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Get list of shard identifiers without opening streams.</p>
 <p>Used for metadata queries like counting shards without actually streaming data. Implementations should return identifiers that match what shards would yield.</p>
-<p>Returns: List of shard identifier strings.</p>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`list`">list</a>[<a href="`str`">str</a>]</td>
+<td>List of shard identifier strings.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.DataSource.open_shard" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.DataSource.open_shard">open_shard</h3>
-<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>DataSource.open_shard(shard_id)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>DataSource.open_shard(shard_id)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Open a single shard by its identifier.</p>
 <p>This method enables random access to individual shards, which is required for PyTorch DataLoader worker splitting. Each worker opens only its assigned shards rather than iterating all shards.</p>
-<p>Args: shard_id: Shard identifier from shard_list.</p>
-<p>Returns: File-like stream for reading the shard.</p>
-<p>Raises: KeyError: If shard_id is not in shard_list.</p>
+<section id="parameters" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>shard_id</td>
+<td><a href="`str`">str</a></td>
+<td>Shard identifier from shard_list.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-1" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`typing.IO`">IO</a>[<a href="`bytes`">bytes</a>]</td>
+<td>File-like stream for reading the shard.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`KeyError`">KeyError</a></td>
+<td>If shard_id is not in shard_list.</td>
+</tr>
+</tbody>
+</table>
 
 
+</section>
 </section>
 </section>
 </section>

@@ -34,63 +34,63 @@
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/DatasetDict.html</loc>
-    <lastmod>2026-01-23T03:31:26.249Z</lastmod>
+    <lastmod>2026-01-24T19:19:45.336Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/AtmosphereClient.html</loc>
-    <lastmod>2026-01-23T03:31:26.313Z</lastmod>
+    <lastmod>2026-01-23T23:20:15.723Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/DictSample.html</loc>
-    <lastmod>2026-01-23T03:31:26.226Z</lastmod>
+    <lastmod>2026-01-23T23:20:15.573Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/LensLoader.html</loc>
-    <lastmod>2026-01-23T03:31:26.348Z</lastmod>
+    <lastmod>2026-01-23T23:20:15.788Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/AtmosphereIndex.html</loc>
-    <lastmod>2026-01-23T03:31:26.320Z</lastmod>
+    <lastmod>2026-01-23T23:20:15.736Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/DataSource.html</loc>
-    <lastmod>2026-01-23T22:28:15.705Z</lastmod>
+    <lastmod>2026-01-23T23:20:15.642Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/DatasetLoader.html</loc>
-    <lastmod>2026-01-23T03:31:26.340Z</lastmod>
+    <lastmod>2026-01-23T23:20:15.773Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/Lens.html</loc>
-    <lastmod>2026-01-23T22:28:15.684Z</lastmod>
+    <lastmod>2026-01-24T19:29:16.065Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/local.Index.html</loc>
-    <lastmod>2026-01-23T03:31:26.290Z</lastmod>
+    <lastmod>2026-01-23T23:20:15.683Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/Dataset.html</loc>
-    <lastmod>2026-01-23T03:31:26.234Z</lastmod>
+    <lastmod>2026-01-23T23:20:15.588Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/AbstractDataStore.html</loc>
-    <lastmod>2026-01-23T22:28:15.703Z</lastmod>
+    <lastmod>2026-01-23T23:20:15.638Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/local.S3DataStore.html</loc>
-    <lastmod>2026-01-23T03:31:26.298Z</lastmod>
+    <lastmod>2026-01-23T23:03:53.869Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/AtUri.html</loc>
-    <lastmod>2026-01-23T03:31:26.350Z</lastmod>
+    <lastmod>2026-01-23T23:20:15.791Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/Packable-protocol.html</loc>
-    <lastmod>2026-01-23T22:28:15.690Z</lastmod>
+    <lastmod>2026-01-23T23:20:15.617Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/packable.html</loc>
-    <lastmod>2026-01-23T22:28:15.652Z</lastmod>
+    <lastmod>2026-01-23T23:21:24.522Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/index.html</loc>
@@ -98,63 +98,63 @@
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/SampleBatch.html</loc>
-    <lastmod>2026-01-23T03:31:26.235Z</lastmod>
+    <lastmod>2026-01-23T23:20:15.589Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/LensPublisher.html</loc>
-    <lastmod>2026-01-23T03:31:26.344Z</lastmod>
+    <lastmod>2026-01-23T23:20:15.781Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/AtmosphereIndexEntry.html</loc>
-    <lastmod>2026-01-23T03:31:26.322Z</lastmod>
+    <lastmod>2026-01-23T23:03:53.910Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/AbstractIndex.html</loc>
-    <lastmod>2026-01-23T22:28:15.699Z</lastmod>
+    <lastmod>2026-01-23T23:20:15.632Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/local.LocalDatasetEntry.html</loc>
-    <lastmod>2026-01-23T03:31:26.295Z</lastmod>
+    <lastmod>2026-01-23T23:03:53.862Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/S3Source.html</loc>
-    <lastmod>2026-01-23T03:40:16.524Z</lastmod>
+    <lastmod>2026-01-24T19:19:45.376Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/IndexEntry.html</loc>
-    <lastmod>2026-01-23T22:28:15.692Z</lastmod>
+    <lastmod>2026-01-23T23:03:53.795Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/index.html</loc>
-    <lastmod>2026-01-23T22:28:15.643Z</lastmod>
+    <lastmod>2026-01-24T19:29:16.007Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/URLSource.html</loc>
-    <lastmod>2026-01-23T03:40:16.518Z</lastmod>
+    <lastmod>2026-01-24T19:19:45.367Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/DatasetPublisher.html</loc>
-    <lastmod>2026-01-23T03:31:26.332Z</lastmod>
+    <lastmod>2026-01-23T23:20:15.757Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/SchemaPublisher.html</loc>
-    <lastmod>2026-01-23T03:31:26.324Z</lastmod>
+    <lastmod>2026-01-23T23:20:15.742Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/promote_to_atmosphere.html</loc>
-    <lastmod>2026-01-23T03:31:26.352Z</lastmod>
+    <lastmod>2026-01-24T19:19:45.514Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/load_dataset.html</loc>
-    <lastmod>2026-01-23T03:31:26.247Z</lastmod>
+    <lastmod>2026-01-24T19:19:45.334Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/PackableSample.html</loc>
-    <lastmod>2026-01-23T03:31:26.219Z</lastmod>
+    <lastmod>2026-01-23T23:20:15.564Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/api/SchemaLoader.html</loc>
-    <lastmod>2026-01-23T03:31:26.327Z</lastmod>
+    <lastmod>2026-01-23T23:20:15.746Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/your-org/atdata/tutorials/atmosphere.html</loc>

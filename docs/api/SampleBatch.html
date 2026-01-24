@@ -398,7 +398,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#atdata.SampleBatch" id="toc-atdata.SampleBatch" class="nav-link active" data-scroll-target="#atdata.SampleBatch">SampleBatch</a>
   <ul class="collapse">
+  <li><a href="#parameters" id="toc-parameters" class="nav-link" data-scroll-target="#parameters">Parameters</a></li>
   <li><a href="#attributes" id="toc-attributes" class="nav-link" data-scroll-target="#attributes">Attributes</a></li>
+  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
+  <li><a href="#note" id="toc-note" class="nav-link" data-scroll-target="#note">Note</a></li>
   </ul></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/your-org/atdata/edit/main/api/SampleBatch.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
@@ -416,26 +419,62 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>A batch of samples with automatic attribute aggregation.</p>
 <p>This class wraps a sequence of samples and provides magic <code>__getattr__</code> access to aggregate sample attributes. When you access an attribute that exists on the sample type, it automatically aggregates values across all samples in the batch.</p>
 <p>NDArray fields are stacked into a numpy array with a batch dimension. Other fields are aggregated into a list.</p>
-<p>Type Parameters: DT: The sample type, must derive from <code>PackableSample</code>.</p>
-<p>Attributes: samples: The list of sample instances in this batch.</p>
-<p>Example: &gt;&gt;&gt; batch = SampleBatch<a href="[sample1, sample2, sample3]">MyData</a> &gt;&gt;&gt; batch.embeddings # Returns stacked numpy array of shape (3, …) &gt;&gt;&gt; batch.names # Returns list of names</p>
-<p>Note: This class uses Python’s <code>__orig_class__</code> mechanism to extract the type parameter at runtime. Instances must be created using the subscripted syntax <code>SampleBatch[MyType](samples)</code> rather than calling the constructor directly with an unsubscripted class.</p>
-<section id="attributes" class="level2">
-<h2 class="anchored" data-anchor-id="attributes">Attributes</h2>
+<section id="parameters" class="level2 doc-section doc-section-parameters">
+<h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 9%">
+<col style="width: 9%">
+<col style="width: 66%">
+<col style="width: 14%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>DT</td>
+<td></td>
+<td>The sample type, must derive from <code>PackableSample</code>.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="attributes" class="level2 doc-section doc-section-attributes">
+<h2 class="doc-section doc-section-attributes anchored" data-anchor-id="attributes">Attributes</h2>
 <table class="caption-top table">
 <thead>
 <tr class="header">
 <th>Name</th>
+<th>Type</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><a href="#atdata.SampleBatch.sample_type">sample_type</a></td>
-<td>The type of each sample in this batch.</td>
+<td>samples</td>
+<td></td>
+<td>The list of sample instances in this batch.</td>
 </tr>
 </tbody>
 </table>
+</section>
+<section id="example" class="level2 doc-section doc-section-example">
+<h2 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h2>
+<p>::</p>
+<pre><code>&gt;&gt;&gt; batch = SampleBatch[MyData]([sample1, sample2, sample3])
+&gt;&gt;&gt; batch.embeddings  # Returns stacked numpy array of shape (3, ...)
+&gt;&gt;&gt; batch.names  # Returns list of names</code></pre>
+</section>
+<section id="note" class="level2 doc-section doc-section-note">
+<h2 class="doc-section doc-section-note anchored" data-anchor-id="note">Note</h2>
+<p>This class uses Python’s <code>__orig_class__</code> mechanism to extract the type parameter at runtime. Instances must be created using the subscripted syntax <code>SampleBatch[MyType](samples)</code> rather than calling the constructor directly with an unsubscripted class.</p>
 
 
 </section>

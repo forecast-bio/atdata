@@ -398,6 +398,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#atdata.atmosphere.SchemaPublisher" id="toc-atdata.atmosphere.SchemaPublisher" class="nav-link active" data-scroll-target="#atdata.atmosphere.SchemaPublisher">SchemaPublisher</a>
   <ul class="collapse">
+  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
   <li><a href="#atdata.atmosphere.SchemaPublisher.publish" id="toc-atdata.atmosphere.SchemaPublisher.publish" class="nav-link" data-scroll-target="#atdata.atmosphere.SchemaPublisher.publish">publish</a></li>
@@ -418,7 +419,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>atmosphere.SchemaPublisher(client)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Publishes PackableSample schemas to ATProto.</p>
 <p>This class introspects a PackableSample class to extract its field definitions and publishes them as an ATProto schema record.</p>
-<p>Example: &gt;&gt;&gt; <span class="citation" data-cites="atdata.packable">@atdata.packable</span> … class MySample: … image: NDArray … label: str … &gt;&gt;&gt; client = AtmosphereClient() &gt;&gt;&gt; client.login(“handle”, “password”) &gt;&gt;&gt; &gt;&gt;&gt; publisher = SchemaPublisher(client) &gt;&gt;&gt; uri = publisher.publish(MySample, version=“1.0.0”) &gt;&gt;&gt; print(uri) at://did:plc:…/ac.foundation.dataset.sampleSchema/…</p>
+<section id="example" class="level2 doc-section doc-section-example">
+<h2 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h2>
+<p>::</p>
+<pre><code>&gt;&gt;&gt; @atdata.packable
+... class MySample:
+...     image: NDArray
+...     label: str
+...
+&gt;&gt;&gt; client = AtmosphereClient()
+&gt;&gt;&gt; client.login("handle", "password")
+&gt;&gt;&gt;
+&gt;&gt;&gt; publisher = SchemaPublisher(client)
+&gt;&gt;&gt; uri = publisher.publish(MySample, version="1.0.0")
+&gt;&gt;&gt; print(uri)
+at://did:plc:.../ac.foundation.dataset.sampleSchema/...</code></pre>
+</section>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>
 <table class="caption-top table">
@@ -437,21 +453,112 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="atdata.atmosphere.SchemaPublisher.publish" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.atmosphere.SchemaPublisher.publish">publish</h3>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>atmosphere.SchemaPublisher.publish(</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    sample_type,</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    version<span class="op">=</span><span class="st">'1.0.0'</span>,</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    description<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    metadata<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    rkey<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>atmosphere.SchemaPublisher.publish(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    sample_type,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    version<span class="op">=</span><span class="st">'1.0.0'</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    description<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    metadata<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    rkey<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Publish a PackableSample schema to ATProto.</p>
-<p>Args: sample_type: The PackableSample class to publish. name: Human-readable name. Defaults to the class name. version: Semantic version string (e.g., ‘1.0.0’). description: Human-readable description. metadata: Arbitrary metadata dictionary. rkey: Optional explicit record key. If not provided, a TID is generated.</p>
-<p>Returns: The AT URI of the created schema record.</p>
-<p>Raises: ValueError: If sample_type is not a dataclass or client is not authenticated. TypeError: If a field type is not supported.</p>
+<section id="parameters" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>sample_type</td>
+<td><a href="`typing.Type`">Type</a>[<a href="`atdata.atmosphere.schema.ST`">ST</a>]</td>
+<td>The PackableSample class to publish.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>name</td>
+<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
+<td>Human-readable name. Defaults to the class name.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>version</td>
+<td><a href="`str`">str</a></td>
+<td>Semantic version string (e.g., ‘1.0.0’).</td>
+<td><code>'1.0.0'</code></td>
+</tr>
+<tr class="even">
+<td>description</td>
+<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
+<td>Human-readable description.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>metadata</td>
+<td><a href="`typing.Optional`">Optional</a>[<a href="`dict`">dict</a>]</td>
+<td>Arbitrary metadata dictionary.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>rkey</td>
+<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
+<td>Optional explicit record key. If not provided, a TID is generated.</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`atdata.atmosphere._types.AtUri`">AtUri</a></td>
+<td>The AT URI of the created schema record.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>If sample_type is not a dataclass or client is not authenticated.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`TypeError`">TypeError</a></td>
+<td>If a field type is not supported.</td>
+</tr>
+</tbody>
+</table>
 
 
+</section>
 </section>
 </section>
 </section>

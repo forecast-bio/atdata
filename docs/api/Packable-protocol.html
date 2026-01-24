@@ -398,6 +398,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#atdata.Packable" id="toc-atdata.Packable" class="nav-link active" data-scroll-target="#atdata.Packable">Packable</a>
   <ul class="collapse">
+  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
   <li><a href="#attributes" id="toc-attributes" class="nav-link" data-scroll-target="#attributes">Attributes</a></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
@@ -422,7 +423,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>This protocol allows classes decorated with <code>@packable</code> to be recognized as valid types for lens transformations and schema operations, even though the decorator doesn’t change the class’s nominal type at static analysis time.</p>
 <p>Both <code>PackableSample</code> subclasses and <code>@packable</code>-decorated classes satisfy this protocol structurally.</p>
 <p>The protocol captures the full interface needed for: - Lens type transformations (as_wds, from_data) - Schema publishing (class introspection via dataclass fields) - Serialization/deserialization (packed, from_bytes)</p>
-<p>Example: &gt;&gt;&gt; <span class="citation" data-cites="packable">@packable</span> … class MySample: … name: str … value: int … &gt;&gt;&gt; def process(sample_type: Type<a href="#atdata.Packable">Packable</a>) -&gt; None: … # Type checker knows sample_type has from_bytes, packed, etc. … instance = sample_type.from_bytes(data) … print(instance.packed)</p>
+<section id="example" class="level2 doc-section doc-section-example">
+<h2 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h2>
+<p>::</p>
+<pre><code>&gt;&gt;&gt; @packable
+... class MySample:
+...     name: str
+...     value: int
+...
+&gt;&gt;&gt; def process(sample_type: Type[Packable]) -&gt; None:
+...     # Type checker knows sample_type has from_bytes, packed, etc.
+...     instance = sample_type.from_bytes(data)
+...     print(instance.packed)</code></pre>
+</section>
 <section id="attributes" class="level2">
 <h2 class="anchored" data-anchor-id="attributes">Attributes</h2>
 <table class="caption-top table">
@@ -466,12 +479,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="atdata.Packable.from_bytes" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.Packable.from_bytes">from_bytes</h3>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>Packable.from_bytes(bs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>Packable.from_bytes(bs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Create instance from raw msgpack bytes.</p>
 </section>
 <section id="atdata.Packable.from_data" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.Packable.from_data">from_data</h3>
-<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>Packable.from_data(data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>Packable.from_data(data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Create instance from unpacked msgpack data dictionary.</p>
 
 

@@ -9,7 +9,10 @@ Publishes dataset index records to ATProto.
 This class creates dataset records that reference a schema and point to
 external storage (WebDataset URLs) or ATProto blobs.
 
-Example:
+## Example {.doc-section .doc-section-example}
+
+::
+
     >>> dataset = atdata.Dataset[MySample]("s3://bucket/data-{000000..000009}.tar")
     >>>
     >>> client = AtmosphereClient()
@@ -50,24 +53,31 @@ atmosphere.DatasetPublisher.publish(
 
 Publish a dataset index record to ATProto.
 
-Args:
-    dataset: The Dataset to publish.
-    name: Human-readable dataset name.
-    schema_uri: AT URI of the schema record. If not provided and
-        auto_publish_schema is True, the schema will be published.
-    description: Human-readable description.
-    tags: Searchable tags for discovery.
-    license: SPDX license identifier (e.g., 'MIT', 'Apache-2.0').
-    auto_publish_schema: If True and schema_uri not provided,
-        automatically publish the schema first.
-    schema_version: Version for auto-published schema.
-    rkey: Optional explicit record key.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    The AT URI of the created dataset record.
+| Name                | Type                                                                        | Description                                                                                                 | Default    |
+|---------------------|-----------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|------------|
+| dataset             | [Dataset](`atdata.dataset.Dataset`)\[[ST](`atdata.atmosphere.records.ST`)\] | The Dataset to publish.                                                                                     | _required_ |
+| name                | [str](`str`)                                                                | Human-readable dataset name.                                                                                | _required_ |
+| schema_uri          | [Optional](`typing.Optional`)\[[str](`str`)\]                               | AT URI of the schema record. If not provided and auto_publish_schema is True, the schema will be published. | `None`     |
+| description         | [Optional](`typing.Optional`)\[[str](`str`)\]                               | Human-readable description.                                                                                 | `None`     |
+| tags                | [Optional](`typing.Optional`)\[[list](`list`)\[[str](`str`)\]\]             | Searchable tags for discovery.                                                                              | `None`     |
+| license             | [Optional](`typing.Optional`)\[[str](`str`)\]                               | SPDX license identifier (e.g., 'MIT', 'Apache-2.0').                                                        | `None`     |
+| auto_publish_schema | [bool](`bool`)                                                              | If True and schema_uri not provided, automatically publish the schema first.                                | `True`     |
+| schema_version      | [str](`str`)                                                                | Version for auto-published schema.                                                                          | `'1.0.0'`  |
+| rkey                | [Optional](`typing.Optional`)\[[str](`str`)\]                               | Optional explicit record key.                                                                               | `None`     |
 
-Raises:
-    ValueError: If schema_uri is not provided and auto_publish_schema is False.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                      | Description                               |
+|--------|-------------------------------------------|-------------------------------------------|
+|        | [AtUri](`atdata.atmosphere._types.AtUri`) | The AT URI of the created dataset record. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                                                     |
+|--------|----------------------------|-----------------------------------------------------------------|
+|        | [ValueError](`ValueError`) | If schema_uri is not provided and auto_publish_schema is False. |
 
 ### publish_with_blobs { #atdata.atmosphere.DatasetPublisher.publish_with_blobs }
 
@@ -92,23 +102,30 @@ This method uploads the provided data as blobs to the PDS and creates
 a dataset record referencing them. Suitable for smaller datasets that
 fit within blob size limits (typically 50MB per blob, configurable).
 
-Args:
-    blobs: List of binary data (e.g., tar shards) to upload as blobs.
-    schema_uri: AT URI of the schema record.
-    name: Human-readable dataset name.
-    description: Human-readable description.
-    tags: Searchable tags for discovery.
-    license: SPDX license identifier.
-    metadata: Arbitrary metadata dictionary.
-    mime_type: MIME type for the blobs (default: application/x-tar).
-    rkey: Optional explicit record key.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    The AT URI of the created dataset record.
+| Name        | Type                                                            | Description                                                | Default               |
+|-------------|-----------------------------------------------------------------|------------------------------------------------------------|-----------------------|
+| blobs       | [list](`list`)\[[bytes](`bytes`)\]                              | List of binary data (e.g., tar shards) to upload as blobs. | _required_            |
+| schema_uri  | [str](`str`)                                                    | AT URI of the schema record.                               | _required_            |
+| name        | [str](`str`)                                                    | Human-readable dataset name.                               | _required_            |
+| description | [Optional](`typing.Optional`)\[[str](`str`)\]                   | Human-readable description.                                | `None`                |
+| tags        | [Optional](`typing.Optional`)\[[list](`list`)\[[str](`str`)\]\] | Searchable tags for discovery.                             | `None`                |
+| license     | [Optional](`typing.Optional`)\[[str](`str`)\]                   | SPDX license identifier.                                   | `None`                |
+| metadata    | [Optional](`typing.Optional`)\[[dict](`dict`)\]                 | Arbitrary metadata dictionary.                             | `None`                |
+| mime_type   | [str](`str`)                                                    | MIME type for the blobs (default: application/x-tar).      | `'application/x-tar'` |
+| rkey        | [Optional](`typing.Optional`)\[[str](`str`)\]                   | Optional explicit record key.                              | `None`                |
 
-Note:
-    Blobs are only retained by the PDS when referenced in a committed
-    record. This method handles that automatically.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                      | Description                               |
+|--------|-------------------------------------------|-------------------------------------------|
+|        | [AtUri](`atdata.atmosphere._types.AtUri`) | The AT URI of the created dataset record. |
+
+#### Note {.doc-section .doc-section-note}
+
+Blobs are only retained by the PDS when referenced in a committed
+record. This method handles that automatically.
 
 ### publish_with_urls { #atdata.atmosphere.DatasetPublisher.publish_with_urls }
 
@@ -131,15 +148,21 @@ Publish a dataset record with explicit URLs.
 This method allows publishing a dataset record without having a
 Dataset object, useful for registering existing WebDataset files.
 
-Args:
-    urls: List of WebDataset URLs with brace notation.
-    schema_uri: AT URI of the schema record.
-    name: Human-readable dataset name.
-    description: Human-readable description.
-    tags: Searchable tags for discovery.
-    license: SPDX license identifier.
-    metadata: Arbitrary metadata dictionary.
-    rkey: Optional explicit record key.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    The AT URI of the created dataset record.
+| Name        | Type                                                            | Description                                  | Default    |
+|-------------|-----------------------------------------------------------------|----------------------------------------------|------------|
+| urls        | [list](`list`)\[[str](`str`)\]                                  | List of WebDataset URLs with brace notation. | _required_ |
+| schema_uri  | [str](`str`)                                                    | AT URI of the schema record.                 | _required_ |
+| name        | [str](`str`)                                                    | Human-readable dataset name.                 | _required_ |
+| description | [Optional](`typing.Optional`)\[[str](`str`)\]                   | Human-readable description.                  | `None`     |
+| tags        | [Optional](`typing.Optional`)\[[list](`list`)\[[str](`str`)\]\] | Searchable tags for discovery.               | `None`     |
+| license     | [Optional](`typing.Optional`)\[[str](`str`)\]                   | SPDX license identifier.                     | `None`     |
+| metadata    | [Optional](`typing.Optional`)\[[dict](`dict`)\]                 | Arbitrary metadata dictionary.               | `None`     |
+| rkey        | [Optional](`typing.Optional`)\[[str](`str`)\]                   | Optional explicit record key.                | `None`     |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                      | Description                               |
+|--------|-------------------------------------------|-------------------------------------------|
+|        | [AtUri](`atdata.atmosphere._types.AtUri`) | The AT URI of the created dataset record. |

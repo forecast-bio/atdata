@@ -20,13 +20,15 @@ Protocols:
     AbstractDataStore: Protocol for data storage operations
 
 Example:
-    >>> def process_datasets(index: AbstractIndex) -> None:
-    ...     for entry in index.list_datasets():
-    ...         print(f"{entry.name}: {entry.data_urls}")
-    ...
-    >>> # Works with either LocalIndex or AtmosphereIndex
-    >>> process_datasets(local_index)
-    >>> process_datasets(atmosphere_index)
+    ::
+
+        >>> def process_datasets(index: AbstractIndex) -> None:
+        ...     for entry in index.list_datasets():
+        ...         print(f"{entry.name}: {entry.data_urls}")
+        ...
+        >>> # Works with either LocalIndex or AtmosphereIndex
+        >>> process_datasets(local_index)
+        >>> process_datasets(atmosphere_index)
 """
 
 from typing import (
@@ -66,15 +68,17 @@ class Packable(Protocol):
     - Serialization/deserialization (packed, from_bytes)
 
     Example:
-        >>> @packable
-        ... class MySample:
-        ...     name: str
-        ...     value: int
-        ...
-        >>> def process(sample_type: Type[Packable]) -> None:
-        ...     # Type checker knows sample_type has from_bytes, packed, etc.
-        ...     instance = sample_type.from_bytes(data)
-        ...     print(instance.packed)
+        ::
+
+            >>> @packable
+            ... class MySample:
+            ...     name: str
+            ...     value: int
+            ...
+            >>> def process(sample_type: Type[Packable]) -> None:
+            ...     # Type checker knows sample_type has from_bytes, packed, etc.
+            ...     instance = sample_type.from_bytes(data)
+            ...     print(instance.packed)
     """
 
     @classmethod
@@ -166,18 +170,20 @@ class AbstractIndex(Protocol):
           If present, ``load_dataset`` will use it for S3 credential resolution.
 
     Example:
-        >>> def publish_and_list(index: AbstractIndex) -> None:
-        ...     # Publish schemas for different types
-        ...     schema1 = index.publish_schema(ImageSample, version="1.0.0")
-        ...     schema2 = index.publish_schema(TextSample, version="1.0.0")
-        ...
-        ...     # Insert datasets of different types
-        ...     index.insert_dataset(image_ds, name="images")
-        ...     index.insert_dataset(text_ds, name="texts")
-        ...
-        ...     # List all datasets (mixed types)
-        ...     for entry in index.list_datasets():
-        ...         print(f"{entry.name} -> {entry.schema_ref}")
+        ::
+
+            >>> def publish_and_list(index: AbstractIndex) -> None:
+            ...     # Publish schemas for different types
+            ...     schema1 = index.publish_schema(ImageSample, version="1.0.0")
+            ...     schema2 = index.publish_schema(TextSample, version="1.0.0")
+            ...
+            ...     # Insert datasets of different types
+            ...     index.insert_dataset(image_ds, name="images")
+            ...     index.insert_dataset(text_ds, name="texts")
+            ...
+            ...     # List all datasets (mixed types)
+            ...     for entry in index.list_datasets():
+            ...         print(f"{entry.name} -> {entry.schema_ref}")
     """
 
     # Optional data store (not required by protocol, but supported by some implementations)
@@ -317,11 +323,13 @@ class AbstractIndex(Protocol):
             ValueError: If schema cannot be decoded (unsupported field types).
 
         Example:
-            >>> entry = index.get_dataset("my-dataset")
-            >>> SampleType = index.decode_schema(entry.schema_ref)
-            >>> ds = Dataset[SampleType](entry.data_urls[0])
-            >>> for sample in ds.ordered():
-            ...     print(sample)  # sample is instance of SampleType
+            ::
+
+                >>> entry = index.get_dataset("my-dataset")
+                >>> SampleType = index.decode_schema(entry.schema_ref)
+                >>> ds = Dataset[SampleType](entry.data_urls[0])
+                >>> for sample in ds.ordered():
+                ...     print(sample)  # sample is instance of SampleType
         """
         ...
 
@@ -342,10 +350,12 @@ class AbstractDataStore(Protocol):
     S3 storage, or atmosphere index with PDS blobs.
 
     Example:
-        >>> store = S3DataStore(credentials, bucket="my-bucket")
-        >>> urls = store.write_shards(dataset, prefix="training/v1")
-        >>> print(urls)
-        ['s3://my-bucket/training/v1/shard-000000.tar', ...]
+        ::
+
+            >>> store = S3DataStore(credentials, bucket="my-bucket")
+            >>> urls = store.write_shards(dataset, prefix="training/v1")
+            >>> print(urls)
+            ['s3://my-bucket/training/v1/shard-000000.tar', ...]
     """
 
     def write_shards(
@@ -415,15 +425,17 @@ class DataSource(Protocol):
     - Any other source that can provide file-like objects
 
     Example:
-        >>> source = S3Source(
-        ...     bucket="my-bucket",
-        ...     keys=["data-000.tar", "data-001.tar"],
-        ...     endpoint="https://r2.example.com",
-        ...     credentials=creds,
-        ... )
-        >>> ds = Dataset[MySample](source)
-        >>> for sample in ds.ordered():
-        ...     print(sample)
+        ::
+
+            >>> source = S3Source(
+            ...     bucket="my-bucket",
+            ...     keys=["data-000.tar", "data-001.tar"],
+            ...     endpoint="https://r2.example.com",
+            ...     credentials=creds,
+            ... )
+            >>> ds = Dataset[MySample](source)
+            >>> for sample in ds.ordered():
+            ...     print(sample)
     """
 
     @property
@@ -437,9 +449,11 @@ class DataSource(Protocol):
             Tuple of (shard_identifier, file_like_stream).
 
         Example:
-            >>> for shard_id, stream in source.shards:
-            ...     print(f"Processing {shard_id}")
-            ...     data = stream.read()
+            ::
+
+                >>> for shard_id, stream in source.shards:
+                ...     print(f"Processing {shard_id}")
+                ...     data = stream.read()
         """
         ...
 

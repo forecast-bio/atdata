@@ -9,7 +9,10 @@ Loads PackableSample schemas from ATProto.
 This class fetches schema records from ATProto and can list available
 schemas from a repository.
 
-Example:
+## Example {.doc-section .doc-section-example}
+
+::
+
     >>> client = AtmosphereClient()
     >>> client.login("handle", "password")
     >>>
@@ -33,15 +36,24 @@ atmosphere.SchemaLoader.get(uri)
 
 Fetch a schema record by AT URI.
 
-Args:
-    uri: The AT URI of the schema record.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    The schema record as a dictionary.
+| Name   | Type                                                      | Description                      | Default    |
+|--------|-----------------------------------------------------------|----------------------------------|------------|
+| uri    | [str](`str`) \| [AtUri](`atdata.atmosphere._types.AtUri`) | The AT URI of the schema record. | _required_ |
 
-Raises:
-    ValueError: If the record is not a schema record.
-    atproto.exceptions.AtProtocolError: If record not found.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type           | Description                        |
+|--------|----------------|------------------------------------|
+|        | [dict](`dict`) | The schema record as a dictionary. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                                                                                                            | Description                           |
+|--------|-----------------------------------------------------------------------------------------------------------------|---------------------------------------|
+|        | [ValueError](`ValueError`)                                                                                      | If the record is not a schema record. |
+|        | [atproto](`atproto`).[exceptions](`atproto.exceptions`).[AtProtocolError](`atproto.exceptions.AtProtocolError`) | If record not found.                  |
 
 ### list_all { #atdata.atmosphere.SchemaLoader.list_all }
 
@@ -51,9 +63,15 @@ atmosphere.SchemaLoader.list_all(repo=None, limit=100)
 
 List schema records from a repository.
 
-Args:
-    repo: The DID of the repository. Defaults to authenticated user.
-    limit: Maximum number of records to return.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    List of schema records.
+| Name   | Type                                          | Description                                                | Default   |
+|--------|-----------------------------------------------|------------------------------------------------------------|-----------|
+| repo   | [Optional](`typing.Optional`)\[[str](`str`)\] | The DID of the repository. Defaults to authenticated user. | `None`    |
+| limit  | [int](`int`)                                  | Maximum number of records to return.                       | `100`     |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                             | Description             |
+|--------|----------------------------------|-------------------------|
+|        | [list](`list`)\[[dict](`dict`)\] | List of schema records. |

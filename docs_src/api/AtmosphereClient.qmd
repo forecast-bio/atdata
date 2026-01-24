@@ -9,15 +9,19 @@ ATProto client wrapper for atdata operations.
 This class wraps the atproto SDK client and provides higher-level methods
 for working with atdata records (schemas, datasets, lenses).
 
-Example:
+## Example {.doc-section .doc-section-example}
+
+::
+
     >>> client = AtmosphereClient()
     >>> client.login("alice.bsky.social", "app-password")
     >>> print(client.did)
     'did:plc:...'
 
-Note:
-    The password should be an app-specific password, not your main account
-    password. Create app passwords in your Bluesky account settings.
+## Note {.doc-section .doc-section-note}
+
+The password should be an app-specific password, not your main account
+password. Create app passwords in your Bluesky account settings.
 
 ## Attributes
 
@@ -60,20 +64,27 @@ atmosphere.AtmosphereClient.create_record(
 
 Create a record in the user's repository.
 
-Args:
-    collection: The NSID of the record collection
-        (e.g., 'ac.foundation.dataset.sampleSchema').
-    record: The record data. Must include a '$type' field.
-    rkey: Optional explicit record key. If not provided, a TID is generated.
-    validate: Whether to validate against the Lexicon schema. Set to False
-        for custom lexicons that the PDS doesn't know about.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    The AT URI of the created record.
+| Name       | Type                                          | Description                                                                                                       | Default    |
+|------------|-----------------------------------------------|-------------------------------------------------------------------------------------------------------------------|------------|
+| collection | [str](`str`)                                  | The NSID of the record collection (e.g., 'ac.foundation.dataset.sampleSchema').                                   | _required_ |
+| record     | [dict](`dict`)                                | The record data. Must include a '$type' field.                                                                    | _required_ |
+| rkey       | [Optional](`typing.Optional`)\[[str](`str`)\] | Optional explicit record key. If not provided, a TID is generated.                                                | `None`     |
+| validate   | [bool](`bool`)                                | Whether to validate against the Lexicon schema. Set to False for custom lexicons that the PDS doesn't know about. | `False`    |
 
-Raises:
-    ValueError: If not authenticated.
-    atproto.exceptions.AtProtocolError: If record creation fails.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                      | Description                       |
+|--------|-------------------------------------------|-----------------------------------|
+|        | [AtUri](`atdata.atmosphere._types.AtUri`) | The AT URI of the created record. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                                                                                                            | Description               |
+|--------|-----------------------------------------------------------------------------------------------------------------|---------------------------|
+|        | [ValueError](`ValueError`)                                                                                      | If not authenticated.     |
+|        | [atproto](`atproto`).[exceptions](`atproto.exceptions`).[AtProtocolError](`atproto.exceptions.AtProtocolError`) | If record creation fails. |
 
 ### delete_record { #atdata.atmosphere.AtmosphereClient.delete_record }
 
@@ -83,13 +94,19 @@ atmosphere.AtmosphereClient.delete_record(uri, *, swap_commit=None)
 
 Delete a record.
 
-Args:
-    uri: The AT URI of the record to delete.
-    swap_commit: Optional CID for compare-and-swap delete.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Raises:
-    ValueError: If not authenticated.
-    atproto.exceptions.AtProtocolError: If deletion fails.
+| Name        | Type                                                      | Description                               | Default    |
+|-------------|-----------------------------------------------------------|-------------------------------------------|------------|
+| uri         | [str](`str`) \| [AtUri](`atdata.atmosphere._types.AtUri`) | The AT URI of the record to delete.       | _required_ |
+| swap_commit | [Optional](`typing.Optional`)\[[str](`str`)\]             | Optional CID for compare-and-swap delete. | `None`     |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                                                                                                            | Description           |
+|--------|-----------------------------------------------------------------------------------------------------------------|-----------------------|
+|        | [ValueError](`ValueError`)                                                                                      | If not authenticated. |
+|        | [atproto](`atproto`).[exceptions](`atproto.exceptions`).[AtProtocolError](`atproto.exceptions.AtProtocolError`) | If deletion fails.    |
 
 ### export_session { #atdata.atmosphere.AtmosphereClient.export_session }
 
@@ -99,11 +116,17 @@ atmosphere.AtmosphereClient.export_session()
 
 Export the current session for later reuse.
 
-Returns:
-    Session string that can be passed to ``login_with_session()``.
+#### Returns {.doc-section .doc-section-returns}
 
-Raises:
-    ValueError: If not authenticated.
+| Name   | Type         | Description                                                    |
+|--------|--------------|----------------------------------------------------------------|
+|        | [str](`str`) | Session string that can be passed to ``login_with_session()``. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description           |
+|--------|----------------------------|-----------------------|
+|        | [ValueError](`ValueError`) | If not authenticated. |
 
 ### get_blob { #atdata.atmosphere.AtmosphereClient.get_blob }
 
@@ -116,16 +139,25 @@ Download a blob from a PDS.
 This resolves the PDS endpoint from the DID document and fetches
 the blob directly from the PDS.
 
-Args:
-    did: The DID of the repository containing the blob.
-    cid: The CID of the blob.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    The blob data as bytes.
+| Name   | Type         | Description                                    | Default    |
+|--------|--------------|------------------------------------------------|------------|
+| did    | [str](`str`) | The DID of the repository containing the blob. | _required_ |
+| cid    | [str](`str`) | The CID of the blob.                           | _required_ |
 
-Raises:
-    ValueError: If PDS endpoint cannot be resolved.
-    requests.HTTPError: If blob fetch fails.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type             | Description             |
+|--------|------------------|-------------------------|
+|        | [bytes](`bytes`) | The blob data as bytes. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                                                     | Description                         |
+|--------|----------------------------------------------------------|-------------------------------------|
+|        | [ValueError](`ValueError`)                               | If PDS endpoint cannot be resolved. |
+|        | [requests](`requests`).[HTTPError](`requests.HTTPError`) | If blob fetch fails.                |
 
 ### get_blob_url { #atdata.atmosphere.AtmosphereClient.get_blob_url }
 
@@ -137,15 +169,24 @@ Get the direct URL for fetching a blob.
 
 This is useful for passing to WebDataset or other HTTP clients.
 
-Args:
-    did: The DID of the repository containing the blob.
-    cid: The CID of the blob.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    The full URL for fetching the blob.
+| Name   | Type         | Description                                    | Default    |
+|--------|--------------|------------------------------------------------|------------|
+| did    | [str](`str`) | The DID of the repository containing the blob. | _required_ |
+| cid    | [str](`str`) | The CID of the blob.                           | _required_ |
 
-Raises:
-    ValueError: If PDS endpoint cannot be resolved.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type         | Description                         |
+|--------|--------------|-------------------------------------|
+|        | [str](`str`) | The full URL for fetching the blob. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                         |
+|--------|----------------------------|-------------------------------------|
+|        | [ValueError](`ValueError`) | If PDS endpoint cannot be resolved. |
 
 ### get_record { #atdata.atmosphere.AtmosphereClient.get_record }
 
@@ -155,14 +196,23 @@ atmosphere.AtmosphereClient.get_record(uri)
 
 Fetch a record by AT URI.
 
-Args:
-    uri: The AT URI of the record.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    The record data as a dictionary.
+| Name   | Type                                                      | Description               | Default    |
+|--------|-----------------------------------------------------------|---------------------------|------------|
+| uri    | [str](`str`) \| [AtUri](`atdata.atmosphere._types.AtUri`) | The AT URI of the record. | _required_ |
 
-Raises:
-    atproto.exceptions.AtProtocolError: If record not found.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type           | Description                      |
+|--------|----------------|----------------------------------|
+|        | [dict](`dict`) | The record data as a dictionary. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                                                                                                            | Description          |
+|--------|-----------------------------------------------------------------------------------------------------------------|----------------------|
+|        | [atproto](`atproto`).[exceptions](`atproto.exceptions`).[AtProtocolError](`atproto.exceptions.AtProtocolError`) | If record not found. |
 
 ### list_datasets { #atdata.atmosphere.AtmosphereClient.list_datasets }
 
@@ -172,12 +222,18 @@ atmosphere.AtmosphereClient.list_datasets(repo=None, limit=100)
 
 List dataset records.
 
-Args:
-    repo: The DID to query. Defaults to authenticated user.
-    limit: Maximum number to return.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    List of dataset records.
+| Name   | Type                                          | Description                                       | Default   |
+|--------|-----------------------------------------------|---------------------------------------------------|-----------|
+| repo   | [Optional](`typing.Optional`)\[[str](`str`)\] | The DID to query. Defaults to authenticated user. | `None`    |
+| limit  | [int](`int`)                                  | Maximum number to return.                         | `100`     |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                             | Description              |
+|--------|----------------------------------|--------------------------|
+|        | [list](`list`)\[[dict](`dict`)\] | List of dataset records. |
 
 ### list_lenses { #atdata.atmosphere.AtmosphereClient.list_lenses }
 
@@ -187,12 +243,18 @@ atmosphere.AtmosphereClient.list_lenses(repo=None, limit=100)
 
 List lens records.
 
-Args:
-    repo: The DID to query. Defaults to authenticated user.
-    limit: Maximum number to return.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    List of lens records.
+| Name   | Type                                          | Description                                       | Default   |
+|--------|-----------------------------------------------|---------------------------------------------------|-----------|
+| repo   | [Optional](`typing.Optional`)\[[str](`str`)\] | The DID to query. Defaults to authenticated user. | `None`    |
+| limit  | [int](`int`)                                  | Maximum number to return.                         | `100`     |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                             | Description           |
+|--------|----------------------------------|-----------------------|
+|        | [list](`list`)\[[dict](`dict`)\] | List of lens records. |
 
 ### list_records { #atdata.atmosphere.AtmosphereClient.list_records }
 
@@ -208,19 +270,27 @@ atmosphere.AtmosphereClient.list_records(
 
 List records in a collection.
 
-Args:
-    collection: The NSID of the record collection.
-    repo: The DID of the repository to query. Defaults to the
-        authenticated user's repository.
-    limit: Maximum number of records to return (default 100).
-    cursor: Pagination cursor from a previous call.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    A tuple of (records, next_cursor). The cursor is None if there
-    are no more records.
+| Name       | Type                                          | Description                                                                          | Default    |
+|------------|-----------------------------------------------|--------------------------------------------------------------------------------------|------------|
+| collection | [str](`str`)                                  | The NSID of the record collection.                                                   | _required_ |
+| repo       | [Optional](`typing.Optional`)\[[str](`str`)\] | The DID of the repository to query. Defaults to the authenticated user's repository. | `None`     |
+| limit      | [int](`int`)                                  | Maximum number of records to return (default 100).                                   | `100`      |
+| cursor     | [Optional](`typing.Optional`)\[[str](`str`)\] | Pagination cursor from a previous call.                                              | `None`     |
 
-Raises:
-    ValueError: If repo is None and not authenticated.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                          | Description                                                    |
+|--------|-----------------------------------------------|----------------------------------------------------------------|
+|        | [list](`list`)\[[dict](`dict`)\]              | A tuple of (records, next_cursor). The cursor is None if there |
+|        | [Optional](`typing.Optional`)\[[str](`str`)\] | are no more records.                                           |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                            |
+|--------|----------------------------|----------------------------------------|
+|        | [ValueError](`ValueError`) | If repo is None and not authenticated. |
 
 ### list_schemas { #atdata.atmosphere.AtmosphereClient.list_schemas }
 
@@ -230,12 +300,18 @@ atmosphere.AtmosphereClient.list_schemas(repo=None, limit=100)
 
 List schema records.
 
-Args:
-    repo: The DID to query. Defaults to authenticated user.
-    limit: Maximum number to return.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    List of schema records.
+| Name   | Type                                          | Description                                       | Default   |
+|--------|-----------------------------------------------|---------------------------------------------------|-----------|
+| repo   | [Optional](`typing.Optional`)\[[str](`str`)\] | The DID to query. Defaults to authenticated user. | `None`    |
+| limit  | [int](`int`)                                  | Maximum number to return.                         | `100`     |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                             | Description             |
+|--------|----------------------------------|-------------------------|
+|        | [list](`list`)\[[dict](`dict`)\] | List of schema records. |
 
 ### login { #atdata.atmosphere.AtmosphereClient.login }
 
@@ -245,12 +321,18 @@ atmosphere.AtmosphereClient.login(handle, password)
 
 Authenticate with the ATProto PDS.
 
-Args:
-    handle: Your Bluesky handle (e.g., 'alice.bsky.social').
-    password: App-specific password (not your main password).
+#### Parameters {.doc-section .doc-section-parameters}
 
-Raises:
-    atproto.exceptions.AtProtocolError: If authentication fails.
+| Name     | Type         | Description                                      | Default    |
+|----------|--------------|--------------------------------------------------|------------|
+| handle   | [str](`str`) | Your Bluesky handle (e.g., 'alice.bsky.social'). | _required_ |
+| password | [str](`str`) | App-specific password (not your main password).  | _required_ |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                                                                                                            | Description              |
+|--------|-----------------------------------------------------------------------------------------------------------------|--------------------------|
+|        | [atproto](`atproto`).[exceptions](`atproto.exceptions`).[AtProtocolError](`atproto.exceptions.AtProtocolError`) | If authentication fails. |
 
 ### login_with_session { #atdata.atmosphere.AtmosphereClient.login_with_session }
 
@@ -263,8 +345,11 @@ Authenticate using an exported session string.
 This allows reusing a session without re-authenticating, which helps
 avoid rate limits on session creation.
 
-Args:
-    session_string: Session string from ``export_session()``.
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name           | Type         | Description                               | Default    |
+|----------------|--------------|-------------------------------------------|------------|
+| session_string | [str](`str`) | Session string from ``export_session()``. | _required_ |
 
 ### put_record { #atdata.atmosphere.AtmosphereClient.put_record }
 
@@ -281,19 +366,28 @@ atmosphere.AtmosphereClient.put_record(
 
 Create or update a record at a specific key.
 
-Args:
-    collection: The NSID of the record collection.
-    rkey: The record key.
-    record: The record data. Must include a '$type' field.
-    validate: Whether to validate against the Lexicon schema.
-    swap_commit: Optional CID for compare-and-swap update.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    The AT URI of the record.
+| Name        | Type                                          | Description                                     | Default    |
+|-------------|-----------------------------------------------|-------------------------------------------------|------------|
+| collection  | [str](`str`)                                  | The NSID of the record collection.              | _required_ |
+| rkey        | [str](`str`)                                  | The record key.                                 | _required_ |
+| record      | [dict](`dict`)                                | The record data. Must include a '$type' field.  | _required_ |
+| validate    | [bool](`bool`)                                | Whether to validate against the Lexicon schema. | `False`    |
+| swap_commit | [Optional](`typing.Optional`)\[[str](`str`)\] | Optional CID for compare-and-swap update.       | `None`     |
 
-Raises:
-    ValueError: If not authenticated.
-    atproto.exceptions.AtProtocolError: If operation fails.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                      | Description               |
+|--------|-------------------------------------------|---------------------------|
+|        | [AtUri](`atdata.atmosphere._types.AtUri`) | The AT URI of the record. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                                                                                                            | Description           |
+|--------|-----------------------------------------------------------------------------------------------------------------|-----------------------|
+|        | [ValueError](`ValueError`)                                                                                      | If not authenticated. |
+|        | [atproto](`atproto`).[exceptions](`atproto.exceptions`).[AtProtocolError](`atproto.exceptions.AtProtocolError`) | If operation fails.   |
 
 ### upload_blob { #atdata.atmosphere.AtmosphereClient.upload_blob }
 
@@ -306,14 +400,23 @@ atmosphere.AtmosphereClient.upload_blob(
 
 Upload binary data as a blob to the PDS.
 
-Args:
-    data: Binary data to upload.
-    mime_type: MIME type of the data (for reference, not enforced by PDS).
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    A blob reference dict with keys: '$type', 'ref', 'mimeType', 'size'.
-    This can be embedded directly in record fields.
+| Name      | Type             | Description                                                 | Default                      |
+|-----------|------------------|-------------------------------------------------------------|------------------------------|
+| data      | [bytes](`bytes`) | Binary data to upload.                                      | _required_                   |
+| mime_type | [str](`str`)     | MIME type of the data (for reference, not enforced by PDS). | `'application/octet-stream'` |
 
-Raises:
-    ValueError: If not authenticated.
-    atproto.exceptions.AtProtocolError: If upload fails.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type           | Description                                                          |
+|--------|----------------|----------------------------------------------------------------------|
+|        | [dict](`dict`) | A blob reference dict with keys: '$type', 'ref', 'mimeType', 'size'. |
+|        | [dict](`dict`) | This can be embedded directly in record fields.                      |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                                                                                                            | Description           |
+|--------|-----------------------------------------------------------------------------------------------------------------|-----------------------|
+|        | [ValueError](`ValueError`)                                                                                      | If not authenticated. |
+|        | [atproto](`atproto`).[exceptions](`atproto.exceptions`).[AtProtocolError](`atproto.exceptions.AtProtocolError`) | If upload fails.      |

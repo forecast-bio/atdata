@@ -85,9 +85,11 @@ class SchemaNamespace:
     schema's class becomes available as an attribute on this namespace.
 
     Example:
-        >>> index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
-        >>> MyType = index.types.MySample
-        >>> sample = MyType(field1="hello", field2=42)
+        ::
+
+            >>> index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
+            >>> MyType = index.types.MySample
+            >>> sample = MyType(field1="hello", field2=42)
 
     The namespace supports:
     - Attribute access: ``index.types.MySample``
@@ -1026,9 +1028,11 @@ class Index:
         as attributes on this namespace.
 
         Example:
-            >>> index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
-            >>> MyType = index.types.MySample
-            >>> sample = MyType(name="hello", value=42)
+            ::
+
+                >>> index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
+                >>> MyType = index.types.MySample
+                >>> sample = MyType(name="hello", value=42)
 
         Returns:
             SchemaNamespace containing all loaded schema types.
@@ -1055,13 +1059,15 @@ class Index:
             ValueError: If schema cannot be decoded.
 
         Example:
-            >>> # Load and use immediately
-            >>> MyType = index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
-            >>> sample = MyType(name="hello", value=42)
-            >>>
-            >>> # Or access later via namespace
-            >>> index.load_schema("atdata://local/sampleSchema/OtherType@1.0.0")
-            >>> other = index.types.OtherType(data="test")
+            ::
+
+                >>> # Load and use immediately
+                >>> MyType = index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
+                >>> sample = MyType(name="hello", value=42)
+                >>>
+                >>> # Or access later via namespace
+                >>> index.load_schema("atdata://local/sampleSchema/OtherType@1.0.0")
+                >>> other = index.types.OtherType(data="test")
         """
         # Decode the schema (uses generated module if auto_stubs enabled)
         cls = self.decode_schema(ref)
@@ -1085,13 +1091,15 @@ class Index:
             is disabled.
 
         Example:
-            >>> index = LocalIndex(auto_stubs=True)
-            >>> ref = index.publish_schema(MySample, version="1.0.0")
-            >>> index.load_schema(ref)
-            >>> print(index.get_import_path(ref))
-            local.MySample_1_0_0
-            >>> # Then in your code:
-            >>> # from local.MySample_1_0_0 import MySample
+            ::
+
+                >>> index = LocalIndex(auto_stubs=True)
+                >>> ref = index.publish_schema(MySample, version="1.0.0")
+                >>> index.load_schema(ref)
+                >>> print(index.get_import_path(ref))
+                local.MySample_1_0_0
+                >>> # Then in your code:
+                >>> # from local.MySample_1_0_0 import MySample
         """
         if self._stub_manager is None:
             return None
@@ -1526,12 +1534,14 @@ class Index:
             The decoded type, cast to match the type_hint for IDE support.
 
         Example:
-            >>> # After enabling auto_stubs and configuring IDE extraPaths:
-            >>> from local.MySample_1_0_0 import MySample
-            >>>
-            >>> # This gives full IDE autocomplete:
-            >>> DecodedType = index.decode_schema_as(ref, MySample)
-            >>> sample = DecodedType(text="hello", value=42)  # IDE knows signature!
+            ::
+
+                >>> # After enabling auto_stubs and configuring IDE extraPaths:
+                >>> from local.MySample_1_0_0 import MySample
+                >>>
+                >>> # This gives full IDE autocomplete:
+                >>> DecodedType = index.decode_schema_as(ref, MySample)
+                >>> sample = DecodedType(text="hello", value=42)  # IDE knows signature!
 
         Note:
             The type_hint is only used for static type checking - at runtime,

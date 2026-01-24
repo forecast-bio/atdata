@@ -396,7 +396,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#atdata.packable" id="toc-atdata.packable" class="nav-link active" data-scroll-target="#atdata.packable">packable</a></li>
+  <li><a href="#atdata.packable" id="toc-atdata.packable" class="nav-link active" data-scroll-target="#atdata.packable">packable</a>
+  <ul class="collapse">
+  <li><a href="#parameters" id="toc-parameters" class="nav-link" data-scroll-target="#parameters">Parameters</a></li>
+  <li><a href="#returns" id="toc-returns" class="nav-link" data-scroll-target="#returns">Returns</a></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
+  </ul></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/your-org/atdata/edit/main/api/packable.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -413,11 +418,73 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Decorator to convert a regular class into a <code>PackableSample</code>.</p>
 <p>This decorator transforms a class into a dataclass that inherits from <code>PackableSample</code>, enabling automatic msgpack serialization/deserialization with special handling for NDArray fields.</p>
 <p>The resulting class satisfies the <code>Packable</code> protocol, making it compatible with all atdata APIs that accept packable types (e.g., <code>publish_schema</code>, lens transformations, etc.).</p>
-<p>Args: cls: The class to convert. Should have type annotations for its fields.</p>
-<p>Returns: A new dataclass that inherits from <code>PackableSample</code> with the same name and annotations as the original class. The class satisfies the <code>Packable</code> protocol and can be used with <code>Type[Packable]</code> signatures.</p>
-<p>Example: &gt;&gt;&gt; <span class="citation" data-cites="packable">@packable</span> … class MyData: … name: str … values: NDArray … &gt;&gt;&gt; sample = MyData(name=“test”, values=np.array([1, 2, 3])) &gt;&gt;&gt; bytes_data = sample.packed &gt;&gt;&gt; restored = MyData.from_bytes(bytes_data) &gt;&gt;&gt; &gt;&gt;&gt; # Works with Packable-typed APIs &gt;&gt;&gt; index.publish_schema(MyData, version=“1.0.0”) # Type-safe</p>
+<section id="parameters" class="level2 doc-section doc-section-parameters">
+<h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>cls</td>
+<td><a href="`type`">type</a>[<a href="`atdata.dataset._T`">_T</a>]</td>
+<td>The class to convert. Should have type annotations for its fields.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level2 doc-section doc-section-returns">
+<h2 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`type`">type</a>[<a href="`atdata.dataset._T`">_T</a>]</td>
+<td>A new dataclass that inherits from <code>PackableSample</code> with the same</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`type`">type</a>[<a href="`atdata.dataset._T`">_T</a>]</td>
+<td>name and annotations as the original class. The class satisfies the</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`type`">type</a>[<a href="`atdata.dataset._T`">_T</a>]</td>
+<td><code>Packable</code> protocol and can be used with <code>Type[Packable]</code> signatures.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples" class="level2 doc-section doc-section-examples">
+<h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
+<p>This is a test of the functionality::</p>
+<pre><code>@packable
+class MyData:
+    name: str
+    values: NDArray
+
+sample = MyData(name="test", values=np.array([1, 2, 3]))
+bytes_data = sample.packed
+restored = MyData.from_bytes(bytes_data)
+
+# Works with Packable-typed APIs
+index.publish_schema(MyData, version="1.0.0")  # Type-safe</code></pre>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

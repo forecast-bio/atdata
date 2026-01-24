@@ -20,7 +20,10 @@ To convert to a typed schema, use ``Dataset.as_type()`` with a
 ``@packable``-decorated class. Every ``@packable`` class automatically
 registers a lens from ``DictSample``, making this conversion seamless.
 
-Example:
+## Example {.doc-section .doc-section-example}
+
+::
+
     >>> ds = load_dataset("path/to/data.tar")  # Returns Dataset[DictSample]
     >>> for sample in ds.ordered():
     ...     print(sample.some_field)      # Attribute access
@@ -30,9 +33,10 @@ Example:
     >>> # Convert to typed schema
     >>> typed_ds = ds.as_type(MyTypedSample)
 
-Note:
-    NDArray fields are stored as raw bytes in DictSample. They are only
-    converted to numpy arrays when accessed through a typed sample class.
+## Note {.doc-section .doc-section-note}
+
+NDArray fields are stored as raw bytes in DictSample. They are only
+converted to numpy arrays when accessed through a typed sample class.
 
 ## Attributes
 
@@ -61,11 +65,17 @@ DictSample.from_bytes(bs)
 
 Create a DictSample from raw msgpack bytes.
 
-Args:
-    bs: Raw bytes from a msgpack-serialized sample.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    New DictSample instance with the unpacked data.
+| Name   | Type             | Description                                 | Default    |
+|--------|------------------|---------------------------------------------|------------|
+| bs     | [bytes](`bytes`) | Raw bytes from a msgpack-serialized sample. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                      | Description                                     |
+|--------|-------------------------------------------|-------------------------------------------------|
+|        | [DictSample](`atdata.dataset.DictSample`) | New DictSample instance with the unpacked data. |
 
 ### from_data { #atdata.DictSample.from_data }
 
@@ -75,11 +85,17 @@ DictSample.from_data(data)
 
 Create a DictSample from unpacked msgpack data.
 
-Args:
-    data: Dictionary with field names as keys.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    New DictSample instance wrapping the data.
+| Name   | Type                                                | Description                          | Default    |
+|--------|-----------------------------------------------------|--------------------------------------|------------|
+| data   | [dict](`dict`)\[[str](`str`), [Any](`typing.Any`)\] | Dictionary with field names as keys. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                      | Description                                |
+|--------|-------------------------------------------|--------------------------------------------|
+|        | [DictSample](`atdata.dataset.DictSample`) | New DictSample instance wrapping the data. |
 
 ### get { #atdata.DictSample.get }
 
@@ -89,12 +105,18 @@ DictSample.get(key, default=None)
 
 Get a field value with optional default.
 
-Args:
-    key: Field name to access.
-    default: Value to return if field doesn't exist.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    The field value or default.
+| Name    | Type                | Description                             | Default    |
+|---------|---------------------|-----------------------------------------|------------|
+| key     | [str](`str`)        | Field name to access.                   | _required_ |
+| default | [Any](`typing.Any`) | Value to return if field doesn't exist. | `None`     |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                | Description                 |
+|--------|---------------------|-----------------------------|
+|        | [Any](`typing.Any`) | The field value or default. |
 
 ### items { #atdata.DictSample.items }
 

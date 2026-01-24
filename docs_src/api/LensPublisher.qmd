@@ -9,7 +9,10 @@ Publishes Lens transformation records to ATProto.
 This class creates lens records that reference source and target schemas
 and point to the transformation code in a git repository.
 
-Example:
+## Example {.doc-section .doc-section-example}
+
+::
+
     >>> @atdata.lens
     ... def my_lens(source: SourceType) -> TargetType:
     ...     return TargetType(field=source.other_field)
@@ -28,10 +31,11 @@ Example:
     ...     putter_path="mymodule.lenses:my_lens_putter",
     ... )
 
-Security Note:
-    Lens code is stored as references to git repositories rather than
-    inline code. This prevents arbitrary code execution from ATProto
-    records. Users must manually install and trust lens implementations.
+## Security Note {.doc-section .doc-section-security-note}
+
+Lens code is stored as references to git repositories rather than
+inline code. This prevents arbitrary code execution from ATProto
+records. Users must manually install and trust lens implementations.
 
 ## Methods
 
@@ -58,24 +62,31 @@ atmosphere.LensPublisher.publish(
 
 Publish a lens transformation record to ATProto.
 
-Args:
-    name: Human-readable lens name.
-    source_schema_uri: AT URI of the source schema.
-    target_schema_uri: AT URI of the target schema.
-    description: What this transformation does.
-    code_repository: Git repository URL containing the lens code.
-    code_commit: Git commit hash for reproducibility.
-    getter_path: Module path to the getter function
-        (e.g., 'mymodule.lenses:my_getter').
-    putter_path: Module path to the putter function
-        (e.g., 'mymodule.lenses:my_putter').
-    rkey: Optional explicit record key.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    The AT URI of the created lens record.
+| Name              | Type                                          | Description                                                             | Default    |
+|-------------------|-----------------------------------------------|-------------------------------------------------------------------------|------------|
+| name              | [str](`str`)                                  | Human-readable lens name.                                               | _required_ |
+| source_schema_uri | [str](`str`)                                  | AT URI of the source schema.                                            | _required_ |
+| target_schema_uri | [str](`str`)                                  | AT URI of the target schema.                                            | _required_ |
+| description       | [Optional](`typing.Optional`)\[[str](`str`)\] | What this transformation does.                                          | `None`     |
+| code_repository   | [Optional](`typing.Optional`)\[[str](`str`)\] | Git repository URL containing the lens code.                            | `None`     |
+| code_commit       | [Optional](`typing.Optional`)\[[str](`str`)\] | Git commit hash for reproducibility.                                    | `None`     |
+| getter_path       | [Optional](`typing.Optional`)\[[str](`str`)\] | Module path to the getter function (e.g., 'mymodule.lenses:my_getter'). | `None`     |
+| putter_path       | [Optional](`typing.Optional`)\[[str](`str`)\] | Module path to the putter function (e.g., 'mymodule.lenses:my_putter'). | `None`     |
+| rkey              | [Optional](`typing.Optional`)\[[str](`str`)\] | Optional explicit record key.                                           | `None`     |
 
-Raises:
-    ValueError: If code references are incomplete.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                      | Description                            |
+|--------|-------------------------------------------|----------------------------------------|
+|        | [AtUri](`atdata.atmosphere._types.AtUri`) | The AT URI of the created lens record. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                        |
+|--------|----------------------------|------------------------------------|
+|        | [ValueError](`ValueError`) | If code references are incomplete. |
 
 ### publish_from_lens { #atdata.atmosphere.LensPublisher.publish_from_lens }
 
@@ -98,15 +109,21 @@ Publish a lens record from an existing Lens object.
 This method extracts the getter and putter function names from
 the Lens object and publishes a record referencing them.
 
-Args:
-    lens_obj: The Lens object to publish.
-    name: Human-readable lens name.
-    source_schema_uri: AT URI of the source schema.
-    target_schema_uri: AT URI of the target schema.
-    code_repository: Git repository URL.
-    code_commit: Git commit hash.
-    description: What this transformation does.
-    rkey: Optional explicit record key.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    The AT URI of the created lens record.
+| Name              | Type                                          | Description                    | Default    |
+|-------------------|-----------------------------------------------|--------------------------------|------------|
+| lens_obj          | [Lens](`atdata.lens.Lens`)                    | The Lens object to publish.    | _required_ |
+| name              | [str](`str`)                                  | Human-readable lens name.      | _required_ |
+| source_schema_uri | [str](`str`)                                  | AT URI of the source schema.   | _required_ |
+| target_schema_uri | [str](`str`)                                  | AT URI of the target schema.   | _required_ |
+| code_repository   | [str](`str`)                                  | Git repository URL.            | _required_ |
+| code_commit       | [str](`str`)                                  | Git commit hash.               | _required_ |
+| description       | [Optional](`typing.Optional`)\[[str](`str`)\] | What this transformation does. | `None`     |
+| rkey              | [Optional](`typing.Optional`)\[[str](`str`)\] | Optional explicit record key.  | `None`     |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                      | Description                            |
+|--------|-------------------------------------------|----------------------------------------|
+|        | [AtUri](`atdata.atmosphere._types.AtUri`) | The AT URI of the created lens record. |

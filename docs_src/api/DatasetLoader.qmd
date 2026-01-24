@@ -10,7 +10,10 @@ This class fetches dataset index records and can create Dataset objects
 from them. Note that loading a dataset requires having the corresponding
 Python class for the sample type.
 
-Example:
+## Example {.doc-section .doc-section-example}
+
+::
+
     >>> client = AtmosphereClient()
     >>> loader = DatasetLoader(client)
     >>>
@@ -43,14 +46,23 @@ atmosphere.DatasetLoader.get(uri)
 
 Fetch a dataset record by AT URI.
 
-Args:
-    uri: The AT URI of the dataset record.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    The dataset record as a dictionary.
+| Name   | Type                                                      | Description                       | Default    |
+|--------|-----------------------------------------------------------|-----------------------------------|------------|
+| uri    | [str](`str`) \| [AtUri](`atdata.atmosphere._types.AtUri`) | The AT URI of the dataset record. | _required_ |
 
-Raises:
-    ValueError: If the record is not a dataset record.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type           | Description                         |
+|--------|----------------|-------------------------------------|
+|        | [dict](`dict`) | The dataset record as a dictionary. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                            |
+|--------|----------------------------|----------------------------------------|
+|        | [ValueError](`ValueError`) | If the record is not a dataset record. |
 
 ### get_blob_urls { #atdata.atmosphere.DatasetLoader.get_blob_urls }
 
@@ -63,14 +75,23 @@ Get fetchable URLs for blob-stored dataset shards.
 This resolves the PDS endpoint and constructs URLs that can be
 used to fetch the blob data directly.
 
-Args:
-    uri: The AT URI of the dataset record.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    List of URLs for fetching the blob data.
+| Name   | Type                                                      | Description                       | Default    |
+|--------|-----------------------------------------------------------|-----------------------------------|------------|
+| uri    | [str](`str`) \| [AtUri](`atdata.atmosphere._types.AtUri`) | The AT URI of the dataset record. | _required_ |
 
-Raises:
-    ValueError: If storage type is not blobs or PDS cannot be resolved.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                           | Description                              |
+|--------|--------------------------------|------------------------------------------|
+|        | [list](`list`)\[[str](`str`)\] | List of URLs for fetching the blob data. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                                             |
+|--------|----------------------------|---------------------------------------------------------|
+|        | [ValueError](`ValueError`) | If storage type is not blobs or PDS cannot be resolved. |
 
 ### get_blobs { #atdata.atmosphere.DatasetLoader.get_blobs }
 
@@ -80,14 +101,23 @@ atmosphere.DatasetLoader.get_blobs(uri)
 
 Get the blob references from a dataset record.
 
-Args:
-    uri: The AT URI of the dataset record.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    List of blob reference dicts with keys: $type, ref, mimeType, size.
+| Name   | Type                                                      | Description                       | Default    |
+|--------|-----------------------------------------------------------|-----------------------------------|------------|
+| uri    | [str](`str`) \| [AtUri](`atdata.atmosphere._types.AtUri`) | The AT URI of the dataset record. | _required_ |
 
-Raises:
-    ValueError: If the storage type is not blobs.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                             | Description                                                         |
+|--------|----------------------------------|---------------------------------------------------------------------|
+|        | [list](`list`)\[[dict](`dict`)\] | List of blob reference dicts with keys: $type, ref, mimeType, size. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                       |
+|--------|----------------------------|-----------------------------------|
+|        | [ValueError](`ValueError`) | If the storage type is not blobs. |
 
 ### get_metadata { #atdata.atmosphere.DatasetLoader.get_metadata }
 
@@ -97,11 +127,17 @@ atmosphere.DatasetLoader.get_metadata(uri)
 
 Get the metadata from a dataset record.
 
-Args:
-    uri: The AT URI of the dataset record.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    The metadata dictionary, or None if no metadata.
+| Name   | Type                                                      | Description                       | Default    |
+|--------|-----------------------------------------------------------|-----------------------------------|------------|
+| uri    | [str](`str`) \| [AtUri](`atdata.atmosphere._types.AtUri`) | The AT URI of the dataset record. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                            | Description                                      |
+|--------|-------------------------------------------------|--------------------------------------------------|
+|        | [Optional](`typing.Optional`)\[[dict](`dict`)\] | The metadata dictionary, or None if no metadata. |
 
 ### get_storage_type { #atdata.atmosphere.DatasetLoader.get_storage_type }
 
@@ -111,14 +147,23 @@ atmosphere.DatasetLoader.get_storage_type(uri)
 
 Get the storage type of a dataset record.
 
-Args:
-    uri: The AT URI of the dataset record.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    Either "external" or "blobs".
+| Name   | Type                                                      | Description                       | Default    |
+|--------|-----------------------------------------------------------|-----------------------------------|------------|
+| uri    | [str](`str`) \| [AtUri](`atdata.atmosphere._types.AtUri`) | The AT URI of the dataset record. | _required_ |
 
-Raises:
-    ValueError: If storage type is unknown.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type         | Description                   |
+|--------|--------------|-------------------------------|
+|        | [str](`str`) | Either "external" or "blobs". |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                 |
+|--------|----------------------------|-----------------------------|
+|        | [ValueError](`ValueError`) | If storage type is unknown. |
 
 ### get_urls { #atdata.atmosphere.DatasetLoader.get_urls }
 
@@ -128,14 +173,23 @@ atmosphere.DatasetLoader.get_urls(uri)
 
 Get the WebDataset URLs from a dataset record.
 
-Args:
-    uri: The AT URI of the dataset record.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    List of WebDataset URLs.
+| Name   | Type                                                      | Description                       | Default    |
+|--------|-----------------------------------------------------------|-----------------------------------|------------|
+| uri    | [str](`str`) \| [AtUri](`atdata.atmosphere._types.AtUri`) | The AT URI of the dataset record. | _required_ |
 
-Raises:
-    ValueError: If the storage type is not external URLs.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                           | Description              |
+|--------|--------------------------------|--------------------------|
+|        | [list](`list`)\[[str](`str`)\] | List of WebDataset URLs. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                               |
+|--------|----------------------------|-------------------------------------------|
+|        | [ValueError](`ValueError`) | If the storage type is not external URLs. |
 
 ### list_all { #atdata.atmosphere.DatasetLoader.list_all }
 
@@ -145,12 +199,18 @@ atmosphere.DatasetLoader.list_all(repo=None, limit=100)
 
 List dataset records from a repository.
 
-Args:
-    repo: The DID of the repository. Defaults to authenticated user.
-    limit: Maximum number of records to return.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    List of dataset records.
+| Name   | Type                                          | Description                                                | Default   |
+|--------|-----------------------------------------------|------------------------------------------------------------|-----------|
+| repo   | [Optional](`typing.Optional`)\[[str](`str`)\] | The DID of the repository. Defaults to authenticated user. | `None`    |
+| limit  | [int](`int`)                                  | Maximum number of records to return.                       | `100`     |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                             | Description              |
+|--------|----------------------------------|--------------------------|
+|        | [list](`list`)\[[dict](`dict`)\] | List of dataset records. |
 
 ### to_dataset { #atdata.atmosphere.DatasetLoader.to_dataset }
 
@@ -166,17 +226,29 @@ schema referenced by the record.
 
 Supports both external URL storage and ATProto blob storage.
 
-Args:
-    uri: The AT URI of the dataset record.
-    sample_type: The Python class for the sample type.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    A Dataset instance configured from the record.
+| Name        | Type                                                          | Description                           | Default    |
+|-------------|---------------------------------------------------------------|---------------------------------------|------------|
+| uri         | [str](`str`) \| [AtUri](`atdata.atmosphere._types.AtUri`)     | The AT URI of the dataset record.     | _required_ |
+| sample_type | [Type](`typing.Type`)\[[ST](`atdata.atmosphere.records.ST`)\] | The Python class for the sample type. | _required_ |
 
-Raises:
-    ValueError: If no storage URLs can be resolved.
+#### Returns {.doc-section .doc-section-returns}
 
-Example:
+| Name   | Type                                                                        | Description                                    |
+|--------|-----------------------------------------------------------------------------|------------------------------------------------|
+|        | [Dataset](`atdata.dataset.Dataset`)\[[ST](`atdata.atmosphere.records.ST`)\] | A Dataset instance configured from the record. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                         |
+|--------|----------------------------|-------------------------------------|
+|        | [ValueError](`ValueError`) | If no storage URLs can be resolved. |
+
+#### Example {.doc-section .doc-section-example}
+
+::
+
     >>> loader = DatasetLoader(client)
     >>> dataset = loader.to_dataset(uri, MySampleType)
     >>> for batch in dataset.shuffled(batch_size=32):

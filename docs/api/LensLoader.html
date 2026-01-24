@@ -398,6 +398,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#atdata.atmosphere.LensLoader" id="toc-atdata.atmosphere.LensLoader" class="nav-link active" data-scroll-target="#atdata.atmosphere.LensLoader">LensLoader</a>
   <ul class="collapse">
+  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
   <li><a href="#atdata.atmosphere.LensLoader.find_by_schemas" id="toc-atdata.atmosphere.LensLoader.find_by_schemas" class="nav-link" data-scroll-target="#atdata.atmosphere.LensLoader.find_by_schemas">find_by_schemas</a></li>
@@ -420,7 +421,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>atmosphere.LensLoader(client)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Loads lens records from ATProto.</p>
 <p>This class fetches lens transformation records. Note that actually using a lens requires installing the referenced code and importing it manually.</p>
-<p>Example: &gt;&gt;&gt; client = AtmosphereClient() &gt;&gt;&gt; loader = LensLoader(client) &gt;&gt;&gt; &gt;&gt;&gt; record = loader.get(“at://did:plc:abc/ac.foundation.dataset.lens/xyz”) &gt;&gt;&gt; print(record[“name”]) &gt;&gt;&gt; print(record[“sourceSchema”]) &gt;&gt;&gt; print(record.get(“getterCode”, {}).get(“repository”))</p>
+<section id="example" class="level2 doc-section doc-section-example">
+<h2 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h2>
+<p>::</p>
+<pre><code>&gt;&gt;&gt; client = AtmosphereClient()
+&gt;&gt;&gt; loader = LensLoader(client)
+&gt;&gt;&gt;
+&gt;&gt;&gt; record = loader.get("at://did:plc:abc/ac.foundation.dataset.lens/xyz")
+&gt;&gt;&gt; print(record["name"])
+&gt;&gt;&gt; print(record["sourceSchema"])
+&gt;&gt;&gt; print(record.get("getterCode", {}).get("repository"))</code></pre>
+</section>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>
 <table class="caption-top table">
@@ -447,31 +458,181 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="atdata.atmosphere.LensLoader.find_by_schemas" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.atmosphere.LensLoader.find_by_schemas">find_by_schemas</h3>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>atmosphere.LensLoader.find_by_schemas(</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    source_schema_uri,</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    target_schema_uri<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    repo<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>atmosphere.LensLoader.find_by_schemas(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    source_schema_uri,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    target_schema_uri<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    repo<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Find lenses that transform between specific schemas.</p>
-<p>Args: source_schema_uri: AT URI of the source schema. target_schema_uri: Optional AT URI of the target schema. If not provided, returns all lenses from the source. repo: The DID of the repository to search.</p>
-<p>Returns: List of matching lens records.</p>
+<section id="parameters" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>source_schema_uri</td>
+<td><a href="`str`">str</a></td>
+<td>AT URI of the source schema.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>target_schema_uri</td>
+<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
+<td>Optional AT URI of the target schema. If not provided, returns all lenses from the source.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>repo</td>
+<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
+<td>The DID of the repository to search.</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`list`">list</a>[<a href="`dict`">dict</a>]</td>
+<td>List of matching lens records.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.atmosphere.LensLoader.get" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.atmosphere.LensLoader.get">get</h3>
-<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>atmosphere.LensLoader.get(uri)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>atmosphere.LensLoader.get(uri)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Fetch a lens record by AT URI.</p>
-<p>Args: uri: The AT URI of the lens record.</p>
-<p>Returns: The lens record as a dictionary.</p>
-<p>Raises: ValueError: If the record is not a lens record.</p>
+<section id="parameters-1" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>uri</td>
+<td><a href="`str`">str</a> | <a href="`atdata.atmosphere._types.AtUri`">AtUri</a></td>
+<td>The AT URI of the lens record.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-1" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`dict`">dict</a></td>
+<td>The lens record as a dictionary.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>If the record is not a lens record.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.atmosphere.LensLoader.list_all" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.atmosphere.LensLoader.list_all">list_all</h3>
-<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>atmosphere.LensLoader.list_all(repo<span class="op">=</span><span class="va">None</span>, limit<span class="op">=</span><span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>atmosphere.LensLoader.list_all(repo<span class="op">=</span><span class="va">None</span>, limit<span class="op">=</span><span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>List lens records from a repository.</p>
-<p>Args: repo: The DID of the repository. Defaults to authenticated user. limit: Maximum number of records to return.</p>
-<p>Returns: List of lens records.</p>
+<section id="parameters-2" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-2">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>repo</td>
+<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
+<td>The DID of the repository. Defaults to authenticated user.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>limit</td>
+<td><a href="`int`">int</a></td>
+<td>Maximum number of records to return.</td>
+<td><code>100</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-2" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`list`">list</a>[<a href="`dict`">dict</a>]</td>
+<td>List of lens records.</td>
+</tr>
+</tbody>
+</table>
 
 
+</section>
 </section>
 </section>
 </section>

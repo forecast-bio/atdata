@@ -398,6 +398,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#atdata.atmosphere.AtUri" id="toc-atdata.atmosphere.AtUri" class="nav-link active" data-scroll-target="#atdata.atmosphere.AtUri">AtUri</a>
   <ul class="collapse">
+  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
   <li><a href="#attributes" id="toc-attributes" class="nav-link" data-scroll-target="#attributes">Attributes</a></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
@@ -419,7 +420,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtUri(authority, collection, rkey)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Parsed AT Protocol URI.</p>
 <p>AT URIs follow the format: at://<authority>/<collection>/<rkey></rkey></collection></authority></p>
-<p>Example: &gt;&gt;&gt; uri = AtUri.parse(“at://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz”) &gt;&gt;&gt; uri.authority ‘did:plc:abc123’ &gt;&gt;&gt; uri.collection ‘ac.foundation.dataset.sampleSchema’ &gt;&gt;&gt; uri.rkey ‘xyz’</p>
+<section id="example" class="level2 doc-section doc-section-example">
+<h2 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h2>
+<p>::</p>
+<pre><code>&gt;&gt;&gt; uri = AtUri.parse("at://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz")
+&gt;&gt;&gt; uri.authority
+'did:plc:abc123'
+&gt;&gt;&gt; uri.collection
+'ac.foundation.dataset.sampleSchema'
+&gt;&gt;&gt; uri.rkey
+'xyz'</code></pre>
+</section>
 <section id="attributes" class="level2">
 <h2 class="anchored" data-anchor-id="attributes">Attributes</h2>
 <table class="caption-top table">
@@ -463,13 +474,69 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="atdata.atmosphere.AtUri.parse" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.atmosphere.AtUri.parse">parse</h3>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtUri.parse(uri)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtUri.parse(uri)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Parse an AT URI string into components.</p>
-<p>Args: uri: AT URI string in format <code>at://&lt;authority&gt;/&lt;collection&gt;/&lt;rkey&gt;</code></p>
-<p>Returns: Parsed AtUri instance.</p>
-<p>Raises: ValueError: If the URI format is invalid.</p>
+<section id="parameters" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>uri</td>
+<td><a href="`str`">str</a></td>
+<td>AT URI string in format <code>at://&lt;authority&gt;/&lt;collection&gt;/&lt;rkey&gt;</code></td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`atdata.atmosphere._types.AtUri`">AtUri</a></td>
+<td>Parsed AtUri instance.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>If the URI format is invalid.</td>
+</tr>
+</tbody>
+</table>
 
 
+</section>
 </section>
 </section>
 </section>

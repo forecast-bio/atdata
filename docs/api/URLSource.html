@@ -399,6 +399,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#atdata.URLSource" id="toc-atdata.URLSource" class="nav-link active" data-scroll-target="#atdata.URLSource">URLSource</a>
   <ul class="collapse">
   <li><a href="#attributes" id="toc-attributes" class="nav-link" data-scroll-target="#attributes">Attributes</a></li>
+  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
   <li><a href="#atdata.URLSource.list_shards" id="toc-atdata.URLSource.list_shards" class="nav-link" data-scroll-target="#atdata.URLSource.list_shards">list_shards</a></li>
@@ -421,28 +422,31 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Data source for WebDataset-compatible URLs.</p>
 <p>Wraps WebDataset’s gopen to open URLs using built-in handlers for http, https, pipe, gs, hf, sftp, etc. Supports brace expansion for shard patterns like “data-{000..099}.tar”.</p>
 <p>This is the default source type when a string URL is passed to Dataset.</p>
-<p>Attributes: url: URL or brace pattern for the shards.</p>
-<p>Example: &gt;&gt;&gt; source = URLSource(“https://example.com/train-{000..009}.tar”) &gt;&gt;&gt; for shard_id, stream in source.shards: … print(f”Streaming {shard_id}“)</p>
-<section id="attributes" class="level2">
-<h2 class="anchored" data-anchor-id="attributes">Attributes</h2>
+<section id="attributes" class="level2 doc-section doc-section-attributes">
+<h2 class="doc-section doc-section-attributes anchored" data-anchor-id="attributes">Attributes</h2>
 <table class="caption-top table">
 <thead>
 <tr class="header">
 <th>Name</th>
+<th>Type</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><a href="#atdata.URLSource.shard_list">shard_list</a></td>
-<td>Expand brace pattern and return list of shard URLs (deprecated, use list_shards()).</td>
-</tr>
-<tr class="even">
-<td><a href="#atdata.URLSource.shards">shards</a></td>
-<td>Lazily yield (url, stream) pairs for each shard.</td>
+<td>url</td>
+<td><a href="`str`">str</a></td>
+<td>URL or brace pattern for the shards.</td>
 </tr>
 </tbody>
 </table>
+</section>
+<section id="example" class="level2 doc-section doc-section-example">
+<h2 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h2>
+<p>::</p>
+<pre><code>&gt;&gt;&gt; source = URLSource("https://example.com/train-{000..009}.tar")
+&gt;&gt;&gt; for shard_id, stream in source.shards:
+...     print(f"Streaming {shard_id}")</code></pre>
 </section>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>
@@ -466,18 +470,74 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="atdata.URLSource.list_shards" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.URLSource.list_shards">list_shards</h3>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>URLSource.list_shards()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>URLSource.list_shards()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Expand brace pattern and return list of shard URLs.</p>
 </section>
 <section id="atdata.URLSource.open_shard" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.URLSource.open_shard">open_shard</h3>
-<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>URLSource.open_shard(shard_id)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>URLSource.open_shard(shard_id)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Open a single shard by URL.</p>
-<p>Args: shard_id: URL of the shard to open.</p>
-<p>Returns: File-like stream from gopen.</p>
-<p>Raises: KeyError: If shard_id is not in list_shards().</p>
+<section id="parameters" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>shard_id</td>
+<td><a href="`str`">str</a></td>
+<td>URL of the shard to open.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`typing.IO`">IO</a>[<a href="`bytes`">bytes</a>]</td>
+<td>File-like stream from gopen.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`KeyError`">KeyError</a></td>
+<td>If shard_id is not in list_shards().</td>
+</tr>
+</tbody>
+</table>
 
 
+</section>
 </section>
 </section>
 </section>

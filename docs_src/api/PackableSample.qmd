@@ -15,7 +15,10 @@ Subclasses should be defined either by:
 1. Direct inheritance with the ``@dataclass`` decorator
 2. Using the ``@packable`` decorator (recommended)
 
-Example:
+## Example {.doc-section .doc-section-example}
+
+::
+
     >>> @packable
     ... class MyData:
     ...     name: str
@@ -47,11 +50,17 @@ PackableSample.from_bytes(bs)
 
 Create a sample instance from raw msgpack bytes.
 
-Args:
-    bs: Raw bytes from a msgpack-serialized sample.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    A new instance of this sample class deserialized from the bytes.
+| Name   | Type             | Description                                 | Default    |
+|--------|------------------|---------------------------------------------|------------|
+| bs     | [bytes](`bytes`) | Raw bytes from a msgpack-serialized sample. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                  | Description                                                      |
+|--------|-----------------------|------------------------------------------------------------------|
+|        | [Self](`typing.Self`) | A new instance of this sample class deserialized from the bytes. |
 
 ### from_data { #atdata.PackableSample.from_data }
 
@@ -61,8 +70,14 @@ PackableSample.from_data(data)
 
 Create a sample instance from unpacked msgpack data.
 
-Args:
-    data: Dictionary with keys matching the sample's field names.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    New instance with NDArray fields auto-converted from bytes.
+| Name   | Type                                          | Description                                             | Default    |
+|--------|-----------------------------------------------|---------------------------------------------------------|------------|
+| data   | [WDSRawSample](`atdata.dataset.WDSRawSample`) | Dictionary with keys matching the sample's field names. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                  | Description                                                 |
+|--------|-----------------------|-------------------------------------------------------------|
+|        | [Self](`typing.Self`) | New instance with NDArray fields auto-converted from bytes. |

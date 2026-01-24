@@ -21,23 +21,14 @@ The CID is generated from the entry's content (schema_ref + data_urls),
 ensuring the same data produces the same CID whether stored locally or
 in the atmosphere. This enables seamless promotion from local to ATProto.
 
-Attributes:
-    name: Human-readable name for this dataset.
-    schema_ref: Reference to the schema for this dataset.
-    data_urls: WebDataset URLs for the data.
-    metadata: Arbitrary metadata dictionary, or None if not set.
+## Attributes {.doc-section .doc-section-attributes}
 
-## Attributes
-
-| Name | Description |
-| --- | --- |
-| [cid](#atdata.local.LocalDatasetEntry.cid) | Content identifier (ATProto-compatible CID). |
-| [data_urls](#atdata.local.LocalDatasetEntry.data_urls) | WebDataset URLs for the data. |
-| [metadata](#atdata.local.LocalDatasetEntry.metadata) | Arbitrary metadata dictionary, or None if not set. |
-| [name](#atdata.local.LocalDatasetEntry.name) | Human-readable name for this dataset. |
-| [sample_kind](#atdata.local.LocalDatasetEntry.sample_kind) | Legacy property: returns schema_ref for backwards compatibility. |
-| [schema_ref](#atdata.local.LocalDatasetEntry.schema_ref) | Reference to the schema for this dataset. |
-| [wds_url](#atdata.local.LocalDatasetEntry.wds_url) | Legacy property: returns first data URL for backwards compatibility. |
+| Name       | Type                           | Description                                        |
+|------------|--------------------------------|----------------------------------------------------|
+| name       | [str](`str`)                   | Human-readable name for this dataset.              |
+| schema_ref | [str](`str`)                   | Reference to the schema for this dataset.          |
+| data_urls  | [list](`list`)\[[str](`str`)\] | WebDataset URLs for the data.                      |
+| metadata   | [dict](`dict`) \| None         | Arbitrary metadata dictionary, or None if not set. |
 
 ## Methods
 
@@ -54,15 +45,24 @@ local.LocalDatasetEntry.from_redis(redis, cid)
 
 Load an entry from Redis by CID.
 
-Args:
-    redis: Redis connection to read from.
-    cid: Content identifier of the entry to load.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    LocalDatasetEntry loaded from Redis.
+| Name   | Type                   | Description                              | Default    |
+|--------|------------------------|------------------------------------------|------------|
+| redis  | [Redis](`redis.Redis`) | Redis connection to read from.           | _required_ |
+| cid    | [str](`str`)           | Content identifier of the entry to load. | _required_ |
 
-Raises:
-    KeyError: If entry not found.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                  | Description                          |
+|--------|-------------------------------------------------------|--------------------------------------|
+|        | [LocalDatasetEntry](`atdata.local.LocalDatasetEntry`) | LocalDatasetEntry loaded from Redis. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                   | Description         |
+|--------|------------------------|---------------------|
+|        | [KeyError](`KeyError`) | If entry not found. |
 
 ### write_to { #atdata.local.LocalDatasetEntry.write_to }
 
@@ -74,5 +74,8 @@ Persist this index entry to Redis.
 
 Stores the entry as a Redis hash with key '{REDIS_KEY_DATASET_ENTRY}:{cid}'.
 
-Args:
-    redis: Redis connection to write to.
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                   | Description                   | Default    |
+|--------|------------------------|-------------------------------|------------|
+| redis  | [Redis](`redis.Redis`) | Redis connection to write to. | _required_ |

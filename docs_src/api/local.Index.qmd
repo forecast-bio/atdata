@@ -20,21 +20,12 @@ When initialized with a data_store, insert_dataset() will write dataset
 shards to storage before indexing. Without a data_store, insert_dataset()
 only indexes existing URLs.
 
-Attributes:
-    _redis: Redis connection for index storage.
-    _data_store: Optional AbstractDataStore for writing dataset shards.
+## Attributes {.doc-section .doc-section-attributes}
 
-## Attributes
-
-| Name | Description |
-| --- | --- |
-| [all_entries](#atdata.local.Index.all_entries) | Get all index entries as a list (deprecated, use list_entries()). |
-| [data_store](#atdata.local.Index.data_store) | The data store for writing shards, or None if index-only. |
-| [datasets](#atdata.local.Index.datasets) | Lazily iterate over all dataset entries (AbstractIndex protocol). |
-| [entries](#atdata.local.Index.entries) | Iterate over all index entries. |
-| [schemas](#atdata.local.Index.schemas) | Iterate over all schema records in this index. |
-| [stub_dir](#atdata.local.Index.stub_dir) | Directory where stub files are written, or None if auto-stubs disabled. |
-| [types](#atdata.local.Index.types) | Namespace for accessing loaded schema types. |
+| Name        | Type   | Description                                            |
+|-------------|--------|--------------------------------------------------------|
+| _redis      |        | Redis connection for index storage.                    |
+| _data_store |        | Optional AbstractDataStore for writing dataset shards. |
 
 ## Methods
 
@@ -67,14 +58,20 @@ Add a dataset to the index.
 
 Creates a LocalDatasetEntry for the dataset and persists it to Redis.
 
-Args:
-    ds: The dataset to add to the index.
-    name: Human-readable name for the dataset.
-    schema_ref: Optional schema reference. If None, generates from sample type.
-    metadata: Optional metadata dictionary. If None, uses ds._metadata if available.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    The created LocalDatasetEntry object.
+| Name       | Type                        | Description                                                            | Default    |
+|------------|-----------------------------|------------------------------------------------------------------------|------------|
+| ds         | [Dataset](`atdata.Dataset`) | The dataset to add to the index.                                       | _required_ |
+| name       | [str](`str`)                | Human-readable name for the dataset.                                   | _required_ |
+| schema_ref | [str](`str`) \| None        | Optional schema reference. If None, generates from sample type.        | `None`     |
+| metadata   | [dict](`dict`) \| None      | Optional metadata dictionary. If None, uses ds._metadata if available. | `None`     |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                  | Description                           |
+|--------|-------------------------------------------------------|---------------------------------------|
+|        | [LocalDatasetEntry](`atdata.local.LocalDatasetEntry`) | The created LocalDatasetEntry object. |
 
 ### clear_stubs { #atdata.local.Index.clear_stubs }
 
@@ -86,8 +83,11 @@ Remove all auto-generated stub files.
 
 Only works if auto_stubs was enabled when creating the Index.
 
-Returns:
-    Number of stub files removed, or 0 if auto_stubs is disabled.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type         | Description                                                   |
+|--------|--------------|---------------------------------------------------------------|
+|        | [int](`int`) | Number of stub files removed, or 0 if auto_stubs is disabled. |
 
 ### decode_schema { #atdata.local.Index.decode_schema }
 
@@ -105,17 +105,25 @@ If auto_stubs is enabled, a Python module will be generated and the
 class will be imported from it, providing full IDE autocomplete support.
 The returned class has proper type information that IDEs can understand.
 
-Args:
-    ref: Schema reference string (atdata://local/sampleSchema/... or
-        legacy local://schemas/...).
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    A PackableSample subclass - either imported from a generated module
-    (if auto_stubs is enabled) or dynamically created.
+| Name   | Type         | Description                                                                              | Default    |
+|--------|--------------|------------------------------------------------------------------------------------------|------------|
+| ref    | [str](`str`) | Schema reference string (atdata://local/sampleSchema/... or legacy local://schemas/...). | _required_ |
 
-Raises:
-    KeyError: If schema not found.
-    ValueError: If schema cannot be decoded.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                              | Description                                                         |
+|--------|-------------------------------------------------------------------|---------------------------------------------------------------------|
+|        | [Type](`typing.Type`)\[[Packable](`atdata._protocols.Packable`)\] | A PackableSample subclass - either imported from a generated module |
+|        | [Type](`typing.Type`)\[[Packable](`atdata._protocols.Packable`)\] | (if auto_stubs is enabled) or dynamically created.                  |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                  |
+|--------|----------------------------|------------------------------|
+|        | [KeyError](`KeyError`)     | If schema not found.         |
+|        | [ValueError](`ValueError`) | If schema cannot be decoded. |
 
 ### decode_schema_as { #atdata.local.Index.decode_schema_as }
 
@@ -129,15 +137,23 @@ This is a typed wrapper around decode_schema() that preserves the
 type information for IDE autocomplete. Use this when you have a
 stub file for the schema and want full IDE support.
 
-Args:
-    ref: Schema reference string.
-    type_hint: The stub type to use for type hints. Import this from
-        the generated stub file.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    The decoded type, cast to match the type_hint for IDE support.
+| Name      | Type                                    | Description                                                                    | Default    |
+|-----------|-----------------------------------------|--------------------------------------------------------------------------------|------------|
+| ref       | [str](`str`)                            | Schema reference string.                                                       | _required_ |
+| type_hint | [type](`type`)\[[T](`atdata.local.T`)\] | The stub type to use for type hints. Import this from the generated stub file. | _required_ |
 
-Example:
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                    | Description                                                    |
+|--------|-----------------------------------------|----------------------------------------------------------------|
+|        | [type](`type`)\[[T](`atdata.local.T`)\] | The decoded type, cast to match the type_hint for IDE support. |
+
+#### Example {.doc-section .doc-section-example}
+
+::
+
     >>> # After enabling auto_stubs and configuring IDE extraPaths:
     >>> from local.MySample_1_0_0 import MySample
     >>>
@@ -145,10 +161,11 @@ Example:
     >>> DecodedType = index.decode_schema_as(ref, MySample)
     >>> sample = DecodedType(text="hello", value=42)  # IDE knows signature!
 
-Note:
-    The type_hint is only used for static type checking - at runtime,
-    the actual decoded type from the schema is returned. Ensure the
-    stub matches the schema to avoid runtime surprises.
+#### Note {.doc-section .doc-section-note}
+
+The type_hint is only used for static type checking - at runtime,
+the actual decoded type from the schema is returned. Ensure the
+stub matches the schema to avoid runtime surprises.
 
 ### get_dataset { #atdata.local.Index.get_dataset }
 
@@ -158,14 +175,23 @@ local.Index.get_dataset(ref)
 
 Get a dataset entry by name (AbstractIndex protocol).
 
-Args:
-    ref: Dataset name.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    IndexEntry for the dataset.
+| Name   | Type         | Description   | Default    |
+|--------|--------------|---------------|------------|
+| ref    | [str](`str`) | Dataset name. | _required_ |
 
-Raises:
-    KeyError: If dataset not found.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                  | Description                 |
+|--------|-------------------------------------------------------|-----------------------------|
+|        | [LocalDatasetEntry](`atdata.local.LocalDatasetEntry`) | IndexEntry for the dataset. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                   | Description           |
+|--------|------------------------|-----------------------|
+|        | [KeyError](`KeyError`) | If dataset not found. |
 
 ### get_entry { #atdata.local.Index.get_entry }
 
@@ -175,14 +201,23 @@ local.Index.get_entry(cid)
 
 Get an entry by its CID.
 
-Args:
-    cid: Content identifier of the entry.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    LocalDatasetEntry for the given CID.
+| Name   | Type         | Description                      | Default    |
+|--------|--------------|----------------------------------|------------|
+| cid    | [str](`str`) | Content identifier of the entry. | _required_ |
 
-Raises:
-    KeyError: If entry not found.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                  | Description                          |
+|--------|-------------------------------------------------------|--------------------------------------|
+|        | [LocalDatasetEntry](`atdata.local.LocalDatasetEntry`) | LocalDatasetEntry for the given CID. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                   | Description         |
+|--------|------------------------|---------------------|
+|        | [KeyError](`KeyError`) | If entry not found. |
 
 ### get_entry_by_name { #atdata.local.Index.get_entry_by_name }
 
@@ -192,14 +227,23 @@ local.Index.get_entry_by_name(name)
 
 Get an entry by its human-readable name.
 
-Args:
-    name: Human-readable name of the entry.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    LocalDatasetEntry with the given name.
+| Name   | Type         | Description                       | Default    |
+|--------|--------------|-----------------------------------|------------|
+| name   | [str](`str`) | Human-readable name of the entry. | _required_ |
 
-Raises:
-    KeyError: If no entry with that name exists.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                  | Description                            |
+|--------|-------------------------------------------------------|----------------------------------------|
+|        | [LocalDatasetEntry](`atdata.local.LocalDatasetEntry`) | LocalDatasetEntry with the given name. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                   | Description                        |
+|--------|------------------------|------------------------------------|
+|        | [KeyError](`KeyError`) | If no entry with that name exists. |
 
 ### get_import_path { #atdata.local.Index.get_import_path }
 
@@ -212,14 +256,23 @@ Get the import path for a schema's generated module.
 When auto_stubs is enabled, this returns the import path that can
 be used to import the schema type with full IDE support.
 
-Args:
-    ref: Schema reference string.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    Import path like "local.MySample_1_0_0", or None if auto_stubs
-    is disabled.
+| Name   | Type         | Description              | Default    |
+|--------|--------------|--------------------------|------------|
+| ref    | [str](`str`) | Schema reference string. | _required_ |
 
-Example:
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                 | Description                                                    |
+|--------|----------------------|----------------------------------------------------------------|
+|        | [str](`str`) \| None | Import path like "local.MySample_1_0_0", or None if auto_stubs |
+|        | [str](`str`) \| None | is disabled.                                                   |
+
+#### Example {.doc-section .doc-section-example}
+
+::
+
     >>> index = LocalIndex(auto_stubs=True)
     >>> ref = index.publish_schema(MySample, version="1.0.0")
     >>> index.load_schema(ref)
@@ -236,18 +289,25 @@ local.Index.get_schema(ref)
 
 Get a schema record by reference (AbstractIndex protocol).
 
-Args:
-    ref: Schema reference string. Supports both new format
-        (atdata://local/sampleSchema/{name}@{version}) and legacy
-        format (local://schemas/{module.Class}@{version}).
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    Schema record as a dictionary with keys 'name', 'version',
-    'fields', '$ref', etc.
+| Name   | Type         | Description                                                                                                                                                    | Default    |
+|--------|--------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| ref    | [str](`str`) | Schema reference string. Supports both new format (atdata://local/sampleSchema/{name}@{version}) and legacy format (local://schemas/{module.Class}@{version}). | _required_ |
 
-Raises:
-    KeyError: If schema not found.
-    ValueError: If reference format is invalid.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type           | Description                                                |
+|--------|----------------|------------------------------------------------------------|
+|        | [dict](`dict`) | Schema record as a dictionary with keys 'name', 'version', |
+|        | [dict](`dict`) | 'fields', '$ref', etc.                                     |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                     |
+|--------|----------------------------|---------------------------------|
+|        | [KeyError](`KeyError`)     | If schema not found.            |
+|        | [ValueError](`ValueError`) | If reference format is invalid. |
 
 ### get_schema_record { #atdata.local.Index.get_schema_record }
 
@@ -260,15 +320,24 @@ Get a schema record as LocalSchemaRecord object.
 Use this when you need the full LocalSchemaRecord with typed properties.
 For Protocol-compliant dict access, use get_schema() instead.
 
-Args:
-    ref: Schema reference string.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    LocalSchemaRecord with schema details.
+| Name   | Type         | Description              | Default    |
+|--------|--------------|--------------------------|------------|
+| ref    | [str](`str`) | Schema reference string. | _required_ |
 
-Raises:
-    KeyError: If schema not found.
-    ValueError: If reference format is invalid.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                  | Description                            |
+|--------|-------------------------------------------------------|----------------------------------------|
+|        | [LocalSchemaRecord](`atdata.local.LocalSchemaRecord`) | LocalSchemaRecord with schema details. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                     |
+|--------|----------------------------|---------------------------------|
+|        | [KeyError](`KeyError`)     | If schema not found.            |
+|        | [ValueError](`ValueError`) | If reference format is invalid. |
 
 ### insert_dataset { #atdata.local.Index.insert_dataset }
 
@@ -282,17 +351,20 @@ If a data_store was provided at initialization, writes dataset shards
 to storage first, then indexes the new URLs. Otherwise, indexes the
 dataset's existing URL.
 
-Args:
-    ds: The Dataset to register.
-    name: Human-readable name for the dataset.
-    schema_ref: Optional schema reference.
-    **kwargs: Additional options:
-        - metadata: Optional metadata dict
-        - prefix: Storage prefix (default: dataset name)
-        - cache_local: If True, cache writes locally first
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    IndexEntry for the inserted dataset.
+| Name       | Type                        | Description                                                                                                                                                | Default    |
+|------------|-----------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| ds         | [Dataset](`atdata.Dataset`) | The Dataset to register.                                                                                                                                   | _required_ |
+| name       | [str](`str`)                | Human-readable name for the dataset.                                                                                                                       | _required_ |
+| schema_ref | [str](`str`) \| None        | Optional schema reference.                                                                                                                                 | `None`     |
+| **kwargs   |                             | Additional options: - metadata: Optional metadata dict - prefix: Storage prefix (default: dataset name) - cache_local: If True, cache writes locally first | `{}`       |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                  | Description                          |
+|--------|-------------------------------------------------------|--------------------------------------|
+|        | [LocalDatasetEntry](`atdata.local.LocalDatasetEntry`) | IndexEntry for the inserted dataset. |
 
 ### list_datasets { #atdata.local.Index.list_datasets }
 
@@ -302,8 +374,11 @@ local.Index.list_datasets()
 
 Get all dataset entries as a materialized list (AbstractIndex protocol).
 
-Returns:
-    List of IndexEntry for each dataset.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                    | Description                          |
+|--------|-------------------------------------------------------------------------|--------------------------------------|
+|        | [list](`list`)\[[LocalDatasetEntry](`atdata.local.LocalDatasetEntry`)\] | List of IndexEntry for each dataset. |
 
 ### list_entries { #atdata.local.Index.list_entries }
 
@@ -313,8 +388,11 @@ local.Index.list_entries()
 
 Get all index entries as a materialized list.
 
-Returns:
-    List of all LocalDatasetEntry objects in the index.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                    | Description                                         |
+|--------|-------------------------------------------------------------------------|-----------------------------------------------------|
+|        | [list](`list`)\[[LocalDatasetEntry](`atdata.local.LocalDatasetEntry`)\] | List of all LocalDatasetEntry objects in the index. |
 
 ### list_schemas { #atdata.local.Index.list_schemas }
 
@@ -324,8 +402,11 @@ local.Index.list_schemas()
 
 Get all schema records as a materialized list (AbstractIndex protocol).
 
-Returns:
-    List of schema records as dictionaries.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                             | Description                             |
+|--------|----------------------------------|-----------------------------------------|
+|        | [list](`list`)\[[dict](`dict`)\] | List of schema records as dictionaries. |
 
 ### load_schema { #atdata.local.Index.load_schema }
 
@@ -339,19 +420,30 @@ This method decodes the schema, optionally generates a Python module
 for IDE support (if auto_stubs is enabled), and registers the type
 in the :attr:`types` namespace for easy access.
 
-Args:
-    ref: Schema reference string (atdata://local/sampleSchema/... or
-        legacy local://schemas/...).
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    The decoded PackableSample subclass. Also available via
-    ``index.types.<ClassName>`` after this call.
+| Name   | Type         | Description                                                                              | Default    |
+|--------|--------------|------------------------------------------------------------------------------------------|------------|
+| ref    | [str](`str`) | Schema reference string (atdata://local/sampleSchema/... or legacy local://schemas/...). | _required_ |
 
-Raises:
-    KeyError: If schema not found.
-    ValueError: If schema cannot be decoded.
+#### Returns {.doc-section .doc-section-returns}
 
-Example:
+| Name   | Type                                                              | Description                                             |
+|--------|-------------------------------------------------------------------|---------------------------------------------------------|
+|        | [Type](`typing.Type`)\[[Packable](`atdata._protocols.Packable`)\] | The decoded PackableSample subclass. Also available via |
+|        | [Type](`typing.Type`)\[[Packable](`atdata._protocols.Packable`)\] | ``index.types.<ClassName>`` after this call.            |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                  |
+|--------|----------------------------|------------------------------|
+|        | [KeyError](`KeyError`)     | If schema not found.         |
+|        | [ValueError](`ValueError`) | If schema cannot be decoded. |
+
+#### Example {.doc-section .doc-section-example}
+
+::
+
     >>> # Load and use immediately
     >>> MyType = index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
     >>> sample = MyType(name="hello", value=42)
@@ -368,17 +460,23 @@ local.Index.publish_schema(sample_type, *, version=None, description=None)
 
 Publish a schema for a sample type to Redis.
 
-Args:
-    sample_type: The PackableSample subclass to publish.
-    version: Semantic version string (e.g., '1.0.0'). If None,
-        auto-increments from the latest published version (patch bump),
-        or starts at '1.0.0' if no previous version exists.
-    description: Optional human-readable description. If None, uses
-        the class docstring.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    Schema reference string: 'atdata://local/sampleSchema/{name}@{version}'.
+| Name        | Type                                                              | Description                                                                                                                                                           | Default    |
+|-------------|-------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| sample_type | [Type](`typing.Type`)\[[Packable](`atdata._protocols.Packable`)\] | The PackableSample subclass to publish.                                                                                                                               | _required_ |
+| version     | [str](`str`) \| None                                              | Semantic version string (e.g., '1.0.0'). If None, auto-increments from the latest published version (patch bump), or starts at '1.0.0' if no previous version exists. | `None`     |
+| description | [str](`str`) \| None                                              | Optional human-readable description. If None, uses the class docstring.                                                                                               | `None`     |
 
-Raises:
-    ValueError: If sample_type is not a dataclass.
-    TypeError: If a field type is not supported.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type         | Description                                                              |
+|--------|--------------|--------------------------------------------------------------------------|
+|        | [str](`str`) | Schema reference string: 'atdata://local/sampleSchema/{name}@{version}'. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                        |
+|--------|----------------------------|------------------------------------|
+|        | [ValueError](`ValueError`) | If sample_type is not a dataclass. |
+|        | [TypeError](`TypeError`)   | If a field type is not supported.  |

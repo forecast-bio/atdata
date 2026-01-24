@@ -396,7 +396,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#atdata.promote.promote_to_atmosphere" id="toc-atdata.promote.promote_to_atmosphere" class="nav-link active" data-scroll-target="#atdata.promote.promote_to_atmosphere">promote_to_atmosphere</a></li>
+  <li><a href="#atdata.promote.promote_to_atmosphere" id="toc-atdata.promote.promote_to_atmosphere" class="nav-link active" data-scroll-target="#atdata.promote.promote_to_atmosphere">promote_to_atmosphere</a>
+  <ul class="collapse">
+  <li><a href="#parameters" id="toc-parameters" class="nav-link" data-scroll-target="#parameters">Parameters</a></li>
+  <li><a href="#returns" id="toc-returns" class="nav-link" data-scroll-target="#returns">Returns</a></li>
+  <li><a href="#raises" id="toc-raises" class="nav-link" data-scroll-target="#raises">Raises</a></li>
+  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
+  </ul></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/your-org/atdata/edit/main/api/promote_to_atmosphere.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -422,12 +428,122 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Promote a local dataset to the atmosphere network.</p>
 <p>This function takes a locally-indexed dataset and publishes it to ATProto, making it discoverable on the federated atmosphere network.</p>
-<p>Args: local_entry: The LocalDatasetEntry to promote. local_index: Local index containing the schema for this entry. atmosphere_client: Authenticated AtmosphereClient. data_store: Optional data store for copying data to new location. If None, the existing data_urls are used as-is. name: Override name for the atmosphere record. Defaults to local name. description: Optional description for the dataset. tags: Optional tags for discovery. license: Optional license identifier.</p>
-<p>Returns: AT URI of the created atmosphere dataset record.</p>
-<p>Raises: KeyError: If schema not found in local index. ValueError: If local entry has no data URLs.</p>
-<p>Example: &gt;&gt;&gt; entry = local_index.get_dataset(“mnist-train”) &gt;&gt;&gt; uri = promote_to_atmosphere(entry, local_index, client) &gt;&gt;&gt; print(uri) at://did:plc:abc123/ac.foundation.dataset.datasetIndex/…</p>
+<section id="parameters" class="level2 doc-section doc-section-parameters">
+<h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>local_entry</td>
+<td><a href="`atdata.local.LocalDatasetEntry`">LocalDatasetEntry</a></td>
+<td>The LocalDatasetEntry to promote.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>local_index</td>
+<td><a href="`atdata.local.Index`">LocalIndex</a></td>
+<td>Local index containing the schema for this entry.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="odd">
+<td>atmosphere_client</td>
+<td><a href="`atdata.atmosphere.AtmosphereClient`">AtmosphereClient</a></td>
+<td>Authenticated AtmosphereClient.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>data_store</td>
+<td><a href="`atdata._protocols.AbstractDataStore`">AbstractDataStore</a> | None</td>
+<td>Optional data store for copying data to new location. If None, the existing data_urls are used as-is.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>name</td>
+<td><a href="`str`">str</a> | None</td>
+<td>Override name for the atmosphere record. Defaults to local name.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>description</td>
+<td><a href="`str`">str</a> | None</td>
+<td>Optional description for the dataset.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>tags</td>
+<td><a href="`list`">list</a>[<a href="`str`">str</a>] | None</td>
+<td>Optional tags for discovery.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>license</td>
+<td><a href="`str`">str</a> | None</td>
+<td>Optional license identifier.</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level2 doc-section doc-section-returns">
+<h2 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`str`">str</a></td>
+<td>AT URI of the created atmosphere dataset record.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises" class="level2 doc-section doc-section-raises">
+<h2 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`KeyError`">KeyError</a></td>
+<td>If schema not found in local index.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>If local entry has no data URLs.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="example" class="level2 doc-section doc-section-example">
+<h2 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h2>
+<p>::</p>
+<pre><code>&gt;&gt;&gt; entry = local_index.get_dataset("mnist-train")
+&gt;&gt;&gt; uri = promote_to_atmosphere(entry, local_index, client)
+&gt;&gt;&gt; print(uri)
+at://did:plc:abc123/ac.foundation.dataset.datasetIndex/...</code></pre>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

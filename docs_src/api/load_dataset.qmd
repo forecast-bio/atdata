@@ -23,47 +23,37 @@ When no ``sample_type`` is provided, returns a ``Dataset[DictSample]`` that
 provides dynamic dict-like access to fields. Use ``.as_type(MyType)`` to
 convert to a typed schema.
 
-Args:
-    path: Path to dataset. Can be:
-        - Index lookup: "@handle/dataset-name" or "@local/dataset-name"
-        - WebDataset brace notation: "path/to/{train,test}-{000..099}.tar"
-        - Local directory: "./data/" (scans for .tar files)
-        - Glob pattern: "path/to/*.tar"
-        - Remote URL: "s3://bucket/path/data-*.tar"
-        - Single file: "path/to/data.tar"
+## Parameters {.doc-section .doc-section-parameters}
 
-    sample_type: The PackableSample subclass defining the schema. If None,
-        returns ``Dataset[DictSample]`` with dynamic field access. Can also
-        be resolved from an index when using @handle/dataset syntax.
+| Name        | Type                                                                                                                                     | Description                                                                                                                                                                                                                                                                                                                   | Default    |
+|-------------|------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| path        | [str](`str`)                                                                                                                             | Path to dataset. Can be: - Index lookup: "@handle/dataset-name" or "@local/dataset-name" - WebDataset brace notation: "path/to/{train,test}-{000..099}.tar" - Local directory: "./data/" (scans for .tar files) - Glob pattern: "path/to/*.tar" - Remote URL: "s3://bucket/path/data-*.tar" - Single file: "path/to/data.tar" | _required_ |
+| sample_type | [Type](`typing.Type`)\[[ST](`atdata._hf_api.ST`)\] \| None                                                                               | The PackableSample subclass defining the schema. If None, returns ``Dataset[DictSample]`` with dynamic field access. Can also be resolved from an index when using @handle/dataset syntax.                                                                                                                                    | `None`     |
+| split       | [str](`str`) \| None                                                                                                                     | Which split to load. If None, returns a DatasetDict with all detected splits. If specified (e.g., "train", "test"), returns a single Dataset for that split.                                                                                                                                                                  | `None`     |
+| data_files  | [str](`str`) \| [list](`list`)\[[str](`str`)\] \| [dict](`dict`)\[[str](`str`), [str](`str`) \| [list](`list`)\[[str](`str`)\]\] \| None | Optional explicit mapping of data files. Can be: - str: Single file pattern - list[str]: List of file patterns (assigned to "train") - dict[str, str \| list[str]]: Explicit split -> files mapping                                                                                                                           | `None`     |
+| streaming   | [bool](`bool`)                                                                                                                           | If True, explicitly marks the dataset for streaming mode. Note: atdata Datasets are already lazy/streaming via WebDataset pipelines, so this parameter primarily signals intent.                                                                                                                                              | `False`    |
+| index       | [Optional](`typing.Optional`)\[\'AbstractIndex\'\]                                                                                       | Optional AbstractIndex for dataset lookup. Required when using @handle/dataset syntax. When provided with an indexed path, the schema can be auto-resolved from the index.                                                                                                                                                    | `None`     |
 
-    split: Which split to load. If None, returns a DatasetDict with all
-        detected splits. If specified (e.g., "train", "test"), returns
-        a single Dataset for that split.
+## Returns {.doc-section .doc-section-returns}
 
-    data_files: Optional explicit mapping of data files. Can be:
-        - str: Single file pattern
-        - list[str]: List of file patterns (assigned to "train")
-        - dict[str, str | list[str]]: Explicit split -> files mapping
+| Name   | Type                                                                                                                                         | Description                                                       |
+|--------|----------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------|
+|        | [Dataset](`atdata.dataset.Dataset`)\[[ST](`atdata._hf_api.ST`)\] \| [DatasetDict](`atdata._hf_api.DatasetDict`)\[[ST](`atdata._hf_api.ST`)\] | If split is None: DatasetDict with all detected splits.           |
+|        | [Dataset](`atdata.dataset.Dataset`)\[[ST](`atdata._hf_api.ST`)\] \| [DatasetDict](`atdata._hf_api.DatasetDict`)\[[ST](`atdata._hf_api.ST`)\] | If split is specified: Dataset for that split.                    |
+|        | [Dataset](`atdata.dataset.Dataset`)\[[ST](`atdata._hf_api.ST`)\] \| [DatasetDict](`atdata._hf_api.DatasetDict`)\[[ST](`atdata._hf_api.ST`)\] | Type is ``ST`` if sample_type provided, otherwise ``DictSample``. |
 
-    streaming: If True, explicitly marks the dataset for streaming mode.
-        Note: atdata Datasets are already lazy/streaming via WebDataset
-        pipelines, so this parameter primarily signals intent.
+## Raises {.doc-section .doc-section-raises}
 
-    index: Optional AbstractIndex for dataset lookup. Required when using
-        @handle/dataset syntax. When provided with an indexed path, the
-        schema can be auto-resolved from the index.
+| Name   | Type                                     | Description                             |
+|--------|------------------------------------------|-----------------------------------------|
+|        | [ValueError](`ValueError`)               | If the specified split is not found.    |
+|        | [FileNotFoundError](`FileNotFoundError`) | If no data files are found at the path. |
+|        | [KeyError](`KeyError`)                   | If dataset not found in index.          |
 
-Returns:
-    If split is None: DatasetDict with all detected splits.
-    If split is specified: Dataset for that split.
-    Type is ``ST`` if sample_type provided, otherwise ``DictSample``.
+## Example {.doc-section .doc-section-example}
 
-Raises:
-    ValueError: If the specified split is not found.
-    FileNotFoundError: If no data files are found at the path.
-    KeyError: If dataset not found in index.
+::
 
-Example:
     >>> # Load without type - get DictSample for exploration
     >>> ds = load_dataset("./data/train.tar", split="train")
     >>> for sample in ds.ordered():

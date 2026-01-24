@@ -398,6 +398,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#atdata.PackableSample" id="toc-atdata.PackableSample" class="nav-link active" data-scroll-target="#atdata.PackableSample">PackableSample</a>
   <ul class="collapse">
+  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
   <li><a href="#attributes" id="toc-attributes" class="nav-link" data-scroll-target="#attributes">Attributes</a></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
@@ -421,7 +422,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Base class for samples that can be serialized with msgpack.</p>
 <p>This abstract base class provides automatic serialization/deserialization for dataclass-based samples. Fields annotated as <code>NDArray</code> or <code>NDArray | None</code> are automatically converted between numpy arrays and bytes during packing/unpacking.</p>
 <p>Subclasses should be defined either by: 1. Direct inheritance with the <code>@dataclass</code> decorator 2. Using the <code>@packable</code> decorator (recommended)</p>
-<p>Example: &gt;&gt;&gt; <span class="citation" data-cites="packable">@packable</span> … class MyData: … name: str … embeddings: NDArray … &gt;&gt;&gt; sample = MyData(name=“test”, embeddings=np.array([1.0, 2.0])) &gt;&gt;&gt; packed = sample.packed # Serialize to bytes &gt;&gt;&gt; restored = MyData.from_bytes(packed) # Deserialize</p>
+<section id="example" class="level2 doc-section doc-section-example">
+<h2 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h2>
+<p>::</p>
+<pre><code>&gt;&gt;&gt; @packable
+... class MyData:
+...     name: str
+...     embeddings: NDArray
+...
+&gt;&gt;&gt; sample = MyData(name="test", embeddings=np.array([1.0, 2.0]))
+&gt;&gt;&gt; packed = sample.packed  # Serialize to bytes
+&gt;&gt;&gt; restored = MyData.from_bytes(packed)  # Deserialize</code></pre>
+</section>
 <section id="attributes" class="level2">
 <h2 class="anchored" data-anchor-id="attributes">Attributes</h2>
 <table class="caption-top table">
@@ -465,19 +477,95 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="atdata.PackableSample.from_bytes" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.PackableSample.from_bytes">from_bytes</h3>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>PackableSample.from_bytes(bs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>PackableSample.from_bytes(bs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Create a sample instance from raw msgpack bytes.</p>
-<p>Args: bs: Raw bytes from a msgpack-serialized sample.</p>
-<p>Returns: A new instance of this sample class deserialized from the bytes.</p>
+<section id="parameters" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>bs</td>
+<td><a href="`bytes`">bytes</a></td>
+<td>Raw bytes from a msgpack-serialized sample.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`typing.Self`">Self</a></td>
+<td>A new instance of this sample class deserialized from the bytes.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.PackableSample.from_data" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.PackableSample.from_data">from_data</h3>
-<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>PackableSample.from_data(data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>PackableSample.from_data(data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Create a sample instance from unpacked msgpack data.</p>
-<p>Args: data: Dictionary with keys matching the sample’s field names.</p>
-<p>Returns: New instance with NDArray fields auto-converted from bytes.</p>
+<section id="parameters-1" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>data</td>
+<td><a href="`atdata.dataset.WDSRawSample`">WDSRawSample</a></td>
+<td>Dictionary with keys matching the sample’s field names.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-1" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`typing.Self`">Self</a></td>
+<td>New instance with NDArray fields auto-converted from bytes.</td>
+</tr>
+</tbody>
+</table>
 
 
+</section>
 </section>
 </section>
 </section>

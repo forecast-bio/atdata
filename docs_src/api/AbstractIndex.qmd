@@ -14,12 +14,16 @@ This protocol defines the common interface for managing dataset metadata:
 A single index can hold datasets of many different sample types. The sample
 type is tracked via schema references, not as a generic parameter on the index.
 
-Optional Extensions:
-    Some index implementations support additional features:
-    - ``data_store``: An AbstractDataStore for reading/writing dataset shards.
-      If present, ``load_dataset`` will use it for S3 credential resolution.
+## Optional Extensions {.doc-section .doc-section-optional-extensions}
 
-Example:
+Some index implementations support additional features:
+- ``data_store``: An AbstractDataStore for reading/writing dataset shards.
+  If present, ``load_dataset`` will use it for S3 credential resolution.
+
+## Example {.doc-section .doc-section-example}
+
+::
+
     >>> def publish_and_list(index: AbstractIndex) -> None:
     ...     # Publish schemas for different types
     ...     schema1 = index.publish_schema(ImageSample, version="1.0.0")
@@ -64,19 +68,31 @@ This method enables loading datasets without knowing the sample type
 ahead of time. The index retrieves the schema record and dynamically
 generates a Packable class matching the schema definition.
 
-Args:
-    ref: Schema reference string (local:// or at://).
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    A dynamically generated Packable class with fields matching
-    the schema definition. The class can be used with
-    ``Dataset[T]`` to load and iterate over samples.
+| Name   | Type         | Description                                  | Default    |
+|--------|--------------|----------------------------------------------|------------|
+| ref    | [str](`str`) | Schema reference string (local:// or at://). | _required_ |
 
-Raises:
-    KeyError: If schema not found.
-    ValueError: If schema cannot be decoded (unsupported field types).
+#### Returns {.doc-section .doc-section-returns}
 
-Example:
+| Name   | Type                                                              | Description                                                 |
+|--------|-------------------------------------------------------------------|-------------------------------------------------------------|
+|        | [Type](`typing.Type`)\[[Packable](`atdata._protocols.Packable`)\] | A dynamically generated Packable class with fields matching |
+|        | [Type](`typing.Type`)\[[Packable](`atdata._protocols.Packable`)\] | the schema definition. The class can be used with           |
+|        | [Type](`typing.Type`)\[[Packable](`atdata._protocols.Packable`)\] | ``Dataset[T]`` to load and iterate over samples.            |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                                            |
+|--------|----------------------------|--------------------------------------------------------|
+|        | [KeyError](`KeyError`)     | If schema not found.                                   |
+|        | [ValueError](`ValueError`) | If schema cannot be decoded (unsupported field types). |
+
+#### Example {.doc-section .doc-section-example}
+
+::
+
     >>> entry = index.get_dataset("my-dataset")
     >>> SampleType = index.decode_schema(entry.schema_ref)
     >>> ds = Dataset[SampleType](entry.data_urls[0])
@@ -91,14 +107,23 @@ AbstractIndex.get_dataset(ref)
 
 Get a dataset entry by name or reference.
 
-Args:
-    ref: Dataset name, path, or full reference string.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    IndexEntry for the dataset.
+| Name   | Type         | Description                                   | Default    |
+|--------|--------------|-----------------------------------------------|------------|
+| ref    | [str](`str`) | Dataset name, path, or full reference string. | _required_ |
 
-Raises:
-    KeyError: If dataset not found.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                         | Description                 |
+|--------|----------------------------------------------|-----------------------------|
+|        | [IndexEntry](`atdata._protocols.IndexEntry`) | IndexEntry for the dataset. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                   | Description           |
+|--------|------------------------|-----------------------|
+|        | [KeyError](`KeyError`) | If dataset not found. |
 
 ### get_schema { #atdata.AbstractIndex.get_schema }
 
@@ -108,15 +133,24 @@ AbstractIndex.get_schema(ref)
 
 Get a schema record by reference.
 
-Args:
-    ref: Schema reference string (local:// or at://).
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    Schema record as a dictionary with fields like 'name', 'version',
-    'fields', etc.
+| Name   | Type         | Description                                  | Default    |
+|--------|--------------|----------------------------------------------|------------|
+| ref    | [str](`str`) | Schema reference string (local:// or at://). | _required_ |
 
-Raises:
-    KeyError: If schema not found.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type           | Description                                                       |
+|--------|----------------|-------------------------------------------------------------------|
+|        | [dict](`dict`) | Schema record as a dictionary with fields like 'name', 'version', |
+|        | [dict](`dict`) | 'fields', etc.                                                    |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                   | Description          |
+|--------|------------------------|----------------------|
+|        | [KeyError](`KeyError`) | If schema not found. |
 
 ### insert_dataset { #atdata.AbstractIndex.insert_dataset }
 
@@ -129,15 +163,20 @@ Insert a dataset into the index.
 The sample type is inferred from ``ds.sample_type``. If schema_ref is not
 provided, the schema may be auto-published based on the sample type.
 
-Args:
-    ds: The Dataset to register in the index (any sample type).
-    name: Human-readable name for the dataset.
-    schema_ref: Optional explicit schema reference. If not provided,
-        the schema may be auto-published or inferred from ds.sample_type.
-    **kwargs: Additional backend-specific options.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    IndexEntry for the inserted dataset.
+| Name       | Type                                          | Description                                                                                                            | Default    |
+|------------|-----------------------------------------------|------------------------------------------------------------------------------------------------------------------------|------------|
+| ds         | [Dataset](`atdata.dataset.Dataset`)           | The Dataset to register in the index (any sample type).                                                                | _required_ |
+| name       | [str](`str`)                                  | Human-readable name for the dataset.                                                                                   | _required_ |
+| schema_ref | [Optional](`typing.Optional`)\[[str](`str`)\] | Optional explicit schema reference. If not provided, the schema may be auto-published or inferred from ds.sample_type. | `None`     |
+| **kwargs   |                                               | Additional backend-specific options.                                                                                   | `{}`       |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                         | Description                          |
+|--------|----------------------------------------------|--------------------------------------|
+|        | [IndexEntry](`atdata._protocols.IndexEntry`) | IndexEntry for the inserted dataset. |
 
 ### list_datasets { #atdata.AbstractIndex.list_datasets }
 
@@ -147,8 +186,11 @@ AbstractIndex.list_datasets()
 
 Get all dataset entries as a materialized list.
 
-Returns:
-    List of IndexEntry for each dataset.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                           | Description                          |
+|--------|----------------------------------------------------------------|--------------------------------------|
+|        | [list](`list`)\[[IndexEntry](`atdata._protocols.IndexEntry`)\] | List of IndexEntry for each dataset. |
 
 ### list_schemas { #atdata.AbstractIndex.list_schemas }
 
@@ -158,8 +200,11 @@ AbstractIndex.list_schemas()
 
 Get all schema records as a materialized list.
 
-Returns:
-    List of schema records as dictionaries.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                             | Description                             |
+|--------|----------------------------------|-----------------------------------------|
+|        | [list](`list`)\[[dict](`dict`)\] | List of schema records as dictionaries. |
 
 ### publish_schema { #atdata.AbstractIndex.publish_schema }
 
@@ -169,12 +214,18 @@ AbstractIndex.publish_schema(sample_type, *, version='1.0.0', **kwargs)
 
 Publish a schema for a sample type.
 
-Args:
-    sample_type: A Packable type (PackableSample subclass or @packable-decorated).
-    version: Semantic version string for the schema.
-    **kwargs: Additional backend-specific options.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    Schema reference string:
-    - Local: 'local://schemas/{module.Class}@{version}'
-    - Atmosphere: 'at://did:plc:.../ac.foundation.dataset.sampleSchema/...'
+| Name        | Type                                                              | Description                                                       | Default    |
+|-------------|-------------------------------------------------------------------|-------------------------------------------------------------------|------------|
+| sample_type | [Type](`typing.Type`)\[[Packable](`atdata._protocols.Packable`)\] | A Packable type (PackableSample subclass or @packable-decorated). | _required_ |
+| version     | [str](`str`)                                                      | Semantic version string for the schema.                           | `'1.0.0'`  |
+| **kwargs    |                                                                   | Additional backend-specific options.                              | `{}`       |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type         | Description                                                             |
+|--------|--------------|-------------------------------------------------------------------------|
+|        | [str](`str`) | Schema reference string:                                                |
+|        | [str](`str`) | - Local: 'local://schemas/{module.Class}@{version}'                     |
+|        | [str](`str`) | - Atmosphere: 'at://did:plc:.../ac.foundation.dataset.sampleSchema/...' |

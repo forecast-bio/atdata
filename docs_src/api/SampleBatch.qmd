@@ -14,25 +14,29 @@ samples in the batch.
 NDArray fields are stacked into a numpy array with a batch dimension.
 Other fields are aggregated into a list.
 
-Type Parameters:
-    DT: The sample type, must derive from ``PackableSample``.
+## Parameters {.doc-section .doc-section-parameters}
 
-Attributes:
-    samples: The list of sample instances in this batch.
+| Name   | Type   | Description                                           | Default    |
+|--------|--------|-------------------------------------------------------|------------|
+| DT     |        | The sample type, must derive from ``PackableSample``. | _required_ |
 
-Example:
+## Attributes {.doc-section .doc-section-attributes}
+
+| Name    | Type   | Description                                 |
+|---------|--------|---------------------------------------------|
+| samples |        | The list of sample instances in this batch. |
+
+## Example {.doc-section .doc-section-example}
+
+::
+
     >>> batch = SampleBatch[MyData]([sample1, sample2, sample3])
     >>> batch.embeddings  # Returns stacked numpy array of shape (3, ...)
     >>> batch.names  # Returns list of names
 
-Note:
-    This class uses Python's ``__orig_class__`` mechanism to extract the
-    type parameter at runtime. Instances must be created using the
-    subscripted syntax ``SampleBatch[MyType](samples)`` rather than
-    calling the constructor directly with an unsubscripted class.
+## Note {.doc-section .doc-section-note}
 
-## Attributes
-
-| Name | Description |
-| --- | --- |
-| [sample_type](#atdata.SampleBatch.sample_type) | The type of each sample in this batch. |
+This class uses Python's ``__orig_class__`` mechanism to extract the
+type parameter at runtime. Instances must be created using the
+subscripted syntax ``SampleBatch[MyType](samples)`` rather than
+calling the constructor directly with an unsubscripted class.

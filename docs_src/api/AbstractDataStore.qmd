@@ -14,7 +14,10 @@ The separation of index (metadata) from data store (actual files) allows
 flexible deployment: local index with S3 storage, atmosphere index with
 S3 storage, or atmosphere index with PDS blobs.
 
-Example:
+## Example {.doc-section .doc-section-example}
+
+::
+
     >>> store = S3DataStore(credentials, bucket="my-bucket")
     >>> urls = store.write_shards(dataset, prefix="training/v1")
     >>> print(urls)
@@ -40,11 +43,17 @@ Some storage backends may need to transform URLs (e.g., signing S3 URLs
 or resolving blob references). This method returns a URL that can be
 used directly with WebDataset.
 
-Args:
-    url: Storage URL to resolve.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    WebDataset-compatible URL for reading.
+| Name   | Type         | Description             | Default    |
+|--------|--------------|-------------------------|------------|
+| url    | [str](`str`) | Storage URL to resolve. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type         | Description                            |
+|--------|--------------|----------------------------------------|
+|        | [str](`str`) | WebDataset-compatible URL for reading. |
 
 ### supports_streaming { #atdata.AbstractDataStore.supports_streaming }
 
@@ -54,9 +63,12 @@ AbstractDataStore.supports_streaming()
 
 Whether this store supports streaming reads.
 
-Returns:
-    True if the store supports efficient streaming (like S3),
-    False if data must be fully downloaded first.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type           | Description                                               |
+|--------|----------------|-----------------------------------------------------------|
+|        | [bool](`bool`) | True if the store supports efficient streaming (like S3), |
+|        | [bool](`bool`) | False if data must be fully downloaded first.             |
 
 ### write_shards { #atdata.AbstractDataStore.write_shards }
 
@@ -66,11 +78,17 @@ AbstractDataStore.write_shards(ds, *, prefix, **kwargs)
 
 Write dataset shards to storage.
 
-Args:
-    ds: The Dataset to write.
-    prefix: Path prefix for the shards (e.g., 'datasets/mnist/v1').
-    **kwargs: Backend-specific options (e.g., maxcount for shard size).
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    List of URLs for the written shards, suitable for use with
-    WebDataset or atdata.Dataset().
+| Name     | Type                                | Description                                               | Default    |
+|----------|-------------------------------------|-----------------------------------------------------------|------------|
+| ds       | [Dataset](`atdata.dataset.Dataset`) | The Dataset to write.                                     | _required_ |
+| prefix   | [str](`str`)                        | Path prefix for the shards (e.g., 'datasets/mnist/v1').   | _required_ |
+| **kwargs |                                     | Backend-specific options (e.g., maxcount for shard size). | `{}`       |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                           | Description                                                |
+|--------|--------------------------------|------------------------------------------------------------|
+|        | [list](`list`)\[[str](`str`)\] | List of URLs for the written shards, suitable for use with |
+|        | [list](`list`)\[[str](`str`)\] | WebDataset or atdata.Dataset().                            |

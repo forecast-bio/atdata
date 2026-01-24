@@ -7,6 +7,7 @@ quartodoc:
   dir: api
   title: "API Reference"
   style: pkgdown
+  parser: google
   render_interlinks: true
 
   sections:

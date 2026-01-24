@@ -14,15 +14,17 @@ during serialization, enabling efficient storage of numerical data in WebDataset
 archives.
 
 Example:
-    >>> @packable
-    ... class ImageSample:
-    ...     image: NDArray
-    ...     label: str
-    ...
-    >>> ds = Dataset[ImageSample]("data-{000000..000009}.tar")
-    >>> for batch in ds.shuffled(batch_size=32):
-    ...     images = batch.image  # Stacked numpy array (32, H, W, C)
-    ...     labels = batch.label  # List of 32 strings
+    ::
+
+        >>> @packable
+        ... class ImageSample:
+        ...     image: NDArray
+        ...     label: str
+        ...
+        >>> ds = Dataset[ImageSample]("data-{000000..000009}.tar")
+        >>> for batch in ds.shuffled(batch_size=32):
+        ...     images = batch.image  # Stacked numpy array (32, H, W, C)
+        ...     labels = batch.label  # List of 32 strings
 """
 
 ##
@@ -124,14 +126,16 @@ class DictSample:
     registers a lens from ``DictSample``, making this conversion seamless.
 
     Example:
-        >>> ds = load_dataset("path/to/data.tar")  # Returns Dataset[DictSample]
-        >>> for sample in ds.ordered():
-        ...     print(sample.some_field)      # Attribute access
-        ...     print(sample["other_field"])  # Dict access
-        ...     print(sample.keys())          # Inspect available fields
-        ...
-        >>> # Convert to typed schema
-        >>> typed_ds = ds.as_type(MyTypedSample)
+        ::
+
+            >>> ds = load_dataset("path/to/data.tar")  # Returns Dataset[DictSample]
+            >>> for sample in ds.ordered():
+            ...     print(sample.some_field)      # Attribute access
+            ...     print(sample["other_field"])  # Dict access
+            ...     print(sample.keys())          # Inspect available fields
+            ...
+            >>> # Convert to typed schema
+            >>> typed_ds = ds.as_type(MyTypedSample)
 
     Note:
         NDArray fields are stored as raw bytes in DictSample. They are only
@@ -285,14 +289,16 @@ class PackableSample( ABC ):
     2. Using the ``@packable`` decorator (recommended)
 
     Example:
-        >>> @packable
-        ... class MyData:
-        ...     name: str
-        ...     embeddings: NDArray
-        ...
-        >>> sample = MyData(name="test", embeddings=np.array([1.0, 2.0]))
-        >>> packed = sample.packed  # Serialize to bytes
-        >>> restored = MyData.from_bytes(packed)  # Deserialize
+        ::
+
+            >>> @packable
+            ... class MyData:
+            ...     name: str
+            ...     embeddings: NDArray
+            ...
+            >>> sample = MyData(name="test", embeddings=np.array([1.0, 2.0]))
+            >>> packed = sample.packed  # Serialize to bytes
+            >>> restored = MyData.from_bytes(packed)  # Deserialize
     """
 
     def _ensure_good( self ):
@@ -417,16 +423,18 @@ class SampleBatch( Generic[DT] ):
     NDArray fields are stacked into a numpy array with a batch dimension.
     Other fields are aggregated into a list.
 
-    Type Parameters:
+    Parameters:
         DT: The sample type, must derive from ``PackableSample``.
 
     Attributes:
         samples: The list of sample instances in this batch.
 
     Example:
-        >>> batch = SampleBatch[MyData]([sample1, sample2, sample3])
-        >>> batch.embeddings  # Returns stacked numpy array of shape (3, ...)
-        >>> batch.names  # Returns list of names
+        ::
+
+            >>> batch = SampleBatch[MyData]([sample1, sample2, sample3])
+            >>> batch.embeddings  # Returns stacked numpy array of shape (3, ...)
+            >>> batch.names  # Returns list of names
 
     Note:
         This class uses Python's ``__orig_class__`` mechanism to extract the
@@ -434,6 +442,7 @@ class SampleBatch( Generic[DT] ):
         subscripted syntax ``SampleBatch[MyType](samples)`` rather than
         calling the constructor directly with an unsubscripted class.
     """
+    # TODO The above has a line for "Parameters:" that should be "Type Parameters:"; this is a temporary fix for `quartodoc` auto-generation bugs.
 
     def __init__( self, samples: Sequence[DT] ):
         """Create a batch from a sequence of samples.
@@ -539,20 +548,22 @@ class Dataset( Generic[ST] ):
     - Type transformations via the lens system (``as_type()``)
     - Export to parquet format
 
-    Type Parameters:
+    Parameters:
         ST: The sample type for this dataset, must derive from ``PackableSample``.
 
     Attributes:
         url: WebDataset brace-notation URL for the tar file(s).
 
     Example:
-        >>> ds = Dataset[MyData]("path/to/data-{000000..000009}.tar")
-        >>> for sample in ds.ordered(batch_size=32):
-        ...     # sample is SampleBatch[MyData] with batch_size samples
-        ...     embeddings = sample.embeddings  # shape: (32, ...)
-        ...
-        >>> # Transform to a different view
-        >>> ds_view = ds.as_type(MyDataView)
+        ::
+
+            >>> ds = Dataset[MyData]("path/to/data-{000000..000009}.tar")
+            >>> for sample in ds.ordered(batch_size=32):
+            ...     # sample is SampleBatch[MyData] with batch_size samples
+            ...     embeddings = sample.embeddings  # shape: (32, ...)
+            ...
+            >>> # Transform to a different view
+            >>> ds_view = ds.as_type(MyDataView)
 
     Note:
         This class uses Python's ``__orig_class__`` mechanism to extract the
@@ -560,6 +571,7 @@ class Dataset( Generic[ST] ):
         subscripted syntax ``Dataset[MyType](url)`` rather than calling the
         constructor directly with an unsubscripted class.
     """
+    # TODO The above has a line for "Parameters:" that should be "Type Parameters:"; this is a temporary fix for `quartodoc` auto-generation bugs.
 
     @property
     def sample_type( self ) -> Type:
@@ -809,12 +821,14 @@ class Dataset( Generic[ST] ):
             ``output-000001.parquet``, etc.
 
         Example:
-            >>> ds = Dataset[MySample]("data.tar")
-            >>> # Small dataset - load all at once
-            >>> ds.to_parquet("output.parquet")
-            >>>
-            >>> # Large dataset - process in chunks
-            >>> ds.to_parquet("output.parquet", maxcount=50000)
+            ::
+
+                >>> ds = Dataset[MySample]("data.tar")
+                >>> # Small dataset - load all at once
+                >>> ds.to_parquet("output.parquet")
+                >>>
+                >>> # Large dataset - process in chunks
+                >>> ds.to_parquet("output.parquet", maxcount=50000)
         """
         ##
 
@@ -938,18 +952,20 @@ def packable( cls: type[_T] ) -> type[_T]:
         name and annotations as the original class. The class satisfies the
         ``Packable`` protocol and can be used with ``Type[Packable]`` signatures.
 
-    Example:
-        >>> @packable
-        ... class MyData:
-        ...     name: str
-        ...     values: NDArray
-        ...
-        >>> sample = MyData(name="test", values=np.array([1, 2, 3]))
-        >>> bytes_data = sample.packed
-        >>> restored = MyData.from_bytes(bytes_data)
-        >>>
-        >>> # Works with Packable-typed APIs
-        >>> index.publish_schema(MyData, version="1.0.0")  # Type-safe
+    Examples:
+        This is a test of the functionality::
+
+            @packable
+            class MyData:
+                name: str
+                values: NDArray
+            
+            sample = MyData(name="test", values=np.array([1, 2, 3]))
+            bytes_data = sample.packed
+            restored = MyData.from_bytes(bytes_data)
+            
+            # Works with Packable-typed APIs
+            index.publish_schema(MyData, version="1.0.0")  # Type-safe
     """
 
     ##

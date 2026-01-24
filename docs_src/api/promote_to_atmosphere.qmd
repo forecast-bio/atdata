@@ -19,25 +19,36 @@ Promote a local dataset to the atmosphere network.
 This function takes a locally-indexed dataset and publishes it to ATProto,
 making it discoverable on the federated atmosphere network.
 
-Args:
-    local_entry: The LocalDatasetEntry to promote.
-    local_index: Local index containing the schema for this entry.
-    atmosphere_client: Authenticated AtmosphereClient.
-    data_store: Optional data store for copying data to new location.
-        If None, the existing data_urls are used as-is.
-    name: Override name for the atmosphere record. Defaults to local name.
-    description: Optional description for the dataset.
-    tags: Optional tags for discovery.
-    license: Optional license identifier.
+## Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    AT URI of the created atmosphere dataset record.
+| Name              | Type                                                               | Description                                                                                           | Default    |
+|-------------------|--------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|------------|
+| local_entry       | [LocalDatasetEntry](`atdata.local.LocalDatasetEntry`)              | The LocalDatasetEntry to promote.                                                                     | _required_ |
+| local_index       | [LocalIndex](`atdata.local.Index`)                                 | Local index containing the schema for this entry.                                                     | _required_ |
+| atmosphere_client | [AtmosphereClient](`atdata.atmosphere.AtmosphereClient`)           | Authenticated AtmosphereClient.                                                                       | _required_ |
+| data_store        | [AbstractDataStore](`atdata._protocols.AbstractDataStore`) \| None | Optional data store for copying data to new location. If None, the existing data_urls are used as-is. | `None`     |
+| name              | [str](`str`) \| None                                               | Override name for the atmosphere record. Defaults to local name.                                      | `None`     |
+| description       | [str](`str`) \| None                                               | Optional description for the dataset.                                                                 | `None`     |
+| tags              | [list](`list`)\[[str](`str`)\] \| None                             | Optional tags for discovery.                                                                          | `None`     |
+| license           | [str](`str`) \| None                                               | Optional license identifier.                                                                          | `None`     |
 
-Raises:
-    KeyError: If schema not found in local index.
-    ValueError: If local entry has no data URLs.
+## Returns {.doc-section .doc-section-returns}
 
-Example:
+| Name   | Type         | Description                                      |
+|--------|--------------|--------------------------------------------------|
+|        | [str](`str`) | AT URI of the created atmosphere dataset record. |
+
+## Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                         |
+|--------|----------------------------|-------------------------------------|
+|        | [KeyError](`KeyError`)     | If schema not found in local index. |
+|        | [ValueError](`ValueError`) | If local entry has no data URLs.    |
+
+## Example {.doc-section .doc-section-example}
+
+::
+
     >>> entry = local_index.get_dataset("mnist-train")
     >>> uri = promote_to_atmosphere(entry, local_index, client)
     >>> print(uri)

@@ -24,15 +24,21 @@ Unlike URL-based approaches, this doesn't require URL transformation
 or global gopen_schemes registration. Credentials are scoped to the
 source instance.
 
-Attributes:
-    bucket: S3 bucket name.
-    keys: List of object keys (paths within bucket).
-    endpoint: Optional custom endpoint URL for S3-compatible services.
-    access_key: Optional AWS access key ID.
-    secret_key: Optional AWS secret access key.
-    region: Optional AWS region (defaults to us-east-1).
+## Attributes {.doc-section .doc-section-attributes}
 
-Example:
+| Name       | Type                           | Description                                              |
+|------------|--------------------------------|----------------------------------------------------------|
+| bucket     | [str](`str`)                   | S3 bucket name.                                          |
+| keys       | [list](`list`)\[[str](`str`)\] | List of object keys (paths within bucket).               |
+| endpoint   | [str](`str`) \| None           | Optional custom endpoint URL for S3-compatible services. |
+| access_key | [str](`str`) \| None           | Optional AWS access key ID.                              |
+| secret_key | [str](`str`) \| None           | Optional AWS secret access key.                          |
+| region     | [str](`str`) \| None           | Optional AWS region (defaults to us-east-1).             |
+
+## Example {.doc-section .doc-section-example}
+
+::
+
     >>> source = S3Source(
     ...     bucket="my-datasets",
     ...     keys=["train/shard-000.tar", "train/shard-001.tar"],
@@ -42,13 +48,6 @@ Example:
     ... )
     >>> for shard_id, stream in source.shards:
     ...     process(stream)
-
-## Attributes
-
-| Name | Description |
-| --- | --- |
-| [shard_list](#atdata.S3Source.shard_list) | Return list of S3 URIs for the shards (deprecated, use list_shards()). |
-| [shards](#atdata.S3Source.shards) | Lazily yield (s3_uri, stream) pairs for each shard. |
 
 ## Methods
 
@@ -69,16 +68,24 @@ Create S3Source from a credentials dictionary.
 
 Accepts the same credential format used by S3DataStore.
 
-Args:
-    credentials: Dict with AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
-        and optionally AWS_ENDPOINT.
-    bucket: S3 bucket name.
-    keys: List of object keys.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    Configured S3Source.
+| Name        | Type                                         | Description                                                                      | Default    |
+|-------------|----------------------------------------------|----------------------------------------------------------------------------------|------------|
+| credentials | [dict](`dict`)\[[str](`str`), [str](`str`)\] | Dict with AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and optionally AWS_ENDPOINT. | _required_ |
+| bucket      | [str](`str`)                                 | S3 bucket name.                                                                  | _required_ |
+| keys        | [list](`list`)\[[str](`str`)\]               | List of object keys.                                                             | _required_ |
 
-Example:
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type         | Description          |
+|--------|--------------|----------------------|
+|        | \'S3Source\' | Configured S3Source. |
+
+#### Example {.doc-section .doc-section-example}
+
+::
+
     >>> creds = {
     ...     "AWS_ACCESS_KEY_ID": "...",
     ...     "AWS_SECRET_ACCESS_KEY": "...",
@@ -104,20 +111,32 @@ Create S3Source from s3:// URLs.
 Parses s3://bucket/key URLs and extracts bucket and keys.
 All URLs must be in the same bucket.
 
-Args:
-    urls: List of s3:// URLs.
-    endpoint: Optional custom endpoint.
-    access_key: Optional access key.
-    secret_key: Optional secret key.
-    region: Optional region.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    S3Source configured for the given URLs.
+| Name       | Type                           | Description               | Default    |
+|------------|--------------------------------|---------------------------|------------|
+| urls       | [list](`list`)\[[str](`str`)\] | List of s3:// URLs.       | _required_ |
+| endpoint   | [str](`str`) \| None           | Optional custom endpoint. | `None`     |
+| access_key | [str](`str`) \| None           | Optional access key.      | `None`     |
+| secret_key | [str](`str`) \| None           | Optional secret key.      | `None`     |
+| region     | [str](`str`) \| None           | Optional region.          | `None`     |
 
-Raises:
-    ValueError: If URLs are not valid s3:// URLs or span multiple buckets.
+#### Returns {.doc-section .doc-section-returns}
 
-Example:
+| Name   | Type         | Description                             |
+|--------|--------------|-----------------------------------------|
+|        | \'S3Source\' | S3Source configured for the given URLs. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                                                |
+|--------|----------------------------|------------------------------------------------------------|
+|        | [ValueError](`ValueError`) | If URLs are not valid s3:// URLs or span multiple buckets. |
+
+#### Example {.doc-section .doc-section-example}
+
+::
+
     >>> source = S3Source.from_urls(
     ...     ["s3://my-bucket/train-000.tar", "s3://my-bucket/train-001.tar"],
     ...     endpoint="https://r2.example.com",
@@ -139,11 +158,20 @@ S3Source.open_shard(shard_id)
 
 Open a single shard by S3 URI.
 
-Args:
-    shard_id: S3 URI of the shard (s3://bucket/key).
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    StreamingBody for reading the object.
+| Name     | Type         | Description                            | Default    |
+|----------|--------------|----------------------------------------|------------|
+| shard_id | [str](`str`) | S3 URI of the shard (s3://bucket/key). | _required_ |
 
-Raises:
-    KeyError: If shard_id is not in list_shards().
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                  | Description                           |
+|--------|---------------------------------------|---------------------------------------|
+|        | [IO](`typing.IO`)\[[bytes](`bytes`)\] | StreamingBody for reading the object. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                   | Description                          |
+|--------|------------------------|--------------------------------------|
+|        | [KeyError](`KeyError`) | If shard_id is not in list_shards(). |

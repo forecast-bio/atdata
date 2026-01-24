@@ -398,6 +398,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#atdata.IndexEntry" id="toc-atdata.IndexEntry" class="nav-link active" data-scroll-target="#atdata.IndexEntry">IndexEntry</a>
   <ul class="collapse">
+  <li><a href="#properties" id="toc-properties" class="nav-link" data-scroll-target="#properties">Properties</a></li>
   <li><a href="#attributes" id="toc-attributes" class="nav-link" data-scroll-target="#attributes">Attributes</a></li>
   </ul></li>
   </ul>
@@ -415,7 +416,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>IndexEntry()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Common interface for index entries (local or atmosphere).</p>
 <p>Both LocalDatasetEntry and atmosphere DatasetRecord-based entries should satisfy this protocol, enabling code that works with either.</p>
-<p>Properties: name: Human-readable dataset name schema_ref: Reference to schema (local:// path or AT URI) data_urls: WebDataset URLs for the data metadata: Arbitrary metadata dict, or None</p>
+<section id="properties" class="level2 doc-section doc-section-properties">
+<h2 class="doc-section doc-section-properties anchored" data-anchor-id="properties">Properties</h2>
+<p>name: Human-readable dataset name schema_ref: Reference to schema (local:// path or AT URI) data_urls: WebDataset URLs for the data metadata: Arbitrary metadata dict, or None</p>
+</section>
 <section id="attributes" class="level2">
 <h2 class="anchored" data-anchor-id="attributes">Attributes</h2>
 <table class="caption-top table">

@@ -25,6 +25,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Make docs script work from any directory (#371)
+- Add uv script shortcut 'docs' for documentation build (#370)
+- Update docstrings in local.py (#367)
+- Update docstrings in _protocols.py (#366)
+- Update docstrings in lens.py (#365)
+- Update docstrings in dataset.py (#364)
 - Review and address human-review.md feedback (#344)
 - Fix load_dataset overloads and AbstractIndex compatibility (#348)
 - Connect load_dataset to index data_store for S3 credentials (#361)

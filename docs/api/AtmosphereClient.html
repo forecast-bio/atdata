@@ -398,6 +398,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#atdata.atmosphere.AtmosphereClient" id="toc-atdata.atmosphere.AtmosphereClient" class="nav-link active" data-scroll-target="#atdata.atmosphere.AtmosphereClient">AtmosphereClient</a>
   <ul class="collapse">
+  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
+  <li><a href="#note" id="toc-note" class="nav-link" data-scroll-target="#note">Note</a></li>
   <li><a href="#attributes" id="toc-attributes" class="nav-link" data-scroll-target="#attributes">Attributes</a></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
@@ -432,8 +434,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereClient(base_url<span class="op">=</span><span class="va">None</span>, <span class="op">*</span>, _client<span class="op">=</span><span class="va">None</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>ATProto client wrapper for atdata operations.</p>
 <p>This class wraps the atproto SDK client and provides higher-level methods for working with atdata records (schemas, datasets, lenses).</p>
-<p>Example: &gt;&gt;&gt; client = AtmosphereClient() &gt;&gt;&gt; client.login(“alice.bsky.social”, “app-password”) &gt;&gt;&gt; print(client.did) ‘did:plc:…’</p>
-<p>Note: The password should be an app-specific password, not your main account password. Create app passwords in your Bluesky account settings.</p>
+<section id="example" class="level2 doc-section doc-section-example">
+<h2 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h2>
+<p>::</p>
+<pre><code>&gt;&gt;&gt; client = AtmosphereClient()
+&gt;&gt;&gt; client.login("alice.bsky.social", "app-password")
+&gt;&gt;&gt; print(client.did)
+'did:plc:...'</code></pre>
+</section>
+<section id="note" class="level2 doc-section doc-section-note">
+<h2 class="doc-section doc-section-note anchored" data-anchor-id="note">Note</h2>
+<p>The password should be an app-specific password, not your main account password. Create app passwords in your Bluesky account settings.</p>
+</section>
 <section id="attributes" class="level2">
 <h2 class="anchored" data-anchor-id="attributes">Attributes</h2>
 <table class="caption-top table">
@@ -529,134 +541,915 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="atdata.atmosphere.AtmosphereClient.create_record" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.atmosphere.AtmosphereClient.create_record">create_record</h3>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereClient.create_record(</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    collection,</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    record,</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    rkey<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    validate<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereClient.create_record(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    collection,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    record,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    rkey<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    validate<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Create a record in the user’s repository.</p>
-<p>Args: collection: The NSID of the record collection (e.g., ‘ac.foundation.dataset.sampleSchema’). record: The record data. Must include a ‘$type’ field. rkey: Optional explicit record key. If not provided, a TID is generated. validate: Whether to validate against the Lexicon schema. Set to False for custom lexicons that the PDS doesn’t know about.</p>
-<p>Returns: The AT URI of the created record.</p>
-<p>Raises: ValueError: If not authenticated. atproto.exceptions.AtProtocolError: If record creation fails.</p>
+<section id="parameters" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>collection</td>
+<td><a href="`str`">str</a></td>
+<td>The NSID of the record collection (e.g., ‘ac.foundation.dataset.sampleSchema’).</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>record</td>
+<td><a href="`dict`">dict</a></td>
+<td>The record data. Must include a ‘$type’ field.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="odd">
+<td>rkey</td>
+<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
+<td>Optional explicit record key. If not provided, a TID is generated.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>validate</td>
+<td><a href="`bool`">bool</a></td>
+<td>Whether to validate against the Lexicon schema. Set to False for custom lexicons that the PDS doesn’t know about.</td>
+<td><code>False</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`atdata.atmosphere._types.AtUri`">AtUri</a></td>
+<td>The AT URI of the created record.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>If not authenticated.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`atproto`">atproto</a>.<a href="`atproto.exceptions`">exceptions</a>.<a href="`atproto.exceptions.AtProtocolError`">AtProtocolError</a></td>
+<td>If record creation fails.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.atmosphere.AtmosphereClient.delete_record" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.atmosphere.AtmosphereClient.delete_record">delete_record</h3>
-<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereClient.delete_record(uri, <span class="op">*</span>, swap_commit<span class="op">=</span><span class="va">None</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereClient.delete_record(uri, <span class="op">*</span>, swap_commit<span class="op">=</span><span class="va">None</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Delete a record.</p>
-<p>Args: uri: The AT URI of the record to delete. swap_commit: Optional CID for compare-and-swap delete.</p>
-<p>Raises: ValueError: If not authenticated. atproto.exceptions.AtProtocolError: If deletion fails.</p>
+<section id="parameters-1" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>uri</td>
+<td><a href="`str`">str</a> | <a href="`atdata.atmosphere._types.AtUri`">AtUri</a></td>
+<td>The AT URI of the record to delete.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>swap_commit</td>
+<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
+<td>Optional CID for compare-and-swap delete.</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-1" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-1">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>If not authenticated.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`atproto`">atproto</a>.<a href="`atproto.exceptions`">exceptions</a>.<a href="`atproto.exceptions.AtProtocolError`">AtProtocolError</a></td>
+<td>If deletion fails.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.atmosphere.AtmosphereClient.export_session" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.atmosphere.AtmosphereClient.export_session">export_session</h3>
-<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereClient.export_session()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereClient.export_session()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Export the current session for later reuse.</p>
-<p>Returns: Session string that can be passed to <code>login_with_session()</code>.</p>
-<p>Raises: ValueError: If not authenticated.</p>
+<section id="returns-1" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`str`">str</a></td>
+<td>Session string that can be passed to <code>login_with_session()</code>.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-2" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-2">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>If not authenticated.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.atmosphere.AtmosphereClient.get_blob" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.atmosphere.AtmosphereClient.get_blob">get_blob</h3>
-<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereClient.get_blob(did, cid)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereClient.get_blob(did, cid)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Download a blob from a PDS.</p>
 <p>This resolves the PDS endpoint from the DID document and fetches the blob directly from the PDS.</p>
-<p>Args: did: The DID of the repository containing the blob. cid: The CID of the blob.</p>
-<p>Returns: The blob data as bytes.</p>
-<p>Raises: ValueError: If PDS endpoint cannot be resolved. requests.HTTPError: If blob fetch fails.</p>
+<section id="parameters-2" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-2">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>did</td>
+<td><a href="`str`">str</a></td>
+<td>The DID of the repository containing the blob.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>cid</td>
+<td><a href="`str`">str</a></td>
+<td>The CID of the blob.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-2" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`bytes`">bytes</a></td>
+<td>The blob data as bytes.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-3" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-3">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>If PDS endpoint cannot be resolved.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`requests`">requests</a>.<a href="`requests.HTTPError`">HTTPError</a></td>
+<td>If blob fetch fails.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.atmosphere.AtmosphereClient.get_blob_url" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.atmosphere.AtmosphereClient.get_blob_url">get_blob_url</h3>
-<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereClient.get_blob_url(did, cid)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereClient.get_blob_url(did, cid)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Get the direct URL for fetching a blob.</p>
 <p>This is useful for passing to WebDataset or other HTTP clients.</p>
-<p>Args: did: The DID of the repository containing the blob. cid: The CID of the blob.</p>
-<p>Returns: The full URL for fetching the blob.</p>
-<p>Raises: ValueError: If PDS endpoint cannot be resolved.</p>
+<section id="parameters-3" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-3">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>did</td>
+<td><a href="`str`">str</a></td>
+<td>The DID of the repository containing the blob.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>cid</td>
+<td><a href="`str`">str</a></td>
+<td>The CID of the blob.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-3" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-3">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`str`">str</a></td>
+<td>The full URL for fetching the blob.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-4" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-4">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>If PDS endpoint cannot be resolved.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.atmosphere.AtmosphereClient.get_record" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.atmosphere.AtmosphereClient.get_record">get_record</h3>
-<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereClient.get_record(uri)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereClient.get_record(uri)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Fetch a record by AT URI.</p>
-<p>Args: uri: The AT URI of the record.</p>
-<p>Returns: The record data as a dictionary.</p>
-<p>Raises: atproto.exceptions.AtProtocolError: If record not found.</p>
+<section id="parameters-4" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-4">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>uri</td>
+<td><a href="`str`">str</a> | <a href="`atdata.atmosphere._types.AtUri`">AtUri</a></td>
+<td>The AT URI of the record.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-4" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-4">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`dict`">dict</a></td>
+<td>The record data as a dictionary.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-5" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-5">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`atproto`">atproto</a>.<a href="`atproto.exceptions`">exceptions</a>.<a href="`atproto.exceptions.AtProtocolError`">AtProtocolError</a></td>
+<td>If record not found.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.atmosphere.AtmosphereClient.list_datasets" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.atmosphere.AtmosphereClient.list_datasets">list_datasets</h3>
-<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereClient.list_datasets(repo<span class="op">=</span><span class="va">None</span>, limit<span class="op">=</span><span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereClient.list_datasets(repo<span class="op">=</span><span class="va">None</span>, limit<span class="op">=</span><span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>List dataset records.</p>
-<p>Args: repo: The DID to query. Defaults to authenticated user. limit: Maximum number to return.</p>
-<p>Returns: List of dataset records.</p>
+<section id="parameters-5" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-5">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>repo</td>
+<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
+<td>The DID to query. Defaults to authenticated user.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>limit</td>
+<td><a href="`int`">int</a></td>
+<td>Maximum number to return.</td>
+<td><code>100</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-5" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-5">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`list`">list</a>[<a href="`dict`">dict</a>]</td>
+<td>List of dataset records.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.atmosphere.AtmosphereClient.list_lenses" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.atmosphere.AtmosphereClient.list_lenses">list_lenses</h3>
-<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereClient.list_lenses(repo<span class="op">=</span><span class="va">None</span>, limit<span class="op">=</span><span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereClient.list_lenses(repo<span class="op">=</span><span class="va">None</span>, limit<span class="op">=</span><span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>List lens records.</p>
-<p>Args: repo: The DID to query. Defaults to authenticated user. limit: Maximum number to return.</p>
-<p>Returns: List of lens records.</p>
+<section id="parameters-6" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-6">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>repo</td>
+<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
+<td>The DID to query. Defaults to authenticated user.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>limit</td>
+<td><a href="`int`">int</a></td>
+<td>Maximum number to return.</td>
+<td><code>100</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-6" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-6">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`list`">list</a>[<a href="`dict`">dict</a>]</td>
+<td>List of lens records.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.atmosphere.AtmosphereClient.list_records" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.atmosphere.AtmosphereClient.list_records">list_records</h3>
-<div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereClient.list_records(</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    collection,</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    repo<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    limit<span class="op">=</span><span class="dv">100</span>,</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    cursor<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereClient.list_records(</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    collection,</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    repo<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    limit<span class="op">=</span><span class="dv">100</span>,</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    cursor<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>List records in a collection.</p>
-<p>Args: collection: The NSID of the record collection. repo: The DID of the repository to query. Defaults to the authenticated user’s repository. limit: Maximum number of records to return (default 100). cursor: Pagination cursor from a previous call.</p>
-<p>Returns: A tuple of (records, next_cursor). The cursor is None if there are no more records.</p>
-<p>Raises: ValueError: If repo is None and not authenticated.</p>
+<section id="parameters-7" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-7">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>collection</td>
+<td><a href="`str`">str</a></td>
+<td>The NSID of the record collection.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>repo</td>
+<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
+<td>The DID of the repository to query. Defaults to the authenticated user’s repository.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>limit</td>
+<td><a href="`int`">int</a></td>
+<td>Maximum number of records to return (default 100).</td>
+<td><code>100</code></td>
+</tr>
+<tr class="even">
+<td>cursor</td>
+<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
+<td>Pagination cursor from a previous call.</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-7" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-7">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`list`">list</a>[<a href="`dict`">dict</a>]</td>
+<td>A tuple of (records, next_cursor). The cursor is None if there</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
+<td>are no more records.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-6" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-6">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>If repo is None and not authenticated.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.atmosphere.AtmosphereClient.list_schemas" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.atmosphere.AtmosphereClient.list_schemas">list_schemas</h3>
-<div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereClient.list_schemas(repo<span class="op">=</span><span class="va">None</span>, limit<span class="op">=</span><span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereClient.list_schemas(repo<span class="op">=</span><span class="va">None</span>, limit<span class="op">=</span><span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>List schema records.</p>
-<p>Args: repo: The DID to query. Defaults to authenticated user. limit: Maximum number to return.</p>
-<p>Returns: List of schema records.</p>
+<section id="parameters-8" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-8">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>repo</td>
+<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
+<td>The DID to query. Defaults to authenticated user.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>limit</td>
+<td><a href="`int`">int</a></td>
+<td>Maximum number to return.</td>
+<td><code>100</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-8" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-8">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`list`">list</a>[<a href="`dict`">dict</a>]</td>
+<td>List of schema records.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.atmosphere.AtmosphereClient.login" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.atmosphere.AtmosphereClient.login">login</h3>
-<div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereClient.login(handle, password)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereClient.login(handle, password)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Authenticate with the ATProto PDS.</p>
-<p>Args: handle: Your Bluesky handle (e.g., ‘alice.bsky.social’). password: App-specific password (not your main password).</p>
-<p>Raises: atproto.exceptions.AtProtocolError: If authentication fails.</p>
+<section id="parameters-9" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-9">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>handle</td>
+<td><a href="`str`">str</a></td>
+<td>Your Bluesky handle (e.g., ‘alice.bsky.social’).</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>password</td>
+<td><a href="`str`">str</a></td>
+<td>App-specific password (not your main password).</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-7" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-7">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`atproto`">atproto</a>.<a href="`atproto.exceptions`">exceptions</a>.<a href="`atproto.exceptions.AtProtocolError`">AtProtocolError</a></td>
+<td>If authentication fails.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.atmosphere.AtmosphereClient.login_with_session" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.atmosphere.AtmosphereClient.login_with_session">login_with_session</h3>
-<div class="sourceCode" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereClient.login_with_session(session_string)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereClient.login_with_session(session_string)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Authenticate using an exported session string.</p>
 <p>This allows reusing a session without re-authenticating, which helps avoid rate limits on session creation.</p>
-<p>Args: session_string: Session string from <code>export_session()</code>.</p>
+<section id="parameters-10" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-10">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>session_string</td>
+<td><a href="`str`">str</a></td>
+<td>Session string from <code>export_session()</code>.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.atmosphere.AtmosphereClient.put_record" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.atmosphere.AtmosphereClient.put_record">put_record</h3>
-<div class="sourceCode" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereClient.put_record(</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    collection,</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    rkey,</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    record,</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    validate<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    swap_commit<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereClient.put_record(</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    collection,</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    rkey,</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    record,</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    validate<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    swap_commit<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Create or update a record at a specific key.</p>
-<p>Args: collection: The NSID of the record collection. rkey: The record key. record: The record data. Must include a ‘$type’ field. validate: Whether to validate against the Lexicon schema. swap_commit: Optional CID for compare-and-swap update.</p>
-<p>Returns: The AT URI of the record.</p>
-<p>Raises: ValueError: If not authenticated. atproto.exceptions.AtProtocolError: If operation fails.</p>
+<section id="parameters-11" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-11">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>collection</td>
+<td><a href="`str`">str</a></td>
+<td>The NSID of the record collection.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>rkey</td>
+<td><a href="`str`">str</a></td>
+<td>The record key.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="odd">
+<td>record</td>
+<td><a href="`dict`">dict</a></td>
+<td>The record data. Must include a ‘$type’ field.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>validate</td>
+<td><a href="`bool`">bool</a></td>
+<td>Whether to validate against the Lexicon schema.</td>
+<td><code>False</code></td>
+</tr>
+<tr class="odd">
+<td>swap_commit</td>
+<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
+<td>Optional CID for compare-and-swap update.</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-9" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-9">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`atdata.atmosphere._types.AtUri`">AtUri</a></td>
+<td>The AT URI of the record.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-8" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-8">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>If not authenticated.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`atproto`">atproto</a>.<a href="`atproto.exceptions`">exceptions</a>.<a href="`atproto.exceptions.AtProtocolError`">AtProtocolError</a></td>
+<td>If operation fails.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.atmosphere.AtmosphereClient.upload_blob" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.atmosphere.AtmosphereClient.upload_blob">upload_blob</h3>
-<div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereClient.upload_blob(</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    data,</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    mime_type<span class="op">=</span><span class="st">'application/octet-stream'</span>,</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereClient.upload_blob(</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    data,</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    mime_type<span class="op">=</span><span class="st">'application/octet-stream'</span>,</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Upload binary data as a blob to the PDS.</p>
-<p>Args: data: Binary data to upload. mime_type: MIME type of the data (for reference, not enforced by PDS).</p>
-<p>Returns: A blob reference dict with keys: ‘$type’, ‘ref’, ‘mimeType’, ‘size’. This can be embedded directly in record fields.</p>
-<p>Raises: ValueError: If not authenticated. atproto.exceptions.AtProtocolError: If upload fails.</p>
+<section id="parameters-12" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-12">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>data</td>
+<td><a href="`bytes`">bytes</a></td>
+<td>Binary data to upload.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>mime_type</td>
+<td><a href="`str`">str</a></td>
+<td>MIME type of the data (for reference, not enforced by PDS).</td>
+<td><code>'application/octet-stream'</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-10" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-10">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`dict`">dict</a></td>
+<td>A blob reference dict with keys: ‘$type’, ‘ref’, ‘mimeType’, ‘size’.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`dict`">dict</a></td>
+<td>This can be embedded directly in record fields.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-9" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-9">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>If not authenticated.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`atproto`">atproto</a>.<a href="`atproto.exceptions`">exceptions</a>.<a href="`atproto.exceptions.AtProtocolError`">AtProtocolError</a></td>
+<td>If upload fails.</td>
+</tr>
+</tbody>
+</table>
 
 
+</section>
 </section>
 </section>
 </section>

@@ -10,10 +10,16 @@ Similar to HuggingFace's DatasetDict, this provides a container for
 multiple dataset splits (train, test, validation, etc.) with convenience
 methods that operate across all splits.
 
-Type Parameters:
-    ST: The sample type for all datasets in this dict.
+## Parameters {.doc-section .doc-section-parameters}
 
-Example:
+| Name   | Type   | Description                                    | Default    |
+|--------|--------|------------------------------------------------|------------|
+| ST     |        | The sample type for all datasets in this dict. | _required_ |
+
+## Example {.doc-section .doc-section-example}
+
+::
+
     >>> ds_dict = load_dataset("path/to/data", MyData)
     >>> train = ds_dict["train"]
     >>> test = ds_dict["test"]

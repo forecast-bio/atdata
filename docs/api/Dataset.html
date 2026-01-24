@@ -398,7 +398,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#atdata.Dataset" id="toc-atdata.Dataset" class="nav-link active" data-scroll-target="#atdata.Dataset">Dataset</a>
   <ul class="collapse">
+  <li><a href="#parameters" id="toc-parameters" class="nav-link" data-scroll-target="#parameters">Parameters</a></li>
   <li><a href="#attributes" id="toc-attributes" class="nav-link" data-scroll-target="#attributes">Attributes</a></li>
+  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
+  <li><a href="#note" id="toc-note" class="nav-link" data-scroll-target="#note">Note</a></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
   <li><a href="#atdata.Dataset.as_type" id="toc-atdata.Dataset.as_type" class="nav-link" data-scroll-target="#atdata.Dataset.as_type">as_type</a></li>
@@ -426,46 +429,66 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>A typed dataset built on WebDataset with lens transformations.</p>
 <p>This class wraps WebDataset tar archives and provides type-safe iteration over samples of a specific <code>PackableSample</code> type. Samples are stored as msgpack-serialized data within WebDataset shards.</p>
 <p>The dataset supports: - Ordered and shuffled iteration - Automatic batching with <code>SampleBatch</code> - Type transformations via the lens system (<code>as_type()</code>) - Export to parquet format</p>
-<p>Type Parameters: ST: The sample type for this dataset, must derive from <code>PackableSample</code>.</p>
-<p>Attributes: url: WebDataset brace-notation URL for the tar file(s).</p>
-<p>Example: &gt;&gt;&gt; ds = Dataset<a href="&quot;path/to/data-{000000..000009}.tar&quot;">MyData</a> &gt;&gt;&gt; for sample in ds.ordered(batch_size=32): … # sample is SampleBatch[MyData] with batch_size samples … embeddings = sample.embeddings # shape: (32, …) … &gt;&gt;&gt; # Transform to a different view &gt;&gt;&gt; ds_view = ds.as_type(MyDataView)</p>
-<p>Note: This class uses Python’s <code>__orig_class__</code> mechanism to extract the type parameter at runtime. Instances must be created using the subscripted syntax <code>Dataset[MyType](url)</code> rather than calling the constructor directly with an unsubscripted class.</p>
-<section id="attributes" class="level2">
-<h2 class="anchored" data-anchor-id="attributes">Attributes</h2>
+<section id="parameters" class="level2 doc-section doc-section-parameters">
+<h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 8%">
+<col style="width: 8%">
+<col style="width: 72%">
+<col style="width: 12%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ST</td>
+<td></td>
+<td>The sample type for this dataset, must derive from <code>PackableSample</code>.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="attributes" class="level2 doc-section doc-section-attributes">
+<h2 class="doc-section doc-section-attributes anchored" data-anchor-id="attributes">Attributes</h2>
 <table class="caption-top table">
 <thead>
 <tr class="header">
 <th>Name</th>
+<th>Type</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><a href="#atdata.Dataset.batch_type">batch_type</a></td>
-<td>The type of batches produced by this dataset.</td>
-</tr>
-<tr class="even">
-<td><a href="#atdata.Dataset.metadata">metadata</a></td>
-<td>Fetch and cache metadata from metadata_url.</td>
-</tr>
-<tr class="odd">
-<td><a href="#atdata.Dataset.metadata_url">metadata_url</a></td>
-<td>Optional URL to msgpack-encoded metadata for this dataset.</td>
-</tr>
-<tr class="even">
-<td><a href="#atdata.Dataset.sample_type">sample_type</a></td>
-<td>The type of each returned sample from this dataset’s iterator.</td>
-</tr>
-<tr class="odd">
-<td><a href="#atdata.Dataset.shard_list">shard_list</a></td>
-<td>List of individual dataset shards (deprecated, use list_shards()).</td>
-</tr>
-<tr class="even">
-<td><a href="#atdata.Dataset.source">source</a></td>
-<td>The underlying data source for this dataset.</td>
+<td>url</td>
+<td></td>
+<td>WebDataset brace-notation URL for the tar file(s).</td>
 </tr>
 </tbody>
 </table>
+</section>
+<section id="example" class="level2 doc-section doc-section-example">
+<h2 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h2>
+<p>::</p>
+<pre><code>&gt;&gt;&gt; ds = Dataset[MyData]("path/to/data-{000000..000009}.tar")
+&gt;&gt;&gt; for sample in ds.ordered(batch_size=32):
+...     # sample is SampleBatch[MyData] with batch_size samples
+...     embeddings = sample.embeddings  # shape: (32, ...)
+...
+&gt;&gt;&gt; # Transform to a different view
+&gt;&gt;&gt; ds_view = ds.as_type(MyDataView)</code></pre>
+</section>
+<section id="note" class="level2 doc-section doc-section-note">
+<h2 class="doc-section doc-section-note anchored" data-anchor-id="note">Note</h2>
+<p>This class uses Python’s <code>__orig_class__</code> mechanism to extract the type parameter at runtime. Instances must be created using the subscripted syntax <code>Dataset[MyType](url)</code> rather than calling the constructor directly with an unsubscripted class.</p>
 </section>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>
@@ -509,64 +532,403 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="atdata.Dataset.as_type" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.Dataset.as_type">as_type</h3>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>Dataset.as_type(other)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>Dataset.as_type(other)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>View this dataset through a different sample type using a registered lens.</p>
-<p>Args: other: The target sample type to transform into. Must be a type derived from <code>PackableSample</code>.</p>
-<p>Returns: A new <code>Dataset</code> instance that yields samples of type <code>other</code> by applying the appropriate lens transformation from the global <code>LensNetwork</code> registry.</p>
-<p>Raises: ValueError: If no registered lens exists between the current sample type and the target type.</p>
+<section id="parameters-1" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>other</td>
+<td><a href="`typing.Type`">Type</a>[<a href="`atdata.dataset.RT`">RT</a>]</td>
+<td>The target sample type to transform into. Must be a type derived from <code>PackableSample</code>.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`atdata.dataset.Dataset`">Dataset</a>[<a href="`atdata.dataset.RT`">RT</a>]</td>
+<td>A new <code>Dataset</code> instance that yields samples of type <code>other</code></td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`atdata.dataset.Dataset`">Dataset</a>[<a href="`atdata.dataset.RT`">RT</a>]</td>
+<td>by applying the appropriate lens transformation from the global</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`atdata.dataset.Dataset`">Dataset</a>[<a href="`atdata.dataset.RT`">RT</a>]</td>
+<td><code>LensNetwork</code> registry.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>If no registered lens exists between the current sample type and the target type.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.Dataset.list_shards" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.Dataset.list_shards">list_shards</h3>
-<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>Dataset.list_shards()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>Dataset.list_shards()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Get list of individual dataset shards.</p>
-<p>Returns: A full (non-lazy) list of the individual <code>tar</code> files within the source WebDataset.</p>
+<section id="returns-1" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`list`">list</a>[<a href="`str`">str</a>]</td>
+<td>A full (non-lazy) list of the individual <code>tar</code> files within the</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`list`">list</a>[<a href="`str`">str</a>]</td>
+<td>source WebDataset.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.Dataset.ordered" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.Dataset.ordered">ordered</h3>
-<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>Dataset.ordered(batch_size<span class="op">=</span><span class="va">None</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>Dataset.ordered(batch_size<span class="op">=</span><span class="va">None</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Iterate over the dataset in order</p>
-<p>Args: batch_size (:obj:<code>int</code>, optional): The size of iterated batches. Default: None (unbatched). If <code>None</code>, iterates over one sample at a time with no batch dimension.</p>
-<p>Returns: :obj:<code>webdataset.DataPipeline</code> A data pipeline that iterates over the dataset in its original sample order</p>
+<section id="parameters-2" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-2">Parameters</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 7%">
+<col style="width: 4%">
+<col style="width: 81%">
+<col style="width: 6%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>batch_size (</td>
+<td></td>
+<td>obj:<code>int</code>, optional): The size of iterated batches. Default: None (unbatched). If <code>None</code>, iterates over one sample at a time with no batch dimension.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-2" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`typing.Iterable`">Iterable</a>[<a href="`atdata.dataset.ST`">ST</a>]</td>
+<td>obj:<code>webdataset.DataPipeline</code> A data pipeline that iterates over</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`typing.Iterable`">Iterable</a>[<a href="`atdata.dataset.ST`">ST</a>]</td>
+<td>the dataset in its original sample order</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.Dataset.shuffled" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.Dataset.shuffled">shuffled</h3>
-<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>Dataset.shuffled(buffer_shards<span class="op">=</span><span class="dv">100</span>, buffer_samples<span class="op">=</span><span class="dv">10000</span>, batch_size<span class="op">=</span><span class="va">None</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>Dataset.shuffled(buffer_shards<span class="op">=</span><span class="dv">100</span>, buffer_samples<span class="op">=</span><span class="dv">10000</span>, batch_size<span class="op">=</span><span class="va">None</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Iterate over the dataset in random order.</p>
-<p>Args: buffer_shards: Number of shards to buffer for shuffling at the shard level. Larger values increase randomness but use more memory. Default: 100. buffer_samples: Number of samples to buffer for shuffling within shards. Larger values increase randomness but use more memory. Default: 10,000. batch_size: The size of iterated batches. Default: None (unbatched). If <code>None</code>, iterates over one sample at a time with no batch dimension.</p>
-<p>Returns: A WebDataset data pipeline that iterates over the dataset in randomized order. If <code>batch_size</code> is not <code>None</code>, yields <code>SampleBatch[ST]</code> instances; otherwise yields individual <code>ST</code> samples.</p>
+<section id="parameters-3" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-3">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>buffer_shards</td>
+<td><a href="`int`">int</a></td>
+<td>Number of shards to buffer for shuffling at the shard level. Larger values increase randomness but use more memory. Default: 100.</td>
+<td><code>100</code></td>
+</tr>
+<tr class="even">
+<td>buffer_samples</td>
+<td><a href="`int`">int</a></td>
+<td>Number of samples to buffer for shuffling within shards. Larger values increase randomness but use more memory. Default: 10,000.</td>
+<td><code>10000</code></td>
+</tr>
+<tr class="odd">
+<td>batch_size</td>
+<td><a href="`int`">int</a> | None</td>
+<td>The size of iterated batches. Default: None (unbatched). If <code>None</code>, iterates over one sample at a time with no batch dimension.</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-3" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-3">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`typing.Iterable`">Iterable</a>[<a href="`atdata.dataset.ST`">ST</a>]</td>
+<td>A WebDataset data pipeline that iterates over the dataset in</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`typing.Iterable`">Iterable</a>[<a href="`atdata.dataset.ST`">ST</a>]</td>
+<td>randomized order. If <code>batch_size</code> is not <code>None</code>, yields</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`typing.Iterable`">Iterable</a>[<a href="`atdata.dataset.ST`">ST</a>]</td>
+<td><code>SampleBatch[ST]</code> instances; otherwise yields individual <code>ST</code></td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`typing.Iterable`">Iterable</a>[<a href="`atdata.dataset.ST`">ST</a>]</td>
+<td>samples.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.Dataset.to_parquet" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.Dataset.to_parquet">to_parquet</h3>
-<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>Dataset.to_parquet(path, sample_map<span class="op">=</span><span class="va">None</span>, maxcount<span class="op">=</span><span class="va">None</span>, <span class="op">**</span>kwargs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>Dataset.to_parquet(path, sample_map<span class="op">=</span><span class="va">None</span>, maxcount<span class="op">=</span><span class="va">None</span>, <span class="op">**</span>kwargs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Export dataset contents to parquet format.</p>
 <p>Converts all samples to a pandas DataFrame and saves to parquet file(s). Useful for interoperability with data analysis tools.</p>
-<p>Args: path: Output path for the parquet file. If <code>maxcount</code> is specified, files are named <code>{stem}-{segment:06d}.parquet</code>. sample_map: Optional function to convert samples to dictionaries. Defaults to <code>dataclasses.asdict</code>. maxcount: If specified, split output into multiple files with at most this many samples each. Recommended for large datasets. **kwargs: Additional arguments passed to <code>pandas.DataFrame.to_parquet()</code>. Common options include <code>compression</code>, <code>index</code>, <code>engine</code>.</p>
-<p>Warning: <strong>Memory Usage</strong>: When <code>maxcount=None</code> (default), this method loads the <strong>entire dataset into memory</strong> as a pandas DataFrame before writing. For large datasets, this can cause memory exhaustion.</p>
-<pre><code>For datasets larger than available RAM, always specify ``maxcount``::
-
-    # Safe for large datasets - processes in chunks
-    ds.to_parquet("output.parquet", maxcount=10000)
-
-This creates multiple parquet files: ``output-000000.parquet``,
-``output-000001.parquet``, etc.</code></pre>
-<p>Example: &gt;&gt;&gt; ds = Dataset<a href="&quot;data.tar&quot;">MySample</a> &gt;&gt;&gt; # Small dataset - load all at once &gt;&gt;&gt; ds.to_parquet(“output.parquet”) &gt;&gt;&gt; &gt;&gt;&gt; # Large dataset - process in chunks &gt;&gt;&gt; ds.to_parquet(“output.parquet”, maxcount=50000)</p>
+<section id="parameters-4" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-4">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>path</td>
+<td><a href="`atdata.dataset.Pathlike`">Pathlike</a></td>
+<td>Output path for the parquet file. If <code>maxcount</code> is specified, files are named <code>{stem}-{segment:06d}.parquet</code>.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>sample_map</td>
+<td><a href="`typing.Optional`">Optional</a>[<a href="`atdata.dataset.SampleExportMap`">SampleExportMap</a>]</td>
+<td>Optional function to convert samples to dictionaries. Defaults to <code>dataclasses.asdict</code>.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>maxcount</td>
+<td><a href="`typing.Optional`">Optional</a>[<a href="`int`">int</a>]</td>
+<td>If specified, split output into multiple files with at most this many samples each. Recommended for large datasets.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>**kwargs</td>
+<td></td>
+<td>Additional arguments passed to <code>pandas.DataFrame.to_parquet()</code>. Common options include <code>compression</code>, <code>index</code>, <code>engine</code>.</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="warning" class="level4 doc-section doc-section-warning">
+<h4 class="doc-section doc-section-warning anchored" data-anchor-id="warning">Warning</h4>
+<p><strong>Memory Usage</strong>: When <code>maxcount=None</code> (default), this method loads the <strong>entire dataset into memory</strong> as a pandas DataFrame before writing. For large datasets, this can cause memory exhaustion.</p>
+<p>For datasets larger than available RAM, always specify <code>maxcount</code>::</p>
+<pre><code># Safe for large datasets - processes in chunks
+ds.to_parquet("output.parquet", maxcount=10000)</code></pre>
+<p>This creates multiple parquet files: <code>output-000000.parquet</code>, <code>output-000001.parquet</code>, etc.</p>
+</section>
+<section id="example-1" class="level4 doc-section doc-section-example">
+<h4 class="doc-section doc-section-example anchored" data-anchor-id="example-1">Example</h4>
+<p>::</p>
+<pre><code>&gt;&gt;&gt; ds = Dataset[MySample]("data.tar")
+&gt;&gt;&gt; # Small dataset - load all at once
+&gt;&gt;&gt; ds.to_parquet("output.parquet")
+&gt;&gt;&gt;
+&gt;&gt;&gt; # Large dataset - process in chunks
+&gt;&gt;&gt; ds.to_parquet("output.parquet", maxcount=50000)</code></pre>
+</section>
 </section>
 <section id="atdata.Dataset.wrap" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.Dataset.wrap">wrap</h3>
-<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>Dataset.wrap(sample)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>Dataset.wrap(sample)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Wrap a raw msgpack sample into the appropriate dataset-specific type.</p>
-<p>Args: sample: A dictionary containing at minimum a <code>'msgpack'</code> key with serialized sample bytes.</p>
-<p>Returns: A deserialized sample of type <code>ST</code>, optionally transformed through a lens if <code>as_type()</code> was called.</p>
+<section id="parameters-5" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-5">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>sample</td>
+<td><a href="`atdata.dataset.WDSRawSample`">WDSRawSample</a></td>
+<td>A dictionary containing at minimum a <code>'msgpack'</code> key with serialized sample bytes.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-4" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-4">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`atdata.dataset.ST`">ST</a></td>
+<td>A deserialized sample of type <code>ST</code>, optionally transformed through</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`atdata.dataset.ST`">ST</a></td>
+<td>a lens if <code>as_type()</code> was called.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.Dataset.wrap_batch" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.Dataset.wrap_batch">wrap_batch</h3>
-<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>Dataset.wrap_batch(batch)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>Dataset.wrap_batch(batch)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Wrap a batch of raw msgpack samples into a typed SampleBatch.</p>
-<p>Args: batch: A dictionary containing a <code>'msgpack'</code> key with a list of serialized sample bytes.</p>
-<p>Returns: A <code>SampleBatch[ST]</code> containing deserialized samples, optionally transformed through a lens if <code>as_type()</code> was called.</p>
-<p>Note: This implementation deserializes samples one at a time, then aggregates them into a batch.</p>
+<section id="parameters-6" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-6">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>batch</td>
+<td><a href="`atdata.dataset.WDSRawBatch`">WDSRawBatch</a></td>
+<td>A dictionary containing a <code>'msgpack'</code> key with a list of serialized sample bytes.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-5" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-5">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`atdata.dataset.SampleBatch`">SampleBatch</a>[<a href="`atdata.dataset.ST`">ST</a>]</td>
+<td>A <code>SampleBatch[ST]</code> containing deserialized samples, optionally</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`atdata.dataset.SampleBatch`">SampleBatch</a>[<a href="`atdata.dataset.ST`">ST</a>]</td>
+<td>transformed through a lens if <code>as_type()</code> was called.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="note-1" class="level4 doc-section doc-section-note">
+<h4 class="doc-section doc-section-note anchored" data-anchor-id="note-1">Note</h4>
+<p>This implementation deserializes samples one at a time, then aggregates them into a batch.</p>
 
 
+</section>
 </section>
 </section>
 </section>

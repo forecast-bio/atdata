@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Build documentation using quartodoc and quarto.
+# Run from any directory in the project.
+
+set -e
+
+# Find script directory, then project root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+cd "$PROJECT_ROOT"
+uv run python dev/build_docs.py "$@"

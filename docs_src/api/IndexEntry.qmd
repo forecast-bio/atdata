@@ -9,11 +9,12 @@ Common interface for index entries (local or atmosphere).
 Both LocalDatasetEntry and atmosphere DatasetRecord-based entries
 should satisfy this protocol, enabling code that works with either.
 
-Properties:
-    name: Human-readable dataset name
-    schema_ref: Reference to schema (local:// path or AT URI)
-    data_urls: WebDataset URLs for the data
-    metadata: Arbitrary metadata dict, or None
+## Properties {.doc-section .doc-section-properties}
+
+name: Human-readable dataset name
+schema_ref: Reference to schema (local:// path or AT URI)
+data_urls: WebDataset URLs for the data
+metadata: Arbitrary metadata dict, or None
 
 ## Attributes
 

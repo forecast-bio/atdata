@@ -9,7 +9,10 @@ Publishes PackableSample schemas to ATProto.
 This class introspects a PackableSample class to extract its field
 definitions and publishes them as an ATProto schema record.
 
-Example:
+## Example {.doc-section .doc-section-example}
+
+::
+
     >>> @atdata.packable
     ... class MySample:
     ...     image: NDArray
@@ -45,17 +48,26 @@ atmosphere.SchemaPublisher.publish(
 
 Publish a PackableSample schema to ATProto.
 
-Args:
-    sample_type: The PackableSample class to publish.
-    name: Human-readable name. Defaults to the class name.
-    version: Semantic version string (e.g., '1.0.0').
-    description: Human-readable description.
-    metadata: Arbitrary metadata dictionary.
-    rkey: Optional explicit record key. If not provided, a TID is generated.
+#### Parameters {.doc-section .doc-section-parameters}
 
-Returns:
-    The AT URI of the created schema record.
+| Name        | Type                                                         | Description                                                        | Default    |
+|-------------|--------------------------------------------------------------|--------------------------------------------------------------------|------------|
+| sample_type | [Type](`typing.Type`)\[[ST](`atdata.atmosphere.schema.ST`)\] | The PackableSample class to publish.                               | _required_ |
+| name        | [Optional](`typing.Optional`)\[[str](`str`)\]                | Human-readable name. Defaults to the class name.                   | `None`     |
+| version     | [str](`str`)                                                 | Semantic version string (e.g., '1.0.0').                           | `'1.0.0'`  |
+| description | [Optional](`typing.Optional`)\[[str](`str`)\]                | Human-readable description.                                        | `None`     |
+| metadata    | [Optional](`typing.Optional`)\[[dict](`dict`)\]              | Arbitrary metadata dictionary.                                     | `None`     |
+| rkey        | [Optional](`typing.Optional`)\[[str](`str`)\]                | Optional explicit record key. If not provided, a TID is generated. | `None`     |
 
-Raises:
-    ValueError: If sample_type is not a dataclass or client is not authenticated.
-    TypeError: If a field type is not supported.
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                      | Description                              |
+|--------|-------------------------------------------|------------------------------------------|
+|        | [AtUri](`atdata.atmosphere._types.AtUri`) | The AT URI of the created schema record. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                                                       |
+|--------|----------------------------|-------------------------------------------------------------------|
+|        | [ValueError](`ValueError`) | If sample_type is not a dataclass or client is not authenticated. |
+|        | [TypeError](`TypeError`)   | If a field type is not supported.                                 |

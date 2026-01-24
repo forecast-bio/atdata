@@ -10,16 +10,18 @@ The schema format follows the ATProto record structure defined in
 arrays, and schema references.
 
 Example:
-    >>> schema = {
-    ...     "name": "ImageSample",
-    ...     "version": "1.0.0",
-    ...     "fields": [
-    ...         {"name": "image", "fieldType": {"$type": "...#ndarray", "dtype": "float32"}, "optional": False},
-    ...         {"name": "label", "fieldType": {"$type": "...#primitive", "primitive": "str"}, "optional": False},
-    ...     ]
-    ... }
-    >>> ImageSample = schema_to_type(schema)
-    >>> sample = ImageSample(image=np.zeros((64, 64)), label="cat")
+    ::
+
+        >>> schema = {
+        ...     "name": "ImageSample",
+        ...     "version": "1.0.0",
+        ...     "fields": [
+        ...         {"name": "image", "fieldType": {"$type": "...#ndarray", "dtype": "float32"}, "optional": False},
+        ...         {"name": "label", "fieldType": {"$type": "...#primitive", "primitive": "str"}, "optional": False},
+        ...     ]
+        ... }
+        >>> ImageSample = schema_to_type(schema)
+        >>> sample = ImageSample(image=np.zeros((64, 64)), label="cat")
 """
 
 from dataclasses import field, make_dataclass
@@ -150,11 +152,13 @@ def schema_to_type(
         ValueError: If schema is malformed or contains unsupported types.
 
     Example:
-        >>> schema = index.get_schema("local://schemas/MySample@1.0.0")
-        >>> MySample = schema_to_type(schema)
-        >>> ds = Dataset[MySample]("data.tar")
-        >>> for sample in ds.ordered():
-        ...     print(sample)
+        ::
+
+            >>> schema = index.get_schema("local://schemas/MySample@1.0.0")
+            >>> MySample = schema_to_type(schema)
+            >>> ds = Dataset[MySample]("data.tar")
+            >>> for sample in ds.ordered():
+            ...     print(sample)
     """
     # Check cache first
     if use_cache:
@@ -279,11 +283,13 @@ def generate_stub(schema: dict) -> str:
         String content for a .pyi stub file.
 
     Example:
-        >>> schema = index.get_schema("atdata://local/sampleSchema/MySample@1.0.0")
-        >>> stub_content = generate_stub(schema.to_dict())
-        >>> # Save to a stubs directory configured in your IDE
-        >>> with open("stubs/my_sample.pyi", "w") as f:
-        ...     f.write(stub_content)
+        ::
+
+            >>> schema = index.get_schema("atdata://local/sampleSchema/MySample@1.0.0")
+            >>> stub_content = generate_stub(schema.to_dict())
+            >>> # Save to a stubs directory configured in your IDE
+            >>> with open("stubs/my_sample.pyi", "w") as f:
+            ...     f.write(stub_content)
     """
     name = schema.get("name", "UnknownSample")
     version = schema.get("version", "1.0.0")
@@ -355,9 +361,11 @@ def generate_module(schema: dict) -> str:
         String content for a .py module file.
 
     Example:
-        >>> schema = index.get_schema("atdata://local/sampleSchema/MySample@1.0.0")
-        >>> module_content = generate_module(schema.to_dict())
-        >>> # The module can be imported after being saved
+        ::
+
+            >>> schema = index.get_schema("atdata://local/sampleSchema/MySample@1.0.0")
+            >>> module_content = generate_module(schema.to_dict())
+            >>> # The module can be imported after being saved
     """
     name = schema.get("name", "UnknownSample")
     version = schema.get("version", "1.0.0")

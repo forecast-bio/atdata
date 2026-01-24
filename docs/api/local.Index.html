@@ -441,44 +441,31 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Redis-backed index for tracking datasets in a repository.</p>
 <p>Implements the AbstractIndex protocol. Maintains a registry of LocalDatasetEntry objects in Redis, allowing enumeration and lookup of stored datasets.</p>
 <p>When initialized with a data_store, insert_dataset() will write dataset shards to storage before indexing. Without a data_store, insert_dataset() only indexes existing URLs.</p>
-<p>Attributes: _redis: Redis connection for index storage. _data_store: Optional AbstractDataStore for writing dataset shards.</p>
-<section id="attributes" class="level2">
-<h2 class="anchored" data-anchor-id="attributes">Attributes</h2>
+<section id="attributes" class="level2 doc-section doc-section-attributes">
+<h2 class="doc-section doc-section-attributes anchored" data-anchor-id="attributes">Attributes</h2>
 <table class="caption-top table">
+<colgroup>
+<col style="width: 16%">
+<col style="width: 10%">
+<col style="width: 72%">
+</colgroup>
 <thead>
 <tr class="header">
 <th>Name</th>
+<th>Type</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><a href="#atdata.local.Index.all_entries">all_entries</a></td>
-<td>Get all index entries as a list (deprecated, use list_entries()).</td>
+<td>_redis</td>
+<td></td>
+<td>Redis connection for index storage.</td>
 </tr>
 <tr class="even">
-<td><a href="#atdata.local.Index.data_store">data_store</a></td>
-<td>The data store for writing shards, or None if index-only.</td>
-</tr>
-<tr class="odd">
-<td><a href="#atdata.local.Index.datasets">datasets</a></td>
-<td>Lazily iterate over all dataset entries (AbstractIndex protocol).</td>
-</tr>
-<tr class="even">
-<td><a href="#atdata.local.Index.entries">entries</a></td>
-<td>Iterate over all index entries.</td>
-</tr>
-<tr class="odd">
-<td><a href="#atdata.local.Index.schemas">schemas</a></td>
-<td>Iterate over all schema records in this index.</td>
-</tr>
-<tr class="even">
-<td><a href="#atdata.local.Index.stub_dir">stub_dir</a></td>
-<td>Directory where stub files are written, or None if auto-stubs disabled.</td>
-</tr>
-<tr class="odd">
-<td><a href="#atdata.local.Index.types">types</a></td>
-<td>Namespace for accessing loaded schema types.</td>
+<td>_data_store</td>
+<td></td>
+<td>Optional AbstractDataStore for writing dataset shards.</td>
 </tr>
 </tbody>
 </table>
@@ -564,15 +551,89 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>local.Index.add_entry(ds, <span class="op">*</span>, name, schema_ref<span class="op">=</span><span class="va">None</span>, metadata<span class="op">=</span><span class="va">None</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Add a dataset to the index.</p>
 <p>Creates a LocalDatasetEntry for the dataset and persists it to Redis.</p>
-<p>Args: ds: The dataset to add to the index. name: Human-readable name for the dataset. schema_ref: Optional schema reference. If None, generates from sample type. metadata: Optional metadata dictionary. If None, uses ds._metadata if available.</p>
-<p>Returns: The created LocalDatasetEntry object.</p>
+<section id="parameters" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ds</td>
+<td><a href="`atdata.Dataset`">Dataset</a></td>
+<td>The dataset to add to the index.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>name</td>
+<td><a href="`str`">str</a></td>
+<td>Human-readable name for the dataset.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="odd">
+<td>schema_ref</td>
+<td><a href="`str`">str</a> | None</td>
+<td>Optional schema reference. If None, generates from sample type.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>metadata</td>
+<td><a href="`dict`">dict</a> | None</td>
+<td>Optional metadata dictionary. If None, uses ds._metadata if available.</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`atdata.local.LocalDatasetEntry`">LocalDatasetEntry</a></td>
+<td>The created LocalDatasetEntry object.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.local.Index.clear_stubs" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.local.Index.clear_stubs">clear_stubs</h3>
 <div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>local.Index.clear_stubs()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Remove all auto-generated stub files.</p>
 <p>Only works if auto_stubs was enabled when creating the Index.</p>
-<p>Returns: Number of stub files removed, or 0 if auto_stubs is disabled.</p>
+<section id="returns-1" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`int`">int</a></td>
+<td>Number of stub files removed, or 0 if auto_stubs is disabled.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.local.Index.decode_schema" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.local.Index.decode_schema">decode_schema</h3>
@@ -580,115 +641,844 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Reconstruct a Python PackableSample type from a stored schema.</p>
 <p>This method enables loading datasets without knowing the sample type ahead of time. The index retrieves the schema record and dynamically generates a PackableSample subclass matching the schema definition.</p>
 <p>If auto_stubs is enabled, a Python module will be generated and the class will be imported from it, providing full IDE autocomplete support. The returned class has proper type information that IDEs can understand.</p>
-<p>Args: ref: Schema reference string (atdata://local/sampleSchema/… or legacy local://schemas/…).</p>
-<p>Returns: A PackableSample subclass - either imported from a generated module (if auto_stubs is enabled) or dynamically created.</p>
-<p>Raises: KeyError: If schema not found. ValueError: If schema cannot be decoded.</p>
+<section id="parameters-1" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ref</td>
+<td><a href="`str`">str</a></td>
+<td>Schema reference string (atdata://local/sampleSchema/… or legacy local://schemas/…).</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-2" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`typing.Type`">Type</a>[<a href="`atdata._protocols.Packable`">Packable</a>]</td>
+<td>A PackableSample subclass - either imported from a generated module</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`typing.Type`">Type</a>[<a href="`atdata._protocols.Packable`">Packable</a>]</td>
+<td>(if auto_stubs is enabled) or dynamically created.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`KeyError`">KeyError</a></td>
+<td>If schema not found.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>If schema cannot be decoded.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.local.Index.decode_schema_as" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.local.Index.decode_schema_as">decode_schema_as</h3>
 <div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>local.Index.decode_schema_as(ref, type_hint)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Decode a schema with explicit type hint for IDE support.</p>
 <p>This is a typed wrapper around decode_schema() that preserves the type information for IDE autocomplete. Use this when you have a stub file for the schema and want full IDE support.</p>
-<p>Args: ref: Schema reference string. type_hint: The stub type to use for type hints. Import this from the generated stub file.</p>
-<p>Returns: The decoded type, cast to match the type_hint for IDE support.</p>
-<p>Example: &gt;&gt;&gt; # After enabling auto_stubs and configuring IDE extraPaths: &gt;&gt;&gt; from local.MySample_1_0_0 import MySample &gt;&gt;&gt; &gt;&gt;&gt; # This gives full IDE autocomplete: &gt;&gt;&gt; DecodedType = index.decode_schema_as(ref, MySample) &gt;&gt;&gt; sample = DecodedType(text=“hello”, value=42) # IDE knows signature!</p>
-<p>Note: The type_hint is only used for static type checking - at runtime, the actual decoded type from the schema is returned. Ensure the stub matches the schema to avoid runtime surprises.</p>
+<section id="parameters-2" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-2">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ref</td>
+<td><a href="`str`">str</a></td>
+<td>Schema reference string.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>type_hint</td>
+<td><a href="`type`">type</a>[<a href="`atdata.local.T`">T</a>]</td>
+<td>The stub type to use for type hints. Import this from the generated stub file.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-3" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-3">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`type`">type</a>[<a href="`atdata.local.T`">T</a>]</td>
+<td>The decoded type, cast to match the type_hint for IDE support.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="example" class="level4 doc-section doc-section-example">
+<h4 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h4>
+<p>::</p>
+<pre><code>&gt;&gt;&gt; # After enabling auto_stubs and configuring IDE extraPaths:
+&gt;&gt;&gt; from local.MySample_1_0_0 import MySample
+&gt;&gt;&gt;
+&gt;&gt;&gt; # This gives full IDE autocomplete:
+&gt;&gt;&gt; DecodedType = index.decode_schema_as(ref, MySample)
+&gt;&gt;&gt; sample = DecodedType(text="hello", value=42)  # IDE knows signature!</code></pre>
+</section>
+<section id="note" class="level4 doc-section doc-section-note">
+<h4 class="doc-section doc-section-note anchored" data-anchor-id="note">Note</h4>
+<p>The type_hint is only used for static type checking - at runtime, the actual decoded type from the schema is returned. Ensure the stub matches the schema to avoid runtime surprises.</p>
+</section>
 </section>
 <section id="atdata.local.Index.get_dataset" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.local.Index.get_dataset">get_dataset</h3>
-<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>local.Index.get_dataset(ref)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>local.Index.get_dataset(ref)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Get a dataset entry by name (AbstractIndex protocol).</p>
-<p>Args: ref: Dataset name.</p>
-<p>Returns: IndexEntry for the dataset.</p>
-<p>Raises: KeyError: If dataset not found.</p>
+<section id="parameters-3" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-3">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ref</td>
+<td><a href="`str`">str</a></td>
+<td>Dataset name.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-4" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-4">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`atdata.local.LocalDatasetEntry`">LocalDatasetEntry</a></td>
+<td>IndexEntry for the dataset.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-1" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-1">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`KeyError`">KeyError</a></td>
+<td>If dataset not found.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.local.Index.get_entry" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.local.Index.get_entry">get_entry</h3>
-<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>local.Index.get_entry(cid)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>local.Index.get_entry(cid)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Get an entry by its CID.</p>
-<p>Args: cid: Content identifier of the entry.</p>
-<p>Returns: LocalDatasetEntry for the given CID.</p>
-<p>Raises: KeyError: If entry not found.</p>
+<section id="parameters-4" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-4">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>cid</td>
+<td><a href="`str`">str</a></td>
+<td>Content identifier of the entry.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-5" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-5">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`atdata.local.LocalDatasetEntry`">LocalDatasetEntry</a></td>
+<td>LocalDatasetEntry for the given CID.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-2" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-2">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`KeyError`">KeyError</a></td>
+<td>If entry not found.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.local.Index.get_entry_by_name" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.local.Index.get_entry_by_name">get_entry_by_name</h3>
-<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>local.Index.get_entry_by_name(name)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>local.Index.get_entry_by_name(name)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Get an entry by its human-readable name.</p>
-<p>Args: name: Human-readable name of the entry.</p>
-<p>Returns: LocalDatasetEntry with the given name.</p>
-<p>Raises: KeyError: If no entry with that name exists.</p>
+<section id="parameters-5" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-5">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>name</td>
+<td><a href="`str`">str</a></td>
+<td>Human-readable name of the entry.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-6" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-6">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`atdata.local.LocalDatasetEntry`">LocalDatasetEntry</a></td>
+<td>LocalDatasetEntry with the given name.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-3" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-3">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`KeyError`">KeyError</a></td>
+<td>If no entry with that name exists.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.local.Index.get_import_path" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.local.Index.get_import_path">get_import_path</h3>
-<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>local.Index.get_import_path(ref)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>local.Index.get_import_path(ref)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Get the import path for a schema’s generated module.</p>
 <p>When auto_stubs is enabled, this returns the import path that can be used to import the schema type with full IDE support.</p>
-<p>Args: ref: Schema reference string.</p>
-<p>Returns: Import path like “local.MySample_1_0_0”, or None if auto_stubs is disabled.</p>
-<p>Example: &gt;&gt;&gt; index = LocalIndex(auto_stubs=True) &gt;&gt;&gt; ref = index.publish_schema(MySample, version=“1.0.0”) &gt;&gt;&gt; index.load_schema(ref) &gt;&gt;&gt; print(index.get_import_path(ref)) local.MySample_1_0_0 &gt;&gt;&gt; # Then in your code: &gt;&gt;&gt; # from local.MySample_1_0_0 import MySample</p>
+<section id="parameters-6" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-6">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ref</td>
+<td><a href="`str`">str</a></td>
+<td>Schema reference string.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-7" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-7">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`str`">str</a> | None</td>
+<td>Import path like “local.MySample_1_0_0”, or None if auto_stubs</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`str`">str</a> | None</td>
+<td>is disabled.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="example-1" class="level4 doc-section doc-section-example">
+<h4 class="doc-section doc-section-example anchored" data-anchor-id="example-1">Example</h4>
+<p>::</p>
+<pre><code>&gt;&gt;&gt; index = LocalIndex(auto_stubs=True)
+&gt;&gt;&gt; ref = index.publish_schema(MySample, version="1.0.0")
+&gt;&gt;&gt; index.load_schema(ref)
+&gt;&gt;&gt; print(index.get_import_path(ref))
+local.MySample_1_0_0
+&gt;&gt;&gt; # Then in your code:
+&gt;&gt;&gt; # from local.MySample_1_0_0 import MySample</code></pre>
+</section>
 </section>
 <section id="atdata.local.Index.get_schema" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.local.Index.get_schema">get_schema</h3>
-<div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>local.Index.get_schema(ref)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>local.Index.get_schema(ref)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Get a schema record by reference (AbstractIndex protocol).</p>
-<p>Args: ref: Schema reference string. Supports both new format (atdata://local/sampleSchema/{name}<span class="citation" data-cites="version">@version</span>) and legacy format (local://schemas/{module.Class}<span class="citation" data-cites="version">@version</span>).</p>
-<p>Returns: Schema record as a dictionary with keys ‘name’, ‘version’, ‘fields’, ‘$ref’, etc.</p>
-<p>Raises: KeyError: If schema not found. ValueError: If reference format is invalid.</p>
+<section id="parameters-7" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-7">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ref</td>
+<td><a href="`str`">str</a></td>
+<td>Schema reference string. Supports both new format (atdata://local/sampleSchema/{name}<span class="citation" data-cites="version">@version</span>) and legacy format (local://schemas/{module.Class}<span class="citation" data-cites="version">@version</span>).</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-8" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-8">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`dict`">dict</a></td>
+<td>Schema record as a dictionary with keys ‘name’, ‘version’,</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`dict`">dict</a></td>
+<td>‘fields’, ‘$ref’, etc.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-4" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-4">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`KeyError`">KeyError</a></td>
+<td>If schema not found.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>If reference format is invalid.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.local.Index.get_schema_record" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.local.Index.get_schema_record">get_schema_record</h3>
-<div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>local.Index.get_schema_record(ref)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>local.Index.get_schema_record(ref)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Get a schema record as LocalSchemaRecord object.</p>
 <p>Use this when you need the full LocalSchemaRecord with typed properties. For Protocol-compliant dict access, use get_schema() instead.</p>
-<p>Args: ref: Schema reference string.</p>
-<p>Returns: LocalSchemaRecord with schema details.</p>
-<p>Raises: KeyError: If schema not found. ValueError: If reference format is invalid.</p>
+<section id="parameters-8" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-8">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ref</td>
+<td><a href="`str`">str</a></td>
+<td>Schema reference string.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-9" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-9">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`atdata.local.LocalSchemaRecord`">LocalSchemaRecord</a></td>
+<td>LocalSchemaRecord with schema details.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-5" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-5">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`KeyError`">KeyError</a></td>
+<td>If schema not found.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>If reference format is invalid.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.local.Index.insert_dataset" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.local.Index.insert_dataset">insert_dataset</h3>
-<div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>local.Index.insert_dataset(ds, <span class="op">*</span>, name, schema_ref<span class="op">=</span><span class="va">None</span>, <span class="op">**</span>kwargs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>local.Index.insert_dataset(ds, <span class="op">*</span>, name, schema_ref<span class="op">=</span><span class="va">None</span>, <span class="op">**</span>kwargs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Insert a dataset into the index (AbstractIndex protocol).</p>
 <p>If a data_store was provided at initialization, writes dataset shards to storage first, then indexes the new URLs. Otherwise, indexes the dataset’s existing URL.</p>
-<p>Args: ds: The Dataset to register. name: Human-readable name for the dataset. schema_ref: Optional schema reference. **kwargs: Additional options: - metadata: Optional metadata dict - prefix: Storage prefix (default: dataset name) - cache_local: If True, cache writes locally first</p>
-<p>Returns: IndexEntry for the inserted dataset.</p>
+<section id="parameters-9" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-9">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ds</td>
+<td><a href="`atdata.Dataset`">Dataset</a></td>
+<td>The Dataset to register.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>name</td>
+<td><a href="`str`">str</a></td>
+<td>Human-readable name for the dataset.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="odd">
+<td>schema_ref</td>
+<td><a href="`str`">str</a> | None</td>
+<td>Optional schema reference.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>**kwargs</td>
+<td></td>
+<td>Additional options: - metadata: Optional metadata dict - prefix: Storage prefix (default: dataset name) - cache_local: If True, cache writes locally first</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-10" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-10">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`atdata.local.LocalDatasetEntry`">LocalDatasetEntry</a></td>
+<td>IndexEntry for the inserted dataset.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.local.Index.list_datasets" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.local.Index.list_datasets">list_datasets</h3>
-<div class="sourceCode" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>local.Index.list_datasets()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>local.Index.list_datasets()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Get all dataset entries as a materialized list (AbstractIndex protocol).</p>
-<p>Returns: List of IndexEntry for each dataset.</p>
+<section id="returns-11" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-11">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`list`">list</a>[<a href="`atdata.local.LocalDatasetEntry`">LocalDatasetEntry</a>]</td>
+<td>List of IndexEntry for each dataset.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.local.Index.list_entries" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.local.Index.list_entries">list_entries</h3>
-<div class="sourceCode" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>local.Index.list_entries()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>local.Index.list_entries()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Get all index entries as a materialized list.</p>
-<p>Returns: List of all LocalDatasetEntry objects in the index.</p>
+<section id="returns-12" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-12">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`list`">list</a>[<a href="`atdata.local.LocalDatasetEntry`">LocalDatasetEntry</a>]</td>
+<td>List of all LocalDatasetEntry objects in the index.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.local.Index.list_schemas" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.local.Index.list_schemas">list_schemas</h3>
-<div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>local.Index.list_schemas()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>local.Index.list_schemas()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Get all schema records as a materialized list (AbstractIndex protocol).</p>
-<p>Returns: List of schema records as dictionaries.</p>
+<section id="returns-13" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-13">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`list`">list</a>[<a href="`dict`">dict</a>]</td>
+<td>List of schema records as dictionaries.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.local.Index.load_schema" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.local.Index.load_schema">load_schema</h3>
-<div class="sourceCode" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>local.Index.load_schema(ref)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>local.Index.load_schema(ref)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Load a schema and make it available in the types namespace.</p>
 <p>This method decodes the schema, optionally generates a Python module for IDE support (if auto_stubs is enabled), and registers the type in the :attr:<code>types</code> namespace for easy access.</p>
-<p>Args: ref: Schema reference string (atdata://local/sampleSchema/… or legacy local://schemas/…).</p>
-<p>Returns: The decoded PackableSample subclass. Also available via <code>index.types.&lt;ClassName&gt;</code> after this call.</p>
-<p>Raises: KeyError: If schema not found. ValueError: If schema cannot be decoded.</p>
-<p>Example: &gt;&gt;&gt; # Load and use immediately &gt;&gt;&gt; MyType = index.load_schema(“atdata://local/sampleSchema/MySample@1.0.0”) &gt;&gt;&gt; sample = MyType(name=“hello”, value=42) &gt;&gt;&gt; &gt;&gt;&gt; # Or access later via namespace &gt;&gt;&gt; index.load_schema(“atdata://local/sampleSchema/OtherType@1.0.0”) &gt;&gt;&gt; other = index.types.OtherType(data=“test”)</p>
+<section id="parameters-10" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-10">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ref</td>
+<td><a href="`str`">str</a></td>
+<td>Schema reference string (atdata://local/sampleSchema/… or legacy local://schemas/…).</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-14" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-14">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`typing.Type`">Type</a>[<a href="`atdata._protocols.Packable`">Packable</a>]</td>
+<td>The decoded PackableSample subclass. Also available via</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`typing.Type`">Type</a>[<a href="`atdata._protocols.Packable`">Packable</a>]</td>
+<td><code>index.types.&lt;ClassName&gt;</code> after this call.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-6" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-6">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`KeyError`">KeyError</a></td>
+<td>If schema not found.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>If schema cannot be decoded.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="example-2" class="level4 doc-section doc-section-example">
+<h4 class="doc-section doc-section-example anchored" data-anchor-id="example-2">Example</h4>
+<p>::</p>
+<pre><code>&gt;&gt;&gt; # Load and use immediately
+&gt;&gt;&gt; MyType = index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
+&gt;&gt;&gt; sample = MyType(name="hello", value=42)
+&gt;&gt;&gt;
+&gt;&gt;&gt; # Or access later via namespace
+&gt;&gt;&gt; index.load_schema("atdata://local/sampleSchema/OtherType@1.0.0")
+&gt;&gt;&gt; other = index.types.OtherType(data="test")</code></pre>
+</section>
 </section>
 <section id="atdata.local.Index.publish_schema" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.local.Index.publish_schema">publish_schema</h3>
-<div class="sourceCode" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>local.Index.publish_schema(sample_type, <span class="op">*</span>, version<span class="op">=</span><span class="va">None</span>, description<span class="op">=</span><span class="va">None</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>local.Index.publish_schema(sample_type, <span class="op">*</span>, version<span class="op">=</span><span class="va">None</span>, description<span class="op">=</span><span class="va">None</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Publish a schema for a sample type to Redis.</p>
-<p>Args: sample_type: The PackableSample subclass to publish. version: Semantic version string (e.g., ‘1.0.0’). If None, auto-increments from the latest published version (patch bump), or starts at ‘1.0.0’ if no previous version exists. description: Optional human-readable description. If None, uses the class docstring.</p>
-<p>Returns: Schema reference string: ‘atdata://local/sampleSchema/{name}<span class="citation" data-cites="version">@version</span>’.</p>
-<p>Raises: ValueError: If sample_type is not a dataclass. TypeError: If a field type is not supported.</p>
+<section id="parameters-11" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-11">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>sample_type</td>
+<td><a href="`typing.Type`">Type</a>[<a href="`atdata._protocols.Packable`">Packable</a>]</td>
+<td>The PackableSample subclass to publish.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>version</td>
+<td><a href="`str`">str</a> | None</td>
+<td>Semantic version string (e.g., ‘1.0.0’). If None, auto-increments from the latest published version (patch bump), or starts at ‘1.0.0’ if no previous version exists.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>description</td>
+<td><a href="`str`">str</a> | None</td>
+<td>Optional human-readable description. If None, uses the class docstring.</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-15" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-15">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`str`">str</a></td>
+<td>Schema reference string: ‘atdata://local/sampleSchema/{name}<span class="citation" data-cites="version">@version</span>’.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-7" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-7">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>If sample_type is not a dataclass.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`TypeError`">TypeError</a></td>
+<td>If a field type is not supported.</td>
+</tr>
+</tbody>
+</table>
 
 
+</section>
 </section>
 </section>
 </section>

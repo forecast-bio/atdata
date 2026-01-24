@@ -396,7 +396,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#atdata.load_dataset" id="toc-atdata.load_dataset" class="nav-link active" data-scroll-target="#atdata.load_dataset">load_dataset</a></li>
+  <li><a href="#atdata.load_dataset" id="toc-atdata.load_dataset" class="nav-link active" data-scroll-target="#atdata.load_dataset">load_dataset</a>
+  <ul class="collapse">
+  <li><a href="#parameters" id="toc-parameters" class="nav-link" data-scroll-target="#parameters">Parameters</a></li>
+  <li><a href="#returns" id="toc-returns" class="nav-link" data-scroll-target="#returns">Returns</a></li>
+  <li><a href="#raises" id="toc-raises" class="nav-link" data-scroll-target="#raises">Raises</a></li>
+  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
+  </ul></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/your-org/atdata/edit/main/api/load_dataset.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -421,32 +427,137 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Load a dataset from local files, remote URLs, or an index.</p>
 <p>This function provides a HuggingFace Datasets-style interface for loading atdata typed datasets. It handles path resolution, split detection, and returns either a single Dataset or a DatasetDict depending on the split parameter.</p>
 <p>When no <code>sample_type</code> is provided, returns a <code>Dataset[DictSample]</code> that provides dynamic dict-like access to fields. Use <code>.as_type(MyType)</code> to convert to a typed schema.</p>
-<p>Args: path: Path to dataset. Can be: - Index lookup: “<span class="citation" data-cites="handle/dataset-name">@handle/dataset-name</span>” or “<span class="citation" data-cites="local/dataset-name">@local/dataset-name</span>” - WebDataset brace notation: “path/to/{train,test}-{000..099}.tar” - Local directory: “./data/” (scans for .tar files) - Glob pattern: “path/to/<em>.tar” - Remote URL: ”s3://bucket/path/data-</em>.tar” - Single file: “path/to/data.tar”</p>
-<pre><code>sample_type: The PackableSample subclass defining the schema. If None,
-    returns ``Dataset[DictSample]`` with dynamic field access. Can also
-    be resolved from an index when using @handle/dataset syntax.
+<section id="parameters" class="level2 doc-section doc-section-parameters">
+<h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>path</td>
+<td><a href="`str`">str</a></td>
+<td>Path to dataset. Can be: - Index lookup: “<span class="citation" data-cites="handle/dataset-name">@handle/dataset-name</span>” or “<span class="citation" data-cites="local/dataset-name">@local/dataset-name</span>” - WebDataset brace notation: “path/to/{train,test}-{000..099}.tar” - Local directory: “./data/” (scans for .tar files) - Glob pattern: “path/to/<em>.tar” - Remote URL: ”s3://bucket/path/data-</em>.tar” - Single file: “path/to/data.tar”</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>sample_type</td>
+<td><a href="`typing.Type`">Type</a>[<a href="`atdata._hf_api.ST`">ST</a>] | None</td>
+<td>The PackableSample subclass defining the schema. If None, returns <code>Dataset[DictSample]</code> with dynamic field access. Can also be resolved from an index when using <span class="citation" data-cites="handle/dataset">@handle/dataset</span> syntax.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>split</td>
+<td><a href="`str`">str</a> | None</td>
+<td>Which split to load. If None, returns a DatasetDict with all detected splits. If specified (e.g., “train”, “test”), returns a single Dataset for that split.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>data_files</td>
+<td><a href="`str`">str</a> | <a href="`list`">list</a>[<a href="`str`">str</a>] | <a href="`dict`">dict</a>[<a href="`str`">str</a>, <a href="`str`">str</a> | <a href="`list`">list</a>[<a href="`str`">str</a>]] | None</td>
+<td>Optional explicit mapping of data files. Can be: - str: Single file pattern - list[str]: List of file patterns (assigned to “train”) - dict[str, str | list[str]]: Explicit split -&gt; files mapping</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>streaming</td>
+<td><a href="`bool`">bool</a></td>
+<td>If True, explicitly marks the dataset for streaming mode. Note: atdata Datasets are already lazy/streaming via WebDataset pipelines, so this parameter primarily signals intent.</td>
+<td><code>False</code></td>
+</tr>
+<tr class="even">
+<td>index</td>
+<td><a href="`typing.Optional`">Optional</a>['AbstractIndex']</td>
+<td>Optional AbstractIndex for dataset lookup. Required when using <span class="citation" data-cites="handle/dataset">@handle/dataset</span> syntax. When provided with an indexed path, the schema can be auto-resolved from the index.</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level2 doc-section doc-section-returns">
+<h2 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`atdata.dataset.Dataset`">Dataset</a>[<a href="`atdata._hf_api.ST`">ST</a>] | <a href="`atdata._hf_api.DatasetDict`">DatasetDict</a>[<a href="`atdata._hf_api.ST`">ST</a>]</td>
+<td>If split is None: DatasetDict with all detected splits.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`atdata.dataset.Dataset`">Dataset</a>[<a href="`atdata._hf_api.ST`">ST</a>] | <a href="`atdata._hf_api.DatasetDict`">DatasetDict</a>[<a href="`atdata._hf_api.ST`">ST</a>]</td>
+<td>If split is specified: Dataset for that split.</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`atdata.dataset.Dataset`">Dataset</a>[<a href="`atdata._hf_api.ST`">ST</a>] | <a href="`atdata._hf_api.DatasetDict`">DatasetDict</a>[<a href="`atdata._hf_api.ST`">ST</a>]</td>
+<td>Type is <code>ST</code> if sample_type provided, otherwise <code>DictSample</code>.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises" class="level2 doc-section doc-section-raises">
+<h2 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>If the specified split is not found.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`FileNotFoundError`">FileNotFoundError</a></td>
+<td>If no data files are found at the path.</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><a href="`KeyError`">KeyError</a></td>
+<td>If dataset not found in index.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="example" class="level2 doc-section doc-section-example">
+<h2 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h2>
+<p>::</p>
+<pre><code>&gt;&gt;&gt; # Load without type - get DictSample for exploration
+&gt;&gt;&gt; ds = load_dataset("./data/train.tar", split="train")
+&gt;&gt;&gt; for sample in ds.ordered():
+...     print(sample.keys())  # Explore fields
+...     print(sample["text"]) # Dict-style access
+...     print(sample.label)   # Attribute access
+&gt;&gt;&gt;
+&gt;&gt;&gt; # Convert to typed schema
+&gt;&gt;&gt; typed_ds = ds.as_type(TextData)
+&gt;&gt;&gt;
+&gt;&gt;&gt; # Or load with explicit type directly
+&gt;&gt;&gt; train_ds = load_dataset("./data/train-*.tar", TextData, split="train")
+&gt;&gt;&gt;
+&gt;&gt;&gt; # Load from index with auto-type resolution
+&gt;&gt;&gt; index = LocalIndex()
+&gt;&gt;&gt; ds = load_dataset("@local/my-dataset", index=index, split="train")</code></pre>
 
-split: Which split to load. If None, returns a DatasetDict with all
-    detected splits. If specified (e.g., "train", "test"), returns
-    a single Dataset for that split.
 
-data_files: Optional explicit mapping of data files. Can be:
-    - str: Single file pattern
-    - list[str]: List of file patterns (assigned to "train")
-    - dict[str, str | list[str]]: Explicit split -&gt; files mapping
-
-streaming: If True, explicitly marks the dataset for streaming mode.
-    Note: atdata Datasets are already lazy/streaming via WebDataset
-    pipelines, so this parameter primarily signals intent.
-
-index: Optional AbstractIndex for dataset lookup. Required when using
-    @handle/dataset syntax. When provided with an indexed path, the
-    schema can be auto-resolved from the index.</code></pre>
-<p>Returns: If split is None: DatasetDict with all detected splits. If split is specified: Dataset for that split. Type is <code>ST</code> if sample_type provided, otherwise <code>DictSample</code>.</p>
-<p>Raises: ValueError: If the specified split is not found. FileNotFoundError: If no data files are found at the path. KeyError: If dataset not found in index.</p>
-<p>Example: &gt;&gt;&gt; # Load without type - get DictSample for exploration &gt;&gt;&gt; ds = load_dataset(“./data/train.tar”, split=“train”) &gt;&gt;&gt; for sample in ds.ordered(): … print(sample.keys()) # Explore fields … print(sample[“text”]) # Dict-style access … print(sample.label) # Attribute access &gt;&gt;&gt; &gt;&gt;&gt; # Convert to typed schema &gt;&gt;&gt; typed_ds = ds.as_type(TextData) &gt;&gt;&gt; &gt;&gt;&gt; # Or load with explicit type directly &gt;&gt;&gt; train_ds = load_dataset(“./data/train-*.tar”, TextData, split=“train”) &gt;&gt;&gt; &gt;&gt;&gt; # Load from index with auto-type resolution &gt;&gt;&gt; index = LocalIndex() &gt;&gt;&gt; ds = load_dataset(“<span class="citation" data-cites="local/my-dataset">@local/my-dataset</span>”, index=index, split=“train”)</p>
-
-
+</section>
 </section>
 
 </main> <!-- /main -->

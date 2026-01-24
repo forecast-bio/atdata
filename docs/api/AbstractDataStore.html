@@ -398,6 +398,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#atdata.AbstractDataStore" id="toc-atdata.AbstractDataStore" class="nav-link active" data-scroll-target="#atdata.AbstractDataStore">AbstractDataStore</a>
   <ul class="collapse">
+  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
   <li><a href="#atdata.AbstractDataStore.read_url" id="toc-atdata.AbstractDataStore.read_url" class="nav-link" data-scroll-target="#atdata.AbstractDataStore.read_url">read_url</a></li>
@@ -421,7 +422,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Protocol for data storage operations.</p>
 <p>This protocol abstracts over different storage backends for dataset data: - S3DataStore: S3-compatible object storage - PDSBlobStore: ATProto PDS blob storage (future)</p>
 <p>The separation of index (metadata) from data store (actual files) allows flexible deployment: local index with S3 storage, atmosphere index with S3 storage, or atmosphere index with PDS blobs.</p>
-<p>Example: &gt;&gt;&gt; store = S3DataStore(credentials, bucket=“my-bucket”) &gt;&gt;&gt; urls = store.write_shards(dataset, prefix=“training/v1”) &gt;&gt;&gt; print(urls) [‘s3://my-bucket/training/v1/shard-000000.tar’, …]</p>
+<section id="example" class="level2 doc-section doc-section-example">
+<h2 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h2>
+<p>::</p>
+<pre><code>&gt;&gt;&gt; store = S3DataStore(credentials, bucket="my-bucket")
+&gt;&gt;&gt; urls = store.write_shards(dataset, prefix="training/v1")
+&gt;&gt;&gt; print(urls)
+['s3://my-bucket/training/v1/shard-000000.tar', ...]</code></pre>
+</section>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>
 <table class="caption-top table">
@@ -448,26 +456,142 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="atdata.AbstractDataStore.read_url" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.AbstractDataStore.read_url">read_url</h3>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>AbstractDataStore.read_url(url)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>AbstractDataStore.read_url(url)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Resolve a storage URL for reading.</p>
 <p>Some storage backends may need to transform URLs (e.g., signing S3 URLs or resolving blob references). This method returns a URL that can be used directly with WebDataset.</p>
-<p>Args: url: Storage URL to resolve.</p>
-<p>Returns: WebDataset-compatible URL for reading.</p>
+<section id="parameters" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>url</td>
+<td><a href="`str`">str</a></td>
+<td>Storage URL to resolve.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`str`">str</a></td>
+<td>WebDataset-compatible URL for reading.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.AbstractDataStore.supports_streaming" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.AbstractDataStore.supports_streaming">supports_streaming</h3>
-<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>AbstractDataStore.supports_streaming()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>AbstractDataStore.supports_streaming()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Whether this store supports streaming reads.</p>
-<p>Returns: True if the store supports efficient streaming (like S3), False if data must be fully downloaded first.</p>
+<section id="returns-1" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`bool`">bool</a></td>
+<td>True if the store supports efficient streaming (like S3),</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`bool`">bool</a></td>
+<td>False if data must be fully downloaded first.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.AbstractDataStore.write_shards" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.AbstractDataStore.write_shards">write_shards</h3>
-<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>AbstractDataStore.write_shards(ds, <span class="op">*</span>, prefix, <span class="op">**</span>kwargs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>AbstractDataStore.write_shards(ds, <span class="op">*</span>, prefix, <span class="op">**</span>kwargs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Write dataset shards to storage.</p>
-<p>Args: ds: The Dataset to write. prefix: Path prefix for the shards (e.g., ‘datasets/mnist/v1’). **kwargs: Backend-specific options (e.g., maxcount for shard size).</p>
-<p>Returns: List of URLs for the written shards, suitable for use with WebDataset or atdata.Dataset().</p>
+<section id="parameters-1" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ds</td>
+<td><a href="`atdata.dataset.Dataset`">Dataset</a></td>
+<td>The Dataset to write.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>prefix</td>
+<td><a href="`str`">str</a></td>
+<td>Path prefix for the shards (e.g., ‘datasets/mnist/v1’).</td>
+<td><em>required</em></td>
+</tr>
+<tr class="odd">
+<td>**kwargs</td>
+<td></td>
+<td>Backend-specific options (e.g., maxcount for shard size).</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-2" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`list`">list</a>[<a href="`str`">str</a>]</td>
+<td>List of URLs for the written shards, suitable for use with</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`list`">list</a>[<a href="`str`">str</a>]</td>
+<td>WebDataset or atdata.Dataset().</td>
+</tr>
+</tbody>
+</table>
 
 
+</section>
 </section>
 </section>
 </section>

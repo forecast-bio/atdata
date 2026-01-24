@@ -398,6 +398,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#atdata.lens" id="toc-atdata.lens" class="nav-link active" data-scroll-target="#atdata.lens">lens</a>
   <ul class="collapse">
+  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
   <li><a href="#classes" id="toc-classes" class="nav-link" data-scroll-target="#classes">Classes</a>
   <ul class="collapse">
   <li><a href="#atdata.lens.Lens" id="toc-atdata.lens.Lens" class="nav-link" data-scroll-target="#atdata.lens.Lens">Lens</a></li>
@@ -430,7 +431,31 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>@lens</code>: Decorator to create and register lens transformations</li>
 </ul>
 <p>Lenses support the functional programming concept of composable, well-behaved transformations that satisfy lens laws (GetPut and PutGet).</p>
-<p>Example: &gt;&gt;&gt; <span class="citation" data-cites="packable">@packable</span> … class FullData: … name: str … age: int … embedding: NDArray … &gt;&gt;&gt; <span class="citation" data-cites="packable">@packable</span> … class NameOnly: … name: str … &gt;&gt;&gt; <span class="citation" data-cites="lens">@lens</span> … def name_view(full: FullData) -&gt; NameOnly: … return NameOnly(name=full.name) … &gt;&gt;&gt; <span class="citation" data-cites="name_view.putter">@name_view.putter</span> … def name_view_put(view: NameOnly, source: FullData) -&gt; FullData: … return FullData(name=view.name, age=source.age, … embedding=source.embedding) … &gt;&gt;&gt; ds = Dataset<a href="&quot;data.tar&quot;">FullData</a> &gt;&gt;&gt; ds_names = ds.as_type(NameOnly) # Uses registered lens</p>
+<section id="example" class="level2 doc-section doc-section-example">
+<h2 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h2>
+<p>::</p>
+<pre><code>&gt;&gt;&gt; @packable
+... class FullData:
+...     name: str
+...     age: int
+...     embedding: NDArray
+...
+&gt;&gt;&gt; @packable
+... class NameOnly:
+...     name: str
+...
+&gt;&gt;&gt; @lens
+... def name_view(full: FullData) -&gt; NameOnly:
+...     return NameOnly(name=full.name)
+...
+&gt;&gt;&gt; @name_view.putter
+... def name_view_put(view: NameOnly, source: FullData) -&gt; FullData:
+...     return FullData(name=view.name, age=source.age,
+...                     embedding=source.embedding)
+...
+&gt;&gt;&gt; ds = Dataset[FullData]("data.tar")
+&gt;&gt;&gt; ds_names = ds.as_type(NameOnly)  # Uses registered lens</code></pre>
+</section>
 <section id="classes" class="level2">
 <h2 class="anchored" data-anchor-id="classes">Classes</h2>
 <table class="caption-top table">
@@ -453,11 +478,53 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="atdata.lens.Lens" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.lens.Lens">Lens</h3>
-<div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>lens.Lens(get, put<span class="op">=</span><span class="va">None</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>lens.Lens(get, put<span class="op">=</span><span class="va">None</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>A bidirectional transformation between two sample types.</p>
 <p>A lens provides a way to view and update data of type <code>S</code> (source) as if it were type <code>V</code> (view). It consists of a getter that transforms <code>S -&gt; V</code> and an optional putter that transforms <code>(V, S) -&gt; S</code>, enabling updates to the view to be reflected back in the source.</p>
-<p>Type Parameters: S: The source type, must derive from <code>PackableSample</code>. V: The view type, must derive from <code>PackableSample</code>.</p>
-<p>Example: &gt;&gt;&gt; <span class="citation" data-cites="lens">@lens</span> … def name_lens(full: FullData) -&gt; NameOnly: … return NameOnly(name=full.name) … &gt;&gt;&gt; <span class="citation" data-cites="name_lens.putter">@name_lens.putter</span> … def name_lens_put(view: NameOnly, source: FullData) -&gt; FullData: … return FullData(name=view.name, age=source.age)</p>
+<section id="parameters" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 9%">
+<col style="width: 9%">
+<col style="width: 66%">
+<col style="width: 14%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>S</td>
+<td></td>
+<td>The source type, must derive from <code>PackableSample</code>.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>V</td>
+<td></td>
+<td>The view type, must derive from <code>PackableSample</code>.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="example-1" class="level4 doc-section doc-section-example">
+<h4 class="doc-section doc-section-example anchored" data-anchor-id="example-1">Example</h4>
+<p>::</p>
+<pre><code>&gt;&gt;&gt; @lens
+... def name_lens(full: FullData) -&gt; NameOnly:
+...     return NameOnly(name=full.name)
+...
+&gt;&gt;&gt; @name_lens.putter
+... def name_lens_put(view: NameOnly, source: FullData) -&gt; FullData:
+...     return FullData(name=view.name, age=source.age)</code></pre>
+</section>
 <section id="methods" class="level4">
 <h4 class="anchored" data-anchor-id="methods">Methods</h4>
 <table class="caption-top table">
@@ -484,34 +551,183 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="atdata.lens.Lens.get" class="level5">
 <h5 class="anchored" data-anchor-id="atdata.lens.Lens.get">get</h5>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>lens.Lens.get(s)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>lens.Lens.get(s)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Transform the source into the view type.</p>
-<p>Args: s: The source sample of type <code>S</code>.</p>
-<p>Returns: A view of the source as type <code>V</code>.</p>
+<section id="parameters-1" class="level6 doc-section doc-section-parameters">
+<h6 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h6>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>s</td>
+<td><a href="`atdata.lens.S`">S</a></td>
+<td>The source sample of type <code>S</code>.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns" class="level6 doc-section doc-section-returns">
+<h6 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h6>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`atdata.lens.V`">V</a></td>
+<td>A view of the source as type <code>V</code>.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.lens.Lens.put" class="level5">
 <h5 class="anchored" data-anchor-id="atdata.lens.Lens.put">put</h5>
-<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>lens.Lens.put(v, s)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>lens.Lens.put(v, s)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Update the source based on a modified view.</p>
-<p>Args: v: The modified view of type <code>V</code>. s: The original source of type <code>S</code>.</p>
-<p>Returns: An updated source of type <code>S</code> that reflects changes from the view.</p>
+<section id="parameters-2" class="level6 doc-section doc-section-parameters">
+<h6 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-2">Parameters</h6>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>v</td>
+<td><a href="`atdata.lens.V`">V</a></td>
+<td>The modified view of type <code>V</code>.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>s</td>
+<td><a href="`atdata.lens.S`">S</a></td>
+<td>The original source of type <code>S</code>.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-1" class="level6 doc-section doc-section-returns">
+<h6 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h6>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`atdata.lens.S`">S</a></td>
+<td>An updated source of type <code>S</code> that reflects changes from the view.</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="atdata.lens.Lens.putter" class="level5">
 <h5 class="anchored" data-anchor-id="atdata.lens.Lens.putter">putter</h5>
-<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>lens.Lens.putter(put)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>lens.Lens.putter(put)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Decorator to register a putter function for this lens.</p>
-<p>Args: put: A function that takes a view of type <code>V</code> and source of type <code>S</code>, and returns an updated source of type <code>S</code>.</p>
-<p>Returns: The putter function, allowing this to be used as a decorator.</p>
-<p>Example: &gt;&gt;&gt; <span class="citation" data-cites="my_lens.putter">@my_lens.putter</span> … def my_lens_put(view: ViewType, source: SourceType) -&gt; SourceType: … return SourceType(…)</p>
+<section id="parameters-3" class="level6 doc-section doc-section-parameters">
+<h6 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-3">Parameters</h6>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>put</td>
+<td><a href="`atdata.lens.LensPutter`">LensPutter</a>[<a href="`atdata.lens.S`">S</a>, <a href="`atdata.lens.V`">V</a>]</td>
+<td>A function that takes a view of type <code>V</code> and source of type <code>S</code>, and returns an updated source of type <code>S</code>.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-2" class="level6 doc-section doc-section-returns">
+<h6 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h6>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`atdata.lens.LensPutter`">LensPutter</a>[<a href="`atdata.lens.S`">S</a>, <a href="`atdata.lens.V`">V</a>]</td>
+<td>The putter function, allowing this to be used as a decorator.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="example-2" class="level6 doc-section doc-section-example">
+<h6 class="doc-section doc-section-example anchored" data-anchor-id="example-2">Example</h6>
+<p>::</p>
+<pre><code>&gt;&gt;&gt; @my_lens.putter
+... def my_lens_put(view: ViewType, source: SourceType) -&gt; SourceType:
+...     return SourceType(...)</code></pre>
+</section>
 </section>
 </section>
 </section>
 <section id="atdata.lens.LensNetwork" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.lens.LensNetwork">LensNetwork</h3>
-<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>lens.LensNetwork()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>lens.LensNetwork()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Global registry for lens transformations between sample types.</p>
 <p>This class implements a singleton pattern to maintain a global registry of all lenses decorated with <code>@lens</code>. It enables looking up transformations between different <code>PackableSample</code> types.</p>
-<p>Attributes: _instance: The singleton instance of this class. _registry: Dictionary mapping <code>(source_type, view_type)</code> tuples to their corresponding <code>Lens</code> objects.</p>
+<section id="attributes" class="level4 doc-section doc-section-attributes">
+<h4 class="doc-section doc-section-attributes anchored" data-anchor-id="attributes">Attributes</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>_instance</td>
+<td></td>
+<td>The singleton instance of this class.</td>
+</tr>
+<tr class="even">
+<td>_registry</td>
+<td><a href="`typing.Dict`">Dict</a>[<a href="`atdata.lens.LensSignature`">LensSignature</a>, <a href="`atdata.lens.Lens`">Lens</a>]</td>
+<td>Dictionary mapping <code>(source_type, view_type)</code> tuples to their corresponding <code>Lens</code> objects.</td>
+</tr>
+</tbody>
+</table>
+</section>
 <section id="methods-1" class="level4">
 <h4 class="anchored" data-anchor-id="methods-1">Methods</h4>
 <table class="caption-top table">
@@ -534,19 +750,107 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="atdata.lens.LensNetwork.register" class="level5">
 <h5 class="anchored" data-anchor-id="atdata.lens.LensNetwork.register">register</h5>
-<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>lens.LensNetwork.register(_lens)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>lens.LensNetwork.register(_lens)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Register a lens as the canonical transformation between two types.</p>
-<p>Args: _lens: The lens to register. Will be stored in the registry under the key <code>(_lens.source_type, _lens.view_type)</code>.</p>
-<p>Note: If a lens already exists for the same type pair, it will be overwritten.</p>
+<section id="parameters-4" class="level6 doc-section doc-section-parameters">
+<h6 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-4">Parameters</h6>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>_lens</td>
+<td><a href="`atdata.lens.Lens`">Lens</a></td>
+<td>The lens to register. Will be stored in the registry under the key <code>(_lens.source_type, _lens.view_type)</code>.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="note" class="level6 doc-section doc-section-note">
+<h6 class="doc-section doc-section-note anchored" data-anchor-id="note">Note</h6>
+<p>If a lens already exists for the same type pair, it will be overwritten.</p>
+</section>
 </section>
 <section id="atdata.lens.LensNetwork.transform" class="level5">
 <h5 class="anchored" data-anchor-id="atdata.lens.LensNetwork.transform">transform</h5>
-<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>lens.LensNetwork.transform(source, view)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>lens.LensNetwork.transform(source, view)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Look up the lens transformation between two sample types.</p>
-<p>Args: source: The source sample type (must derive from <code>PackableSample</code>). view: The target view type (must derive from <code>PackableSample</code>).</p>
-<p>Returns: The registered <code>Lens</code> that transforms from <code>source</code> to <code>view</code>.</p>
-<p>Raises: ValueError: If no lens has been registered for the given type pair.</p>
-<p>Note: Currently only supports direct transformations. Compositional transformations (chaining multiple lenses) are not yet implemented.</p>
+<section id="parameters-5" class="level6 doc-section doc-section-parameters">
+<h6 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-5">Parameters</h6>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>source</td>
+<td><a href="`atdata.lens.DatasetType`">DatasetType</a></td>
+<td>The source sample type (must derive from <code>PackableSample</code>).</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>view</td>
+<td><a href="`atdata.lens.DatasetType`">DatasetType</a></td>
+<td>The target view type (must derive from <code>PackableSample</code>).</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-3" class="level6 doc-section doc-section-returns">
+<h6 class="doc-section doc-section-returns anchored" data-anchor-id="returns-3">Returns</h6>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`atdata.lens.Lens`">Lens</a></td>
+<td>The registered <code>Lens</code> that transforms from <code>source</code> to <code>view</code>.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises" class="level6 doc-section doc-section-raises">
+<h6 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h6>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>If no lens has been registered for the given type pair.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="note-1" class="level6 doc-section doc-section-note">
+<h6 class="doc-section doc-section-note anchored" data-anchor-id="note-1">Note</h6>
+<p>Currently only supports direct transformations. Compositional transformations (chaining multiple lenses) are not yet implemented.</p>
+</section>
 </section>
 </section>
 </section>
@@ -569,14 +873,67 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <section id="atdata.lens.lens" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.lens.lens">lens</h3>
-<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>lens.lens(f)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>lens.lens(f)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Decorator to create and register a lens transformation.</p>
 <p>This decorator converts a getter function into a <code>Lens</code> object and automatically registers it in the global <code>LensNetwork</code> registry.</p>
-<p>Args: f: A getter function that transforms from source type <code>S</code> to view type <code>V</code>. Must have exactly one parameter with a type annotation.</p>
-<p>Returns: A <code>Lens[S, V]</code> object that can be called to apply the transformation or decorated with <code>@lens_name.putter</code> to add a putter function.</p>
-<p>Example: &gt;&gt;&gt; <span class="citation" data-cites="lens">@lens</span> … def extract_name(full: FullData) -&gt; NameOnly: … return NameOnly(name=full.name) … &gt;&gt;&gt; <span class="citation" data-cites="extract_name.putter">@extract_name.putter</span> … def extract_name_put(view: NameOnly, source: FullData) -&gt; FullData: … return FullData(name=view.name, age=source.age)</p>
+<section id="parameters-6" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-6">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>f</td>
+<td><a href="`atdata.lens.LensGetter`">LensGetter</a>[<a href="`atdata.lens.S`">S</a>, <a href="`atdata.lens.V`">V</a>]</td>
+<td>A getter function that transforms from source type <code>S</code> to view type <code>V</code>. Must have exactly one parameter with a type annotation.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-4" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-4">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`atdata.lens.Lens`">Lens</a>[<a href="`atdata.lens.S`">S</a>, <a href="`atdata.lens.V`">V</a>]</td>
+<td>A <code>Lens[S, V]</code> object that can be called to apply the transformation</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`atdata.lens.Lens`">Lens</a>[<a href="`atdata.lens.S`">S</a>, <a href="`atdata.lens.V`">V</a>]</td>
+<td>or decorated with <code>@lens_name.putter</code> to add a putter function.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="example-3" class="level4 doc-section doc-section-example">
+<h4 class="doc-section doc-section-example anchored" data-anchor-id="example-3">Example</h4>
+<p>::</p>
+<pre><code>&gt;&gt;&gt; @lens
+... def extract_name(full: FullData) -&gt; NameOnly:
+...     return NameOnly(name=full.name)
+...
+&gt;&gt;&gt; @extract_name.putter
+... def extract_name_put(view: NameOnly, source: FullData) -&gt; FullData:
+...     return FullData(name=view.name, age=source.age)</code></pre>
 
 
+</section>
 </section>
 </section>
 </section>

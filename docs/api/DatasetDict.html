@@ -398,6 +398,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#atdata.DatasetDict" id="toc-atdata.DatasetDict" class="nav-link active" data-scroll-target="#atdata.DatasetDict">DatasetDict</a>
   <ul class="collapse">
+  <li><a href="#parameters" id="toc-parameters" class="nav-link" data-scroll-target="#parameters">Parameters</a></li>
+  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
   <li><a href="#attributes" id="toc-attributes" class="nav-link" data-scroll-target="#attributes">Attributes</a></li>
   </ul></li>
   </ul>
@@ -415,8 +417,44 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>DatasetDict(splits<span class="op">=</span><span class="va">None</span>, sample_type<span class="op">=</span><span class="va">None</span>, streaming<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>A dictionary of split names to Dataset instances.</p>
 <p>Similar to HuggingFace’s DatasetDict, this provides a container for multiple dataset splits (train, test, validation, etc.) with convenience methods that operate across all splits.</p>
-<p>Type Parameters: ST: The sample type for all datasets in this dict.</p>
-<p>Example: &gt;&gt;&gt; ds_dict = load_dataset(“path/to/data”, MyData) &gt;&gt;&gt; train = ds_dict[“train”] &gt;&gt;&gt; test = ds_dict[“test”] &gt;&gt;&gt; &gt;&gt;&gt; # Iterate over all splits &gt;&gt;&gt; for split_name, dataset in ds_dict.items(): … print(f”{split_name}: {len(dataset.shard_list)} shards”)</p>
+<section id="parameters" class="level2 doc-section doc-section-parameters">
+<h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 10%">
+<col style="width: 10%">
+<col style="width: 63%">
+<col style="width: 15%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ST</td>
+<td></td>
+<td>The sample type for all datasets in this dict.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="example" class="level2 doc-section doc-section-example">
+<h2 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h2>
+<p>::</p>
+<pre><code>&gt;&gt;&gt; ds_dict = load_dataset("path/to/data", MyData)
+&gt;&gt;&gt; train = ds_dict["train"]
+&gt;&gt;&gt; test = ds_dict["test"]
+&gt;&gt;&gt;
+&gt;&gt;&gt; # Iterate over all splits
+&gt;&gt;&gt; for split_name, dataset in ds_dict.items():
+...     print(f"{split_name}: {len(dataset.shard_list)} shards")</code></pre>
+</section>
 <section id="attributes" class="level2">
 <h2 class="anchored" data-anchor-id="attributes">Attributes</h2>
 <table class="caption-top table">
