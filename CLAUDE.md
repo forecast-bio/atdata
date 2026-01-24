@@ -41,6 +41,17 @@ uv run pytest tests/test_lens.py::test_lens
 uv build
 ```
 
+### Development Scripts (justfile)
+
+Development tasks are managed with [just](https://github.com/casey/just), a command runner. Available commands:
+
+```bash
+# Build documentation (runs quartodoc + quarto)
+just docs
+```
+
+The `justfile` is in the project root. Add new dev tasks there rather than creating shell scripts.
+
 ### Running Python
 ```bash
 # Always use uv run for Python commands to use the correct virtual environment

@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Document justfile in CLAUDE.md (#372)
 - Make docs script work from any directory (#371)
 - Add uv script shortcut 'docs' for documentation build (#370)
 - Update docstrings in local.py (#367)
