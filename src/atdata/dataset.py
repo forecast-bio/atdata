@@ -56,6 +56,7 @@ from typing import (
     Any,
     Optional,
     Dict,
+    Iterator,
     Sequence,
     Iterable,
     Callable,
@@ -465,6 +466,7 @@ class SampleBatch( Generic[DT] ):
         """
         if self._sample_type_cache is None:
             self._sample_type_cache = typing.get_args( self.__orig_class__)[0]
+            assert self._sample_type_cache is not None
         return self._sample_type_cache
 
     def __getattr__( self, name ):
@@ -500,7 +502,7 @@ ST = TypeVar( 'ST', bound = PackableSample )
 RT = TypeVar( 'RT', bound = PackableSample )
 
 
-class _ShardListStage(wds.PipelineStage):
+class _ShardListStage(wds.utils.PipelineStage):
     """Pipeline stage that yields {url: shard_id} dicts from a DataSource.
 
     This is analogous to SimpleShardList but works with any DataSource.
@@ -516,7 +518,7 @@ class _ShardListStage(wds.PipelineStage):
             yield {"url": shard_id}
 
 
-class _StreamOpenerStage(wds.PipelineStage):
+class _StreamOpenerStage(wds.utils.PipelineStage):
     """Pipeline stage that opens streams from a DataSource.
 
     Takes {url: shard_id} dicts and adds a stream using source.open_shard().
@@ -582,6 +584,7 @@ class Dataset( Generic[ST] ):
         """
         if self._sample_type_cache is None:
             self._sample_type_cache = typing.get_args( self.__orig_class__ )[0]
+            assert self._sample_type_cache is not None
         return self._sample_type_cache
     @property
     def batch_type( self ) -> Type:
@@ -666,7 +669,22 @@ class Dataset( Generic[ST] ):
         ret._output_lens = lenses.transform( self.sample_type, ret.sample_type )
         return ret
 
-    def list_shards( self ) -> list[str]:
+    @property
+    def shards(self) -> Iterator[str]:
+        """Lazily iterate over shard identifiers.
+
+        Yields:
+            Shard identifiers (e.g., 'train-000000.tar', 'train-000001.tar').
+
+        Example:
+            ::
+
+                >>> for shard in ds.shards:
+                ...     print(f"Processing {shard}")
+        """
+        return iter(self._source.list_shards())
+
+    def list_shards(self) -> list[str]:
         """Get list of individual dataset shards.
 
         Returns:
@@ -677,8 +695,18 @@ class Dataset( Generic[ST] ):
 
     # Legacy alias for backwards compatibility
     @property
-    def shard_list( self ) -> list[str]:
-        """List of individual dataset shards (deprecated, use list_shards())."""
+    def shard_list(self) -> list[str]:
+        """List of individual dataset shards (deprecated, use list_shards()).
+
+        .. deprecated::
+            Use :meth:`list_shards` instead.
+        """
+        import warnings
+        warnings.warn(
+            "shard_list is deprecated, use list_shards() instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self.list_shards()
 
     @property

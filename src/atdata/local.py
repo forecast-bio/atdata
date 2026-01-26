@@ -1342,7 +1342,7 @@ class Index:
 
     def publish_schema(
         self,
-        sample_type: Type[Packable],
+        sample_type: type,
         *,
         version: str | None = None,
         description: str | None = None,
@@ -1350,7 +1350,7 @@ class Index:
         """Publish a schema for a sample type to Redis.
 
         Args:
-            sample_type: The PackableSample subclass to publish.
+            sample_type: A Packable type (@packable-decorated or PackableSample subclass).
             version: Semantic version string (e.g., '1.0.0'). If None,
                 auto-increments from the latest published version (patch bump),
                 or starts at '1.0.0' if no previous version exists.
@@ -1362,8 +1362,26 @@ class Index:
 
         Raises:
             ValueError: If sample_type is not a dataclass.
-            TypeError: If a field type is not supported.
+            TypeError: If sample_type doesn't satisfy the Packable protocol,
+                or if a field type is not supported.
         """
+        # Validate that sample_type satisfies Packable protocol at runtime
+        # This catches non-packable types early with a clear error message
+        try:
+            # Check protocol compliance by verifying required methods exist
+            if not (hasattr(sample_type, 'from_data') and
+                    hasattr(sample_type, 'from_bytes') and
+                    callable(getattr(sample_type, 'from_data', None)) and
+                    callable(getattr(sample_type, 'from_bytes', None))):
+                raise TypeError(
+                    f"{sample_type.__name__} does not satisfy the Packable protocol. "
+                    "Use @packable decorator or inherit from PackableSample."
+                )
+        except AttributeError:
+            raise TypeError(
+                f"sample_type must be a class, got {type(sample_type).__name__}"
+            )
+
         # Auto-increment version if not specified
         if version is None:
             latest = self._get_latest_schema_version(sample_type.__name__)

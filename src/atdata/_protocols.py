@@ -186,9 +186,23 @@ class AbstractIndex(Protocol):
             ...         print(f"{entry.name} -> {entry.schema_ref}")
     """
 
-    # Optional data store (not required by protocol, but supported by some implementations)
-    # Use hasattr() to check if available: if hasattr(index, 'data_store') and index.data_store
-    data_store: Optional["AbstractDataStore"]
+    @property
+    def data_store(self) -> Optional["AbstractDataStore"]:
+        """Optional data store for reading/writing shards.
+
+        If present, ``load_dataset`` will use it for credential resolution
+        (e.g., S3 credentials from S3DataStore).
+
+        Returns:
+            AbstractDataStore instance, or None if this index doesn't have
+            an associated data store.
+
+        Note:
+            Not all index implementations provide a data_store. Use
+            ``hasattr(index, 'data_store') and index.data_store is not None``
+            for safe access.
+        """
+        ...
 
     # Dataset operations
 
@@ -252,15 +266,20 @@ class AbstractIndex(Protocol):
 
     def publish_schema(
         self,
-        sample_type: Type[Packable],
+        sample_type: type,
         *,
         version: str = "1.0.0",
         **kwargs,
     ) -> str:
         """Publish a schema for a sample type.
 
+        The sample_type is accepted as ``type`` rather than ``Type[Packable]`` to
+        support ``@packable``-decorated classes, which satisfy the Packable protocol
+        at runtime but cannot be statically verified by type checkers.
+
         Args:
             sample_type: A Packable type (PackableSample subclass or @packable-decorated).
+                Validated at runtime via the @runtime_checkable Packable protocol.
             version: Semantic version string for the schema.
             **kwargs: Additional backend-specific options.
 

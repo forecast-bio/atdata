@@ -25,6 +25,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Investigate Redis index entry expiration/reset issue (#376)
+- Audit codebase for xs/@property vs list_xs() convention (#377)
+- Evaluate PackableSample → Packable protocol migration (#375)
+- Fix load_dataset overload type hints for AbstractIndex (#379)
+- Fix load_dataset to use source-appropriate credentials (#378)
+- Review and plan human-review.md feedback items (#374)
 - Create v0.3 roadmap synthesis document (#373)
 - Document justfile in CLAUDE.md (#372)
 - Make docs script work from any directory (#371)

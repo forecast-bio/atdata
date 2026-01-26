@@ -142,6 +142,23 @@ Datasets use WebDataset brace-notation URLs:
 - Single shard: `path/to/file-000000.tar`
 - Multiple shards: `path/to/file-{000000..000009}.tar`
 
+### Naming Conventions
+
+**Property vs Method Pattern for Collections**
+
+When exposing collections of items, follow this convention:
+
+- `foo.xs` - `@property` returning `Iterator[X]` (lazy iteration)
+- `foo.list_xs()` - method returning `list[X]` (eager, fully evaluated)
+
+Examples:
+- `index.datasets` / `index.list_datasets()`
+- `index.schemas` / `index.list_schemas()`
+- `dataset.shards` / `dataset.list_shards()`
+
+The lazy property enables memory-efficient iteration over large collections,
+while the method provides a concrete list when needed.
+
 ### Important Implementation Details
 
 **Type Parameters**

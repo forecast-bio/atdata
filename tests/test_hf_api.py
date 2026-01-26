@@ -835,3 +835,41 @@ class TestLoadDatasetWithIndex:
 
         # URL should be unchanged
         assert ds.url == "s3://bucket/data.tar"
+
+    def test_indexed_path_creates_s3source_with_credentials(self):
+        """load_dataset creates S3Source with credentials when S3DataStore is available."""
+        from atdata.local import S3DataStore
+        from atdata._sources import S3Source
+
+        # Create a real S3DataStore with mock credentials
+        mock_credentials = {
+            "AWS_ACCESS_KEY_ID": "test-access-key",
+            "AWS_SECRET_ACCESS_KEY": "test-secret-key",
+            "AWS_ENDPOINT": "https://r2.example.com",
+        }
+
+        # Mock the S3DataStore
+        mock_store = Mock(spec=S3DataStore)
+        mock_store.credentials = mock_credentials
+
+        mock_index = Mock()
+        mock_index.data_store = mock_store
+        mock_entry = Mock()
+        mock_entry.data_urls = ["s3://my-bucket/train-000.tar", "s3://my-bucket/train-001.tar"]
+        mock_entry.schema_ref = "local://schemas/test@1.0.0"
+        mock_index.get_dataset.return_value = mock_entry
+
+        ds = load_dataset(
+            "@local/my-dataset",
+            SimpleTestSample,
+            index=mock_index,
+            split="train",
+        )
+
+        # Verify the dataset source is an S3Source with credentials
+        assert isinstance(ds.source, S3Source)
+        assert ds.source.bucket == "my-bucket"
+        assert ds.source.keys == ["train-000.tar", "train-001.tar"]
+        assert ds.source.endpoint == "https://r2.example.com"
+        assert ds.source.access_key == "test-access-key"
+        assert ds.source.secret_key == "test-secret-key"

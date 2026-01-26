@@ -43,9 +43,12 @@ from typing import (
 )
 
 from .dataset import Dataset, PackableSample, DictSample
+from ._sources import URLSource, S3Source
+from ._protocols import DataSource
 
 if TYPE_CHECKING:
     from ._protocols import AbstractIndex
+    from .local import S3DataStore
 
 ##
 # Type variables
@@ -133,7 +136,7 @@ class DatasetDict(Generic[ST], dict):
             This property accesses the shard list, which may trigger
             shard enumeration for remote datasets.
         """
-        return {name: len(ds.shard_list) for name, ds in self.items()}
+        return {name: len(ds.list_shards()) for name, ds in self.items()}
 
 
 ##
@@ -443,15 +446,16 @@ def _parse_indexed_path(path: str) -> tuple[str, str]:
 def _resolve_indexed_path(
     path: str,
     index: "AbstractIndex",
-) -> tuple[list[str], str]:
-    """Resolve @handle/dataset path to URLs and schema_ref via index lookup.
+) -> tuple[DataSource, str]:
+    """Resolve @handle/dataset path to DataSource and schema_ref via index lookup.
 
     Args:
         path: Path in @handle/dataset format.
         index: Index to use for lookup.
 
     Returns:
-        Tuple of (data_urls, schema_ref).
+        Tuple of (DataSource, schema_ref). The DataSource is configured with
+        appropriate credentials when the index has an S3DataStore.
 
     Raises:
         KeyError: If dataset not found in index.
@@ -461,16 +465,36 @@ def _resolve_indexed_path(
     # For AtmosphereIndex, we need to resolve handle to DID first
     # For LocalIndex, the handle is ignored and we just look up by name
     entry = index.get_dataset(dataset_name)
-
     data_urls = entry.data_urls
 
-    # Transform URLs through data store if available.
-    # This handles S3-compatible endpoints (like Cloudflare R2, MinIO) that need
-    # URL transformation from s3:// to https:// for WebDataset streaming.
+    # Check if index has a data store
     if hasattr(index, 'data_store') and index.data_store is not None:
-        data_urls = [index.data_store.read_url(url) for url in data_urls]
+        store = index.data_store
 
-    return data_urls, entry.schema_ref
+        # Import here to avoid circular imports at module level
+        from .local import S3DataStore
+
+        # For S3DataStore with S3 URLs, create S3Source with credentials
+        if isinstance(store, S3DataStore):
+            if data_urls and all(url.startswith("s3://") for url in data_urls):
+                source = S3Source.from_urls(
+                    data_urls,
+                    endpoint=store.credentials.get("AWS_ENDPOINT"),
+                    access_key=store.credentials.get("AWS_ACCESS_KEY_ID"),
+                    secret_key=store.credentials.get("AWS_SECRET_ACCESS_KEY"),
+                    region=store.credentials.get("AWS_REGION"),
+                )
+                return source, entry.schema_ref
+
+        # For any data store, use read_url to transform URLs if needed
+        # (handles endpoint URL conversion for HTTPS access, etc.)
+        transformed_urls = [store.read_url(url) for url in data_urls]
+        url = _shards_to_wds_url(transformed_urls)
+        return URLSource(url), entry.schema_ref
+
+    # Default: URL-based source without credentials
+    url = _shards_to_wds_url(data_urls)
+    return URLSource(url), entry.schema_ref
 
 
 ##
@@ -617,14 +641,13 @@ def load_dataset(
                 "Pass index=LocalIndex() or index=AtmosphereIndex(client)."
             )
 
-        data_urls, schema_ref = _resolve_indexed_path(path, index)
+        source, schema_ref = _resolve_indexed_path(path, index)
 
         # Resolve sample_type from schema if not provided
         resolved_type: Type = sample_type if sample_type is not None else index.decode_schema(schema_ref)
 
-        # For indexed datasets, we treat all URLs as a single "train" split
-        url = _shards_to_wds_url(data_urls)
-        ds = Dataset[resolved_type](url)
+        # Create dataset from the resolved source (includes credentials if S3)
+        ds = Dataset[resolved_type](source)
 
         if split is not None:
             # Indexed datasets are single-split by default
