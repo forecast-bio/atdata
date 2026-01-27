@@ -65,18 +65,86 @@ Connect to a custom PDS instead of bsky.social:
 client = AtmosphereClient(base_url="https://pds.example.com")
 ```
 
+## PDSBlobStore
+
+Store dataset shards as ATProto blobs for fully decentralized storage:
+
+```{python}
+#| eval: false
+from atdata.atmosphere import AtmosphereClient, PDSBlobStore
+
+client = AtmosphereClient()
+client.login("handle.bsky.social", "app-password")
+
+store = PDSBlobStore(client)
+
+# Write shards as blobs
+urls = store.write_shards(dataset, prefix="my-data/v1")
+# Returns: ['at://did:plc:.../blob/bafyrei...', ...]
+
+# Transform AT URIs to HTTP URLs for reading
+http_url = store.read_url(urls[0])
+# Returns: 'https://pds.example.com/xrpc/com.atproto.sync.getBlob?...'
+
+# Create a BlobSource for streaming
+source = store.create_source(urls)
+ds = atdata.Dataset[MySample](source)
+```
+
+### Size Limits
+
+PDS blobs typically have size limits (often 50MB-5GB depending on the PDS). Use `maxcount` and `maxsize` parameters to control shard sizes:
+
+```{python}
+#| eval: false
+urls = store.write_shards(
+    dataset,
+    prefix="large-data/v1",
+    maxcount=5000,    # Max 5000 samples per shard
+    maxsize=50e6,     # Max 50MB per shard
+)
+```
+
+## BlobSource
+
+Read datasets stored as PDS blobs:
+
+```{python}
+#| eval: false
+from atdata import BlobSource
+
+# From blob references
+source = BlobSource.from_refs([
+    {"did": "did:plc:abc123", "cid": "bafyrei111"},
+    {"did": "did:plc:abc123", "cid": "bafyrei222"},
+])
+
+# Or from PDSBlobStore
+source = store.create_source(urls)
+
+# Use with Dataset
+ds = atdata.Dataset[MySample](source)
+for batch in ds.ordered(batch_size=32):
+    process(batch)
+```
+
 ## AtmosphereIndex
 
 The unified interface for ATProto operations, implementing the AbstractIndex protocol:
 
 ```{python}
 #| eval: false
-from atdata.atmosphere import AtmosphereClient, AtmosphereIndex
+from atdata.atmosphere import AtmosphereClient, AtmosphereIndex, PDSBlobStore
 
 client = AtmosphereClient()
 client.login("handle.bsky.social", "app-password")
 
+# Without blob storage (use external URLs)
 index = AtmosphereIndex(client)
+
+# With PDS blob storage (recommended for full decentralization)
+store = PDSBlobStore(client)
+index = AtmosphereIndex(client, data_store=store)
 ```
 
 ### Publishing Schemas
@@ -185,7 +253,34 @@ uri = publisher.publish(
 
 #### Blob Storage {#blob-storage}
 
-For smaller datasets (up to ~50MB per shard), you can store data directly in ATProto blobs instead of external URLs:
+There are two approaches to storing data as ATProto blobs:
+
+**Approach 1: PDSBlobStore (Recommended)**
+
+Use `PDSBlobStore` with `AtmosphereIndex` for automatic shard management:
+
+```{python}
+#| eval: false
+from atdata.atmosphere import PDSBlobStore, AtmosphereIndex
+
+store = PDSBlobStore(client)
+index = AtmosphereIndex(client, data_store=store)
+
+# Dataset shards are automatically uploaded as blobs
+entry = index.insert_dataset(
+    dataset,
+    name="my-dataset",
+    schema_ref=schema_uri,
+)
+
+# Later: load using BlobSource
+source = store.create_source(entry.data_urls)
+ds = atdata.Dataset[MySample](source)
+```
+
+**Approach 2: Manual Blob Publishing**
+
+For more control, use `DatasetPublisher.publish_with_blobs()` directly:
 
 ```{python}
 #| eval: false
@@ -208,11 +303,12 @@ uri = publisher.publish_with_blobs(
 )
 ```
 
-To load datasets with blob storage:
+**Loading Blob-Stored Datasets**
 
 ```{python}
 #| eval: false
 from atdata.atmosphere import DatasetLoader
+from atdata import BlobSource
 
 loader = DatasetLoader(client)
 
@@ -220,8 +316,10 @@ loader = DatasetLoader(client)
 storage_type = loader.get_storage_type(uri)  # "external" or "blobs"
 
 if storage_type == "blobs":
-    # Get blob URLs for direct access
+    # Get blob URLs and create BlobSource
     blob_urls = loader.get_blob_urls(uri)
+    # Parse to blob refs for BlobSource
+    # Or use loader.to_dataset() which handles this automatically
 
 # to_dataset() handles both storage types automatically
 dataset = loader.to_dataset(uri, MySample)
@@ -380,12 +478,14 @@ Schemas support these field types:
 
 ## Complete Example
 
+This example shows the full workflow using `PDSBlobStore` for decentralized storage:
+
 ```{python}
 #| eval: false
 import numpy as np
 from numpy.typing import NDArray
 import atdata
-from atdata.atmosphere import AtmosphereClient, AtmosphereIndex
+from atdata.atmosphere import AtmosphereClient, AtmosphereIndex, PDSBlobStore
 import webdataset as wds
 
 # 1. Define and create samples
@@ -409,11 +509,12 @@ with wds.writer.TarWriter("features.tar") as sink:
     for i, s in enumerate(samples):
         sink.write({**s.as_wds, "__key__": f"{i:06d}"})
 
-# 3. Authenticate
+# 3. Authenticate and set up blob storage
 client = AtmosphereClient()
 client.login("myhandle.bsky.social", "app-password")
 
-index = AtmosphereIndex(client)
+store = PDSBlobStore(client)
+index = AtmosphereIndex(client, data_store=store)
 
 # 4. Publish schema
 schema_uri = index.publish_schema(
@@ -422,7 +523,7 @@ schema_uri = index.publish_schema(
     description="Feature vectors with labels",
 )
 
-# 5. Publish dataset
+# 5. Publish dataset (shards uploaded as blobs)
 dataset = atdata.Dataset[FeatureSample]("features.tar")
 entry = index.insert_dataset(
     dataset,
@@ -432,19 +533,41 @@ entry = index.insert_dataset(
 )
 
 print(f"Published: {entry.uri}")
+print(f"Blob URLs: {entry.data_urls}")
 
-# 6. Later: discover and load
+# 6. Later: discover and load from blobs
 for dataset_entry in index.list_datasets():
     print(f"Found: {dataset_entry.name}")
 
     # Reconstruct type from schema
     SampleType = index.decode_schema(dataset_entry.schema_ref)
 
-    # Load dataset
-    ds = atdata.Dataset[SampleType](dataset_entry.data_urls[0])
+    # Create source from blob URLs
+    source = store.create_source(dataset_entry.data_urls)
+
+    # Load dataset from blobs
+    ds = atdata.Dataset[SampleType](source)
     for batch in ds.ordered(batch_size=32):
         print(batch.features.shape)
         break
+```
+
+For external URL storage (without `PDSBlobStore`):
+
+```{python}
+#| eval: false
+# Use AtmosphereIndex without data_store
+index = AtmosphereIndex(client)
+
+# Dataset URLs will be stored as-is (external references)
+entry = index.insert_dataset(
+    dataset,
+    name="external-features",
+    schema_ref=schema_uri,
+)
+
+# Load using standard URL source
+ds = atdata.Dataset[FeatureSample](entry.data_urls[0])
 ```
 
 ## Related

@@ -1415,8 +1415,8 @@ local.MySample_1_0_0
 <tbody>
 <tr class="odd">
 <td>sample_type</td>
-<td><a href="`typing.Type`">Type</a>[<a href="`atdata._protocols.Packable`">Packable</a>]</td>
-<td>The PackableSample subclass to publish.</td>
+<td><a href="`type`">type</a></td>
+<td>A Packable type (<span class="citation" data-cites="packable-decorated">@packable-decorated</span> or PackableSample subclass).</td>
 <td><em>required</em></td>
 </tr>
 <tr class="even">
@@ -1472,7 +1472,7 @@ local.MySample_1_0_0
 <tr class="even">
 <td></td>
 <td><a href="`TypeError`">TypeError</a></td>
-<td>If a field type is not supported.</td>
+<td>If sample_type doesn’t satisfy the Packable protocol, or if a field type is not supported.</td>
 </tr>
 </tbody>
 </table>

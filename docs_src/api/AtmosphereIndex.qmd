@@ -1,13 +1,16 @@
 # AtmosphereIndex { #atdata.atmosphere.AtmosphereIndex }
 
 ```python
-atmosphere.AtmosphereIndex(client)
+atmosphere.AtmosphereIndex(client, *, data_store=None)
 ```
 
 ATProto index implementing AbstractIndex protocol.
 
 Wraps SchemaPublisher/Loader and DatasetPublisher/Loader to provide
 a unified interface compatible with LocalIndex.
+
+Optionally accepts a ``PDSBlobStore`` for writing dataset shards as
+ATProto blobs, enabling fully decentralized dataset storage.
 
 ## Example {.doc-section .doc-section-example}
 
@@ -16,14 +19,19 @@ a unified interface compatible with LocalIndex.
     >>> client = AtmosphereClient()
     >>> client.login("handle.bsky.social", "app-password")
     >>>
+    >>> # Without blob storage (external URLs only)
     >>> index = AtmosphereIndex(client)
-    >>> schema_ref = index.publish_schema(MySample, version="1.0.0")
+    >>>
+    >>> # With PDS blob storage
+    >>> store = PDSBlobStore(client)
+    >>> index = AtmosphereIndex(client, data_store=store)
     >>> entry = index.insert_dataset(dataset, name="my-data")
 
 ## Attributes
 
 | Name | Description |
 | --- | --- |
+| [data_store](#atdata.atmosphere.AtmosphereIndex.data_store) | The PDS blob store for writing shards, or None if not configured. |
 | [datasets](#atdata.atmosphere.AtmosphereIndex.datasets) | Lazily iterate over all dataset entries (AbstractIndex protocol). |
 | [schemas](#atdata.atmosphere.AtmosphereIndex.schemas) | Lazily iterate over all schema records (AbstractIndex protocol). |
 

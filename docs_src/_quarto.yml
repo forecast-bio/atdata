@@ -52,6 +52,8 @@ quartodoc:
           children: embedded
         - name: S3Source
           children: embedded
+        - name: BlobSource
+          children: embedded
 
     # Local storage
     - title: Local Storage
@@ -74,6 +76,8 @@ quartodoc:
         - name: AtmosphereIndex
           children: embedded
         - name: AtmosphereIndexEntry
+          children: embedded
+        - name: PDSBlobStore
           children: embedded
         - name: SchemaPublisher
         - name: SchemaLoader

@@ -459,10 +459,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
+<td><a href="#atdata.AbstractIndex.data_store">data_store</a></td>
+<td>Optional data store for reading/writing shards.</td>
+</tr>
+<tr class="even">
 <td><a href="#atdata.AbstractIndex.datasets">datasets</a></td>
 <td>Lazily iterate over all dataset entries in this index.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><a href="#atdata.AbstractIndex.schemas">schemas</a></td>
 <td>Lazily iterate over all schema records in this index.</td>
 </tr>
@@ -847,6 +851,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="atdata.AbstractIndex.publish_schema">publish_schema</h3>
 <div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>AbstractIndex.publish_schema(sample_type, <span class="op">*</span>, version<span class="op">=</span><span class="st">'1.0.0'</span>, <span class="op">**</span>kwargs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Publish a schema for a sample type.</p>
+<p>The sample_type is accepted as <code>type</code> rather than <code>Type[Packable]</code> to support <code>@packable</code>-decorated classes, which satisfy the Packable protocol at runtime but cannot be statically verified by type checkers.</p>
 <section id="parameters-4" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-4">Parameters</h4>
 <table class="caption-top table">
@@ -861,8 +866,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>sample_type</td>
-<td><a href="`typing.Type`">Type</a>[<a href="`atdata._protocols.Packable`">Packable</a>]</td>
-<td>A Packable type (PackableSample subclass or <span class="citation" data-cites="packable-decorated">@packable-decorated</span>).</td>
+<td><a href="`type`">type</a></td>
+<td>A Packable type (PackableSample subclass or <span class="citation" data-cites="packable-decorated">@packable-decorated</span>). Validated at runtime via the <span class="citation" data-cites="runtime_checkable">@runtime_checkable</span> Packable protocol.</td>
 <td><em>required</em></td>
 </tr>
 <tr class="even">

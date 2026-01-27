@@ -25,6 +25,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Update atmosphere example with blob storage case (#216)
+- Implement PDSBlobStore for atmosphere data storage (#244)
+- Update docs and examples to include PDSBlobStore (#384)
+- Add API docs for PDSBlobStore and BlobSource (#388)
+- Update atmosphere_demo.py example (#387)
+- Update atmosphere reference docs (#386)
+- Update atmosphere tutorial with PDSBlobStore (#385)
 - Implement PDSBlobStore for ATProto blob storage (#380)
 - Add tests for PDSBlobStore and BlobSource (#383)
 - Add BlobSource for reading PDS blobs as DataSource (#382)

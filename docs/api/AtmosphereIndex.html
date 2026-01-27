@@ -423,17 +423,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="atdata.atmosphere.AtmosphereIndex" class="level1">
 <h1>AtmosphereIndex</h1>
-<div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereIndex(client)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>atmosphere.AtmosphereIndex(client, <span class="op">*</span>, data_store<span class="op">=</span><span class="va">None</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>ATProto index implementing AbstractIndex protocol.</p>
 <p>Wraps SchemaPublisher/Loader and DatasetPublisher/Loader to provide a unified interface compatible with LocalIndex.</p>
+<p>Optionally accepts a <code>PDSBlobStore</code> for writing dataset shards as ATProto blobs, enabling fully decentralized dataset storage.</p>
 <section id="example" class="level2 doc-section doc-section-example">
 <h2 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h2>
 <p>::</p>
 <pre><code>&gt;&gt;&gt; client = AtmosphereClient()
 &gt;&gt;&gt; client.login("handle.bsky.social", "app-password")
 &gt;&gt;&gt;
+&gt;&gt;&gt; # Without blob storage (external URLs only)
 &gt;&gt;&gt; index = AtmosphereIndex(client)
-&gt;&gt;&gt; schema_ref = index.publish_schema(MySample, version="1.0.0")
+&gt;&gt;&gt;
+&gt;&gt;&gt; # With PDS blob storage
+&gt;&gt;&gt; store = PDSBlobStore(client)
+&gt;&gt;&gt; index = AtmosphereIndex(client, data_store=store)
 &gt;&gt;&gt; entry = index.insert_dataset(dataset, name="my-data")</code></pre>
 </section>
 <section id="attributes" class="level2">
@@ -447,10 +452,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
+<td><a href="#atdata.atmosphere.AtmosphereIndex.data_store">data_store</a></td>
+<td>The PDS blob store for writing shards, or None if not configured.</td>
+</tr>
+<tr class="even">
 <td><a href="#atdata.atmosphere.AtmosphereIndex.datasets">datasets</a></td>
 <td>Lazily iterate over all dataset entries (AbstractIndex protocol).</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><a href="#atdata.atmosphere.AtmosphereIndex.schemas">schemas</a></td>
 <td>Lazily iterate over all schema records (AbstractIndex protocol).</td>
 </tr>

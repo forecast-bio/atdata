@@ -462,11 +462,11 @@ Publish a schema for a sample type to Redis.
 
 #### Parameters {.doc-section .doc-section-parameters}
 
-| Name        | Type                                                              | Description                                                                                                                                                           | Default    |
-|-------------|-------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
-| sample_type | [Type](`typing.Type`)\[[Packable](`atdata._protocols.Packable`)\] | The PackableSample subclass to publish.                                                                                                                               | _required_ |
-| version     | [str](`str`) \| None                                              | Semantic version string (e.g., '1.0.0'). If None, auto-increments from the latest published version (patch bump), or starts at '1.0.0' if no previous version exists. | `None`     |
-| description | [str](`str`) \| None                                              | Optional human-readable description. If None, uses the class docstring.                                                                                               | `None`     |
+| Name        | Type                 | Description                                                                                                                                                           | Default    |
+|-------------|----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| sample_type | [type](`type`)       | A Packable type (@packable-decorated or PackableSample subclass).                                                                                                     | _required_ |
+| version     | [str](`str`) \| None | Semantic version string (e.g., '1.0.0'). If None, auto-increments from the latest published version (patch bump), or starts at '1.0.0' if no previous version exists. | `None`     |
+| description | [str](`str`) \| None | Optional human-readable description. If None, uses the class docstring.                                                                                               | `None`     |
 
 #### Returns {.doc-section .doc-section-returns}
 
@@ -476,7 +476,7 @@ Publish a schema for a sample type to Redis.
 
 #### Raises {.doc-section .doc-section-raises}
 
-| Name   | Type                       | Description                        |
-|--------|----------------------------|------------------------------------|
-|        | [ValueError](`ValueError`) | If sample_type is not a dataclass. |
-|        | [TypeError](`TypeError`)   | If a field type is not supported.  |
+| Name   | Type                       | Description                                                                                |
+|--------|----------------------------|--------------------------------------------------------------------------------------------|
+|        | [ValueError](`ValueError`) | If sample_type is not a dataclass.                                                         |
+|        | [TypeError](`TypeError`)   | If sample_type doesn't satisfy the Packable protocol, or if a field type is not supported. |

@@ -6,9 +6,8 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="The atdata:// URI scheme for addressing resources">
 
-<title>URI Specification – atdata</title>
+<title>blobsource – atdata</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -112,7 +111,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link rel="stylesheet" href="../assets/styles.css">
 </head>
 
-<body class="nav-sidebar docked nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -292,7 +291,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link active" href="../index.html" aria-current="page"> 
+    <a class="nav-link" href="../index.html"> 
 <span class="menu-text">Guide</span></a>
   </li>  
   <li class="nav-item dropdown ">
@@ -387,362 +386,252 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
       </div> <!-- /container-fluid -->
     </nav>
-  <nav class="quarto-secondary-nav">
-    <div class="container-fluid d-flex">
-      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
-        <i class="bi bi-layout-text-sidebar-reverse"></i>
-      </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/packable-samples.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/uri-spec.html">URI Specification</a></li></ol></nav>
-        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
-        </a>
-    </div>
-  </nav>
 </header>
 <!-- content -->
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
-  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
-    <div class="sidebar-menu-container"> 
-    <ul class="list-unstyled mt-1">
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">atdata</span></a>
-  </div>
-</li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
- <span class="menu-text">Getting Started</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../tutorials/quickstart.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Quick Start</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../tutorials/local-workflow.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Local Workflow</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../tutorials/atmosphere.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Atmosphere Publishing</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../tutorials/promotion.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Promotion Workflow</span></a>
-  </div>
-</li>
-      </ul>
-  </li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
- <span class="menu-text">Reference</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../reference/packable-samples.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Packable Samples</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../reference/datasets.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Datasets</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../reference/lenses.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Lenses</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../reference/local-storage.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Local Storage</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../reference/atmosphere.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Atmosphere (ATProto Integration)</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../reference/promotion.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Promotion Workflow</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../reference/load-dataset.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">load_dataset API</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../reference/protocols.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Protocols</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../reference/uri-spec.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">URI Specification</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../reference/troubleshooting.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Troubleshooting &amp; FAQ</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../reference/deployment.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Deployment Guide</span></a>
-  </div>
-</li>
-      </ul>
-  </li>
-    </ul>
-    </div>
-</nav>
-<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         <nav id="TOC" role="doc-toc" class="toc-active">
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
-  <li><a href="#uri-format" id="toc-uri-format" class="nav-link" data-scroll-target="#uri-format">URI Format</a>
+  <li><a href="#atdata.BlobSource" id="toc-atdata.BlobSource" class="nav-link active" data-scroll-target="#atdata.BlobSource">BlobSource</a>
   <ul class="collapse">
-  <li><a href="#authority" id="toc-authority" class="nav-link" data-scroll-target="#authority">Authority</a></li>
-  <li><a href="#resource-types" id="toc-resource-types" class="nav-link" data-scroll-target="#resource-types">Resource Types</a></li>
-  <li><a href="#version-specifiers" id="toc-version-specifiers" class="nav-link" data-scroll-target="#version-specifiers">Version Specifiers</a></li>
-  </ul></li>
-  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a>
+  <li><a href="#attributes" id="toc-attributes" class="nav-link" data-scroll-target="#attributes">Attributes</a></li>
+  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
+  <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
-  <li><a href="#local-development" id="toc-local-development" class="nav-link" data-scroll-target="#local-development">Local Development</a></li>
-  <li><a href="#atmosphere-atproto-federation" id="toc-atmosphere-atproto-federation" class="nav-link" data-scroll-target="#atmosphere-atproto-federation">Atmosphere (ATProto Federation)</a></li>
+  <li><a href="#atdata.BlobSource.from_refs" id="toc-atdata.BlobSource.from_refs" class="nav-link" data-scroll-target="#atdata.BlobSource.from_refs">from_refs</a></li>
+  <li><a href="#atdata.BlobSource.list_shards" id="toc-atdata.BlobSource.list_shards" class="nav-link" data-scroll-target="#atdata.BlobSource.list_shards">list_shards</a></li>
+  <li><a href="#atdata.BlobSource.open_shard" id="toc-atdata.BlobSource.open_shard" class="nav-link" data-scroll-target="#atdata.BlobSource.open_shard">open_shard</a></li>
   </ul></li>
-  <li><a href="#relationship-to-at-protocol-uris" id="toc-relationship-to-at-protocol-uris" class="nav-link" data-scroll-target="#relationship-to-at-protocol-uris">Relationship to AT Protocol URIs</a></li>
-  <li><a href="#legacy-format" id="toc-legacy-format" class="nav-link" data-scroll-target="#legacy-format">Legacy Format</a></li>
+  </ul></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/your-org/atdata/edit/main/reference/uri-spec.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/your-org/atdata/edit/main/api/BlobSource.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/packable-samples.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/uri-spec.html">URI Specification</a></li></ol></nav>
-<div class="quarto-title">
-<h1 class="title">URI Specification</h1>
-</div>
-
-<div>
-  <div class="description">
-    The atdata:// URI scheme for addressing resources
-  </div>
-</div>
 
 
-<div class="quarto-title-meta">
 
-    
-  
-    
-  </div>
-  
-
-
-</header>
-
-
-<p>The <code>atdata://</code> URI scheme provides a unified way to address atdata resources across local development and the ATProto federation.</p>
-<section id="overview" class="level2">
-<h2 class="anchored" data-anchor-id="overview">Overview</h2>
-<p>The atdata URI scheme:</p>
-<ul>
-<li>Follows <a href="https://datatracker.ietf.org/doc/html/rfc3986">RFC 3986</a> syntax</li>
-<li>Provides consistent addressing for local and atmosphere resources</li>
-<li>Enables seamless promotion from development to production</li>
-</ul>
-</section>
-<section id="uri-format" class="level2">
-<h2 class="anchored" data-anchor-id="uri-format">URI Format</h2>
-<pre><code>atdata://{authority}/{resource_type}/{name}@{version}</code></pre>
-<section id="authority" class="level3">
-<h3 class="anchored" data-anchor-id="authority">Authority</h3>
-<p>The authority identifies where the resource is stored:</p>
+<section id="atdata.BlobSource" class="level1">
+<h1>BlobSource</h1>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>BlobSource(blob_refs, pds_endpoint<span class="op">=</span><span class="va">None</span>, _endpoint_cache<span class="op">=</span><span class="bu">dict</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Data source for ATProto PDS blob storage.</p>
+<p>Streams dataset shards stored as blobs on an ATProto Personal Data Server. Each shard is identified by a blob reference containing the DID and CID.</p>
+<p>This source resolves blob references to HTTP URLs and streams the content directly, supporting efficient iteration over shards without downloading everything upfront.</p>
+<section id="attributes" class="level2 doc-section doc-section-attributes">
+<h2 class="doc-section doc-section-attributes anchored" data-anchor-id="attributes">Attributes</h2>
 <table class="caption-top table">
 <thead>
 <tr class="header">
-<th>Authority</th>
-<th>Description</th>
-<th>Example</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>local</code></td>
-<td>Local Redis/S3 storage</td>
-<td><code>atdata://local/...</code></td>
-</tr>
-<tr class="even">
-<td><code>{handle}</code></td>
-<td>ATProto handle</td>
-<td><code>atdata://alice.bsky.social/...</code></td>
-</tr>
-<tr class="odd">
-<td><code>{did}</code></td>
-<td>ATProto DID</td>
-<td><code>atdata://did:plc:abc123/...</code></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="resource-types" class="level3">
-<h3 class="anchored" data-anchor-id="resource-types">Resource Types</h3>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Resource Type</th>
+<th>Name</th>
+<th>Type</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>sampleSchema</code></td>
-<td>PackableSample type definitions</td>
+<td>blob_refs</td>
+<td><a href="`list`">list</a>[<a href="`dict`">dict</a>[<a href="`str`">str</a>, <a href="`str`">str</a>]]</td>
+<td>List of blob reference dicts with ‘did’ and ‘cid’ keys.</td>
 </tr>
 <tr class="even">
-<td><code>dataset</code></td>
-<td>Dataset entries (future)</td>
-</tr>
-<tr class="odd">
-<td><code>lens</code></td>
-<td>Lens transformations (future)</td>
+<td>pds_endpoint</td>
+<td><a href="`str`">str</a> | None</td>
+<td>Optional PDS endpoint URL. If not provided, resolved from DID.</td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="version-specifiers" class="level3">
-<h3 class="anchored" data-anchor-id="version-specifiers">Version Specifiers</h3>
-<p>Versions follow semantic versioning and are specified with <code>@</code>:</p>
+<section id="example" class="level2 doc-section doc-section-example">
+<h2 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h2>
+<p>::</p>
+<pre><code>&gt;&gt;&gt; source = BlobSource(
+...     blob_refs=[
+...         {"did": "did:plc:abc123", "cid": "bafyrei..."},
+...         {"did": "did:plc:abc123", "cid": "bafyrei..."},
+...     ],
+... )
+&gt;&gt;&gt; for shard_id, stream in source.shards:
+...     process(stream)</code></pre>
+</section>
+<section id="methods" class="level2">
+<h2 class="anchored" data-anchor-id="methods">Methods</h2>
 <table class="caption-top table">
 <thead>
 <tr class="header">
-<th>Specifier</th>
+<th>Name</th>
 <th>Description</th>
-<th>Example</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>@{major}.{minor}.{patch}</code></td>
-<td>Exact version</td>
-<td><code>@1.0.0</code>, <code>@2.1.3</code></td>
+<td><a href="#atdata.BlobSource.from_refs">from_refs</a></td>
+<td>Create BlobSource from blob reference dicts.</td>
 </tr>
 <tr class="even">
-<td>(none)</td>
-<td>Latest version</td>
-<td>Resolves to highest semver</td>
+<td><a href="#atdata.BlobSource.list_shards">list_shards</a></td>
+<td>Return list of AT URI-style shard identifiers.</td>
+</tr>
+<tr class="odd">
+<td><a href="#atdata.BlobSource.open_shard">open_shard</a></td>
+<td>Open a single shard by its AT URI.</td>
 </tr>
 </tbody>
 </table>
-</section>
-</section>
-<section id="examples" class="level2">
-<h2 class="anchored" data-anchor-id="examples">Examples</h2>
-<section id="local-development" class="level3">
-<h3 class="anchored" data-anchor-id="local-development">Local Development</h3>
-<div id="0ec519c5" class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> Index</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> Index()</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Publish a schema (returns atdata:// URI)</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>ref <span class="op">=</span> index.publish_schema(MySample, version<span class="op">=</span><span class="st">"1.0.0"</span>)</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"># =&gt; "atdata://local/sampleSchema/MySample@1.0.0"</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Auto-increment version</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>ref <span class="op">=</span> index.publish_schema(MySample)</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co"># =&gt; "atdata://local/sampleSchema/MySample@1.0.1"</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Retrieve by URI</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>schema <span class="op">=</span> index.get_schema(<span class="st">"atdata://local/sampleSchema/MySample@1.0.0"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="atmosphere-atproto-federation" class="level3">
-<h3 class="anchored" data-anchor-id="atmosphere-atproto-federation">Atmosphere (ATProto Federation)</h3>
-<div id="80732fae" class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> Client</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> Client()</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Publish returns at:// URI that maps to atdata://</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>ref <span class="op">=</span> client.publish_schema(MySample)</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co"># =&gt; "at://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz"</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Can also be addressed as:</span></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co"># =&gt; "atdata://did:plc:abc123/sampleSchema/MySample@1.0.0"</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co"># =&gt; "atdata://alice.bsky.social/sampleSchema/MySample@1.0.0"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-</section>
-<section id="relationship-to-at-protocol-uris" class="level2">
-<h2 class="anchored" data-anchor-id="relationship-to-at-protocol-uris">Relationship to AT Protocol URIs</h2>
-<p>The <code>atdata://</code> scheme is inspired by and maps to ATProto’s <code>at://</code> scheme:</p>
+<section id="atdata.BlobSource.from_refs" class="level3">
+<h3 class="anchored" data-anchor-id="atdata.BlobSource.from_refs">from_refs</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>BlobSource.from_refs(refs, <span class="op">*</span>, pds_endpoint<span class="op">=</span><span class="va">None</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Create BlobSource from blob reference dicts.</p>
+<p>Accepts blob references in the format returned by upload_blob: <code>{"$type": "blob", "ref": {"$link": "cid"}, ...}</code></p>
+<p>Also accepts simplified format: <code>{"did": "...", "cid": "..."}</code></p>
+<section id="parameters" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
 <table class="caption-top table">
-<colgroup>
-<col style="width: 61%">
-<col style="width: 38%">
-</colgroup>
 <thead>
 <tr class="header">
-<th>atdata://</th>
-<th>at://</th>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>atdata://{did}/sampleSchema/{name}@{version}</code></td>
-<td><code>at://{did}/ac.foundation.dataset.sampleSchema/{rkey}</code></td>
+<td>refs</td>
+<td><a href="`list`">list</a>[<a href="`dict`">dict</a>]</td>
+<td>List of blob reference dicts.</td>
+<td><em>required</em></td>
 </tr>
 <tr class="even">
-<td><code>atdata://local/...</code></td>
-<td>(local only, no at:// equivalent)</td>
+<td>pds_endpoint</td>
+<td><a href="`str`">str</a> | None</td>
+<td>Optional PDS endpoint to use for all blobs.</td>
+<td><code>None</code></td>
 </tr>
 </tbody>
 </table>
-<p>When publishing to the atmosphere, atdata URIs are automatically resolved to their corresponding <code>at://</code> URIs for federation compatibility.</p>
 </section>
-<section id="legacy-format" class="level2">
-<h2 class="anchored" data-anchor-id="legacy-format">Legacy Format</h2>
-<p>For backwards compatibility, the local index also accepts the legacy format:</p>
-<pre><code>local://schemas/{module.Class}@{version}</code></pre>
-<p>This format is deprecated and will be removed in a future version. Use <code>atdata://local/sampleSchema/{name}@{version}</code> instead.</p>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>'BlobSource'</td>
+<td>Configured BlobSource.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>If refs is empty or format is invalid.</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="atdata.BlobSource.list_shards" class="level3">
+<h3 class="anchored" data-anchor-id="atdata.BlobSource.list_shards">list_shards</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>BlobSource.list_shards()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Return list of AT URI-style shard identifiers.</p>
+</section>
+<section id="atdata.BlobSource.open_shard" class="level3">
+<h3 class="anchored" data-anchor-id="atdata.BlobSource.open_shard">open_shard</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>BlobSource.open_shard(shard_id)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Open a single shard by its AT URI.</p>
+<section id="parameters-1" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>shard_id</td>
+<td><a href="`str`">str</a></td>
+<td>AT URI of the shard (at://did/blob/cid).</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-1" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`typing.IO`">IO</a>[<a href="`bytes`">bytes</a>]</td>
+<td>Streaming response body for reading the blob.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-1" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-1">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`KeyError`">KeyError</a></td>
+<td>If shard_id is not in list_shards().</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>If shard_id format is invalid.</td>
+</tr>
+</tbody>
+</table>
 
 
+</section>
+</section>
+</section>
 </section>
 
 </main> <!-- /main -->
@@ -1166,7 +1055,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/your-org/atdata/edit/main/reference/uri-spec.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/your-org/atdata/edit/main/api/BlobSource.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
     <div class="nav-footer-right">
 <p>MIT License</p>
 </div>

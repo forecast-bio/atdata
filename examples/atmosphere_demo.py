@@ -29,12 +29,15 @@ from numpy.typing import NDArray
 import atdata
 from atdata.atmosphere import (
     AtmosphereClient,
+    AtmosphereIndex,
+    PDSBlobStore,
     SchemaPublisher,
     SchemaLoader,
     DatasetPublisher,
     DatasetLoader,
     AtUri,
 )
+from atdata import BlobSource
 
 
 # =============================================================================
@@ -362,6 +365,112 @@ def demo_blob_storage(handle: str, password: str):
     print("\nBlob storage demo complete!")
 
 
+def demo_pds_blob_store(handle: str, password: str):
+    """Demonstrate PDSBlobStore for decentralized dataset storage.
+
+    PDSBlobStore is the recommended way to store datasets as ATProto blobs.
+    It provides automatic shard management and integrates with AtmosphereIndex.
+
+    Args:
+        handle: Bluesky handle (e.g., 'alice.bsky.social')
+        password: App-specific password
+    """
+    import webdataset as wds
+
+    print("\n" + "=" * 60)
+    print("PDSBlobStore Demo (Recommended Approach)")
+    print("=" * 60)
+
+    # Create client and authenticate
+    print(f"\nConnecting as {handle}...")
+    client = AtmosphereClient()
+    client.login(handle, password)
+    print(f"Authenticated as {client.handle}")
+
+    # Create PDSBlobStore and AtmosphereIndex
+    print("\nSetting up PDSBlobStore and AtmosphereIndex...")
+    store = PDSBlobStore(client)
+    index = AtmosphereIndex(client, data_store=store)
+    print("  Store and index configured")
+
+    # Define a sample type
+    @atdata.packable
+    class FeatureSample:
+        features: NDArray
+        label: int
+        source: str
+
+    # Create sample data
+    print("\nCreating sample data...")
+    samples = [
+        FeatureSample(
+            features=np.random.randn(64).astype(np.float32),
+            label=i % 5,
+            source="demo",
+        )
+        for i in range(50)
+    ]
+
+    # Write to temporary tar file
+    import tempfile
+    import os
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        tar_path = os.path.join(temp_dir, "demo.tar")
+
+        with wds.writer.TarWriter(tar_path) as sink:
+            for i, s in enumerate(samples):
+                sink.write({**s.as_wds, "__key__": f"{i:06d}"})
+
+        print(f"  Created tar with {len(samples)} samples")
+
+        # Create dataset
+        dataset = atdata.Dataset[FeatureSample](tar_path)
+
+        # Publish schema
+        print("\nPublishing schema...")
+        schema_uri = index.publish_schema(
+            FeatureSample,
+            version="1.0.0",
+            description="Demo feature vectors",
+        )
+        print(f"  Schema URI: {schema_uri}")
+
+        # Publish dataset with blob storage
+        print("\nPublishing dataset (shards uploaded as blobs)...")
+        entry = index.insert_dataset(
+            dataset,
+            name=f"pds-blob-demo-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
+            schema_ref=schema_uri,
+            description="Dataset stored using PDSBlobStore",
+            tags=["demo", "pds-blob-store"],
+        )
+
+        print(f"  Dataset URI: {entry.uri}")
+        print(f"  Blob URLs: {len(entry.data_urls)} shard(s)")
+        for url in entry.data_urls:
+            print(f"    {url[:70]}...")
+
+    # Load back from blobs
+    print("\nLoading dataset from blobs...")
+    source = store.create_source(entry.data_urls)
+    print(f"  Created BlobSource with {len(source.blob_refs)} blob(s)")
+
+    loaded_ds = atdata.Dataset[FeatureSample](source)
+    count = 0
+    for batch in loaded_ds.ordered():
+        count += 1
+        print(f"  Sample {count}: label={batch.label}, features shape={batch.features.shape}")
+        if count >= 3:
+            print("  ...")
+            break
+
+    print("\nPDSBlobStore demo complete!")
+    print("  - Shards stored as ATProto blobs in your PDS")
+    print("  - No external storage required")
+    print("  - Fully decentralized!")
+
+
 def demo_dataset_loading():
     """Demonstrate loading a dataset from an ATProto record."""
     print("\n" + "=" * 60)
@@ -446,7 +555,8 @@ def main():
     # Run live demos if credentials provided
     if args.handle and args.password:
         demo_live_connection(args.handle, args.password)
-        demo_blob_storage(args.handle, args.password)
+        demo_pds_blob_store(args.handle, args.password)  # Recommended approach
+        demo_blob_storage(args.handle, args.password)     # Legacy approach
     else:
         print("\n" + "=" * 60)
         print("Live Demo Skipped")

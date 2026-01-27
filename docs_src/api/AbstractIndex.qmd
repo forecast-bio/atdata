@@ -41,6 +41,7 @@ Some index implementations support additional features:
 
 | Name | Description |
 | --- | --- |
+| [data_store](#atdata.AbstractIndex.data_store) | Optional data store for reading/writing shards. |
 | [datasets](#atdata.AbstractIndex.datasets) | Lazily iterate over all dataset entries in this index. |
 | [schemas](#atdata.AbstractIndex.schemas) | Lazily iterate over all schema records in this index. |
 
@@ -214,13 +215,17 @@ AbstractIndex.publish_schema(sample_type, *, version='1.0.0', **kwargs)
 
 Publish a schema for a sample type.
 
+The sample_type is accepted as ``type`` rather than ``Type[Packable]`` to
+support ``@packable``-decorated classes, which satisfy the Packable protocol
+at runtime but cannot be statically verified by type checkers.
+
 #### Parameters {.doc-section .doc-section-parameters}
 
-| Name        | Type                                                              | Description                                                       | Default    |
-|-------------|-------------------------------------------------------------------|-------------------------------------------------------------------|------------|
-| sample_type | [Type](`typing.Type`)\[[Packable](`atdata._protocols.Packable`)\] | A Packable type (PackableSample subclass or @packable-decorated). | _required_ |
-| version     | [str](`str`)                                                      | Semantic version string for the schema.                           | `'1.0.0'`  |
-| **kwargs    |                                                                   | Additional backend-specific options.                              | `{}`       |
+| Name        | Type           | Description                                                                                                                          | Default    |
+|-------------|----------------|--------------------------------------------------------------------------------------------------------------------------------------|------------|
+| sample_type | [type](`type`) | A Packable type (PackableSample subclass or @packable-decorated). Validated at runtime via the @runtime_checkable Packable protocol. | _required_ |
+| version     | [str](`str`)   | Semantic version string for the schema.                                                                                              | `'1.0.0'`  |
+| **kwargs    |                | Additional backend-specific options.                                                                                                 | `{}`       |
 
 #### Returns {.doc-section .doc-section-returns}
 
