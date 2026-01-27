@@ -604,7 +604,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="basic-usage" class="level2">
 <h2 class="anchored" data-anchor-id="basic-usage">Basic Usage</h2>
-<div id="7ed2b10d" class="cell">
+<div id="753f1d4b" class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata <span class="im">import</span> load_dataset</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
@@ -627,7 +627,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="path-formats">Path Formats</h2>
 <section id="webdataset-brace-notation" class="level3">
 <h3 class="anchored" data-anchor-id="webdataset-brace-notation">WebDataset Brace Notation</h3>
-<div id="f28a7507" class="cell">
+<div id="1f4e9142" class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Range notation</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"data-{000000..000099}.tar"</span>, MySample, split<span class="op">=</span><span class="st">"train"</span>)</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -637,7 +637,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="glob-patterns" class="level3">
 <h3 class="anchored" data-anchor-id="glob-patterns">Glob Patterns</h3>
-<div id="c187d3d7" class="cell">
+<div id="9fd0a092" class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Match all tar files</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"path/to/*.tar"</span>, MySample)</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -647,14 +647,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="local-directory" class="level3">
 <h3 class="anchored" data-anchor-id="local-directory">Local Directory</h3>
-<div id="dcd8bdec" class="cell">
+<div id="8ddee3fc" class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Scans for .tar files</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"./my-dataset/"</span>, MySample)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="remote-urls" class="level3">
 <h3 class="anchored" data-anchor-id="remote-urls">Remote URLs</h3>
-<div id="b3a20847" class="cell">
+<div id="6a120d61" class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># S3 (public buckets)</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"s3://bucket/data-{000..099}.tar"</span>, MySample, split<span class="op">=</span><span class="st">"train"</span>)</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -680,7 +680,7 @@ Note
 </section>
 <section id="index-lookup" class="level3">
 <h3 class="anchored" data-anchor-id="index-lookup">Index Lookup</h3>
-<div id="079ac960" class="cell">
+<div id="c4c8a01b" class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> LocalIndex</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> LocalIndex()</span>
@@ -747,7 +747,7 @@ Note
 <section id="datasetdict" class="level2">
 <h2 class="anchored" data-anchor-id="datasetdict">DatasetDict</h2>
 <p>When loading without <code>split=</code>, returns a <code>DatasetDict</code>:</p>
-<div id="59cd381c" class="cell">
+<div id="eed41d5d" class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>ds_dict <span class="op">=</span> load_dataset(<span class="st">"path/to/data/"</span>, MySample)</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Access splits</span></span>
@@ -767,7 +767,7 @@ Note
 <section id="explicit-data-files" class="level2">
 <h2 class="anchored" data-anchor-id="explicit-data-files">Explicit Data Files</h2>
 <p>Override automatic detection with <code>data_files</code>:</p>
-<div id="82ab3caf" class="cell">
+<div id="a87676d3" class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Single pattern</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"path/to/"</span>,</span>
@@ -796,7 +796,7 @@ Note
 <section id="streaming-mode" class="level2">
 <h2 class="anchored" data-anchor-id="streaming-mode">Streaming Mode</h2>
 <p>The <code>streaming</code> parameter signals intent for streaming mode:</p>
-<div id="ac9975cc" class="cell">
+<div id="d0ca2f60" class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Mark as streaming</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>ds_dict <span class="op">=</span> load_dataset(<span class="st">"path/to/data.tar"</span>, MySample, streaming<span class="op">=</span><span class="va">True</span>)</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -821,7 +821,7 @@ Tip
 <section id="auto-type-resolution" class="level2">
 <h2 class="anchored" data-anchor-id="auto-type-resolution">Auto Type Resolution</h2>
 <p>When using index lookup, the sample type can be resolved automatically:</p>
-<div id="a7679439" class="cell">
+<div id="eff9b3ae" class="cell">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> LocalIndex</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> LocalIndex()</span>
@@ -835,7 +835,7 @@ Tip
 </section>
 <section id="error-handling" class="level2">
 <h2 class="anchored" data-anchor-id="error-handling">Error Handling</h2>
-<div id="c1b9e6e6" class="cell">
+<div id="70c2f7f5" class="cell">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    ds <span class="op">=</span> load_dataset(<span class="st">"path/to/data.tar"</span>, MySample, split<span class="op">=</span><span class="st">"train"</span>)</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> <span class="pp">FileNotFoundError</span>:</span>
@@ -851,7 +851,7 @@ Tip
 </section>
 <section id="complete-example" class="level2">
 <h2 class="anchored" data-anchor-id="complete-example">Complete Example</h2>
-<div id="5e83c9a3" class="cell">
+<div id="076854da" class="cell">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>

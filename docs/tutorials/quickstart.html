@@ -606,7 +606,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Round-trip fidelity</strong>: Data survives serialization without loss</li>
 </ul>
 <p>Use the <code>@packable</code> decorator to create a typed sample:</p>
-<div id="e779f1c8" class="cell">
+<div id="5fe343cc" class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
@@ -627,7 +627,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="create-sample-instances" class="level2">
 <h2 class="anchored" data-anchor-id="create-sample-instances">Create Sample Instances</h2>
-<div id="9017c045" class="cell">
+<div id="ceeaea84" class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a single sample</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>sample <span class="op">=</span> ImageSample(</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    image<span class="op">=</span>np.random.rand(<span class="dv">224</span>, <span class="dv">224</span>, <span class="dv">3</span>).astype(np.float32),</span>
@@ -655,7 +655,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p>The <code>as_wds</code> property on your sample provides the dictionary format WebDataset expects:</p>
 <p>Use WebDataset’s <code>TarWriter</code> to create dataset files:</p>
-<div id="de114376" class="cell">
+<div id="21430fdb" class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> webdataset <span class="im">as</span> wds</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create 100 samples</span></span>
@@ -686,7 +686,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p>This eliminates boilerplate collation code and works automatically with any PackableSample type.</p>
 <p>Create a typed <code>Dataset</code> and iterate with batching:</p>
-<div id="a3152d0f" class="cell">
+<div id="f9c53332" class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load dataset with type</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[ImageSample](<span class="st">"my-dataset-000000.tar"</span>)</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -713,7 +713,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ol>
 <p>This approach balances randomness with streaming efficiency—you get well-shuffled data without needing random access to the entire dataset.</p>
 <p>For training, use shuffled iteration:</p>
-<div id="64a443cd" class="cell">
+<div id="7af05c86" class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> dataset.shuffled(batch_size<span class="op">=</span><span class="dv">32</span>):</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Samples are shuffled at shard and sample level</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    images <span class="op">=</span> batch.image</span>
@@ -734,7 +734,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Derived features</strong>: Compute fields on-the-fly during iteration</li>
 </ul>
 <p>View datasets through different schemas:</p>
-<div id="cdc9da8b" class="cell">
+<div id="a671173c" class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Define a simplified view type</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> SimplifiedSample:</span>
