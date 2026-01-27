@@ -68,6 +68,7 @@ from ._protocols import (
 from ._sources import (
     URLSource as URLSource,
     S3Source as S3Source,
+    BlobSource as BlobSource,
 )
 
 from ._schema_codec import (

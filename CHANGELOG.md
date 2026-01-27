@@ -25,6 +25,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Implement PDSBlobStore for ATProto blob storage (#380)
+- Add tests for PDSBlobStore and BlobSource (#383)
+- Add BlobSource for reading PDS blobs as DataSource (#382)
+- Create PDSBlobStore class in atmosphere module (#381)
 - Investigate Redis index entry expiration/reset issue (#376)
 - Audit codebase for xs/@property vs list_xs() convention (#377)
 - Evaluate PackableSample → Packable protocol migration (#375)

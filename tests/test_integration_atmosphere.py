@@ -401,3 +401,156 @@ class TestAtUriParsing:
         uri = AtUri.parse(f"at://did:plc:abc/{LEXICON_NAMESPACE}.sampleSchema/test")
 
         assert uri.collection == f"{LEXICON_NAMESPACE}.sampleSchema"
+
+
+class TestPDSBlobStore:
+    """Tests for PDSBlobStore blob storage."""
+
+    def test_create_with_client(self, authenticated_client):
+        """PDSBlobStore can be created with authenticated client."""
+        from atdata.atmosphere import PDSBlobStore
+
+        store = PDSBlobStore(client=authenticated_client)
+        assert store.client is authenticated_client
+
+    def test_supports_streaming(self, authenticated_client):
+        """PDSBlobStore supports streaming."""
+        from atdata.atmosphere import PDSBlobStore
+
+        store = PDSBlobStore(client=authenticated_client)
+        assert store.supports_streaming() is True
+
+    def test_write_shards_requires_auth(self, mock_atproto_client):
+        """write_shards raises if client not authenticated."""
+        from atdata.atmosphere import PDSBlobStore
+
+        # Create client without login
+        client = AtmosphereClient(_client=mock_atproto_client)
+        # Clear session
+        client._session = None
+
+        store = PDSBlobStore(client=client)
+
+        # Create minimal mock dataset
+        mock_ds = Mock()
+        mock_ds.ordered.return_value = iter([])
+
+        with pytest.raises(ValueError, match="Not authenticated"):
+            store.write_shards(mock_ds, prefix="test")
+
+    def test_write_shards_uploads_blobs(self, authenticated_client, mock_atproto_client, tmp_path):
+        """write_shards uploads each shard as a blob."""
+        from atdata.atmosphere import PDSBlobStore
+        import webdataset as wds
+
+        # Create a test dataset with samples
+        tar_path = tmp_path / "test.tar"
+        with wds.writer.TarWriter(str(tar_path)) as sink:
+            sample = AtmoSample(name="test", value=42)
+            sink.write(sample.as_wds)
+
+        ds = atdata.Dataset[AtmoSample](str(tar_path))
+
+        # Mock upload_blob to return a blob reference
+        authenticated_client.upload_blob = Mock(return_value={
+            "$type": "blob",
+            "ref": {"$link": "bafyrei123abc"},
+            "mimeType": "application/x-tar",
+            "size": 1024,
+        })
+
+        store = PDSBlobStore(client=authenticated_client)
+        urls = store.write_shards(ds, prefix="test/v1", maxcount=100)
+
+        # Should have uploaded one shard
+        assert len(urls) == 1
+        assert urls[0] == "at://did:plc:integration123/blob/bafyrei123abc"
+
+        # Verify upload_blob was called with tar data
+        authenticated_client.upload_blob.assert_called_once()
+        call_args = authenticated_client.upload_blob.call_args
+        assert call_args.kwargs["mime_type"] == "application/x-tar"
+        # First arg should be bytes (tar data)
+        assert isinstance(call_args.args[0], bytes)
+
+    def test_read_url_transforms_at_uri(self, authenticated_client, mock_atproto_client):
+        """read_url transforms AT URIs to HTTP URLs."""
+        from atdata.atmosphere import PDSBlobStore
+
+        authenticated_client.get_blob_url = Mock(
+            return_value="https://pds.example.com/xrpc/com.atproto.sync.getBlob?did=did:plc:abc&cid=bafyrei123"
+        )
+
+        store = PDSBlobStore(client=authenticated_client)
+        url = store.read_url("at://did:plc:abc/blob/bafyrei123")
+
+        assert "https://pds.example.com" in url
+        assert "bafyrei123" in url
+        authenticated_client.get_blob_url.assert_called_once_with("did:plc:abc", "bafyrei123")
+
+    def test_read_url_passes_non_at_uri(self, authenticated_client):
+        """read_url returns non-AT URIs unchanged."""
+        from atdata.atmosphere import PDSBlobStore
+
+        store = PDSBlobStore(client=authenticated_client)
+        url = store.read_url("https://example.com/data.tar")
+
+        assert url == "https://example.com/data.tar"
+
+    def test_read_url_invalid_format(self, authenticated_client):
+        """read_url raises on invalid AT URI format."""
+        from atdata.atmosphere import PDSBlobStore
+
+        store = PDSBlobStore(client=authenticated_client)
+
+        with pytest.raises(ValueError, match="Invalid blob AT URI format"):
+            store.read_url("at://did:plc:abc/invalid/format/extra")
+
+    def test_create_source_returns_blob_source(self, authenticated_client):
+        """create_source returns BlobSource for AT URIs."""
+        from atdata.atmosphere import PDSBlobStore
+        from atdata._sources import BlobSource
+
+        store = PDSBlobStore(client=authenticated_client)
+        source = store.create_source([
+            "at://did:plc:abc/blob/bafyrei111",
+            "at://did:plc:abc/blob/bafyrei222",
+        ])
+
+        assert isinstance(source, BlobSource)
+        assert len(source.blob_refs) == 2
+        assert source.blob_refs[0]["did"] == "did:plc:abc"
+        assert source.blob_refs[0]["cid"] == "bafyrei111"
+
+    def test_create_source_invalid_url(self, authenticated_client):
+        """create_source raises on non-AT URIs."""
+        from atdata.atmosphere import PDSBlobStore
+
+        store = PDSBlobStore(client=authenticated_client)
+
+        with pytest.raises(ValueError, match="Not an AT URI"):
+            store.create_source(["https://example.com/data.tar"])
+
+    def test_atmosphere_index_with_data_store(self, authenticated_client):
+        """AtmosphereIndex can be created with PDSBlobStore."""
+        from atdata.atmosphere import PDSBlobStore
+
+        store = PDSBlobStore(client=authenticated_client)
+        index = AtmosphereIndex(client=authenticated_client, data_store=store)
+
+        assert index.data_store is store
+
+    def test_atmosphere_index_data_store_property(self, authenticated_client):
+        """AtmosphereIndex.data_store property returns the store."""
+        from atdata.atmosphere import PDSBlobStore
+
+        store = PDSBlobStore(client=authenticated_client)
+        index = AtmosphereIndex(client=authenticated_client, data_store=store)
+
+        assert index.data_store is store
+
+    def test_atmosphere_index_without_data_store(self, authenticated_client):
+        """AtmosphereIndex without data_store has None."""
+        index = AtmosphereIndex(client=authenticated_client)
+
+        assert index.data_store is None

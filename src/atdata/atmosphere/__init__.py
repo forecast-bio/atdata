@@ -38,6 +38,7 @@ from .client import AtmosphereClient
 from .schema import SchemaPublisher, SchemaLoader
 from .records import DatasetPublisher, DatasetLoader
 from .lens import LensPublisher, LensLoader
+from .store import PDSBlobStore
 from ._types import (
     AtUri,
     SchemaRecord,
@@ -102,30 +103,48 @@ class AtmosphereIndex:
     Wraps SchemaPublisher/Loader and DatasetPublisher/Loader to provide
     a unified interface compatible with LocalIndex.
 
+    Optionally accepts a ``PDSBlobStore`` for writing dataset shards as
+    ATProto blobs, enabling fully decentralized dataset storage.
+
     Example:
         ::
 
             >>> client = AtmosphereClient()
             >>> client.login("handle.bsky.social", "app-password")
             >>>
+            >>> # Without blob storage (external URLs only)
             >>> index = AtmosphereIndex(client)
-            >>> schema_ref = index.publish_schema(MySample, version="1.0.0")
+            >>>
+            >>> # With PDS blob storage
+            >>> store = PDSBlobStore(client)
+            >>> index = AtmosphereIndex(client, data_store=store)
             >>> entry = index.insert_dataset(dataset, name="my-data")
     """
 
-    def __init__(self, client: AtmosphereClient):
+    def __init__(
+        self,
+        client: AtmosphereClient,
+        *,
+        data_store: Optional[PDSBlobStore] = None,
+    ):
         """Initialize the atmosphere index.
 
         Args:
             client: Authenticated AtmosphereClient instance.
+            data_store: Optional PDSBlobStore for writing shards as blobs.
+                If provided, insert_dataset will upload shards to PDS.
         """
         self.client = client
         self._schema_publisher = SchemaPublisher(client)
         self._schema_loader = SchemaLoader(client)
         self._dataset_publisher = DatasetPublisher(client)
         self._dataset_loader = DatasetLoader(client)
-        # AtmosphereIndex doesn't support data_store (uses PDS blobs)
-        self.data_store = None
+        self._data_store = data_store
+
+    @property
+    def data_store(self) -> Optional[PDSBlobStore]:
+        """The PDS blob store for writing shards, or None if not configured."""
+        return self._data_store
 
     # Dataset operations
 
@@ -291,6 +310,8 @@ class AtmosphereIndex:
 __all__ = [
     # Client
     "AtmosphereClient",
+    # Storage
+    "PDSBlobStore",
     # Unified index (AbstractIndex protocol)
     "AtmosphereIndex",
     "AtmosphereIndexEntry",
