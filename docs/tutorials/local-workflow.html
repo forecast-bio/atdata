@@ -324,6 +324,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     </a>
     <ul class="dropdown-menu" aria-labelledby="nav-menu-reference">    
         <li>
+    <a class="dropdown-item" href="../reference/architecture.html">
+ <span class="dropdown-text">Architecture Overview</span></a>
+  </li>  
+        <li>
     <a class="dropdown-item" href="../reference/packable-samples.html">
  <span class="dropdown-text">Packable Samples</span></a>
   </li>  
@@ -456,6 +460,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../reference/architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Architecture Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../reference/packable-samples.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Packable Samples</span></a>
   </div>
@@ -532,7 +542,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link active" data-scroll-target="#prerequisites">Prerequisites</a></li>
+  <li><a href="#why-team-storage" id="toc-why-team-storage" class="nav-link active" data-scroll-target="#why-team-storage">Why Team Storage?</a></li>
+  <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
   <li><a href="#setup" id="toc-setup" class="nav-link" data-scroll-target="#setup">Setup</a></li>
   <li><a href="#define-sample-types" id="toc-define-sample-types" class="nav-link" data-scroll-target="#define-sample-types">Define Sample Types</a></li>
   <li><a href="#localdatasetentry" id="toc-localdatasetentry" class="nav-link" data-scroll-target="#localdatasetentry">LocalDatasetEntry</a></li>
@@ -543,6 +554,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#s3datastore" id="toc-s3datastore" class="nav-link" data-scroll-target="#s3datastore">S3DataStore</a></li>
   <li><a href="#complete-index-workflow" id="toc-complete-index-workflow" class="nav-link" data-scroll-target="#complete-index-workflow">Complete Index Workflow</a></li>
   <li><a href="#using-load_dataset-with-index" id="toc-using-load_dataset-with-index" class="nav-link" data-scroll-target="#using-load_dataset-with-index">Using load_dataset with Index</a></li>
+  <li><a href="#what-youve-learned" id="toc-what-youve-learned" class="nav-link" data-scroll-target="#what-youve-learned">What You’ve Learned</a></li>
   <li><a href="#next-steps" id="toc-next-steps" class="nav-link" data-scroll-target="#next-steps">Next Steps</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/your-org/atdata/edit/main/tutorials/local-workflow.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
@@ -575,7 +587,40 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>This tutorial demonstrates how to use the local storage module to store and index datasets using Redis and S3-compatible storage.</p>
+<p>This tutorial demonstrates how to use the local storage module to store and index datasets using Redis and S3-compatible storage. This is <strong>Layer 2</strong> of atdata’s architecture—team-scale storage that bridges local development and federated sharing.</p>
+<section id="why-team-storage" class="level2">
+<h2 class="anchored" data-anchor-id="why-team-storage">Why Team Storage?</h2>
+<p>Local tar files work well for individual experiments, but teams need:</p>
+<ul>
+<li><strong>Discovery</strong>: “What datasets do we have? What schema does this one use?”</li>
+<li><strong>Consistency</strong>: “Is everyone using the same version of this dataset?”</li>
+<li><strong>Durability</strong>: “Where’s the canonical copy of our training data?”</li>
+</ul>
+<p>atdata’s local storage module addresses these needs with a two-component architecture:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 55%">
+<col style="width: 45%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Component</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Redis Index</strong></td>
+<td>Fast metadata queries, schema registry, dataset discovery</td>
+</tr>
+<tr class="even">
+<td><strong>S3 DataStore</strong></td>
+<td>Scalable object storage for actual data files</td>
+</tr>
+</tbody>
+</table>
+<p>This separation means metadata operations (listing datasets, resolving schemas) are fast and don’t touch large data files, while the data itself lives in battle-tested object storage.</p>
+</section>
 <section id="prerequisites" class="level2">
 <h2 class="anchored" data-anchor-id="prerequisites">Prerequisites</h2>
 <ul>
@@ -599,7 +644,7 @@ Tip
 </section>
 <section id="setup" class="level2">
 <h2 class="anchored" data-anchor-id="setup">Setup</h2>
-<div id="cba2b198" class="cell">
+<div id="abef9b71" class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
@@ -609,7 +654,7 @@ Tip
 </section>
 <section id="define-sample-types" class="level2">
 <h2 class="anchored" data-anchor-id="define-sample-types">Define Sample Types</h2>
-<div id="8bf33c29" class="cell">
+<div id="eb4a25ab" class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> TrainingSample:</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""A sample containing features and label for training."""</span></span>
@@ -625,8 +670,15 @@ Tip
 </section>
 <section id="localdatasetentry" class="level2">
 <h2 class="anchored" data-anchor-id="localdatasetentry">LocalDatasetEntry</h2>
+<p>Every dataset in the index is represented by a <code>LocalDatasetEntry</code>. A key design decision: entries use <strong>content-addressable CIDs</strong> (Content Identifiers) as their identity. This means:</p>
+<ul>
+<li>Identical content always has the same CID</li>
+<li>You can verify data integrity by checking the CID</li>
+<li>Deduplication happens automatically</li>
+</ul>
+<p>CIDs are computed from the entry’s schema reference and data URLs, so the same logical dataset will have the same CID regardless of where it’s stored.</p>
 <p>Create entries with content-addressable CIDs:</p>
-<div id="a93468d2" class="cell">
+<div id="b26485ff" class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create an entry manually</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>entry <span class="op">=</span> LocalDatasetEntry(</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    _name<span class="op">=</span><span class="st">"my-dataset"</span>,</span>
@@ -657,8 +709,9 @@ Note
 </section>
 <section id="localindex" class="level2">
 <h2 class="anchored" data-anchor-id="localindex">LocalIndex</h2>
+<p>The <code>LocalIndex</code> is your team’s dataset registry. It implements the <code>AbstractIndex</code> protocol, meaning code written against <code>LocalIndex</code> will also work with <code>AtmosphereIndex</code> when you’re ready for federated sharing.</p>
 <p>The index tracks datasets in Redis:</p>
-<div id="05315823" class="cell">
+<div id="d23bcb72" class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> redis <span class="im">import</span> Redis</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Connect to Redis</span></span>
@@ -669,7 +722,9 @@ Note
 </div>
 <section id="schema-management" class="level3">
 <h3 class="anchored" data-anchor-id="schema-management">Schema Management</h3>
-<div id="a16e84e2" class="cell">
+<p><strong>Schema publishing</strong> is how you ensure type consistency across your team. When you publish a schema, atdata stores the complete type definition (field names, types, metadata) so anyone can reconstruct the Python class from just the schema reference.</p>
+<p>This enables a powerful workflow: share a dataset by sharing its name, and consumers can dynamically reconstruct the sample type without having the original Python code.</p>
+<div id="39ba8cff" class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Publish a schema</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>schema_ref <span class="op">=</span> index.publish_schema(TrainingSample, version<span class="op">=</span><span class="st">"1.0.0"</span>)</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Published schema: </span><span class="sc">{</span>schema_ref<span class="sc">}</span><span class="ss">"</span>)</span>
@@ -690,8 +745,15 @@ Note
 </section>
 <section id="s3datastore" class="level2">
 <h2 class="anchored" data-anchor-id="s3datastore">S3DataStore</h2>
+<p>The <code>S3DataStore</code> implements the <code>AbstractDataStore</code> protocol for S3-compatible object storage. It works with:</p>
+<ul>
+<li><strong>AWS S3</strong>: Production-scale cloud storage</li>
+<li><strong>MinIO</strong>: Self-hosted S3-compatible storage (great for development)</li>
+<li><strong>Cloudflare R2</strong>: Cost-effective S3-compatible storage</li>
+</ul>
+<p>The data store handles uploading tar shards and creating signed URLs for streaming access.</p>
 <p>For direct S3 operations:</p>
-<div id="0b93923c" class="cell">
+<div id="d1cd901f" class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>creds <span class="op">=</span> {</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"AWS_ENDPOINT"</span>: <span class="st">"http://localhost:9000"</span>,</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"AWS_ACCESS_KEY_ID"</span>: <span class="st">"minioadmin"</span>,</span>
@@ -706,8 +768,18 @@ Note
 </section>
 <section id="complete-index-workflow" class="level2">
 <h2 class="anchored" data-anchor-id="complete-index-workflow">Complete Index Workflow</h2>
+<p>Here’s the typical workflow for publishing a dataset to your team:</p>
+<ol type="1">
+<li><strong>Create samples</strong> using your <code>@packable</code> type</li>
+<li><strong>Write to local tar</strong> for staging</li>
+<li><strong>Create a Dataset</strong> wrapper</li>
+<li><strong>Connect to index with data store</strong></li>
+<li><strong>Publish schema</strong> for type consistency</li>
+<li><strong>Insert dataset</strong> (uploads to S3, indexes in Redis)</li>
+</ol>
+<p>The index composition pattern (<code>LocalIndex(data_store=S3DataStore(...))</code>) is deliberate—it separates the concern of “where is metadata?” from “where is data?”, making it easy to swap storage backends.</p>
 <p>Use <code>LocalIndex</code> with <code>S3DataStore</code> to store datasets with S3 storage and Redis indexing:</p>
-<div id="437797e0" class="cell">
+<div id="6d91c4f2" class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Create sample data</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>samples <span class="op">=</span> [</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    TrainingSample(</span>
@@ -755,8 +827,9 @@ Note
 </section>
 <section id="using-load_dataset-with-index" class="level2">
 <h2 class="anchored" data-anchor-id="using-load_dataset-with-index">Using load_dataset with Index</h2>
+<p>The <code>load_dataset()</code> function provides a HuggingFace-style API that abstracts away the details of where data lives. When you pass an index, it can resolve <code>@local/</code> prefixed paths to the actual data URLs and apply the correct credentials automatically.</p>
 <p>The <code>load_dataset()</code> function supports index lookup:</p>
-<div id="a2176738" class="cell">
+<div id="4bf81ece" class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata <span class="im">import</span> load_dataset</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Load from local index</span></span>
@@ -768,8 +841,56 @@ Note
 <span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">break</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
+<section id="what-youve-learned" class="level2">
+<h2 class="anchored" data-anchor-id="what-youve-learned">What You’ve Learned</h2>
+<p>You now understand team-scale storage in atdata:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Concept</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>LocalIndex</code></td>
+<td>Redis-backed dataset registry implementing <code>AbstractIndex</code></td>
+</tr>
+<tr class="even">
+<td><code>S3DataStore</code></td>
+<td>S3-compatible object storage implementing <code>AbstractDataStore</code></td>
+</tr>
+<tr class="odd">
+<td><code>LocalDatasetEntry</code></td>
+<td>Content-addressed dataset entries with CIDs</td>
+</tr>
+<tr class="even">
+<td>Schema publishing</td>
+<td>Shared type definitions for team consistency</td>
+</tr>
+</tbody>
+</table>
+<p>The same sample types you defined in the Quick Start work seamlessly here—the only change is where the data lives.</p>
+</section>
 <section id="next-steps" class="level2">
 <h2 class="anchored" data-anchor-id="next-steps">Next Steps</h2>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Ready for Public Sharing?
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The <a href="../tutorials/atmosphere.html">Atmosphere Publishing</a> tutorial shows how to publish datasets to the ATProto network for decentralized, cross-organization discovery.</p>
+</div>
+</div>
 <ul>
 <li><strong><a href="../tutorials/atmosphere.html">Atmosphere Publishing</a></strong> - Publish to ATProto federation</li>
 <li><strong><a href="../tutorials/promotion.html">Promotion Workflow</a></strong> - Migrate from local to atmosphere</li>

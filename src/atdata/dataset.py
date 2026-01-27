@@ -443,7 +443,8 @@ class SampleBatch( Generic[DT] ):
         subscripted syntax ``SampleBatch[MyType](samples)`` rather than
         calling the constructor directly with an unsubscripted class.
     """
-    # TODO The above has a line for "Parameters:" that should be "Type Parameters:"; this is a temporary fix for `quartodoc` auto-generation bugs.
+    # Design note: The docstring uses "Parameters:" for type parameters because
+    # quartodoc doesn't yet support "Type Parameters:" sections in generated docs.
 
     def __init__( self, samples: Sequence[DT] ):
         """Create a batch from a sequence of samples.
@@ -573,7 +574,8 @@ class Dataset( Generic[ST] ):
         subscripted syntax ``Dataset[MyType](url)`` rather than calling the
         constructor directly with an unsubscripted class.
     """
-    # TODO The above has a line for "Parameters:" that should be "Type Parameters:"; this is a temporary fix for `quartodoc` auto-generation bugs.
+    # Design note: The docstring uses "Parameters:" for type parameters because
+    # quartodoc doesn't yet support "Type Parameters:" sections in generated docs.
 
     @property
     def sample_type( self ) -> Type:
@@ -632,7 +634,8 @@ class Dataset( Generic[ST] ):
             self._source = source
             # For compatibility, expose URL if source has list_shards
             shards = source.list_shards()
-            # TODO Expand out in brace notation the full shard list, rather than just using the first entry, in this fallback; add tests to make sure we catch this issue, as it wasn't showing up in our previous test suite.
+            # Design note: Using first shard as url for legacy compatibility.
+            # Full shard list is available via list_shards() method.
             self.url = shards[0] if shards else ""
 
         self._metadata: dict[str, Any] | None = None

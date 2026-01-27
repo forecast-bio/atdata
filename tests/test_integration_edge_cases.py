@@ -105,6 +105,37 @@ class TestEmptyAndMinimalDatasets:
         assert len(batches) >= 1
         assert len(batches[0].samples) == 1
 
+    def test_empty_tar_iteration(self, tmp_path):
+        """Iteration over empty tar file should yield no samples."""
+        import webdataset as wds
+
+        tar_path = tmp_path / "empty-000000.tar"
+        # Create empty tar file with no samples
+        with wds.writer.TarWriter(str(tar_path)):
+            pass
+
+        ds = atdata.Dataset[EmptyCompatSample](str(tar_path))
+
+        # Ordered iteration should yield nothing
+        samples = list(ds.ordered(batch_size=None))
+        assert samples == []
+
+        # Batched iteration should also yield nothing
+        batches = list(ds.ordered(batch_size=10))
+        assert batches == []
+
+    def test_empty_tar_shuffled_iteration(self, tmp_path):
+        """Shuffled iteration over empty tar should yield no samples."""
+        import webdataset as wds
+
+        tar_path = tmp_path / "empty-shuffled-000000.tar"
+        with wds.writer.TarWriter(str(tar_path)):
+            pass
+
+        ds = atdata.Dataset[EmptyCompatSample](str(tar_path))
+        samples = list(ds.shuffled(batch_size=None))
+        assert samples == []
+
 
 ##
 # Primitive Type Coverage Tests

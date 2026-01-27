@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Typed dataclasses with automatic msgpack serialization">
+<meta name="description" content="Understanding the design and components of atdata">
 
-<title>Packable Samples – atdata</title>
+<title>Architecture Overview – atdata</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -396,7 +396,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/architecture.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/packable-samples.html">Packable Samples</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/architecture.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/architecture.html">Architecture Overview</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -460,13 +460,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../reference/architecture.html" class="sidebar-item-text sidebar-link">
+  <a href="../reference/architecture.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">Architecture Overview</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../reference/packable-samples.html" class="sidebar-item-text sidebar-link active">
+  <a href="../reference/packable-samples.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Packable Samples</span></a>
   </div>
 </li>
@@ -542,42 +542,59 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#the-packable-decorator" id="toc-the-packable-decorator" class="nav-link active" data-scroll-target="#the-packable-decorator">The <code>@packable</code> Decorator</a></li>
-  <li><a href="#supported-field-types" id="toc-supported-field-types" class="nav-link" data-scroll-target="#supported-field-types">Supported Field Types</a>
+  <li><a href="#design-philosophy" id="toc-design-philosophy" class="nav-link active" data-scroll-target="#design-philosophy">Design Philosophy</a>
   <ul class="collapse">
-  <li><a href="#primitives" id="toc-primitives" class="nav-link" data-scroll-target="#primitives">Primitives</a></li>
-  <li><a href="#numpy-arrays" id="toc-numpy-arrays" class="nav-link" data-scroll-target="#numpy-arrays">NumPy Arrays</a></li>
-  <li><a href="#lists" id="toc-lists" class="nav-link" data-scroll-target="#lists">Lists</a></li>
+  <li><a href="#the-problem" id="toc-the-problem" class="nav-link" data-scroll-target="#the-problem">The Problem</a></li>
+  <li><a href="#the-solution" id="toc-the-solution" class="nav-link" data-scroll-target="#the-solution">The Solution</a></li>
   </ul></li>
-  <li><a href="#serialization" id="toc-serialization" class="nav-link" data-scroll-target="#serialization">Serialization</a>
+  <li><a href="#core-components" id="toc-core-components" class="nav-link" data-scroll-target="#core-components">Core Components</a>
   <ul class="collapse">
-  <li><a href="#packing-to-bytes" id="toc-packing-to-bytes" class="nav-link" data-scroll-target="#packing-to-bytes">Packing to Bytes</a></li>
-  <li><a href="#unpacking-from-bytes" id="toc-unpacking-from-bytes" class="nav-link" data-scroll-target="#unpacking-from-bytes">Unpacking from Bytes</a></li>
-  <li><a href="#webdataset-format" id="toc-webdataset-format" class="nav-link" data-scroll-target="#webdataset-format">WebDataset Format</a></li>
+  <li><a href="#packablesample-the-foundation" id="toc-packablesample-the-foundation" class="nav-link" data-scroll-target="#packablesample-the-foundation">PackableSample: The Foundation</a></li>
+  <li><a href="#dataset-typed-iteration" id="toc-dataset-typed-iteration" class="nav-link" data-scroll-target="#dataset-typed-iteration">Dataset: Typed Iteration</a></li>
+  <li><a href="#samplebatch-automatic-aggregation" id="toc-samplebatch-automatic-aggregation" class="nav-link" data-scroll-target="#samplebatch-automatic-aggregation">SampleBatch: Automatic Aggregation</a></li>
+  <li><a href="#lens-schema-transformations" id="toc-lens-schema-transformations" class="nav-link" data-scroll-target="#lens-schema-transformations">Lens: Schema Transformations</a></li>
   </ul></li>
-  <li><a href="#direct-inheritance-alternative" id="toc-direct-inheritance-alternative" class="nav-link" data-scroll-target="#direct-inheritance-alternative">Direct Inheritance (Alternative)</a></li>
-  <li><a href="#how-it-works" id="toc-how-it-works" class="nav-link" data-scroll-target="#how-it-works">How It Works</a>
+  <li><a href="#storage-backends" id="toc-storage-backends" class="nav-link" data-scroll-target="#storage-backends">Storage Backends</a>
   <ul class="collapse">
-  <li><a href="#serialization-flow" id="toc-serialization-flow" class="nav-link" data-scroll-target="#serialization-flow">Serialization Flow</a></li>
-  <li><a href="#the-_ensure_good-method" id="toc-the-_ensure_good-method" class="nav-link" data-scroll-target="#the-_ensure_good-method">The <code>_ensure_good()</code> Method</a></li>
+  <li><a href="#local-index-redis-s3" id="toc-local-index-redis-s3" class="nav-link" data-scroll-target="#local-index-redis-s3">Local Index (Redis + S3)</a></li>
+  <li><a href="#atmosphere-index-atproto" id="toc-atmosphere-index-atproto" class="nav-link" data-scroll-target="#atmosphere-index-atproto">Atmosphere Index (ATProto)</a></li>
   </ul></li>
-  <li><a href="#best-practices" id="toc-best-practices" class="nav-link" data-scroll-target="#best-practices">Best Practices</a></li>
+  <li><a href="#protocol-abstractions" id="toc-protocol-abstractions" class="nav-link" data-scroll-target="#protocol-abstractions">Protocol Abstractions</a>
+  <ul class="collapse">
+  <li><a href="#abstractindex" id="toc-abstractindex" class="nav-link" data-scroll-target="#abstractindex">AbstractIndex</a></li>
+  <li><a href="#abstractdatastore" id="toc-abstractdatastore" class="nav-link" data-scroll-target="#abstractdatastore">AbstractDataStore</a></li>
+  <li><a href="#datasource" id="toc-datasource" class="nav-link" data-scroll-target="#datasource">DataSource</a></li>
+  </ul></li>
+  <li><a href="#data-flow-local-to-federation" id="toc-data-flow-local-to-federation" class="nav-link" data-scroll-target="#data-flow-local-to-federation">Data Flow: Local to Federation</a>
+  <ul class="collapse">
+  <li><a href="#stage-1-local-development" id="toc-stage-1-local-development" class="nav-link" data-scroll-target="#stage-1-local-development">Stage 1: Local Development</a></li>
+  <li><a href="#stage-2-team-storage" id="toc-stage-2-team-storage" class="nav-link" data-scroll-target="#stage-2-team-storage">Stage 2: Team Storage</a></li>
+  <li><a href="#stage-3-federation" id="toc-stage-3-federation" class="nav-link" data-scroll-target="#stage-3-federation">Stage 3: Federation</a></li>
+  </ul></li>
+  <li><a href="#content-addressing" id="toc-content-addressing" class="nav-link" data-scroll-target="#content-addressing">Content Addressing</a></li>
+  <li><a href="#extension-points" id="toc-extension-points" class="nav-link" data-scroll-target="#extension-points">Extension Points</a>
+  <ul class="collapse">
+  <li><a href="#custom-datasources" id="toc-custom-datasources" class="nav-link" data-scroll-target="#custom-datasources">Custom DataSources</a></li>
+  <li><a href="#custom-lenses" id="toc-custom-lenses" class="nav-link" data-scroll-target="#custom-lenses">Custom Lenses</a></li>
+  <li><a href="#schema-extensions" id="toc-schema-extensions" class="nav-link" data-scroll-target="#schema-extensions">Schema Extensions</a></li>
+  </ul></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a></li>
   <li><a href="#related" id="toc-related" class="nav-link" data-scroll-target="#related">Related</a></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/your-org/atdata/edit/main/reference/packable-samples.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/your-org/atdata/edit/main/reference/architecture.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/architecture.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/packable-samples.html">Packable Samples</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/architecture.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/architecture.html">Architecture Overview</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">Packable Samples</h1>
+<h1 class="title">Architecture Overview</h1>
 </div>
 
 <div>
   <div class="description">
-    Typed dataclasses with automatic msgpack serialization
+    Understanding the design and components of atdata
   </div>
 </div>
 
@@ -594,208 +611,391 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>Packable samples are typed dataclasses that can be serialized with msgpack for storage in WebDataset tar files.</p>
-<section id="the-packable-decorator" class="level2">
-<h2 class="anchored" data-anchor-id="the-packable-decorator">The <code>@packable</code> Decorator</h2>
-<p>The recommended way to define a sample type is with the <code>@packable</code> decorator:</p>
-<div id="c5cea75b" class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ImageSample:</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    image: NDArray</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    label: <span class="bu">str</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    confidence: <span class="bu">float</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>This creates a dataclass that:</p>
+<p>atdata is designed around a simple but powerful idea: <strong>typed, serializable samples</strong> that can flow seamlessly between local development, team storage, and a federated network. This page explains the architectural decisions and how the components work together.</p>
+<section id="design-philosophy" class="level2">
+<h2 class="anchored" data-anchor-id="design-philosophy">Design Philosophy</h2>
+<section id="the-problem" class="level3">
+<h3 class="anchored" data-anchor-id="the-problem">The Problem</h3>
+<p>Machine learning workflows involve datasets at every stage—training data, validation sets, embeddings, features, and model outputs. These datasets are often:</p>
 <ul>
-<li>Inherits from <code>PackableSample</code></li>
-<li>Has automatic msgpack serialization</li>
-<li>Handles NDArray conversion to/from bytes</li>
+<li><strong>Untyped</strong>: Raw files with implicit schemas, leading to runtime errors</li>
+<li><strong>Siloed</strong>: Stuck in one location (local disk, team bucket, or cloud storage)</li>
+<li><strong>Undiscoverable</strong>: No standard way to find and share datasets across teams or organizations</li>
 </ul>
 </section>
-<section id="supported-field-types" class="level2">
-<h2 class="anchored" data-anchor-id="supported-field-types">Supported Field Types</h2>
-<section id="primitives" class="level3">
-<h3 class="anchored" data-anchor-id="primitives">Primitives</h3>
-<div id="c8b5a276" class="cell">
+<section id="the-solution" class="level3">
+<h3 class="anchored" data-anchor-id="the-solution">The Solution</h3>
+<p>atdata provides a three-layer architecture that addresses each problem:</p>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│  Layer 3: Federation (ATProto Atmosphere)                   │
+│  - Decentralized discovery and sharing                      │
+│  - Content-addressable identifiers                          │
+│  - Cross-organization dataset federation                    │
+└─────────────────────────────────────────────────────────────┘
+                              ↑
+                        Promotion
+                              ↑
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 2: Team Storage (Redis + S3)                         │
+│  - Shared index for team discovery                          │
+│  - Scalable object storage for data                         │
+│  - Schema registry for type consistency                     │
+└─────────────────────────────────────────────────────────────┘
+                              ↑
+                         Insert
+                              ↑
+┌─────────────────────────────────────────────────────────────┐
+│  Layer 1: Local Development                                 │
+│  - Typed samples with automatic serialization               │
+│  - WebDataset tar files for efficient storage               │
+│  - Lens transformations for schema flexibility              │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+</section>
+</section>
+<section id="core-components" class="level2">
+<h2 class="anchored" data-anchor-id="core-components">Core Components</h2>
+<section id="packablesample-the-foundation" class="level3">
+<h3 class="anchored" data-anchor-id="packablesample-the-foundation">PackableSample: The Foundation</h3>
+<p>Everything in atdata starts with <strong>PackableSample</strong>—a base class that makes Python dataclasses serializable with msgpack:</p>
+<div id="1d6c7714" class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> PrimitiveSample:</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    name: <span class="bu">str</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    count: <span class="bu">int</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    score: <span class="bu">float</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    active: <span class="bu">bool</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    data: <span class="bu">bytes</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ImageSample:</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    image: NDArray       <span class="co"># Automatically converted to/from bytes</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    label: <span class="bu">str</span>           <span class="co"># Standard msgpack serialization</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    confidence: <span class="bu">float</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>Key features:</p>
+<ul>
+<li><strong>Automatic NDArray handling</strong>: Numpy arrays are serialized efficiently</li>
+<li><strong>Type safety</strong>: Field types are preserved and validated</li>
+<li><strong>Round-trip fidelity</strong>: Serialize → deserialize always produces identical data</li>
+</ul>
+<p>The <code>@packable</code> decorator is syntactic sugar that:</p>
+<ol type="1">
+<li>Converts your class to a dataclass</li>
+<li>Adds <code>PackableSample</code> as a base class</li>
+<li>Registers a lens from <code>DictSample</code> for flexible loading</li>
+</ol>
 </section>
-<section id="numpy-arrays" class="level3">
-<h3 class="anchored" data-anchor-id="numpy-arrays">NumPy Arrays</h3>
-<p>Fields annotated as <code>NDArray</code> are automatically converted:</p>
-<div id="59e8610f" class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ArraySample:</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    features: NDArray          <span class="co"># Required array</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    embeddings: NDArray <span class="op">|</span> <span class="va">None</span>  <span class="co"># Optional array</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="dataset-typed-iteration" class="level3">
+<h3 class="anchored" data-anchor-id="dataset-typed-iteration">Dataset: Typed Iteration</h3>
+<p>The <code>Dataset[T]</code> class wraps WebDataset tar archives with type information:</p>
+<div id="750a8ebc" class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[ImageSample](<span class="st">"data-{000000..000009}.tar"</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> dataset.shuffled(batch_size<span class="op">=</span><span class="dv">32</span>):</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    images <span class="op">=</span> batch.image  <span class="co"># Stacked NDArray: (32, H, W, C)</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    labels <span class="op">=</span> batch.label  <span class="co"># List of 32 strings</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Note
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Bytes in NDArray-typed fields are always interpreted as serialized arrays. Don’t use <code>NDArray</code> for raw binary data—use <code>bytes</code> instead.</p>
-</div>
-</div>
+<p><strong>Why WebDataset?</strong></p>
+<p>WebDataset is a battle-tested format for large-scale ML training:</p>
+<ul>
+<li><strong>Streaming</strong>: No need to download entire datasets</li>
+<li><strong>Sharding</strong>: Data split across multiple tar files for parallelism</li>
+<li><strong>Shuffling</strong>: Two-level shuffling (shard + sample) for training</li>
+</ul>
+<p>atdata adds:</p>
+<ul>
+<li><strong>Type safety</strong>: Know the schema at compile time</li>
+<li><strong>Batch aggregation</strong>: NDArrays are automatically stacked</li>
+<li><strong>Lens transformations</strong>: View data through different schemas</li>
+</ul>
 </section>
-<section id="lists" class="level3">
-<h3 class="anchored" data-anchor-id="lists">Lists</h3>
-<div id="e0a943cf" class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ListSample:</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    tags: <span class="bu">list</span>[<span class="bu">str</span>]</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    scores: <span class="bu">list</span>[<span class="bu">float</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="samplebatch-automatic-aggregation" class="level3">
+<h3 class="anchored" data-anchor-id="samplebatch-automatic-aggregation">SampleBatch: Automatic Aggregation</h3>
+<p>When iterating with <code>batch_size</code>, atdata returns <code>SampleBatch[T]</code> objects that aggregate sample attributes:</p>
+<div id="36aa2bc8" class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>batch <span class="op">=</span> SampleBatch[ImageSample](samples)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># NDArray fields → stacked numpy array with batch dimension</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>batch.image.shape  <span class="co"># (batch_size, H, W, C)</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Other fields → list</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>batch.label  <span class="co"># ["cat", "dog", "bird", ...]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>This eliminates boilerplate collation code and works automatically for any <code>PackableSample</code> type.</p>
 </section>
-</section>
-<section id="serialization" class="level2">
-<h2 class="anchored" data-anchor-id="serialization">Serialization</h2>
-<section id="packing-to-bytes" class="level3">
-<h3 class="anchored" data-anchor-id="packing-to-bytes">Packing to Bytes</h3>
-<div id="15e89907" class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>sample <span class="op">=</span> ImageSample(</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    image<span class="op">=</span>np.random.rand(<span class="dv">224</span>, <span class="dv">224</span>, <span class="dv">3</span>).astype(np.float32),</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    label<span class="op">=</span><span class="st">"cat"</span>,</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    confidence<span class="op">=</span><span class="fl">0.95</span>,</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Serialize to msgpack bytes</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>packed_bytes <span class="op">=</span> sample.packed</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Size: </span><span class="sc">{</span><span class="bu">len</span>(packed_bytes)<span class="sc">}</span><span class="ss"> bytes"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="lens-schema-transformations" class="level3">
+<h3 class="anchored" data-anchor-id="lens-schema-transformations">Lens: Schema Transformations</h3>
+<p>Lenses enable viewing datasets through different schemas without duplicating data:</p>
+<div id="a5b534a8" class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> SimplifiedSample:</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    label: <span class="bu">str</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.lens</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> simplify(src: ImageSample) <span class="op">-&gt;</span> SimplifiedSample:</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> SimplifiedSample(label<span class="op">=</span>src.label)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co"># View dataset through simplified schema</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>simple_ds <span class="op">=</span> dataset.as_type(SimplifiedSample)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p><strong>When to use lenses:</strong></p>
+<ul>
+<li><strong>Reducing fields</strong>: Drop unnecessary data for specific tasks</li>
+<li><strong>Transforming data</strong>: Compute derived fields on-the-fly</li>
+<li><strong>Schema migration</strong>: Handle version differences between datasets</li>
+</ul>
+<p>Lenses are registered globally in a <code>LensNetwork</code>, enabling automatic discovery of transformation paths.</p>
 </section>
-<section id="unpacking-from-bytes" class="level3">
-<h3 class="anchored" data-anchor-id="unpacking-from-bytes">Unpacking from Bytes</h3>
-<div id="abf5f1f1" class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Deserialize from bytes</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>restored <span class="op">=</span> ImageSample.from_bytes(packed_bytes)</span>
+</section>
+<section id="storage-backends" class="level2">
+<h2 class="anchored" data-anchor-id="storage-backends">Storage Backends</h2>
+<section id="local-index-redis-s3" class="level3">
+<h3 class="anchored" data-anchor-id="local-index-redis-s3">Local Index (Redis + S3)</h3>
+<p>For team-scale usage, atdata provides a two-component storage system:</p>
+<p><strong>Redis Index</strong>: Stores metadata and enables fast lookups</p>
+<ul>
+<li>Dataset entries (name, schema, URLs, metadata)</li>
+<li>Schema registry (type definitions)</li>
+<li>CID-based content addressing</li>
+</ul>
+<p><strong>S3 DataStore</strong>: Stores actual data files</p>
+<ul>
+<li>WebDataset tar shards</li>
+<li>Any S3-compatible storage (AWS, MinIO, Cloudflare R2)</li>
+</ul>
+<div id="8792eb75" class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>store <span class="op">=</span> S3DataStore(credentials<span class="op">=</span>creds, bucket<span class="op">=</span><span class="st">"datasets"</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> LocalIndex(data_store<span class="op">=</span>store)</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Arrays are automatically restored</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> np.array_equal(sample.image, restored.image)</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> sample.label <span class="op">==</span> restored.label</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Insert dataset: writes to S3, indexes in Redis</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>entry <span class="op">=</span> index.insert_dataset(dataset, name<span class="op">=</span><span class="st">"training-v1"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p><strong>Why this split?</strong></p>
+<ul>
+<li><strong>Separation of concerns</strong>: Metadata queries don’t touch data storage</li>
+<li><strong>Flexibility</strong>: Use any S3-compatible storage</li>
+<li><strong>Scalability</strong>: Redis handles high-throughput lookups; S3 handles large files</li>
+</ul>
 </section>
-<section id="webdataset-format" class="level3">
-<h3 class="anchored" data-anchor-id="webdataset-format">WebDataset Format</h3>
-<p>The <code>as_wds</code> property returns a dict ready for WebDataset:</p>
-<div id="e29904d9" class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>wds_dict <span class="op">=</span> sample.as_wds</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co"># {'__key__': '1234...', 'msgpack': b'...'}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Write samples to a tar file:</p>
-<div id="9a0b0a14" class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> webdataset <span class="im">as</span> wds</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> wds.writer.TarWriter(<span class="st">"data-000000.tar"</span>) <span class="im">as</span> sink:</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, sample <span class="kw">in</span> <span class="bu">enumerate</span>(samples):</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Use custom key or let as_wds generate one</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        sink.write({<span class="op">**</span>sample.as_wds, <span class="st">"__key__"</span>: <span class="ss">f"sample_</span><span class="sc">{</span>i<span class="sc">:06d}</span><span class="ss">"</span>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-</section>
-<section id="direct-inheritance-alternative" class="level2">
-<h2 class="anchored" data-anchor-id="direct-inheritance-alternative">Direct Inheritance (Alternative)</h2>
-<p>You can also inherit directly from <code>PackableSample</code>:</p>
-<div id="8a5579f0" class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dataclasses <span class="im">import</span> dataclass</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> DirectSample(atdata.PackableSample):</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    name: <span class="bu">str</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    values: NDArray</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>This is equivalent to using <code>@packable</code> but more verbose.</p>
-</section>
-<section id="how-it-works" class="level2">
-<h2 class="anchored" data-anchor-id="how-it-works">How It Works</h2>
-<section id="serialization-flow" class="level3">
-<h3 class="anchored" data-anchor-id="serialization-flow">Serialization Flow</h3>
-<div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true">Packing</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false">Unpacking</a></li></ul>
-<div class="tab-content">
-<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
-<ol type="1">
-<li>NDArray fields → converted to bytes via <code>array_to_bytes()</code></li>
-<li>Other fields → passed through unchanged</li>
-<li>All fields → packed with msgpack</li>
-</ol>
-</div>
-<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
-<ol type="1">
-<li>Bytes → unpacked with ormsgpack</li>
-<li>Dict → passed to <code>__init__</code></li>
-<li><code>__post_init__</code> → calls <code>_ensure_good()</code></li>
-<li>NDArray fields → bytes converted back to arrays</li>
-</ol>
-</div>
-</div>
-</div>
-</section>
-<section id="the-_ensure_good-method" class="level3">
-<h3 class="anchored" data-anchor-id="the-_ensure_good-method">The <code>_ensure_good()</code> Method</h3>
-<p>This method runs automatically after construction and handles NDArray conversion:</p>
-<div id="3a74bab4" class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _ensure_good(<span class="va">self</span>):</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> field <span class="kw">in</span> dataclasses.fields(<span class="va">self</span>):</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> _is_possibly_ndarray_type(field.<span class="bu">type</span>):</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>            value <span class="op">=</span> <span class="bu">getattr</span>(<span class="va">self</span>, field.name)</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="bu">isinstance</span>(value, <span class="bu">bytes</span>):</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>                <span class="bu">setattr</span>(<span class="va">self</span>, field.name, bytes_to_array(value))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="atmosphere-index-atproto" class="level3">
+<h3 class="anchored" data-anchor-id="atmosphere-index-atproto">Atmosphere Index (ATProto)</h3>
+<p>For public or cross-organization sharing, atdata integrates with the AT Protocol:</p>
+<p><strong>ATProto PDS</strong>: Your Personal Data Server stores records</p>
+<ul>
+<li>Schema definitions</li>
+<li>Dataset index records</li>
+<li>Lens transformation records</li>
+</ul>
+<p><strong>PDSBlobStore</strong>: Optional blob storage on your PDS</p>
+<ul>
+<li>Store actual data shards as ATProto blobs</li>
+<li>Fully decentralized—no external dependencies</li>
+</ul>
+<div id="a5b8403d" class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> AtmosphereClient()</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>client.login(<span class="st">"handle.bsky.social"</span>, <span class="st">"app-password"</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>store <span class="op">=</span> PDSBlobStore(client)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> AtmosphereIndex(client, data_store<span class="op">=</span>store)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Publish: creates ATProto records, uploads blobs</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>entry <span class="op">=</span> index.insert_dataset(dataset, name<span class="op">=</span><span class="st">"public-features"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 </section>
-<section id="best-practices" class="level2">
-<h2 class="anchored" data-anchor-id="best-practices">Best Practices</h2>
-<div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true">Do</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false">Don’t</a></li></ul>
-<div class="tab-content">
-<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
-<div id="5efd4f23" class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> GoodSample:</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    features: NDArray           <span class="co"># Clear type annotation</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    label: <span class="bu">str</span>                  <span class="co"># Simple primitives</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    metadata: <span class="bu">dict</span>              <span class="co"># Msgpack-compatible dicts</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    scores: <span class="bu">list</span>[<span class="bu">float</span>]         <span class="co"># Typed lists</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="protocol-abstractions" class="level2">
+<h2 class="anchored" data-anchor-id="protocol-abstractions">Protocol Abstractions</h2>
+<p>atdata uses <strong>protocols</strong> (structural typing) to enable backend interoperability:</p>
+<section id="abstractindex" class="level3">
+<h3 class="anchored" data-anchor-id="abstractindex">AbstractIndex</h3>
+<p>Common interface for both <code>LocalIndex</code> and <code>AtmosphereIndex</code>:</p>
+<div id="53fdc4fb" class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> process_dataset(index: AbstractIndex, name: <span class="bu">str</span>):</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    entry <span class="op">=</span> index.get_dataset(name)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    schema <span class="op">=</span> index.decode_schema(entry.schema_ref)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Works with either LocalIndex or AtmosphereIndex</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>Key methods:</p>
+<ul>
+<li><code>insert_dataset()</code> / <code>get_dataset()</code>: Dataset CRUD</li>
+<li><code>publish_schema()</code> / <code>decode_schema()</code>: Schema management</li>
+<li><code>list_datasets()</code> / <code>list_schemas()</code>: Discovery</li>
+</ul>
+</section>
+<section id="abstractdatastore" class="level3">
+<h3 class="anchored" data-anchor-id="abstractdatastore">AbstractDataStore</h3>
+<p>Common interface for <code>S3DataStore</code> and <code>PDSBlobStore</code>:</p>
+<div id="76134918" class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> write_to_store(store: AbstractDataStore, dataset: Dataset):</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    urls <span class="op">=</span> store.write_shards(dataset, prefix<span class="op">=</span><span class="st">"data/v1"</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Works with S3 or PDS blob storage</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
-<div id="dc1f3f7b" class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> BadSample:</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># DON'T: Nested dataclasses not supported</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    nested: OtherSample</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="co"># DON'T: Complex objects that aren't msgpack-serializable</span></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    callback: Callable</span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># DON'T: Use NDArray for raw bytes</span></span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    raw_data: NDArray  <span class="co"># Use 'bytes' type instead</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="datasource" class="level3">
+<h3 class="anchored" data-anchor-id="datasource">DataSource</h3>
+<p>Common interface for data streaming:</p>
+<ul>
+<li><code>URLSource</code>: WebDataset-compatible URLs</li>
+<li><code>S3Source</code>: S3 with explicit credentials</li>
+<li><code>BlobSource</code>: ATProto PDS blobs</li>
+</ul>
+</section>
+</section>
+<section id="data-flow-local-to-federation" class="level2">
+<h2 class="anchored" data-anchor-id="data-flow-local-to-federation">Data Flow: Local to Federation</h2>
+<p>A typical workflow progresses through three stages:</p>
+<section id="stage-1-local-development" class="level3">
+<h3 class="anchored" data-anchor-id="stage-1-local-development">Stage 1: Local Development</h3>
+<div id="9ea69426" class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Define type and create samples</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MySample:</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    features: NDArray</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    label: <span class="bu">str</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Write to local tar</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> wds.writer.TarWriter(<span class="st">"data.tar"</span>) <span class="im">as</span> sink:</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> sample <span class="kw">in</span> samples:</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>        sink.write(sample.as_wds)</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Iterate locally</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[MySample](<span class="st">"data.tar"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+</section>
+<section id="stage-2-team-storage" class="level3">
+<h3 class="anchored" data-anchor-id="stage-2-team-storage">Stage 2: Team Storage</h3>
+<div id="c454dd0d" class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Set up team storage</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>store <span class="op">=</span> S3DataStore(credentials<span class="op">=</span>team_creds, bucket<span class="op">=</span><span class="st">"team-datasets"</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> LocalIndex(data_store<span class="op">=</span>store)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Publish schema and insert</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>index.publish_schema(MySample, version<span class="op">=</span><span class="st">"1.0.0"</span>)</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>entry <span class="op">=</span> index.insert_dataset(dataset, name<span class="op">=</span><span class="st">"my-features"</span>)</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Team members can now load via index</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"@local/my-features"</span>, index<span class="op">=</span>index)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+</section>
+<section id="stage-3-federation" class="level3">
+<h3 class="anchored" data-anchor-id="stage-3-federation">Stage 3: Federation</h3>
+<div id="9dfedd67" class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Promote to atmosphere</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> AtmosphereClient()</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>client.login(<span class="st">"handle.bsky.social"</span>, <span class="st">"app-password"</span>)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>at_uri <span class="op">=</span> promote_to_atmosphere(entry, index, client)</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Anyone can now discover and load</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="co"># ds = load_dataset("@handle.bsky.social/my-features")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+</section>
+</section>
+<section id="content-addressing" class="level2">
+<h2 class="anchored" data-anchor-id="content-addressing">Content Addressing</h2>
+<p>atdata uses <strong>CIDs</strong> (Content Identifiers) for content-addressable storage:</p>
+<ul>
+<li><strong>Schema CIDs</strong>: Hash of schema definition</li>
+<li><strong>Entry CIDs</strong>: Hash of (schema_ref, data_urls)</li>
+<li><strong>Blob CIDs</strong>: Hash of data content</li>
+</ul>
+<p>Benefits:</p>
+<ul>
+<li><strong>Deduplication</strong>: Identical content has identical CID</li>
+<li><strong>Integrity</strong>: Verify data matches expected hash</li>
+<li><strong>ATProto compatibility</strong>: CIDs are native to the AT Protocol</li>
+</ul>
+</section>
+<section id="extension-points" class="level2">
+<h2 class="anchored" data-anchor-id="extension-points">Extension Points</h2>
+<p>atdata is designed for extensibility:</p>
+<section id="custom-datasources" class="level3">
+<h3 class="anchored" data-anchor-id="custom-datasources">Custom DataSources</h3>
+<p>Implement the <code>DataSource</code> protocol to add new storage backends:</p>
+<div id="e8e5bb8b" class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyCustomSource:</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> list_shards(<span class="va">self</span>) <span class="op">-&gt;</span> <span class="bu">list</span>[<span class="bu">str</span>]: ...</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> open_shard(<span class="va">self</span>, shard_id: <span class="bu">str</span>) <span class="op">-&gt;</span> IO[<span class="bu">bytes</span>]: ...</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">@property</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> shards(<span class="va">self</span>) <span class="op">-&gt;</span> Iterator[<span class="bu">tuple</span>[<span class="bu">str</span>, IO[<span class="bu">bytes</span>]]]: ...</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+</section>
+<section id="custom-lenses" class="level3">
+<h3 class="anchored" data-anchor-id="custom-lenses">Custom Lenses</h3>
+<p>Register transformations between any PackableSample types:</p>
+<div id="d20b964d" class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.lens</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> my_transform(src: SourceType) <span class="op">-&gt;</span> TargetType:</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> TargetType(...)</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="at">@my_transform.putter</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> my_transform_put(view: TargetType, src: SourceType) <span class="op">-&gt;</span> SourceType:</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> SourceType(...)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="schema-extensions" class="level3">
+<h3 class="anchored" data-anchor-id="schema-extensions">Schema Extensions</h3>
+<p>The schema format supports custom metadata for domain-specific needs:</p>
+<div id="c00ad4da" class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>index.publish_schema(</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    MySample,</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    version<span class="op">=</span><span class="st">"1.0.0"</span>,</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    metadata<span class="op">=</span>{<span class="st">"domain"</span>: <span class="st">"chemistry"</span>, <span class="st">"units"</span>: <span class="st">"mol/L"</span>},</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="summary" class="level2">
+<h2 class="anchored" data-anchor-id="summary">Summary</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 27%">
+<col style="width: 39%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Component</th>
+<th>Purpose</th>
+<th>Key Classes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Samples</strong></td>
+<td>Typed, serializable data</td>
+<td><code>PackableSample</code>, <code>@packable</code></td>
+</tr>
+<tr class="even">
+<td><strong>Datasets</strong></td>
+<td>Typed iteration over WebDataset</td>
+<td><code>Dataset[T]</code>, <code>SampleBatch[T]</code></td>
+</tr>
+<tr class="odd">
+<td><strong>Lenses</strong></td>
+<td>Schema transformations</td>
+<td><code>Lens</code>, <code>@lens</code>, <code>LensNetwork</code></td>
+</tr>
+<tr class="even">
+<td><strong>Local Storage</strong></td>
+<td>Team-scale index + data</td>
+<td><code>LocalIndex</code>, <code>S3DataStore</code></td>
+</tr>
+<tr class="odd">
+<td><strong>Atmosphere</strong></td>
+<td>Federated sharing</td>
+<td><code>AtmosphereIndex</code>, <code>PDSBlobStore</code></td>
+</tr>
+<tr class="even">
+<td><strong>Protocols</strong></td>
+<td>Backend abstraction</td>
+<td><code>AbstractIndex</code>, <code>AbstractDataStore</code>, <code>DataSource</code></td>
+</tr>
+</tbody>
+</table>
+<p>The architecture enables a smooth progression from local experimentation to team collaboration to public federation, all while maintaining type safety and efficient data handling.</p>
 </section>
 <section id="related" class="level2">
 <h2 class="anchored" data-anchor-id="related">Related</h2>
 <ul>
-<li><a href="../reference/datasets.html">Datasets</a> - Loading and iterating samples</li>
-<li><a href="../reference/lenses.html">Lenses</a> - Transforming between sample types</li>
+<li><a href="../reference/packable-samples.html">Packable Samples</a> - Defining sample types</li>
+<li><a href="../reference/datasets.html">Datasets</a> - Dataset iteration and batching</li>
+<li><a href="../reference/local-storage.html">Local Storage</a> - Redis + S3 backend</li>
+<li><a href="../reference/atmosphere.html">Atmosphere</a> - ATProto federation</li>
+<li><a href="../reference/protocols.html">Protocols</a> - Abstract interfaces</li>
 </ul>
 
 
@@ -1222,7 +1422,7 @@ Note
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/your-org/atdata/edit/main/reference/packable-samples.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/your-org/atdata/edit/main/reference/architecture.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
     <div class="nav-footer-right">
 <p>MIT License</p>
 </div>

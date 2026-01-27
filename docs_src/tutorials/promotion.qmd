@@ -3,7 +3,22 @@ title: "Promotion Workflow"
 description: "Migrate datasets from local storage to ATProto"
 ---
 
-This tutorial demonstrates the workflow for migrating datasets from local Redis/S3 storage to the federated ATProto atmosphere network.
+This tutorial demonstrates the workflow for migrating datasets from local Redis/S3 storage to the federated ATProto atmosphere network. Promotion is the bridge between **Layer 2** (team storage) and **Layer 3** (federation).
+
+## Why Promotion?
+
+A common pattern in data science:
+
+1. **Start private**: Develop and validate datasets within your team
+2. **Go public**: Share successful datasets with the broader community
+
+Promotion handles this transition without re-processing your data. Instead of creating a new dataset from scratch, you're **lifting** an existing local dataset entry into the federated atmosphere.
+
+The workflow handles several complexities automatically:
+
+- **Schema deduplication**: If you've already published the same schema type and version, promotion reuses it
+- **URL preservation**: Data stays in place (unless you explicitly want to copy it)
+- **CID consistency**: Content identifiers remain valid across the transition
 
 ## Overview
 
@@ -307,6 +322,30 @@ print(f"Dataset published: {at_uri}")
 
 # 6. Others can now discover and load
 # ds = atdata.load_dataset("@myhandle.bsky.social/feature-vectors-v1")
+```
+
+## What You've Learned
+
+You now understand the promotion workflow:
+
+| Concept | Purpose |
+|---------|---------|
+| `promote_to_atmosphere()` | Lift local entries to federated network |
+| Schema deduplication | Avoid publishing duplicate schemas |
+| Data URL preservation | Keep data in place or copy to new storage |
+| Metadata enrichment | Add description, tags, license during promotion |
+
+Promotion completes atdata's three-layer story: you can now move seamlessly from local experimentation to team collaboration to public sharing, all with the same typed sample definitions.
+
+## The Complete Journey
+
+```
+┌──────────────────┐     insert     ┌──────────────────┐    promote    ┌──────────────────┐
+│  Local Files     │ ────────────→  │  Team Storage    │ ────────────→ │  Federation      │
+│                  │                │                  │               │                  │
+│  tar files       │                │  Redis + S3      │               │  ATProto PDS     │
+│  Dataset[T]      │                │  LocalIndex      │               │  AtmosphereIndex │
+└──────────────────┘                └──────────────────┘               └──────────────────┘
 ```
 
 ## Next Steps

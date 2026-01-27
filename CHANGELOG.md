@@ -25,6 +25,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Expand Quarto documentation with architectural narrative (#395)
+- Expand atmosphere tutorial with federation context (#400)
+- Expand local-workflow tutorial with system narrative (#399)
+- Expand quickstart tutorial with design context (#398)
+- Expand index.qmd with architecture narrative (#397)
+- Add architecture overview page (reference/architecture.qmd) (#396)
+- Adversarial review: Post-PDSBlobStore comprehensive assessment (#389)
+- Remove deprecated shard_list property warnings if unused (#394)
+- Add test for Dataset iteration over empty tar file (#393)
+- Consolidate duplicate sample types in live atmosphere tests (#392)
+- Convert TODO comment in dataset.py to design note or remove (#391)
+- Remove redundant no-op statements in _stub_manager.py (#390)
 - Update atmosphere example with blob storage case (#216)
 - Implement PDSBlobStore for atmosphere data storage (#244)
 - Update docs and examples to include PDSBlobStore (#384)

@@ -119,6 +119,8 @@ website:
             href: tutorials/promotion.qmd
       - text: "Reference"
         menu:
+          - text: "Architecture Overview"
+            href: reference/architecture.qmd
           - text: "Packable Samples"
             href: reference/packable-samples.qmd
           - text: "Datasets"
@@ -160,6 +162,7 @@ website:
             - tutorials/promotion.qmd
         - section: "Reference"
           contents:
+            - reference/architecture.qmd
             - reference/packable-samples.qmd
             - reference/datasets.qmd
             - reference/lenses.qmd

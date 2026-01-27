@@ -3,7 +3,24 @@ title: "Local Workflow"
 description: "Store and manage datasets with Redis + S3"
 ---
 
-This tutorial demonstrates how to use the local storage module to store and index datasets using Redis and S3-compatible storage.
+This tutorial demonstrates how to use the local storage module to store and index datasets using Redis and S3-compatible storage. This is **Layer 2** of atdata's architecture—team-scale storage that bridges local development and federated sharing.
+
+## Why Team Storage?
+
+Local tar files work well for individual experiments, but teams need:
+
+- **Discovery**: "What datasets do we have? What schema does this one use?"
+- **Consistency**: "Is everyone using the same version of this dataset?"
+- **Durability**: "Where's the canonical copy of our training data?"
+
+atdata's local storage module addresses these needs with a two-component architecture:
+
+| Component | Purpose |
+|-----------|---------|
+| **Redis Index** | Fast metadata queries, schema registry, dataset discovery |
+| **S3 DataStore** | Scalable object storage for actual data files |
+
+This separation means metadata operations (listing datasets, resolving schemas) are fast and don't touch large data files, while the data itself lives in battle-tested object storage.
 
 ## Prerequisites
 
@@ -47,6 +64,14 @@ class TextSample:
 
 ## LocalDatasetEntry
 
+Every dataset in the index is represented by a `LocalDatasetEntry`. A key design decision: entries use **content-addressable CIDs** (Content Identifiers) as their identity. This means:
+
+- Identical content always has the same CID
+- You can verify data integrity by checking the CID
+- Deduplication happens automatically
+
+CIDs are computed from the entry's schema reference and data URLs, so the same logical dataset will have the same CID regardless of where it's stored.
+
 Create entries with content-addressable CIDs:
 
 ```{python}
@@ -72,6 +97,8 @@ CIDs are generated from content (schema_ref + data_urls), so identical data prod
 
 ## LocalIndex
 
+The `LocalIndex` is your team's dataset registry. It implements the `AbstractIndex` protocol, meaning code written against `LocalIndex` will also work with `AtmosphereIndex` when you're ready for federated sharing.
+
 The index tracks datasets in Redis:
 
 ```{python}
@@ -86,6 +113,10 @@ print("LocalIndex connected")
 ```
 
 ### Schema Management
+
+**Schema publishing** is how you ensure type consistency across your team. When you publish a schema, atdata stores the complete type definition (field names, types, metadata) so anyone can reconstruct the Python class from just the schema reference.
+
+This enables a powerful workflow: share a dataset by sharing its name, and consumers can dynamically reconstruct the sample type without having the original Python code.
 
 ```{python}
 #| eval: false
@@ -108,6 +139,14 @@ print(f"Decoded type: {decoded_type.__name__}")
 
 ## S3DataStore
 
+The `S3DataStore` implements the `AbstractDataStore` protocol for S3-compatible object storage. It works with:
+
+- **AWS S3**: Production-scale cloud storage
+- **MinIO**: Self-hosted S3-compatible storage (great for development)
+- **Cloudflare R2**: Cost-effective S3-compatible storage
+
+The data store handles uploading tar shards and creating signed URLs for streaming access.
+
 For direct S3 operations:
 
 ```{python}
@@ -125,6 +164,17 @@ print(f"Supports streaming: {store.supports_streaming()}")
 ```
 
 ## Complete Index Workflow
+
+Here's the typical workflow for publishing a dataset to your team:
+
+1. **Create samples** using your `@packable` type
+2. **Write to local tar** for staging
+3. **Create a Dataset** wrapper
+4. **Connect to index with data store**
+5. **Publish schema** for type consistency
+6. **Insert dataset** (uploads to S3, indexes in Redis)
+
+The index composition pattern (`LocalIndex(data_store=S3DataStore(...))`) is deliberate—it separates the concern of "where is metadata?" from "where is data?", making it easy to swap storage backends.
 
 Use `LocalIndex` with `S3DataStore` to store datasets with S3 storage and Redis indexing:
 
@@ -177,6 +227,8 @@ for batch in dataset.ordered(batch_size=32):
 
 ## Using load_dataset with Index
 
+The `load_dataset()` function provides a HuggingFace-style API that abstracts away the details of where data lives. When you pass an index, it can resolve `@local/` prefixed paths to the actual data URLs and apply the correct credentials automatically.
+
 The `load_dataset()` function supports index lookup:
 
 ```{python}
@@ -192,7 +244,25 @@ for batch in ds.shuffled(batch_size=32):
     break
 ```
 
+## What You've Learned
+
+You now understand team-scale storage in atdata:
+
+| Concept | Purpose |
+|---------|---------|
+| `LocalIndex` | Redis-backed dataset registry implementing `AbstractIndex` |
+| `S3DataStore` | S3-compatible object storage implementing `AbstractDataStore` |
+| `LocalDatasetEntry` | Content-addressed dataset entries with CIDs |
+| Schema publishing | Shared type definitions for team consistency |
+
+The same sample types you defined in the Quick Start work seamlessly here—the only change is where the data lives.
+
 ## Next Steps
+
+::: {.callout-tip}
+## Ready for Public Sharing?
+The [Atmosphere Publishing](atmosphere.qmd) tutorial shows how to publish datasets to the ATProto network for decentralized, cross-organization discovery.
+:::
 
 - **[Atmosphere Publishing](atmosphere.qmd)** - Publish to ATProto federation
 - **[Promotion Workflow](promotion.qmd)** - Migrate from local to atmosphere

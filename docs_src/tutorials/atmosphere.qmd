@@ -3,7 +3,26 @@ title: "Atmosphere Publishing"
 description: "Publish and discover datasets on the ATProto network"
 ---
 
-This tutorial demonstrates how to use the atmosphere module to publish datasets to the AT Protocol network, enabling federated discovery and sharing.
+This tutorial demonstrates how to use the atmosphere module to publish datasets to the AT Protocol network, enabling federated discovery and sharing. This is **Layer 3** of atdata's architecture—decentralized federation that enables cross-organization dataset sharing.
+
+## Why Federation?
+
+Team storage (Redis + S3) works well within an organization, but sharing across organizations introduces new challenges:
+
+- **Discovery**: How do researchers find relevant datasets across institutions?
+- **Trust**: How do you verify a dataset is what it claims to be?
+- **Durability**: What happens if the original publisher goes offline?
+
+The **AT Protocol** (ATProto), developed by Bluesky, provides a foundation for decentralized social applications. atdata leverages ATProto's infrastructure for dataset federation:
+
+| ATProto Feature | atdata Usage |
+|----------------|--------------|
+| **DIDs** (Decentralized Identifiers) | Publisher identity verification |
+| **Lexicons** | Dataset/schema record schemas |
+| **PDSes** (Personal Data Servers) | Storage for records and blobs |
+| **Relays & AppViews** | Discovery and aggregation |
+
+The key insight: your Bluesky identity (`@handle.bsky.social`) becomes your dataset publisher identity. Anyone can verify that a dataset was published by you, and can discover your datasets through the federated network.
 
 ## Prerequisites
 
@@ -86,6 +105,14 @@ print(f"Round-trip successful: {np.allclose(sample.image, restored.image)}")
 
 ## AT URI Parsing
 
+Every record in ATProto is identified by an **AT URI**, which encodes:
+
+- **Authority**: The DID or handle of the record owner
+- **Collection**: The Lexicon type (like a table name)
+- **Rkey**: The record key (unique within the collection)
+
+Understanding AT URIs is essential for working with atmosphere datasets, as they're how you reference schemas, datasets, and lenses.
+
 ATProto records are identified by AT URIs:
 
 ```{python}
@@ -105,6 +132,8 @@ for uri_str in uris:
 
 ## Authentication
 
+The `AtmosphereClient` handles ATProto authentication. When you authenticate, you're proving ownership of your decentralized identity (DID), which gives you permission to create and modify records in your Personal Data Server (PDS).
+
 Connect to ATProto:
 
 ```{python}
@@ -117,6 +146,8 @@ print(f"DID: {client.did}")
 ```
 
 ## Publish a Schema
+
+When you publish a schema to ATProto, it becomes a **public, immutable record** that others can reference. The schema CID ensures that anyone can verify they're using exactly the same type definition you published.
 
 ```{python}
 #| eval: false
@@ -161,6 +192,12 @@ print(f"Dataset URI: {dataset_uri}")
 ```
 
 ### With PDS Blob Storage (Recommended)
+
+The `PDSBlobStore` is the **fully decentralized** option: your dataset shards are stored as ATProto blobs directly in your PDS, alongside your other ATProto records. This means:
+
+- **No external dependencies**: Data lives in the same infrastructure as your identity
+- **Content-addressed**: Blobs are identified by their CID, ensuring integrity
+- **Federated replication**: Relays can mirror your blobs for availability
 
 For fully decentralized storage, use `PDSBlobStore` to store dataset shards directly as ATProto blobs in your PDS:
 
@@ -223,6 +260,8 @@ for batch in ds.ordered(batch_size=32):
 
 ### With External URLs
 
+For larger datasets that exceed PDS blob limits, or when you already have data in object storage, you can publish a dataset record that references external URLs. The ATProto record serves as the **index entry** while the actual data lives elsewhere.
+
 For larger datasets or when using existing object storage:
 
 ```{python}
@@ -274,6 +313,17 @@ for batch in ds.ordered():
 ```
 
 ## Complete Publishing Workflow
+
+Here's the end-to-end workflow for publishing a dataset to the atmosphere:
+
+1. **Define your sample type** using `@packable`
+2. **Create samples and write to tar** (same as local workflow)
+3. **Authenticate** with your ATProto identity
+4. **Create index with blob storage** (`AtmosphereIndex` + `PDSBlobStore`)
+5. **Publish schema** (creates ATProto record)
+6. **Insert dataset** (uploads blobs, creates dataset record)
+
+Notice how similar this is to the local workflow—the same sample types and patterns, just with a different storage backend.
 
 This example shows the recommended workflow using `PDSBlobStore` for fully decentralized storage:
 
@@ -334,7 +384,40 @@ for batch in ds.ordered(batch_size=32):
     break
 ```
 
+## What You've Learned
+
+You now understand federated dataset publishing in atdata:
+
+| Concept | Purpose |
+|---------|---------|
+| `AtmosphereClient` | ATProto authentication and record management |
+| `AtmosphereIndex` | Federated index implementing `AbstractIndex` |
+| `PDSBlobStore` | PDS blob storage implementing `AbstractDataStore` |
+| `BlobSource` | Stream datasets from PDS blobs |
+| AT URIs | Universal identifiers for schemas and datasets |
+
+The protocol abstractions (`AbstractIndex`, `AbstractDataStore`, `DataSource`) ensure your code works across all three layers of atdata—local files, team storage, and federated sharing.
+
+## The Full Picture
+
+You've now seen atdata's complete architecture:
+
+```
+Local Development          Team Storage              Federation
+─────────────────          ────────────              ──────────
+tar files                  Redis + S3                ATProto PDS
+Dataset[T]                 LocalIndex                AtmosphereIndex
+                           S3DataStore               PDSBlobStore
+```
+
+The same `@packable` sample types, the same `Dataset[T]` iteration patterns, and the same lens transformations work at every layer. Only the storage backend changes.
+
 ## Next Steps
+
+::: {.callout-tip}
+## Already Have Local Datasets?
+The [Promotion Workflow](promotion.qmd) tutorial shows how to migrate existing datasets from local storage to the atmosphere without re-processing your data.
+:::
 
 - **[Promotion Workflow](promotion.qmd)** - Migrate from local storage to atmosphere
 - **[Atmosphere Reference](../reference/atmosphere.qmd)** - Complete API reference

@@ -241,8 +241,8 @@ class StubManager:
                     fcntl.flock(f.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
                 except (OSError, IOError):
                     # Lock unavailable (NFS, Windows, etc.) - proceed without lock
-                    # This is safe because atomic rename provides the real protection
-                    _ = None  # Explicit no-op
+                    # Atomic rename provides the real protection
+                    pass
 
                 f.write(content)
                 f.flush()
@@ -256,7 +256,7 @@ class StubManager:
             try:
                 temp_path.unlink()
             except OSError:
-                _ = None  # Temp file cleanup failed, but we're re-raising anyway
+                pass  # Temp file cleanup failed, re-raising original error
             raise
 
     def _write_stub_atomic(self, path: Path, content: str) -> None:
