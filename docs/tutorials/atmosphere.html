@@ -324,6 +324,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     </a>
     <ul class="dropdown-menu" aria-labelledby="nav-menu-reference">    
         <li>
+    <a class="dropdown-item" href="../reference/architecture.html">
+ <span class="dropdown-text">Architecture Overview</span></a>
+  </li>  
+        <li>
     <a class="dropdown-item" href="../reference/packable-samples.html">
  <span class="dropdown-text">Packable Samples</span></a>
   </li>  
@@ -456,6 +460,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../reference/architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Architecture Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../reference/packable-samples.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Packable Samples</span></a>
   </div>
@@ -522,23 +532,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
       </ul>
   </li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
- <span class="menu-text">API Reference</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../api/index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">API Reference</span></a>
-  </div>
-</li>
-      </ul>
-  </li>
     </ul>
     </div>
 </nav>
@@ -549,7 +542,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link active" data-scroll-target="#prerequisites">Prerequisites</a></li>
+  <li><a href="#why-federation" id="toc-why-federation" class="nav-link active" data-scroll-target="#why-federation">Why Federation?</a></li>
+  <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
   <li><a href="#setup" id="toc-setup" class="nav-link" data-scroll-target="#setup">Setup</a></li>
   <li><a href="#define-sample-types" id="toc-define-sample-types" class="nav-link" data-scroll-target="#define-sample-types">Define Sample Types</a></li>
   <li><a href="#type-introspection" id="toc-type-introspection" class="nav-link" data-scroll-target="#type-introspection">Type Introspection</a></li>
@@ -560,11 +554,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#publish-a-dataset" id="toc-publish-a-dataset" class="nav-link" data-scroll-target="#publish-a-dataset">Publish a Dataset</a>
   <ul class="collapse">
   <li><a href="#with-external-urls" id="toc-with-external-urls" class="nav-link" data-scroll-target="#with-external-urls">With External URLs</a></li>
-  <li><a href="#with-blob-storage" id="toc-with-blob-storage" class="nav-link" data-scroll-target="#with-blob-storage">With Blob Storage</a></li>
+  <li><a href="#with-pds-blob-storage-recommended" id="toc-with-pds-blob-storage-recommended" class="nav-link" data-scroll-target="#with-pds-blob-storage-recommended">With PDS Blob Storage (Recommended)</a></li>
+  <li><a href="#with-external-urls-1" id="toc-with-external-urls-1" class="nav-link" data-scroll-target="#with-external-urls-1">With External URLs</a></li>
   </ul></li>
   <li><a href="#list-and-load-datasets" id="toc-list-and-load-datasets" class="nav-link" data-scroll-target="#list-and-load-datasets">List and Load Datasets</a></li>
   <li><a href="#load-a-dataset" id="toc-load-a-dataset" class="nav-link" data-scroll-target="#load-a-dataset">Load a Dataset</a></li>
   <li><a href="#complete-publishing-workflow" id="toc-complete-publishing-workflow" class="nav-link" data-scroll-target="#complete-publishing-workflow">Complete Publishing Workflow</a></li>
+  <li><a href="#what-youve-learned" id="toc-what-youve-learned" class="nav-link" data-scroll-target="#what-youve-learned">What You’ve Learned</a></li>
+  <li><a href="#the-full-picture" id="toc-the-full-picture" class="nav-link" data-scroll-target="#the-full-picture">The Full Picture</a></li>
   <li><a href="#next-steps" id="toc-next-steps" class="nav-link" data-scroll-target="#next-steps">Next Steps</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/your-org/atdata/edit/main/tutorials/atmosphere.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
@@ -597,7 +594,48 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>This tutorial demonstrates how to use the atmosphere module to publish datasets to the AT Protocol network, enabling federated discovery and sharing.</p>
+<p>This tutorial demonstrates how to use the atmosphere module to publish datasets to the AT Protocol network, enabling federated discovery and sharing. This is <strong>Layer 3</strong> of atdata’s architecture—decentralized federation that enables cross-organization dataset sharing.</p>
+<section id="why-federation" class="level2">
+<h2 class="anchored" data-anchor-id="why-federation">Why Federation?</h2>
+<p>Team storage (Redis + S3) works well within an organization, but sharing across organizations introduces new challenges:</p>
+<ul>
+<li><strong>Discovery</strong>: How do researchers find relevant datasets across institutions?</li>
+<li><strong>Trust</strong>: How do you verify a dataset is what it claims to be?</li>
+<li><strong>Durability</strong>: What happens if the original publisher goes offline?</li>
+</ul>
+<p>The <strong>AT Protocol</strong> (ATProto), developed by Bluesky, provides a foundation for decentralized social applications. atdata leverages ATProto’s infrastructure for dataset federation:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 53%">
+<col style="width: 46%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>ATProto Feature</th>
+<th>atdata Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>DIDs</strong> (Decentralized Identifiers)</td>
+<td>Publisher identity verification</td>
+</tr>
+<tr class="even">
+<td><strong>Lexicons</strong></td>
+<td>Dataset/schema record schemas</td>
+</tr>
+<tr class="odd">
+<td><strong>PDSes</strong> (Personal Data Servers)</td>
+<td>Storage for records and blobs</td>
+</tr>
+<tr class="even">
+<td><strong>Relays &amp; AppViews</strong></td>
+<td>Discovery and aggregation</td>
+</tr>
+</tbody>
+</table>
+<p>The key insight: your Bluesky identity (<code>@handle.bsky.social</code>) becomes your dataset publisher identity. Anyone can verify that a dataset was published by you, and can discover your datasets through the federated network.</p>
+</section>
 <section id="prerequisites" class="level2">
 <h2 class="anchored" data-anchor-id="prerequisites">Prerequisites</h2>
 <ul>
@@ -620,24 +658,27 @@ Warning
 </section>
 <section id="setup" class="level2">
 <h2 class="anchored" data-anchor-id="setup">Setup</h2>
-<div id="be857a4f" class="cell">
+<div id="acf890d8" class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> (</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    AtmosphereClient,</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    SchemaPublisher,</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    SchemaLoader,</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    DatasetPublisher,</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    DatasetLoader,</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    AtUri,</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> webdataset <span class="im">as</span> wds</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    AtmosphereIndex,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    PDSBlobStore,</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    SchemaPublisher,</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    SchemaLoader,</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    DatasetPublisher,</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    DatasetLoader,</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    AtUri,</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata <span class="im">import</span> BlobSource</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> webdataset <span class="im">as</span> wds</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="define-sample-types" class="level2">
 <h2 class="anchored" data-anchor-id="define-sample-types">Define Sample Types</h2>
-<div id="a2d68ccd" class="cell">
+<div id="ba343730" class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ImageSample:</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""A sample containing image data with metadata."""</span></span>
@@ -656,7 +697,7 @@ Warning
 <section id="type-introspection" class="level2">
 <h2 class="anchored" data-anchor-id="type-introspection">Type Introspection</h2>
 <p>See what information is available from a PackableSample type:</p>
-<div id="a532916f" class="cell">
+<div id="d3147fcc" class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dataclasses <span class="im">import</span> fields, is_dataclass</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Sample type: </span><span class="sc">{</span>ImageSample<span class="sc">.</span><span class="va">__name__</span><span class="sc">}</span><span class="ss">"</span>)</span>
@@ -683,8 +724,15 @@ Warning
 </section>
 <section id="at-uri-parsing" class="level2">
 <h2 class="anchored" data-anchor-id="at-uri-parsing">AT URI Parsing</h2>
+<p>Every record in ATProto is identified by an <strong>AT URI</strong>, which encodes:</p>
+<ul>
+<li><strong>Authority</strong>: The DID or handle of the record owner</li>
+<li><strong>Collection</strong>: The Lexicon type (like a table name)</li>
+<li><strong>Rkey</strong>: The record key (unique within the collection)</li>
+</ul>
+<p>Understanding AT URIs is essential for working with atmosphere datasets, as they’re how you reference schemas, datasets, and lenses.</p>
 <p>ATProto records are identified by AT URIs:</p>
-<div id="3f958c3b" class="cell">
+<div id="2e4e2375" class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>uris <span class="op">=</span> [</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"at://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz789"</span>,</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"at://alice.bsky.social/ac.foundation.dataset.record/my-dataset"</span>,</span>
@@ -700,8 +748,9 @@ Warning
 </section>
 <section id="authentication" class="level2">
 <h2 class="anchored" data-anchor-id="authentication">Authentication</h2>
+<p>The <code>AtmosphereClient</code> handles ATProto authentication. When you authenticate, you’re proving ownership of your decentralized identity (DID), which gives you permission to create and modify records in your Personal Data Server (PDS).</p>
 <p>Connect to ATProto:</p>
-<div id="9165dec8" class="cell">
+<div id="5e1f8209" class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> AtmosphereClient()</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>client.login(<span class="st">"your.handle.social"</span>, <span class="st">"your-app-password"</span>)</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -711,7 +760,8 @@ Warning
 </section>
 <section id="publish-a-schema" class="level2">
 <h2 class="anchored" data-anchor-id="publish-a-schema">Publish a Schema</h2>
-<div id="f985aa1b" class="cell">
+<p>When you publish a schema to ATProto, it becomes a <strong>public, immutable record</strong> that others can reference. The schema CID ensures that anyone can verify they’re using exactly the same type definition you published.</p>
+<div id="9fd4595f" class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>schema_publisher <span class="op">=</span> SchemaPublisher(client)</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>schema_uri <span class="op">=</span> schema_publisher.publish(</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    ImageSample,</span>
@@ -724,7 +774,7 @@ Warning
 </section>
 <section id="list-your-schemas" class="level2">
 <h2 class="anchored" data-anchor-id="list-your-schemas">List Your Schemas</h2>
-<div id="2193d988" class="cell">
+<div id="d7b31f8e" class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>schema_loader <span class="op">=</span> SchemaLoader(client)</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>schemas <span class="op">=</span> schema_loader.list_all(limit<span class="op">=</span><span class="dv">10</span>)</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Found </span><span class="sc">{</span><span class="bu">len</span>(schemas)<span class="sc">}</span><span class="ss"> schema(s)"</span>)</span>
@@ -737,7 +787,7 @@ Warning
 <h2 class="anchored" data-anchor-id="publish-a-dataset">Publish a Dataset</h2>
 <section id="with-external-urls" class="level3">
 <h3 class="anchored" data-anchor-id="with-external-urls">With External URLs</h3>
-<div id="a0d2b9fb" class="cell">
+<div id="38a5ea19" class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>dataset_publisher <span class="op">=</span> DatasetPublisher(client)</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>dataset_uri <span class="op">=</span> dataset_publisher.publish_with_urls(</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    urls<span class="op">=</span>[<span class="st">"s3://example-bucket/demo-data-{000000..000009}.tar"</span>],</span>
@@ -750,132 +800,255 @@ Warning
 <span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Dataset URI: </span><span class="sc">{</span>dataset_uri<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="with-blob-storage" class="level3">
-<h3 class="anchored" data-anchor-id="with-blob-storage">With Blob Storage</h3>
-<p>For smaller datasets, store data directly in ATProto blobs:</p>
-<div id="87822526" class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> io</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> DemoSample:</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">id</span>: <span class="bu">int</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    text: <span class="bu">str</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Create samples</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>samples <span class="op">=</span> [</span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    DemoSample(<span class="bu">id</span><span class="op">=</span><span class="dv">0</span>, text<span class="op">=</span><span class="st">"Hello from blob storage!"</span>),</span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    DemoSample(<span class="bu">id</span><span class="op">=</span><span class="dv">1</span>, text<span class="op">=</span><span class="st">"ATProto is decentralized."</span>),</span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    DemoSample(<span class="bu">id</span><span class="op">=</span><span class="dv">2</span>, text<span class="op">=</span><span class="st">"atdata makes ML data easy."</span>),</span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Create tar in memory</span></span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>tar_buffer <span class="op">=</span> io.BytesIO()</span>
-<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> wds.writer.TarWriter(tar_buffer) <span class="im">as</span> sink:</span>
-<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> sample <span class="kw">in</span> samples:</span>
-<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>        sink.write(sample.as_wds)</span>
+<section id="with-pds-blob-storage-recommended" class="level3">
+<h3 class="anchored" data-anchor-id="with-pds-blob-storage-recommended">With PDS Blob Storage (Recommended)</h3>
+<p>The <code>PDSBlobStore</code> is the <strong>fully decentralized</strong> option: your dataset shards are stored as ATProto blobs directly in your PDS, alongside your other ATProto records. This means:</p>
+<ul>
+<li><strong>No external dependencies</strong>: Data lives in the same infrastructure as your identity</li>
+<li><strong>Content-addressed</strong>: Blobs are identified by their CID, ensuring integrity</li>
+<li><strong>Federated replication</strong>: Relays can mirror your blobs for availability</li>
+</ul>
+<p>For fully decentralized storage, use <code>PDSBlobStore</code> to store dataset shards directly as ATProto blobs in your PDS:</p>
+<div id="674acaa3" class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create store and index with blob storage</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>store <span class="op">=</span> PDSBlobStore(client)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> AtmosphereIndex(client, data_store<span class="op">=</span>store)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Define sample type</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> FeatureSample:</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    features: NDArray</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    label: <span class="bu">int</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Create dataset in memory or from existing tar</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>samples <span class="op">=</span> [FeatureSample(features<span class="op">=</span>np.random.randn(<span class="dv">64</span>).astype(np.float32), label<span class="op">=</span>i <span class="op">%</span> <span class="dv">10</span>) <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">100</span>)]</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Write to temporary tar</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> wds.writer.TarWriter(<span class="st">"temp.tar"</span>) <span class="im">as</span> sink:</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, s <span class="kw">in</span> <span class="bu">enumerate</span>(samples):</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>        sink.write({<span class="op">**</span>s.as_wds, <span class="st">"__key__"</span>: <span class="ss">f"</span><span class="sc">{</span>i<span class="sc">:06d}</span><span class="ss">"</span>})</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[FeatureSample](<span class="st">"temp.tar"</span>)</span>
 <span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>tar_data <span class="op">=</span> tar_buffer.getvalue()</span>
-<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Created tar with </span><span class="sc">{</span><span class="bu">len</span>(samples)<span class="sc">}</span><span class="ss"> samples (</span><span class="sc">{</span><span class="bu">len</span>(tar_data)<span class="sc">:,}</span><span class="ss"> bytes)"</span>)</span>
-<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Publish schema</span></span>
-<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>blob_schema_uri <span class="op">=</span> schema_publisher.publish(DemoSample, version<span class="op">=</span><span class="st">"1.0.0"</span>)</span>
-<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Publish with blob storage</span></span>
-<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>blob_dataset_uri <span class="op">=</span> dataset_publisher.publish_with_blobs(</span>
-<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>    blobs<span class="op">=</span>[tar_data],</span>
-<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>    schema_uri<span class="op">=</span><span class="bu">str</span>(blob_schema_uri),</span>
-<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">"Blob Storage Demo Dataset"</span>,</span>
-<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>    description<span class="op">=</span><span class="st">"Small dataset stored directly in ATProto blobs"</span>,</span>
-<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>    tags<span class="op">=</span>[<span class="st">"demo"</span>, <span class="st">"blob-storage"</span>],</span>
-<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Dataset URI: </span><span class="sc">{</span>blob_dataset_uri<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Publish - shards are uploaded as blobs automatically</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>schema_uri <span class="op">=</span> index.publish_schema(FeatureSample, version<span class="op">=</span><span class="st">"1.0.0"</span>)</span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>entry <span class="op">=</span> index.insert_dataset(</span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>    dataset,</span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">"blob-stored-features"</span>,</span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>    schema_ref<span class="op">=</span>schema_uri,</span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>    description<span class="op">=</span><span class="st">"Features stored as PDS blobs"</span>,</span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Dataset URI: </span><span class="sc">{</span>entry<span class="sc">.</span>uri<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Blob URLs: </span><span class="sc">{</span>entry<span class="sc">.</span>data_urls<span class="sc">}</span><span class="ss">"</span>)  <span class="co"># at://did/blob/cid format</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Reading Blob-Stored Datasets
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Use <code>BlobSource</code> to stream directly from PDS blobs:</p>
+<div id="0f2fcbb6" class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create source from the blob URLs</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>source <span class="op">=</span> store.create_source(entry.data_urls)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Or manually from blob references</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>source <span class="op">=</span> BlobSource.from_refs([</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    {<span class="st">"did"</span>: client.did, <span class="st">"cid"</span>: <span class="st">"bafyrei..."</span>},</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Load and iterate</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> atdata.Dataset[FeatureSample](source)</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> ds.ordered(batch_size<span class="op">=</span><span class="dv">32</span>):</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(batch.features.shape)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="with-external-urls-1" class="level3">
+<h3 class="anchored" data-anchor-id="with-external-urls-1">With External URLs</h3>
+<p>For larger datasets that exceed PDS blob limits, or when you already have data in object storage, you can publish a dataset record that references external URLs. The ATProto record serves as the <strong>index entry</strong> while the actual data lives elsewhere.</p>
+<p>For larger datasets or when using existing object storage:</p>
+<div id="8111fff9" class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>dataset_publisher <span class="op">=</span> DatasetPublisher(client)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>dataset_uri <span class="op">=</span> dataset_publisher.publish_with_urls(</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    urls<span class="op">=</span>[<span class="st">"s3://example-bucket/demo-data-{000000..000009}.tar"</span>],</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    schema_uri<span class="op">=</span><span class="bu">str</span>(schema_uri),</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">"Demo Image Dataset"</span>,</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    description<span class="op">=</span><span class="st">"Example dataset demonstrating atmosphere publishing"</span>,</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    tags<span class="op">=</span>[<span class="st">"demo"</span>, <span class="st">"images"</span>, <span class="st">"atdata"</span>],</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    license<span class="op">=</span><span class="st">"MIT"</span>,</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Dataset URI: </span><span class="sc">{</span>dataset_uri<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 </section>
 <section id="list-and-load-datasets" class="level2">
 <h2 class="anchored" data-anchor-id="list-and-load-datasets">List and Load Datasets</h2>
-<div id="2de5f130" class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>dataset_loader <span class="op">=</span> DatasetLoader(client)</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>datasets <span class="op">=</span> dataset_loader.list_all(limit<span class="op">=</span><span class="dv">10</span>)</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Found </span><span class="sc">{</span><span class="bu">len</span>(datasets)<span class="sc">}</span><span class="ss"> dataset(s)"</span>)</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> ds <span class="kw">in</span> datasets:</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  - </span><span class="sc">{</span>ds<span class="sc">.</span>get(<span class="st">'name'</span>, <span class="st">'Unknown'</span>)<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"    Schema: </span><span class="sc">{</span>ds<span class="sc">.</span>get(<span class="st">'schemaRef'</span>, <span class="st">'N/A'</span>)<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    tags <span class="op">=</span> ds.get(<span class="st">'tags'</span>, [])</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tags:</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"    Tags: </span><span class="sc">{</span><span class="st">', '</span><span class="sc">.</span>join(tags)<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="ef2e681c" class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>dataset_loader <span class="op">=</span> DatasetLoader(client)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>datasets <span class="op">=</span> dataset_loader.list_all(limit<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Found </span><span class="sc">{</span><span class="bu">len</span>(datasets)<span class="sc">}</span><span class="ss"> dataset(s)"</span>)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> ds <span class="kw">in</span> datasets:</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  - </span><span class="sc">{</span>ds<span class="sc">.</span>get(<span class="st">'name'</span>, <span class="st">'Unknown'</span>)<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"    Schema: </span><span class="sc">{</span>ds<span class="sc">.</span>get(<span class="st">'schemaRef'</span>, <span class="st">'N/A'</span>)<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    tags <span class="op">=</span> ds.get(<span class="st">'tags'</span>, [])</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tags:</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"    Tags: </span><span class="sc">{</span><span class="st">', '</span><span class="sc">.</span>join(tags)<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="load-a-dataset" class="level2">
 <h2 class="anchored" data-anchor-id="load-a-dataset">Load a Dataset</h2>
-<div id="6ebf2e30" class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check storage type</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>storage_type <span class="op">=</span> dataset_loader.get_storage_type(<span class="bu">str</span>(blob_dataset_uri))</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Storage type: </span><span class="sc">{</span>storage_type<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> storage_type <span class="op">==</span> <span class="st">"blobs"</span>:</span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    blob_urls <span class="op">=</span> dataset_loader.get_blob_urls(<span class="bu">str</span>(blob_dataset_uri))</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Blob URLs: </span><span class="sc">{</span><span class="bu">len</span>(blob_urls)<span class="sc">}</span><span class="ss"> blob(s)"</span>)</span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Load and iterate (works for both storage types)</span></span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> dataset_loader.to_dataset(<span class="bu">str</span>(blob_dataset_uri), DemoSample)</span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> ds.ordered():</span>
-<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Sample id=</span><span class="sc">{</span>batch<span class="sc">.</span><span class="bu">id</span><span class="sc">}</span><span class="ss">, text=</span><span class="sc">{</span>batch<span class="sc">.</span>text<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="a0076f9e" class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check storage type</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>storage_type <span class="op">=</span> dataset_loader.get_storage_type(<span class="bu">str</span>(blob_dataset_uri))</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Storage type: </span><span class="sc">{</span>storage_type<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> storage_type <span class="op">==</span> <span class="st">"blobs"</span>:</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    blob_urls <span class="op">=</span> dataset_loader.get_blob_urls(<span class="bu">str</span>(blob_dataset_uri))</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Blob URLs: </span><span class="sc">{</span><span class="bu">len</span>(blob_urls)<span class="sc">}</span><span class="ss"> blob(s)"</span>)</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Load and iterate (works for both storage types)</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> dataset_loader.to_dataset(<span class="bu">str</span>(blob_dataset_uri), DemoSample)</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> ds.ordered():</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Sample id=</span><span class="sc">{</span>batch<span class="sc">.</span><span class="bu">id</span><span class="sc">}</span><span class="ss">, text=</span><span class="sc">{</span>batch<span class="sc">.</span>text<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="complete-publishing-workflow" class="level2">
 <h2 class="anchored" data-anchor-id="complete-publishing-workflow">Complete Publishing Workflow</h2>
-<div id="a7ba0337" class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Define and create samples</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> FeatureSample:</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    features: NDArray</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    label: <span class="bu">int</span></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    source: <span class="bu">str</span></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>samples <span class="op">=</span> [</span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    FeatureSample(</span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>        features<span class="op">=</span>np.random.randn(<span class="dv">128</span>).astype(np.float32),</span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>        label<span class="op">=</span>i <span class="op">%</span> <span class="dv">10</span>,</span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>        source<span class="op">=</span><span class="st">"synthetic"</span>,</span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1000</span>)</span>
-<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Write to tar</span></span>
-<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> wds.writer.TarWriter(<span class="st">"features.tar"</span>) <span class="im">as</span> sink:</span>
-<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, s <span class="kw">in</span> <span class="bu">enumerate</span>(samples):</span>
-<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>        sink.write({<span class="op">**</span>s.as_wds, <span class="st">"__key__"</span>: <span class="ss">f"</span><span class="sc">{</span>i<span class="sc">:06d}</span><span class="ss">"</span>})</span>
-<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Authenticate</span></span>
-<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> AtmosphereIndex</span>
-<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> AtmosphereClient()</span>
-<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>client.login(<span class="st">"myhandle.bsky.social"</span>, <span class="st">"app-password"</span>)</span>
-<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> AtmosphereIndex(client)</span>
-<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Publish schema</span></span>
-<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>schema_uri <span class="op">=</span> index.publish_schema(</span>
-<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>    FeatureSample,</span>
-<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a>    version<span class="op">=</span><span class="st">"1.0.0"</span>,</span>
-<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a>    description<span class="op">=</span><span class="st">"Feature vectors with labels"</span>,</span>
-<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Publish dataset</span></span>
-<span id="cb12-37"><a href="#cb12-37" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[FeatureSample](<span class="st">"features.tar"</span>)</span>
-<span id="cb12-38"><a href="#cb12-38" aria-hidden="true" tabindex="-1"></a>entry <span class="op">=</span> index.insert_dataset(</span>
-<span id="cb12-39"><a href="#cb12-39" aria-hidden="true" tabindex="-1"></a>    dataset,</span>
-<span id="cb12-40"><a href="#cb12-40" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">"synthetic-features-v1"</span>,</span>
-<span id="cb12-41"><a href="#cb12-41" aria-hidden="true" tabindex="-1"></a>    schema_ref<span class="op">=</span>schema_uri,</span>
-<span id="cb12-42"><a href="#cb12-42" aria-hidden="true" tabindex="-1"></a>    tags<span class="op">=</span>[<span class="st">"features"</span>, <span class="st">"synthetic"</span>],</span>
-<span id="cb12-43"><a href="#cb12-43" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb12-44"><a href="#cb12-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-45"><a href="#cb12-45" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Published: </span><span class="sc">{</span>entry<span class="sc">.</span>uri<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Here’s the end-to-end workflow for publishing a dataset to the atmosphere:</p>
+<ol type="1">
+<li><strong>Define your sample type</strong> using <code>@packable</code></li>
+<li><strong>Create samples and write to tar</strong> (same as local workflow)</li>
+<li><strong>Authenticate</strong> with your ATProto identity</li>
+<li><strong>Create index with blob storage</strong> (<code>AtmosphereIndex</code> + <code>PDSBlobStore</code>)</li>
+<li><strong>Publish schema</strong> (creates ATProto record)</li>
+<li><strong>Insert dataset</strong> (uploads blobs, creates dataset record)</li>
+</ol>
+<p>Notice how similar this is to the local workflow—the same sample types and patterns, just with a different storage backend.</p>
+<p>This example shows the recommended workflow using <code>PDSBlobStore</code> for fully decentralized storage:</p>
+<div id="92130535" class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Define and create samples</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> FeatureSample:</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    features: NDArray</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    label: <span class="bu">int</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    source: <span class="bu">str</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>samples <span class="op">=</span> [</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    FeatureSample(</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>        features<span class="op">=</span>np.random.randn(<span class="dv">128</span>).astype(np.float32),</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>        label<span class="op">=</span>i <span class="op">%</span> <span class="dv">10</span>,</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>        source<span class="op">=</span><span class="st">"synthetic"</span>,</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1000</span>)</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Write to tar</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> wds.writer.TarWriter(<span class="st">"features.tar"</span>) <span class="im">as</span> sink:</span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, s <span class="kw">in</span> <span class="bu">enumerate</span>(samples):</span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>        sink.write({<span class="op">**</span>s.as_wds, <span class="st">"__key__"</span>: <span class="ss">f"</span><span class="sc">{</span>i<span class="sc">:06d}</span><span class="ss">"</span>})</span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Authenticate and create index with blob storage</span></span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> AtmosphereClient()</span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>client.login(<span class="st">"myhandle.bsky.social"</span>, <span class="st">"app-password"</span>)</span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>store <span class="op">=</span> PDSBlobStore(client)</span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> AtmosphereIndex(client, data_store<span class="op">=</span>store)</span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Publish schema</span></span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>schema_uri <span class="op">=</span> index.publish_schema(</span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a>    FeatureSample,</span>
+<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a>    version<span class="op">=</span><span class="st">"1.0.0"</span>,</span>
+<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a>    description<span class="op">=</span><span class="st">"Feature vectors with labels"</span>,</span>
+<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Publish dataset (shards uploaded as blobs automatically)</span></span>
+<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[FeatureSample](<span class="st">"features.tar"</span>)</span>
+<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a>entry <span class="op">=</span> index.insert_dataset(</span>
+<span id="cb14-39"><a href="#cb14-39" aria-hidden="true" tabindex="-1"></a>    dataset,</span>
+<span id="cb14-40"><a href="#cb14-40" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">"synthetic-features-v1"</span>,</span>
+<span id="cb14-41"><a href="#cb14-41" aria-hidden="true" tabindex="-1"></a>    schema_ref<span class="op">=</span>schema_uri,</span>
+<span id="cb14-42"><a href="#cb14-42" aria-hidden="true" tabindex="-1"></a>    tags<span class="op">=</span>[<span class="st">"features"</span>, <span class="st">"synthetic"</span>],</span>
+<span id="cb14-43"><a href="#cb14-43" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb14-44"><a href="#cb14-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-45"><a href="#cb14-45" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Published: </span><span class="sc">{</span>entry<span class="sc">.</span>uri<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb14-46"><a href="#cb14-46" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Data stored at: </span><span class="sc">{</span>entry<span class="sc">.</span>data_urls<span class="sc">}</span><span class="ss">"</span>)  <span class="co"># at://did/blob/cid URLs</span></span>
+<span id="cb14-47"><a href="#cb14-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-48"><a href="#cb14-48" aria-hidden="true" tabindex="-1"></a><span class="co"># 6. Later: load from blobs</span></span>
+<span id="cb14-49"><a href="#cb14-49" aria-hidden="true" tabindex="-1"></a>source <span class="op">=</span> store.create_source(entry.data_urls)</span>
+<span id="cb14-50"><a href="#cb14-50" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> atdata.Dataset[FeatureSample](source)</span>
+<span id="cb14-51"><a href="#cb14-51" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> ds.ordered(batch_size<span class="op">=</span><span class="dv">32</span>):</span>
+<span id="cb14-52"><a href="#cb14-52" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Loaded batch with </span><span class="sc">{</span><span class="bu">len</span>(batch.label)<span class="sc">}</span><span class="ss"> samples"</span>)</span>
+<span id="cb14-53"><a href="#cb14-53" aria-hidden="true" tabindex="-1"></a>    <span class="cf">break</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+</section>
+<section id="what-youve-learned" class="level2">
+<h2 class="anchored" data-anchor-id="what-youve-learned">What You’ve Learned</h2>
+<p>You now understand federated dataset publishing in atdata:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Concept</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>AtmosphereClient</code></td>
+<td>ATProto authentication and record management</td>
+</tr>
+<tr class="even">
+<td><code>AtmosphereIndex</code></td>
+<td>Federated index implementing <code>AbstractIndex</code></td>
+</tr>
+<tr class="odd">
+<td><code>PDSBlobStore</code></td>
+<td>PDS blob storage implementing <code>AbstractDataStore</code></td>
+</tr>
+<tr class="even">
+<td><code>BlobSource</code></td>
+<td>Stream datasets from PDS blobs</td>
+</tr>
+<tr class="odd">
+<td>AT URIs</td>
+<td>Universal identifiers for schemas and datasets</td>
+</tr>
+</tbody>
+</table>
+<p>The protocol abstractions (<code>AbstractIndex</code>, <code>AbstractDataStore</code>, <code>DataSource</code>) ensure your code works across all three layers of atdata—local files, team storage, and federated sharing.</p>
+</section>
+<section id="the-full-picture" class="level2">
+<h2 class="anchored" data-anchor-id="the-full-picture">The Full Picture</h2>
+<p>You’ve now seen atdata’s complete architecture:</p>
+<pre><code>Local Development          Team Storage              Federation
+─────────────────          ────────────              ──────────
+tar files                  Redis + S3                ATProto PDS
+Dataset[T]                 LocalIndex                AtmosphereIndex
+                           S3DataStore               PDSBlobStore</code></pre>
+<p>The same <code>@packable</code> sample types, the same <code>Dataset[T]</code> iteration patterns, and the same lens transformations work at every layer. Only the storage backend changes.</p>
 </section>
 <section id="next-steps" class="level2">
 <h2 class="anchored" data-anchor-id="next-steps">Next Steps</h2>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Already Have Local Datasets?
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The <a href="../tutorials/promotion.html">Promotion Workflow</a> tutorial shows how to migrate existing datasets from local storage to the atmosphere without re-processing your data.</p>
+</div>
+</div>
 <ul>
 <li><strong><a href="../tutorials/promotion.html">Promotion Workflow</a></strong> - Migrate from local storage to atmosphere</li>
 <li><strong><a href="../reference/atmosphere.html">Atmosphere Reference</a></strong> - Complete API reference</li>

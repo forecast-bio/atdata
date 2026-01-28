@@ -1,0 +1,81 @@
+# local.LocalDatasetEntry { #atdata.local.LocalDatasetEntry }
+
+```python
+local.LocalDatasetEntry(
+    name,
+    schema_ref,
+    data_urls,
+    metadata=None,
+    _cid=None,
+    _legacy_uuid=None,
+)
+```
+
+Index entry for a dataset stored in the local repository.
+
+Implements the IndexEntry protocol for compatibility with AbstractIndex.
+Uses dual identity: a content-addressable CID (ATProto-compatible) and
+a human-readable name.
+
+The CID is generated from the entry's content (schema_ref + data_urls),
+ensuring the same data produces the same CID whether stored locally or
+in the atmosphere. This enables seamless promotion from local to ATProto.
+
+## Attributes {.doc-section .doc-section-attributes}
+
+| Name       | Type                           | Description                                        |
+|------------|--------------------------------|----------------------------------------------------|
+| name       | [str](`str`)                   | Human-readable name for this dataset.              |
+| schema_ref | [str](`str`)                   | Reference to the schema for this dataset.          |
+| data_urls  | [list](`list`)\[[str](`str`)\] | WebDataset URLs for the data.                      |
+| metadata   | [dict](`dict`) \| None         | Arbitrary metadata dictionary, or None if not set. |
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [from_redis](#atdata.local.LocalDatasetEntry.from_redis) | Load an entry from Redis by CID. |
+| [write_to](#atdata.local.LocalDatasetEntry.write_to) | Persist this index entry to Redis. |
+
+### from_redis { #atdata.local.LocalDatasetEntry.from_redis }
+
+```python
+local.LocalDatasetEntry.from_redis(redis, cid)
+```
+
+Load an entry from Redis by CID.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                   | Description                              | Default    |
+|--------|------------------------|------------------------------------------|------------|
+| redis  | [Redis](`redis.Redis`) | Redis connection to read from.           | _required_ |
+| cid    | [str](`str`)           | Content identifier of the entry to load. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                  | Description                          |
+|--------|-------------------------------------------------------|--------------------------------------|
+|        | [LocalDatasetEntry](`atdata.local.LocalDatasetEntry`) | LocalDatasetEntry loaded from Redis. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                   | Description         |
+|--------|------------------------|---------------------|
+|        | [KeyError](`KeyError`) | If entry not found. |
+
+### write_to { #atdata.local.LocalDatasetEntry.write_to }
+
+```python
+local.LocalDatasetEntry.write_to(redis)
+```
+
+Persist this index entry to Redis.
+
+Stores the entry as a Redis hash with key '{REDIS_KEY_DATASET_ENTRY}:{cid}'.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                   | Description                   | Default    |
+|--------|------------------------|-------------------------------|------------|
+| redis  | [Redis](`redis.Redis`) | Redis connection to write to. | _required_ |

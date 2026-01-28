@@ -1,0 +1,109 @@
+# BlobSource { #atdata.BlobSource }
+
+```python
+BlobSource(blob_refs, pds_endpoint=None, _endpoint_cache=dict())
+```
+
+Data source for ATProto PDS blob storage.
+
+Streams dataset shards stored as blobs on an ATProto Personal Data Server.
+Each shard is identified by a blob reference containing the DID and CID.
+
+This source resolves blob references to HTTP URLs and streams the content
+directly, supporting efficient iteration over shards without downloading
+everything upfront.
+
+## Attributes {.doc-section .doc-section-attributes}
+
+| Name         | Type                                                           | Description                                                    |
+|--------------|----------------------------------------------------------------|----------------------------------------------------------------|
+| blob_refs    | [list](`list`)\[[dict](`dict`)\[[str](`str`), [str](`str`)\]\] | List of blob reference dicts with 'did' and 'cid' keys.        |
+| pds_endpoint | [str](`str`) \| None                                           | Optional PDS endpoint URL. If not provided, resolved from DID. |
+
+## Example {.doc-section .doc-section-example}
+
+::
+
+    >>> source = BlobSource(
+    ...     blob_refs=[
+    ...         {"did": "did:plc:abc123", "cid": "bafyrei..."},
+    ...         {"did": "did:plc:abc123", "cid": "bafyrei..."},
+    ...     ],
+    ... )
+    >>> for shard_id, stream in source.shards:
+    ...     process(stream)
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [from_refs](#atdata.BlobSource.from_refs) | Create BlobSource from blob reference dicts. |
+| [list_shards](#atdata.BlobSource.list_shards) | Return list of AT URI-style shard identifiers. |
+| [open_shard](#atdata.BlobSource.open_shard) | Open a single shard by its AT URI. |
+
+### from_refs { #atdata.BlobSource.from_refs }
+
+```python
+BlobSource.from_refs(refs, *, pds_endpoint=None)
+```
+
+Create BlobSource from blob reference dicts.
+
+Accepts blob references in the format returned by upload_blob:
+``{"$type": "blob", "ref": {"$link": "cid"}, ...}``
+
+Also accepts simplified format: ``{"did": "...", "cid": "..."}``
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name         | Type                             | Description                                 | Default    |
+|--------------|----------------------------------|---------------------------------------------|------------|
+| refs         | [list](`list`)\[[dict](`dict`)\] | List of blob reference dicts.               | _required_ |
+| pds_endpoint | [str](`str`) \| None             | Optional PDS endpoint to use for all blobs. | `None`     |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type           | Description            |
+|--------|----------------|------------------------|
+|        | \'BlobSource\' | Configured BlobSource. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                            |
+|--------|----------------------------|----------------------------------------|
+|        | [ValueError](`ValueError`) | If refs is empty or format is invalid. |
+
+### list_shards { #atdata.BlobSource.list_shards }
+
+```python
+BlobSource.list_shards()
+```
+
+Return list of AT URI-style shard identifiers.
+
+### open_shard { #atdata.BlobSource.open_shard }
+
+```python
+BlobSource.open_shard(shard_id)
+```
+
+Open a single shard by its AT URI.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name     | Type         | Description                              | Default    |
+|----------|--------------|------------------------------------------|------------|
+| shard_id | [str](`str`) | AT URI of the shard (at://did/blob/cid). | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                  | Description                                   |
+|--------|---------------------------------------|-----------------------------------------------|
+|        | [IO](`typing.IO`)\[[bytes](`bytes`)\] | Streaming response body for reading the blob. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                          |
+|--------|----------------------------|--------------------------------------|
+|        | [KeyError](`KeyError`)     | If shard_id is not in list_shards(). |
+|        | [ValueError](`ValueError`) | If shard_id format is invalid.       |

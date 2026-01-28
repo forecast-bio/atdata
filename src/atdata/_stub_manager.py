@@ -9,17 +9,19 @@ can be imported at runtime. This allows ``decode_schema`` to return properly
 typed classes that work with both static type checkers and runtime.
 
 Example:
-    >>> from atdata.local import Index
-    >>>
-    >>> # Enable auto-stub generation
-    >>> index = Index(auto_stubs=True)
-    >>>
-    >>> # Modules are generated automatically on decode_schema
-    >>> MyType = index.decode_schema("atdata://local/sampleSchema/MySample@1.0.0")
-    >>> # MyType is now properly typed for IDE autocomplete!
-    >>>
-    >>> # Get the stub directory path for IDE configuration
-    >>> print(f"Add to IDE: {index.stub_dir}")
+    ::
+
+        >>> from atdata.local import Index
+        >>>
+        >>> # Enable auto-stub generation
+        >>> index = Index(auto_stubs=True)
+        >>>
+        >>> # Modules are generated automatically on decode_schema
+        >>> MyType = index.decode_schema("atdata://local/sampleSchema/MySample@1.0.0")
+        >>> # MyType is now properly typed for IDE autocomplete!
+        >>>
+        >>> # Get the stub directory path for IDE configuration
+        >>> print(f"Add to IDE: {index.stub_dir}")
 """
 
 from pathlib import Path
@@ -100,11 +102,13 @@ class StubManager:
         stub_dir: Directory to write module files. Defaults to ``~/.atdata/stubs/``.
 
     Example:
-        >>> manager = StubManager()
-        >>> schema_dict = {"name": "MySample", "version": "1.0.0", "fields": [...]}
-        >>> SampleClass = manager.ensure_module(schema_dict)
-        >>> print(manager.stub_dir)
-        /Users/you/.atdata/stubs
+        ::
+
+            >>> manager = StubManager()
+            >>> schema_dict = {"name": "MySample", "version": "1.0.0", "fields": [...]}
+            >>> SampleClass = manager.ensure_module(schema_dict)
+            >>> print(manager.stub_dir)
+            /Users/you/.atdata/stubs
     """
 
     def __init__(self, stub_dir: Optional[Union[str, Path]] = None):
@@ -237,8 +241,8 @@ class StubManager:
                     fcntl.flock(f.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
                 except (OSError, IOError):
                     # Lock unavailable (NFS, Windows, etc.) - proceed without lock
-                    # This is safe because atomic rename provides the real protection
-                    _ = None  # Explicit no-op
+                    # Atomic rename provides the real protection
+                    pass
 
                 f.write(content)
                 f.flush()
@@ -252,7 +256,7 @@ class StubManager:
             try:
                 temp_path.unlink()
             except OSError:
-                _ = None  # Temp file cleanup failed, but we're re-raising anyway
+                pass  # Temp file cleanup failed, re-raising original error
             raise
 
     def _write_stub_atomic(self, path: Path, content: str) -> None:

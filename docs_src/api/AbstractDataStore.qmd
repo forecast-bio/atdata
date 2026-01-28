@@ -1,0 +1,94 @@
+# AbstractDataStore { #atdata.AbstractDataStore }
+
+```python
+AbstractDataStore()
+```
+
+Protocol for data storage operations.
+
+This protocol abstracts over different storage backends for dataset data:
+- S3DataStore: S3-compatible object storage
+- PDSBlobStore: ATProto PDS blob storage (future)
+
+The separation of index (metadata) from data store (actual files) allows
+flexible deployment: local index with S3 storage, atmosphere index with
+S3 storage, or atmosphere index with PDS blobs.
+
+## Example {.doc-section .doc-section-example}
+
+::
+
+    >>> store = S3DataStore(credentials, bucket="my-bucket")
+    >>> urls = store.write_shards(dataset, prefix="training/v1")
+    >>> print(urls)
+    ['s3://my-bucket/training/v1/shard-000000.tar', ...]
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [read_url](#atdata.AbstractDataStore.read_url) | Resolve a storage URL for reading. |
+| [supports_streaming](#atdata.AbstractDataStore.supports_streaming) | Whether this store supports streaming reads. |
+| [write_shards](#atdata.AbstractDataStore.write_shards) | Write dataset shards to storage. |
+
+### read_url { #atdata.AbstractDataStore.read_url }
+
+```python
+AbstractDataStore.read_url(url)
+```
+
+Resolve a storage URL for reading.
+
+Some storage backends may need to transform URLs (e.g., signing S3 URLs
+or resolving blob references). This method returns a URL that can be
+used directly with WebDataset.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type         | Description             | Default    |
+|--------|--------------|-------------------------|------------|
+| url    | [str](`str`) | Storage URL to resolve. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type         | Description                            |
+|--------|--------------|----------------------------------------|
+|        | [str](`str`) | WebDataset-compatible URL for reading. |
+
+### supports_streaming { #atdata.AbstractDataStore.supports_streaming }
+
+```python
+AbstractDataStore.supports_streaming()
+```
+
+Whether this store supports streaming reads.
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type           | Description                                               |
+|--------|----------------|-----------------------------------------------------------|
+|        | [bool](`bool`) | True if the store supports efficient streaming (like S3), |
+|        | [bool](`bool`) | False if data must be fully downloaded first.             |
+
+### write_shards { #atdata.AbstractDataStore.write_shards }
+
+```python
+AbstractDataStore.write_shards(ds, *, prefix, **kwargs)
+```
+
+Write dataset shards to storage.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name     | Type                                | Description                                               | Default    |
+|----------|-------------------------------------|-----------------------------------------------------------|------------|
+| ds       | [Dataset](`atdata.dataset.Dataset`) | The Dataset to write.                                     | _required_ |
+| prefix   | [str](`str`)                        | Path prefix for the shards (e.g., 'datasets/mnist/v1').   | _required_ |
+| **kwargs |                                     | Backend-specific options (e.g., maxcount for shard size). | `{}`       |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                           | Description                                                |
+|--------|--------------------------------|------------------------------------------------------------|
+|        | [list](`list`)\[[str](`str`)\] | List of URLs for the written shards, suitable for use with |
+|        | [list](`list`)\[[str](`str`)\] | WebDataset or atdata.Dataset().                            |

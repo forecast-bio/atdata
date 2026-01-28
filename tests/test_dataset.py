@@ -698,3 +698,205 @@ def test_dataset_invalid_batch_size(tmp_path):
 
 
 ##
+# DictSample tests
+
+
+def test_dictsample_creation():
+    """Test DictSample can be created with keyword args or dict."""
+    # From keyword args
+    ds1 = atdata.DictSample(name="test", value=42)
+    assert ds1.name == "test"
+    assert ds1.value == 42
+
+    # From _data dict
+    ds2 = atdata.DictSample(_data={"name": "test2", "value": 100})
+    assert ds2.name == "test2"
+    assert ds2.value == 100
+
+
+def test_dictsample_getattr():
+    """Test DictSample attribute access."""
+    sample = atdata.DictSample(text="hello", label=1)
+
+    assert sample.text == "hello"
+    assert sample.label == 1
+
+    # Non-existent attribute raises AttributeError
+    with pytest.raises(AttributeError, match="has no field"):
+        _ = sample.nonexistent
+
+
+def test_dictsample_getitem():
+    """Test DictSample dict-style access."""
+    sample = atdata.DictSample(text="hello", label=1)
+
+    assert sample["text"] == "hello"
+    assert sample["label"] == 1
+
+    # Non-existent key raises KeyError
+    with pytest.raises(KeyError):
+        _ = sample["nonexistent"]
+
+
+def test_dictsample_dict_methods():
+    """Test DictSample dict-like methods."""
+    sample = atdata.DictSample(a=1, b=2, c=3)
+
+    assert set(sample.keys()) == {"a", "b", "c"}
+    assert set(sample.values()) == {1, 2, 3}
+    assert set(sample.items()) == {("a", 1), ("b", 2), ("c", 3)}
+    assert "a" in sample
+    assert "x" not in sample
+    assert sample.get("a") == 1
+    assert sample.get("x", "default") == "default"
+
+
+def test_dictsample_to_dict():
+    """Test DictSample.to_dict returns a copy."""
+    sample = atdata.DictSample(name="test", value=42)
+    d = sample.to_dict()
+
+    assert d == {"name": "test", "value": 42}
+    # Should be a copy
+    d["name"] = "modified"
+    assert sample.name == "test"
+
+
+def test_dictsample_serialization():
+    """Test DictSample can be serialized and deserialized."""
+    original = atdata.DictSample(text="hello", count=42)
+
+    # Serialize
+    packed = original.packed
+
+    # Deserialize
+    restored = atdata.DictSample.from_bytes(packed)
+
+    assert restored.text == "hello"
+    assert restored.count == 42
+
+
+def test_dictsample_as_wds():
+    """Test DictSample.as_wds produces valid WebDataset format."""
+    sample = atdata.DictSample(name="test", value=123)
+    wds_dict = sample.as_wds
+
+    assert "__key__" in wds_dict
+    assert "msgpack" in wds_dict
+    assert isinstance(wds_dict["msgpack"], bytes)
+
+
+def test_dictsample_repr():
+    """Test DictSample has a useful repr."""
+    sample = atdata.DictSample(name="test", value=42)
+    repr_str = repr(sample)
+
+    assert "DictSample" in repr_str
+    assert "name" in repr_str
+    assert "value" in repr_str
+
+
+def test_dictsample_dataset_iteration(tmp_path):
+    """Test Dataset[DictSample] can iterate over data."""
+    # Create typed sample data
+    @atdata.packable
+    class SourceSample:
+        text: str
+        label: int
+
+    wds_filename = (tmp_path / "dictsample_test.tar").as_posix()
+    with wds.writer.TarWriter(wds_filename) as sink:
+        for i in range(5):
+            sample = SourceSample(text=f"item_{i}", label=i)
+            sink.write(sample.as_wds)
+
+    # Read as DictSample
+    dataset = atdata.Dataset[atdata.DictSample](wds_filename)
+
+    samples = list(dataset.ordered())
+    assert len(samples) == 5
+
+    for i, sample in enumerate(samples):
+        assert isinstance(sample, atdata.DictSample)
+        assert sample.text == f"item_{i}"
+        assert sample["label"] == i
+
+
+def test_dictsample_to_typed_via_as_type(tmp_path):
+    """Test converting DictSample dataset to typed via as_type."""
+    @atdata.packable
+    class TypedSample:
+        text: str
+        label: int
+
+    # Create data using typed sample
+    wds_filename = (tmp_path / "astype_test.tar").as_posix()
+    with wds.writer.TarWriter(wds_filename) as sink:
+        for i in range(5):
+            sample = TypedSample(text=f"item_{i}", label=i)
+            sink.write(sample.as_wds)
+
+    # Load as DictSample first
+    ds_dict = atdata.Dataset[atdata.DictSample](wds_filename)
+
+    # Convert to typed
+    ds_typed = ds_dict.as_type(TypedSample)
+
+    # Verify typed iteration works
+    samples = list(ds_typed.ordered())
+    assert len(samples) == 5
+
+    for i, sample in enumerate(samples):
+        assert isinstance(sample, TypedSample)
+        assert sample.text == f"item_{i}"
+        assert sample.label == i
+
+
+def test_packable_auto_registers_dictsample_lens():
+    """Test @packable decorator auto-registers lens from DictSample."""
+    @atdata.packable
+    class AutoLensSample:
+        name: str
+        value: int
+
+    # The lens should be registered automatically
+    network = atdata.LensNetwork()
+    lens = network.transform(atdata.DictSample, AutoLensSample)
+
+    # Test the lens works
+    dict_sample = atdata.DictSample(name="test", value=42)
+    typed_sample = lens(dict_sample)
+
+    assert isinstance(typed_sample, AutoLensSample)
+    assert typed_sample.name == "test"
+    assert typed_sample.value == 42
+
+
+def test_dictsample_batched_iteration(tmp_path):
+    """Test Dataset[DictSample] works with batched iteration."""
+    @atdata.packable
+    class BatchSource:
+        text: str
+        value: int
+
+    wds_filename = (tmp_path / "batch_dictsample_test.tar").as_posix()
+    with wds.writer.TarWriter(wds_filename) as sink:
+        for i in range(10):
+            sample = BatchSource(text=f"item_{i}", value=i)
+            sink.write(sample.as_wds)
+
+    # Read as DictSample with batching
+    dataset = atdata.Dataset[atdata.DictSample](wds_filename)
+
+    batch_count = 0
+    for batch in dataset.ordered(batch_size=4):
+        assert isinstance(batch, atdata.SampleBatch)
+        assert len(batch.samples) <= 4
+        for sample in batch.samples:
+            assert isinstance(sample, atdata.DictSample)
+        batch_count += 1
+
+    assert batch_count == 3  # 10 samples / 4 per batch = 2 full + 1 partial
+
+
+##

@@ -1,0 +1,61 @@
+# AtUri { #atdata.atmosphere.AtUri }
+
+```python
+atmosphere.AtUri(authority, collection, rkey)
+```
+
+Parsed AT Protocol URI.
+
+AT URIs follow the format: at://<authority>/<collection>/<rkey>
+
+## Example {.doc-section .doc-section-example}
+
+::
+
+    >>> uri = AtUri.parse("at://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz")
+    >>> uri.authority
+    'did:plc:abc123'
+    >>> uri.collection
+    'ac.foundation.dataset.sampleSchema'
+    >>> uri.rkey
+    'xyz'
+
+## Attributes
+
+| Name | Description |
+| --- | --- |
+| [authority](#atdata.atmosphere.AtUri.authority) | The DID or handle of the repository owner. |
+| [collection](#atdata.atmosphere.AtUri.collection) | The NSID of the record collection. |
+| [rkey](#atdata.atmosphere.AtUri.rkey) | The record key within the collection. |
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [parse](#atdata.atmosphere.AtUri.parse) | Parse an AT URI string into components. |
+
+### parse { #atdata.atmosphere.AtUri.parse }
+
+```python
+atmosphere.AtUri.parse(uri)
+```
+
+Parse an AT URI string into components.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type         | Description                                                      | Default    |
+|--------|--------------|------------------------------------------------------------------|------------|
+| uri    | [str](`str`) | AT URI string in format ``at://<authority>/<collection>/<rkey>`` | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                      | Description            |
+|--------|-------------------------------------------|------------------------|
+|        | [AtUri](`atdata.atmosphere._types.AtUri`) | Parsed AtUri instance. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                   |
+|--------|----------------------------|-------------------------------|
+|        | [ValueError](`ValueError`) | If the URI format is invalid. |

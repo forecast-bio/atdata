@@ -1,0 +1,68 @@
+# URLSource { #atdata.URLSource }
+
+```python
+URLSource(url)
+```
+
+Data source for WebDataset-compatible URLs.
+
+Wraps WebDataset's gopen to open URLs using built-in handlers for
+http, https, pipe, gs, hf, sftp, etc. Supports brace expansion
+for shard patterns like "data-{000..099}.tar".
+
+This is the default source type when a string URL is passed to Dataset.
+
+## Attributes {.doc-section .doc-section-attributes}
+
+| Name   | Type         | Description                          |
+|--------|--------------|--------------------------------------|
+| url    | [str](`str`) | URL or brace pattern for the shards. |
+
+## Example {.doc-section .doc-section-example}
+
+::
+
+    >>> source = URLSource("https://example.com/train-{000..009}.tar")
+    >>> for shard_id, stream in source.shards:
+    ...     print(f"Streaming {shard_id}")
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [list_shards](#atdata.URLSource.list_shards) | Expand brace pattern and return list of shard URLs. |
+| [open_shard](#atdata.URLSource.open_shard) | Open a single shard by URL. |
+
+### list_shards { #atdata.URLSource.list_shards }
+
+```python
+URLSource.list_shards()
+```
+
+Expand brace pattern and return list of shard URLs.
+
+### open_shard { #atdata.URLSource.open_shard }
+
+```python
+URLSource.open_shard(shard_id)
+```
+
+Open a single shard by URL.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name     | Type         | Description               | Default    |
+|----------|--------------|---------------------------|------------|
+| shard_id | [str](`str`) | URL of the shard to open. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                  | Description                  |
+|--------|---------------------------------------|------------------------------|
+|        | [IO](`typing.IO`)\[[bytes](`bytes`)\] | File-like stream from gopen. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                   | Description                          |
+|--------|------------------------|--------------------------------------|
+|        | [KeyError](`KeyError`) | If shard_id is not in list_shards(). |

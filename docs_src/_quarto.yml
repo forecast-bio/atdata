@@ -2,6 +2,98 @@ project:
   type: website
   output-dir: ../docs
 
+quartodoc:
+  package: atdata
+  dir: api
+  title: "API Reference"
+  style: pkgdown
+  parser: google
+  render_interlinks: true
+
+  sections:
+    # Core module
+    - title: Core
+      desc: Core types, decorators, and dataset classes
+      contents:
+        - name: packable
+        - name: PackableSample
+          children: embedded
+        - name: DictSample
+          children: embedded
+        - name: Dataset
+          children: embedded
+        - name: SampleBatch
+          children: embedded
+        - name: Lens
+          children: embedded
+        - name: lens
+        - name: load_dataset
+        - name: DatasetDict
+          children: embedded
+
+    # Protocols
+    - title: Protocols
+      desc: Abstract protocols for storage backends
+      contents:
+        - kind: page
+          path: Packable-protocol
+          contents:
+            - name: Packable
+        - name: IndexEntry
+        - name: AbstractIndex
+        - name: AbstractDataStore
+        - name: DataSource
+
+    # Data Sources
+    - title: Data Sources
+      desc: Data source implementations for streaming
+      contents:
+        - name: URLSource
+          children: embedded
+        - name: S3Source
+          children: embedded
+        - name: BlobSource
+          children: embedded
+
+    # Local storage
+    - title: Local Storage
+      desc: Local Redis/S3 storage backend
+      contents:
+        - name: local.Index
+          children: embedded
+        - name: local.LocalDatasetEntry
+          children: embedded
+        - name: local.S3DataStore
+          children: embedded
+
+    # Atmosphere
+    - title: Atmosphere
+      desc: ATProto federation
+      package: atdata.atmosphere
+      contents:
+        - name: AtmosphereClient
+          children: embedded
+        - name: AtmosphereIndex
+          children: embedded
+        - name: AtmosphereIndexEntry
+          children: embedded
+        - name: PDSBlobStore
+          children: embedded
+        - name: SchemaPublisher
+        - name: SchemaLoader
+        - name: DatasetPublisher
+        - name: DatasetLoader
+        - name: LensPublisher
+        - name: LensLoader
+        - name: AtUri
+
+    # Promotion
+    - title: Promotion
+      desc: Local to atmosphere migration
+      package: atdata.promote
+      contents:
+        - name: promote_to_atmosphere
+
 website:
   title: "atdata"
   description: "A loose federation of distributed, typed datasets built on WebDataset"
@@ -27,6 +119,8 @@ website:
             href: tutorials/promotion.qmd
       - text: "Reference"
         menu:
+          - text: "Architecture Overview"
+            href: reference/architecture.qmd
           - text: "Packable Samples"
             href: reference/packable-samples.qmd
           - text: "Datasets"
@@ -68,6 +162,7 @@ website:
             - tutorials/promotion.qmd
         - section: "Reference"
           contents:
+            - reference/architecture.qmd
             - reference/packable-samples.qmd
             - reference/datasets.qmd
             - reference/lenses.qmd
@@ -79,9 +174,6 @@ website:
             - reference/uri-spec.qmd
             - reference/troubleshooting.qmd
             - reference/deployment.qmd
-        - section: "API Reference"
-          contents:
-            - api/index.qmd
 
   page-footer:
     left: "Built with [Quarto](https://quarto.org/)"

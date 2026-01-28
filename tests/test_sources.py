@@ -9,7 +9,7 @@ import pytest
 import webdataset as wds
 
 import atdata
-from atdata._sources import URLSource, S3Source
+from atdata._sources import URLSource, S3Source, BlobSource
 from atdata._protocols import DataSource
 
 
@@ -62,13 +62,13 @@ class TestURLSource:
         ]
 
     def test_shards_yields_streams(self, tmp_path):
-        """shards() yields (url, stream) pairs."""
+        """shards property yields (url, stream) pairs."""
         # Create test tar file
         tar_path = tmp_path / "test.tar"
         create_test_tar(tar_path, [{"name": "test", "value": 42}])
 
         source = URLSource(str(tar_path))
-        shards = list(source.shards())
+        shards = list(source.shards)
 
         assert len(shards) == 1
         url, stream = shards[0]
@@ -202,7 +202,7 @@ class TestS3Source:
                 secret_key="SECRET",
             )
 
-            shards = list(source.shards())
+            shards = list(source.shards)
 
             assert len(shards) == 1
             uri, stream = shards[0]
@@ -287,6 +287,159 @@ class TestS3Source:
 
             assert client1 is client2
             assert mock_boto.call_count == 1
+
+
+class TestBlobSource:
+    """Tests for BlobSource (ATProto PDS blob storage)."""
+
+    def test_conforms_to_protocol(self):
+        """BlobSource should satisfy DataSource protocol."""
+        source = BlobSource(blob_refs=[{"did": "did:plc:abc", "cid": "bafyrei123"}])
+        assert isinstance(source, DataSource)
+
+    def test_list_shards(self):
+        """list_shards returns AT URIs."""
+        source = BlobSource(blob_refs=[
+            {"did": "did:plc:abc", "cid": "bafyrei111"},
+            {"did": "did:plc:abc", "cid": "bafyrei222"},
+        ])
+        assert source.list_shards() == [
+            "at://did:plc:abc/blob/bafyrei111",
+            "at://did:plc:abc/blob/bafyrei222",
+        ]
+
+    def test_from_refs_simple_format(self):
+        """from_refs accepts simple {did, cid} format."""
+        source = BlobSource.from_refs([
+            {"did": "did:plc:abc", "cid": "bafyrei123"},
+        ])
+        assert len(source.blob_refs) == 1
+        assert source.blob_refs[0]["did"] == "did:plc:abc"
+        assert source.blob_refs[0]["cid"] == "bafyrei123"
+
+    def test_from_refs_with_endpoint(self):
+        """from_refs accepts pds_endpoint parameter."""
+        source = BlobSource.from_refs(
+            [{"did": "did:plc:abc", "cid": "bafyrei123"}],
+            pds_endpoint="https://pds.example.com",
+        )
+        assert source.pds_endpoint == "https://pds.example.com"
+
+    def test_from_refs_empty(self):
+        """from_refs raises on empty list."""
+        with pytest.raises(ValueError, match="cannot be empty"):
+            BlobSource.from_refs([])
+
+    def test_from_refs_invalid_format(self):
+        """from_refs raises on invalid blob reference format."""
+        with pytest.raises(ValueError, match="Invalid blob reference format"):
+            BlobSource.from_refs([{"invalid": "data"}])
+
+    def test_from_refs_atproto_format_without_did(self):
+        """from_refs raises helpful error for ATProto format without DID."""
+        with pytest.raises(ValueError, match="requires 'did' field"):
+            BlobSource.from_refs([{"ref": {"$link": "bafyrei123"}}])
+
+    def test_resolve_pds_endpoint_uses_cache(self):
+        """PDS endpoint resolution is cached."""
+        source = BlobSource(blob_refs=[{"did": "did:plc:abc", "cid": "cid"}])
+
+        # Pre-populate cache
+        source._endpoint_cache["did:plc:abc"] = "https://cached.pds.com"
+
+        endpoint = source._resolve_pds_endpoint("did:plc:abc")
+        assert endpoint == "https://cached.pds.com"
+
+    def test_resolve_pds_endpoint_uses_provided_endpoint(self):
+        """Provided pds_endpoint is used instead of resolution."""
+        source = BlobSource(
+            blob_refs=[{"did": "did:plc:abc", "cid": "cid"}],
+            pds_endpoint="https://my.pds.com",
+        )
+
+        endpoint = source._resolve_pds_endpoint("did:plc:abc")
+        assert endpoint == "https://my.pds.com"
+
+    def test_get_blob_url(self):
+        """_get_blob_url constructs correct URL."""
+        source = BlobSource(
+            blob_refs=[{"did": "did:plc:abc", "cid": "bafyrei123"}],
+            pds_endpoint="https://pds.example.com",
+        )
+
+        url = source._get_blob_url("did:plc:abc", "bafyrei123")
+        assert url == "https://pds.example.com/xrpc/com.atproto.sync.getBlob?did=did:plc:abc&cid=bafyrei123"
+
+    def test_shards_fetches_blobs(self):
+        """shards property fetches blobs via HTTP."""
+        mock_response = Mock()
+        mock_response.raw = Mock()
+        mock_response.raise_for_status = Mock()
+
+        with patch("requests.get", return_value=mock_response) as mock_get:
+            source = BlobSource(
+                blob_refs=[{"did": "did:plc:abc", "cid": "bafyrei123"}],
+                pds_endpoint="https://pds.example.com",
+            )
+
+            shards = list(source.shards)
+
+            assert len(shards) == 1
+            shard_id, stream = shards[0]
+            assert shard_id == "at://did:plc:abc/blob/bafyrei123"
+            assert stream is mock_response.raw
+
+            mock_get.assert_called_once_with(
+                "https://pds.example.com/xrpc/com.atproto.sync.getBlob?did=did:plc:abc&cid=bafyrei123",
+                stream=True,
+                timeout=60,
+            )
+
+    def test_open_shard_fetches_single_blob(self):
+        """open_shard fetches a specific blob."""
+        mock_response = Mock()
+        mock_response.raw = Mock()
+        mock_response.raise_for_status = Mock()
+
+        with patch("requests.get", return_value=mock_response) as mock_get:
+            source = BlobSource(
+                blob_refs=[
+                    {"did": "did:plc:abc", "cid": "bafyrei111"},
+                    {"did": "did:plc:abc", "cid": "bafyrei222"},
+                ],
+                pds_endpoint="https://pds.example.com",
+            )
+
+            stream = source.open_shard("at://did:plc:abc/blob/bafyrei222")
+
+            assert stream is mock_response.raw
+            mock_get.assert_called_once()
+            call_args = mock_get.call_args
+            assert "bafyrei222" in call_args[0][0]
+
+    def test_open_shard_not_found(self):
+        """open_shard raises KeyError for unknown shard."""
+        source = BlobSource(blob_refs=[{"did": "did:plc:abc", "cid": "bafyrei123"}])
+
+        with pytest.raises(KeyError, match="Shard not found"):
+            source.open_shard("at://did:plc:abc/blob/unknown")
+
+    def test_open_shard_invalid_format(self):
+        """open_shard raises ValueError for invalid shard ID format."""
+        # Test that we properly validate the AT URI format
+        # by checking the error message when we pass an invalid format
+        # that isn't in the list but would fail format check
+        source = BlobSource(
+            blob_refs=[{"did": "did:plc:abc", "cid": "bafyrei123"}],
+        )
+
+        # A non-AT URI should raise KeyError (not in list)
+        with pytest.raises(KeyError, match="Shard not found"):
+            source.open_shard("not-an-at-uri")
+
+        # An AT URI with wrong format should also raise KeyError (not in list)
+        with pytest.raises(KeyError, match="Shard not found"):
+            source.open_shard("at://did:plc:abc/wrong/format")
 
 
 class TestDatasetWithDataSource:

@@ -1,323 +1,75 @@
----
-title: "API Reference"
-description: "Complete API reference for atdata"
----
-
-This page provides a comprehensive reference for the atdata API.
-
-## Core Module (`atdata`)
-
-### Decorators
-
-#### `@packable`
-
-```python
-@atdata.packable
-class MySample:
-    field: str
-    array: NDArray
-```
-
-Converts a class into a `PackableSample` with automatic msgpack serialization.
-
-#### `@lens`
-
-```python
-@atdata.lens
-def transform(src: SourceType) -> ViewType:
-    return ViewType(...)
-```
-
-Creates a lens transformation and registers it in the `LensNetwork`.
-
-### Classes
-
-#### `PackableSample`
-
-Base class for typed samples with serialization support.
-
-| Property/Method | Description |
-|-----------------|-------------|
-| `.packed` | Serialize to msgpack bytes |
-| `.as_wds` | Get WebDataset dict with `__key__` and `msgpack` |
-| `.from_bytes(data)` | Class method to deserialize from bytes |
-| `.from_data(dict)` | Class method to create from dictionary |
-
-#### `Dataset[ST]`
-
-Generic typed dataset wrapping WebDataset tar files.
-
-```python
-dataset = atdata.Dataset[MySample]("data-{000000..000009}.tar")
-```
-
-| Property/Method | Description |
-|-----------------|-------------|
-| `.url` | The dataset URL pattern |
-| `.sample_type` | The sample type class |
-| `.shard_list` | List of individual shard URLs |
-| `.metadata` | Metadata dict (if metadata_url provided) |
-| `.ordered(batch_size=1)` | Iterate in order |
-| `.shuffled(batch_size=1, buffer_shards=100, buffer_samples=10000)` | Iterate shuffled |
-| `.as_type(ViewType)` | View through a lens transformation |
-| `.to_parquet(path, ...)` | Export to parquet format |
-
-#### `SampleBatch[DT]`
-
-Batch of samples with automatic attribute aggregation.
-
-| Property | Description |
-|----------|-------------|
-| `.<field>` | Access aggregated field (NDArray stacked, others as list) |
-| `.sample_type` | The sample type class |
-
-#### `Lens[S, V]`
-
-Bidirectional transformation between types.
-
-| Property/Method | Description |
-|-----------------|-------------|
-| `.get(source)` | Transform source to view |
-| `.put(view, source)` | Update source from view |
-| `@lens.putter` | Decorator to add putter function |
-
-### Functions
-
-#### `load_dataset()`
-
-```python
-def load_dataset(
-    path: str,
-    sample_type: Type[ST] = None,
-    *,
-    split: str = None,
-    data_files: str | list | dict = None,
-    streaming: bool = False,
-    index: AbstractIndex = None,
-) -> Dataset[ST] | DatasetDict
-```
-
-HuggingFace-style dataset loading.
-
----
-
-## Local Module (`atdata.local`)
-
-### Classes
-
-#### `LocalIndex`
-
-```python
-index = LocalIndex(redis=redis_connection)
-# or
-index = LocalIndex(host="localhost", port=6379)
-```
-
-| Method | Description |
-|--------|-------------|
-| `.add_entry(dataset, name, ...)` | Add dataset to index |
-| `.get_entry(cid)` | Get entry by CID |
-| `.get_entry_by_name(name)` | Get entry by name |
-| `.entries` | Iterator over all entries |
-| `.all_entries` | List of all entries |
-| `.publish_schema(type, version, ...)` | Publish schema |
-| `.get_schema(ref)` | Get schema record |
-| `.list_schemas()` | List all schemas |
-| `.decode_schema(ref)` | Reconstruct sample type from schema |
-
-#### `LocalDatasetEntry`
-
-```python
-entry = LocalDatasetEntry(
-    _name="my-dataset",
-    _schema_ref="local://schemas/MySample@1.0.0",
-    _data_urls=["s3://bucket/data.tar"],
-    _metadata={"key": "value"},
-)
-```
-
-| Property | Description |
-|----------|-------------|
-| `.name` | Dataset name |
-| `.schema_ref` | Schema reference |
-| `.data_urls` | List of WebDataset URLs |
-| `.metadata` | Metadata dict or None |
-| `.cid` | Content identifier |
-
-#### `Repo` (Deprecated)
-
-::: {.callout-warning}
-`Repo` is deprecated. Use `LocalIndex` with `S3DataStore` instead:
-
-```python
-store = S3DataStore(credentials, bucket="my-bucket")
-index = LocalIndex(data_store=store)
-entry = index.insert_dataset(dataset, name="my-dataset", prefix="data")
-```
-:::
-
-| Method | Description |
-|--------|-------------|
-| `.insert(dataset, name, ...)` | Insert dataset (returns entry, stored_dataset) |
-
-#### `S3DataStore`
-
-```python
-store = S3DataStore(credentials, bucket)
-```
-
-| Method | Description |
-|--------|-------------|
-| `.write_shards(dataset, prefix, ...)` | Write dataset shards to S3 |
-| `.read_url(url)` | Resolve URL for reading |
-| `.supports_streaming()` | Check streaming support |
-
----
-
-## Atmosphere Module (`atdata.atmosphere`)
-
-### Classes
-
-#### `AtmosphereClient`
-
-```python
-client = AtmosphereClient(base_url="https://bsky.social")
-client.login(handle, password)
-```
-
-| Property/Method | Description |
-|-----------------|-------------|
-| `.did` | User DID |
-| `.handle` | User handle |
-| `.login(handle, password)` | Authenticate |
-| `.login_with_session(session_string)` | Restore session |
-| `.export_session()` | Export session for later |
-| `.create_record(collection, record, ...)` | Create ATProto record |
-| `.get_record(uri)` | Get record by URI |
-| `.upload_blob(data, mime_type)` | Upload blob to PDS |
-| `.get_blob(did, cid)` | Fetch blob data |
-| `.get_blob_url(did, cid)` | Get blob download URL |
-
-#### `AtmosphereIndex`
-
-```python
-index = AtmosphereIndex(client)
-```
-
-| Method | Description |
-|--------|-------------|
-| `.publish_schema(type, version, ...)` | Publish schema |
-| `.get_schema(uri)` | Get schema record |
-| `.list_schemas(repo=None)` | List schemas |
-| `.decode_schema(uri)` | Reconstruct sample type |
-| `.insert_dataset(dataset, name, ...)` | Publish dataset |
-| `.get_dataset(uri)` | Get dataset entry |
-| `.list_datasets(repo=None)` | List datasets |
-
-#### `SchemaPublisher`
-
-```python
-publisher = SchemaPublisher(client)
-uri = publisher.publish(SampleType, name, version, ...)
-```
-
-#### `SchemaLoader`
-
-```python
-loader = SchemaLoader(client)
-schemas = loader.list_all(limit=100)
-schema = loader.get(uri)
-```
-
-#### `DatasetPublisher`
-
-```python
-publisher = DatasetPublisher(client)
-uri = publisher.publish(dataset, name, schema_uri, ...)
-uri = publisher.publish_with_urls(urls, schema_uri, name, ...)
-uri = publisher.publish_with_blobs(blobs, schema_uri, name, ...)
-```
-
-#### `DatasetLoader`
-
-```python
-loader = DatasetLoader(client)
-datasets = loader.list_all(limit=100)
-record = loader.get(uri)
-urls = loader.get_urls(uri)
-storage_type = loader.get_storage_type(uri)  # "external" or "blobs"
-blob_urls = loader.get_blob_urls(uri)
-blobs = loader.get_blobs(uri)
-dataset = loader.to_dataset(uri, SampleType)
-```
-
-#### `AtUri`
-
-```python
-uri = AtUri.parse("at://did:plc:abc/collection/rkey")
-print(uri.authority, uri.collection, uri.rkey)
-print(str(uri))
-```
-
----
-
-## Promote Module (`atdata.promote`)
-
-### Functions
-
-#### `promote_to_atmosphere()`
-
-```python
-def promote_to_atmosphere(
-    entry: IndexEntry,
-    local_index: AbstractIndex,
-    client: AtmosphereClient,
-    *,
-    name: str = None,
-    description: str = None,
-    tags: list[str] = None,
-    license: str = None,
-    data_store: AbstractDataStore = None,
-) -> AtUri
-```
-
-Migrate a local dataset to the ATProto atmosphere.
-
----
-
-## Protocols (`atdata._protocols`)
-
-### `IndexEntry`
-
-Protocol for dataset index entries.
-
-| Property | Type |
-|----------|------|
-| `name` | `str` |
-| `schema_ref` | `str` |
-| `data_urls` | `list[str]` |
-| `metadata` | `dict \| None` |
-
-### `AbstractIndex`
-
-Protocol for index operations.
-
-| Method | Description |
-|--------|-------------|
-| `insert_dataset(...)` | Insert dataset |
-| `get_dataset(...)` | Get dataset |
-| `list_datasets(...)` | List datasets |
-| `publish_schema(...)` | Publish schema |
-| `get_schema(...)` | Get schema |
-| `list_schemas(...)` | List schemas |
-| `decode_schema(...)` | Decode schema to type |
-
-### `AbstractDataStore`
-
-Protocol for data storage operations.
-
-| Method | Description |
-|--------|-------------|
-| `write_shards(...)` | Write dataset shards |
-| `read_url(...)` | Resolve URL for reading |
-| `supports_streaming()` | Check streaming support |
+# API Reference {.doc .doc-index}
+
+## Core
+
+Core types, decorators, and dataset classes
+
+| | |
+| --- | --- |
+| [packable](packable.qmd#atdata.packable) | Decorator to convert a regular class into a ``PackableSample``. |
+| [PackableSample](PackableSample.qmd#atdata.PackableSample) | Base class for samples that can be serialized with msgpack. |
+| [DictSample](DictSample.qmd#atdata.DictSample) | Dynamic sample type providing dict-like access to raw msgpack data. |
+| [Dataset](Dataset.qmd#atdata.Dataset) | A typed dataset built on WebDataset with lens transformations. |
+| [SampleBatch](SampleBatch.qmd#atdata.SampleBatch) | A batch of samples with automatic attribute aggregation. |
+| [Lens](Lens.qmd#atdata.Lens) | A bidirectional transformation between two sample types. |
+| [lens](lens.qmd#atdata.lens) | Lens-based type transformations for datasets. |
+| [load_dataset](load_dataset.qmd#atdata.load_dataset) | Load a dataset from local files, remote URLs, or an index. |
+| [DatasetDict](DatasetDict.qmd#atdata.DatasetDict) | A dictionary of split names to Dataset instances. |
+
+## Protocols
+
+Abstract protocols for storage backends
+
+| | |
+| --- | --- |
+| [Packable](Packable-protocol.qmd#atdata.Packable) | Structural protocol for packable sample types. |
+| [IndexEntry](IndexEntry.qmd#atdata.IndexEntry) | Common interface for index entries (local or atmosphere). |
+| [AbstractIndex](AbstractIndex.qmd#atdata.AbstractIndex) | Protocol for index operations - implemented by LocalIndex and AtmosphereIndex. |
+| [AbstractDataStore](AbstractDataStore.qmd#atdata.AbstractDataStore) | Protocol for data storage operations. |
+| [DataSource](DataSource.qmd#atdata.DataSource) | Protocol for data sources that provide streams to Dataset. |
+
+## Data Sources
+
+Data source implementations for streaming
+
+| | |
+| --- | --- |
+| [URLSource](URLSource.qmd#atdata.URLSource) | Data source for WebDataset-compatible URLs. |
+| [S3Source](S3Source.qmd#atdata.S3Source) | Data source for S3-compatible storage with explicit credentials. |
+| [BlobSource](BlobSource.qmd#atdata.BlobSource) | Data source for ATProto PDS blob storage. |
+
+## Local Storage
+
+Local Redis/S3 storage backend
+
+| | |
+| --- | --- |
+| [local.Index](local.Index.qmd#atdata.local.Index) | Redis-backed index for tracking datasets in a repository. |
+| [local.LocalDatasetEntry](local.LocalDatasetEntry.qmd#atdata.local.LocalDatasetEntry) | Index entry for a dataset stored in the local repository. |
+| [local.S3DataStore](local.S3DataStore.qmd#atdata.local.S3DataStore) | S3-compatible data store implementing AbstractDataStore protocol. |
+
+## Atmosphere
+
+ATProto federation
+
+| | |
+| --- | --- |
+| [AtmosphereClient](AtmosphereClient.qmd#atdata.atmosphere.AtmosphereClient) | ATProto client wrapper for atdata operations. |
+| [AtmosphereIndex](AtmosphereIndex.qmd#atdata.atmosphere.AtmosphereIndex) | ATProto index implementing AbstractIndex protocol. |
+| [AtmosphereIndexEntry](AtmosphereIndexEntry.qmd#atdata.atmosphere.AtmosphereIndexEntry) | Entry wrapper for ATProto dataset records implementing IndexEntry protocol. |
+| [PDSBlobStore](PDSBlobStore.qmd#atdata.atmosphere.PDSBlobStore) | PDS blob store implementing AbstractDataStore protocol. |
+| [SchemaPublisher](SchemaPublisher.qmd#atdata.atmosphere.SchemaPublisher) | Publishes PackableSample schemas to ATProto. |
+| [SchemaLoader](SchemaLoader.qmd#atdata.atmosphere.SchemaLoader) | Loads PackableSample schemas from ATProto. |
+| [DatasetPublisher](DatasetPublisher.qmd#atdata.atmosphere.DatasetPublisher) | Publishes dataset index records to ATProto. |
+| [DatasetLoader](DatasetLoader.qmd#atdata.atmosphere.DatasetLoader) | Loads dataset records from ATProto. |
+| [LensPublisher](LensPublisher.qmd#atdata.atmosphere.LensPublisher) | Publishes Lens transformation records to ATProto. |
+| [LensLoader](LensLoader.qmd#atdata.atmosphere.LensLoader) | Loads lens records from ATProto. |
+| [AtUri](AtUri.qmd#atdata.atmosphere.AtUri) | Parsed AT Protocol URI. |
+
+## Promotion
+
+Local to atmosphere migration
+
+| | |
+| --- | --- |
+| [promote_to_atmosphere](promote_to_atmosphere.qmd#atdata.promote.promote_to_atmosphere) | Promote a local dataset to the atmosphere network. |

@@ -323,6 +323,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     </a>
     <ul class="dropdown-menu" aria-labelledby="nav-menu-reference">    
         <li>
+    <a class="dropdown-item" href="./reference/architecture.html">
+ <span class="dropdown-text">Architecture Overview</span></a>
+  </li>  
+        <li>
     <a class="dropdown-item" href="./reference/packable-samples.html">
  <span class="dropdown-text">Packable Samples</span></a>
   </li>  
@@ -455,6 +459,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="./reference/architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Architecture Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="./reference/packable-samples.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Packable Samples</span></a>
   </div>
@@ -521,23 +531,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
       </ul>
   </li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
- <span class="menu-text">API Reference</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./api/index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">API Reference</span></a>
-  </div>
-</li>
-      </ul>
-  </li>
     </ul>
     </div>
 </nav>
@@ -549,17 +542,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#atdata" id="toc-atdata" class="nav-link active" data-scroll-target="#atdata">atdata</a></li>
+  <li><a href="#the-challenge" id="toc-the-challenge" class="nav-link" data-scroll-target="#the-challenge">The Challenge</a></li>
   <li><a href="#what-is-atdata" id="toc-what-is-atdata" class="nav-link" data-scroll-target="#what-is-atdata">What is atdata?</a></li>
+  <li><a href="#the-architecture" id="toc-the-architecture" class="nav-link" data-scroll-target="#the-architecture">The Architecture</a></li>
   <li><a href="#installation" id="toc-installation" class="nav-link" data-scroll-target="#installation">Installation</a></li>
   <li><a href="#quick-example" id="toc-quick-example" class="nav-link" data-scroll-target="#quick-example">Quick Example</a>
   <ul class="collapse">
-  <li><a href="#define-a-sample-type" id="toc-define-a-sample-type" class="nav-link" data-scroll-target="#define-a-sample-type">Define a Sample Type</a></li>
-  <li><a href="#create-and-write-samples" id="toc-create-and-write-samples" class="nav-link" data-scroll-target="#create-and-write-samples">Create and Write Samples</a></li>
-  <li><a href="#load-and-iterate" id="toc-load-and-iterate" class="nav-link" data-scroll-target="#load-and-iterate">Load and Iterate</a></li>
+  <li><a href="#define-a-sample-type" id="toc-define-a-sample-type" class="nav-link" data-scroll-target="#define-a-sample-type">1. Define a Sample Type</a></li>
+  <li><a href="#create-and-write-samples" id="toc-create-and-write-samples" class="nav-link" data-scroll-target="#create-and-write-samples">2. Create and Write Samples</a></li>
+  <li><a href="#load-and-iterate-with-type-safety" id="toc-load-and-iterate-with-type-safety" class="nav-link" data-scroll-target="#load-and-iterate-with-type-safety">3. Load and Iterate with Type Safety</a></li>
+  </ul></li>
+  <li><a href="#scaling-up" id="toc-scaling-up" class="nav-link" data-scroll-target="#scaling-up">Scaling Up</a>
+  <ul class="collapse">
+  <li><a href="#team-storage-with-redis-s3" id="toc-team-storage-with-redis-s3" class="nav-link" data-scroll-target="#team-storage-with-redis-s3">Team Storage with Redis + S3</a></li>
+  <li><a href="#federation-with-atproto" id="toc-federation-with-atproto" class="nav-link" data-scroll-target="#federation-with-atproto">Federation with ATProto</a></li>
   </ul></li>
   <li><a href="#huggingface-style-loading" id="toc-huggingface-style-loading" class="nav-link" data-scroll-target="#huggingface-style-loading">HuggingFace-Style Loading</a></li>
-  <li><a href="#local-storage-with-redis-s3" id="toc-local-storage-with-redis-s3" class="nav-link" data-scroll-target="#local-storage-with-redis-s3">Local Storage with Redis + S3</a></li>
-  <li><a href="#publish-to-atproto-federation" id="toc-publish-to-atproto-federation" class="nav-link" data-scroll-target="#publish-to-atproto-federation">Publish to ATProto Federation</a></li>
+  <li><a href="#why-atdata" id="toc-why-atdata" class="nav-link" data-scroll-target="#why-atdata">Why atdata?</a></li>
   <li><a href="#next-steps" id="toc-next-steps" class="nav-link" data-scroll-target="#next-steps">Next Steps</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/your-org/atdata/edit/main/index.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
@@ -593,152 +592,253 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>A loose federation of distributed, typed datasets built on WebDataset.</p>
 <p><a href="./tutorials/quickstart.html" class="btn btn-primary btn-lg">Get Started</a> <a href="https://github.com/your-org/atdata" class="btn btn-outline-secondary btn-lg">View on GitHub</a></p>
 </section>
+<section id="the-challenge" class="level2">
+<h2 class="anchored" data-anchor-id="the-challenge">The Challenge</h2>
+<p>Machine learning datasets are everywhere—training data, validation sets, embeddings, features, model outputs. Yet working with them often means:</p>
+<ul>
+<li><strong>Runtime surprises</strong>: Discovering a field is missing or has the wrong type during training</li>
+<li><strong>Copy-paste schemas</strong>: Redefining the same sample structure across notebooks and scripts</li>
+<li><strong>Storage silos</strong>: Data stuck in one location, invisible to collaborators</li>
+<li><strong>Discovery friction</strong>: No standard way to find datasets across teams or organizations</li>
+</ul>
+<p>atdata solves these problems with a simple idea: <strong>typed, serializable samples</strong> that flow seamlessly from local development to team storage to federated sharing.</p>
+</section>
 <section id="what-is-atdata" class="level2">
 <h2 class="anchored" data-anchor-id="what-is-atdata">What is atdata?</h2>
-<p>atdata provides a typed dataset abstraction for machine learning workflows with:</p>
+<p>atdata is a Python library that combines:</p>
 <div class="feature-cards">
 <section id="typed-samples" class="level3 feature-card">
 <h3 class="anchored" data-anchor-id="typed-samples">Typed Samples</h3>
-<p>Define dataclass-based sample types with automatic msgpack serialization.</p>
+<p>Define dataclass-based sample types with automatic msgpack serialization. Catch schema errors at definition time, not training time.</p>
 </section>
-<section id="ndarray-handling" class="level3 feature-card">
-<h3 class="anchored" data-anchor-id="ndarray-handling">NDArray Handling</h3>
-<p>Transparent numpy array conversion with efficient byte serialization.</p>
+<section id="efficient-storage" class="level3 feature-card">
+<h3 class="anchored" data-anchor-id="efficient-storage">Efficient Storage</h3>
+<p>Built on WebDataset’s proven tar-based format. Stream large datasets without downloading everything first.</p>
 </section>
 <section id="lens-transformations" class="level3 feature-card">
 <h3 class="anchored" data-anchor-id="lens-transformations">Lens Transformations</h3>
-<p>View datasets through different schemas without duplicating data.</p>
+<p>View datasets through different schemas without duplicating data. Perfect for feature extraction, schema migration, and multi-task learning.</p>
 </section>
 <section id="batch-aggregation" class="level3 feature-card">
 <h3 class="anchored" data-anchor-id="batch-aggregation">Batch Aggregation</h3>
-<p>Automatic numpy stacking for NDArray fields during iteration.</p>
+<p>Automatic numpy stacking for NDArray fields. No more manual collation code—just iterate and train.</p>
 </section>
-<section id="webdataset-integration" class="level3 feature-card">
-<h3 class="anchored" data-anchor-id="webdataset-integration">WebDataset Integration</h3>
-<p>Efficient large-scale storage with streaming tar file support.</p>
+<section id="team-storage" class="level3 feature-card">
+<h3 class="anchored" data-anchor-id="team-storage">Team Storage</h3>
+<p>Redis + S3 backend for shared dataset indexes. Publish schemas, track versions, and enable team discovery.</p>
 </section>
 <section id="atproto-federation" class="level3 feature-card">
 <h3 class="anchored" data-anchor-id="atproto-federation">ATProto Federation</h3>
-<p>Publish and discover datasets on the decentralized AT Protocol network.</p>
+<p>Publish datasets to the decentralized AT Protocol network. Enable cross-organization discovery without centralized infrastructure.</p>
 </section>
 </div>
+</section>
+<section id="the-architecture" class="level2">
+<h2 class="anchored" data-anchor-id="the-architecture">The Architecture</h2>
+<p>atdata provides a three-layer progression for your datasets:</p>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│  Federation: ATProto Atmosphere                             │
+│  Decentralized discovery, cross-org sharing                 │
+└─────────────────────────────────────────────────────────────┘
+                              ↑ promote
+┌─────────────────────────────────────────────────────────────┐
+│  Team Storage: Redis + S3                                   │
+│  Shared index, versioned schemas, S3 data                   │
+└─────────────────────────────────────────────────────────────┘
+                              ↑ insert
+┌─────────────────────────────────────────────────────────────┐
+│  Local Development                                          │
+│  Typed samples, WebDataset files, fast iteration            │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+<p>Start local, scale to your team, and optionally share with the world—all with the same sample types and consistent APIs.</p>
 </section>
 <section id="installation" class="level2">
 <h2 class="anchored" data-anchor-id="installation">Installation</h2>
 <div class="install-box">
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install atdata</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># With ATProto support</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install atdata<span class="pp">[</span><span class="ss">atmosphere</span><span class="pp">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install atdata</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># With ATProto support</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install atdata<span class="pp">[</span><span class="ss">atmosphere</span><span class="pp">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="quick-example" class="level2">
 <h2 class="anchored" data-anchor-id="quick-example">Quick Example</h2>
 <section id="define-a-sample-type" class="level3">
-<h3 class="anchored" data-anchor-id="define-a-sample-type">Define a Sample Type</h3>
-<div id="51496c92" class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ImageSample:</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    image: NDArray</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    label: <span class="bu">str</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    confidence: <span class="bu">float</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<h3 class="anchored" data-anchor-id="define-a-sample-type">1. Define a Sample Type</h3>
+<p>The <code>@packable</code> decorator creates a serializable dataclass:</p>
+<div id="ce9c727b" class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ImageSample:</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    image: NDArray      <span class="co"># Automatically handled as bytes</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    label: <span class="bu">str</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    confidence: <span class="bu">float</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="create-and-write-samples" class="level3">
-<h3 class="anchored" data-anchor-id="create-and-write-samples">Create and Write Samples</h3>
-<div id="7283938c" class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> webdataset <span class="im">as</span> wds</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>samples <span class="op">=</span> [</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    ImageSample(</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        image<span class="op">=</span>np.random.rand(<span class="dv">224</span>, <span class="dv">224</span>, <span class="dv">3</span>).astype(np.float32),</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        label<span class="op">=</span><span class="st">"cat"</span>,</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        confidence<span class="op">=</span><span class="fl">0.95</span>,</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">100</span>)</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> wds.writer.TarWriter(<span class="st">"data-000000.tar"</span>) <span class="im">as</span> sink:</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, sample <span class="kw">in</span> <span class="bu">enumerate</span>(samples):</span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        sink.write({<span class="op">**</span>sample.as_wds, <span class="st">"__key__"</span>: <span class="ss">f"sample_</span><span class="sc">{</span>i<span class="sc">:06d}</span><span class="ss">"</span>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<h3 class="anchored" data-anchor-id="create-and-write-samples">2. Create and Write Samples</h3>
+<p>Use WebDataset’s standard TarWriter:</p>
+<div id="a2250059" class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> webdataset <span class="im">as</span> wds</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>samples <span class="op">=</span> [</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    ImageSample(</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>        image<span class="op">=</span>np.random.rand(<span class="dv">224</span>, <span class="dv">224</span>, <span class="dv">3</span>).astype(np.float32),</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        label<span class="op">=</span><span class="st">"cat"</span>,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>        confidence<span class="op">=</span><span class="fl">0.95</span>,</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">100</span>)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> wds.writer.TarWriter(<span class="st">"data-000000.tar"</span>) <span class="im">as</span> sink:</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, sample <span class="kw">in</span> <span class="bu">enumerate</span>(samples):</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>        sink.write({<span class="op">**</span>sample.as_wds, <span class="st">"__key__"</span>: <span class="ss">f"sample_</span><span class="sc">{</span>i<span class="sc">:06d}</span><span class="ss">"</span>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="load-and-iterate" class="level3">
-<h3 class="anchored" data-anchor-id="load-and-iterate">Load and Iterate</h3>
-<div id="95680d15" class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[ImageSample](<span class="st">"data-000000.tar"</span>)</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Iterate with batching</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> dataset.shuffled(batch_size<span class="op">=</span><span class="dv">32</span>):</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    images <span class="op">=</span> batch.image      <span class="co"># numpy array (32, 224, 224, 3)</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    labels <span class="op">=</span> batch.label      <span class="co"># list of 32 strings</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    confs <span class="op">=</span> batch.confidence  <span class="co"># list of 32 floats</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="load-and-iterate-with-type-safety" class="level3">
+<h3 class="anchored" data-anchor-id="load-and-iterate-with-type-safety">3. Load and Iterate with Type Safety</h3>
+<p>The generic <code>Dataset[T]</code> provides typed access:</p>
+<div id="86e5860f" class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[ImageSample](<span class="st">"data-000000.tar"</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> dataset.shuffled(batch_size<span class="op">=</span><span class="dv">32</span>):</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    images <span class="op">=</span> batch.image      <span class="co"># numpy array (32, 224, 224, 3)</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    labels <span class="op">=</span> batch.label      <span class="co"># list of 32 strings</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    confs <span class="op">=</span> batch.confidence  <span class="co"># list of 32 floats</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="scaling-up" class="level2">
+<h2 class="anchored" data-anchor-id="scaling-up">Scaling Up</h2>
+<section id="team-storage-with-redis-s3" class="level3">
+<h3 class="anchored" data-anchor-id="team-storage-with-redis-s3">Team Storage with Redis + S3</h3>
+<p>When you’re ready to share with your team:</p>
+<div id="7a91c337" class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> LocalIndex, S3DataStore</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Connect to team infrastructure</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>store <span class="op">=</span> S3DataStore(</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    credentials<span class="op">=</span>{<span class="st">"AWS_ENDPOINT"</span>: <span class="st">"http://localhost:9000"</span>, ...},</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    bucket<span class="op">=</span><span class="st">"team-datasets"</span>,</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> LocalIndex(data_store<span class="op">=</span>store)</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Publish schema for consistency</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>index.publish_schema(ImageSample, version<span class="op">=</span><span class="st">"1.0.0"</span>)</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Insert dataset (writes to S3, indexes in Redis)</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[ImageSample](<span class="st">"data.tar"</span>)</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>entry <span class="op">=</span> index.insert_dataset(dataset, name<span class="op">=</span><span class="st">"training-images-v1"</span>)</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Team members can now discover and load</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="co"># ds = atdata.load_dataset("@local/training-images-v1", index=index)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="federation-with-atproto" class="level3">
+<h3 class="anchored" data-anchor-id="federation-with-atproto">Federation with ATProto</h3>
+<p>For public or cross-organization sharing:</p>
+<div id="1d65da04" class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> AtmosphereClient, AtmosphereIndex, PDSBlobStore</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.promote <span class="im">import</span> promote_to_atmosphere</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Authenticate with your ATProto identity</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> AtmosphereClient()</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>client.login(<span class="st">"handle.bsky.social"</span>, <span class="st">"app-password"</span>)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Option 1: Promote existing local dataset</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>entry <span class="op">=</span> index.get_dataset(<span class="st">"training-images-v1"</span>)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>at_uri <span class="op">=</span> promote_to_atmosphere(entry, index, client)</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Option 2: Publish directly with blob storage</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>store <span class="op">=</span> PDSBlobStore(client)</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>atm_index <span class="op">=</span> AtmosphereIndex(client, data_store<span class="op">=</span>store)</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>atm_index.insert_dataset(dataset, name<span class="op">=</span><span class="st">"public-images"</span>, schema_ref<span class="op">=</span>schema_uri)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 </section>
 <section id="huggingface-style-loading" class="level2">
 <h2 class="anchored" data-anchor-id="huggingface-style-loading">HuggingFace-Style Loading</h2>
-<div id="04eeccba" class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load from local path</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> atdata.load_dataset(<span class="st">"path/to/data-{000000..000009}.tar"</span>, split<span class="op">=</span><span class="st">"train"</span>)</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Load with split detection</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>ds_dict <span class="op">=</span> atdata.load_dataset(<span class="st">"path/to/data/"</span>)</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>train_ds <span class="op">=</span> ds_dict[<span class="st">"train"</span>]</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>test_ds <span class="op">=</span> ds_dict[<span class="st">"test"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>For convenient access to datasets:</p>
+<div id="f21a38dc" class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata <span class="im">import</span> load_dataset</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Load from local files</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"path/to/data-{000000..000009}.tar"</span>)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Load with split detection</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>ds_dict <span class="op">=</span> load_dataset(<span class="st">"path/to/data/"</span>)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>train_ds <span class="op">=</span> ds_dict[<span class="st">"train"</span>]</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>test_ds <span class="op">=</span> ds_dict[<span class="st">"test"</span>]</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Load from index</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"@local/my-dataset"</span>, index<span class="op">=</span>index)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="local-storage-with-redis-s3" class="level2">
-<h2 class="anchored" data-anchor-id="local-storage-with-redis-s3">Local Storage with Redis + S3</h2>
-<div id="1b0c3cfe" class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> LocalIndex, S3DataStore</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> webdataset <span class="im">as</span> wds</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Create samples and write to local tar</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> wds.writer.TarWriter(<span class="st">"data.tar"</span>) <span class="im">as</span> sink:</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, sample <span class="kw">in</span> <span class="bu">enumerate</span>(samples):</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        sink.write({<span class="op">**</span>sample.as_wds, <span class="st">"__key__"</span>: <span class="ss">f"</span><span class="sc">{</span>i<span class="sc">:06d}</span><span class="ss">"</span>})</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Set up index with S3 data store</span></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>store <span class="op">=</span> S3DataStore(</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    credentials<span class="op">=</span>{<span class="st">"AWS_ENDPOINT"</span>: <span class="st">"http://localhost:9000"</span>, ...},</span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    bucket<span class="op">=</span><span class="st">"my-bucket"</span>,</span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> LocalIndex(data_store<span class="op">=</span>store)  <span class="co"># Connects to Redis</span></span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Insert dataset (writes to S3, indexes in Redis)</span></span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[ImageSample](<span class="st">"data.tar"</span>)</span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>entry <span class="op">=</span> index.insert_dataset(dataset, name<span class="op">=</span><span class="st">"my-dataset"</span>)</span>
-<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Stored at: </span><span class="sc">{</span>entry<span class="sc">.</span>data_urls<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="publish-to-atproto-federation" class="level2">
-<h2 class="anchored" data-anchor-id="publish-to-atproto-federation">Publish to ATProto Federation</h2>
-<div id="ba25ed5b" class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> AtmosphereClient</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.promote <span class="im">import</span> promote_to_atmosphere</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Authenticate</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> AtmosphereClient()</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>client.login(<span class="st">"handle.bsky.social"</span>, <span class="st">"app-password"</span>)</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Promote local dataset to federation</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>entry <span class="op">=</span> index.get_dataset(<span class="st">"my-dataset"</span>)</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>at_uri <span class="op">=</span> promote_to_atmosphere(entry, index, client)</span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Published at: </span><span class="sc">{</span>at_uri<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
+<section id="why-atdata" class="level2">
+<h2 class="anchored" data-anchor-id="why-atdata">Why atdata?</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 37%">
+<col style="width: 62%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Need</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Type-safe samples</td>
+<td><code>@packable</code> decorator, <code>PackableSample</code> base class</td>
+</tr>
+<tr class="even">
+<td>Efficient large-scale storage</td>
+<td>WebDataset tar format, streaming iteration</td>
+</tr>
+<tr class="odd">
+<td>Schema flexibility</td>
+<td>Lens transformations, <code>DictSample</code> for exploration</td>
+</tr>
+<tr class="even">
+<td>Team collaboration</td>
+<td>Redis index, S3 data store, schema registry</td>
+</tr>
+<tr class="odd">
+<td>Public sharing</td>
+<td>ATProto federation, content-addressable CIDs</td>
+</tr>
+<tr class="even">
+<td>Multiple backends</td>
+<td>Protocol abstractions (<code>AbstractIndex</code>, <code>DataSource</code>)</td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="next-steps" class="level2">
 <h2 class="anchored" data-anchor-id="next-steps">Next Steps</h2>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Getting Started
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>New to atdata?</strong> Start with the <a href="./tutorials/quickstart.html">Quick Start Tutorial</a> to learn the basics of typed samples and datasets.</p>
+</div>
+</div>
 <ul>
-<li><strong><a href="./tutorials/quickstart.html">Quick Start Tutorial</a></strong> - Get up and running in 5 minutes</li>
-<li><strong><a href="./reference/packable-samples.html">Packable Samples</a></strong> - Learn about typed sample definitions</li>
-<li><strong><a href="./reference/datasets.html">Datasets</a></strong> - Master dataset iteration and batching</li>
-<li><strong><a href="./reference/atmosphere.html">Atmosphere</a></strong> - Publish to the ATProto federation</li>
+<li><strong><a href="./reference/architecture.html">Architecture Overview</a></strong> - Understand the design and how components fit together</li>
+<li><strong><a href="./tutorials/local-workflow.html">Local Workflow</a></strong> - Set up team storage with Redis + S3</li>
+<li><strong><a href="./tutorials/atmosphere.html">Atmosphere Publishing</a></strong> - Share datasets on the ATProto network</li>
+<li><strong><a href="./reference/packable-samples.html">Packable Samples</a></strong> - Deep dive into sample type definitions</li>
+<li><strong><a href="./reference/datasets.html">Datasets</a></strong> - Master iteration, batching, and transformations</li>
 </ul>
 
 
