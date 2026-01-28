@@ -29,6 +29,7 @@ from atdata.atmosphere._types import LEXICON_NAMESPACE
 @atdata.packable
 class CrossBackendSample:
     """Sample for cross-backend tests."""
+
     name: str
     value: int
 
@@ -36,6 +37,7 @@ class CrossBackendSample:
 @atdata.packable
 class CrossBackendArraySample:
     """Sample with NDArray for cross-backend tests."""
+
     label: str
     data: NDArray
 
@@ -116,12 +118,16 @@ class TestIndexEntryProtocol:
 
         assert isinstance(entry, IndexEntry)
         assert entry.name == "atmo-dataset"
-        assert entry.schema_ref == "at://did:plc:test/ac.foundation.dataset.sampleSchema/abc"
+        assert (
+            entry.schema_ref
+            == "at://did:plc:test/ac.foundation.dataset.sampleSchema/abc"
+        )
         assert entry.data_urls == ["s3://bucket/atmo.tar"]
         assert entry.metadata is None
 
     def test_entries_work_with_common_function(self):
         """Both entry types should work with functions accepting IndexEntry."""
+
         def process_entry(entry: IndexEntry) -> dict:
             return {
                 "name": entry.name,
@@ -294,16 +300,23 @@ class TestAbstractIndexProtocol:
         assert schema["version"] == "2.0.0"
         assert len(schema["fields"]) == 2
 
-    def test_atmosphere_index_get_schema(
-        self, atmosphere_index, mock_atproto_client
-    ):
+    def test_atmosphere_index_get_schema(self, atmosphere_index, mock_atproto_client):
         """AtmosphereIndex should retrieve schemas."""
         mock_response = Mock()
         mock_response.value = {
             "$type": f"{LEXICON_NAMESPACE}.sampleSchema",
             "name": "RetrievedSchema",
             "version": "1.0.0",
-            "fields": [{"name": "field1", "fieldType": {"$type": f"{LEXICON_NAMESPACE}.schemaType#primitive", "primitive": "str"}, "optional": False}],
+            "fields": [
+                {
+                    "name": "field1",
+                    "fieldType": {
+                        "$type": f"{LEXICON_NAMESPACE}.schemaType#primitive",
+                        "primitive": "str",
+                    },
+                    "optional": False,
+                }
+            ],
         }
         mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
 
@@ -332,7 +345,9 @@ class TestSchemaPortability:
 
     def test_ndarray_schema_field_structure(self, local_index):
         """NDArray fields should be represented consistently."""
-        schema_ref = local_index.publish_schema(CrossBackendArraySample, version="1.0.0")
+        schema_ref = local_index.publish_schema(
+            CrossBackendArraySample, version="1.0.0"
+        )
         schema = local_index.get_schema(schema_ref)
 
         field_names = {f["name"] for f in schema["fields"]}
@@ -343,8 +358,10 @@ class TestSchemaPortability:
         data_field = next(f for f in schema["fields"] if f["name"] == "data")
         field_type = data_field["fieldType"]
         # Field type should indicate it's an ndarray
-        assert "ndarray" in field_type.get("$type", "").lower() or \
-               field_type.get("primitive") == "ndarray"
+        assert (
+            "ndarray" in field_type.get("$type", "").lower()
+            or field_type.get("primitive") == "ndarray"
+        )
 
 
 class TestCrossBackendSchemaResolution:
@@ -357,9 +374,7 @@ class TestCrossBackendSchemaResolution:
         assert schema_ref.startswith("atdata://local/sampleSchema/")
         assert "CrossBackendSample" in schema_ref
 
-    def test_atmosphere_schema_ref_format(
-        self, atmosphere_index, mock_atproto_client
-    ):
+    def test_atmosphere_schema_ref_format(self, atmosphere_index, mock_atproto_client):
         """Atmosphere schema refs should use at:// URI scheme."""
         mock_response = Mock()
         mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/abc"
@@ -483,9 +498,7 @@ class TestGenericIndexFunction:
         count = self.count_datasets(local_index)
         assert count >= 3
 
-    def test_count_works_with_atmosphere(
-        self, atmosphere_index, mock_atproto_client
-    ):
+    def test_count_works_with_atmosphere(self, atmosphere_index, mock_atproto_client):
         """Dataset count function should work with AtmosphereIndex."""
         mock_records = []
         for i in range(5):

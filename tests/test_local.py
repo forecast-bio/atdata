@@ -26,6 +26,7 @@ from numpy.typing import NDArray
 ##
 # Test fixtures (redis_connection and clean_redis are in conftest.py)
 
+
 @pytest.fixture
 def mock_s3():
     """Provide a mock S3 environment using moto.
@@ -36,28 +37,26 @@ def mock_s3():
     """
     with mock_aws():
         # Create S3 credentials dict (no endpoint_url for moto)
-        creds = {
-            'AWS_ACCESS_KEY_ID': 'testing',
-            'AWS_SECRET_ACCESS_KEY': 'testing'
-        }
+        creds = {"AWS_ACCESS_KEY_ID": "testing", "AWS_SECRET_ACCESS_KEY": "testing"}
 
         # Create S3 client and bucket
         import boto3
+
         s3_client = boto3.client(
-            's3',
-            aws_access_key_id=creds['AWS_ACCESS_KEY_ID'],
-            aws_secret_access_key=creds['AWS_SECRET_ACCESS_KEY'],
-            region_name='us-east-1'
+            "s3",
+            aws_access_key_id=creds["AWS_ACCESS_KEY_ID"],
+            aws_secret_access_key=creds["AWS_SECRET_ACCESS_KEY"],
+            region_name="us-east-1",
         )
 
-        bucket_name = 'test-bucket'
+        bucket_name = "test-bucket"
         s3_client.create_bucket(Bucket=bucket_name)
 
         yield {
-            'credentials': creds,
-            'bucket': bucket_name,
-            'hive_path': f'{bucket_name}/datasets',
-            's3_client': s3_client
+            "credentials": creds,
+            "bucket": bucket_name,
+            "hive_path": f"{bucket_name}/datasets",
+            "s3_client": s3_client,
         }
 
 
@@ -83,6 +82,7 @@ class SimpleTestSample(atdata.PackableSample):
     Note: This matches SharedBasicSample in conftest.py but is kept local
     because tests verify class name behavior.
     """
+
     name: str
     value: int
 
@@ -93,11 +93,14 @@ class ArrayTestSample(atdata.PackableSample):
 
     Note: Similar to SharedNumpySample but kept local for test isolation.
     """
+
     label: str
     data: NDArray
 
 
-def make_simple_dataset(tmp_path: Path, num_samples: int = 10, name: str = "test") -> atdata.Dataset:
+def make_simple_dataset(
+    tmp_path: Path, num_samples: int = 10, name: str = "test"
+) -> atdata.Dataset:
     """Create a SimpleTestSample dataset for testing."""
     dataset_path = tmp_path / f"{name}-dataset-000000.tar"
     with wds.writer.TarWriter(str(dataset_path)) as sink:
@@ -107,7 +110,9 @@ def make_simple_dataset(tmp_path: Path, num_samples: int = 10, name: str = "test
     return atdata.Dataset[SimpleTestSample](url=str(dataset_path))
 
 
-def make_array_dataset(tmp_path: Path, num_samples: int = 3, array_shape: tuple = (10, 10)) -> atdata.Dataset:
+def make_array_dataset(
+    tmp_path: Path, num_samples: int = 3, array_shape: tuple = (10, 10)
+) -> atdata.Dataset:
     """Create an ArrayTestSample dataset for testing."""
     dataset_path = tmp_path / "array-dataset-000000.tar"
     with wds.writer.TarWriter(str(dataset_path)) as sink:
@@ -120,6 +125,7 @@ def make_array_dataset(tmp_path: Path, num_samples: int = 3, array_shape: tuple 
 
 ##
 # Helper function tests
+
 
 def test_kind_str_for_sample_type():
     """Test that sample types are converted to correct fully-qualified string identifiers.
@@ -149,17 +155,29 @@ def test_s3_env_valid_credentials(tmp_path):
     result = atlocal._s3_env(env_file)
 
     assert result == {
-        'AWS_ENDPOINT': 'http://localhost:9000',
-        'AWS_ACCESS_KEY_ID': 'minioadmin',
-        'AWS_SECRET_ACCESS_KEY': 'minioadmin'
+        "AWS_ENDPOINT": "http://localhost:9000",
+        "AWS_ACCESS_KEY_ID": "minioadmin",
+        "AWS_SECRET_ACCESS_KEY": "minioadmin",
     }
 
 
-@pytest.mark.parametrize("missing_field,env_content", [
-    ("AWS_ENDPOINT", "AWS_ACCESS_KEY_ID=minioadmin\nAWS_SECRET_ACCESS_KEY=minioadmin\n"),
-    ("AWS_ACCESS_KEY_ID", "AWS_ENDPOINT=http://localhost:9000\nAWS_SECRET_ACCESS_KEY=minioadmin\n"),
-    ("AWS_SECRET_ACCESS_KEY", "AWS_ENDPOINT=http://localhost:9000\nAWS_ACCESS_KEY_ID=minioadmin\n"),
-])
+@pytest.mark.parametrize(
+    "missing_field,env_content",
+    [
+        (
+            "AWS_ENDPOINT",
+            "AWS_ACCESS_KEY_ID=minioadmin\nAWS_SECRET_ACCESS_KEY=minioadmin\n",
+        ),
+        (
+            "AWS_ACCESS_KEY_ID",
+            "AWS_ENDPOINT=http://localhost:9000\nAWS_SECRET_ACCESS_KEY=minioadmin\n",
+        ),
+        (
+            "AWS_SECRET_ACCESS_KEY",
+            "AWS_ENDPOINT=http://localhost:9000\nAWS_ACCESS_KEY_ID=minioadmin\n",
+        ),
+    ],
+)
 def test_s3_env_missing_required_field(tmp_path, missing_field, env_content):
     """Test that loading S3 credentials fails when a required field is missing.
 
@@ -179,17 +197,17 @@ def test_s3_from_credentials_with_dict():
     Should create a properly configured S3FileSystem instance using dict credentials.
     """
     creds = {
-        'AWS_ENDPOINT': 'http://localhost:9000',
-        'AWS_ACCESS_KEY_ID': 'minioadmin',
-        'AWS_SECRET_ACCESS_KEY': 'minioadmin'
+        "AWS_ENDPOINT": "http://localhost:9000",
+        "AWS_ACCESS_KEY_ID": "minioadmin",
+        "AWS_SECRET_ACCESS_KEY": "minioadmin",
     }
 
     fs = atlocal._s3_from_credentials(creds)
 
     assert isinstance(fs, atlocal.S3FileSystem)
-    assert fs.endpoint_url == 'http://localhost:9000'
-    assert fs.key == 'minioadmin'
-    assert fs.secret == 'minioadmin'
+    assert fs.endpoint_url == "http://localhost:9000"
+    assert fs.key == "minioadmin"
+    assert fs.secret == "minioadmin"
 
 
 def test_s3_from_credentials_with_path(tmp_path):
@@ -207,13 +225,14 @@ def test_s3_from_credentials_with_path(tmp_path):
     fs = atlocal._s3_from_credentials(env_file)
 
     assert isinstance(fs, atlocal.S3FileSystem)
-    assert fs.endpoint_url == 'http://localhost:9000'
-    assert fs.key == 'minioadmin'
-    assert fs.secret == 'minioadmin'
+    assert fs.endpoint_url == "http://localhost:9000"
+    assert fs.key == "minioadmin"
+    assert fs.secret == "minioadmin"
 
 
 ##
 # LocalDatasetEntry tests
+
 
 def test_local_dataset_entry_creation():
     """Test creating a LocalDatasetEntry with explicit values.
@@ -315,7 +334,9 @@ def test_local_dataset_entry_round_trip_redis(clean_redis):
     original_entry.write_to(clean_redis)
 
     # Read back from Redis
-    retrieved_entry = atlocal.LocalDatasetEntry.from_redis(clean_redis, original_entry.cid)
+    retrieved_entry = atlocal.LocalDatasetEntry.from_redis(
+        clean_redis, original_entry.cid
+    )
 
     assert retrieved_entry.name == original_entry.name
     assert retrieved_entry.schema_ref == original_entry.schema_ref
@@ -356,13 +377,13 @@ def test_index_implements_abstract_index_protocol():
     index = atlocal.Index()
 
     # Check protocol methods exist
-    assert hasattr(index, 'insert_dataset')
-    assert hasattr(index, 'get_dataset')
-    assert hasattr(index, 'list_datasets')
-    assert hasattr(index, 'publish_schema')
-    assert hasattr(index, 'get_schema')
-    assert hasattr(index, 'list_schemas')
-    assert hasattr(index, 'decode_schema')
+    assert hasattr(index, "insert_dataset")
+    assert hasattr(index, "get_dataset")
+    assert hasattr(index, "list_datasets")
+    assert hasattr(index, "publish_schema")
+    assert hasattr(index, "get_schema")
+    assert hasattr(index, "list_schemas")
+    assert hasattr(index, "decode_schema")
 
     # Check they are callable
     assert callable(index.insert_dataset)
@@ -372,6 +393,7 @@ def test_index_implements_abstract_index_protocol():
 
 ##
 # Index tests
+
 
 def test_index_init_default_redis():
     """Test creating an Index with default Redis connection.
@@ -401,7 +423,7 @@ def test_index_init_with_redis_kwargs():
 
     Should pass custom kwargs to Redis constructor when creating a new connection.
     """
-    index = atlocal.Index(host='localhost', port=6379, db=0)
+    index = atlocal.Index(host="localhost", port=6379, db=0)
 
     assert index._redis is not None
     assert isinstance(index._redis, Redis)
@@ -415,8 +437,7 @@ def test_index_add_entry(clean_redis):
     index = atlocal.Index(redis=clean_redis)
 
     ds = atdata.Dataset[SimpleTestSample](
-        url="s3://bucket/dataset.tar",
-        metadata_url="s3://bucket/metadata.msgpack"
+        url="s3://bucket/dataset.tar", metadata_url="s3://bucket/metadata.msgpack"
     )
 
     entry = index.add_entry(ds, name="test-dataset")
@@ -442,9 +463,7 @@ def test_index_add_entry_with_schema_ref(clean_redis):
     ds = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset.tar")
 
     entry = index.add_entry(
-        ds,
-        name="test-dataset",
-        schema_ref="local://schemas/custom.Schema@2.0.0"
+        ds, name="test-dataset", schema_ref="local://schemas/custom.Schema@2.0.0"
     )
 
     assert entry.schema_ref == "local://schemas/custom.Schema@2.0.0"
@@ -460,9 +479,7 @@ def test_index_add_entry_with_metadata(clean_redis):
     ds = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset.tar")
 
     entry = index.add_entry(
-        ds,
-        name="test-dataset",
-        metadata={"version": "1.0", "author": "test"}
+        ds, name="test-dataset", metadata={"version": "1.0", "author": "test"}
     )
 
     assert entry.metadata == {"version": "1.0", "author": "test"}
@@ -593,6 +610,7 @@ def test_index_get_entry_by_name_not_found(clean_redis):
 ##
 # AbstractIndex protocol method tests
 
+
 def test_index_insert_dataset(clean_redis):
     """Test insert_dataset protocol method."""
     index = atlocal.Index(redis=clean_redis)
@@ -667,9 +685,9 @@ def test_repo_init_with_s3_dict():
     Should create a Repo with S3FileSystem and set hive_path and hive_bucket.
     """
     creds = {
-        'AWS_ENDPOINT': 'http://localhost:9000',
-        'AWS_ACCESS_KEY_ID': 'minioadmin',
-        'AWS_SECRET_ACCESS_KEY': 'minioadmin'
+        "AWS_ENDPOINT": "http://localhost:9000",
+        "AWS_ACCESS_KEY_ID": "minioadmin",
+        "AWS_SECRET_ACCESS_KEY": "minioadmin",
     }
 
     repo = atlocal.Repo(s3_credentials=creds, hive_path="test-bucket/datasets")
@@ -710,9 +728,9 @@ def test_repo_init_s3_without_hive_path():
     Should raise ValueError when s3_credentials is provided but hive_path is None.
     """
     creds = {
-        'AWS_ENDPOINT': 'http://localhost:9000',
-        'AWS_ACCESS_KEY_ID': 'minioadmin',
-        'AWS_SECRET_ACCESS_KEY': 'minioadmin'
+        "AWS_ENDPOINT": "http://localhost:9000",
+        "AWS_ACCESS_KEY_ID": "minioadmin",
+        "AWS_SECRET_ACCESS_KEY": "minioadmin",
     }
 
     with pytest.raises(ValueError, match="Must specify hive path"):
@@ -726,9 +744,9 @@ def test_repo_init_hive_path_parsing():
     Should set hive_bucket to the first component of hive_path.
     """
     creds = {
-        'AWS_ENDPOINT': 'http://localhost:9000',
-        'AWS_ACCESS_KEY_ID': 'minioadmin',
-        'AWS_SECRET_ACCESS_KEY': 'minioadmin'
+        "AWS_ENDPOINT": "http://localhost:9000",
+        "AWS_ACCESS_KEY_ID": "minioadmin",
+        "AWS_SECRET_ACCESS_KEY": "minioadmin",
     }
 
     repo = atlocal.Repo(s3_credentials=creds, hive_path="my-bucket/path/to/datasets")
@@ -751,6 +769,7 @@ def test_repo_init_with_custom_redis():
 
 ##
 # Repo tests - Insert functionality
+
 
 @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
 def test_repo_insert_without_s3():
@@ -775,12 +794,14 @@ def test_repo_insert_single_shard(mock_s3, clean_redis, sample_dataset):
     a new Dataset pointing to the stored copy with correct URL format.
     """
     repo = atlocal.Repo(
-        s3_credentials=mock_s3['credentials'],
-        hive_path=mock_s3['hive_path'],
-        redis=clean_redis
+        s3_credentials=mock_s3["credentials"],
+        hive_path=mock_s3["hive_path"],
+        redis=clean_redis,
     )
 
-    entry, new_ds = repo.insert(sample_dataset, name="single-shard-dataset", maxcount=100)
+    entry, new_ds = repo.insert(
+        sample_dataset, name="single-shard-dataset", maxcount=100
+    )
 
     assert entry.cid is not None
     assert entry.cid.startswith("bafy")
@@ -788,8 +809,8 @@ def test_repo_insert_single_shard(mock_s3, clean_redis, sample_dataset):
     assert len(entry.data_urls) > 0
     assert "SimpleTestSample" in entry.schema_ref
     assert len(repo.index.all_entries) == 1
-    assert '.tar' in new_ds.url
-    assert new_ds.url.startswith(mock_s3['hive_path'])
+    assert ".tar" in new_ds.url
+    assert new_ds.url.startswith(mock_s3["hive_path"])
 
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
@@ -803,16 +824,16 @@ def test_repo_insert_multiple_shards(mock_s3, clean_redis, tmp_path):
     """
     ds = make_simple_dataset(tmp_path, num_samples=50, name="large")
     repo = atlocal.Repo(
-        s3_credentials=mock_s3['credentials'],
-        hive_path=mock_s3['hive_path'],
-        redis=clean_redis
+        s3_credentials=mock_s3["credentials"],
+        hive_path=mock_s3["hive_path"],
+        redis=clean_redis,
     )
 
     entry, new_ds = repo.insert(ds, name="multi-shard-dataset", maxcount=10)
 
     assert entry.cid is not None
     assert len(entry.data_urls) > 0
-    assert '{' in new_ds.url and '}' in new_ds.url
+    assert "{" in new_ds.url and "}" in new_ds.url
 
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
@@ -827,9 +848,9 @@ def test_repo_insert_with_metadata(mock_s3, clean_redis, tmp_path):
     ds._metadata = {"description": "test dataset", "version": "1.0"}
 
     repo = atlocal.Repo(
-        s3_credentials=mock_s3['credentials'],
-        hive_path=mock_s3['hive_path'],
-        redis=clean_redis
+        s3_credentials=mock_s3["credentials"],
+        hive_path=mock_s3["hive_path"],
+        redis=clean_redis,
     )
 
     entry, new_ds = repo.insert(ds, name="metadata-dataset", maxcount=100)
@@ -849,9 +870,9 @@ def test_repo_insert_without_metadata(mock_s3, clean_redis, tmp_path):
     """
     ds = make_simple_dataset(tmp_path, num_samples=5)
     repo = atlocal.Repo(
-        s3_credentials=mock_s3['credentials'],
-        hive_path=mock_s3['hive_path'],
-        redis=clean_redis
+        s3_credentials=mock_s3["credentials"],
+        hive_path=mock_s3["hive_path"],
+        redis=clean_redis,
     )
 
     entry, new_ds = repo.insert(ds, name="no-metadata-dataset", maxcount=100)
@@ -869,12 +890,14 @@ def test_repo_insert_cache_local_false(mock_s3, clean_redis, sample_dataset):
     Should write tar shards directly to S3 without local caching.
     """
     repo = atlocal.Repo(
-        s3_credentials=mock_s3['credentials'],
-        hive_path=mock_s3['hive_path'],
-        redis=clean_redis
+        s3_credentials=mock_s3["credentials"],
+        hive_path=mock_s3["hive_path"],
+        redis=clean_redis,
     )
 
-    entry, new_ds = repo.insert(sample_dataset, name="direct-write", cache_local=False, maxcount=100)
+    entry, new_ds = repo.insert(
+        sample_dataset, name="direct-write", cache_local=False, maxcount=100
+    )
 
     assert entry.cid is not None
     assert len(entry.data_urls) > 0
@@ -890,12 +913,14 @@ def test_repo_insert_cache_local_true(mock_s3, clean_redis, sample_dataset):
     local cache files after copying.
     """
     repo = atlocal.Repo(
-        s3_credentials=mock_s3['credentials'],
-        hive_path=mock_s3['hive_path'],
-        redis=clean_redis
+        s3_credentials=mock_s3["credentials"],
+        hive_path=mock_s3["hive_path"],
+        redis=clean_redis,
     )
 
-    entry, new_ds = repo.insert(sample_dataset, name="cached-write", cache_local=True, maxcount=100)
+    entry, new_ds = repo.insert(
+        sample_dataset, name="cached-write", cache_local=True, maxcount=100
+    )
 
     assert entry.cid is not None
     assert len(entry.data_urls) > 0
@@ -911,9 +936,9 @@ def test_repo_insert_creates_index_entry(mock_s3, clean_redis, sample_dataset):
     and CID.
     """
     repo = atlocal.Repo(
-        s3_credentials=mock_s3['credentials'],
-        hive_path=mock_s3['hive_path'],
-        redis=clean_redis
+        s3_credentials=mock_s3["credentials"],
+        hive_path=mock_s3["hive_path"],
+        redis=clean_redis,
     )
 
     entry, new_ds = repo.insert(sample_dataset, name="indexed-dataset", maxcount=100)
@@ -936,9 +961,9 @@ def test_repo_insert_cid_generation(mock_s3, clean_redis, sample_dataset):
     Should create different CIDs for datasets with different URLs.
     """
     repo = atlocal.Repo(
-        s3_credentials=mock_s3['credentials'],
-        hive_path=mock_s3['hive_path'],
-        redis=clean_redis
+        s3_credentials=mock_s3["credentials"],
+        hive_path=mock_s3["hive_path"],
+        redis=clean_redis,
     )
 
     entry1, new_ds1 = repo.insert(sample_dataset, name="dataset1", maxcount=100)
@@ -965,15 +990,15 @@ def test_repo_insert_empty_dataset(mock_s3, clean_redis, tmp_path):
 
     ds = atdata.Dataset[SimpleTestSample](url=str(dataset_path))
     repo = atlocal.Repo(
-        s3_credentials=mock_s3['credentials'],
-        hive_path=mock_s3['hive_path'],
-        redis=clean_redis
+        s3_credentials=mock_s3["credentials"],
+        hive_path=mock_s3["hive_path"],
+        redis=clean_redis,
     )
 
     # Empty datasets succeed because WebDataset creates a shard file regardless
     entry, new_ds = repo.insert(ds, name="empty-dataset", maxcount=100)
     assert entry.cid is not None
-    assert '.tar' in new_ds.url
+    assert ".tar" in new_ds.url
 
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
@@ -985,9 +1010,9 @@ def test_repo_insert_preserves_sample_type(mock_s3, clean_redis, sample_dataset)
     Should return a Dataset[T] with the same sample type as the input dataset.
     """
     repo = atlocal.Repo(
-        s3_credentials=mock_s3['credentials'],
-        hive_path=mock_s3['hive_path'],
-        redis=clean_redis
+        s3_credentials=mock_s3["credentials"],
+        hive_path=mock_s3["hive_path"],
+        redis=clean_redis,
     )
 
     entry, new_ds = repo.insert(sample_dataset, name="typed-dataset", maxcount=100)
@@ -1006,14 +1031,14 @@ def test_repo_insert_with_shard_writer_kwargs(mock_s3, clean_redis, tmp_path):
     """
     ds = make_simple_dataset(tmp_path, num_samples=30, name="large")
     repo = atlocal.Repo(
-        s3_credentials=mock_s3['credentials'],
-        hive_path=mock_s3['hive_path'],
-        redis=clean_redis
+        s3_credentials=mock_s3["credentials"],
+        hive_path=mock_s3["hive_path"],
+        redis=clean_redis,
     )
 
     entry, new_ds = repo.insert(ds, name="sharded-dataset", maxcount=5)
 
-    assert '{' in new_ds.url and '}' in new_ds.url
+    assert "{" in new_ds.url and "}" in new_ds.url
 
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
@@ -1026,9 +1051,9 @@ def test_repo_insert_numpy_arrays(mock_s3, clean_redis, tmp_path):
     """
     ds = make_array_dataset(tmp_path, num_samples=3, array_shape=(10, 10))
     repo = atlocal.Repo(
-        s3_credentials=mock_s3['credentials'],
-        hive_path=mock_s3['hive_path'],
-        redis=clean_redis
+        s3_credentials=mock_s3["credentials"],
+        hive_path=mock_s3["hive_path"],
+        redis=clean_redis,
     )
 
     entry, new_ds = repo.insert(ds, name="array-dataset", maxcount=100)
@@ -1040,6 +1065,7 @@ def test_repo_insert_numpy_arrays(mock_s3, clean_redis, tmp_path):
 ##
 # Integration tests
 
+
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
@@ -1050,9 +1076,9 @@ def test_repo_index_integration(mock_s3, clean_redis, sample_dataset):
     from the Index.
     """
     repo = atlocal.Repo(
-        s3_credentials=mock_s3['credentials'],
-        hive_path=mock_s3['hive_path'],
-        redis=clean_redis
+        s3_credentials=mock_s3["credentials"],
+        hive_path=mock_s3["hive_path"],
+        redis=clean_redis,
     )
 
     entry, new_ds = repo.insert(sample_dataset, name="integrated-dataset", maxcount=100)
@@ -1073,9 +1099,9 @@ def test_multiple_datasets_same_type(mock_s3, clean_redis, sample_dataset):
     retrievable from the index.
     """
     repo = atlocal.Repo(
-        s3_credentials=mock_s3['credentials'],
-        hive_path=mock_s3['hive_path'],
-        redis=clean_redis
+        s3_credentials=mock_s3["credentials"],
+        hive_path=mock_s3["hive_path"],
+        redis=clean_redis,
     )
 
     entry1, _ = repo.insert(sample_dataset, name="dataset-a", maxcount=100)
@@ -1105,9 +1131,9 @@ def test_multiple_datasets_different_types(mock_s3, clean_redis, tmp_path):
     array_ds = make_array_dataset(tmp_path, num_samples=3, array_shape=(5, 5))
 
     repo = atlocal.Repo(
-        s3_credentials=mock_s3['credentials'],
-        hive_path=mock_s3['hive_path'],
-        redis=clean_redis
+        s3_credentials=mock_s3["credentials"],
+        hive_path=mock_s3["hive_path"],
+        redis=clean_redis,
     )
 
     entry1, _ = repo.insert(simple_ds, name="simple-dataset", maxcount=100)
@@ -1168,12 +1194,13 @@ def test_concurrent_index_access(clean_redis):
 ##
 # S3DataStore tests
 
+
 def test_s3_datastore_init():
     """Test creating an S3DataStore."""
     creds = {
-        'AWS_ENDPOINT': 'http://localhost:9000',
-        'AWS_ACCESS_KEY_ID': 'minioadmin',
-        'AWS_SECRET_ACCESS_KEY': 'minioadmin'
+        "AWS_ENDPOINT": "http://localhost:9000",
+        "AWS_ACCESS_KEY_ID": "minioadmin",
+        "AWS_SECRET_ACCESS_KEY": "minioadmin",
     }
 
     store = atlocal.S3DataStore(credentials=creds, bucket="test-bucket")
@@ -1185,10 +1212,7 @@ def test_s3_datastore_init():
 
 def test_s3_datastore_supports_streaming():
     """Test that S3DataStore reports streaming support."""
-    creds = {
-        'AWS_ACCESS_KEY_ID': 'test',
-        'AWS_SECRET_ACCESS_KEY': 'test'
-    }
+    creds = {"AWS_ACCESS_KEY_ID": "test", "AWS_SECRET_ACCESS_KEY": "test"}
 
     store = atlocal.S3DataStore(credentials=creds, bucket="test")
 
@@ -1197,10 +1221,7 @@ def test_s3_datastore_supports_streaming():
 
 def test_s3_datastore_read_url():
     """Test that read_url returns URL unchanged without custom endpoint."""
-    creds = {
-        'AWS_ACCESS_KEY_ID': 'test',
-        'AWS_SECRET_ACCESS_KEY': 'test'
-    }
+    creds = {"AWS_ACCESS_KEY_ID": "test", "AWS_SECRET_ACCESS_KEY": "test"}
 
     store = atlocal.S3DataStore(credentials=creds, bucket="test")
 
@@ -1211,9 +1232,9 @@ def test_s3_datastore_read_url():
 def test_s3_datastore_read_url_with_custom_endpoint():
     """Test that read_url transforms s3:// to https:// with custom endpoint."""
     creds = {
-        'AWS_ACCESS_KEY_ID': 'test',
-        'AWS_SECRET_ACCESS_KEY': 'test',
-        'AWS_ENDPOINT': 'https://abc123.r2.cloudflarestorage.com'
+        "AWS_ACCESS_KEY_ID": "test",
+        "AWS_SECRET_ACCESS_KEY": "test",
+        "AWS_ENDPOINT": "https://abc123.r2.cloudflarestorage.com",
     }
 
     store = atlocal.S3DataStore(credentials=creds, bucket="test")
@@ -1224,9 +1245,12 @@ def test_s3_datastore_read_url_with_custom_endpoint():
     assert store.read_url(url) == expected
 
     # Trailing slash on endpoint should be handled
-    creds['AWS_ENDPOINT'] = 'https://endpoint.example.com/'
+    creds["AWS_ENDPOINT"] = "https://endpoint.example.com/"
     store2 = atlocal.S3DataStore(credentials=creds, bucket="test")
-    assert store2.read_url(url) == "https://endpoint.example.com/my-bucket/path/to/data.tar"
+    assert (
+        store2.read_url(url)
+        == "https://endpoint.example.com/my-bucket/path/to/data.tar"
+    )
 
     # Non-s3 URLs should be passed through unchanged
     https_url = "https://example.com/data.tar"
@@ -1240,15 +1264,14 @@ def test_s3_datastore_write_shards(mock_s3, tmp_path):
     ds = make_simple_dataset(tmp_path, num_samples=5)
 
     store = atlocal.S3DataStore(
-        credentials=mock_s3['credentials'],
-        bucket=mock_s3['bucket']
+        credentials=mock_s3["credentials"], bucket=mock_s3["bucket"]
     )
 
     urls = store.write_shards(ds, prefix="test/data", maxcount=100)
 
     assert len(urls) >= 1
     assert all(url.startswith("s3://") for url in urls)
-    assert all(mock_s3['bucket'] in url for url in urls)
+    assert all(mock_s3["bucket"] in url for url in urls)
 
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
@@ -1258,8 +1281,7 @@ def test_s3_datastore_write_shards_cache_local(mock_s3, tmp_path):
     ds = make_simple_dataset(tmp_path, num_samples=5)
 
     store = atlocal.S3DataStore(
-        credentials=mock_s3['credentials'],
-        bucket=mock_s3['bucket']
+        credentials=mock_s3["credentials"], bucket=mock_s3["bucket"]
     )
 
     urls = store.write_shards(ds, prefix="cached/data", cache_local=True, maxcount=100)
@@ -1279,8 +1301,7 @@ def test_index_with_datastore_insert(mock_s3, clean_redis, tmp_path):
     ds = make_simple_dataset(tmp_path, num_samples=5)
 
     store = atlocal.S3DataStore(
-        credentials=mock_s3['credentials'],
-        bucket=mock_s3['bucket']
+        credentials=mock_s3["credentials"], bucket=mock_s3["bucket"]
     )
     index = atlocal.Index(redis=clean_redis, data_store=store)
 
@@ -1303,16 +1324,12 @@ def test_index_with_datastore_custom_prefix(mock_s3, clean_redis, tmp_path):
     ds = make_simple_dataset(tmp_path, num_samples=3)
 
     store = atlocal.S3DataStore(
-        credentials=mock_s3['credentials'],
-        bucket=mock_s3['bucket']
+        credentials=mock_s3["credentials"], bucket=mock_s3["bucket"]
     )
     index = atlocal.Index(redis=clean_redis, data_store=store)
 
     entry = index.insert_dataset(
-        ds,
-        name="my-dataset",
-        prefix="custom/path/v1",
-        maxcount=100
+        ds, name="my-dataset", prefix="custom/path/v1", maxcount=100
     )
 
     assert "custom/path/v1" in entry.data_urls[0]
@@ -1334,8 +1351,7 @@ def test_index_without_datastore_indexes_existing_url(clean_redis, tmp_path):
 def test_index_data_store_property(mock_s3, clean_redis):
     """Test that Index.data_store property returns the data store."""
     store = atlocal.S3DataStore(
-        credentials=mock_s3['credentials'],
-        bucket=mock_s3['bucket']
+        credentials=mock_s3["credentials"], bucket=mock_s3["bucket"]
     )
     index = atlocal.Index(redis=clean_redis, data_store=store)
 
@@ -1351,6 +1367,7 @@ def test_index_data_store_property_none(clean_redis):
 
 ##
 # Schema storage tests
+
 
 def test_publish_schema(clean_redis):
     """Test publishing a schema to Redis."""
@@ -1368,13 +1385,11 @@ def test_publish_schema_with_description(clean_redis):
     index = atlocal.Index(redis=clean_redis)
 
     schema_ref = index.publish_schema(
-        SimpleTestSample,
-        version="2.0.0",
-        description="A simple test sample type"
+        SimpleTestSample, version="2.0.0", description="A simple test sample type"
     )
 
     schema = index.get_schema(schema_ref)
-    assert schema.get('description') == "A simple test sample type"
+    assert schema.get("description") == "A simple test sample type"
 
 
 def test_publish_schema_auto_increment(clean_redis):
@@ -1411,7 +1426,7 @@ def test_publish_schema_docstring_fallback(clean_redis):
     schema = index.get_schema(schema_ref)
 
     # Should use the class docstring
-    assert schema.get('description') == SimpleTestSample.__doc__
+    assert schema.get("description") == SimpleTestSample.__doc__
 
 
 def test_get_schema(clean_redis):
@@ -1421,10 +1436,10 @@ def test_get_schema(clean_redis):
     schema_ref = index.publish_schema(SimpleTestSample, version="1.0.0")
     schema = index.get_schema(schema_ref)
 
-    assert schema['name'] == 'SimpleTestSample'
-    assert schema['version'] == '1.0.0'
-    assert len(schema['fields']) == 2  # name and value fields
-    assert schema['$ref'] == schema_ref
+    assert schema["name"] == "SimpleTestSample"
+    assert schema["version"] == "1.0.0"
+    assert len(schema["fields"]) == 2  # name and value fields
+    assert schema["$ref"] == schema_ref
 
 
 def test_get_schema_not_found(clean_redis):
@@ -1461,9 +1476,9 @@ def test_list_schemas_multiple(clean_redis):
     schemas = list(index.list_schemas())
     assert len(schemas) == 2
 
-    names = {s['name'] for s in schemas}
-    assert 'SimpleTestSample' in names
-    assert 'ArrayTestSample' in names
+    names = {s["name"] for s in schemas}
+    assert "SimpleTestSample" in names
+    assert "ArrayTestSample" in names
 
 
 def test_schema_field_types(clean_redis):
@@ -1474,13 +1489,13 @@ def test_schema_field_types(clean_redis):
     schema = index.get_schema(schema_ref)
 
     # Find name field (should be str)
-    name_field = next(f for f in schema['fields'] if f['name'] == 'name')
-    assert name_field['fieldType']['primitive'] == 'str'
-    assert name_field['optional'] is False
+    name_field = next(f for f in schema["fields"] if f["name"] == "name")
+    assert name_field["fieldType"]["primitive"] == "str"
+    assert name_field["optional"] is False
 
     # Find value field (should be int)
-    value_field = next(f for f in schema['fields'] if f['name'] == 'value')
-    assert value_field['fieldType']['primitive'] == 'int'
+    value_field = next(f for f in schema["fields"] if f["name"] == "value")
+    assert value_field["fieldType"]["primitive"] == "int"
 
 
 def test_schema_ndarray_field(clean_redis):
@@ -1491,9 +1506,9 @@ def test_schema_ndarray_field(clean_redis):
     schema = index.get_schema(schema_ref)
 
     # Find data field (should be ndarray)
-    data_field = next(f for f in schema['fields'] if f['name'] == 'data')
-    assert data_field['fieldType']['$type'] == 'local#ndarray'
-    assert data_field['fieldType']['dtype'] == 'float32'
+    data_field = next(f for f in schema["fields"] if f["name"] == "data")
+    assert data_field["fieldType"]["$type"] == "local#ndarray"
+    assert data_field["fieldType"]["dtype"] == "float32"
 
 
 def test_decode_schema(clean_redis):
@@ -1518,6 +1533,7 @@ def test_decode_schema_preserves_structure(clean_redis):
 
     # Check fields exist
     import numpy as np
+
     instance = ReconstructedType(label="test", data=np.zeros((3, 3)))
     assert instance.label == "test"
     assert instance.data.shape == (3, 3)
@@ -1556,12 +1572,13 @@ def test_schema_version_handling(clean_redis):
     schema_v1 = index.get_schema(ref_v1)
     schema_v2 = index.get_schema(ref_v2)
 
-    assert schema_v1['version'] == '1.0.0'
-    assert schema_v2['version'] == '2.0.0'
+    assert schema_v1["version"] == "1.0.0"
+    assert schema_v2["version"] == "2.0.0"
 
 
 ##
 # Schema codec tests
+
 
 def test_schema_codec_type_caching():
     """Test that schema_to_type caches generated types."""
@@ -1573,7 +1590,13 @@ def test_schema_codec_type_caching():
     schema = {
         "name": "CacheTestSample",
         "version": "1.0.0",
-        "fields": [{"name": "value", "fieldType": {"$type": "local#primitive", "primitive": "int"}, "optional": False}],
+        "fields": [
+            {
+                "name": "value",
+                "fieldType": {"$type": "local#primitive", "primitive": "int"},
+                "optional": False,
+            }
+        ],
     }
 
     # First call creates and caches type
@@ -1596,7 +1619,13 @@ def test_schema_to_type_missing_name():
     clear_type_cache()
     schema = {
         "version": "1.0.0",
-        "fields": [{"name": "value", "fieldType": {"$type": "#primitive", "primitive": "int"}, "optional": False}],
+        "fields": [
+            {
+                "name": "value",
+                "fieldType": {"$type": "#primitive", "primitive": "int"},
+                "optional": False,
+            }
+        ],
     }
 
     with pytest.raises(ValueError, match="must have a 'name' field"):
@@ -1626,7 +1655,12 @@ def test_schema_to_type_field_missing_name():
     schema = {
         "name": "BadFieldSample",
         "version": "1.0.0",
-        "fields": [{"fieldType": {"$type": "#primitive", "primitive": "int"}, "optional": False}],
+        "fields": [
+            {
+                "fieldType": {"$type": "#primitive", "primitive": "int"},
+                "optional": False,
+            }
+        ],
     }
 
     # Raises KeyError from cache key generation (accesses f['name']) or
@@ -1643,7 +1677,13 @@ def test_schema_to_type_unknown_primitive():
     schema = {
         "name": "UnknownPrimitiveSample",
         "version": "1.0.0",
-        "fields": [{"name": "value", "fieldType": {"$type": "#primitive", "primitive": "unknown_type"}, "optional": False}],
+        "fields": [
+            {
+                "name": "value",
+                "fieldType": {"$type": "#primitive", "primitive": "unknown_type"},
+                "optional": False,
+            }
+        ],
     }
 
     with pytest.raises(ValueError, match="Unknown primitive type"):
@@ -1658,7 +1698,13 @@ def test_schema_to_type_unknown_field_kind():
     schema = {
         "name": "UnknownKindSample",
         "version": "1.0.0",
-        "fields": [{"name": "value", "fieldType": {"$type": "#unknown_kind"}, "optional": False}],
+        "fields": [
+            {
+                "name": "value",
+                "fieldType": {"$type": "#unknown_kind"},
+                "optional": False,
+            }
+        ],
     }
 
     with pytest.raises(ValueError, match="Unknown field type kind"):
@@ -1673,7 +1719,13 @@ def test_schema_to_type_ref_not_supported():
     schema = {
         "name": "RefSample",
         "version": "1.0.0",
-        "fields": [{"name": "other", "fieldType": {"$type": "#ref", "ref": "other.Schema"}, "optional": False}],
+        "fields": [
+            {
+                "name": "other",
+                "fieldType": {"$type": "#ref", "ref": "other.Schema"},
+                "optional": False,
+            }
+        ],
     }
 
     with pytest.raises(ValueError, match="Schema references.*not yet supported"):
@@ -1689,11 +1741,31 @@ def test_schema_to_type_all_primitives():
         "name": "AllPrimitivesSample",
         "version": "1.0.0",
         "fields": [
-            {"name": "s", "fieldType": {"$type": "#primitive", "primitive": "str"}, "optional": False},
-            {"name": "i", "fieldType": {"$type": "#primitive", "primitive": "int"}, "optional": False},
-            {"name": "f", "fieldType": {"$type": "#primitive", "primitive": "float"}, "optional": False},
-            {"name": "b", "fieldType": {"$type": "#primitive", "primitive": "bool"}, "optional": False},
-            {"name": "by", "fieldType": {"$type": "#primitive", "primitive": "bytes"}, "optional": False},
+            {
+                "name": "s",
+                "fieldType": {"$type": "#primitive", "primitive": "str"},
+                "optional": False,
+            },
+            {
+                "name": "i",
+                "fieldType": {"$type": "#primitive", "primitive": "int"},
+                "optional": False,
+            },
+            {
+                "name": "f",
+                "fieldType": {"$type": "#primitive", "primitive": "float"},
+                "optional": False,
+            },
+            {
+                "name": "b",
+                "fieldType": {"$type": "#primitive", "primitive": "bool"},
+                "optional": False,
+            },
+            {
+                "name": "by",
+                "fieldType": {"$type": "#primitive", "primitive": "bytes"},
+                "optional": False,
+            },
         ],
     }
 
@@ -1716,8 +1788,16 @@ def test_schema_to_type_optional_fields():
         "name": "OptionalSample",
         "version": "1.0.0",
         "fields": [
-            {"name": "required", "fieldType": {"$type": "#primitive", "primitive": "str"}, "optional": False},
-            {"name": "optional_str", "fieldType": {"$type": "#primitive", "primitive": "str"}, "optional": True},
+            {
+                "name": "required",
+                "fieldType": {"$type": "#primitive", "primitive": "str"},
+                "optional": False,
+            },
+            {
+                "name": "optional_str",
+                "fieldType": {"$type": "#primitive", "primitive": "str"},
+                "optional": True,
+            },
         ],
     }
 
@@ -1742,7 +1822,11 @@ def test_schema_to_type_ndarray_field():
         "name": "ArraySample",
         "version": "1.0.0",
         "fields": [
-            {"name": "data", "fieldType": {"$type": "#ndarray", "dtype": "float32"}, "optional": False},
+            {
+                "name": "data",
+                "fieldType": {"$type": "#ndarray", "dtype": "float32"},
+                "optional": False,
+            },
         ],
     }
 
@@ -1762,7 +1846,14 @@ def test_schema_to_type_array_field():
         "name": "ListSample",
         "version": "1.0.0",
         "fields": [
-            {"name": "tags", "fieldType": {"$type": "#array", "items": {"$type": "#primitive", "primitive": "str"}}, "optional": False},
+            {
+                "name": "tags",
+                "fieldType": {
+                    "$type": "#array",
+                    "items": {"$type": "#primitive", "primitive": "str"},
+                },
+                "optional": False,
+            },
         ],
     }
 
@@ -1780,7 +1871,13 @@ def test_schema_to_type_use_cache_false():
     schema = {
         "name": "NoCacheSample",
         "version": "1.0.0",
-        "fields": [{"name": "value", "fieldType": {"$type": "#primitive", "primitive": "int"}, "optional": False}],
+        "fields": [
+            {
+                "name": "value",
+                "fieldType": {"$type": "#primitive", "primitive": "int"},
+                "optional": False,
+            }
+        ],
     }
 
     Type1 = schema_to_type(schema, use_cache=False)
@@ -1818,7 +1915,7 @@ class TestAutoStubs:
         ref = index.publish_schema(SimpleTestSample, version="1.0.0")
 
         # Get schema should trigger stub generation
-        schema = index.get_schema(ref)
+        _schema = index.get_schema(ref)
 
         # Check stub was created (in local/ subdirectory for namespacing)
         stub_path = stub_dir / "local" / "SimpleTestSample_1_0_0.py"
@@ -1859,6 +1956,7 @@ class TestAutoStubs:
 
         # Small delay to ensure different mtime if regenerated
         import time
+
         time.sleep(0.01)
 
         # Second call should not regenerate

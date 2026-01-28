@@ -18,6 +18,7 @@ def _get_atproto_client_class():
     if _atproto_client_class is None:
         try:
             from atproto import Client
+
             _atproto_client_class = Client
         except ImportError as e:
             raise ImportError(
@@ -325,7 +326,11 @@ class AtmosphereClient:
         # Convert to dict format suitable for embedding in records
         return {
             "$type": "blob",
-            "ref": {"$link": blob_ref.ref.link if hasattr(blob_ref.ref, "link") else str(blob_ref.ref)},
+            "ref": {
+                "$link": blob_ref.ref.link
+                if hasattr(blob_ref.ref, "link")
+                else str(blob_ref.ref)
+            },
             "mimeType": blob_ref.mime_type,
             "size": blob_ref.size,
         }

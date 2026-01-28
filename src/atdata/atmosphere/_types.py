@@ -56,7 +56,9 @@ class AtUri:
 
         parts = uri[5:].split("/")
         if len(parts) < 3:
-            raise ValueError(f"Invalid AT URI: expected authority/collection/rkey: {uri}")
+            raise ValueError(
+                f"Invalid AT URI: expected authority/collection/rkey: {uri}"
+            )
 
         return cls(
             authority=parts[0],

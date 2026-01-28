@@ -203,7 +203,9 @@ def schema_to_type(
         namespace={
             "__post_init__": lambda self: PackableSample.__post_init__(self),
             "__schema_version__": version,
-            "__schema_ref__": schema.get("$ref", None),  # Store original ref if available
+            "__schema_ref__": schema.get(
+                "$ref", None
+            ),  # Store original ref if available
         },
     )
 
@@ -239,7 +241,9 @@ def _field_type_to_stub_str(field_type: dict, optional: bool = False) -> str:
 
     if kind == "primitive":
         primitive = field_type.get("primitive", "str")
-        py_type = primitive  # str, int, float, bool, bytes are all valid Python type names
+        py_type = (
+            primitive  # str, int, float, bool, bytes are all valid Python type names
+        )
     elif kind == "ndarray":
         py_type = "NDArray[Any]"
     elif kind == "array":

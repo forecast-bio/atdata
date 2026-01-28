@@ -20,7 +20,6 @@ Examples:
 
 from __future__ import annotations
 
-import io
 import tempfile
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
@@ -29,6 +28,7 @@ import webdataset as wds
 
 if TYPE_CHECKING:
     from ..dataset import Dataset
+    from .._sources import BlobSource
     from .client import AtmosphereClient
 
 

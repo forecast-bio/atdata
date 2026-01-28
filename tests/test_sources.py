@@ -1,7 +1,5 @@
 """Tests for data source implementations."""
 
-import io
-import tarfile
 from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
 
@@ -17,6 +15,7 @@ from atdata._protocols import DataSource
 @atdata.packable
 class SourceTestSample:
     """Simple sample for testing data sources."""
+
     name: str
     value: int
 
@@ -98,10 +97,13 @@ class TestURLSource:
     def test_dataset_integration(self, tmp_path):
         """URLSource works with Dataset."""
         tar_path = tmp_path / "test.tar"
-        create_test_tar(tar_path, [
-            {"name": "sample1", "value": 1},
-            {"name": "sample2", "value": 2},
-        ])
+        create_test_tar(
+            tar_path,
+            [
+                {"name": "sample1", "value": 1},
+                {"name": "sample2", "value": 2},
+            ],
+        )
 
         source = URLSource(str(tar_path))
         ds = atdata.Dataset[SourceTestSample](source)
@@ -130,10 +132,12 @@ class TestS3Source:
 
     def test_from_urls(self):
         """from_urls parses S3 URLs correctly."""
-        source = S3Source.from_urls([
-            "s3://bucket/path/a.tar",
-            "s3://bucket/path/b.tar",
-        ])
+        source = S3Source.from_urls(
+            [
+                "s3://bucket/path/a.tar",
+                "s3://bucket/path/b.tar",
+            ]
+        )
 
         assert source.bucket == "bucket"
         assert source.keys == ["path/a.tar", "path/b.tar"]
@@ -164,10 +168,12 @@ class TestS3Source:
     def test_from_urls_multiple_buckets(self):
         """from_urls raises when URLs span buckets."""
         with pytest.raises(ValueError, match="same bucket"):
-            S3Source.from_urls([
-                "s3://bucket-a/data.tar",
-                "s3://bucket-b/data.tar",
-            ])
+            S3Source.from_urls(
+                [
+                    "s3://bucket-a/data.tar",
+                    "s3://bucket-b/data.tar",
+                ]
+            )
 
     def test_from_credentials(self):
         """from_credentials creates source from dict."""
@@ -299,10 +305,12 @@ class TestBlobSource:
 
     def test_list_shards(self):
         """list_shards returns AT URIs."""
-        source = BlobSource(blob_refs=[
-            {"did": "did:plc:abc", "cid": "bafyrei111"},
-            {"did": "did:plc:abc", "cid": "bafyrei222"},
-        ])
+        source = BlobSource(
+            blob_refs=[
+                {"did": "did:plc:abc", "cid": "bafyrei111"},
+                {"did": "did:plc:abc", "cid": "bafyrei222"},
+            ]
+        )
         assert source.list_shards() == [
             "at://did:plc:abc/blob/bafyrei111",
             "at://did:plc:abc/blob/bafyrei222",
@@ -310,9 +318,11 @@ class TestBlobSource:
 
     def test_from_refs_simple_format(self):
         """from_refs accepts simple {did, cid} format."""
-        source = BlobSource.from_refs([
-            {"did": "did:plc:abc", "cid": "bafyrei123"},
-        ])
+        source = BlobSource.from_refs(
+            [
+                {"did": "did:plc:abc", "cid": "bafyrei123"},
+            ]
+        )
         assert len(source.blob_refs) == 1
         assert source.blob_refs[0]["did"] == "did:plc:abc"
         assert source.blob_refs[0]["cid"] == "bafyrei123"
@@ -368,7 +378,10 @@ class TestBlobSource:
         )
 
         url = source._get_blob_url("did:plc:abc", "bafyrei123")
-        assert url == "https://pds.example.com/xrpc/com.atproto.sync.getBlob?did=did:plc:abc&cid=bafyrei123"
+        assert (
+            url
+            == "https://pds.example.com/xrpc/com.atproto.sync.getBlob?did=did:plc:abc&cid=bafyrei123"
+        )
 
     def test_shards_fetches_blobs(self):
         """shards property fetches blobs via HTTP."""

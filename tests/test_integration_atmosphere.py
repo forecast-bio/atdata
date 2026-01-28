@@ -33,6 +33,7 @@ from atdata.atmosphere._types import LEXICON_NAMESPACE
 @atdata.packable
 class AtmoSample:
     """Sample for atmosphere tests."""
+
     name: str
     value: int
 
@@ -40,6 +41,7 @@ class AtmoSample:
 @atdata.packable
 class AtmoNDArraySample:
     """Sample with NDArray for atmosphere tests."""
+
     label: str
     data: NDArray
 
@@ -84,10 +86,14 @@ class TestFullPublishWorkflow:
         """Full workflow: login → publish schema → publish dataset."""
         # Setup mock responses
         schema_response = Mock()
-        schema_response.uri = f"at://did:plc:integration123/{LEXICON_NAMESPACE}.sampleSchema/schema123"
+        schema_response.uri = (
+            f"at://did:plc:integration123/{LEXICON_NAMESPACE}.sampleSchema/schema123"
+        )
 
         dataset_response = Mock()
-        dataset_response.uri = f"at://did:plc:integration123/{LEXICON_NAMESPACE}.dataset/dataset456"
+        dataset_response.uri = (
+            f"at://did:plc:integration123/{LEXICON_NAMESPACE}.dataset/dataset456"
+        )
 
         mock_atproto_client.com.atproto.repo.create_record.side_effect = [
             schema_response,
@@ -135,7 +141,9 @@ class TestSessionPersistence:
         client.login_with_session("saved-session-string")
 
         assert client.is_authenticated
-        mock_atproto_client.login.assert_called_with(session_string="saved-session-string")
+        mock_atproto_client.login.assert_called_with(
+            session_string="saved-session-string"
+        )
 
     def test_session_round_trip(self, mock_atproto_client):
         """Export then import session should maintain auth."""
@@ -188,8 +196,15 @@ class TestRecordDiscovery:
             "name": "FoundSchema",
             "version": "2.0.0",
             "fields": [
-                {"name": "field1", "fieldType": {"$type": f"{LEXICON_NAMESPACE}.schemaType#primitive", "primitive": "str"}, "optional": False}
-            ]
+                {
+                    "name": "field1",
+                    "fieldType": {
+                        "$type": f"{LEXICON_NAMESPACE}.schemaType#primitive",
+                        "primitive": "str",
+                    },
+                    "optional": False,
+                }
+            ],
         }
         mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
 
@@ -203,14 +218,19 @@ class TestRecordDiscovery:
 class TestAtmosphereIndex:
     """Tests for AtmosphereIndex AbstractIndex compliance."""
 
-    def test_index_list_datasets_yields_entries(self, authenticated_client, mock_atproto_client):
+    def test_index_list_datasets_yields_entries(
+        self, authenticated_client, mock_atproto_client
+    ):
         """list_datasets should yield AtmosphereIndexEntry objects."""
         mock_record = Mock()
         mock_record.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.dataset/d1"
         mock_record.value = {
             "name": "listed-dataset",
             "schemaRef": "at://schema",
-            "storage": {"$type": f"{LEXICON_NAMESPACE}.storageExternal", "urls": ["s3://data.tar"]},
+            "storage": {
+                "$type": f"{LEXICON_NAMESPACE}.storageExternal",
+                "urls": ["s3://data.tar"],
+            },
         }
 
         mock_response = Mock()
@@ -229,7 +249,10 @@ class TestAtmosphereIndex:
         record = {
             "name": "test-dataset",
             "schemaRef": "at://did:plc:schema/schema/key",
-            "storage": {"$type": f"{LEXICON_NAMESPACE}.storageExternal", "urls": ["s3://data.tar"]},
+            "storage": {
+                "$type": f"{LEXICON_NAMESPACE}.storageExternal",
+                "urls": ["s3://data.tar"],
+            },
         }
 
         entry = AtmosphereIndexEntry("at://test/dataset/key", record)
@@ -247,7 +270,10 @@ class TestAtmosphereIndex:
         record = {
             "name": "meta-dataset",
             "schemaRef": "at://schema",
-            "storage": {"$type": f"{LEXICON_NAMESPACE}.storageExternal", "urls": ["s3://data.tar"]},
+            "storage": {
+                "$type": f"{LEXICON_NAMESPACE}.storageExternal",
+                "urls": ["s3://data.tar"],
+            },
             "metadata": packed_meta,
         }
 
@@ -261,7 +287,10 @@ class TestAtmosphereIndex:
         record = {
             "name": "no-meta",
             "schemaRef": "at://schema",
-            "storage": {"$type": f"{LEXICON_NAMESPACE}.storageExternal", "urls": ["s3://data.tar"]},
+            "storage": {
+                "$type": f"{LEXICON_NAMESPACE}.storageExternal",
+                "urls": ["s3://data.tar"],
+            },
         }
 
         entry = AtmosphereIndexEntry("at://test/dataset/key", record)
@@ -300,7 +329,10 @@ class TestExternalStorageUrls:
             "schemaRef": "at://schema",
             "storage": {
                 "$type": f"{LEXICON_NAMESPACE}.storageExternal",
-                "urls": ["https://cdn.example.com/data-000.tar", "https://cdn.example.com/data-001.tar"],
+                "urls": [
+                    "https://cdn.example.com/data-000.tar",
+                    "https://cdn.example.com/data-001.tar",
+                ],
             },
         }
 
@@ -339,7 +371,9 @@ class TestSchemaPublishing:
     def test_publish_ndarray_schema(self, authenticated_client, mock_atproto_client):
         """Schema with NDArray field should publish correctly."""
         mock_response = Mock()
-        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/ndarray"
+        mock_response.uri = (
+            f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/ndarray"
+        )
         mock_atproto_client.com.atproto.repo.create_record.return_value = mock_response
 
         publisher = SchemaPublisher(authenticated_client)
@@ -438,7 +472,9 @@ class TestPDSBlobStore:
         with pytest.raises(ValueError, match="Not authenticated"):
             store.write_shards(mock_ds, prefix="test")
 
-    def test_write_shards_uploads_blobs(self, authenticated_client, mock_atproto_client, tmp_path):
+    def test_write_shards_uploads_blobs(
+        self, authenticated_client, mock_atproto_client, tmp_path
+    ):
         """write_shards uploads each shard as a blob."""
         from atdata.atmosphere import PDSBlobStore
         import webdataset as wds
@@ -452,12 +488,14 @@ class TestPDSBlobStore:
         ds = atdata.Dataset[AtmoSample](str(tar_path))
 
         # Mock upload_blob to return a blob reference
-        authenticated_client.upload_blob = Mock(return_value={
-            "$type": "blob",
-            "ref": {"$link": "bafyrei123abc"},
-            "mimeType": "application/x-tar",
-            "size": 1024,
-        })
+        authenticated_client.upload_blob = Mock(
+            return_value={
+                "$type": "blob",
+                "ref": {"$link": "bafyrei123abc"},
+                "mimeType": "application/x-tar",
+                "size": 1024,
+            }
+        )
 
         store = PDSBlobStore(client=authenticated_client)
         urls = store.write_shards(ds, prefix="test/v1", maxcount=100)
@@ -473,7 +511,9 @@ class TestPDSBlobStore:
         # First arg should be bytes (tar data)
         assert isinstance(call_args.args[0], bytes)
 
-    def test_read_url_transforms_at_uri(self, authenticated_client, mock_atproto_client):
+    def test_read_url_transforms_at_uri(
+        self, authenticated_client, mock_atproto_client
+    ):
         """read_url transforms AT URIs to HTTP URLs."""
         from atdata.atmosphere import PDSBlobStore
 
@@ -486,7 +526,9 @@ class TestPDSBlobStore:
 
         assert "https://pds.example.com" in url
         assert "bafyrei123" in url
-        authenticated_client.get_blob_url.assert_called_once_with("did:plc:abc", "bafyrei123")
+        authenticated_client.get_blob_url.assert_called_once_with(
+            "did:plc:abc", "bafyrei123"
+        )
 
     def test_read_url_passes_non_at_uri(self, authenticated_client):
         """read_url returns non-AT URIs unchanged."""
@@ -512,10 +554,12 @@ class TestPDSBlobStore:
         from atdata._sources import BlobSource
 
         store = PDSBlobStore(client=authenticated_client)
-        source = store.create_source([
-            "at://did:plc:abc/blob/bafyrei111",
-            "at://did:plc:abc/blob/bafyrei222",
-        ])
+        source = store.create_source(
+            [
+                "at://did:plc:abc/blob/bafyrei111",
+                "at://did:plc:abc/blob/bafyrei222",
+            ]
+        )
 
         assert isinstance(source, BlobSource)
         assert len(source.blob_refs) == 2

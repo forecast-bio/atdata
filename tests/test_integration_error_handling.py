@@ -28,6 +28,7 @@ from atdata.atmosphere import AtmosphereClient, AtUri
 @atdata.packable
 class ErrorTestSample:
     """Sample for error handling tests."""
+
     name: str
     value: int
 
@@ -110,8 +111,6 @@ class TestMalformedMsgpack:
         """Tar with invalid msgpack should raise on iteration."""
         tar_path = tmp_path / "corrupted-000000.tar"
 
-        import io
-
         # Create tar with invalid msgpack data
         with tarfile.open(tar_path, "w") as tar:
             # Add a valid key file
@@ -146,6 +145,7 @@ class TestCorruptedTar:
             info = tarfile.TarInfo(name="test.txt")
             info.size = len(data)
             import io
+
             tar.addfile(info, fileobj=io.BytesIO(data))
 
         # Truncate the file
@@ -183,7 +183,9 @@ class TestRedisErrors:
         from redis import Redis, ConnectionError
 
         # Create index with invalid Redis connection
-        bad_redis = Redis(host="nonexistent.invalid.host", port=9999, socket_timeout=0.1)
+        bad_redis = Redis(
+            host="nonexistent.invalid.host", port=9999, socket_timeout=0.1
+        )
 
         index = LocalIndex(redis=bad_redis)
 
@@ -227,6 +229,7 @@ class TestAtProtoErrors:
         assert not client.is_authenticated
 
         from atdata.atmosphere import SchemaPublisher
+
         publisher = SchemaPublisher(client)
 
         with pytest.raises(ValueError, match="authenticated"):
@@ -264,6 +267,7 @@ class TestAtProtoErrors:
         client._session = {"did": "did:plc:test123"}  # Mark as authenticated
 
         from atdata.atmosphere import SchemaPublisher
+
         publisher = SchemaPublisher(client)
 
         # Should propagate the API error
@@ -339,6 +343,7 @@ class TestErrorMessageQuality:
         client = AtmosphereClient(_client=mock_client)
 
         from atdata.atmosphere import SchemaPublisher
+
         publisher = SchemaPublisher(client)
 
         try:
@@ -374,6 +379,7 @@ class TestRecovery:
         # Now use a good file - should still work
         good_tar = tmp_path / "good-000000.tar"
         import webdataset as wds
+
         with wds.writer.TarWriter(str(good_tar)) as writer:
             sample = ErrorTestSample(name="good", value=42)
             writer.write(sample.as_wds)
@@ -421,7 +427,9 @@ class TestInputValidation:
         """Special characters in version should be handled."""
         index = LocalIndex(redis=clean_redis)
 
-        schema_ref = index.publish_schema(ErrorTestSample, version="1.0.0-beta+build.123")
+        schema_ref = index.publish_schema(
+            ErrorTestSample, version="1.0.0-beta+build.123"
+        )
         schema = index.get_schema(schema_ref)
 
         assert schema["version"] == "1.0.0-beta+build.123"
@@ -615,7 +623,9 @@ class TestS3ErrorSimulation:
         # Mock the client after source creation
         with patch.object(source, "_get_client") as mock_get_client:
             mock_client = Mock()
-            mock_client.get_object.side_effect = ConnectTimeoutError(endpoint_url="s3://test")
+            mock_client.get_object.side_effect = ConnectTimeoutError(
+                endpoint_url="s3://test"
+            )
             mock_get_client.return_value = mock_client
 
             # Use full S3 URI as returned by shard_list

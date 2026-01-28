@@ -9,15 +9,18 @@ from atdata._helpers import array_to_bytes, bytes_to_array
 class TestArraySerialization:
     """Test array_to_bytes and bytes_to_array round-trip serialization."""
 
-    @pytest.mark.parametrize("dtype", [
-        np.float32,
-        np.float64,
-        np.int32,
-        np.int64,
-        np.uint8,
-        np.bool_,
-        np.complex64,
-    ])
+    @pytest.mark.parametrize(
+        "dtype",
+        [
+            np.float32,
+            np.float64,
+            np.int32,
+            np.int64,
+            np.uint8,
+            np.bool_,
+            np.complex64,
+        ],
+    )
     def test_dtype_preservation(self, dtype):
         """Verify dtype is preserved through serialization."""
         original = np.array([1, 2, 3], dtype=dtype)
@@ -27,12 +30,15 @@ class TestArraySerialization:
         assert restored.dtype == original.dtype
         np.testing.assert_array_equal(restored, original)
 
-    @pytest.mark.parametrize("shape", [
-        (10,),
-        (3, 4),
-        (2, 3, 4),
-        (1, 1, 1, 1),
-    ])
+    @pytest.mark.parametrize(
+        "shape",
+        [
+            (10,),
+            (3, 4),
+            (2, 3, 4),
+            (1, 1, 1, 1),
+        ],
+    )
     def test_shape_preservation(self, shape):
         """Verify shape is preserved through serialization."""
         original = np.random.rand(*shape).astype(np.float32)
@@ -73,7 +79,7 @@ class TestArraySerialization:
         original = np.random.rand(10, 10).astype(np.float32)
         non_contiguous = original[::2, ::2]  # Strided view
 
-        assert not non_contiguous.flags['C_CONTIGUOUS']
+        assert not non_contiguous.flags["C_CONTIGUOUS"]
 
         serialized = array_to_bytes(non_contiguous)
         restored = bytes_to_array(serialized)

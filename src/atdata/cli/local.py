@@ -144,7 +144,9 @@ def _run_compose(
         elif shutil.which("docker-compose"):
             base_cmd = ["docker-compose"]
         else:
-            raise RuntimeError("Neither 'docker compose' nor 'docker-compose' available")
+            raise RuntimeError(
+                "Neither 'docker compose' nor 'docker-compose' available"
+            )
     else:
         raise RuntimeError("Docker not found")
 
@@ -195,6 +197,7 @@ def local_up(
 
     # Wait a moment for containers to be healthy
     import time
+
     time.sleep(2)
 
     # Show status

@@ -19,6 +19,7 @@ from ._types import (
 
 # Import for type checking only to avoid circular imports
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from ..dataset import PackableSample, Dataset
 
@@ -394,8 +395,7 @@ class DatasetLoader:
             return storage.get("blobs", [])
         elif "storageExternal" in storage_type:
             raise ValueError(
-                "Dataset uses external URL storage, not blobs. "
-                "Use get_urls() instead."
+                "Dataset uses external URL storage, not blobs. Use get_urls() instead."
             )
         else:
             raise ValueError(f"Unknown storage type: {storage_type}")

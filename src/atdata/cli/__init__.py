@@ -42,7 +42,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
-        "--version", "-v",
+        "--version",
+        "-v",
         action="store_true",
         help="Show version information",
     )
@@ -83,7 +84,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="MinIO console port (default: 9001)",
     )
     up_parser.add_argument(
-        "--detach", "-d",
+        "--detach",
+        "-d",
         action="store_true",
         default=True,
         help="Run containers in detached mode (default: True)",
@@ -95,7 +97,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="Stop local development containers",
     )
     down_parser.add_argument(
-        "--volumes", "-v",
+        "--volumes",
+        "-v",
         action="store_true",
         help="Also remove volumes (deletes all data)",
     )
@@ -165,10 +168,12 @@ def _cmd_version() -> int:
     """Show version information."""
     try:
         from atdata import __version__
+
         version = __version__
     except ImportError:
         # Fallback to package metadata
         from importlib.metadata import version as pkg_version
+
         version = pkg_version("atdata")
 
     print(f"atdata {version}")
@@ -183,6 +188,7 @@ def _cmd_local_up(
 ) -> int:
     """Start local development infrastructure."""
     from .local import local_up
+
     return local_up(
         redis_port=redis_port,
         minio_port=minio_port,
@@ -194,18 +200,21 @@ def _cmd_local_up(
 def _cmd_local_down(remove_volumes: bool) -> int:
     """Stop local development infrastructure."""
     from .local import local_down
+
     return local_down(remove_volumes=remove_volumes)
 
 
 def _cmd_local_status() -> int:
     """Show status of local infrastructure."""
     from .local import local_status
+
     return local_status()
 
 
 def _cmd_diagnose(host: str, port: int) -> int:
     """Diagnose Redis configuration."""
     from .diagnose import diagnose_redis
+
     return diagnose_redis(host=host, port=port)
 
 

@@ -21,6 +21,7 @@ from ._types import (
 
 # Import for type checking only
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from ..lens import Lens
 

@@ -32,7 +32,6 @@ Examples:
 from typing import (
     IO,
     Any,
-    ClassVar,
     Iterator,
     Optional,
     Protocol,
