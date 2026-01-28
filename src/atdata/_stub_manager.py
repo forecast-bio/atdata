@@ -8,20 +8,18 @@ Unlike simple .pyi stubs, the generated modules are actual Python code that
 can be imported at runtime. This allows ``decode_schema`` to return properly
 typed classes that work with both static type checkers and runtime.
 
-Example:
-    ::
-
-        >>> from atdata.local import Index
-        >>>
-        >>> # Enable auto-stub generation
-        >>> index = Index(auto_stubs=True)
-        >>>
-        >>> # Modules are generated automatically on decode_schema
-        >>> MyType = index.decode_schema("atdata://local/sampleSchema/MySample@1.0.0")
-        >>> # MyType is now properly typed for IDE autocomplete!
-        >>>
-        >>> # Get the stub directory path for IDE configuration
-        >>> print(f"Add to IDE: {index.stub_dir}")
+Examples:
+    >>> from atdata.local import Index
+    >>>
+    >>> # Enable auto-stub generation
+    >>> index = Index(auto_stubs=True)
+    >>>
+    >>> # Modules are generated automatically on decode_schema
+    >>> MyType = index.decode_schema("atdata://local/sampleSchema/MySample@1.0.0")
+    >>> # MyType is now properly typed for IDE autocomplete!
+    >>>
+    >>> # Get the stub directory path for IDE configuration
+    >>> print(f"Add to IDE: {index.stub_dir}")
 """
 
 from pathlib import Path
@@ -101,14 +99,12 @@ class StubManager:
     Args:
         stub_dir: Directory to write module files. Defaults to ``~/.atdata/stubs/``.
 
-    Example:
-        ::
-
-            >>> manager = StubManager()
-            >>> schema_dict = {"name": "MySample", "version": "1.0.0", "fields": [...]}
-            >>> SampleClass = manager.ensure_module(schema_dict)
-            >>> print(manager.stub_dir)
-            /Users/you/.atdata/stubs
+    Examples:
+        >>> manager = StubManager()
+        >>> schema_dict = {"name": "MySample", "version": "1.0.0", "fields": [...]}
+        >>> SampleClass = manager.ensure_module(schema_dict)
+        >>> print(manager.stub_dir)
+        /Users/you/.atdata/stubs
     """
 
     def __init__(self, stub_dir: Optional[Union[str, Path]] = None):

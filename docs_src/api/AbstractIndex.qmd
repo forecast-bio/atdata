@@ -20,22 +20,22 @@ Some index implementations support additional features:
 - ``data_store``: An AbstractDataStore for reading/writing dataset shards.
   If present, ``load_dataset`` will use it for S3 credential resolution.
 
-## Example {.doc-section .doc-section-example}
+## Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> def publish_and_list(index: AbstractIndex) -> None:
-    ...     # Publish schemas for different types
-    ...     schema1 = index.publish_schema(ImageSample, version="1.0.0")
-    ...     schema2 = index.publish_schema(TextSample, version="1.0.0")
-    ...
-    ...     # Insert datasets of different types
-    ...     index.insert_dataset(image_ds, name="images")
-    ...     index.insert_dataset(text_ds, name="texts")
-    ...
-    ...     # List all datasets (mixed types)
-    ...     for entry in index.list_datasets():
-    ...         print(f"{entry.name} -> {entry.schema_ref}")
+```python
+>>> def publish_and_list(index: AbstractIndex) -> None:
+...     # Publish schemas for different types
+...     schema1 = index.publish_schema(ImageSample, version="1.0.0")
+...     schema2 = index.publish_schema(TextSample, version="1.0.0")
+...
+...     # Insert datasets of different types
+...     index.insert_dataset(image_ds, name="images")
+...     index.insert_dataset(text_ds, name="texts")
+...
+...     # List all datasets (mixed types)
+...     for entry in index.list_datasets():
+...         print(f"{entry.name} -> {entry.schema_ref}")
+```
 
 ## Attributes
 
@@ -90,15 +90,15 @@ generates a Packable class matching the schema definition.
 |        | [KeyError](`KeyError`)     | If schema not found.                                   |
 |        | [ValueError](`ValueError`) | If schema cannot be decoded (unsupported field types). |
 
-#### Example {.doc-section .doc-section-example}
+#### Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> entry = index.get_dataset("my-dataset")
-    >>> SampleType = index.decode_schema(entry.schema_ref)
-    >>> ds = Dataset[SampleType](entry.data_urls[0])
-    >>> for sample in ds.ordered():
-    ...     print(sample)  # sample is instance of SampleType
+```python
+>>> entry = index.get_dataset("my-dataset")
+>>> SampleType = index.decode_schema(entry.schema_ref)
+>>> ds = Dataset[SampleType](entry.data_urls[0])
+>>> for sample in ds.ordered():
+...     print(sample)  # sample is instance of SampleType
+```
 
 ### get_dataset { #atdata.AbstractIndex.get_dataset }
 

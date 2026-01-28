@@ -18,31 +18,31 @@ Key components:
 Lenses support the functional programming concept of composable, well-behaved
 transformations that satisfy lens laws (GetPut and PutGet).
 
-## Example {.doc-section .doc-section-example}
+## Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> @packable
-    ... class FullData:
-    ...     name: str
-    ...     age: int
-    ...     embedding: NDArray
-    ...
-    >>> @packable
-    ... class NameOnly:
-    ...     name: str
-    ...
-    >>> @lens
-    ... def name_view(full: FullData) -> NameOnly:
-    ...     return NameOnly(name=full.name)
-    ...
-    >>> @name_view.putter
-    ... def name_view_put(view: NameOnly, source: FullData) -> FullData:
-    ...     return FullData(name=view.name, age=source.age,
-    ...                     embedding=source.embedding)
-    ...
-    >>> ds = Dataset[FullData]("data.tar")
-    >>> ds_names = ds.as_type(NameOnly)  # Uses registered lens
+```python
+>>> @packable
+... class FullData:
+...     name: str
+...     age: int
+...     embedding: NDArray
+...
+>>> @packable
+... class NameOnly:
+...     name: str
+...
+>>> @lens
+... def name_view(full: FullData) -> NameOnly:
+...     return NameOnly(name=full.name)
+...
+>>> @name_view.putter
+... def name_view_put(view: NameOnly, source: FullData) -> FullData:
+...     return FullData(name=view.name, age=source.age,
+...                     embedding=source.embedding)
+...
+>>> ds = Dataset[FullData]("data.tar")
+>>> ds_names = ds.as_type(NameOnly)  # Uses registered lens
+```
 
 ## Classes
 
@@ -71,17 +71,17 @@ the view to be reflected back in the source.
 | S      |        | The source type, must derive from ``PackableSample``. | _required_ |
 | V      |        | The view type, must derive from ``PackableSample``.   | _required_ |
 
-#### Example {.doc-section .doc-section-example}
+#### Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> @lens
-    ... def name_lens(full: FullData) -> NameOnly:
-    ...     return NameOnly(name=full.name)
-    ...
-    >>> @name_lens.putter
-    ... def name_lens_put(view: NameOnly, source: FullData) -> FullData:
-    ...     return FullData(name=view.name, age=source.age)
+```python
+>>> @lens
+... def name_lens(full: FullData) -> NameOnly:
+...     return NameOnly(name=full.name)
+...
+>>> @name_lens.putter
+... def name_lens_put(view: NameOnly, source: FullData) -> FullData:
+...     return FullData(name=view.name, age=source.age)
+```
 
 #### Methods
 
@@ -152,13 +152,13 @@ Decorator to register a putter function for this lens.
 |--------|--------------------------------------------------------------------------------------|---------------------------------------------------------------|
 |        | [LensPutter](`atdata.lens.LensPutter`)\[[S](`atdata.lens.S`), [V](`atdata.lens.V`)\] | The putter function, allowing this to be used as a decorator. |
 
-###### Example {.doc-section .doc-section-example}
+###### Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> @my_lens.putter
-    ... def my_lens_put(view: ViewType, source: SourceType) -> SourceType:
-    ...     return SourceType(...)
+```python
+>>> @my_lens.putter
+... def my_lens_put(view: ViewType, source: SourceType) -> SourceType:
+...     return SourceType(field=view.field, other=source.other)
+```
 
 ### LensNetwork { #atdata.lens.LensNetwork }
 
@@ -267,14 +267,14 @@ automatically registers it in the global ``LensNetwork`` registry.
 |        | [Lens](`atdata.lens.Lens`)\[[S](`atdata.lens.S`), [V](`atdata.lens.V`)\] | A ``Lens[S, V]`` object that can be called to apply the transformation |
 |        | [Lens](`atdata.lens.Lens`)\[[S](`atdata.lens.S`), [V](`atdata.lens.V`)\] | or decorated with ``@lens_name.putter`` to add a putter function.      |
 
-#### Example {.doc-section .doc-section-example}
+#### Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> @lens
-    ... def extract_name(full: FullData) -> NameOnly:
-    ...     return NameOnly(name=full.name)
-    ...
-    >>> @extract_name.putter
-    ... def extract_name_put(view: NameOnly, source: FullData) -> FullData:
-    ...     return FullData(name=view.name, age=source.age)
+```python
+>>> @lens
+... def extract_name(full: FullData) -> NameOnly:
+...     return NameOnly(name=full.name)
+...
+>>> @extract_name.putter
+... def extract_name_put(view: NameOnly, source: FullData) -> FullData:
+...     return FullData(name=view.name, age=source.age)
+```

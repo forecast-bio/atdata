@@ -19,14 +19,14 @@ to HTTP URLs for streaming.
 |--------|----------------------|------------------------------------------|
 | client | \'AtmosphereClient\' | Authenticated AtmosphereClient instance. |
 
-## Example {.doc-section .doc-section-example}
+## Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> store = PDSBlobStore(client)
-    >>> urls = store.write_shards(dataset, prefix="training/v1")
-    >>> # Returns AT URIs like:
-    >>> # ['at://did:plc:abc/blob/bafyrei...', ...]
+```python
+>>> store = PDSBlobStore(client)
+>>> urls = store.write_shards(dataset, prefix="training/v1")
+>>> # Returns AT URIs like:
+>>> # ['at://did:plc:abc/blob/bafyrei...', ...]
+```
 
 ## Methods
 

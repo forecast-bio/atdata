@@ -15,18 +15,18 @@ Subclasses should be defined either by:
 1. Direct inheritance with the ``@dataclass`` decorator
 2. Using the ``@packable`` decorator (recommended)
 
-## Example {.doc-section .doc-section-example}
+## Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> @packable
-    ... class MyData:
-    ...     name: str
-    ...     embeddings: NDArray
-    ...
-    >>> sample = MyData(name="test", embeddings=np.array([1.0, 2.0]))
-    >>> packed = sample.packed  # Serialize to bytes
-    >>> restored = MyData.from_bytes(packed)  # Deserialize
+```python
+>>> @packable
+... class MyData:
+...     name: str
+...     embeddings: NDArray
+...
+>>> sample = MyData(name="test", embeddings=np.array([1.0, 2.0]))
+>>> packed = sample.packed  # Serialize to bytes
+>>> restored = MyData.from_bytes(packed)  # Deserialize
+```
 
 ## Attributes
 

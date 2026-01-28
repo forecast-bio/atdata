@@ -9,22 +9,22 @@ Publishes PackableSample schemas to ATProto.
 This class introspects a PackableSample class to extract its field
 definitions and publishes them as an ATProto schema record.
 
-## Example {.doc-section .doc-section-example}
+## Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> @atdata.packable
-    ... class MySample:
-    ...     image: NDArray
-    ...     label: str
-    ...
-    >>> client = AtmosphereClient()
-    >>> client.login("handle", "password")
-    >>>
-    >>> publisher = SchemaPublisher(client)
-    >>> uri = publisher.publish(MySample, version="1.0.0")
-    >>> print(uri)
-    at://did:plc:.../ac.foundation.dataset.sampleSchema/...
+```python
+>>> @atdata.packable
+... class MySample:
+...     image: NDArray
+...     label: str
+...
+>>> client = AtmosphereClient()
+>>> client.login("handle", "password")
+>>>
+>>> publisher = SchemaPublisher(client)
+>>> uri = publisher.publish(MySample, version="1.0.0")
+>>> print(uri)
+at://did:plc:.../ac.foundation.dataset.sampleSchema/...
+```
 
 ## Methods
 

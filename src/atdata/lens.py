@@ -14,30 +14,28 @@ Key components:
 Lenses support the functional programming concept of composable, well-behaved
 transformations that satisfy lens laws (GetPut and PutGet).
 
-Example:
-    ::
-
-        >>> @packable
-        ... class FullData:
-        ...     name: str
-        ...     age: int
-        ...     embedding: NDArray
-        ...
-        >>> @packable
-        ... class NameOnly:
-        ...     name: str
-        ...
-        >>> @lens
-        ... def name_view(full: FullData) -> NameOnly:
-        ...     return NameOnly(name=full.name)
-        ...
-        >>> @name_view.putter
-        ... def name_view_put(view: NameOnly, source: FullData) -> FullData:
-        ...     return FullData(name=view.name, age=source.age,
-        ...                     embedding=source.embedding)
-        ...
-        >>> ds = Dataset[FullData]("data.tar")
-        >>> ds_names = ds.as_type(NameOnly)  # Uses registered lens
+Examples:
+    >>> @packable
+    ... class FullData:
+    ...     name: str
+    ...     age: int
+    ...     embedding: NDArray
+    ...
+    >>> @packable
+    ... class NameOnly:
+    ...     name: str
+    ...
+    >>> @lens
+    ... def name_view(full: FullData) -> NameOnly:
+    ...     return NameOnly(name=full.name)
+    ...
+    >>> @name_view.putter
+    ... def name_view_put(view: NameOnly, source: FullData) -> FullData:
+    ...     return FullData(name=view.name, age=source.age,
+    ...                     embedding=source.embedding)
+    ...
+    >>> ds = Dataset[FullData]("data.tar")
+    >>> ds_names = ds.as_type(NameOnly)  # Uses registered lens
 """
 
 ##
@@ -92,16 +90,14 @@ class Lens( Generic[S, V] ):
         S: The source type, must derive from ``PackableSample``.
         V: The view type, must derive from ``PackableSample``.
 
-    Example:
-        ::
-
-            >>> @lens
-            ... def name_lens(full: FullData) -> NameOnly:
-            ...     return NameOnly(name=full.name)
-            ...
-            >>> @name_lens.putter
-            ... def name_lens_put(view: NameOnly, source: FullData) -> FullData:
-            ...     return FullData(name=view.name, age=source.age)
+    Examples:
+        >>> @lens
+        ... def name_lens(full: FullData) -> NameOnly:
+        ...     return NameOnly(name=full.name)
+        ...
+        >>> @name_lens.putter
+        ... def name_lens_put(view: NameOnly, source: FullData) -> FullData:
+        ...     return FullData(name=view.name, age=source.age)
     """
     # TODO The above has a line for "Parameters:" that should be "Type Parameters:"; this is a temporary fix for `quartodoc` auto-generation bugs.
 
@@ -163,12 +159,10 @@ class Lens( Generic[S, V] ):
         Returns:
             The putter function, allowing this to be used as a decorator.
 
-        Example:
-            ::
-
-                >>> @my_lens.putter
-                ... def my_lens_put(view: ViewType, source: SourceType) -> SourceType:
-                ...     return SourceType(...)
+        Examples:
+            >>> @my_lens.putter
+            ... def my_lens_put(view: ViewType, source: SourceType) -> SourceType:
+            ...     return SourceType(field=view.field, other=source.other)
         """
         ##
         self._putter = put
@@ -218,16 +212,14 @@ def lens(  f: LensGetter[S, V] ) -> Lens[S, V]:
         A ``Lens[S, V]`` object that can be called to apply the transformation
         or decorated with ``@lens_name.putter`` to add a putter function.
 
-    Example:
-        ::
-
-            >>> @lens
-            ... def extract_name(full: FullData) -> NameOnly:
-            ...     return NameOnly(name=full.name)
-            ...
-            >>> @extract_name.putter
-            ... def extract_name_put(view: NameOnly, source: FullData) -> FullData:
-            ...     return FullData(name=view.name, age=source.age)
+    Examples:
+        >>> @lens
+        ... def extract_name(full: FullData) -> NameOnly:
+        ...     return NameOnly(name=full.name)
+        ...
+        >>> @extract_name.putter
+        ... def extract_name_put(view: NameOnly, source: FullData) -> FullData:
+        ...     return FullData(name=view.name, age=source.age)
     """
     ret = Lens[S, V]( f )
     _network.register( ret )

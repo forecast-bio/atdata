@@ -766,15 +766,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="example" class="level4 doc-section doc-section-example">
-<h4 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h4>
-<p>::</p>
-<pre><code>&gt;&gt;&gt; # After enabling auto_stubs and configuring IDE extraPaths:
-&gt;&gt;&gt; from local.MySample_1_0_0 import MySample
-&gt;&gt;&gt;
-&gt;&gt;&gt; # This gives full IDE autocomplete:
-&gt;&gt;&gt; DecodedType = index.decode_schema_as(ref, MySample)
-&gt;&gt;&gt; sample = DecodedType(text="hello", value=42)  # IDE knows signature!</code></pre>
+<section id="examples" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h4>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="co"># After enabling auto_stubs and configuring IDE extraPaths:</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="im">from</span> local.MySample_1_0_0 <span class="im">import</span> MySample</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="co"># This gives full IDE autocomplete:</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> DecodedType <span class="op">=</span> index.decode_schema_as(ref, MySample)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> sample <span class="op">=</span> DecodedType(text<span class="op">=</span><span class="st">"hello"</span>, value<span class="op">=</span><span class="dv">42</span>)  <span class="co"># IDE knows signature!</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="note" class="level4 doc-section doc-section-note">
 <h4 class="doc-section doc-section-note anchored" data-anchor-id="note">Note</h4>
@@ -1023,16 +1022,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="example-1" class="level4 doc-section doc-section-example">
-<h4 class="doc-section doc-section-example anchored" data-anchor-id="example-1">Example</h4>
-<p>::</p>
-<pre><code>&gt;&gt;&gt; index = LocalIndex(auto_stubs=True)
-&gt;&gt;&gt; ref = index.publish_schema(MySample, version="1.0.0")
-&gt;&gt;&gt; index.load_schema(ref)
-&gt;&gt;&gt; print(index.get_import_path(ref))
-local.MySample_1_0_0
-&gt;&gt;&gt; # Then in your code:
-&gt;&gt;&gt; # from local.MySample_1_0_0 import MySample</code></pre>
+<section id="examples-1" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-1">Examples</h4>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> index <span class="op">=</span> LocalIndex(auto_stubs<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> ref <span class="op">=</span> index.publish_schema(MySample, version<span class="op">=</span><span class="st">"1.0.0"</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> index.load_schema(ref)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="bu">print</span>(index.get_import_path(ref))</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>local.MySample_1_0_0</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="co"># Then in your code:</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="co"># from local.MySample_1_0_0 import MySample</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
 <section id="atdata.local.Index.get_schema" class="level3">
@@ -1389,16 +1387,15 @@ local.MySample_1_0_0
 </tbody>
 </table>
 </section>
-<section id="example-2" class="level4 doc-section doc-section-example">
-<h4 class="doc-section doc-section-example anchored" data-anchor-id="example-2">Example</h4>
-<p>::</p>
-<pre><code>&gt;&gt;&gt; # Load and use immediately
-&gt;&gt;&gt; MyType = index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
-&gt;&gt;&gt; sample = MyType(name="hello", value=42)
-&gt;&gt;&gt;
-&gt;&gt;&gt; # Or access later via namespace
-&gt;&gt;&gt; index.load_schema("atdata://local/sampleSchema/OtherType@1.0.0")
-&gt;&gt;&gt; other = index.types.OtherType(data="test")</code></pre>
+<section id="examples-2" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-2">Examples</h4>
+<div class="sourceCode" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="co"># Load and use immediately</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> MyType <span class="op">=</span> index.load_schema(<span class="st">"atdata://local/sampleSchema/MySample@1.0.0"</span>)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> sample <span class="op">=</span> MyType(name<span class="op">=</span><span class="st">"hello"</span>, value<span class="op">=</span><span class="dv">42</span>)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="co"># Or access later via namespace</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> index.load_schema(<span class="st">"atdata://local/sampleSchema/OtherType@1.0.0"</span>)</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> other <span class="op">=</span> index.types.OtherType(data<span class="op">=</span><span class="st">"test"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
 <section id="atdata.local.Index.publish_schema" class="level3">

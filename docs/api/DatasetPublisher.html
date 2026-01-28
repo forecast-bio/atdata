@@ -402,7 +402,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#atdata.atmosphere.DatasetPublisher" id="toc-atdata.atmosphere.DatasetPublisher" class="nav-link active" data-scroll-target="#atdata.atmosphere.DatasetPublisher">DatasetPublisher</a>
   <ul class="collapse">
-  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
   <li><a href="#atdata.atmosphere.DatasetPublisher.publish" id="toc-atdata.atmosphere.DatasetPublisher.publish" class="nav-link" data-scroll-target="#atdata.atmosphere.DatasetPublisher.publish">publish</a></li>
@@ -425,21 +425,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>atmosphere.DatasetPublisher(client)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Publishes dataset index records to ATProto.</p>
 <p>This class creates dataset records that reference a schema and point to external storage (WebDataset URLs) or ATProto blobs.</p>
-<section id="example" class="level2 doc-section doc-section-example">
-<h2 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h2>
-<p>::</p>
-<pre><code>&gt;&gt;&gt; dataset = atdata.Dataset[MySample]("s3://bucket/data-{000000..000009}.tar")
-&gt;&gt;&gt;
-&gt;&gt;&gt; client = AtmosphereClient()
-&gt;&gt;&gt; client.login("handle", "password")
-&gt;&gt;&gt;
-&gt;&gt;&gt; publisher = DatasetPublisher(client)
-&gt;&gt;&gt; uri = publisher.publish(
-...     dataset,
-...     name="My Training Data",
-...     description="Training data for my model",
-...     tags=["computer-vision", "training"],
-... )</code></pre>
+<section id="examples" class="level2 doc-section doc-section-examples">
+<h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> dataset <span class="op">=</span> atdata.Dataset[MySample](<span class="st">"s3://bucket/data-{000000..000009}.tar"</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> client <span class="op">=</span> AtmosphereClient()</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> client.login(<span class="st">"handle"</span>, <span class="st">"password"</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> publisher <span class="op">=</span> DatasetPublisher(client)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> uri <span class="op">=</span> publisher.publish(</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>...     dataset,</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>...     name<span class="op">=</span><span class="st">"My Training Data"</span>,</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>...     description<span class="op">=</span><span class="st">"Training data for my model"</span>,</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>...     tags<span class="op">=</span>[<span class="st">"computer-vision"</span>, <span class="st">"training"</span>],</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>... )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>

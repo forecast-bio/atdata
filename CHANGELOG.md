@@ -25,6 +25,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Investigate quartodoc Example section rendering - missing CSS classes on pre/code tags (#401)
+- Update all docstrings from Example: to Examples: format (#403)
+- Create GitHub issues for v0.3 roadmap feature domains (#402)
 - Expand Quarto documentation with architectural narrative (#395)
 - Expand atmosphere tutorial with federation context (#400)
 - Expand local-workflow tutorial with system narrative (#399)

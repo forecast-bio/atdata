@@ -37,21 +37,19 @@ class SchemaPublisher:
     This class introspects a PackableSample class to extract its field
     definitions and publishes them as an ATProto schema record.
 
-    Example:
-        ::
-
-            >>> @atdata.packable
-            ... class MySample:
-            ...     image: NDArray
-            ...     label: str
-            ...
-            >>> client = AtmosphereClient()
-            >>> client.login("handle", "password")
-            >>>
-            >>> publisher = SchemaPublisher(client)
-            >>> uri = publisher.publish(MySample, version="1.0.0")
-            >>> print(uri)
-            at://did:plc:.../ac.foundation.dataset.sampleSchema/...
+    Examples:
+        >>> @atdata.packable
+        ... class MySample:
+        ...     image: NDArray
+        ...     label: str
+        ...
+        >>> client = AtmosphereClient()
+        >>> client.login("handle", "password")
+        >>>
+        >>> publisher = SchemaPublisher(client)
+        >>> uri = publisher.publish(MySample, version="1.0.0")
+        >>> print(uri)
+        at://did:plc:.../ac.foundation.dataset.sampleSchema/...
     """
 
     def __init__(self, client: AtmosphereClient):
@@ -178,16 +176,14 @@ class SchemaLoader:
     This class fetches schema records from ATProto and can list available
     schemas from a repository.
 
-    Example:
-        ::
-
-            >>> client = AtmosphereClient()
-            >>> client.login("handle", "password")
-            >>>
-            >>> loader = SchemaLoader(client)
-            >>> schema = loader.get("at://did:plc:.../ac.foundation.dataset.sampleSchema/...")
-            >>> print(schema["name"])
-            'MySample'
+    Examples:
+        >>> client = AtmosphereClient()
+        >>> client.login("handle", "password")
+        >>>
+        >>> loader = SchemaLoader(client)
+        >>> schema = loader.get("at://did:plc:.../ac.foundation.dataset.sampleSchema/...")
+        >>> print(schema["name"])
+        'MySample'
     """
 
     def __init__(self, client: AtmosphereClient):

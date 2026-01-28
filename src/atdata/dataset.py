@@ -13,18 +13,16 @@ The implementation handles automatic conversion between numpy arrays and bytes
 during serialization, enabling efficient storage of numerical data in WebDataset
 archives.
 
-Example:
-    ::
-
-        >>> @packable
-        ... class ImageSample:
-        ...     image: NDArray
-        ...     label: str
-        ...
-        >>> ds = Dataset[ImageSample]("data-{000000..000009}.tar")
-        >>> for batch in ds.shuffled(batch_size=32):
-        ...     images = batch.image  # Stacked numpy array (32, H, W, C)
-        ...     labels = batch.label  # List of 32 strings
+Examples:
+    >>> @packable
+    ... class ImageSample:
+    ...     image: NDArray
+    ...     label: str
+    ...
+    >>> ds = Dataset[ImageSample]("data-{000000..000009}.tar")
+    >>> for batch in ds.shuffled(batch_size=32):
+    ...     images = batch.image  # Stacked numpy array (32, H, W, C)
+    ...     labels = batch.label  # List of 32 strings
 """
 
 ##
@@ -126,17 +124,15 @@ class DictSample:
     ``@packable``-decorated class. Every ``@packable`` class automatically
     registers a lens from ``DictSample``, making this conversion seamless.
 
-    Example:
-        ::
-
-            >>> ds = load_dataset("path/to/data.tar")  # Returns Dataset[DictSample]
-            >>> for sample in ds.ordered():
-            ...     print(sample.some_field)      # Attribute access
-            ...     print(sample["other_field"])  # Dict access
-            ...     print(sample.keys())          # Inspect available fields
-            ...
-            >>> # Convert to typed schema
-            >>> typed_ds = ds.as_type(MyTypedSample)
+    Examples:
+        >>> ds = load_dataset("path/to/data.tar")  # Returns Dataset[DictSample]
+        >>> for sample in ds.ordered():
+        ...     print(sample.some_field)      # Attribute access
+        ...     print(sample["other_field"])  # Dict access
+        ...     print(sample.keys())          # Inspect available fields
+        ...
+        >>> # Convert to typed schema
+        >>> typed_ds = ds.as_type(MyTypedSample)
 
     Note:
         NDArray fields are stored as raw bytes in DictSample. They are only
@@ -289,17 +285,15 @@ class PackableSample( ABC ):
     1. Direct inheritance with the ``@dataclass`` decorator
     2. Using the ``@packable`` decorator (recommended)
 
-    Example:
-        ::
-
-            >>> @packable
-            ... class MyData:
-            ...     name: str
-            ...     embeddings: NDArray
-            ...
-            >>> sample = MyData(name="test", embeddings=np.array([1.0, 2.0]))
-            >>> packed = sample.packed  # Serialize to bytes
-            >>> restored = MyData.from_bytes(packed)  # Deserialize
+    Examples:
+        >>> @packable
+        ... class MyData:
+        ...     name: str
+        ...     embeddings: NDArray
+        ...
+        >>> sample = MyData(name="test", embeddings=np.array([1.0, 2.0]))
+        >>> packed = sample.packed  # Serialize to bytes
+        >>> restored = MyData.from_bytes(packed)  # Deserialize
     """
 
     def _ensure_good( self ):
@@ -430,12 +424,10 @@ class SampleBatch( Generic[DT] ):
     Attributes:
         samples: The list of sample instances in this batch.
 
-    Example:
-        ::
-
-            >>> batch = SampleBatch[MyData]([sample1, sample2, sample3])
-            >>> batch.embeddings  # Returns stacked numpy array of shape (3, ...)
-            >>> batch.names  # Returns list of names
+    Examples:
+        >>> batch = SampleBatch[MyData]([sample1, sample2, sample3])
+        >>> batch.embeddings  # Returns stacked numpy array of shape (3, ...)
+        >>> batch.names  # Returns list of names
 
     Note:
         This class uses Python's ``__orig_class__`` mechanism to extract the
@@ -557,16 +549,14 @@ class Dataset( Generic[ST] ):
     Attributes:
         url: WebDataset brace-notation URL for the tar file(s).
 
-    Example:
-        ::
-
-            >>> ds = Dataset[MyData]("path/to/data-{000000..000009}.tar")
-            >>> for sample in ds.ordered(batch_size=32):
-            ...     # sample is SampleBatch[MyData] with batch_size samples
-            ...     embeddings = sample.embeddings  # shape: (32, ...)
-            ...
-            >>> # Transform to a different view
-            >>> ds_view = ds.as_type(MyDataView)
+    Examples:
+        >>> ds = Dataset[MyData]("path/to/data-{000000..000009}.tar")
+        >>> for sample in ds.ordered(batch_size=32):
+        ...     # sample is SampleBatch[MyData] with batch_size samples
+        ...     embeddings = sample.embeddings  # shape: (32, ...)
+        ...
+        >>> # Transform to a different view
+        >>> ds_view = ds.as_type(MyDataView)
 
     Note:
         This class uses Python's ``__orig_class__`` mechanism to extract the
@@ -679,11 +669,9 @@ class Dataset( Generic[ST] ):
         Yields:
             Shard identifiers (e.g., 'train-000000.tar', 'train-000001.tar').
 
-        Example:
-            ::
-
-                >>> for shard in ds.shards:
-                ...     print(f"Processing {shard}")
+        Examples:
+            >>> for shard in ds.shards:
+            ...     print(f"Processing {shard}")
         """
         return iter(self._source.list_shards())
 
@@ -851,15 +839,13 @@ class Dataset( Generic[ST] ):
             This creates multiple parquet files: ``output-000000.parquet``,
             ``output-000001.parquet``, etc.
 
-        Example:
-            ::
-
-                >>> ds = Dataset[MySample]("data.tar")
-                >>> # Small dataset - load all at once
-                >>> ds.to_parquet("output.parquet")
-                >>>
-                >>> # Large dataset - process in chunks
-                >>> ds.to_parquet("output.parquet", maxcount=50000)
+        Examples:
+            >>> ds = Dataset[MySample]("data.tar")
+            >>> # Small dataset - load all at once
+            >>> ds.to_parquet("output.parquet")
+            >>>
+            >>> # Large dataset - process in chunks
+            >>> ds.to_parquet("output.parquet", maxcount=50000)
         """
         ##
 
@@ -984,19 +970,17 @@ def packable( cls: type[_T] ) -> type[_T]:
         ``Packable`` protocol and can be used with ``Type[Packable]`` signatures.
 
     Examples:
-        This is a test of the functionality::
-
-            @packable
-            class MyData:
-                name: str
-                values: NDArray
-            
-            sample = MyData(name="test", values=np.array([1, 2, 3]))
-            bytes_data = sample.packed
-            restored = MyData.from_bytes(bytes_data)
-            
-            # Works with Packable-typed APIs
-            index.publish_schema(MyData, version="1.0.0")  # Type-safe
+        >>> @packable
+        ... class MyData:
+        ...     name: str
+        ...     values: NDArray
+        ...
+        >>> sample = MyData(name="test", values=np.array([1, 2, 3]))
+        >>> bytes_data = sample.packed
+        >>> restored = MyData.from_bytes(bytes_data)
+        >>>
+        >>> # Works with Packable-typed APIs
+        >>> index.publish_schema(MyData, version="1.0.0")  # Type-safe
     """
 
     ##

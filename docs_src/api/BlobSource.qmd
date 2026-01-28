@@ -20,18 +20,18 @@ everything upfront.
 | blob_refs    | [list](`list`)\[[dict](`dict`)\[[str](`str`), [str](`str`)\]\] | List of blob reference dicts with 'did' and 'cid' keys.        |
 | pds_endpoint | [str](`str`) \| None                                           | Optional PDS endpoint URL. If not provided, resolved from DID. |
 
-## Example {.doc-section .doc-section-example}
+## Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> source = BlobSource(
-    ...     blob_refs=[
-    ...         {"did": "did:plc:abc123", "cid": "bafyrei..."},
-    ...         {"did": "did:plc:abc123", "cid": "bafyrei..."},
-    ...     ],
-    ... )
-    >>> for shard_id, stream in source.shards:
-    ...     process(stream)
+```python
+>>> source = BlobSource(
+...     blob_refs=[
+...         {"did": "did:plc:abc123", "cid": "bafyrei..."},
+...         {"did": "did:plc:abc123", "cid": "bafyrei..."},
+...     ],
+... )
+>>> for shard_id, stream in source.shards:
+...     process(stream)
+```
 
 ## Methods
 

@@ -9,23 +9,21 @@ Key differences from HuggingFace Datasets:
 - Built on WebDataset for efficient streaming of large datasets
 - No Arrow caching layer (WebDataset handles remote/local transparently)
 
-Example:
-    ::
-
-        >>> import atdata
-        >>> from atdata import load_dataset
-        >>>
-        >>> @atdata.packable
-        ... class MyData:
-        ...     text: str
-        ...     label: int
-        >>>
-        >>> # Load a single split
-        >>> ds = load_dataset("path/to/train-{000000..000099}.tar", MyData, split="train")
-        >>>
-        >>> # Load all splits (returns DatasetDict)
-        >>> ds_dict = load_dataset("path/to/{train,test}-*.tar", MyData)
-        >>> train_ds = ds_dict["train"]
+Examples:
+    >>> import atdata
+    >>> from atdata import load_dataset
+    >>>
+    >>> @atdata.packable
+    ... class MyData:
+    ...     text: str
+    ...     label: int
+    >>>
+    >>> # Load a single split
+    >>> ds = load_dataset("path/to/train-{000000..000099}.tar", MyData, split="train")
+    >>>
+    >>> # Load all splits (returns DatasetDict)
+    >>> ds_dict = load_dataset("path/to/{train,test}-*.tar", MyData)
+    >>> train_ds = ds_dict["train"]
 """
 
 from __future__ import annotations
@@ -70,16 +68,14 @@ class DatasetDict(Generic[ST], dict):
     Parameters:
         ST: The sample type for all datasets in this dict.
 
-    Example:
-        ::
-
-            >>> ds_dict = load_dataset("path/to/data", MyData)
-            >>> train = ds_dict["train"]
-            >>> test = ds_dict["test"]
-            >>>
-            >>> # Iterate over all splits
-            >>> for split_name, dataset in ds_dict.items():
-            ...     print(f"{split_name}: {len(dataset.shard_list)} shards")
+    Examples:
+        >>> ds_dict = load_dataset("path/to/data", MyData)
+        >>> train = ds_dict["train"]
+        >>> test = ds_dict["test"]
+        >>>
+        >>> # Iterate over all splits
+        >>> for split_name, dataset in ds_dict.items():
+        ...     print(f"{split_name}: {len(dataset.shard_list)} shards")
     """
     # TODO The above has a line for "Parameters:" that should be "Type Parameters:"; this is a temporary fix for `quartodoc` auto-generation bugs.
 
@@ -613,25 +609,23 @@ def load_dataset(
         FileNotFoundError: If no data files are found at the path.
         KeyError: If dataset not found in index.
 
-    Example:
-        ::
-
-            >>> # Load without type - get DictSample for exploration
-            >>> ds = load_dataset("./data/train.tar", split="train")
-            >>> for sample in ds.ordered():
-            ...     print(sample.keys())  # Explore fields
-            ...     print(sample["text"]) # Dict-style access
-            ...     print(sample.label)   # Attribute access
-            >>>
-            >>> # Convert to typed schema
-            >>> typed_ds = ds.as_type(TextData)
-            >>>
-            >>> # Or load with explicit type directly
-            >>> train_ds = load_dataset("./data/train-*.tar", TextData, split="train")
-            >>>
-            >>> # Load from index with auto-type resolution
-            >>> index = LocalIndex()
-            >>> ds = load_dataset("@local/my-dataset", index=index, split="train")
+    Examples:
+        >>> # Load without type - get DictSample for exploration
+        >>> ds = load_dataset("./data/train.tar", split="train")
+        >>> for sample in ds.ordered():
+        ...     print(sample.keys())  # Explore fields
+        ...     print(sample["text"]) # Dict-style access
+        ...     print(sample.label)   # Attribute access
+        >>>
+        >>> # Convert to typed schema
+        >>> typed_ds = ds.as_type(TextData)
+        >>>
+        >>> # Or load with explicit type directly
+        >>> train_ds = load_dataset("./data/train-*.tar", TextData, split="train")
+        >>>
+        >>> # Load from index with auto-type resolution
+        >>> index = LocalIndex()
+        >>> ds = load_dataset("@local/my-dataset", index=index, split="train")
     """
     # Handle @handle/dataset indexed path resolution
     if _is_indexed_path(path):

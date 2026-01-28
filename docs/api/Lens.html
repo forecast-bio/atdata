@@ -402,7 +402,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#atdata.lens" id="toc-atdata.lens" class="nav-link active" data-scroll-target="#atdata.lens">lens</a>
   <ul class="collapse">
-  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
   <li><a href="#classes" id="toc-classes" class="nav-link" data-scroll-target="#classes">Classes</a>
   <ul class="collapse">
   <li><a href="#atdata.lens.Lens" id="toc-atdata.lens.Lens" class="nav-link" data-scroll-target="#atdata.lens.Lens">Lens</a></li>
@@ -435,30 +435,29 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>@lens</code>: Decorator to create and register lens transformations</li>
 </ul>
 <p>Lenses support the functional programming concept of composable, well-behaved transformations that satisfy lens laws (GetPut and PutGet).</p>
-<section id="example" class="level2 doc-section doc-section-example">
-<h2 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h2>
-<p>::</p>
-<pre><code>&gt;&gt;&gt; @packable
-... class FullData:
-...     name: str
-...     age: int
-...     embedding: NDArray
-...
-&gt;&gt;&gt; @packable
-... class NameOnly:
-...     name: str
-...
-&gt;&gt;&gt; @lens
-... def name_view(full: FullData) -&gt; NameOnly:
-...     return NameOnly(name=full.name)
-...
-&gt;&gt;&gt; @name_view.putter
-... def name_view_put(view: NameOnly, source: FullData) -&gt; FullData:
-...     return FullData(name=view.name, age=source.age,
-...                     embedding=source.embedding)
-...
-&gt;&gt;&gt; ds = Dataset[FullData]("data.tar")
-&gt;&gt;&gt; ds_names = ds.as_type(NameOnly)  # Uses registered lens</code></pre>
+<section id="examples" class="level2 doc-section doc-section-examples">
+<h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="op">@</span>packable</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>... <span class="kw">class</span> FullData:</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>...     name: <span class="bu">str</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>...     age: <span class="bu">int</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>...     embedding: NDArray</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="op">@</span>packable</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>... <span class="kw">class</span> NameOnly:</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>...     name: <span class="bu">str</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="op">@</span>lens</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>... <span class="kw">def</span> name_view(full: FullData) <span class="op">-&gt;</span> NameOnly:</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>...     <span class="cf">return</span> NameOnly(name<span class="op">=</span>full.name)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="op">@</span>name_view.putter</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>... <span class="kw">def</span> name_view_put(view: NameOnly, source: FullData) <span class="op">-&gt;</span> FullData:</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>...     <span class="cf">return</span> FullData(name<span class="op">=</span>view.name, age<span class="op">=</span>source.age,</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>...                     embedding<span class="op">=</span>source.embedding)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> ds <span class="op">=</span> Dataset[FullData](<span class="st">"data.tar"</span>)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> ds_names <span class="op">=</span> ds.as_type(NameOnly)  <span class="co"># Uses registered lens</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="classes" class="level2">
 <h2 class="anchored" data-anchor-id="classes">Classes</h2>
@@ -518,16 +517,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="example-1" class="level4 doc-section doc-section-example">
-<h4 class="doc-section doc-section-example anchored" data-anchor-id="example-1">Example</h4>
-<p>::</p>
-<pre><code>&gt;&gt;&gt; @lens
-... def name_lens(full: FullData) -&gt; NameOnly:
-...     return NameOnly(name=full.name)
-...
-&gt;&gt;&gt; @name_lens.putter
-... def name_lens_put(view: NameOnly, source: FullData) -&gt; FullData:
-...     return FullData(name=view.name, age=source.age)</code></pre>
+<section id="examples-1" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-1">Examples</h4>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="op">@</span>lens</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>... <span class="kw">def</span> name_lens(full: FullData) <span class="op">-&gt;</span> NameOnly:</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>...     <span class="cf">return</span> NameOnly(name<span class="op">=</span>full.name)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="op">@</span>name_lens.putter</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>... <span class="kw">def</span> name_lens_put(view: NameOnly, source: FullData) <span class="op">-&gt;</span> FullData:</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>...     <span class="cf">return</span> FullData(name<span class="op">=</span>view.name, age<span class="op">=</span>source.age)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="methods" class="level4">
 <h4 class="anchored" data-anchor-id="methods">Methods</h4>
@@ -693,12 +691,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="example-2" class="level6 doc-section doc-section-example">
-<h6 class="doc-section doc-section-example anchored" data-anchor-id="example-2">Example</h6>
-<p>::</p>
-<pre><code>&gt;&gt;&gt; @my_lens.putter
-... def my_lens_put(view: ViewType, source: SourceType) -&gt; SourceType:
-...     return SourceType(...)</code></pre>
+<section id="examples-2" class="level6 doc-section doc-section-examples">
+<h6 class="doc-section doc-section-examples anchored" data-anchor-id="examples-2">Examples</h6>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="op">@</span>my_lens.putter</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>... <span class="kw">def</span> my_lens_put(view: ViewType, source: SourceType) <span class="op">-&gt;</span> SourceType:</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>...     <span class="cf">return</span> SourceType(field<span class="op">=</span>view.field, other<span class="op">=</span>source.other)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
 </section>
@@ -925,16 +922,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="example-3" class="level4 doc-section doc-section-example">
-<h4 class="doc-section doc-section-example anchored" data-anchor-id="example-3">Example</h4>
-<p>::</p>
-<pre><code>&gt;&gt;&gt; @lens
-... def extract_name(full: FullData) -&gt; NameOnly:
-...     return NameOnly(name=full.name)
-...
-&gt;&gt;&gt; @extract_name.putter
-... def extract_name_put(view: NameOnly, source: FullData) -&gt; FullData:
-...     return FullData(name=view.name, age=source.age)</code></pre>
+<section id="examples-3" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-3">Examples</h4>
+<div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="op">@</span>lens</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>... <span class="kw">def</span> extract_name(full: FullData) <span class="op">-&gt;</span> NameOnly:</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>...     <span class="cf">return</span> NameOnly(name<span class="op">=</span>full.name)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="op">@</span>extract_name.putter</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>... <span class="kw">def</span> extract_name_put(view: NameOnly, source: FullData) <span class="op">-&gt;</span> FullData:</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>...     <span class="cf">return</span> FullData(name<span class="op">=</span>view.name, age<span class="op">=</span>source.age)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 
 </section>

@@ -9,14 +9,14 @@ ATProto client wrapper for atdata operations.
 This class wraps the atproto SDK client and provides higher-level methods
 for working with atdata records (schemas, datasets, lenses).
 
-## Example {.doc-section .doc-section-example}
+## Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> client = AtmosphereClient()
-    >>> client.login("alice.bsky.social", "app-password")
-    >>> print(client.did)
-    'did:plc:...'
+```python
+>>> client = AtmosphereClient()
+>>> client.login("alice.bsky.social", "app-password")
+>>> print(client.did)
+'did:plc:...'
+```
 
 ## Note {.doc-section .doc-section-note}
 

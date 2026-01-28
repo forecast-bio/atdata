@@ -31,26 +31,24 @@ class LensPublisher:
     This class creates lens records that reference source and target schemas
     and point to the transformation code in a git repository.
 
-    Example:
-        ::
-
-            >>> @atdata.lens
-            ... def my_lens(source: SourceType) -> TargetType:
-            ...     return TargetType(field=source.other_field)
-            >>>
-            >>> client = AtmosphereClient()
-            >>> client.login("handle", "password")
-            >>>
-            >>> publisher = LensPublisher(client)
-            >>> uri = publisher.publish(
-            ...     name="my_lens",
-            ...     source_schema_uri="at://did:plc:abc/ac.foundation.dataset.sampleSchema/source",
-            ...     target_schema_uri="at://did:plc:abc/ac.foundation.dataset.sampleSchema/target",
-            ...     code_repository="https://github.com/user/repo",
-            ...     code_commit="abc123def456",
-            ...     getter_path="mymodule.lenses:my_lens",
-            ...     putter_path="mymodule.lenses:my_lens_putter",
-            ... )
+    Examples:
+        >>> @atdata.lens
+        ... def my_lens(source: SourceType) -> TargetType:
+        ...     return TargetType(field=source.other_field)
+        >>>
+        >>> client = AtmosphereClient()
+        >>> client.login("handle", "password")
+        >>>
+        >>> publisher = LensPublisher(client)
+        >>> uri = publisher.publish(
+        ...     name="my_lens",
+        ...     source_schema_uri="at://did:plc:abc/ac.foundation.dataset.sampleSchema/source",
+        ...     target_schema_uri="at://did:plc:abc/ac.foundation.dataset.sampleSchema/target",
+        ...     code_repository="https://github.com/user/repo",
+        ...     code_commit="abc123def456",
+        ...     getter_path="mymodule.lenses:my_lens",
+        ...     putter_path="mymodule.lenses:my_lens_putter",
+        ... )
 
     Security Note:
         Lens code is stored as references to git repositories rather than
@@ -195,16 +193,14 @@ class LensLoader:
     using a lens requires installing the referenced code and importing
     it manually.
 
-    Example:
-        ::
-
-            >>> client = AtmosphereClient()
-            >>> loader = LensLoader(client)
-            >>>
-            >>> record = loader.get("at://did:plc:abc/ac.foundation.dataset.lens/xyz")
-            >>> print(record["name"])
-            >>> print(record["sourceSchema"])
-            >>> print(record.get("getterCode", {}).get("repository"))
+    Examples:
+        >>> client = AtmosphereClient()
+        >>> loader = LensLoader(client)
+        >>>
+        >>> record = loader.get("at://did:plc:abc/ac.foundation.dataset.lens/xyz")
+        >>> print(record["name"])
+        >>> print(record["sourceSchema"])
+        >>> print(record.get("getterCode", {}).get("repository"))
     """
 
     def __init__(self, client: AtmosphereClient):

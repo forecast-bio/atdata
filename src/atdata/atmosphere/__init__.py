@@ -15,16 +15,14 @@ The ATProto integration is additive - existing atdata functionality continues
 to work unchanged. These features are opt-in for users who want to publish
 or discover datasets on the ATProto network.
 
-Example:
-    ::
-
-        >>> from atdata.atmosphere import AtmosphereClient, SchemaPublisher
-        >>>
-        >>> client = AtmosphereClient()
-        >>> client.login("handle.bsky.social", "app-password")
-        >>>
-        >>> publisher = SchemaPublisher(client)
-        >>> schema_uri = publisher.publish(MySampleType, version="1.0.0")
+Examples:
+    >>> from atdata.atmosphere import AtmosphereClient, SchemaPublisher
+    >>>
+    >>> client = AtmosphereClient()
+    >>> client.login("handle.bsky.social", "app-password")
+    >>>
+    >>> publisher = SchemaPublisher(client)
+    >>> schema_uri = publisher.publish(MySampleType, version="1.0.0")
 
 Note:
     This module requires the ``atproto`` package to be installed::
@@ -106,19 +104,17 @@ class AtmosphereIndex:
     Optionally accepts a ``PDSBlobStore`` for writing dataset shards as
     ATProto blobs, enabling fully decentralized dataset storage.
 
-    Example:
-        ::
-
-            >>> client = AtmosphereClient()
-            >>> client.login("handle.bsky.social", "app-password")
-            >>>
-            >>> # Without blob storage (external URLs only)
-            >>> index = AtmosphereIndex(client)
-            >>>
-            >>> # With PDS blob storage
-            >>> store = PDSBlobStore(client)
-            >>> index = AtmosphereIndex(client, data_store=store)
-            >>> entry = index.insert_dataset(dataset, name="my-data")
+    Examples:
+        >>> client = AtmosphereClient()
+        >>> client.login("handle.bsky.social", "app-password")
+        >>>
+        >>> # Without blob storage (external URLs only)
+        >>> index = AtmosphereIndex(client)
+        >>>
+        >>> # With PDS blob storage
+        >>> store = PDSBlobStore(client)
+        >>> index = AtmosphereIndex(client, data_store=store)
+        >>> entry = index.insert_dataset(dataset, name="my-data")
     """
 
     def __init__(

@@ -13,22 +13,20 @@ The key insight is that WebDataset's tar_file_expander only needs
 By providing streams directly, we can support private repos, custom
 endpoints, and future backends like ATProto blobs.
 
-Example:
-    ::
-
-        >>> # Standard URL (uses WebDataset's gopen)
-        >>> source = URLSource("https://example.com/data-{000..009}.tar")
-        >>> ds = Dataset[MySample](source)
-        >>>
-        >>> # Private S3 with credentials
-        >>> source = S3Source(
-        ...     bucket="my-bucket",
-        ...     keys=["train/shard-000.tar", "train/shard-001.tar"],
-        ...     endpoint="https://my-r2.cloudflarestorage.com",
-        ...     access_key="...",
-        ...     secret_key="...",
-        ... )
-        >>> ds = Dataset[MySample](source)
+Examples:
+    >>> # Standard URL (uses WebDataset's gopen)
+    >>> source = URLSource("https://example.com/data-{000..009}.tar")
+    >>> ds = Dataset[MySample](source)
+    >>>
+    >>> # Private S3 with credentials
+    >>> source = S3Source(
+    ...     bucket="my-bucket",
+    ...     keys=["train/shard-000.tar", "train/shard-001.tar"],
+    ...     endpoint="https://my-r2.cloudflarestorage.com",
+    ...     access_key="...",
+    ...     secret_key="...",
+    ... )
+    >>> ds = Dataset[MySample](source)
 """
 
 from __future__ import annotations
@@ -54,12 +52,10 @@ class URLSource:
     Attributes:
         url: URL or brace pattern for the shards.
 
-    Example:
-        ::
-
-            >>> source = URLSource("https://example.com/train-{000..009}.tar")
-            >>> for shard_id, stream in source.shards:
-            ...     print(f"Streaming {shard_id}")
+    Examples:
+        >>> source = URLSource("https://example.com/train-{000..009}.tar")
+        >>> for shard_id, stream in source.shards:
+        ...     print(f"Streaming {shard_id}")
     """
 
     url: str
@@ -131,18 +127,16 @@ class S3Source:
         secret_key: Optional AWS secret access key.
         region: Optional AWS region (defaults to us-east-1).
 
-    Example:
-        ::
-
-            >>> source = S3Source(
-            ...     bucket="my-datasets",
-            ...     keys=["train/shard-000.tar", "train/shard-001.tar"],
-            ...     endpoint="https://abc123.r2.cloudflarestorage.com",
-            ...     access_key="AKIAIOSFODNN7EXAMPLE",
-            ...     secret_key="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
-            ... )
-            >>> for shard_id, stream in source.shards:
-            ...     process(stream)
+    Examples:
+        >>> source = S3Source(
+        ...     bucket="my-datasets",
+        ...     keys=["train/shard-000.tar", "train/shard-001.tar"],
+        ...     endpoint="https://abc123.r2.cloudflarestorage.com",
+        ...     access_key="AKIAIOSFODNN7EXAMPLE",
+        ...     secret_key="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+        ... )
+        >>> for shard_id, stream in source.shards:
+        ...     process(stream)
     """
 
     bucket: str
@@ -258,13 +252,11 @@ class S3Source:
         Raises:
             ValueError: If URLs are not valid s3:// URLs or span multiple buckets.
 
-        Example:
-            ::
-
-                >>> source = S3Source.from_urls(
-                ...     ["s3://my-bucket/train-000.tar", "s3://my-bucket/train-001.tar"],
-                ...     endpoint="https://r2.example.com",
-                ... )
+        Examples:
+            >>> source = S3Source.from_urls(
+            ...     ["s3://my-bucket/train-000.tar", "s3://my-bucket/train-001.tar"],
+            ...     endpoint="https://r2.example.com",
+            ... )
         """
         if not urls:
             raise ValueError("urls cannot be empty")
@@ -317,15 +309,13 @@ class S3Source:
         Returns:
             Configured S3Source.
 
-        Example:
-            ::
-
-                >>> creds = {
-                ...     "AWS_ACCESS_KEY_ID": "...",
-                ...     "AWS_SECRET_ACCESS_KEY": "...",
-                ...     "AWS_ENDPOINT": "https://r2.example.com",
-                ... }
-                >>> source = S3Source.from_credentials(creds, "my-bucket", ["data.tar"])
+        Examples:
+            >>> creds = {
+            ...     "AWS_ACCESS_KEY_ID": "...",
+            ...     "AWS_SECRET_ACCESS_KEY": "...",
+            ...     "AWS_ENDPOINT": "https://r2.example.com",
+            ... }
+            >>> source = S3Source.from_credentials(creds, "my-bucket", ["data.tar"])
         """
         return cls(
             bucket=bucket,
@@ -352,17 +342,15 @@ class BlobSource:
         blob_refs: List of blob reference dicts with 'did' and 'cid' keys.
         pds_endpoint: Optional PDS endpoint URL. If not provided, resolved from DID.
 
-    Example:
-        ::
-
-            >>> source = BlobSource(
-            ...     blob_refs=[
-            ...         {"did": "did:plc:abc123", "cid": "bafyrei..."},
-            ...         {"did": "did:plc:abc123", "cid": "bafyrei..."},
-            ...     ],
-            ... )
-            >>> for shard_id, stream in source.shards:
-            ...     process(stream)
+    Examples:
+        >>> source = BlobSource(
+        ...     blob_refs=[
+        ...         {"did": "did:plc:abc123", "cid": "bafyrei..."},
+        ...         {"did": "did:plc:abc123", "cid": "bafyrei..."},
+        ...     ],
+        ... )
+        >>> for shard_id, stream in source.shards:
+        ...     process(stream)
     """
 
     blob_refs: list[dict[str, str]]

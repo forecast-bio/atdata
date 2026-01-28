@@ -12,20 +12,20 @@ a unified interface compatible with LocalIndex.
 Optionally accepts a ``PDSBlobStore`` for writing dataset shards as
 ATProto blobs, enabling fully decentralized dataset storage.
 
-## Example {.doc-section .doc-section-example}
+## Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> client = AtmosphereClient()
-    >>> client.login("handle.bsky.social", "app-password")
-    >>>
-    >>> # Without blob storage (external URLs only)
-    >>> index = AtmosphereIndex(client)
-    >>>
-    >>> # With PDS blob storage
-    >>> store = PDSBlobStore(client)
-    >>> index = AtmosphereIndex(client, data_store=store)
-    >>> entry = index.insert_dataset(dataset, name="my-data")
+```python
+>>> client = AtmosphereClient()
+>>> client.login("handle.bsky.social", "app-password")
+>>>
+>>> # Without blob storage (external URLs only)
+>>> index = AtmosphereIndex(client)
+>>>
+>>> # With PDS blob storage
+>>> store = PDSBlobStore(client)
+>>> index = AtmosphereIndex(client, data_store=store)
+>>> entry = index.insert_dataset(dataset, name="my-data")
+```
 
 ## Attributes
 

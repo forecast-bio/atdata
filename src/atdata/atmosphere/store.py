@@ -6,18 +6,16 @@ protocol that stores dataset shards as ATProto blobs in a Personal Data Server.
 This enables fully decentralized dataset storage where both metadata (records)
 and data (blobs) live on the AT Protocol network.
 
-Example:
-    ::
-
-        >>> from atdata.atmosphere import AtmosphereClient, PDSBlobStore
-        >>>
-        >>> client = AtmosphereClient()
-        >>> client.login("handle.bsky.social", "app-password")
-        >>>
-        >>> store = PDSBlobStore(client)
-        >>> urls = store.write_shards(dataset, prefix="mnist/v1")
-        >>> print(urls)
-        ['at://did:plc:.../blob/bafyrei...', ...]
+Examples:
+    >>> from atdata.atmosphere import AtmosphereClient, PDSBlobStore
+    >>>
+    >>> client = AtmosphereClient()
+    >>> client.login("handle.bsky.social", "app-password")
+    >>>
+    >>> store = PDSBlobStore(client)
+    >>> urls = store.write_shards(dataset, prefix="mnist/v1")
+    >>> print(urls)
+    ['at://did:plc:.../blob/bafyrei...', ...]
 """
 
 from __future__ import annotations
@@ -48,13 +46,11 @@ class PDSBlobStore:
     Attributes:
         client: Authenticated AtmosphereClient instance.
 
-    Example:
-        ::
-
-            >>> store = PDSBlobStore(client)
-            >>> urls = store.write_shards(dataset, prefix="training/v1")
-            >>> # Returns AT URIs like:
-            >>> # ['at://did:plc:abc/blob/bafyrei...', ...]
+    Examples:
+        >>> store = PDSBlobStore(client)
+        >>> urls = store.write_shards(dataset, prefix="training/v1")
+        >>> # Returns AT URIs like:
+        >>> # ['at://did:plc:abc/blob/bafyrei...', ...]
     """
 
     client: "AtmosphereClient"

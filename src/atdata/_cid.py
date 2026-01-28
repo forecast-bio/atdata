@@ -12,13 +12,11 @@ The CIDs generated here use:
 This ensures compatibility with ATProto's CID requirements and enables
 seamless promotion from local storage to atmosphere (ATProto network).
 
-Example:
-    ::
-
-        >>> schema = {"name": "ImageSample", "version": "1.0.0", "fields": [...]}
-        >>> cid = generate_cid(schema)
-        >>> print(cid)
-        bafyreihffx5a2e7k6r5zqgp5iwpjqr2gfyheqhzqtlxagvqjqyxzqpzqaa
+Examples:
+    >>> schema = {"name": "ImageSample", "version": "1.0.0", "fields": [...]}
+    >>> cid = generate_cid(schema)
+    >>> print(cid)
+    bafyreihffx5a2e7k6r5zqgp5iwpjqr2gfyheqhzqtlxagvqjqyxzqpzqaa
 """
 
 import hashlib
@@ -50,11 +48,9 @@ def generate_cid(data: Any) -> str:
     Raises:
         ValueError: If the data cannot be encoded as DAG-CBOR.
 
-    Example:
-        ::
-
-            >>> generate_cid({"name": "test", "value": 42})
-            'bafyrei...'
+    Examples:
+        >>> generate_cid({"name": "test", "value": 42})
+        'bafyrei...'
     """
     # Encode data as DAG-CBOR
     try:
@@ -86,11 +82,9 @@ def generate_cid_from_bytes(data_bytes: bytes) -> str:
     Returns:
         CIDv1 string in base32 multibase format.
 
-    Example:
-        ::
-
-            >>> cbor_bytes = libipld.encode_dag_cbor({"key": "value"})
-            >>> cid = generate_cid_from_bytes(cbor_bytes)
+    Examples:
+        >>> cbor_bytes = libipld.encode_dag_cbor({"key": "value"})
+        >>> cid = generate_cid_from_bytes(cbor_bytes)
     """
     sha256_hash = hashlib.sha256(data_bytes).digest()
     raw_cid_bytes = bytes([CID_VERSION_1, CODEC_DAG_CBOR, HASH_SHA256, SHA256_SIZE]) + sha256_hash
@@ -107,14 +101,12 @@ def verify_cid(cid: str, data: Any) -> bool:
     Returns:
         True if the CID matches the data, False otherwise.
 
-    Example:
-        ::
-
-            >>> cid = generate_cid({"name": "test"})
-            >>> verify_cid(cid, {"name": "test"})
-            True
-            >>> verify_cid(cid, {"name": "different"})
-            False
+    Examples:
+        >>> cid = generate_cid({"name": "test"})
+        >>> verify_cid(cid, {"name": "test"})
+        True
+        >>> verify_cid(cid, {"name": "different"})
+        False
     """
     expected_cid = generate_cid(data)
     return cid == expected_cid
@@ -130,14 +122,12 @@ def parse_cid(cid: str) -> dict:
         Dictionary with 'version', 'codec', and 'hash' keys.
         The 'hash' value is itself a dict with 'code', 'size', and 'digest'.
 
-    Example:
-        ::
-
-            >>> info = parse_cid('bafyrei...')
-            >>> info['version']
-            1
-            >>> info['codec']
-            113  # 0x71 = dag-cbor
+    Examples:
+        >>> info = parse_cid('bafyrei...')
+        >>> info['version']
+        1
+        >>> info['codec']
+        113  # 0x71 = dag-cbor
     """
     return libipld.decode_cid(cid)
 

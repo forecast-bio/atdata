@@ -9,17 +9,17 @@ Loads PackableSample schemas from ATProto.
 This class fetches schema records from ATProto and can list available
 schemas from a repository.
 
-## Example {.doc-section .doc-section-example}
+## Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> client = AtmosphereClient()
-    >>> client.login("handle", "password")
-    >>>
-    >>> loader = SchemaLoader(client)
-    >>> schema = loader.get("at://did:plc:.../ac.foundation.dataset.sampleSchema/...")
-    >>> print(schema["name"])
-    'MySample'
+```python
+>>> client = AtmosphereClient()
+>>> client.login("handle", "password")
+>>>
+>>> loader = SchemaLoader(client)
+>>> schema = loader.get("at://did:plc:.../ac.foundation.dataset.sampleSchema/...")
+>>> print(schema["name"])
+'MySample'
+```
 
 ## Methods
 

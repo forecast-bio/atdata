@@ -209,11 +209,11 @@ def test_repo_insert_with_s3(mock_s3, clean_redis):
 
 ## Docstring Formatting
 
-This project uses **Google-style docstrings** with quartodoc for API documentation generation. The most important formatting requirement is for **Example sections**.
+This project uses **Google-style docstrings** with quartodoc for API documentation generation. The most important formatting requirement is for **Examples sections**.
 
-### Example Section Format
+### Examples Section Format
 
-Example sections must use reStructuredText literal block syntax (`::`) to render correctly in quartodoc-generated documentation:
+Use `Examples:` (plural) for code examples. This is recognized by griffe's Google docstring parser and rendered with proper syntax highlighting by quartodoc:
 
 ```python
 def my_function():
@@ -227,50 +227,44 @@ def my_function():
     Returns:
         Description of return value.
 
-    Example:
-        ::
-
-            >>> result = my_function()
-            >>> print(result)
-            'output'
+    Examples:
+        >>> result = my_function()
+        >>> print(result)
+        'output'
     """
 ```
 
 **Key formatting rules:**
 
-1. `Example:` with a colon, 4-space indented from the docstring margin
-2. `::` on its own line, 8-space indented (4 more than `Example:`)
-3. Blank line after `::`
-4. Code examples indented 12 spaces (4 more than `::`)
-5. Use `>>>` for Python prompts and `...` for continuation lines
+1. Use `Examples:` (plural, not `Example:` singular)
+2. Code examples are indented 8 spaces (4 more than `Examples:`)
+3. Use `>>>` for Python prompts and `...` for continuation lines
+4. No `::` marker needed - griffe handles the parsing automatically
 
-**Incorrect format (will not render properly):**
+**Incorrect format (will not render with syntax highlighting):**
 ```python
-    Example:
-        >>> code_here()  # Wrong - missing :: and extra indentation
+    Example:  # Wrong - singular form is treated as an admonition
+        ::    # Wrong - reST literal block marker not needed
+            >>> code_here()
 ```
 
 **Correct format:**
 ```python
-    Example:
-        ::
-
-            >>> code_here()  # Correct - has :: and proper indentation
+    Examples:
+        >>> code_here()  # Correct - plural form, proper indentation
 ```
 
 ### Multiple Examples
 
-For multiple examples, use the same pattern:
+For multiple examples, continue in the same section:
 
 ```python
-    Example:
-        ::
+    Examples:
+        >>> # First example
+        >>> x = create_thing()
 
-            >>> # First example
-            >>> x = create_thing()
-
-            >>> # Second example
-            >>> y = other_thing()
+        >>> # Second example
+        >>> y = other_thing()
 ```
 
 ### Class and Method Docstrings
@@ -281,20 +275,16 @@ Apply the same format to class docstrings and method docstrings:
 class MyClass:
     """Class description.
 
-    Example:
-        ::
-
-            >>> obj = MyClass()
-            >>> obj.do_something()
+    Examples:
+        >>> obj = MyClass()
+        >>> obj.do_something()
     """
 
     def method(self):
         """Method description.
 
-        Example:
-            ::
-
-                >>> self.method()
+        Examples:
+            >>> self.method()
         """
 ```
 

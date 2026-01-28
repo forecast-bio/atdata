@@ -402,7 +402,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#atdata.PackableSample" id="toc-atdata.PackableSample" class="nav-link active" data-scroll-target="#atdata.PackableSample">PackableSample</a>
   <ul class="collapse">
-  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
   <li><a href="#attributes" id="toc-attributes" class="nav-link" data-scroll-target="#attributes">Attributes</a></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
@@ -426,17 +426,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Base class for samples that can be serialized with msgpack.</p>
 <p>This abstract base class provides automatic serialization/deserialization for dataclass-based samples. Fields annotated as <code>NDArray</code> or <code>NDArray | None</code> are automatically converted between numpy arrays and bytes during packing/unpacking.</p>
 <p>Subclasses should be defined either by: 1. Direct inheritance with the <code>@dataclass</code> decorator 2. Using the <code>@packable</code> decorator (recommended)</p>
-<section id="example" class="level2 doc-section doc-section-example">
-<h2 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h2>
-<p>::</p>
-<pre><code>&gt;&gt;&gt; @packable
-... class MyData:
-...     name: str
-...     embeddings: NDArray
-...
-&gt;&gt;&gt; sample = MyData(name="test", embeddings=np.array([1.0, 2.0]))
-&gt;&gt;&gt; packed = sample.packed  # Serialize to bytes
-&gt;&gt;&gt; restored = MyData.from_bytes(packed)  # Deserialize</code></pre>
+<section id="examples" class="level2 doc-section doc-section-examples">
+<h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="op">@</span>packable</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>... <span class="kw">class</span> MyData:</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>...     name: <span class="bu">str</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>...     embeddings: NDArray</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> sample <span class="op">=</span> MyData(name<span class="op">=</span><span class="st">"test"</span>, embeddings<span class="op">=</span>np.array([<span class="fl">1.0</span>, <span class="fl">2.0</span>]))</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> packed <span class="op">=</span> sample.packed  <span class="co"># Serialize to bytes</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> restored <span class="op">=</span> MyData.from_bytes(packed)  <span class="co"># Deserialize</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="attributes" class="level2">
 <h2 class="anchored" data-anchor-id="attributes">Attributes</h2>

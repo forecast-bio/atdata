@@ -402,7 +402,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#atdata.atmosphere.AtmosphereIndex" id="toc-atdata.atmosphere.AtmosphereIndex" class="nav-link active" data-scroll-target="#atdata.atmosphere.AtmosphereIndex">AtmosphereIndex</a>
   <ul class="collapse">
-  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
   <li><a href="#attributes" id="toc-attributes" class="nav-link" data-scroll-target="#attributes">Attributes</a></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
@@ -431,19 +431,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>ATProto index implementing AbstractIndex protocol.</p>
 <p>Wraps SchemaPublisher/Loader and DatasetPublisher/Loader to provide a unified interface compatible with LocalIndex.</p>
 <p>Optionally accepts a <code>PDSBlobStore</code> for writing dataset shards as ATProto blobs, enabling fully decentralized dataset storage.</p>
-<section id="example" class="level2 doc-section doc-section-example">
-<h2 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h2>
-<p>::</p>
-<pre><code>&gt;&gt;&gt; client = AtmosphereClient()
-&gt;&gt;&gt; client.login("handle.bsky.social", "app-password")
-&gt;&gt;&gt;
-&gt;&gt;&gt; # Without blob storage (external URLs only)
-&gt;&gt;&gt; index = AtmosphereIndex(client)
-&gt;&gt;&gt;
-&gt;&gt;&gt; # With PDS blob storage
-&gt;&gt;&gt; store = PDSBlobStore(client)
-&gt;&gt;&gt; index = AtmosphereIndex(client, data_store=store)
-&gt;&gt;&gt; entry = index.insert_dataset(dataset, name="my-data")</code></pre>
+<section id="examples" class="level2 doc-section doc-section-examples">
+<h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> client <span class="op">=</span> AtmosphereClient()</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> client.login(<span class="st">"handle.bsky.social"</span>, <span class="st">"app-password"</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="co"># Without blob storage (external URLs only)</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> index <span class="op">=</span> AtmosphereIndex(client)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="co"># With PDS blob storage</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> store <span class="op">=</span> PDSBlobStore(client)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> index <span class="op">=</span> AtmosphereIndex(client, data_store<span class="op">=</span>store)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> entry <span class="op">=</span> index.insert_dataset(dataset, name<span class="op">=</span><span class="st">"my-data"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="attributes" class="level2">
 <h2 class="anchored" data-anchor-id="attributes">Attributes</h2>

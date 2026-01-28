@@ -30,16 +30,16 @@ lens transformations, etc.).
 
 ## Examples {.doc-section .doc-section-examples}
 
-This is a test of the functionality::
-
-    @packable
-    class MyData:
-        name: str
-        values: NDArray
-    
-    sample = MyData(name="test", values=np.array([1, 2, 3]))
-    bytes_data = sample.packed
-    restored = MyData.from_bytes(bytes_data)
-    
-    # Works with Packable-typed APIs
-    index.publish_schema(MyData, version="1.0.0")  # Type-safe
+```python
+>>> @packable
+... class MyData:
+...     name: str
+...     values: NDArray
+...
+>>> sample = MyData(name="test", values=np.array([1, 2, 3]))
+>>> bytes_data = sample.packed
+>>> restored = MyData.from_bytes(bytes_data)
+>>>
+>>> # Works with Packable-typed APIs
+>>> index.publish_schema(MyData, version="1.0.0")  # Type-safe
+```

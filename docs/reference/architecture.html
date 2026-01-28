@@ -657,7 +657,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="packablesample-the-foundation" class="level3">
 <h3 class="anchored" data-anchor-id="packablesample-the-foundation">PackableSample: The Foundation</h3>
 <p>Everything in atdata starts with <strong>PackableSample</strong>—a base class that makes Python dataclasses serializable with msgpack:</p>
-<div id="89a48627" class="cell">
+<div id="935164ef" class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ImageSample:</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    image: NDArray       <span class="co"># Automatically converted to/from bytes</span></span>
@@ -680,7 +680,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="dataset-typed-iteration" class="level3">
 <h3 class="anchored" data-anchor-id="dataset-typed-iteration">Dataset: Typed Iteration</h3>
 <p>The <code>Dataset[T]</code> class wraps WebDataset tar archives with type information:</p>
-<div id="3a0ab003" class="cell">
+<div id="cb4b1f5d" class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[ImageSample](<span class="st">"data-{000000..000009}.tar"</span>)</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> dataset.shuffled(batch_size<span class="op">=</span><span class="dv">32</span>):</span>
@@ -704,7 +704,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="samplebatch-automatic-aggregation" class="level3">
 <h3 class="anchored" data-anchor-id="samplebatch-automatic-aggregation">SampleBatch: Automatic Aggregation</h3>
 <p>When iterating with <code>batch_size</code>, atdata returns <code>SampleBatch[T]</code> objects that aggregate sample attributes:</p>
-<div id="c43dd2d8" class="cell">
+<div id="dac750c2" class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>batch <span class="op">=</span> SampleBatch[ImageSample](samples)</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># NDArray fields → stacked numpy array with batch dimension</span></span>
@@ -718,7 +718,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="lens-schema-transformations" class="level3">
 <h3 class="anchored" data-anchor-id="lens-schema-transformations">Lens: Schema Transformations</h3>
 <p>Lenses enable viewing datasets through different schemas without duplicating data:</p>
-<div id="2dc95de3" class="cell">
+<div id="06cb19a2" class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> SimplifiedSample:</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    label: <span class="bu">str</span></span>
@@ -755,7 +755,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>WebDataset tar shards</li>
 <li>Any S3-compatible storage (AWS, MinIO, Cloudflare R2)</li>
 </ul>
-<div id="a2bdd84b" class="cell">
+<div id="046d8bbf" class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>store <span class="op">=</span> S3DataStore(credentials<span class="op">=</span>creds, bucket<span class="op">=</span><span class="st">"datasets"</span>)</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> LocalIndex(data_store<span class="op">=</span>store)</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -783,7 +783,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Store actual data shards as ATProto blobs</li>
 <li>Fully decentralized—no external dependencies</li>
 </ul>
-<div id="d614873c" class="cell">
+<div id="eb3771a4" class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> AtmosphereClient()</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>client.login(<span class="st">"handle.bsky.social"</span>, <span class="st">"app-password"</span>)</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -801,7 +801,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="abstractindex" class="level3">
 <h3 class="anchored" data-anchor-id="abstractindex">AbstractIndex</h3>
 <p>Common interface for both <code>LocalIndex</code> and <code>AtmosphereIndex</code>:</p>
-<div id="cb928d04" class="cell">
+<div id="d95e2c44" class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> process_dataset(index: AbstractIndex, name: <span class="bu">str</span>):</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    entry <span class="op">=</span> index.get_dataset(name)</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    schema <span class="op">=</span> index.decode_schema(entry.schema_ref)</span>
@@ -817,7 +817,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="abstractdatastore" class="level3">
 <h3 class="anchored" data-anchor-id="abstractdatastore">AbstractDataStore</h3>
 <p>Common interface for <code>S3DataStore</code> and <code>PDSBlobStore</code>:</p>
-<div id="e7b39bb2" class="cell">
+<div id="d5c8d1d6" class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> write_to_store(store: AbstractDataStore, dataset: Dataset):</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    urls <span class="op">=</span> store.write_shards(dataset, prefix<span class="op">=</span><span class="st">"data/v1"</span>)</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Works with S3 or PDS blob storage</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -838,7 +838,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>A typical workflow progresses through three stages:</p>
 <section id="stage-1-local-development" class="level3">
 <h3 class="anchored" data-anchor-id="stage-1-local-development">Stage 1: Local Development</h3>
-<div id="42b455c5" class="cell">
+<div id="d075eb1f" class="cell">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Define type and create samples</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MySample:</span>
@@ -856,7 +856,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="stage-2-team-storage" class="level3">
 <h3 class="anchored" data-anchor-id="stage-2-team-storage">Stage 2: Team Storage</h3>
-<div id="dca2cb0c" class="cell">
+<div id="006a8036" class="cell">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Set up team storage</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>store <span class="op">=</span> S3DataStore(credentials<span class="op">=</span>team_creds, bucket<span class="op">=</span><span class="st">"team-datasets"</span>)</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> LocalIndex(data_store<span class="op">=</span>store)</span>
@@ -871,7 +871,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="stage-3-federation" class="level3">
 <h3 class="anchored" data-anchor-id="stage-3-federation">Stage 3: Federation</h3>
-<div id="b001011a" class="cell">
+<div id="8964a63d" class="cell">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Promote to atmosphere</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> AtmosphereClient()</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>client.login(<span class="st">"handle.bsky.social"</span>, <span class="st">"app-password"</span>)</span>
@@ -904,7 +904,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="custom-datasources" class="level3">
 <h3 class="anchored" data-anchor-id="custom-datasources">Custom DataSources</h3>
 <p>Implement the <code>DataSource</code> protocol to add new storage backends:</p>
-<div id="b258c8c1" class="cell">
+<div id="2aa480fc" class="cell">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MyCustomSource:</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> list_shards(<span class="va">self</span>) <span class="op">-&gt;</span> <span class="bu">list</span>[<span class="bu">str</span>]: ...</span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> open_shard(<span class="va">self</span>, shard_id: <span class="bu">str</span>) <span class="op">-&gt;</span> IO[<span class="bu">bytes</span>]: ...</span>
@@ -916,7 +916,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="custom-lenses" class="level3">
 <h3 class="anchored" data-anchor-id="custom-lenses">Custom Lenses</h3>
 <p>Register transformations between any PackableSample types:</p>
-<div id="69b20972" class="cell">
+<div id="d65d4dda" class="cell">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.lens</span></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> my_transform(src: SourceType) <span class="op">-&gt;</span> TargetType:</span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> TargetType(...)</span>
@@ -929,7 +929,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="schema-extensions" class="level3">
 <h3 class="anchored" data-anchor-id="schema-extensions">Schema Extensions</h3>
 <p>The schema format supports custom metadata for domain-specific needs:</p>
-<div id="acd9c2fa" class="cell">
+<div id="e2b76dd7" class="cell">
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>index.publish_schema(</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    MySample,</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    version<span class="op">=</span><span class="st">"1.0.0"</span>,</span>
