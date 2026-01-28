@@ -64,7 +64,9 @@ def generate_cid(data: Any) -> str:
     # Build raw CID bytes:
     # CIDv1 = version(1) + codec(dag-cbor) + multihash
     # Multihash = code(sha256) + size(32) + digest
-    raw_cid_bytes = bytes([CID_VERSION_1, CODEC_DAG_CBOR, HASH_SHA256, SHA256_SIZE]) + sha256_hash
+    raw_cid_bytes = (
+        bytes([CID_VERSION_1, CODEC_DAG_CBOR, HASH_SHA256, SHA256_SIZE]) + sha256_hash
+    )
 
     # Encode to base32 multibase string
     return libipld.encode_cid(raw_cid_bytes)
@@ -87,7 +89,9 @@ def generate_cid_from_bytes(data_bytes: bytes) -> str:
         >>> cid = generate_cid_from_bytes(cbor_bytes)
     """
     sha256_hash = hashlib.sha256(data_bytes).digest()
-    raw_cid_bytes = bytes([CID_VERSION_1, CODEC_DAG_CBOR, HASH_SHA256, SHA256_SIZE]) + sha256_hash
+    raw_cid_bytes = (
+        bytes([CID_VERSION_1, CODEC_DAG_CBOR, HASH_SHA256, SHA256_SIZE]) + sha256_hash
+    )
     return libipld.encode_cid(raw_cid_bytes)
 
 

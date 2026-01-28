@@ -176,12 +176,15 @@ class TestParseCid:
         parsed = parse_cid(cid)
         assert parsed["hash"]["digest"] == expected_digest
 
-    @pytest.mark.parametrize("malformed_cid", [
-        "",           # empty
-        "invalid",    # not a CID
-        "bafy123",    # truncated CID
-        "Qm123",      # v0 prefix but invalid
-    ])
+    @pytest.mark.parametrize(
+        "malformed_cid",
+        [
+            "",  # empty
+            "invalid",  # not a CID
+            "bafy123",  # truncated CID
+            "Qm123",  # v0 prefix but invalid
+        ],
+    )
     def test_parse_cid_malformed_raises_valueerror(self, malformed_cid):
         """Malformed CID strings raise ValueError."""
         with pytest.raises(ValueError, match="Failed to decode CID"):

@@ -44,6 +44,7 @@ from atdata.atmosphere._types import (
 # Test Fixtures
 # =============================================================================
 
+
 @pytest.fixture
 def mock_atproto_client():
     """Create a mock atproto SDK client."""
@@ -75,6 +76,7 @@ def authenticated_client(mock_atproto_client):
 @atdata.packable
 class BasicSample:
     """Simple sample type for testing."""
+
     name: str
     value: int
 
@@ -82,6 +84,7 @@ class BasicSample:
 @atdata.packable
 class NumpySample:
     """Sample type with NDArray field."""
+
     data: NDArray
     label: str
 
@@ -89,6 +92,7 @@ class NumpySample:
 @atdata.packable
 class OptionalSample:
     """Sample type with optional fields."""
+
     required_field: str
     optional_field: Optional[int]
     optional_array: Optional[NDArray]
@@ -97,6 +101,7 @@ class OptionalSample:
 @atdata.packable
 class AllTypesSample:
     """Sample type with all primitive types."""
+
     str_field: str
     int_field: int
     float_field: float
@@ -107,6 +112,7 @@ class AllTypesSample:
 # =============================================================================
 # Tests for _types.py - AtUri
 # =============================================================================
+
 
 class TestAtUri:
     """Tests for AtUri parsing and formatting."""
@@ -162,6 +168,7 @@ class TestAtUri:
 # Tests for _types.py - FieldType
 # =============================================================================
 
+
 class TestFieldType:
     """Tests for FieldType dataclass."""
 
@@ -203,6 +210,7 @@ class TestFieldType:
 # Tests for _types.py - FieldDef
 # =============================================================================
 
+
 class TestFieldDef:
     """Tests for FieldDef dataclass."""
 
@@ -242,6 +250,7 @@ class TestFieldDef:
 # =============================================================================
 # Tests for _types.py - SchemaRecord
 # =============================================================================
+
 
 class TestSchemaRecord:
     """Tests for SchemaRecord dataclass and to_record()."""
@@ -318,14 +327,19 @@ class TestSchemaRecord:
         # Check primitive field
         prim_field = record["fields"][0]
         assert prim_field["name"] == "primitive_field"
-        assert prim_field["fieldType"]["$type"] == f"{LEXICON_NAMESPACE}.schemaType#primitive"
+        assert (
+            prim_field["fieldType"]["$type"]
+            == f"{LEXICON_NAMESPACE}.schemaType#primitive"
+        )
         assert prim_field["fieldType"]["primitive"] == "int"
         assert prim_field["optional"] is False
 
         # Check ndarray field
         arr_field = record["fields"][1]
         assert arr_field["name"] == "array_field"
-        assert arr_field["fieldType"]["$type"] == f"{LEXICON_NAMESPACE}.schemaType#ndarray"
+        assert (
+            arr_field["fieldType"]["$type"] == f"{LEXICON_NAMESPACE}.schemaType#ndarray"
+        )
         assert arr_field["fieldType"]["dtype"] == "float32"
         assert arr_field["optional"] is True
 
@@ -333,6 +347,7 @@ class TestSchemaRecord:
 # =============================================================================
 # Tests for _types.py - StorageLocation
 # =============================================================================
+
 
 class TestStorageLocation:
     """Tests for StorageLocation dataclass."""
@@ -364,6 +379,7 @@ class TestStorageLocation:
 # Tests for _types.py - DatasetRecord
 # =============================================================================
 
+
 class TestDatasetRecord:
     """Tests for DatasetRecord dataclass and to_record()."""
 
@@ -382,7 +398,10 @@ class TestDatasetRecord:
 
         assert record["$type"] == f"{LEXICON_NAMESPACE}.record"
         assert record["name"] == "TestDataset"
-        assert record["schemaRef"] == "at://did:plc:abc/ac.foundation.dataset.sampleSchema/xyz"
+        assert (
+            record["schemaRef"]
+            == "at://did:plc:abc/ac.foundation.dataset.sampleSchema/xyz"
+        )
         assert record["storage"]["$type"] == f"{LEXICON_NAMESPACE}.storageExternal"
         assert record["storage"]["urls"] == ["s3://bucket/data.tar"]
 
@@ -437,6 +456,7 @@ class TestDatasetRecord:
 # =============================================================================
 # Tests for _types.py - LensRecord
 # =============================================================================
+
 
 class TestLensRecord:
     """Tests for LensRecord dataclass and to_record()."""
@@ -500,6 +520,7 @@ class TestLensRecord:
 # Tests for client.py - AtmosphereClient
 # =============================================================================
 
+
 class TestAtmosphereClient:
     """Tests for AtmosphereClient."""
 
@@ -539,7 +560,9 @@ class TestAtmosphereClient:
         assert client.is_authenticated
         assert client.did == "did:plc:test123456789"
         assert client.handle == "test.bsky.social"
-        mock_atproto_client.login.assert_called_once_with("test.bsky.social", "password123")
+        mock_atproto_client.login.assert_called_once_with(
+            "test.bsky.social", "password123"
+        )
 
     def test_login_with_session(self, mock_atproto_client):
         """Login with exported session string."""
@@ -548,7 +571,9 @@ class TestAtmosphereClient:
         client.login_with_session("test-session-string")
 
         assert client.is_authenticated
-        mock_atproto_client.login.assert_called_once_with(session_string="test-session-string")
+        mock_atproto_client.login.assert_called_once_with(
+            session_string="test-session-string"
+        )
 
     def test_export_session(self, authenticated_client, mock_atproto_client):
         """Export session string."""
@@ -625,7 +650,9 @@ class TestAtmosphereClient:
 
         assert record["field"] == "value"
 
-    def test_get_record_with_aturi_object(self, authenticated_client, mock_atproto_client):
+    def test_get_record_with_aturi_object(
+        self, authenticated_client, mock_atproto_client
+    ):
         """Get a record using AtUri object."""
         mock_response = Mock()
         mock_response.value = {"$type": "test", "data": 123}
@@ -653,7 +680,9 @@ class TestAtmosphereClient:
         mock_response.blob = mock_blob_ref
         mock_atproto_client.upload_blob.return_value = mock_response
 
-        result = authenticated_client.upload_blob(b"test data", mime_type="application/x-tar")
+        result = authenticated_client.upload_blob(
+            b"test data", mime_type="application/x-tar"
+        )
 
         assert result["$type"] == "blob"
         assert result["ref"]["$link"] == "bafkreitest123"
@@ -673,7 +702,10 @@ class TestAtmosphereClient:
             mock_did_response = Mock()
             mock_did_response.json.return_value = {
                 "service": [
-                    {"type": "AtprotoPersonalDataServer", "serviceEndpoint": "https://pds.example.com"}
+                    {
+                        "type": "AtprotoPersonalDataServer",
+                        "serviceEndpoint": "https://pds.example.com",
+                    }
                 ]
             }
             mock_did_response.raise_for_status = Mock()
@@ -692,6 +724,7 @@ class TestAtmosphereClient:
     def test_get_blob_pds_not_found(self, authenticated_client):
         """Get blob raises when PDS cannot be resolved."""
         import requests as req_module
+
         with patch("requests.get") as mock_get:
             mock_get.side_effect = req_module.RequestException("Network error")
 
@@ -704,7 +737,10 @@ class TestAtmosphereClient:
             mock_response = Mock()
             mock_response.json.return_value = {
                 "service": [
-                    {"type": "AtprotoPersonalDataServer", "serviceEndpoint": "https://pds.example.com"}
+                    {
+                        "type": "AtprotoPersonalDataServer",
+                        "serviceEndpoint": "https://pds.example.com",
+                    }
                 ]
             }
             mock_response.raise_for_status = Mock()
@@ -712,11 +748,15 @@ class TestAtmosphereClient:
 
             url = authenticated_client.get_blob_url("did:plc:abc", "bafkreitest")
 
-            assert url == "https://pds.example.com/xrpc/com.atproto.sync.getBlob?did=did:plc:abc&cid=bafkreitest"
+            assert (
+                url
+                == "https://pds.example.com/xrpc/com.atproto.sync.getBlob?did=did:plc:abc&cid=bafkreitest"
+            )
 
     def test_get_blob_url_pds_not_found(self, authenticated_client):
         """Get blob URL raises when PDS cannot be resolved."""
         import requests as req_module
+
         with patch("requests.get") as mock_get:
             mock_get.side_effect = req_module.RequestException("Network error")
 
@@ -763,13 +803,16 @@ class TestAtmosphereClient:
 # Tests for schema.py - SchemaPublisher
 # =============================================================================
 
+
 class TestSchemaPublisher:
     """Tests for SchemaPublisher."""
 
     def test_publish_basic_sample(self, authenticated_client, mock_atproto_client):
         """Publish a basic sample type schema."""
         mock_response = Mock()
-        mock_response.uri = f"at://did:plc:test123456789/{LEXICON_NAMESPACE}.sampleSchema/abc"
+        mock_response.uri = (
+            f"at://did:plc:test123456789/{LEXICON_NAMESPACE}.sampleSchema/abc"
+        )
         mock_atproto_client.com.atproto.repo.create_record.return_value = mock_response
 
         publisher = SchemaPublisher(authenticated_client)
@@ -833,7 +876,9 @@ class TestSchemaPublisher:
         assert required["optional"] is False
         assert optional["optional"] is True
 
-    def test_publish_all_primitive_types(self, authenticated_client, mock_atproto_client):
+    def test_publish_all_primitive_types(
+        self, authenticated_client, mock_atproto_client
+    ):
         """Publish sample with all primitive types."""
         mock_response = Mock()
         mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/abc"
@@ -918,6 +963,7 @@ class TestSchemaLoader:
 # Tests for records.py - DatasetPublisher
 # =============================================================================
 
+
 class TestDatasetPublisher:
     """Tests for DatasetPublisher."""
 
@@ -950,11 +996,15 @@ class TestDatasetPublisher:
         """Publish dataset with auto schema publishing."""
         # Mock for schema creation
         schema_response = Mock()
-        schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/schema123"
+        schema_response.uri = (
+            f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/schema123"
+        )
 
         # Mock for dataset creation
         dataset_response = Mock()
-        dataset_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.record/dataset456"
+        dataset_response.uri = (
+            f"at://did:plc:test/{LEXICON_NAMESPACE}.record/dataset456"
+        )
 
         mock_atproto_client.com.atproto.repo.create_record.side_effect = [
             schema_response,
@@ -977,7 +1027,9 @@ class TestDatasetPublisher:
         # Should have called create_record twice (schema + dataset)
         assert mock_atproto_client.com.atproto.repo.create_record.call_count == 2
 
-    def test_publish_explicit_schema_uri(self, authenticated_client, mock_atproto_client):
+    def test_publish_explicit_schema_uri(
+        self, authenticated_client, mock_atproto_client
+    ):
         """Publish dataset with explicit schema URI (no auto publish)."""
         mock_response = Mock()
         mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.record/abc"
@@ -1026,8 +1078,12 @@ class TestDatasetPublisher:
 
         # Mock create_record response
         mock_create_response = Mock()
-        mock_create_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.record/blobds"
-        mock_atproto_client.com.atproto.repo.create_record.return_value = mock_create_response
+        mock_create_response.uri = (
+            f"at://did:plc:test/{LEXICON_NAMESPACE}.record/blobds"
+        )
+        mock_atproto_client.com.atproto.repo.create_record.return_value = (
+            mock_create_response
+        )
 
         publisher = DatasetPublisher(authenticated_client)
         uri = publisher.publish_with_blobs(
@@ -1050,7 +1106,9 @@ class TestDatasetPublisher:
         assert record["name"] == "BlobStoredDataset"
         assert "storageBlobs" in record["storage"]["$type"]
 
-    def test_publish_with_blobs_with_metadata(self, authenticated_client, mock_atproto_client):
+    def test_publish_with_blobs_with_metadata(
+        self, authenticated_client, mock_atproto_client
+    ):
         """Publish with blobs includes metadata when provided."""
         mock_blob_ref = Mock()
         mock_blob_ref.ref = Mock(link="bafkreiblob456")
@@ -1062,8 +1120,12 @@ class TestDatasetPublisher:
         mock_atproto_client.upload_blob.return_value = mock_upload_response
 
         mock_create_response = Mock()
-        mock_create_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.record/metads"
-        mock_atproto_client.com.atproto.repo.create_record.return_value = mock_create_response
+        mock_create_response.uri = (
+            f"at://did:plc:test/{LEXICON_NAMESPACE}.record/metads"
+        )
+        mock_atproto_client.com.atproto.repo.create_record.return_value = (
+            mock_create_response
+        )
 
         publisher = DatasetPublisher(authenticated_client)
         publisher.publish_with_blobs(
@@ -1123,7 +1185,10 @@ class TestDatasetLoader:
             "schemaRef": "at://schema",
             "storage": {
                 "$type": f"{LEXICON_NAMESPACE}.storageExternal",
-                "urls": ["s3://bucket/data-{000000..000009}.tar", "s3://bucket/extra.tar"],
+                "urls": [
+                    "s3://bucket/data-{000000..000009}.tar",
+                    "s3://bucket/extra.tar",
+                ],
             },
         }
         mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
@@ -1134,7 +1199,9 @@ class TestDatasetLoader:
         assert len(urls) == 2
         assert "data-{000000..000009}.tar" in urls[0]
 
-    def test_get_urls_blob_storage_error(self, authenticated_client, mock_atproto_client):
+    def test_get_urls_blob_storage_error(
+        self, authenticated_client, mock_atproto_client
+    ):
         """Get URLs raises for blob storage datasets."""
         mock_response = Mock()
         mock_response.value = {
@@ -1170,7 +1237,9 @@ class TestDatasetLoader:
         mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
 
         loader = DatasetLoader(authenticated_client)
-        metadata = loader.get_metadata(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+        metadata = loader.get_metadata(
+            f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz"
+        )
 
         assert metadata["split"] == "train"
         assert metadata["samples"] == 10000
@@ -1187,7 +1256,9 @@ class TestDatasetLoader:
         mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
 
         loader = DatasetLoader(authenticated_client)
-        metadata = loader.get_metadata(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+        metadata = loader.get_metadata(
+            f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz"
+        )
 
         assert metadata is None
 
@@ -1221,7 +1292,9 @@ class TestDatasetLoader:
         mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
 
         loader = DatasetLoader(authenticated_client)
-        storage_type = loader.get_storage_type(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+        storage_type = loader.get_storage_type(
+            f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz"
+        )
 
         assert storage_type == "external"
 
@@ -1240,7 +1313,9 @@ class TestDatasetLoader:
         mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
 
         loader = DatasetLoader(authenticated_client)
-        storage_type = loader.get_storage_type(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+        storage_type = loader.get_storage_type(
+            f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz"
+        )
 
         assert storage_type == "blobs"
 
@@ -1265,8 +1340,16 @@ class TestDatasetLoader:
     def test_get_blobs(self, authenticated_client, mock_atproto_client):
         """Get blobs returns blob references from storage."""
         blob_refs = [
-            {"ref": {"$link": "bafkreitest1"}, "mimeType": "application/x-tar", "size": 1024},
-            {"ref": {"$link": "bafkreitest2"}, "mimeType": "application/x-tar", "size": 2048},
+            {
+                "ref": {"$link": "bafkreitest1"},
+                "mimeType": "application/x-tar",
+                "size": 1024,
+            },
+            {
+                "ref": {"$link": "bafkreitest2"},
+                "mimeType": "application/x-tar",
+                "size": 2048,
+            },
         ]
         mock_response = Mock()
         mock_response.value = {
@@ -1287,7 +1370,9 @@ class TestDatasetLoader:
         assert blobs[0]["ref"]["$link"] == "bafkreitest1"
         assert blobs[1]["ref"]["$link"] == "bafkreitest2"
 
-    def test_get_blobs_external_storage_error(self, authenticated_client, mock_atproto_client):
+    def test_get_blobs_external_storage_error(
+        self, authenticated_client, mock_atproto_client
+    ):
         """Get blobs raises for external URL storage datasets."""
         mock_response = Mock()
         mock_response.value = {
@@ -1306,7 +1391,9 @@ class TestDatasetLoader:
         with pytest.raises(ValueError, match="external URL storage"):
             loader.get_blobs(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
 
-    def test_get_blobs_unknown_storage_error(self, authenticated_client, mock_atproto_client):
+    def test_get_blobs_unknown_storage_error(
+        self, authenticated_client, mock_atproto_client
+    ):
         """Get blobs raises for unknown storage type."""
         mock_response = Mock()
         mock_response.value = {
@@ -1346,21 +1433,28 @@ class TestDatasetLoader:
             mock_did_response = Mock()
             mock_did_response.json.return_value = {
                 "service": [
-                    {"type": "AtprotoPersonalDataServer", "serviceEndpoint": "https://pds.example.com"}
+                    {
+                        "type": "AtprotoPersonalDataServer",
+                        "serviceEndpoint": "https://pds.example.com",
+                    }
                 ]
             }
             mock_did_response.raise_for_status = Mock()
             mock_get.return_value = mock_did_response
 
             loader = DatasetLoader(authenticated_client)
-            urls = loader.get_blob_urls(f"at://did:plc:abc123/{LEXICON_NAMESPACE}.record/xyz")
+            urls = loader.get_blob_urls(
+                f"at://did:plc:abc123/{LEXICON_NAMESPACE}.record/xyz"
+            )
 
             assert len(urls) == 2
             assert "bafkreitest1" in urls[0]
             assert "bafkreitest2" in urls[1]
             assert "did:plc:abc123" in urls[0]
 
-    def test_get_urls_unknown_storage_error(self, authenticated_client, mock_atproto_client):
+    def test_get_urls_unknown_storage_error(
+        self, authenticated_client, mock_atproto_client
+    ):
         """Get URLs raises for unknown storage type."""
         mock_response = Mock()
         mock_response.value = {
@@ -1382,6 +1476,7 @@ class TestDatasetLoader:
 # =============================================================================
 # Tests for lens.py - LensPublisher
 # =============================================================================
+
 
 class TestLensPublisher:
     """Tests for LensPublisher."""
@@ -1508,12 +1603,20 @@ class TestLensLoader:
 
         assert len(lenses) == 1
 
-    def test_find_by_schemas_source_only(self, authenticated_client, mock_atproto_client):
+    def test_find_by_schemas_source_only(
+        self, authenticated_client, mock_atproto_client
+    ):
         """Find lenses by source schema only."""
         mock_records = [
-            Mock(value={"sourceSchema": "at://schema/a", "targetSchema": "at://schema/b"}),
-            Mock(value={"sourceSchema": "at://schema/a", "targetSchema": "at://schema/c"}),
-            Mock(value={"sourceSchema": "at://schema/x", "targetSchema": "at://schema/y"}),
+            Mock(
+                value={"sourceSchema": "at://schema/a", "targetSchema": "at://schema/b"}
+            ),
+            Mock(
+                value={"sourceSchema": "at://schema/a", "targetSchema": "at://schema/c"}
+            ),
+            Mock(
+                value={"sourceSchema": "at://schema/x", "targetSchema": "at://schema/y"}
+            ),
         ]
 
         mock_response = Mock()
@@ -1529,8 +1632,12 @@ class TestLensLoader:
     def test_find_by_schemas_both(self, authenticated_client, mock_atproto_client):
         """Find lenses by both source and target schema."""
         mock_records = [
-            Mock(value={"sourceSchema": "at://schema/a", "targetSchema": "at://schema/b"}),
-            Mock(value={"sourceSchema": "at://schema/a", "targetSchema": "at://schema/c"}),
+            Mock(
+                value={"sourceSchema": "at://schema/a", "targetSchema": "at://schema/b"}
+            ),
+            Mock(
+                value={"sourceSchema": "at://schema/a", "targetSchema": "at://schema/c"}
+            ),
         ]
 
         mock_response = Mock()
@@ -1691,6 +1798,7 @@ class TestSchemaPublisherEdgeCases:
 # AtmosphereIndex Tests
 # =============================================================================
 
+
 class TestAtmosphereIndexEntry:
     """Tests for AtmosphereIndexEntry wrapper."""
 
@@ -1738,13 +1846,13 @@ class TestAtmosphereIndex:
         """Index has all AbstractIndex protocol methods."""
         index = AtmosphereIndex(authenticated_client)
 
-        assert hasattr(index, 'insert_dataset')
-        assert hasattr(index, 'get_dataset')
-        assert hasattr(index, 'list_datasets')
-        assert hasattr(index, 'publish_schema')
-        assert hasattr(index, 'get_schema')
-        assert hasattr(index, 'list_schemas')
-        assert hasattr(index, 'decode_schema')
+        assert hasattr(index, "insert_dataset")
+        assert hasattr(index, "get_dataset")
+        assert hasattr(index, "list_datasets")
+        assert hasattr(index, "publish_schema")
+        assert hasattr(index, "get_schema")
+        assert hasattr(index, "list_schemas")
+        assert hasattr(index, "decode_schema")
 
     def test_publish_schema(self, authenticated_client, mock_atproto_client):
         """publish_schema delegates to SchemaPublisher."""

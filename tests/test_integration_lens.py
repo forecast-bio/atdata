@@ -26,6 +26,7 @@ from atdata.lens import LensNetwork
 @atdata.packable
 class FullRecord:
     """Complete record with all fields."""
+
     id: int
     name: str
     email: str
@@ -37,6 +38,7 @@ class FullRecord:
 @atdata.packable
 class ProfileView:
     """View with profile information only."""
+
     name: str
     email: str
     age: int
@@ -45,12 +47,14 @@ class ProfileView:
 @atdata.packable
 class NameView:
     """Minimal view with just name."""
+
     name: str
 
 
 @atdata.packable
 class ScoredRecord:
     """Record with score and embedding."""
+
     id: int
     score: float
     embedding: NDArray
@@ -59,6 +63,7 @@ class ScoredRecord:
 @atdata.packable
 class OptionalFieldSample:
     """Sample with optional fields."""
+
     name: str
     value: int
     extra: str | None = None
@@ -68,6 +73,7 @@ class OptionalFieldSample:
 @atdata.packable
 class OptionalView:
     """View of optional sample."""
+
     name: str
     extra: str | None = None
 
@@ -148,7 +154,9 @@ def optional_to_view(opt: OptionalFieldSample) -> OptionalView:
 
 
 @optional_to_view.putter
-def optional_to_view_put(view: OptionalView, source: OptionalFieldSample) -> OptionalFieldSample:
+def optional_to_view_put(
+    view: OptionalView, source: OptionalFieldSample
+) -> OptionalFieldSample:
     """Update optional sample from view."""
     return OptionalFieldSample(
         name=view.name,
@@ -486,6 +494,7 @@ class TestLensNetworkDiscovery:
 
     def test_unregistered_lens_raises(self):
         """Querying unregistered lens should raise ValueError."""
+
         @atdata.packable
         class UnknownSource:
             x: int
@@ -536,6 +545,7 @@ class TestNDArrayTransformations:
 
     def test_ndarray_transformation_lens(self):
         """Lens that transforms NDArray values."""
+
         @atdata.packable
         class RawData:
             values: NDArray

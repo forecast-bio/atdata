@@ -46,7 +46,6 @@ from ._protocols import DataSource
 
 if TYPE_CHECKING:
     from ._protocols import AbstractIndex
-    from .local import S3DataStore
 
 ##
 # Type variables
@@ -77,6 +76,7 @@ class DatasetDict(Generic[ST], dict):
         >>> for split_name, dataset in ds_dict.items():
         ...     print(f"{split_name}: {len(dataset.shard_list)} shards")
     """
+
     # TODO The above has a line for "Parameters:" that should be "Type Parameters:"; this is a temporary fix for `quartodoc` auto-generation bugs.
 
     def __init__(
@@ -464,7 +464,7 @@ def _resolve_indexed_path(
     data_urls = entry.data_urls
 
     # Check if index has a data store
-    if hasattr(index, 'data_store') and index.data_store is not None:
+    if hasattr(index, "data_store") and index.data_store is not None:
         store = index.data_store
 
         # Import here to avoid circular imports at module level
@@ -638,7 +638,9 @@ def load_dataset(
         source, schema_ref = _resolve_indexed_path(path, index)
 
         # Resolve sample_type from schema if not provided
-        resolved_type: Type = sample_type if sample_type is not None else index.decode_schema(schema_ref)
+        resolved_type: Type = (
+            sample_type if sample_type is not None else index.decode_schema(schema_ref)
+        )
 
         # Create dataset from the resolved source (includes credentials if S3)
         ds = Dataset[resolved_type](source)
@@ -647,7 +649,9 @@ def load_dataset(
             # Indexed datasets are single-split by default
             return ds
 
-        return DatasetDict({"train": ds}, sample_type=resolved_type, streaming=streaming)
+        return DatasetDict(
+            {"train": ds}, sample_type=resolved_type, streaming=streaming
+        )
 
     # Use DictSample as default when no type specified
     resolved_type = sample_type if sample_type is not None else DictSample

@@ -153,7 +153,9 @@ class StubManager:
         """Alias for _module_filename for backwards compatibility."""
         return self._module_filename(name, version)
 
-    def _module_path(self, name: str, version: str, authority: str = DEFAULT_AUTHORITY) -> Path:
+    def _module_path(
+        self, name: str, version: str, authority: str = DEFAULT_AUTHORITY
+    ) -> Path:
         """Get full path to module file for a schema.
 
         Args:
@@ -166,7 +168,9 @@ class StubManager:
         """
         return self._stub_dir / authority / self._module_filename(name, version)
 
-    def _stub_path(self, name: str, version: str, authority: str = DEFAULT_AUTHORITY) -> Path:
+    def _stub_path(
+        self, name: str, version: str, authority: str = DEFAULT_AUTHORITY
+    ) -> Path:
         """Alias for _module_path for backwards compatibility."""
         return self._module_path(name, version, authority)
 
@@ -207,7 +211,9 @@ class StubManager:
         authority_dir.mkdir(parents=True, exist_ok=True)
         init_path = authority_dir / "__init__.py"
         if not init_path.exists():
-            init_path.write_text(f'"""Auto-generated schema modules for {authority}."""\n')
+            init_path.write_text(
+                f'"""Auto-generated schema modules for {authority}."""\n'
+            )
 
     def _write_module_atomic(self, path: Path, content: str, authority: str) -> None:
         """Write module file atomically using temp file and rename.
@@ -355,7 +361,9 @@ class StubManager:
 
         return cls
 
-    def _import_class_from_module(self, module_path: Path, class_name: str) -> Optional[Type]:
+    def _import_class_from_module(
+        self, module_path: Path, class_name: str
+    ) -> Optional[Type]:
         """Import a class from a generated module file.
 
         Uses importlib to dynamically load the module and extract the class.
@@ -395,6 +403,7 @@ class StubManager:
     def _print_ide_hint(self) -> None:
         """Print a one-time hint about IDE configuration."""
         import sys as _sys
+
         print(
             f"\n[atdata] Generated schema module in: {self._stub_dir}\n"
             f"[atdata] For IDE support, add this path to your type checker:\n"

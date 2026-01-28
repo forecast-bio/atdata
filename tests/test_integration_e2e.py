@@ -27,6 +27,7 @@ import atdata
 @atdata.packable
 class SimpleSample:
     """Basic sample with primitive types only."""
+
     name: str
     value: int
     score: float
@@ -36,6 +37,7 @@ class SimpleSample:
 @atdata.packable
 class NDArraySample:
     """Sample with multiple NDArray fields of different shapes."""
+
     label: int
     image: NDArray
     features: NDArray
@@ -44,6 +46,7 @@ class NDArraySample:
 @atdata.packable
 class OptionalNDArraySample:
     """Sample with optional NDArray fields."""
+
     label: int
     image: NDArray
     embeddings: NDArray | None = None
@@ -52,6 +55,7 @@ class OptionalNDArraySample:
 @atdata.packable
 class BytesSample:
     """Sample with bytes field."""
+
     name: str
     raw_data: bytes
 
@@ -59,6 +63,7 @@ class BytesSample:
 @atdata.packable
 class ListSample:
     """Sample with list fields."""
+
     tags: list[str]
     scores: list[float]
     ids: list[int]
@@ -67,6 +72,7 @@ class ListSample:
 @dataclass
 class InheritanceSample(atdata.PackableSample):
     """Sample using inheritance syntax instead of decorator."""
+
     title: str
     count: int
     measurements: NDArray
@@ -101,13 +107,17 @@ def create_ndarray_samples(n: int, img_shape: tuple = (64, 64)) -> list[NDArrayS
     ]
 
 
-def create_optional_samples(n: int, include_optional: bool) -> list[OptionalNDArraySample]:
+def create_optional_samples(
+    n: int, include_optional: bool
+) -> list[OptionalNDArraySample]:
     """Create samples with or without optional embeddings."""
     return [
         OptionalNDArraySample(
             label=i,
             image=np.random.randn(32, 32).astype(np.float32),
-            embeddings=np.random.randn(64).astype(np.float32) if include_optional else None,
+            embeddings=np.random.randn(64).astype(np.float32)
+            if include_optional
+            else None,
         )
         for i in range(n)
     ]
@@ -134,9 +144,7 @@ def write_multi_shard(
             sink.write(sample.as_wds)
 
     n_shards = (len(samples) + samples_per_shard - 1) // samples_per_shard
-    brace_pattern = (
-        base_path / f"shard-{{000000..{n_shards - 1:06d}}}.tar"
-    ).as_posix()
+    brace_pattern = (base_path / f"shard-{{000000..{n_shards - 1:06d}}}.tar").as_posix()
     return brace_pattern, n_shards
 
 
@@ -241,7 +249,9 @@ class TestFullPipelineNDArray:
         for original, loaded_sample in zip(samples, loaded):
             assert loaded_sample.label == original.label
             np.testing.assert_array_almost_equal(loaded_sample.image, original.image)
-            np.testing.assert_array_almost_equal(loaded_sample.features, original.features)
+            np.testing.assert_array_almost_equal(
+                loaded_sample.features, original.features
+            )
 
     def test_ndarray_batch_stacking(self, tmp_path):
         """NDArray fields should stack into batch dimension."""
@@ -309,6 +319,7 @@ class TestFullPipelineNDArray:
 
     def test_mixed_dtypes(self, tmp_path):
         """Various numpy dtypes should serialize correctly."""
+
         @atdata.packable
         class MultiDtypeSample:
             f32: NDArray
@@ -657,7 +668,9 @@ class TestIterationModes:
 
         # At least two passes should differ (very high probability with 100 samples)
         # Note: This could theoretically fail, but probability is astronomically low
-        assert passes[0] != passes[1] or passes[1] != passes[2] or passes[0] != passes[2]
+        assert (
+            passes[0] != passes[1] or passes[1] != passes[2] or passes[0] != passes[2]
+        )
 
     def test_batch_size_one(self, tmp_path):
         """batch_size=1 should return single-element batches."""

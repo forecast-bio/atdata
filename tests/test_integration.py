@@ -16,6 +16,7 @@ from atdata.promote import promote_to_atmosphere
 @atdata.packable
 class IntegrationTestSample:
     """Sample type for integration tests."""
+
     name: str
     value: int
 
@@ -39,8 +40,16 @@ class TestLocalToAtmosphereRoundTrip:
             "name": "test_integration.IntegrationTestSample",
             "version": "1.0.0",
             "fields": [
-                {"name": "name", "fieldType": {"$type": "local#primitive", "primitive": "str"}, "optional": False},
-                {"name": "value", "fieldType": {"$type": "local#primitive", "primitive": "int"}, "optional": False},
+                {
+                    "name": "name",
+                    "fieldType": {"$type": "local#primitive", "primitive": "str"},
+                    "optional": False,
+                },
+                {
+                    "name": "value",
+                    "fieldType": {"$type": "local#primitive", "primitive": "int"},
+                    "optional": False,
+                },
             ],
         }
 
@@ -86,7 +95,11 @@ class TestLocalToAtmosphereRoundTrip:
             "version": "2.1.0",
             "description": "A sample with specific version",
             "fields": [
-                {"name": "value", "fieldType": {"$type": "local#primitive", "primitive": "int"}, "optional": False},
+                {
+                    "name": "value",
+                    "fieldType": {"$type": "local#primitive", "primitive": "int"},
+                    "optional": False,
+                },
             ],
         }
 
@@ -97,7 +110,9 @@ class TestLocalToAtmosphereRoundTrip:
 
             with patch("atdata.atmosphere.DatasetPublisher") as MockPublisher:
                 mock_publisher = MockPublisher.return_value
-                mock_publisher.publish_with_urls.return_value = Mock(__str__=lambda s: "at://result")
+                mock_publisher.publish_with_urls.return_value = Mock(
+                    __str__=lambda s: "at://result"
+                )
 
                 promote_to_atmosphere(local_entry, mock_local_index, mock_client)
 
@@ -173,7 +188,7 @@ class TestSchemaDeduplication:
                     "value": {
                         "name": "test_integration.IntegrationTestSample",
                         "version": "1.0.0",  # Different version
-                    }
+                    },
                 }
             ]
 

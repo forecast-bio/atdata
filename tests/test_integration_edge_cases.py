@@ -9,8 +9,6 @@ Tests boundary conditions and unusual data patterns including:
 - All primitive type variations
 """
 
-from pathlib import Path
-
 import numpy as np
 from numpy.typing import NDArray
 
@@ -28,12 +26,14 @@ from conftest import create_tar_with_samples
 @atdata.packable
 class EmptyCompatSample:
     """Sample type for empty dataset tests."""
+
     id: int
 
 
 @atdata.packable
 class AllPrimitivesSample:
     """Sample with all primitive types."""
+
     str_field: str
     int_field: int
     float_field: float
@@ -44,6 +44,7 @@ class AllPrimitivesSample:
 @atdata.packable
 class OptionalFieldsSample:
     """Sample with optional fields."""
+
     required_str: str
     optional_str: str | None
     optional_int: int | None
@@ -54,6 +55,7 @@ class OptionalFieldsSample:
 @atdata.packable
 class ListFieldsSample:
     """Sample with list fields."""
+
     str_list: list[str]
     int_list: list[int]
     float_list: list[float]
@@ -63,6 +65,7 @@ class ListFieldsSample:
 @atdata.packable
 class UnicodeSample:
     """Sample with unicode content."""
+
     text: str
     label: str
 
@@ -70,6 +73,7 @@ class UnicodeSample:
 @atdata.packable
 class NDArraySample:
     """Sample with NDArray field."""
+
     label: str
     data: NDArray
 
@@ -368,8 +372,7 @@ class TestUnicodeAndSpecialChars:
         tar_path = tmp_path / "emoji-000000.tar"
 
         sample = UnicodeSample(
-            text="Hello World! Have a great day!",
-            label="with-emoji"
+            text="Hello World! Have a great day!", label="with-emoji"
         )
         create_tar_with_samples(tar_path, [sample])
 

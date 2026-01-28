@@ -28,6 +28,7 @@ import atdata.local as atlocal
 @dataclass
 class WorkflowSample(atdata.PackableSample):
     """Sample for workflow tests."""
+
     name: str
     value: int
     score: float
@@ -36,6 +37,7 @@ class WorkflowSample(atdata.PackableSample):
 @dataclass
 class ArrayWorkflowSample(atdata.PackableSample):
     """Sample with array for workflow tests."""
+
     label: str
     data: NDArray
 
@@ -43,6 +45,7 @@ class ArrayWorkflowSample(atdata.PackableSample):
 @dataclass
 class MetadataSample(atdata.PackableSample):
     """Sample for metadata workflow tests."""
+
     id: int
     content: str
 
@@ -61,23 +64,21 @@ def mock_s3():
     """
     with mock_aws():
         import boto3
-        creds = {
-            'AWS_ACCESS_KEY_ID': 'testing',
-            'AWS_SECRET_ACCESS_KEY': 'testing'
-        }
+
+        creds = {"AWS_ACCESS_KEY_ID": "testing", "AWS_SECRET_ACCESS_KEY": "testing"}
         s3_client = boto3.client(
-            's3',
-            aws_access_key_id=creds['AWS_ACCESS_KEY_ID'],
-            aws_secret_access_key=creds['AWS_SECRET_ACCESS_KEY'],
-            region_name='us-east-1'
+            "s3",
+            aws_access_key_id=creds["AWS_ACCESS_KEY_ID"],
+            aws_secret_access_key=creds["AWS_SECRET_ACCESS_KEY"],
+            region_name="us-east-1",
         )
-        bucket_name = 'integration-test-bucket'
+        bucket_name = "integration-test-bucket"
         s3_client.create_bucket(Bucket=bucket_name)
         yield {
-            'credentials': creds,
-            'bucket': bucket_name,
-            'hive_path': f'{bucket_name}/datasets',
-            's3_client': s3_client
+            "credentials": creds,
+            "bucket": bucket_name,
+            "hive_path": f"{bucket_name}/datasets",
+            "s3_client": s3_client,
         }
 
 
@@ -124,9 +125,9 @@ class TestFullRepoWorkflow:
         """Full workflow: init repo → publish schema → insert → query entry."""
         # Initialize repo
         repo = atlocal.Repo(
-            s3_credentials=mock_s3['credentials'],
-            hive_path=mock_s3['hive_path'],
-            redis=clean_redis
+            s3_credentials=mock_s3["credentials"],
+            hive_path=mock_s3["hive_path"],
+            redis=clean_redis,
         )
 
         # Publish schema first
@@ -154,9 +155,9 @@ class TestFullRepoWorkflow:
     def test_multiple_datasets_same_schema(self, mock_s3, clean_redis, tmp_path):
         """Insert multiple datasets with same schema type."""
         repo = atlocal.Repo(
-            s3_credentials=mock_s3['credentials'],
-            hive_path=mock_s3['hive_path'],
-            redis=clean_redis
+            s3_credentials=mock_s3["credentials"],
+            hive_path=mock_s3["hive_path"],
+            redis=clean_redis,
         )
 
         # Create multiple datasets
@@ -187,9 +188,9 @@ class TestFullRepoWorkflow:
     def test_different_schema_types(self, mock_s3, clean_redis, tmp_path):
         """Insert datasets with different schema types."""
         repo = atlocal.Repo(
-            s3_credentials=mock_s3['credentials'],
-            hive_path=mock_s3['hive_path'],
-            redis=clean_redis
+            s3_credentials=mock_s3["credentials"],
+            hive_path=mock_s3["hive_path"],
+            redis=clean_redis,
         )
 
         # Different sample types
@@ -429,6 +430,7 @@ class TestDatasetDiscovery:
         # Should be a generator
         entries = index.entries
         import types
+
         assert isinstance(entries, types.GeneratorType)
 
         # Can iterate partially
@@ -449,9 +451,9 @@ class TestMetadataPersistence:
     def test_metadata_preserved_through_insert(self, mock_s3, clean_redis, tmp_path):
         """Metadata should be preserved when inserting dataset."""
         repo = atlocal.Repo(
-            s3_credentials=mock_s3['credentials'],
-            hive_path=mock_s3['hive_path'],
-            redis=clean_redis
+            s3_credentials=mock_s3["credentials"],
+            hive_path=mock_s3["hive_path"],
+            redis=clean_redis,
         )
 
         ds = create_workflow_dataset(tmp_path, n_samples=5)
@@ -518,12 +520,14 @@ class TestCacheLocalModes:
     @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
     @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
     @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
-    def test_cache_local_true_produces_valid_entry(self, mock_s3, clean_redis, tmp_path):
+    def test_cache_local_true_produces_valid_entry(
+        self, mock_s3, clean_redis, tmp_path
+    ):
         """cache_local=True should produce valid index entry."""
         repo = atlocal.Repo(
-            s3_credentials=mock_s3['credentials'],
-            hive_path=mock_s3['hive_path'],
-            redis=clean_redis
+            s3_credentials=mock_s3["credentials"],
+            hive_path=mock_s3["hive_path"],
+            redis=clean_redis,
         )
 
         ds = create_workflow_dataset(tmp_path, n_samples=10)
@@ -536,12 +540,14 @@ class TestCacheLocalModes:
     @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
     @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
     @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
-    def test_cache_local_false_produces_valid_entry(self, mock_s3, clean_redis, tmp_path):
+    def test_cache_local_false_produces_valid_entry(
+        self, mock_s3, clean_redis, tmp_path
+    ):
         """cache_local=False should produce valid index entry."""
         repo = atlocal.Repo(
-            s3_credentials=mock_s3['credentials'],
-            hive_path=mock_s3['hive_path'],
-            redis=clean_redis
+            s3_credentials=mock_s3["credentials"],
+            hive_path=mock_s3["hive_path"],
+            redis=clean_redis,
         )
 
         ds = create_workflow_dataset(tmp_path, n_samples=10)
@@ -557,16 +563,18 @@ class TestCacheLocalModes:
     def test_both_modes_produce_same_structure(self, mock_s3, clean_redis, tmp_path):
         """Both cache modes should produce entries with same structure."""
         repo = atlocal.Repo(
-            s3_credentials=mock_s3['credentials'],
-            hive_path=mock_s3['hive_path'],
-            redis=clean_redis
+            s3_credentials=mock_s3["credentials"],
+            hive_path=mock_s3["hive_path"],
+            redis=clean_redis,
         )
 
         ds1 = create_workflow_dataset(tmp_path / "cached", n_samples=10)
         ds2 = create_workflow_dataset(tmp_path / "direct", n_samples=10)
 
         entry1, _ = repo.insert(ds1, name="cached-mode", cache_local=True, maxcount=100)
-        entry2, _ = repo.insert(ds2, name="direct-mode", cache_local=False, maxcount=100)
+        entry2, _ = repo.insert(
+            ds2, name="direct-mode", cache_local=False, maxcount=100
+        )
 
         # Both should have valid structure
         assert entry1.schema_ref == entry2.schema_ref  # Same type
@@ -598,11 +606,11 @@ class TestIndexEntryProtocol:
         )
 
         # Required properties
-        assert hasattr(entry, 'name')
-        assert hasattr(entry, 'schema_ref')
-        assert hasattr(entry, 'data_urls')
-        assert hasattr(entry, 'metadata')
-        assert hasattr(entry, 'cid')
+        assert hasattr(entry, "name")
+        assert hasattr(entry, "schema_ref")
+        assert hasattr(entry, "data_urls")
+        assert hasattr(entry, "metadata")
+        assert hasattr(entry, "cid")
 
         # Values accessible
         assert entry.name == "props-test"
@@ -629,12 +637,14 @@ class TestMultiShardStorage:
     @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
     @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
     @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
-    def test_large_dataset_creates_multiple_shards(self, mock_s3, clean_redis, tmp_path):
+    def test_large_dataset_creates_multiple_shards(
+        self, mock_s3, clean_redis, tmp_path
+    ):
         """Large dataset should create multiple shard files."""
         repo = atlocal.Repo(
-            s3_credentials=mock_s3['credentials'],
-            hive_path=mock_s3['hive_path'],
-            redis=clean_redis
+            s3_credentials=mock_s3["credentials"],
+            hive_path=mock_s3["hive_path"],
+            redis=clean_redis,
         )
 
         # Create dataset with many samples
@@ -662,9 +672,9 @@ class TestMultiShardStorage:
     def test_single_shard_no_brace_notation(self, mock_s3, clean_redis, tmp_path):
         """Small dataset should result in single shard without brace notation."""
         repo = atlocal.Repo(
-            s3_credentials=mock_s3['credentials'],
-            hive_path=mock_s3['hive_path'],
-            redis=clean_redis
+            s3_credentials=mock_s3["credentials"],
+            hive_path=mock_s3["hive_path"],
+            redis=clean_redis,
         )
 
         ds = create_workflow_dataset(tmp_path, n_samples=5)

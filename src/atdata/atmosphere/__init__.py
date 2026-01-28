@@ -84,6 +84,7 @@ class AtmosphereIndexEntry:
     def metadata(self) -> Optional[dict]:
         """Metadata from the record, if any."""
         import msgpack
+
         metadata_bytes = self._record.get("metadata")
         if metadata_bytes is None:
             return None

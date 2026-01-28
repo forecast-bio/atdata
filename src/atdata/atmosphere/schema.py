@@ -17,7 +17,6 @@ from ._types import (
     LEXICON_NAMESPACE,
 )
 from .._type_utils import (
-    numpy_dtype_to_string,
     unwrap_optional,
     is_ndarray_type,
     extract_ndarray_dtype,
@@ -25,6 +24,7 @@ from .._type_utils import (
 
 # Import for type checking only to avoid circular imports
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from ..dataset import PackableSample
 
@@ -88,7 +88,9 @@ class SchemaPublisher:
             TypeError: If a field type is not supported.
         """
         if not is_dataclass(sample_type):
-            raise ValueError(f"{sample_type.__name__} must be a dataclass (use @packable)")
+            raise ValueError(
+                f"{sample_type.__name__} must be a dataclass (use @packable)"
+            )
 
         # Build the schema record
         schema_record = self._build_schema_record(
@@ -153,12 +155,18 @@ class SchemaPublisher:
             return FieldType(kind="primitive", primitive="bytes")
 
         if is_ndarray_type(python_type):
-            return FieldType(kind="ndarray", dtype=extract_ndarray_dtype(python_type), shape=None)
+            return FieldType(
+                kind="ndarray", dtype=extract_ndarray_dtype(python_type), shape=None
+            )
 
         origin = get_origin(python_type)
         if origin is list:
             args = get_args(python_type)
-            items = self._python_type_to_field_type(args[0]) if args else FieldType(kind="primitive", primitive="str")
+            items = (
+                self._python_type_to_field_type(args[0])
+                if args
+                else FieldType(kind="primitive", primitive="str")
+            )
             return FieldType(kind="array", items=items)
 
         if is_dataclass(python_type):

@@ -167,7 +167,9 @@ class S3Source:
             client_kwargs["region_name"] = self.region
         elif not self.endpoint:
             # Default region for AWS S3
-            client_kwargs["region_name"] = os.environ.get("AWS_DEFAULT_REGION", "us-east-1")
+            client_kwargs["region_name"] = os.environ.get(
+                "AWS_DEFAULT_REGION", "us-east-1"
+            )
 
         self._client = boto3.client("s3", **client_kwargs)
         return self._client
@@ -219,7 +221,7 @@ class S3Source:
         if not shard_id.startswith(f"s3://{self.bucket}/"):
             raise KeyError(f"Shard not in this bucket: {shard_id}")
 
-        key = shard_id[len(f"s3://{self.bucket}/"):]
+        key = shard_id[len(f"s3://{self.bucket}/") :]
         client = self._get_client()
         response = client.get_object(Bucket=self.bucket, Key=key)
         return response["Body"]
@@ -355,7 +357,9 @@ class BlobSource:
 
     blob_refs: list[dict[str, str]]
     pds_endpoint: str | None = None
-    _endpoint_cache: dict[str, str] = field(default_factory=dict, repr=False, compare=False)
+    _endpoint_cache: dict[str, str] = field(
+        default_factory=dict, repr=False, compare=False
+    )
 
     def _resolve_pds_endpoint(self, did: str) -> str:
         """Resolve PDS endpoint for a DID, with caching."""
@@ -447,6 +451,7 @@ class BlobSource:
         url = self._get_blob_url(did, cid)
 
         import requests
+
         response = requests.get(url, stream=True, timeout=60)
         response.raise_for_status()
         return response.raw

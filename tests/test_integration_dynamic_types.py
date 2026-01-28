@@ -16,7 +16,12 @@ from numpy.typing import NDArray
 import webdataset as wds
 
 import atdata
-from atdata._schema_codec import schema_to_type, generate_stub, clear_type_cache, get_cached_types
+from atdata._schema_codec import (
+    schema_to_type,
+    generate_stub,
+    clear_type_cache,
+    get_cached_types,
+)
 import atdata.local as atlocal
 
 
@@ -27,6 +32,7 @@ import atdata.local as atlocal
 @dataclass
 class SimpleSample(atdata.PackableSample):
     """Simple sample for testing."""
+
     name: str
     value: int
     score: float
@@ -35,6 +41,7 @@ class SimpleSample(atdata.PackableSample):
 @dataclass
 class ArraySample(atdata.PackableSample):
     """Sample with NDArray field."""
+
     label: str
     image: NDArray
 
@@ -42,6 +49,7 @@ class ArraySample(atdata.PackableSample):
 @dataclass
 class OptionalSample(atdata.PackableSample):
     """Sample with optional fields."""
+
     name: str
     value: int
     extra: str | None = None
@@ -51,6 +59,7 @@ class OptionalSample(atdata.PackableSample):
 @dataclass
 class ListSample(atdata.PackableSample):
     """Sample with list fields."""
+
     tags: list[str]
     scores: list[float]
 
@@ -80,10 +89,22 @@ class TestSchemaToType:
             "name": "SimpleSample",
             "version": "1.0.0",
             "fields": [
-                {"name": "name", "fieldType": {"$type": "local#primitive", "primitive": "str"}, "optional": False},
-                {"name": "value", "fieldType": {"$type": "local#primitive", "primitive": "int"}, "optional": False},
-                {"name": "score", "fieldType": {"$type": "local#primitive", "primitive": "float"}, "optional": False},
-            ]
+                {
+                    "name": "name",
+                    "fieldType": {"$type": "local#primitive", "primitive": "str"},
+                    "optional": False,
+                },
+                {
+                    "name": "value",
+                    "fieldType": {"$type": "local#primitive", "primitive": "int"},
+                    "optional": False,
+                },
+                {
+                    "name": "score",
+                    "fieldType": {"$type": "local#primitive", "primitive": "float"},
+                    "optional": False,
+                },
+            ],
         }
 
         SampleType = schema_to_type(schema)
@@ -100,9 +121,17 @@ class TestSchemaToType:
             "name": "ArraySample",
             "version": "1.0.0",
             "fields": [
-                {"name": "label", "fieldType": {"$type": "local#primitive", "primitive": "str"}, "optional": False},
-                {"name": "image", "fieldType": {"$type": "local#ndarray", "dtype": "float32"}, "optional": False},
-            ]
+                {
+                    "name": "label",
+                    "fieldType": {"$type": "local#primitive", "primitive": "str"},
+                    "optional": False,
+                },
+                {
+                    "name": "image",
+                    "fieldType": {"$type": "local#ndarray", "dtype": "float32"},
+                    "optional": False,
+                },
+            ],
         }
 
         SampleType = schema_to_type(schema)
@@ -119,9 +148,17 @@ class TestSchemaToType:
             "name": "OptionalSample",
             "version": "1.0.0",
             "fields": [
-                {"name": "name", "fieldType": {"$type": "local#primitive", "primitive": "str"}, "optional": False},
-                {"name": "extra", "fieldType": {"$type": "local#primitive", "primitive": "str"}, "optional": True},
-            ]
+                {
+                    "name": "name",
+                    "fieldType": {"$type": "local#primitive", "primitive": "str"},
+                    "optional": False,
+                },
+                {
+                    "name": "extra",
+                    "fieldType": {"$type": "local#primitive", "primitive": "str"},
+                    "optional": True,
+                },
+            ],
         }
 
         SampleType = schema_to_type(schema)
@@ -141,9 +178,23 @@ class TestSchemaToType:
             "name": "ListSample",
             "version": "1.0.0",
             "fields": [
-                {"name": "tags", "fieldType": {"$type": "local#array", "items": {"$type": "local#primitive", "primitive": "str"}}, "optional": False},
-                {"name": "scores", "fieldType": {"$type": "local#array", "items": {"$type": "local#primitive", "primitive": "float"}}, "optional": False},
-            ]
+                {
+                    "name": "tags",
+                    "fieldType": {
+                        "$type": "local#array",
+                        "items": {"$type": "local#primitive", "primitive": "str"},
+                    },
+                    "optional": False,
+                },
+                {
+                    "name": "scores",
+                    "fieldType": {
+                        "$type": "local#array",
+                        "items": {"$type": "local#primitive", "primitive": "float"},
+                    },
+                    "optional": False,
+                },
+            ],
         }
 
         SampleType = schema_to_type(schema)
@@ -158,12 +209,32 @@ class TestSchemaToType:
             "name": "AllPrimitives",
             "version": "1.0.0",
             "fields": [
-                {"name": "s", "fieldType": {"$type": "local#primitive", "primitive": "str"}, "optional": False},
-                {"name": "i", "fieldType": {"$type": "local#primitive", "primitive": "int"}, "optional": False},
-                {"name": "f", "fieldType": {"$type": "local#primitive", "primitive": "float"}, "optional": False},
-                {"name": "b", "fieldType": {"$type": "local#primitive", "primitive": "bool"}, "optional": False},
-                {"name": "raw", "fieldType": {"$type": "local#primitive", "primitive": "bytes"}, "optional": False},
-            ]
+                {
+                    "name": "s",
+                    "fieldType": {"$type": "local#primitive", "primitive": "str"},
+                    "optional": False,
+                },
+                {
+                    "name": "i",
+                    "fieldType": {"$type": "local#primitive", "primitive": "int"},
+                    "optional": False,
+                },
+                {
+                    "name": "f",
+                    "fieldType": {"$type": "local#primitive", "primitive": "float"},
+                    "optional": False,
+                },
+                {
+                    "name": "b",
+                    "fieldType": {"$type": "local#primitive", "primitive": "bool"},
+                    "optional": False,
+                },
+                {
+                    "name": "raw",
+                    "fieldType": {"$type": "local#primitive", "primitive": "bytes"},
+                    "optional": False,
+                },
+            ],
         }
 
         SampleType = schema_to_type(schema)
@@ -197,10 +268,22 @@ class TestDynamicTypeWithDataset:
             "name": "SimpleSample",
             "version": "1.0.0",
             "fields": [
-                {"name": "name", "fieldType": {"$type": "local#primitive", "primitive": "str"}, "optional": False},
-                {"name": "value", "fieldType": {"$type": "local#primitive", "primitive": "int"}, "optional": False},
-                {"name": "score", "fieldType": {"$type": "local#primitive", "primitive": "float"}, "optional": False},
-            ]
+                {
+                    "name": "name",
+                    "fieldType": {"$type": "local#primitive", "primitive": "str"},
+                    "optional": False,
+                },
+                {
+                    "name": "value",
+                    "fieldType": {"$type": "local#primitive", "primitive": "int"},
+                    "optional": False,
+                },
+                {
+                    "name": "score",
+                    "fieldType": {"$type": "local#primitive", "primitive": "float"},
+                    "optional": False,
+                },
+            ],
         }
 
         DynamicType = schema_to_type(schema)
@@ -231,9 +314,17 @@ class TestDynamicTypeWithDataset:
             "name": "ArraySample",
             "version": "1.0.0",
             "fields": [
-                {"name": "label", "fieldType": {"$type": "local#primitive", "primitive": "str"}, "optional": False},
-                {"name": "image", "fieldType": {"$type": "local#ndarray", "dtype": "float32"}, "optional": False},
-            ]
+                {
+                    "name": "label",
+                    "fieldType": {"$type": "local#primitive", "primitive": "str"},
+                    "optional": False,
+                },
+                {
+                    "name": "image",
+                    "fieldType": {"$type": "local#ndarray", "dtype": "float32"},
+                    "optional": False,
+                },
+            ],
         }
 
         DynamicType = schema_to_type(schema)
@@ -258,10 +349,22 @@ class TestDynamicTypeWithDataset:
             "name": "SimpleSample",
             "version": "1.0.0",
             "fields": [
-                {"name": "name", "fieldType": {"$type": "local#primitive", "primitive": "str"}, "optional": False},
-                {"name": "value", "fieldType": {"$type": "local#primitive", "primitive": "int"}, "optional": False},
-                {"name": "score", "fieldType": {"$type": "local#primitive", "primitive": "float"}, "optional": False},
-            ]
+                {
+                    "name": "name",
+                    "fieldType": {"$type": "local#primitive", "primitive": "str"},
+                    "optional": False,
+                },
+                {
+                    "name": "value",
+                    "fieldType": {"$type": "local#primitive", "primitive": "int"},
+                    "optional": False,
+                },
+                {
+                    "name": "score",
+                    "fieldType": {"$type": "local#primitive", "primitive": "float"},
+                    "optional": False,
+                },
+            ],
         }
 
         DynamicType = schema_to_type(schema)
@@ -284,8 +387,12 @@ class TestTypeCaching:
             "name": "CachedSample",
             "version": "1.0.0",
             "fields": [
-                {"name": "value", "fieldType": {"$type": "local#primitive", "primitive": "int"}, "optional": False},
-            ]
+                {
+                    "name": "value",
+                    "fieldType": {"$type": "local#primitive", "primitive": "int"},
+                    "optional": False,
+                },
+            ],
         }
 
         Type1 = schema_to_type(schema)
@@ -299,15 +406,23 @@ class TestTypeCaching:
             "name": "VersionedSample",
             "version": "1.0.0",
             "fields": [
-                {"name": "value", "fieldType": {"$type": "local#primitive", "primitive": "int"}, "optional": False},
-            ]
+                {
+                    "name": "value",
+                    "fieldType": {"$type": "local#primitive", "primitive": "int"},
+                    "optional": False,
+                },
+            ],
         }
         schema2 = {
             "name": "VersionedSample",
             "version": "2.0.0",
             "fields": [
-                {"name": "value", "fieldType": {"$type": "local#primitive", "primitive": "int"}, "optional": False},
-            ]
+                {
+                    "name": "value",
+                    "fieldType": {"$type": "local#primitive", "primitive": "int"},
+                    "optional": False,
+                },
+            ],
         }
 
         Type1 = schema_to_type(schema1)
@@ -322,15 +437,23 @@ class TestTypeCaching:
             "name": "FieldSample",
             "version": "1.0.0",
             "fields": [
-                {"name": "a", "fieldType": {"$type": "local#primitive", "primitive": "int"}, "optional": False},
-            ]
+                {
+                    "name": "a",
+                    "fieldType": {"$type": "local#primitive", "primitive": "int"},
+                    "optional": False,
+                },
+            ],
         }
         schema2 = {
             "name": "FieldSample",
             "version": "1.0.0",
             "fields": [
-                {"name": "b", "fieldType": {"$type": "local#primitive", "primitive": "int"}, "optional": False},
-            ]
+                {
+                    "name": "b",
+                    "fieldType": {"$type": "local#primitive", "primitive": "int"},
+                    "optional": False,
+                },
+            ],
         }
 
         Type1 = schema_to_type(schema1)
@@ -344,8 +467,12 @@ class TestTypeCaching:
             "name": "NoCacheSample",
             "version": "1.0.0",
             "fields": [
-                {"name": "value", "fieldType": {"$type": "local#primitive", "primitive": "int"}, "optional": False},
-            ]
+                {
+                    "name": "value",
+                    "fieldType": {"$type": "local#primitive", "primitive": "int"},
+                    "optional": False,
+                },
+            ],
         }
 
         Type1 = schema_to_type(schema, use_cache=False)
@@ -360,8 +487,12 @@ class TestTypeCaching:
             "name": "ClearableSample",
             "version": "1.0.0",
             "fields": [
-                {"name": "value", "fieldType": {"$type": "local#primitive", "primitive": "int"}, "optional": False},
-            ]
+                {
+                    "name": "value",
+                    "fieldType": {"$type": "local#primitive", "primitive": "int"},
+                    "optional": False,
+                },
+            ],
         }
 
         Type1 = schema_to_type(schema)
@@ -377,8 +508,12 @@ class TestTypeCaching:
             "name": "TrackedSample",
             "version": "1.0.0",
             "fields": [
-                {"name": "value", "fieldType": {"$type": "local#primitive", "primitive": "int"}, "optional": False},
-            ]
+                {
+                    "name": "value",
+                    "fieldType": {"$type": "local#primitive", "primitive": "int"},
+                    "optional": False,
+                },
+            ],
         }
 
         schema_to_type(schema)
@@ -450,8 +585,12 @@ class TestSchemaValidation:
         schema = {
             "version": "1.0.0",
             "fields": [
-                {"name": "value", "fieldType": {"$type": "local#primitive", "primitive": "int"}, "optional": False},
-            ]
+                {
+                    "name": "value",
+                    "fieldType": {"$type": "local#primitive", "primitive": "int"},
+                    "optional": False,
+                },
+            ],
         }
 
         with pytest.raises(ValueError, match="must have a 'name'"):
@@ -459,11 +598,7 @@ class TestSchemaValidation:
 
     def test_schema_without_fields_raises(self):
         """Schema without fields should raise ValueError."""
-        schema = {
-            "name": "EmptySample",
-            "version": "1.0.0",
-            "fields": []
-        }
+        schema = {"name": "EmptySample", "version": "1.0.0", "fields": []}
 
         with pytest.raises(ValueError, match="must have at least one field"):
             schema_to_type(schema)
@@ -474,8 +609,11 @@ class TestSchemaValidation:
             "name": "BadFieldSample",
             "version": "1.0.0",
             "fields": [
-                {"fieldType": {"$type": "local#primitive", "primitive": "int"}, "optional": False},
-            ]
+                {
+                    "fieldType": {"$type": "local#primitive", "primitive": "int"},
+                    "optional": False,
+                },
+            ],
         }
 
         # Raises KeyError during cache key generation or ValueError during field processing
@@ -488,8 +626,15 @@ class TestSchemaValidation:
             "name": "UnknownPrimitive",
             "version": "1.0.0",
             "fields": [
-                {"name": "value", "fieldType": {"$type": "local#primitive", "primitive": "complex128"}, "optional": False},
-            ]
+                {
+                    "name": "value",
+                    "fieldType": {
+                        "$type": "local#primitive",
+                        "primitive": "complex128",
+                    },
+                    "optional": False,
+                },
+            ],
         }
 
         with pytest.raises(ValueError, match="Unknown primitive type"):
@@ -501,8 +646,12 @@ class TestSchemaValidation:
             "name": "UnknownType",
             "version": "1.0.0",
             "fields": [
-                {"name": "value", "fieldType": {"$type": "local#custom"}, "optional": False},
-            ]
+                {
+                    "name": "value",
+                    "fieldType": {"$type": "local#custom"},
+                    "optional": False,
+                },
+            ],
         }
 
         with pytest.raises(ValueError, match="Unknown field type kind"):
@@ -518,9 +667,17 @@ class TestComplexSchemaScenarios:
             "name": "OptionalArraySample",
             "version": "1.0.0",
             "fields": [
-                {"name": "name", "fieldType": {"$type": "local#primitive", "primitive": "str"}, "optional": False},
-                {"name": "embedding", "fieldType": {"$type": "local#ndarray", "dtype": "float32"}, "optional": True},
-            ]
+                {
+                    "name": "name",
+                    "fieldType": {"$type": "local#primitive", "primitive": "str"},
+                    "optional": False,
+                },
+                {
+                    "name": "embedding",
+                    "fieldType": {"$type": "local#ndarray", "dtype": "float32"},
+                    "optional": True,
+                },
+            ],
         }
 
         DynamicType = schema_to_type(schema)
@@ -530,7 +687,9 @@ class TestComplexSchemaScenarios:
         with wds.writer.TarWriter(str(tar_path)) as sink:
             for i in range(6):
                 if i % 2 == 0:
-                    sample = OptionalSample(name=f"s_{i}", value=i, embedding=np.zeros(4, dtype=np.float32))
+                    sample = OptionalSample(
+                        name=f"s_{i}", value=i, embedding=np.zeros(4, dtype=np.float32)
+                    )
                 else:
                     sample = OptionalSample(name=f"s_{i}", value=i, embedding=None)
                 sink.write(sample.as_wds)
@@ -550,11 +709,18 @@ class TestComplexSchemaScenarios:
             "name": "NestedListSample",
             "version": "1.0.0",
             "fields": [
-                {"name": "matrix", "fieldType": {
-                    "$type": "local#array",
-                    "items": {"$type": "local#array", "items": {"$type": "local#primitive", "primitive": "int"}}
-                }, "optional": False},
-            ]
+                {
+                    "name": "matrix",
+                    "fieldType": {
+                        "$type": "local#array",
+                        "items": {
+                            "$type": "local#array",
+                            "items": {"$type": "local#primitive", "primitive": "int"},
+                        },
+                    },
+                    "optional": False,
+                },
+            ],
         }
 
         DynamicType = schema_to_type(schema)
@@ -591,9 +757,17 @@ class TestGenerateStub:
             "name": "SimpleSample",
             "version": "1.0.0",
             "fields": [
-                {"name": "name", "fieldType": {"$type": "local#primitive", "primitive": "str"}, "optional": False},
-                {"name": "value", "fieldType": {"$type": "local#primitive", "primitive": "int"}, "optional": False},
-            ]
+                {
+                    "name": "name",
+                    "fieldType": {"$type": "local#primitive", "primitive": "str"},
+                    "optional": False,
+                },
+                {
+                    "name": "value",
+                    "fieldType": {"$type": "local#primitive", "primitive": "int"},
+                    "optional": False,
+                },
+            ],
         }
 
         stub = generate_stub(schema)
@@ -609,8 +783,12 @@ class TestGenerateStub:
             "name": "ArraySample",
             "version": "1.0.0",
             "fields": [
-                {"name": "image", "fieldType": {"$type": "local#ndarray", "dtype": "float32"}, "optional": False},
-            ]
+                {
+                    "name": "image",
+                    "fieldType": {"$type": "local#ndarray", "dtype": "float32"},
+                    "optional": False,
+                },
+            ],
         }
 
         stub = generate_stub(schema)
@@ -624,9 +802,17 @@ class TestGenerateStub:
             "name": "OptionalSample",
             "version": "1.0.0",
             "fields": [
-                {"name": "name", "fieldType": {"$type": "local#primitive", "primitive": "str"}, "optional": False},
-                {"name": "extra", "fieldType": {"$type": "local#primitive", "primitive": "str"}, "optional": True},
-            ]
+                {
+                    "name": "name",
+                    "fieldType": {"$type": "local#primitive", "primitive": "str"},
+                    "optional": False,
+                },
+                {
+                    "name": "extra",
+                    "fieldType": {"$type": "local#primitive", "primitive": "str"},
+                    "optional": True,
+                },
+            ],
         }
 
         stub = generate_stub(schema)
@@ -641,8 +827,15 @@ class TestGenerateStub:
             "name": "ListSample",
             "version": "1.0.0",
             "fields": [
-                {"name": "tags", "fieldType": {"$type": "local#array", "items": {"$type": "local#primitive", "primitive": "str"}}, "optional": False},
-            ]
+                {
+                    "name": "tags",
+                    "fieldType": {
+                        "$type": "local#array",
+                        "items": {"$type": "local#primitive", "primitive": "str"},
+                    },
+                    "optional": False,
+                },
+            ],
         }
 
         stub = generate_stub(schema)
@@ -655,8 +848,12 @@ class TestGenerateStub:
             "name": "MySample",
             "version": "2.1.0",
             "fields": [
-                {"name": "value", "fieldType": {"$type": "local#primitive", "primitive": "int"}, "optional": False},
-            ]
+                {
+                    "name": "value",
+                    "fieldType": {"$type": "local#primitive", "primitive": "int"},
+                    "optional": False,
+                },
+            ],
         }
 
         stub = generate_stub(schema)
@@ -671,8 +868,12 @@ class TestGenerateStub:
             "name": "ImportSample",
             "version": "1.0.0",
             "fields": [
-                {"name": "value", "fieldType": {"$type": "local#primitive", "primitive": "int"}, "optional": False},
-            ]
+                {
+                    "name": "value",
+                    "fieldType": {"$type": "local#primitive", "primitive": "int"},
+                    "optional": False,
+                },
+            ],
         }
 
         stub = generate_stub(schema)
@@ -686,12 +887,32 @@ class TestGenerateStub:
             "name": "AllPrimitives",
             "version": "1.0.0",
             "fields": [
-                {"name": "s", "fieldType": {"$type": "local#primitive", "primitive": "str"}, "optional": False},
-                {"name": "i", "fieldType": {"$type": "local#primitive", "primitive": "int"}, "optional": False},
-                {"name": "f", "fieldType": {"$type": "local#primitive", "primitive": "float"}, "optional": False},
-                {"name": "b", "fieldType": {"$type": "local#primitive", "primitive": "bool"}, "optional": False},
-                {"name": "raw", "fieldType": {"$type": "local#primitive", "primitive": "bytes"}, "optional": False},
-            ]
+                {
+                    "name": "s",
+                    "fieldType": {"$type": "local#primitive", "primitive": "str"},
+                    "optional": False,
+                },
+                {
+                    "name": "i",
+                    "fieldType": {"$type": "local#primitive", "primitive": "int"},
+                    "optional": False,
+                },
+                {
+                    "name": "f",
+                    "fieldType": {"$type": "local#primitive", "primitive": "float"},
+                    "optional": False,
+                },
+                {
+                    "name": "b",
+                    "fieldType": {"$type": "local#primitive", "primitive": "bool"},
+                    "optional": False,
+                },
+                {
+                    "name": "raw",
+                    "fieldType": {"$type": "local#primitive", "primitive": "bytes"},
+                    "optional": False,
+                },
+            ],
         }
 
         stub = generate_stub(schema)
@@ -708,11 +929,18 @@ class TestGenerateStub:
             "name": "NestedSample",
             "version": "1.0.0",
             "fields": [
-                {"name": "matrix", "fieldType": {
-                    "$type": "local#array",
-                    "items": {"$type": "local#array", "items": {"$type": "local#primitive", "primitive": "int"}}
-                }, "optional": False},
-            ]
+                {
+                    "name": "matrix",
+                    "fieldType": {
+                        "$type": "local#array",
+                        "items": {
+                            "$type": "local#array",
+                            "items": {"$type": "local#primitive", "primitive": "int"},
+                        },
+                    },
+                    "optional": False,
+                },
+            ],
         }
 
         stub = generate_stub(schema)
@@ -725,8 +953,15 @@ class TestGenerateStub:
             "name": "RefSample",
             "version": "1.0.0",
             "fields": [
-                {"name": "nested", "fieldType": {"$type": "local#ref", "ref": "local://schemas/Other@1.0.0"}, "optional": False},
-            ]
+                {
+                    "name": "nested",
+                    "fieldType": {
+                        "$type": "local#ref",
+                        "ref": "local://schemas/Other@1.0.0",
+                    },
+                    "optional": False,
+                },
+            ],
         }
 
         stub = generate_stub(schema)
