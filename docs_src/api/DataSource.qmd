@@ -1,0 +1,95 @@
+# DataSource { #atdata.DataSource }
+
+```python
+DataSource()
+```
+
+Protocol for data sources that provide streams to Dataset.
+
+A DataSource abstracts over different ways of accessing dataset shards:
+- URLSource: Standard WebDataset-compatible URLs (http, https, pipe, gs, etc.)
+- S3Source: S3-compatible storage with explicit credentials
+- BlobSource: ATProto blob references (future)
+
+The key method is ``shards()``, which yields (identifier, stream) pairs.
+These are fed directly to WebDataset's tar_file_expander, bypassing URL
+resolution entirely. This enables:
+- Private S3 repos with credentials
+- Custom endpoints (Cloudflare R2, MinIO)
+- ATProto blob streaming
+- Any other source that can provide file-like objects
+
+## Example {.doc-section .doc-section-example}
+
+::
+
+    >>> source = S3Source(
+    ...     bucket="my-bucket",
+    ...     keys=["data-000.tar", "data-001.tar"],
+    ...     endpoint="https://r2.example.com",
+    ...     credentials=creds,
+    ... )
+    >>> ds = Dataset[MySample](source)
+    >>> for sample in ds.ordered():
+    ...     print(sample)
+
+## Attributes
+
+| Name | Description |
+| --- | --- |
+| [shards](#atdata.DataSource.shards) | Lazily yield (identifier, stream) pairs for each shard. |
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [list_shards](#atdata.DataSource.list_shards) | Get list of shard identifiers without opening streams. |
+| [open_shard](#atdata.DataSource.open_shard) | Open a single shard by its identifier. |
+
+### list_shards { #atdata.DataSource.list_shards }
+
+```python
+DataSource.list_shards()
+```
+
+Get list of shard identifiers without opening streams.
+
+Used for metadata queries like counting shards without actually
+streaming data. Implementations should return identifiers that
+match what shards would yield.
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                           | Description                       |
+|--------|--------------------------------|-----------------------------------|
+|        | [list](`list`)\[[str](`str`)\] | List of shard identifier strings. |
+
+### open_shard { #atdata.DataSource.open_shard }
+
+```python
+DataSource.open_shard(shard_id)
+```
+
+Open a single shard by its identifier.
+
+This method enables random access to individual shards, which is
+required for PyTorch DataLoader worker splitting. Each worker opens
+only its assigned shards rather than iterating all shards.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name     | Type         | Description                       | Default    |
+|----------|--------------|-----------------------------------|------------|
+| shard_id | [str](`str`) | Shard identifier from shard_list. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                  | Description                             |
+|--------|---------------------------------------|-----------------------------------------|
+|        | [IO](`typing.IO`)\[[bytes](`bytes`)\] | File-like stream for reading the shard. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                   | Description                       |
+|--------|------------------------|-----------------------------------|
+|        | [KeyError](`KeyError`) | If shard_id is not in shard_list. |

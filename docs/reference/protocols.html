@@ -324,6 +324,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     </a>
     <ul class="dropdown-menu" aria-labelledby="nav-menu-reference">    
         <li>
+    <a class="dropdown-item" href="../reference/architecture.html">
+ <span class="dropdown-text">Architecture Overview</span></a>
+  </li>  
+        <li>
     <a class="dropdown-item" href="../reference/packable-samples.html">
  <span class="dropdown-text">Packable Samples</span></a>
   </li>  
@@ -359,6 +363,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="dropdown-item" href="../reference/uri-spec.html">
  <span class="dropdown-text">URI Specification</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="../reference/troubleshooting.html">
+ <span class="dropdown-text">Troubleshooting &amp; FAQ</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../reference/deployment.html">
+ <span class="dropdown-text">Deployment Guide</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item">
@@ -384,7 +396,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/packable-samples.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/protocols.html">Protocols</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/architecture.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/protocols.html">Protocols</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -448,6 +460,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../reference/architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Architecture Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../reference/packable-samples.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Packable Samples</span></a>
   </div>
@@ -500,21 +518,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">URI Specification</span></a>
   </div>
 </li>
-      </ul>
-  </li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
- <span class="menu-text">API Reference</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../api/index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">API Reference</span></a>
+  <a href="../reference/troubleshooting.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Troubleshooting &amp; FAQ</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../reference/deployment.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Deployment Guide</span></a>
   </div>
 </li>
       </ul>
@@ -564,7 +577,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <main class="content" id="quarto-document-content">
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/packable-samples.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/protocols.html">Protocols</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/architecture.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/protocols.html">Protocols</a></li></ol></nav>
 <div class="quarto-title">
 <h1 class="title">Protocols</h1>
 </div>
@@ -602,7 +615,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="indexentry-protocol" class="level2">
 <h2 class="anchored" data-anchor-id="indexentry-protocol">IndexEntry Protocol</h2>
 <p>Represents a dataset entry in any index:</p>
-<div id="8932c6c6" class="cell">
+<div id="c302a855" class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata._protocols <span class="im">import</span> IndexEntry</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> process_entry(entry: IndexEntry) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
@@ -656,7 +669,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="abstractindex-protocol" class="level2">
 <h2 class="anchored" data-anchor-id="abstractindex-protocol">AbstractIndex Protocol</h2>
 <p>Defines operations for managing schemas and datasets:</p>
-<div id="d320f18a" class="cell">
+<div id="07a31265" class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata._protocols <span class="im">import</span> AbstractIndex</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> list_all_datasets(index: AbstractIndex) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
@@ -666,7 +679,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <section id="dataset-operations" class="level3">
 <h3 class="anchored" data-anchor-id="dataset-operations">Dataset Operations</h3>
-<div id="3950da62" class="cell">
+<div id="7678f752" class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Insert a dataset</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>entry <span class="op">=</span> index.insert_dataset(</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    dataset,</span>
@@ -684,7 +697,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="schema-operations" class="level3">
 <h3 class="anchored" data-anchor-id="schema-operations">Schema Operations</h3>
-<div id="d13f65bf" class="cell">
+<div id="70f62633" class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Publish a schema</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>schema_ref <span class="op">=</span> index.publish_schema(</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    MySample,</span>
@@ -715,7 +728,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="abstractdatastore-protocol" class="level2">
 <h2 class="anchored" data-anchor-id="abstractdatastore-protocol">AbstractDataStore Protocol</h2>
 <p>Abstracts over different storage backends:</p>
-<div id="9a971785" class="cell">
+<div id="52e50320" class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata._protocols <span class="im">import</span> AbstractDataStore</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> write_dataset(store: AbstractDataStore, dataset) <span class="op">-&gt;</span> <span class="bu">list</span>[<span class="bu">str</span>]:</span>
@@ -725,7 +738,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <section id="methods" class="level3">
 <h3 class="anchored" data-anchor-id="methods">Methods</h3>
-<div id="284ccbe5" class="cell">
+<div id="317eac4c" class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Write dataset shards</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>urls <span class="op">=</span> store.write_shards(</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    dataset,</span>
@@ -752,7 +765,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="datasource-protocol" class="level2">
 <h2 class="anchored" data-anchor-id="datasource-protocol">DataSource Protocol</h2>
 <p>Abstracts over different data source backends for streaming dataset shards:</p>
-<div id="8dabac06" class="cell">
+<div id="8a53d5a4" class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata._protocols <span class="im">import</span> DataSource</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> load_from_source(source: DataSource) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
@@ -765,7 +778,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <section id="methods-1" class="level3">
 <h3 class="anchored" data-anchor-id="methods-1">Methods</h3>
-<div id="ecfb7796" class="cell">
+<div id="f867cfdc" class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get list of shard identifiers</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>shard_ids <span class="op">=</span> source.shard_list  <span class="co"># ['data-000000.tar', 'data-000001.tar', ...]</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -788,7 +801,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="creating-custom-data-sources" class="level3">
 <h3 class="anchored" data-anchor-id="creating-custom-data-sources">Creating Custom Data Sources</h3>
 <p>Implement the <code>DataSource</code> protocol for custom backends:</p>
-<div id="a4538f04" class="cell">
+<div id="44575d54" class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> Iterator, IO</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata._protocols <span class="im">import</span> DataSource</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -826,7 +839,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="using-protocols-for-polymorphism" class="level2">
 <h2 class="anchored" data-anchor-id="using-protocols-for-polymorphism">Using Protocols for Polymorphism</h2>
 <p>Write code that works with any backend:</p>
-<div id="041124c9" class="cell">
+<div id="db1294c4" class="cell">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata._protocols <span class="im">import</span> AbstractIndex, IndexEntry</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata <span class="im">import</span> Dataset</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -897,7 +910,7 @@ Note
 <section id="type-checking" class="level2">
 <h2 class="anchored" data-anchor-id="type-checking">Type Checking</h2>
 <p>Protocols are runtime-checkable:</p>
-<div id="a8985032" class="cell">
+<div id="0bb97720" class="cell">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata._protocols <span class="im">import</span> IndexEntry, AbstractIndex</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Check if object implements protocol</span></span>
@@ -911,7 +924,7 @@ Note
 </section>
 <section id="complete-example" class="level2">
 <h2 class="anchored" data-anchor-id="complete-example">Complete Example</h2>
-<div id="d95bd7bf" class="cell">
+<div id="e296723f" class="cell">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> LocalIndex, S3DataStore</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> AtmosphereClient, AtmosphereIndex</span>

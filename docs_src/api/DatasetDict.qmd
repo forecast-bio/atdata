@@ -1,0 +1,37 @@
+# DatasetDict { #atdata.DatasetDict }
+
+```python
+DatasetDict(splits=None, sample_type=None, streaming=False)
+```
+
+A dictionary of split names to Dataset instances.
+
+Similar to HuggingFace's DatasetDict, this provides a container for
+multiple dataset splits (train, test, validation, etc.) with convenience
+methods that operate across all splits.
+
+## Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type   | Description                                    | Default    |
+|--------|--------|------------------------------------------------|------------|
+| ST     |        | The sample type for all datasets in this dict. | _required_ |
+
+## Example {.doc-section .doc-section-example}
+
+::
+
+    >>> ds_dict = load_dataset("path/to/data", MyData)
+    >>> train = ds_dict["train"]
+    >>> test = ds_dict["test"]
+    >>>
+    >>> # Iterate over all splits
+    >>> for split_name, dataset in ds_dict.items():
+    ...     print(f"{split_name}: {len(dataset.shard_list)} shards")
+
+## Attributes
+
+| Name | Description |
+| --- | --- |
+| [num_shards](#atdata.DatasetDict.num_shards) | Number of shards in each split. |
+| [sample_type](#atdata.DatasetDict.sample_type) | The sample type for datasets in this dict. |
+| [streaming](#atdata.DatasetDict.streaming) | Whether this DatasetDict was loaded in streaming mode. |

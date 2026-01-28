@@ -34,10 +34,12 @@ class AtmosphereClient:
     for working with atdata records (schemas, datasets, lenses).
 
     Example:
-        >>> client = AtmosphereClient()
-        >>> client.login("alice.bsky.social", "app-password")
-        >>> print(client.did)
-        'did:plc:...'
+        ::
+
+            >>> client = AtmosphereClient()
+            >>> client.login("alice.bsky.social", "app-password")
+            >>> print(client.did)
+            'did:plc:...'
 
     Note:
         The password should be an app-specific password, not your main account

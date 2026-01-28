@@ -1,0 +1,222 @@
+# AtmosphereIndex { #atdata.atmosphere.AtmosphereIndex }
+
+```python
+atmosphere.AtmosphereIndex(client, *, data_store=None)
+```
+
+ATProto index implementing AbstractIndex protocol.
+
+Wraps SchemaPublisher/Loader and DatasetPublisher/Loader to provide
+a unified interface compatible with LocalIndex.
+
+Optionally accepts a ``PDSBlobStore`` for writing dataset shards as
+ATProto blobs, enabling fully decentralized dataset storage.
+
+## Example {.doc-section .doc-section-example}
+
+::
+
+    >>> client = AtmosphereClient()
+    >>> client.login("handle.bsky.social", "app-password")
+    >>>
+    >>> # Without blob storage (external URLs only)
+    >>> index = AtmosphereIndex(client)
+    >>>
+    >>> # With PDS blob storage
+    >>> store = PDSBlobStore(client)
+    >>> index = AtmosphereIndex(client, data_store=store)
+    >>> entry = index.insert_dataset(dataset, name="my-data")
+
+## Attributes
+
+| Name | Description |
+| --- | --- |
+| [data_store](#atdata.atmosphere.AtmosphereIndex.data_store) | The PDS blob store for writing shards, or None if not configured. |
+| [datasets](#atdata.atmosphere.AtmosphereIndex.datasets) | Lazily iterate over all dataset entries (AbstractIndex protocol). |
+| [schemas](#atdata.atmosphere.AtmosphereIndex.schemas) | Lazily iterate over all schema records (AbstractIndex protocol). |
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [decode_schema](#atdata.atmosphere.AtmosphereIndex.decode_schema) | Reconstruct a Python type from a schema record. |
+| [get_dataset](#atdata.atmosphere.AtmosphereIndex.get_dataset) | Get a dataset by AT URI. |
+| [get_schema](#atdata.atmosphere.AtmosphereIndex.get_schema) | Get a schema record by AT URI. |
+| [insert_dataset](#atdata.atmosphere.AtmosphereIndex.insert_dataset) | Insert a dataset into ATProto. |
+| [list_datasets](#atdata.atmosphere.AtmosphereIndex.list_datasets) | Get all dataset entries as a materialized list (AbstractIndex protocol). |
+| [list_schemas](#atdata.atmosphere.AtmosphereIndex.list_schemas) | Get all schema records as a materialized list (AbstractIndex protocol). |
+| [publish_schema](#atdata.atmosphere.AtmosphereIndex.publish_schema) | Publish a schema to ATProto. |
+
+### decode_schema { #atdata.atmosphere.AtmosphereIndex.decode_schema }
+
+```python
+atmosphere.AtmosphereIndex.decode_schema(ref)
+```
+
+Reconstruct a Python type from a schema record.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type         | Description                  | Default    |
+|--------|--------------|------------------------------|------------|
+| ref    | [str](`str`) | AT URI of the schema record. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                              | Description                          |
+|--------|-------------------------------------------------------------------|--------------------------------------|
+|        | [Type](`typing.Type`)\[[Packable](`atdata._protocols.Packable`)\] | Dynamically generated Packable type. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                  |
+|--------|----------------------------|------------------------------|
+|        | [ValueError](`ValueError`) | If schema cannot be decoded. |
+
+### get_dataset { #atdata.atmosphere.AtmosphereIndex.get_dataset }
+
+```python
+atmosphere.AtmosphereIndex.get_dataset(ref)
+```
+
+Get a dataset by AT URI.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type         | Description                   | Default    |
+|--------|--------------|-------------------------------|------------|
+| ref    | [str](`str`) | AT URI of the dataset record. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                             | Description                           |
+|--------|------------------------------------------------------------------|---------------------------------------|
+|        | [AtmosphereIndexEntry](`atdata.atmosphere.AtmosphereIndexEntry`) | AtmosphereIndexEntry for the dataset. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                 |
+|--------|----------------------------|-----------------------------|
+|        | [ValueError](`ValueError`) | If record is not a dataset. |
+
+### get_schema { #atdata.atmosphere.AtmosphereIndex.get_schema }
+
+```python
+atmosphere.AtmosphereIndex.get_schema(ref)
+```
+
+Get a schema record by AT URI.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type         | Description                  | Default    |
+|--------|--------------|------------------------------|------------|
+| ref    | [str](`str`) | AT URI of the schema record. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type           | Description               |
+|--------|----------------|---------------------------|
+|        | [dict](`dict`) | Schema record dictionary. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                |
+|--------|----------------------------|----------------------------|
+|        | [ValueError](`ValueError`) | If record is not a schema. |
+
+### insert_dataset { #atdata.atmosphere.AtmosphereIndex.insert_dataset }
+
+```python
+atmosphere.AtmosphereIndex.insert_dataset(
+    ds,
+    *,
+    name,
+    schema_ref=None,
+    **kwargs,
+)
+```
+
+Insert a dataset into ATProto.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name       | Type                                          | Description                                             | Default    |
+|------------|-----------------------------------------------|---------------------------------------------------------|------------|
+| ds         | [Dataset](`atdata.dataset.Dataset`)           | The Dataset to publish.                                 | _required_ |
+| name       | [str](`str`)                                  | Human-readable name.                                    | _required_ |
+| schema_ref | [Optional](`typing.Optional`)\[[str](`str`)\] | Optional schema AT URI. If None, auto-publishes schema. | `None`     |
+| **kwargs   |                                               | Additional options (description, tags, license).        | `{}`       |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                             | Description                                    |
+|--------|------------------------------------------------------------------|------------------------------------------------|
+|        | [AtmosphereIndexEntry](`atdata.atmosphere.AtmosphereIndexEntry`) | AtmosphereIndexEntry for the inserted dataset. |
+
+### list_datasets { #atdata.atmosphere.AtmosphereIndex.list_datasets }
+
+```python
+atmosphere.AtmosphereIndex.list_datasets(repo=None)
+```
+
+Get all dataset entries as a materialized list (AbstractIndex protocol).
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                          | Description                                        | Default   |
+|--------|-----------------------------------------------|----------------------------------------------------|-----------|
+| repo   | [Optional](`typing.Optional`)\[[str](`str`)\] | DID of repository. Defaults to authenticated user. | `None`    |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                               | Description                                    |
+|--------|------------------------------------------------------------------------------------|------------------------------------------------|
+|        | [list](`list`)\[[AtmosphereIndexEntry](`atdata.atmosphere.AtmosphereIndexEntry`)\] | List of AtmosphereIndexEntry for each dataset. |
+
+### list_schemas { #atdata.atmosphere.AtmosphereIndex.list_schemas }
+
+```python
+atmosphere.AtmosphereIndex.list_schemas(repo=None)
+```
+
+Get all schema records as a materialized list (AbstractIndex protocol).
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                          | Description                                        | Default   |
+|--------|-----------------------------------------------|----------------------------------------------------|-----------|
+| repo   | [Optional](`typing.Optional`)\[[str](`str`)\] | DID of repository. Defaults to authenticated user. | `None`    |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                             | Description                             |
+|--------|----------------------------------|-----------------------------------------|
+|        | [list](`list`)\[[dict](`dict`)\] | List of schema records as dictionaries. |
+
+### publish_schema { #atdata.atmosphere.AtmosphereIndex.publish_schema }
+
+```python
+atmosphere.AtmosphereIndex.publish_schema(
+    sample_type,
+    *,
+    version='1.0.0',
+    **kwargs,
+)
+```
+
+Publish a schema to ATProto.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name        | Type                                                              | Description                                                       | Default    |
+|-------------|-------------------------------------------------------------------|-------------------------------------------------------------------|------------|
+| sample_type | [Type](`typing.Type`)\[[Packable](`atdata._protocols.Packable`)\] | A Packable type (PackableSample subclass or @packable-decorated). | _required_ |
+| version     | [str](`str`)                                                      | Semantic version string.                                          | `'1.0.0'`  |
+| **kwargs    |                                                                   | Additional options (description, metadata).                       | `{}`       |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type         | Description                  |
+|--------|--------------|------------------------------|
+|        | [str](`str`) | AT URI of the schema record. |

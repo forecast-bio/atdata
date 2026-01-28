@@ -14,15 +14,17 @@ during serialization, enabling efficient storage of numerical data in WebDataset
 archives.
 
 Example:
-    >>> @packable
-    ... class ImageSample:
-    ...     image: NDArray
-    ...     label: str
-    ...
-    >>> ds = Dataset[ImageSample]("data-{000000..000009}.tar")
-    >>> for batch in ds.shuffled(batch_size=32):
-    ...     images = batch.image  # Stacked numpy array (32, H, W, C)
-    ...     labels = batch.label  # List of 32 strings
+    ::
+
+        >>> @packable
+        ... class ImageSample:
+        ...     image: NDArray
+        ...     label: str
+        ...
+        >>> ds = Dataset[ImageSample]("data-{000000..000009}.tar")
+        >>> for batch in ds.shuffled(batch_size=32):
+        ...     images = batch.image  # Stacked numpy array (32, H, W, C)
+        ...     labels = batch.label  # List of 32 strings
 """
 
 ##
@@ -54,6 +56,7 @@ from typing import (
     Any,
     Optional,
     Dict,
+    Iterator,
     Sequence,
     Iterable,
     Callable,
@@ -106,6 +109,173 @@ def _is_possibly_ndarray_type( t ):
         return any( x == NDArray for x in t.__args__ )
     return False
 
+class DictSample:
+    """Dynamic sample type providing dict-like access to raw msgpack data.
+
+    This class is the default sample type for datasets when no explicit type is
+    specified. It stores the raw unpacked msgpack data and provides both
+    attribute-style (``sample.field``) and dict-style (``sample["field"]``)
+    access to fields.
+
+    ``DictSample`` is useful for:
+    - Exploring datasets without defining a schema first
+    - Working with datasets that have variable schemas
+    - Prototyping before committing to a typed schema
+
+    To convert to a typed schema, use ``Dataset.as_type()`` with a
+    ``@packable``-decorated class. Every ``@packable`` class automatically
+    registers a lens from ``DictSample``, making this conversion seamless.
+
+    Example:
+        ::
+
+            >>> ds = load_dataset("path/to/data.tar")  # Returns Dataset[DictSample]
+            >>> for sample in ds.ordered():
+            ...     print(sample.some_field)      # Attribute access
+            ...     print(sample["other_field"])  # Dict access
+            ...     print(sample.keys())          # Inspect available fields
+            ...
+            >>> # Convert to typed schema
+            >>> typed_ds = ds.as_type(MyTypedSample)
+
+    Note:
+        NDArray fields are stored as raw bytes in DictSample. They are only
+        converted to numpy arrays when accessed through a typed sample class.
+    """
+
+    __slots__ = ('_data',)
+
+    def __init__(self, _data: dict[str, Any] | None = None, **kwargs: Any) -> None:
+        """Create a DictSample from a dictionary or keyword arguments.
+
+        Args:
+            _data: Raw data dictionary. If provided, kwargs are ignored.
+            **kwargs: Field values if _data is not provided.
+        """
+        if _data is not None:
+            object.__setattr__(self, '_data', _data)
+        else:
+            object.__setattr__(self, '_data', kwargs)
+
+    @classmethod
+    def from_data(cls, data: dict[str, Any]) -> 'DictSample':
+        """Create a DictSample from unpacked msgpack data.
+
+        Args:
+            data: Dictionary with field names as keys.
+
+        Returns:
+            New DictSample instance wrapping the data.
+        """
+        return cls(_data=data)
+
+    @classmethod
+    def from_bytes(cls, bs: bytes) -> 'DictSample':
+        """Create a DictSample from raw msgpack bytes.
+
+        Args:
+            bs: Raw bytes from a msgpack-serialized sample.
+
+        Returns:
+            New DictSample instance with the unpacked data.
+        """
+        return cls.from_data(ormsgpack.unpackb(bs))
+
+    def __getattr__(self, name: str) -> Any:
+        """Access a field by attribute name.
+
+        Args:
+            name: Field name to access.
+
+        Returns:
+            The field value.
+
+        Raises:
+            AttributeError: If the field doesn't exist.
+        """
+        # Avoid infinite recursion for _data lookup
+        if name == '_data':
+            raise AttributeError(name)
+        try:
+            return self._data[name]
+        except KeyError:
+            raise AttributeError(
+                f"'{type(self).__name__}' has no field '{name}'. "
+                f"Available fields: {list(self._data.keys())}"
+            ) from None
+
+    def __getitem__(self, key: str) -> Any:
+        """Access a field by dict key.
+
+        Args:
+            key: Field name to access.
+
+        Returns:
+            The field value.
+
+        Raises:
+            KeyError: If the field doesn't exist.
+        """
+        return self._data[key]
+
+    def __contains__(self, key: str) -> bool:
+        """Check if a field exists."""
+        return key in self._data
+
+    def keys(self) -> list[str]:
+        """Return list of field names."""
+        return list(self._data.keys())
+
+    def values(self) -> list[Any]:
+        """Return list of field values."""
+        return list(self._data.values())
+
+    def items(self) -> list[tuple[str, Any]]:
+        """Return list of (field_name, value) tuples."""
+        return list(self._data.items())
+
+    def get(self, key: str, default: Any = None) -> Any:
+        """Get a field value with optional default.
+
+        Args:
+            key: Field name to access.
+            default: Value to return if field doesn't exist.
+
+        Returns:
+            The field value or default.
+        """
+        return self._data.get(key, default)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a copy of the underlying data dictionary."""
+        return dict(self._data)
+
+    @property
+    def packed(self) -> bytes:
+        """Pack this sample's data into msgpack bytes.
+
+        Returns:
+            Raw msgpack bytes representing this sample's data.
+        """
+        return msgpack.packb(self._data)
+
+    @property
+    def as_wds(self) -> 'WDSRawSample':
+        """Pack this sample's data for writing to WebDataset.
+
+        Returns:
+            A dictionary with ``__key__`` and ``msgpack`` fields.
+        """
+        return {
+            '__key__': str(uuid.uuid1(0, 0)),
+            'msgpack': self.packed,
+        }
+
+    def __repr__(self) -> str:
+        fields = ', '.join(f'{k}=...' for k in self._data.keys())
+        return f'DictSample({fields})'
+
+
 @dataclass
 class PackableSample( ABC ):
     """Base class for samples that can be serialized with msgpack.
@@ -120,14 +290,16 @@ class PackableSample( ABC ):
     2. Using the ``@packable`` decorator (recommended)
 
     Example:
-        >>> @packable
-        ... class MyData:
-        ...     name: str
-        ...     embeddings: NDArray
-        ...
-        >>> sample = MyData(name="test", embeddings=np.array([1.0, 2.0]))
-        >>> packed = sample.packed  # Serialize to bytes
-        >>> restored = MyData.from_bytes(packed)  # Deserialize
+        ::
+
+            >>> @packable
+            ... class MyData:
+            ...     name: str
+            ...     embeddings: NDArray
+            ...
+            >>> sample = MyData(name="test", embeddings=np.array([1.0, 2.0]))
+            >>> packed = sample.packed  # Serialize to bytes
+            >>> restored = MyData.from_bytes(packed)  # Deserialize
     """
 
     def _ensure_good( self ):
@@ -252,17 +424,27 @@ class SampleBatch( Generic[DT] ):
     NDArray fields are stacked into a numpy array with a batch dimension.
     Other fields are aggregated into a list.
 
-    Type Parameters:
+    Parameters:
         DT: The sample type, must derive from ``PackableSample``.
 
     Attributes:
         samples: The list of sample instances in this batch.
 
     Example:
-        >>> batch = SampleBatch[MyData]([sample1, sample2, sample3])
-        >>> batch.embeddings  # Returns stacked numpy array of shape (3, ...)
-        >>> batch.names  # Returns list of names
+        ::
+
+            >>> batch = SampleBatch[MyData]([sample1, sample2, sample3])
+            >>> batch.embeddings  # Returns stacked numpy array of shape (3, ...)
+            >>> batch.names  # Returns list of names
+
+    Note:
+        This class uses Python's ``__orig_class__`` mechanism to extract the
+        type parameter at runtime. Instances must be created using the
+        subscripted syntax ``SampleBatch[MyType](samples)`` rather than
+        calling the constructor directly with an unsubscripted class.
     """
+    # Design note: The docstring uses "Parameters:" for type parameters because
+    # quartodoc doesn't yet support "Type Parameters:" sections in generated docs.
 
     def __init__( self, samples: Sequence[DT] ):
         """Create a batch from a sequence of samples.
@@ -285,6 +467,7 @@ class SampleBatch( Generic[DT] ):
         """
         if self._sample_type_cache is None:
             self._sample_type_cache = typing.get_args( self.__orig_class__)[0]
+            assert self._sample_type_cache is not None
         return self._sample_type_cache
 
     def __getattr__( self, name ):
@@ -320,7 +503,7 @@ ST = TypeVar( 'ST', bound = PackableSample )
 RT = TypeVar( 'RT', bound = PackableSample )
 
 
-class _ShardListStage(wds.PipelineStage):
+class _ShardListStage(wds.utils.PipelineStage):
     """Pipeline stage that yields {url: shard_id} dicts from a DataSource.
 
     This is analogous to SimpleShardList but works with any DataSource.
@@ -332,11 +515,11 @@ class _ShardListStage(wds.PipelineStage):
 
     def run(self):
         """Yield {url: shard_id} dicts for each shard."""
-        for shard_id in self.source.shard_list:
+        for shard_id in self.source.list_shards():
             yield {"url": shard_id}
 
 
-class _StreamOpenerStage(wds.PipelineStage):
+class _StreamOpenerStage(wds.utils.PipelineStage):
     """Pipeline stage that opens streams from a DataSource.
 
     Takes {url: shard_id} dicts and adds a stream using source.open_shard().
@@ -368,22 +551,31 @@ class Dataset( Generic[ST] ):
     - Type transformations via the lens system (``as_type()``)
     - Export to parquet format
 
-    Type Parameters:
+    Parameters:
         ST: The sample type for this dataset, must derive from ``PackableSample``.
 
     Attributes:
         url: WebDataset brace-notation URL for the tar file(s).
 
     Example:
-        >>> ds = Dataset[MyData]("path/to/data-{000000..000009}.tar")
-        >>> for sample in ds.ordered(batch_size=32):
-        ...     # sample is SampleBatch[MyData] with batch_size samples
-        ...     embeddings = sample.embeddings  # shape: (32, ...)
-        ...
-        >>> # Transform to a different view
-        >>> ds_view = ds.as_type(MyDataView)
-    
+        ::
+
+            >>> ds = Dataset[MyData]("path/to/data-{000000..000009}.tar")
+            >>> for sample in ds.ordered(batch_size=32):
+            ...     # sample is SampleBatch[MyData] with batch_size samples
+            ...     embeddings = sample.embeddings  # shape: (32, ...)
+            ...
+            >>> # Transform to a different view
+            >>> ds_view = ds.as_type(MyDataView)
+
+    Note:
+        This class uses Python's ``__orig_class__`` mechanism to extract the
+        type parameter at runtime. Instances must be created using the
+        subscripted syntax ``Dataset[MyType](url)`` rather than calling the
+        constructor directly with an unsubscripted class.
     """
+    # Design note: The docstring uses "Parameters:" for type parameters because
+    # quartodoc doesn't yet support "Type Parameters:" sections in generated docs.
 
     @property
     def sample_type( self ) -> Type:
@@ -394,6 +586,7 @@ class Dataset( Generic[ST] ):
         """
         if self._sample_type_cache is None:
             self._sample_type_cache = typing.get_args( self.__orig_class__ )[0]
+            assert self._sample_type_cache is not None
         return self._sample_type_cache
     @property
     def batch_type( self ) -> Type:
@@ -439,8 +632,11 @@ class Dataset( Generic[ST] ):
             self.url = source
         else:
             self._source = source
-            # For compatibility, expose URL if source has shard_list
-            self.url = source.shard_list[0] if source.shard_list else ""
+            # For compatibility, expose URL if source has list_shards
+            shards = source.list_shards()
+            # Design note: Using first shard as url for legacy compatibility.
+            # Full shard list is available via list_shards() method.
+            self.url = shards[0] if shards else ""
 
         self._metadata: dict[str, Any] | None = None
         self.metadata_url: str | None = metadata_url
@@ -477,14 +673,44 @@ class Dataset( Generic[ST] ):
         return ret
 
     @property
-    def shard_list( self ) -> list[str]:
-        """List of individual dataset shards
+    def shards(self) -> Iterator[str]:
+        """Lazily iterate over shard identifiers.
+
+        Yields:
+            Shard identifiers (e.g., 'train-000000.tar', 'train-000001.tar').
+
+        Example:
+            ::
+
+                >>> for shard in ds.shards:
+                ...     print(f"Processing {shard}")
+        """
+        return iter(self._source.list_shards())
+
+    def list_shards(self) -> list[str]:
+        """Get list of individual dataset shards.
 
         Returns:
             A full (non-lazy) list of the individual ``tar`` files within the
             source WebDataset.
         """
-        return self._source.shard_list
+        return self._source.list_shards()
+
+    # Legacy alias for backwards compatibility
+    @property
+    def shard_list(self) -> list[str]:
+        """List of individual dataset shards (deprecated, use list_shards()).
+
+        .. deprecated::
+            Use :meth:`list_shards` instead.
+        """
+        import warnings
+        warnings.warn(
+            "shard_list is deprecated, use list_shards() instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.list_shards()
 
     @property
     def metadata( self ) -> dict[str, Any] | None:
@@ -597,9 +823,43 @@ class Dataset( Generic[ST] ):
                 maxcount: Optional[int] = None,
                 **kwargs,
             ):
-        """Save dataset contents to a `parquet` file at `path`
+        """Export dataset contents to parquet format.
 
-        `kwargs` sent to `pandas.to_parquet`
+        Converts all samples to a pandas DataFrame and saves to parquet file(s).
+        Useful for interoperability with data analysis tools.
+
+        Args:
+            path: Output path for the parquet file. If ``maxcount`` is specified,
+                files are named ``{stem}-{segment:06d}.parquet``.
+            sample_map: Optional function to convert samples to dictionaries.
+                Defaults to ``dataclasses.asdict``.
+            maxcount: If specified, split output into multiple files with at most
+                this many samples each. Recommended for large datasets.
+            **kwargs: Additional arguments passed to ``pandas.DataFrame.to_parquet()``.
+                Common options include ``compression``, ``index``, ``engine``.
+
+        Warning:
+            **Memory Usage**: When ``maxcount=None`` (default), this method loads
+            the **entire dataset into memory** as a pandas DataFrame before writing.
+            For large datasets, this can cause memory exhaustion.
+
+            For datasets larger than available RAM, always specify ``maxcount``::
+
+                # Safe for large datasets - processes in chunks
+                ds.to_parquet("output.parquet", maxcount=10000)
+
+            This creates multiple parquet files: ``output-000000.parquet``,
+            ``output-000001.parquet``, etc.
+
+        Example:
+            ::
+
+                >>> ds = Dataset[MySample]("data.tar")
+                >>> # Small dataset - load all at once
+                >>> ds.to_parquet("output.parquet")
+                >>>
+                >>> # Large dataset - process in chunks
+                >>> ds.to_parquet("output.parquet", maxcount=50000)
         """
         ##
 
@@ -711,22 +971,32 @@ def packable( cls: type[_T] ) -> type[_T]:
     ``PackableSample``, enabling automatic msgpack serialization/deserialization
     with special handling for NDArray fields.
 
+    The resulting class satisfies the ``Packable`` protocol, making it compatible
+    with all atdata APIs that accept packable types (e.g., ``publish_schema``,
+    lens transformations, etc.).
+
     Args:
         cls: The class to convert. Should have type annotations for its fields.
 
     Returns:
         A new dataclass that inherits from ``PackableSample`` with the same
-        name and annotations as the original class.
+        name and annotations as the original class. The class satisfies the
+        ``Packable`` protocol and can be used with ``Type[Packable]`` signatures.
 
-    Example:
-        >>> @packable
-        ... class MyData:
-        ...     name: str
-        ...     values: NDArray
-        ...
-        >>> sample = MyData(name="test", values=np.array([1, 2, 3]))
-        >>> bytes_data = sample.packed
-        >>> restored = MyData.from_bytes(bytes_data)
+    Examples:
+        This is a test of the functionality::
+
+            @packable
+            class MyData:
+                name: str
+                values: NDArray
+            
+            sample = MyData(name="test", values=np.array([1, 2, 3]))
+            bytes_data = sample.packed
+            restored = MyData.from_bytes(bytes_data)
+            
+            # Works with Packable-typed APIs
+            index.publish_schema(MyData, version="1.0.0")  # Type-safe
     """
 
     ##
@@ -761,6 +1031,14 @@ def packable( cls: type[_T] ) -> type[_T]:
                 attr.__qualname__ = attr.__qualname__.replace(
                     old_qualname_prefix, class_name, 1
                 )
+
+    # Auto-register lens from DictSample to this type
+    # This enables ds.as_type(MyType) when ds is Dataset[DictSample]
+    def _dict_to_typed(ds: DictSample) -> as_packable:
+        return as_packable.from_data(ds._data)
+
+    _dict_lens = Lens(_dict_to_typed)
+    LensNetwork().register(_dict_lens)
 
     ##
 

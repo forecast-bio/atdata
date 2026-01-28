@@ -5,18 +5,20 @@ ATProto atmosphere network. This enables sharing datasets with the broader
 federation while maintaining schema consistency.
 
 Example:
-    >>> from atdata.local import LocalIndex, Repo
-    >>> from atdata.atmosphere import AtmosphereClient, AtmosphereIndex
-    >>> from atdata.promote import promote_to_atmosphere
-    >>>
-    >>> # Setup
-    >>> local_index = LocalIndex()
-    >>> client = AtmosphereClient()
-    >>> client.login("handle.bsky.social", "app-password")
-    >>>
-    >>> # Promote a dataset
-    >>> entry = local_index.get_dataset("my-dataset")
-    >>> at_uri = promote_to_atmosphere(entry, local_index, client)
+    ::
+
+        >>> from atdata.local import LocalIndex, Repo
+        >>> from atdata.atmosphere import AtmosphereClient, AtmosphereIndex
+        >>> from atdata.promote import promote_to_atmosphere
+        >>>
+        >>> # Setup
+        >>> local_index = LocalIndex()
+        >>> client = AtmosphereClient()
+        >>> client.login("handle.bsky.social", "app-password")
+        >>>
+        >>> # Promote a dataset
+        >>> entry = local_index.get_dataset("my-dataset")
+        >>> at_uri = promote_to_atmosphere(entry, local_index, client)
 """
 
 from typing import TYPE_CHECKING, Type
@@ -24,8 +26,7 @@ from typing import TYPE_CHECKING, Type
 if TYPE_CHECKING:
     from .local import LocalDatasetEntry, Index as LocalIndex
     from .atmosphere import AtmosphereClient
-    from .dataset import PackableSample
-    from ._protocols import AbstractDataStore
+    from ._protocols import AbstractDataStore, Packable
 
 
 def _find_existing_schema(
@@ -54,7 +55,7 @@ def _find_existing_schema(
 
 
 def _find_or_publish_schema(
-    sample_type: "Type[PackableSample]",
+    sample_type: "Type[Packable]",
     version: str,
     client: "AtmosphereClient",
     description: str | None = None,
@@ -128,10 +129,12 @@ def promote_to_atmosphere(
         ValueError: If local entry has no data URLs.
 
     Example:
-        >>> entry = local_index.get_dataset("mnist-train")
-        >>> uri = promote_to_atmosphere(entry, local_index, client)
-        >>> print(uri)
-        at://did:plc:abc123/ac.foundation.dataset.datasetIndex/...
+        ::
+
+            >>> entry = local_index.get_dataset("mnist-train")
+            >>> uri = promote_to_atmosphere(entry, local_index, client)
+            >>> print(uri)
+            at://did:plc:abc123/ac.foundation.dataset.datasetIndex/...
     """
     from .atmosphere import DatasetPublisher
     from ._schema_codec import schema_to_type

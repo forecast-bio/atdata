@@ -30,7 +30,7 @@ from atdata._type_utils import (
     is_ndarray_type,
     extract_ndarray_dtype,
 )
-from atdata._protocols import IndexEntry, AbstractDataStore
+from atdata._protocols import IndexEntry, AbstractDataStore, Packable
 
 from pathlib import Path
 from uuid import uuid4
@@ -85,9 +85,11 @@ class SchemaNamespace:
     schema's class becomes available as an attribute on this namespace.
 
     Example:
-        >>> index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
-        >>> MyType = index.types.MySample
-        >>> sample = MyType(field1="hello", field2=42)
+        ::
+
+            >>> index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
+            >>> MyType = index.types.MySample
+            >>> sample = MyType(field1="hello", field2=42)
 
     The namespace supports:
     - Attribute access: ``index.types.MySample``
@@ -106,9 +108,9 @@ class SchemaNamespace:
     """
 
     def __init__(self) -> None:
-        self._types: dict[str, Type[PackableSample]] = {}
+        self._types: dict[str, Type[Packable]] = {}
 
-    def _register(self, name: str, cls: Type[PackableSample]) -> None:
+    def _register(self, name: str, cls: Type[Packable]) -> None:
         """Register a schema type in the namespace."""
         self._types[name] = cls
 
@@ -142,7 +144,7 @@ class SchemaNamespace:
         names = ", ".join(sorted(self._types.keys()))
         return f"SchemaNamespace({names})"
 
-    def get(self, name: str, default: T | None = None) -> Type[PackableSample] | T | None:
+    def get(self, name: str, default: T | None = None) -> Type[Packable] | T | None:
         """Get a type by name, returning default if not found.
 
         Args:
@@ -355,7 +357,7 @@ class LocalSchemaRecord:
 ##
 # Helpers
 
-def _kind_str_for_sample_type( st: Type[PackableSample] ) -> str:
+def _kind_str_for_sample_type( st: Type[Packable] ) -> str:
     """Return fully-qualified 'module.name' string for a sample type."""
     return f'{st.__module__}.{st.__name__}'
 
@@ -435,7 +437,7 @@ _ATDATA_URI_PREFIX = "atdata://local/sampleSchema/"
 _LEGACY_URI_PREFIX = "local://schemas/"
 
 
-def _schema_ref_from_type(sample_type: Type[PackableSample], version: str) -> str:
+def _schema_ref_from_type(sample_type: Type[Packable], version: str) -> str:
     """Generate 'atdata://local/sampleSchema/{name}@{version}' reference."""
     return _make_schema_ref(sample_type.__name__, version)
 
@@ -506,7 +508,7 @@ def _python_type_to_field_type(python_type: Any) -> dict:
 
 
 def _build_schema_record(
-    sample_type: Type[PackableSample],
+    sample_type: Type[Packable],
     *,
     version: str,
     description: str | None = None,
@@ -1026,16 +1028,18 @@ class Index:
         as attributes on this namespace.
 
         Example:
-            >>> index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
-            >>> MyType = index.types.MySample
-            >>> sample = MyType(name="hello", value=42)
+            ::
+
+                >>> index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
+                >>> MyType = index.types.MySample
+                >>> sample = MyType(name="hello", value=42)
 
         Returns:
             SchemaNamespace containing all loaded schema types.
         """
         return self._schema_namespace
 
-    def load_schema(self, ref: str) -> Type[PackableSample]:
+    def load_schema(self, ref: str) -> Type[Packable]:
         """Load a schema and make it available in the types namespace.
 
         This method decodes the schema, optionally generates a Python module
@@ -1055,13 +1059,15 @@ class Index:
             ValueError: If schema cannot be decoded.
 
         Example:
-            >>> # Load and use immediately
-            >>> MyType = index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
-            >>> sample = MyType(name="hello", value=42)
-            >>>
-            >>> # Or access later via namespace
-            >>> index.load_schema("atdata://local/sampleSchema/OtherType@1.0.0")
-            >>> other = index.types.OtherType(data="test")
+            ::
+
+                >>> # Load and use immediately
+                >>> MyType = index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
+                >>> sample = MyType(name="hello", value=42)
+                >>>
+                >>> # Or access later via namespace
+                >>> index.load_schema("atdata://local/sampleSchema/OtherType@1.0.0")
+                >>> other = index.types.OtherType(data="test")
         """
         # Decode the schema (uses generated module if auto_stubs enabled)
         cls = self.decode_schema(ref)
@@ -1085,13 +1091,15 @@ class Index:
             is disabled.
 
         Example:
-            >>> index = LocalIndex(auto_stubs=True)
-            >>> ref = index.publish_schema(MySample, version="1.0.0")
-            >>> index.load_schema(ref)
-            >>> print(index.get_import_path(ref))
-            local.MySample_1_0_0
-            >>> # Then in your code:
-            >>> # from local.MySample_1_0_0 import MySample
+            ::
+
+                >>> index = LocalIndex(auto_stubs=True)
+                >>> ref = index.publish_schema(MySample, version="1.0.0")
+                >>> index.load_schema(ref)
+                >>> print(index.get_import_path(ref))
+                local.MySample_1_0_0
+                >>> # Then in your code:
+                >>> # from local.MySample_1_0_0 import MySample
         """
         if self._stub_manager is None:
             return None
@@ -1107,14 +1115,19 @@ class Index:
 
         return f"{authority}.{module_name}"
 
-    @property
-    def all_entries(self) -> list[LocalDatasetEntry]:
-        """Get all index entries as a list.
+    def list_entries(self) -> list[LocalDatasetEntry]:
+        """Get all index entries as a materialized list.
 
         Returns:
             List of all LocalDatasetEntry objects in the index.
         """
         return list(self.entries)
+
+    # Legacy alias for backwards compatibility
+    @property
+    def all_entries(self) -> list[LocalDatasetEntry]:
+        """Get all index entries as a list (deprecated, use list_entries())."""
+        return self.list_entries()
 
     @property
     def entries(self) -> Generator[LocalDatasetEntry, None, None]:
@@ -1277,13 +1290,22 @@ class Index:
         """
         return self.get_entry_by_name(ref)
 
-    def list_datasets(self) -> Iterator[LocalDatasetEntry]:
-        """List all dataset entries (AbstractIndex protocol).
+    @property
+    def datasets(self) -> Generator[LocalDatasetEntry, None, None]:
+        """Lazily iterate over all dataset entries (AbstractIndex protocol).
 
         Yields:
             IndexEntry for each dataset.
         """
         return self.entries
+
+    def list_datasets(self) -> list[LocalDatasetEntry]:
+        """Get all dataset entries as a materialized list (AbstractIndex protocol).
+
+        Returns:
+            List of IndexEntry for each dataset.
+        """
+        return self.list_entries()
 
     # Schema operations
 
@@ -1320,7 +1342,7 @@ class Index:
 
     def publish_schema(
         self,
-        sample_type: Type[PackableSample],
+        sample_type: type,
         *,
         version: str | None = None,
         description: str | None = None,
@@ -1328,7 +1350,7 @@ class Index:
         """Publish a schema for a sample type to Redis.
 
         Args:
-            sample_type: The PackableSample subclass to publish.
+            sample_type: A Packable type (@packable-decorated or PackableSample subclass).
             version: Semantic version string (e.g., '1.0.0'). If None,
                 auto-increments from the latest published version (patch bump),
                 or starts at '1.0.0' if no previous version exists.
@@ -1340,8 +1362,26 @@ class Index:
 
         Raises:
             ValueError: If sample_type is not a dataclass.
-            TypeError: If a field type is not supported.
+            TypeError: If sample_type doesn't satisfy the Packable protocol,
+                or if a field type is not supported.
         """
+        # Validate that sample_type satisfies Packable protocol at runtime
+        # This catches non-packable types early with a clear error message
+        try:
+            # Check protocol compliance by verifying required methods exist
+            if not (hasattr(sample_type, 'from_data') and
+                    hasattr(sample_type, 'from_bytes') and
+                    callable(getattr(sample_type, 'from_data', None)) and
+                    callable(getattr(sample_type, 'from_bytes', None))):
+                raise TypeError(
+                    f"{sample_type.__name__} does not satisfy the Packable protocol. "
+                    "Use @packable decorator or inherit from PackableSample."
+                )
+        except AttributeError:
+            raise TypeError(
+                f"sample_type must be a class, got {type(sample_type).__name__}"
+            )
+
         # Auto-increment version if not specified
         if version is None:
             latest = self._get_latest_schema_version(sample_type.__name__)
@@ -1453,16 +1493,15 @@ class Index:
                 schema['$ref'] = _make_schema_ref(name, version)
             yield LocalSchemaRecord.from_dict(schema)
 
-    def list_schemas(self) -> Iterator[dict]:
-        """List all schema records (AbstractIndex protocol).
+    def list_schemas(self) -> list[dict]:
+        """Get all schema records as a materialized list (AbstractIndex protocol).
 
-        Yields:
-            Schema records as dictionaries.
+        Returns:
+            List of schema records as dictionaries.
         """
-        for record in self.schemas:
-            yield record.to_dict()
+        return [record.to_dict() for record in self.schemas]
 
-    def decode_schema(self, ref: str) -> Type[PackableSample]:
+    def decode_schema(self, ref: str) -> Type[Packable]:
         """Reconstruct a Python PackableSample type from a stored schema.
 
         This method enables loading datasets without knowing the sample type
@@ -1513,12 +1552,14 @@ class Index:
             The decoded type, cast to match the type_hint for IDE support.
 
         Example:
-            >>> # After enabling auto_stubs and configuring IDE extraPaths:
-            >>> from local.MySample_1_0_0 import MySample
-            >>>
-            >>> # This gives full IDE autocomplete:
-            >>> DecodedType = index.decode_schema_as(ref, MySample)
-            >>> sample = DecodedType(text="hello", value=42)  # IDE knows signature!
+            ::
+
+                >>> # After enabling auto_stubs and configuring IDE extraPaths:
+                >>> from local.MySample_1_0_0 import MySample
+                >>>
+                >>> # This gives full IDE autocomplete:
+                >>> DecodedType = index.decode_schema_as(ref, MySample)
+                >>> sample = DecodedType(text="hello", value=42)  # IDE knows signature!
 
         Note:
             The type_hint is only used for static type checking - at runtime,

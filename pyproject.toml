@@ -1,6 +1,6 @@
 [project]
 name = "atdata"
-version = "0.2.1a1"
+version = "0.2.2b1"
 description = "A loose federation of distributed, typed datasets"
 readme = "README.md"
 authors = [
@@ -51,5 +51,6 @@ dev = [
     "moto[s3]>=5.0.29",
     "pytest>=8.4.2",
     "pytest-cov>=7.0.0",
+    "quartodoc>=0.11.1",
     "ruff>=0.14.13",
 ]

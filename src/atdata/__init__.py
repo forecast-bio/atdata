@@ -39,6 +39,7 @@ Main Components:
 # Expose components
 
 from .dataset import (
+    DictSample as DictSample,
     PackableSample as PackableSample,
     SampleBatch as SampleBatch,
     Dataset as Dataset,
@@ -57,6 +58,7 @@ from ._hf_api import (
 )
 
 from ._protocols import (
+    Packable as Packable,
     IndexEntry as IndexEntry,
     AbstractIndex as AbstractIndex,
     AbstractDataStore as AbstractDataStore,
@@ -66,6 +68,7 @@ from ._protocols import (
 from ._sources import (
     URLSource as URLSource,
     S3Source as S3Source,
+    BlobSource as BlobSource,
 )
 
 from ._schema_codec import (
@@ -84,5 +87,5 @@ from .promote import (
 # ATProto integration (lazy import to avoid requiring atproto package)
 from . import atmosphere as atmosphere
 
-
-#
+# CLI entry point
+from .cli import main as main

@@ -6,9 +6,8 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Complete API reference for atdata">
 
-<title>API Reference – atdata</title>
+<title>index – atdata</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -20,41 +19,6 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
-}
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -112,7 +76,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link rel="stylesheet" href="../assets/styles.css">
 </head>
 
-<body class="nav-sidebar docked nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -292,7 +256,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link active" href="../index.html" aria-current="page"> 
+    <a class="nav-link" href="../index.html"> 
 <span class="menu-text">Guide</span></a>
   </li>  
   <li class="nav-item dropdown ">
@@ -323,6 +287,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">Reference</span>
     </a>
     <ul class="dropdown-menu" aria-labelledby="nav-menu-reference">    
+        <li>
+    <a class="dropdown-item" href="../reference/architecture.html">
+ <span class="dropdown-text">Architecture Overview</span></a>
+  </li>  
         <li>
     <a class="dropdown-item" href="../reference/packable-samples.html">
  <span class="dropdown-text">Packable Samples</span></a>
@@ -359,10 +327,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="dropdown-item" href="../reference/uri-spec.html">
  <span class="dropdown-text">URI Specification</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="../reference/troubleshooting.html">
+ <span class="dropdown-text">Troubleshooting &amp; FAQ</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../reference/deployment.html">
+ <span class="dropdown-text">Deployment Guide</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item">
-    <a class="nav-link" href="../api/index.html"> 
+    <a class="nav-link active" href="../api/index.html" aria-current="page"> 
 <span class="menu-text">API</span></a>
   </li>  
 </ul>
@@ -379,804 +355,209 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
       </div> <!-- /container-fluid -->
     </nav>
-  <nav class="quarto-secondary-nav">
-    <div class="container-fluid d-flex">
-      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
-        <i class="bi bi-layout-text-sidebar-reverse"></i>
-      </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../api/index.html">API Reference</a></li><li class="breadcrumb-item"><a href="../api/index.html">API Reference</a></li></ol></nav>
-        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
-        </a>
-    </div>
-  </nav>
 </header>
 <!-- content -->
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
-  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
-    <div class="sidebar-menu-container"> 
-    <ul class="list-unstyled mt-1">
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">atdata</span></a>
-  </div>
-</li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
- <span class="menu-text">Getting Started</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../tutorials/quickstart.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Quick Start</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../tutorials/local-workflow.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Local Workflow</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../tutorials/atmosphere.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Atmosphere Publishing</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../tutorials/promotion.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Promotion Workflow</span></a>
-  </div>
-</li>
-      </ul>
-  </li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
- <span class="menu-text">Reference</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../reference/packable-samples.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Packable Samples</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../reference/datasets.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Datasets</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../reference/lenses.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Lenses</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../reference/local-storage.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Local Storage</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../reference/atmosphere.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Atmosphere (ATProto Integration)</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../reference/promotion.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Promotion Workflow</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../reference/load-dataset.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">load_dataset API</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../reference/protocols.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Protocols</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../reference/uri-spec.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">URI Specification</span></a>
-  </div>
-</li>
-      </ul>
-  </li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
- <span class="menu-text">API Reference</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../api/index.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">API Reference</span></a>
-  </div>
-</li>
-      </ul>
-  </li>
-    </ul>
-    </div>
-</nav>
-<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         <nav id="TOC" role="doc-toc" class="toc-active">
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#core-module-atdata" id="toc-core-module-atdata" class="nav-link active" data-scroll-target="#core-module-atdata">Core Module (<code>atdata</code>)</a>
+  <li><a href="#api-reference" id="toc-api-reference" class="nav-link active" data-scroll-target="#api-reference">API Reference</a>
   <ul class="collapse">
-  <li><a href="#decorators" id="toc-decorators" class="nav-link" data-scroll-target="#decorators">Decorators</a></li>
-  <li><a href="#classes" id="toc-classes" class="nav-link" data-scroll-target="#classes">Classes</a></li>
-  <li><a href="#functions" id="toc-functions" class="nav-link" data-scroll-target="#functions">Functions</a></li>
-  </ul></li>
-  <li><a href="#local-module-atdata.local" id="toc-local-module-atdata.local" class="nav-link" data-scroll-target="#local-module-atdata.local">Local Module (<code>atdata.local</code>)</a>
-  <ul class="collapse">
-  <li><a href="#classes-1" id="toc-classes-1" class="nav-link" data-scroll-target="#classes-1">Classes</a></li>
-  </ul></li>
-  <li><a href="#atmosphere-module-atdata.atmosphere" id="toc-atmosphere-module-atdata.atmosphere" class="nav-link" data-scroll-target="#atmosphere-module-atdata.atmosphere">Atmosphere Module (<code>atdata.atmosphere</code>)</a>
-  <ul class="collapse">
-  <li><a href="#classes-2" id="toc-classes-2" class="nav-link" data-scroll-target="#classes-2">Classes</a></li>
-  </ul></li>
-  <li><a href="#promote-module-atdata.promote" id="toc-promote-module-atdata.promote" class="nav-link" data-scroll-target="#promote-module-atdata.promote">Promote Module (<code>atdata.promote</code>)</a>
-  <ul class="collapse">
-  <li><a href="#functions-1" id="toc-functions-1" class="nav-link" data-scroll-target="#functions-1">Functions</a></li>
-  </ul></li>
-  <li><a href="#protocols-atdata._protocols" id="toc-protocols-atdata._protocols" class="nav-link" data-scroll-target="#protocols-atdata._protocols">Protocols (<code>atdata._protocols</code>)</a>
-  <ul class="collapse">
-  <li><a href="#indexentry" id="toc-indexentry" class="nav-link" data-scroll-target="#indexentry"><code>IndexEntry</code></a></li>
-  <li><a href="#abstractindex" id="toc-abstractindex" class="nav-link" data-scroll-target="#abstractindex"><code>AbstractIndex</code></a></li>
-  <li><a href="#abstractdatastore" id="toc-abstractdatastore" class="nav-link" data-scroll-target="#abstractdatastore"><code>AbstractDataStore</code></a></li>
+  <li><a href="#core" id="toc-core" class="nav-link" data-scroll-target="#core">Core</a></li>
+  <li><a href="#protocols" id="toc-protocols" class="nav-link" data-scroll-target="#protocols">Protocols</a></li>
+  <li><a href="#data-sources" id="toc-data-sources" class="nav-link" data-scroll-target="#data-sources">Data Sources</a></li>
+  <li><a href="#local-storage" id="toc-local-storage" class="nav-link" data-scroll-target="#local-storage">Local Storage</a></li>
+  <li><a href="#atmosphere" id="toc-atmosphere" class="nav-link" data-scroll-target="#atmosphere">Atmosphere</a></li>
+  <li><a href="#promotion" id="toc-promotion" class="nav-link" data-scroll-target="#promotion">Promotion</a></li>
   </ul></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/your-org/atdata/edit/main/api/index.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/your-org/atdata/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../api/index.html">API Reference</a></li><li class="breadcrumb-item"><a href="../api/index.html">API Reference</a></li></ol></nav>
-<div class="quarto-title">
-<h1 class="title">API Reference</h1>
-</div>
-
-<div>
-  <div class="description">
-    Complete API reference for atdata
-  </div>
-</div>
 
 
-<div class="quarto-title-meta">
 
-    
-  
-    
-  </div>
-  
-
-
-</header>
-
-
-<p>This page provides a comprehensive reference for the atdata API.</p>
-<section id="core-module-atdata" class="level2">
-<h2 class="anchored" data-anchor-id="core-module-atdata">Core Module (<code>atdata</code>)</h2>
-<section id="decorators" class="level3">
-<h3 class="anchored" data-anchor-id="decorators">Decorators</h3>
-<section id="packable" class="level4">
-<h4 class="anchored" data-anchor-id="packable"><code>@packable</code></h4>
-<div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MySample:</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    field: <span class="bu">str</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    array: NDArray</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Converts a class into a <code>PackableSample</code> with automatic msgpack serialization.</p>
-</section>
-<section id="lens" class="level4">
-<h4 class="anchored" data-anchor-id="lens"><code>@lens</code></h4>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.lens</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> transform(src: SourceType) <span class="op">-&gt;</span> ViewType:</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ViewType(...)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Creates a lens transformation and registers it in the <code>LensNetwork</code>.</p>
-</section>
-</section>
-<section id="classes" class="level3">
-<h3 class="anchored" data-anchor-id="classes">Classes</h3>
-<section id="packablesample" class="level4">
-<h4 class="anchored" data-anchor-id="packablesample"><code>PackableSample</code></h4>
-<p>Base class for typed samples with serialization support.</p>
+<section id="api-reference" class="level1 doc doc-index">
+<h1 class="doc doc-index">API Reference</h1>
+<section id="core" class="level2">
+<h2 class="anchored" data-anchor-id="core">Core</h2>
+<p>Core types, decorators, and dataset classes</p>
 <table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Property/Method</th>
-<th>Description</th>
-</tr>
-</thead>
 <tbody>
 <tr class="odd">
-<td><code>.packed</code></td>
-<td>Serialize to msgpack bytes</td>
+<td><a href="../api/packable.html#atdata.packable">packable</a></td>
+<td>Decorator to convert a regular class into a <code>PackableSample</code>.</td>
 </tr>
 <tr class="even">
-<td><code>.as_wds</code></td>
-<td>Get WebDataset dict with <code>__key__</code> and <code>msgpack</code></td>
+<td><a href="../api/PackableSample.html#atdata.PackableSample">PackableSample</a></td>
+<td>Base class for samples that can be serialized with msgpack.</td>
 </tr>
 <tr class="odd">
-<td><code>.from_bytes(data)</code></td>
-<td>Class method to deserialize from bytes</td>
+<td><a href="../api/DictSample.html#atdata.DictSample">DictSample</a></td>
+<td>Dynamic sample type providing dict-like access to raw msgpack data.</td>
 </tr>
 <tr class="even">
-<td><code>.from_data(dict)</code></td>
-<td>Class method to create from dictionary</td>
+<td><a href="../api/Dataset.html#atdata.Dataset">Dataset</a></td>
+<td>A typed dataset built on WebDataset with lens transformations.</td>
+</tr>
+<tr class="odd">
+<td><a href="../api/SampleBatch.html#atdata.SampleBatch">SampleBatch</a></td>
+<td>A batch of samples with automatic attribute aggregation.</td>
+</tr>
+<tr class="even">
+<td><a href="../api/Lens.html#atdata.Lens">Lens</a></td>
+<td>A bidirectional transformation between two sample types.</td>
+</tr>
+<tr class="odd">
+<td><a href="lens.qmd#atdata.lens">lens</a></td>
+<td>Lens-based type transformations for datasets.</td>
+</tr>
+<tr class="even">
+<td><a href="../api/load_dataset.html#atdata.load_dataset">load_dataset</a></td>
+<td>Load a dataset from local files, remote URLs, or an index.</td>
+</tr>
+<tr class="odd">
+<td><a href="../api/DatasetDict.html#atdata.DatasetDict">DatasetDict</a></td>
+<td>A dictionary of split names to Dataset instances.</td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="datasetst" class="level4">
-<h4 class="anchored" data-anchor-id="datasetst"><code>Dataset[ST]</code></h4>
-<p>Generic typed dataset wrapping WebDataset tar files.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[MySample](<span class="st">"data-{000000..000009}.tar"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="protocols" class="level2">
+<h2 class="anchored" data-anchor-id="protocols">Protocols</h2>
+<p>Abstract protocols for storage backends</p>
 <table class="caption-top table">
-<colgroup>
-<col style="width: 56%">
-<col style="width: 43%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Property/Method</th>
-<th>Description</th>
-</tr>
-</thead>
 <tbody>
 <tr class="odd">
-<td><code>.url</code></td>
-<td>The dataset URL pattern</td>
+<td><a href="../api/Packable-protocol.html#atdata.Packable">Packable</a></td>
+<td>Structural protocol for packable sample types.</td>
 </tr>
 <tr class="even">
-<td><code>.sample_type</code></td>
-<td>The sample type class</td>
+<td><a href="../api/IndexEntry.html#atdata.IndexEntry">IndexEntry</a></td>
+<td>Common interface for index entries (local or atmosphere).</td>
 </tr>
 <tr class="odd">
-<td><code>.shard_list</code></td>
-<td>List of individual shard URLs</td>
+<td><a href="../api/AbstractIndex.html#atdata.AbstractIndex">AbstractIndex</a></td>
+<td>Protocol for index operations - implemented by LocalIndex and AtmosphereIndex.</td>
 </tr>
 <tr class="even">
-<td><code>.metadata</code></td>
-<td>Metadata dict (if metadata_url provided)</td>
+<td><a href="../api/AbstractDataStore.html#atdata.AbstractDataStore">AbstractDataStore</a></td>
+<td>Protocol for data storage operations.</td>
 </tr>
 <tr class="odd">
-<td><code>.ordered(batch_size=1)</code></td>
-<td>Iterate in order</td>
-</tr>
-<tr class="even">
-<td><code>.shuffled(batch_size=1, buffer_shards=100, buffer_samples=10000)</code></td>
-<td>Iterate shuffled</td>
-</tr>
-<tr class="odd">
-<td><code>.as_type(ViewType)</code></td>
-<td>View through a lens transformation</td>
-</tr>
-<tr class="even">
-<td><code>.to_parquet(path, ...)</code></td>
-<td>Export to parquet format</td>
+<td><a href="../api/DataSource.html#atdata.DataSource">DataSource</a></td>
+<td>Protocol for data sources that provide streams to Dataset.</td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="samplebatchdt" class="level4">
-<h4 class="anchored" data-anchor-id="samplebatchdt"><code>SampleBatch[DT]</code></h4>
-<p>Batch of samples with automatic attribute aggregation.</p>
+<section id="data-sources" class="level2">
+<h2 class="anchored" data-anchor-id="data-sources">Data Sources</h2>
+<p>Data source implementations for streaming</p>
 <table class="caption-top table">
-<colgroup>
-<col style="width: 43%">
-<col style="width: 56%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Property</th>
-<th>Description</th>
-</tr>
-</thead>
 <tbody>
 <tr class="odd">
-<td><code>.&lt;field&gt;</code></td>
-<td>Access aggregated field (NDArray stacked, others as list)</td>
+<td><a href="../api/URLSource.html#atdata.URLSource">URLSource</a></td>
+<td>Data source for WebDataset-compatible URLs.</td>
 </tr>
 <tr class="even">
-<td><code>.sample_type</code></td>
-<td>The sample type class</td>
+<td><a href="../api/S3Source.html#atdata.S3Source">S3Source</a></td>
+<td>Data source for S3-compatible storage with explicit credentials.</td>
+</tr>
+<tr class="odd">
+<td><a href="../api/BlobSource.html#atdata.BlobSource">BlobSource</a></td>
+<td>Data source for ATProto PDS blob storage.</td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="lenss-v" class="level4">
-<h4 class="anchored" data-anchor-id="lenss-v"><code>Lens[S, V]</code></h4>
-<p>Bidirectional transformation between types.</p>
+<section id="local-storage" class="level2">
+<h2 class="anchored" data-anchor-id="local-storage">Local Storage</h2>
+<p>Local Redis/S3 storage backend</p>
 <table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Property/Method</th>
-<th>Description</th>
-</tr>
-</thead>
 <tbody>
 <tr class="odd">
-<td><code>.get(source)</code></td>
-<td>Transform source to view</td>
+<td><a href="../api/local.Index.html#atdata.local.Index">local.Index</a></td>
+<td>Redis-backed index for tracking datasets in a repository.</td>
 </tr>
 <tr class="even">
-<td><code>.put(view, source)</code></td>
-<td>Update source from view</td>
+<td><a href="../api/local.LocalDatasetEntry.html#atdata.local.LocalDatasetEntry">local.LocalDatasetEntry</a></td>
+<td>Index entry for a dataset stored in the local repository.</td>
 </tr>
 <tr class="odd">
-<td><code>@lens.putter</code></td>
-<td>Decorator to add putter function</td>
+<td><a href="../api/local.S3DataStore.html#atdata.local.S3DataStore">local.S3DataStore</a></td>
+<td>S3-compatible data store implementing AbstractDataStore protocol.</td>
 </tr>
 </tbody>
 </table>
 </section>
-</section>
-<section id="functions" class="level3">
-<h3 class="anchored" data-anchor-id="functions">Functions</h3>
-<section id="load_dataset" class="level4">
-<h4 class="anchored" data-anchor-id="load_dataset"><code>load_dataset()</code></h4>
-<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> load_dataset(</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    path: <span class="bu">str</span>,</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    sample_type: Type[ST] <span class="op">=</span> <span class="va">None</span>,</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    split: <span class="bu">str</span> <span class="op">=</span> <span class="va">None</span>,</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    data_files: <span class="bu">str</span> <span class="op">|</span> <span class="bu">list</span> <span class="op">|</span> <span class="bu">dict</span> <span class="op">=</span> <span class="va">None</span>,</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    streaming: <span class="bu">bool</span> <span class="op">=</span> <span class="va">False</span>,</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    index: AbstractIndex <span class="op">=</span> <span class="va">None</span>,</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> Dataset[ST] <span class="op">|</span> DatasetDict</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>HuggingFace-style dataset loading.</p>
-<hr>
-</section>
-</section>
-</section>
-<section id="local-module-atdata.local" class="level2">
-<h2 class="anchored" data-anchor-id="local-module-atdata.local">Local Module (<code>atdata.local</code>)</h2>
-<section id="classes-1" class="level3">
-<h3 class="anchored" data-anchor-id="classes-1">Classes</h3>
-<section id="localindex" class="level4">
-<h4 class="anchored" data-anchor-id="localindex"><code>LocalIndex</code></h4>
-<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> LocalIndex(redis<span class="op">=</span>redis_connection)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># or</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> LocalIndex(host<span class="op">=</span><span class="st">"localhost"</span>, port<span class="op">=</span><span class="dv">6379</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="atmosphere" class="level2">
+<h2 class="anchored" data-anchor-id="atmosphere">Atmosphere</h2>
+<p>ATProto federation</p>
 <table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Method</th>
-<th>Description</th>
-</tr>
-</thead>
 <tbody>
 <tr class="odd">
-<td><code>.add_entry(dataset, name, ...)</code></td>
-<td>Add dataset to index</td>
+<td><a href="../api/AtmosphereClient.html#atdata.atmosphere.AtmosphereClient">AtmosphereClient</a></td>
+<td>ATProto client wrapper for atdata operations.</td>
 </tr>
 <tr class="even">
-<td><code>.get_entry(cid)</code></td>
-<td>Get entry by CID</td>
+<td><a href="../api/AtmosphereIndex.html#atdata.atmosphere.AtmosphereIndex">AtmosphereIndex</a></td>
+<td>ATProto index implementing AbstractIndex protocol.</td>
 </tr>
 <tr class="odd">
-<td><code>.get_entry_by_name(name)</code></td>
-<td>Get entry by name</td>
+<td><a href="../api/AtmosphereIndexEntry.html#atdata.atmosphere.AtmosphereIndexEntry">AtmosphereIndexEntry</a></td>
+<td>Entry wrapper for ATProto dataset records implementing IndexEntry protocol.</td>
 </tr>
 <tr class="even">
-<td><code>.entries</code></td>
-<td>Iterator over all entries</td>
+<td><a href="../api/PDSBlobStore.html#atdata.atmosphere.PDSBlobStore">PDSBlobStore</a></td>
+<td>PDS blob store implementing AbstractDataStore protocol.</td>
 </tr>
 <tr class="odd">
-<td><code>.all_entries</code></td>
-<td>List of all entries</td>
+<td><a href="../api/SchemaPublisher.html#atdata.atmosphere.SchemaPublisher">SchemaPublisher</a></td>
+<td>Publishes PackableSample schemas to ATProto.</td>
 </tr>
 <tr class="even">
-<td><code>.publish_schema(type, version, ...)</code></td>
-<td>Publish schema</td>
+<td><a href="../api/SchemaLoader.html#atdata.atmosphere.SchemaLoader">SchemaLoader</a></td>
+<td>Loads PackableSample schemas from ATProto.</td>
 </tr>
 <tr class="odd">
-<td><code>.get_schema(ref)</code></td>
-<td>Get schema record</td>
+<td><a href="../api/DatasetPublisher.html#atdata.atmosphere.DatasetPublisher">DatasetPublisher</a></td>
+<td>Publishes dataset index records to ATProto.</td>
 </tr>
 <tr class="even">
-<td><code>.list_schemas()</code></td>
-<td>List all schemas</td>
+<td><a href="../api/DatasetLoader.html#atdata.atmosphere.DatasetLoader">DatasetLoader</a></td>
+<td>Loads dataset records from ATProto.</td>
 </tr>
 <tr class="odd">
-<td><code>.decode_schema(ref)</code></td>
-<td>Reconstruct sample type from schema</td>
+<td><a href="../api/LensPublisher.html#atdata.atmosphere.LensPublisher">LensPublisher</a></td>
+<td>Publishes Lens transformation records to ATProto.</td>
+</tr>
+<tr class="even">
+<td><a href="../api/LensLoader.html#atdata.atmosphere.LensLoader">LensLoader</a></td>
+<td>Loads lens records from ATProto.</td>
+</tr>
+<tr class="odd">
+<td><a href="../api/AtUri.html#atdata.atmosphere.AtUri">AtUri</a></td>
+<td>Parsed AT Protocol URI.</td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="localdatasetentry" class="level4">
-<h4 class="anchored" data-anchor-id="localdatasetentry"><code>LocalDatasetEntry</code></h4>
-<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>entry <span class="op">=</span> LocalDatasetEntry(</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    _name<span class="op">=</span><span class="st">"my-dataset"</span>,</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    _schema_ref<span class="op">=</span><span class="st">"local://schemas/MySample@1.0.0"</span>,</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    _data_urls<span class="op">=</span>[<span class="st">"s3://bucket/data.tar"</span>],</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    _metadata<span class="op">=</span>{<span class="st">"key"</span>: <span class="st">"value"</span>},</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="promotion" class="level2">
+<h2 class="anchored" data-anchor-id="promotion">Promotion</h2>
+<p>Local to atmosphere migration</p>
 <table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Property</th>
-<th>Description</th>
-</tr>
-</thead>
 <tbody>
 <tr class="odd">
-<td><code>.name</code></td>
-<td>Dataset name</td>
-</tr>
-<tr class="even">
-<td><code>.schema_ref</code></td>
-<td>Schema reference</td>
-</tr>
-<tr class="odd">
-<td><code>.data_urls</code></td>
-<td>List of WebDataset URLs</td>
-</tr>
-<tr class="even">
-<td><code>.metadata</code></td>
-<td>Metadata dict or None</td>
-</tr>
-<tr class="odd">
-<td><code>.cid</code></td>
-<td>Content identifier</td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="repo-deprecated" class="level4">
-<h4 class="anchored" data-anchor-id="repo-deprecated"><code>Repo</code> (Deprecated)</h4>
-<div class="callout callout-style-default callout-warning callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Warning
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p><code>Repo</code> is deprecated. Use <code>LocalIndex</code> with <code>S3DataStore</code> instead:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>store <span class="op">=</span> S3DataStore(credentials, bucket<span class="op">=</span><span class="st">"my-bucket"</span>)</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> LocalIndex(data_store<span class="op">=</span>store)</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>entry <span class="op">=</span> index.insert_dataset(dataset, name<span class="op">=</span><span class="st">"my-dataset"</span>, prefix<span class="op">=</span><span class="st">"data"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</div>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 38%">
-<col style="width: 61%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Method</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>.insert(dataset, name, ...)</code></td>
-<td>Insert dataset (returns entry, stored_dataset)</td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="s3datastore" class="level4">
-<h4 class="anchored" data-anchor-id="s3datastore"><code>S3DataStore</code></h4>
-<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>store <span class="op">=</span> S3DataStore(credentials, bucket)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Method</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>.write_shards(dataset, prefix, ...)</code></td>
-<td>Write dataset shards to S3</td>
-</tr>
-<tr class="even">
-<td><code>.read_url(url)</code></td>
-<td>Resolve URL for reading</td>
-</tr>
-<tr class="odd">
-<td><code>.supports_streaming()</code></td>
-<td>Check streaming support</td>
-</tr>
-</tbody>
-</table>
-<hr>
-</section>
-</section>
-</section>
-<section id="atmosphere-module-atdata.atmosphere" class="level2">
-<h2 class="anchored" data-anchor-id="atmosphere-module-atdata.atmosphere">Atmosphere Module (<code>atdata.atmosphere</code>)</h2>
-<section id="classes-2" class="level3">
-<h3 class="anchored" data-anchor-id="classes-2">Classes</h3>
-<section id="atmosphereclient" class="level4">
-<h4 class="anchored" data-anchor-id="atmosphereclient"><code>AtmosphereClient</code></h4>
-<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> AtmosphereClient(base_url<span class="op">=</span><span class="st">"https://bsky.social"</span>)</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>client.login(handle, password)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Property/Method</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>.did</code></td>
-<td>User DID</td>
-</tr>
-<tr class="even">
-<td><code>.handle</code></td>
-<td>User handle</td>
-</tr>
-<tr class="odd">
-<td><code>.login(handle, password)</code></td>
-<td>Authenticate</td>
-</tr>
-<tr class="even">
-<td><code>.login_with_session(session_string)</code></td>
-<td>Restore session</td>
-</tr>
-<tr class="odd">
-<td><code>.export_session()</code></td>
-<td>Export session for later</td>
-</tr>
-<tr class="even">
-<td><code>.create_record(collection, record, ...)</code></td>
-<td>Create ATProto record</td>
-</tr>
-<tr class="odd">
-<td><code>.get_record(uri)</code></td>
-<td>Get record by URI</td>
-</tr>
-<tr class="even">
-<td><code>.upload_blob(data, mime_type)</code></td>
-<td>Upload blob to PDS</td>
-</tr>
-<tr class="odd">
-<td><code>.get_blob(did, cid)</code></td>
-<td>Fetch blob data</td>
-</tr>
-<tr class="even">
-<td><code>.get_blob_url(did, cid)</code></td>
-<td>Get blob download URL</td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="atmosphereindex" class="level4">
-<h4 class="anchored" data-anchor-id="atmosphereindex"><code>AtmosphereIndex</code></h4>
-<div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> AtmosphereIndex(client)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Method</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>.publish_schema(type, version, ...)</code></td>
-<td>Publish schema</td>
-</tr>
-<tr class="even">
-<td><code>.get_schema(uri)</code></td>
-<td>Get schema record</td>
-</tr>
-<tr class="odd">
-<td><code>.list_schemas(repo=None)</code></td>
-<td>List schemas</td>
-</tr>
-<tr class="even">
-<td><code>.decode_schema(uri)</code></td>
-<td>Reconstruct sample type</td>
-</tr>
-<tr class="odd">
-<td><code>.insert_dataset(dataset, name, ...)</code></td>
-<td>Publish dataset</td>
-</tr>
-<tr class="even">
-<td><code>.get_dataset(uri)</code></td>
-<td>Get dataset entry</td>
-</tr>
-<tr class="odd">
-<td><code>.list_datasets(repo=None)</code></td>
-<td>List datasets</td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="schemapublisher" class="level4">
-<h4 class="anchored" data-anchor-id="schemapublisher"><code>SchemaPublisher</code></h4>
-<div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>publisher <span class="op">=</span> SchemaPublisher(client)</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>uri <span class="op">=</span> publisher.publish(SampleType, name, version, ...)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</section>
-<section id="schemaloader" class="level4">
-<h4 class="anchored" data-anchor-id="schemaloader"><code>SchemaLoader</code></h4>
-<div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>loader <span class="op">=</span> SchemaLoader(client)</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>schemas <span class="op">=</span> loader.list_all(limit<span class="op">=</span><span class="dv">100</span>)</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>schema <span class="op">=</span> loader.get(uri)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</section>
-<section id="datasetpublisher" class="level4">
-<h4 class="anchored" data-anchor-id="datasetpublisher"><code>DatasetPublisher</code></h4>
-<div class="sourceCode" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>publisher <span class="op">=</span> DatasetPublisher(client)</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>uri <span class="op">=</span> publisher.publish(dataset, name, schema_uri, ...)</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>uri <span class="op">=</span> publisher.publish_with_urls(urls, schema_uri, name, ...)</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>uri <span class="op">=</span> publisher.publish_with_blobs(blobs, schema_uri, name, ...)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</section>
-<section id="datasetloader" class="level4">
-<h4 class="anchored" data-anchor-id="datasetloader"><code>DatasetLoader</code></h4>
-<div class="sourceCode" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>loader <span class="op">=</span> DatasetLoader(client)</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>datasets <span class="op">=</span> loader.list_all(limit<span class="op">=</span><span class="dv">100</span>)</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>record <span class="op">=</span> loader.get(uri)</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>urls <span class="op">=</span> loader.get_urls(uri)</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>storage_type <span class="op">=</span> loader.get_storage_type(uri)  <span class="co"># "external" or "blobs"</span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>blob_urls <span class="op">=</span> loader.get_blob_urls(uri)</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>blobs <span class="op">=</span> loader.get_blobs(uri)</span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> loader.to_dataset(uri, SampleType)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</section>
-<section id="aturi" class="level4">
-<h4 class="anchored" data-anchor-id="aturi"><code>AtUri</code></h4>
-<div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>uri <span class="op">=</span> AtUri.parse(<span class="st">"at://did:plc:abc/collection/rkey"</span>)</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(uri.authority, uri.collection, uri.rkey)</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="bu">str</span>(uri))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<hr>
-</section>
-</section>
-</section>
-<section id="promote-module-atdata.promote" class="level2">
-<h2 class="anchored" data-anchor-id="promote-module-atdata.promote">Promote Module (<code>atdata.promote</code>)</h2>
-<section id="functions-1" class="level3">
-<h3 class="anchored" data-anchor-id="functions-1">Functions</h3>
-<section id="promote_to_atmosphere" class="level4">
-<h4 class="anchored" data-anchor-id="promote_to_atmosphere"><code>promote_to_atmosphere()</code></h4>
-<div class="sourceCode" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> promote_to_atmosphere(</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    entry: IndexEntry,</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    local_index: AbstractIndex,</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    client: AtmosphereClient,</span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    name: <span class="bu">str</span> <span class="op">=</span> <span class="va">None</span>,</span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    description: <span class="bu">str</span> <span class="op">=</span> <span class="va">None</span>,</span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    tags: <span class="bu">list</span>[<span class="bu">str</span>] <span class="op">=</span> <span class="va">None</span>,</span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    license: <span class="bu">str</span> <span class="op">=</span> <span class="va">None</span>,</span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    data_store: AbstractDataStore <span class="op">=</span> <span class="va">None</span>,</span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> AtUri</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Migrate a local dataset to the ATProto atmosphere.</p>
-<hr>
-</section>
-</section>
-</section>
-<section id="protocols-atdata._protocols" class="level2">
-<h2 class="anchored" data-anchor-id="protocols-atdata._protocols">Protocols (<code>atdata._protocols</code>)</h2>
-<section id="indexentry" class="level3">
-<h3 class="anchored" data-anchor-id="indexentry"><code>IndexEntry</code></h3>
-<p>Protocol for dataset index entries.</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Property</th>
-<th>Type</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>name</code></td>
-<td><code>str</code></td>
-</tr>
-<tr class="even">
-<td><code>schema_ref</code></td>
-<td><code>str</code></td>
-</tr>
-<tr class="odd">
-<td><code>data_urls</code></td>
-<td><code>list[str]</code></td>
-</tr>
-<tr class="even">
-<td><code>metadata</code></td>
-<td><code>dict \| None</code></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="abstractindex" class="level3">
-<h3 class="anchored" data-anchor-id="abstractindex"><code>AbstractIndex</code></h3>
-<p>Protocol for index operations.</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Method</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>insert_dataset(...)</code></td>
-<td>Insert dataset</td>
-</tr>
-<tr class="even">
-<td><code>get_dataset(...)</code></td>
-<td>Get dataset</td>
-</tr>
-<tr class="odd">
-<td><code>list_datasets(...)</code></td>
-<td>List datasets</td>
-</tr>
-<tr class="even">
-<td><code>publish_schema(...)</code></td>
-<td>Publish schema</td>
-</tr>
-<tr class="odd">
-<td><code>get_schema(...)</code></td>
-<td>Get schema</td>
-</tr>
-<tr class="even">
-<td><code>list_schemas(...)</code></td>
-<td>List schemas</td>
-</tr>
-<tr class="odd">
-<td><code>decode_schema(...)</code></td>
-<td>Decode schema to type</td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="abstractdatastore" class="level3">
-<h3 class="anchored" data-anchor-id="abstractdatastore"><code>AbstractDataStore</code></h3>
-<p>Protocol for data storage operations.</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Method</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>write_shards(...)</code></td>
-<td>Write dataset shards</td>
-</tr>
-<tr class="even">
-<td><code>read_url(...)</code></td>
-<td>Resolve URL for reading</td>
-</tr>
-<tr class="odd">
-<td><code>supports_streaming()</code></td>
-<td>Check streaming support</td>
+<td><a href="../api/promote_to_atmosphere.html#atdata.promote.promote_to_atmosphere">promote_to_atmosphere</a></td>
+<td>Promote a local dataset to the atmosphere network.</td>
 </tr>
 </tbody>
 </table>

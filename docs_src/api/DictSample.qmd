@@ -1,0 +1,151 @@
+# DictSample { #atdata.DictSample }
+
+```python
+DictSample(_data=None, **kwargs)
+```
+
+Dynamic sample type providing dict-like access to raw msgpack data.
+
+This class is the default sample type for datasets when no explicit type is
+specified. It stores the raw unpacked msgpack data and provides both
+attribute-style (``sample.field``) and dict-style (``sample["field"]``)
+access to fields.
+
+``DictSample`` is useful for:
+- Exploring datasets without defining a schema first
+- Working with datasets that have variable schemas
+- Prototyping before committing to a typed schema
+
+To convert to a typed schema, use ``Dataset.as_type()`` with a
+``@packable``-decorated class. Every ``@packable`` class automatically
+registers a lens from ``DictSample``, making this conversion seamless.
+
+## Example {.doc-section .doc-section-example}
+
+::
+
+    >>> ds = load_dataset("path/to/data.tar")  # Returns Dataset[DictSample]
+    >>> for sample in ds.ordered():
+    ...     print(sample.some_field)      # Attribute access
+    ...     print(sample["other_field"])  # Dict access
+    ...     print(sample.keys())          # Inspect available fields
+    ...
+    >>> # Convert to typed schema
+    >>> typed_ds = ds.as_type(MyTypedSample)
+
+## Note {.doc-section .doc-section-note}
+
+NDArray fields are stored as raw bytes in DictSample. They are only
+converted to numpy arrays when accessed through a typed sample class.
+
+## Attributes
+
+| Name | Description |
+| --- | --- |
+| [as_wds](#atdata.DictSample.as_wds) | Pack this sample's data for writing to WebDataset. |
+| [packed](#atdata.DictSample.packed) | Pack this sample's data into msgpack bytes. |
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [from_bytes](#atdata.DictSample.from_bytes) | Create a DictSample from raw msgpack bytes. |
+| [from_data](#atdata.DictSample.from_data) | Create a DictSample from unpacked msgpack data. |
+| [get](#atdata.DictSample.get) | Get a field value with optional default. |
+| [items](#atdata.DictSample.items) | Return list of (field_name, value) tuples. |
+| [keys](#atdata.DictSample.keys) | Return list of field names. |
+| [to_dict](#atdata.DictSample.to_dict) | Return a copy of the underlying data dictionary. |
+| [values](#atdata.DictSample.values) | Return list of field values. |
+
+### from_bytes { #atdata.DictSample.from_bytes }
+
+```python
+DictSample.from_bytes(bs)
+```
+
+Create a DictSample from raw msgpack bytes.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type             | Description                                 | Default    |
+|--------|------------------|---------------------------------------------|------------|
+| bs     | [bytes](`bytes`) | Raw bytes from a msgpack-serialized sample. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                      | Description                                     |
+|--------|-------------------------------------------|-------------------------------------------------|
+|        | [DictSample](`atdata.dataset.DictSample`) | New DictSample instance with the unpacked data. |
+
+### from_data { #atdata.DictSample.from_data }
+
+```python
+DictSample.from_data(data)
+```
+
+Create a DictSample from unpacked msgpack data.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                | Description                          | Default    |
+|--------|-----------------------------------------------------|--------------------------------------|------------|
+| data   | [dict](`dict`)\[[str](`str`), [Any](`typing.Any`)\] | Dictionary with field names as keys. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                      | Description                                |
+|--------|-------------------------------------------|--------------------------------------------|
+|        | [DictSample](`atdata.dataset.DictSample`) | New DictSample instance wrapping the data. |
+
+### get { #atdata.DictSample.get }
+
+```python
+DictSample.get(key, default=None)
+```
+
+Get a field value with optional default.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name    | Type                | Description                             | Default    |
+|---------|---------------------|-----------------------------------------|------------|
+| key     | [str](`str`)        | Field name to access.                   | _required_ |
+| default | [Any](`typing.Any`) | Value to return if field doesn't exist. | `None`     |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                | Description                 |
+|--------|---------------------|-----------------------------|
+|        | [Any](`typing.Any`) | The field value or default. |
+
+### items { #atdata.DictSample.items }
+
+```python
+DictSample.items()
+```
+
+Return list of (field_name, value) tuples.
+
+### keys { #atdata.DictSample.keys }
+
+```python
+DictSample.keys()
+```
+
+Return list of field names.
+
+### to_dict { #atdata.DictSample.to_dict }
+
+```python
+DictSample.to_dict()
+```
+
+Return a copy of the underlying data dictionary.
+
+### values { #atdata.DictSample.values }
+
+```python
+DictSample.values()
+```
+
+Return list of field values.

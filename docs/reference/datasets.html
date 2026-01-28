@@ -324,6 +324,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     </a>
     <ul class="dropdown-menu" aria-labelledby="nav-menu-reference">    
         <li>
+    <a class="dropdown-item" href="../reference/architecture.html">
+ <span class="dropdown-text">Architecture Overview</span></a>
+  </li>  
+        <li>
     <a class="dropdown-item" href="../reference/packable-samples.html">
  <span class="dropdown-text">Packable Samples</span></a>
   </li>  
@@ -359,6 +363,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="dropdown-item" href="../reference/uri-spec.html">
  <span class="dropdown-text">URI Specification</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="../reference/troubleshooting.html">
+ <span class="dropdown-text">Troubleshooting &amp; FAQ</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../reference/deployment.html">
+ <span class="dropdown-text">Deployment Guide</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item">
@@ -384,7 +396,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/packable-samples.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/datasets.html">Datasets</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/architecture.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/datasets.html">Datasets</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -448,6 +460,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../reference/architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Architecture Overview</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../reference/packable-samples.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Packable Samples</span></a>
   </div>
@@ -500,21 +518,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">URI Specification</span></a>
   </div>
 </li>
-      </ul>
-  </li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
- <span class="menu-text">API Reference</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../api/index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">API Reference</span></a>
+  <a href="../reference/troubleshooting.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Troubleshooting &amp; FAQ</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../reference/deployment.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Deployment Guide</span></a>
   </div>
 </li>
       </ul>
@@ -563,7 +576,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <main class="content" id="quarto-document-content">
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/packable-samples.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/datasets.html">Datasets</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../reference/architecture.html">Reference</a></li><li class="breadcrumb-item"><a href="../reference/datasets.html">Datasets</a></li></ol></nav>
 <div class="quarto-title">
 <h1 class="title">Datasets</h1>
 </div>
@@ -590,7 +603,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>The <code>Dataset</code> class provides typed iteration over WebDataset tar files with automatic batching and lens transformations.</p>
 <section id="creating-a-dataset" class="level2">
 <h2 class="anchored" data-anchor-id="creating-a-dataset">Creating a Dataset</h2>
-<div id="2e18486f" class="cell">
+<div id="dc6c764f" class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -613,7 +626,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="url-source-default" class="level3">
 <h3 class="anchored" data-anchor-id="url-source-default">URL Source (default)</h3>
 <p>When you pass a string to <code>Dataset</code>, it automatically wraps it in a <code>URLSource</code>:</p>
-<div id="da2c83cf" class="cell">
+<div id="43d34823" class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># These are equivalent:</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[ImageSample](<span class="st">"data-{000000..000009}.tar"</span>)</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[ImageSample](atdata.URLSource(<span class="st">"data-{000000..000009}.tar"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -622,7 +635,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="s3-source" class="level3">
 <h3 class="anchored" data-anchor-id="s3-source">S3 Source</h3>
 <p>For private S3 buckets or S3-compatible storage (Cloudflare R2, MinIO), use <code>S3Source</code>:</p>
-<div id="708170e4" class="cell">
+<div id="665f191c" class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># From explicit credentials</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>source <span class="op">=</span> atdata.S3Source(</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    bucket<span class="op">=</span><span class="st">"my-bucket"</span>,</span>
@@ -660,7 +673,7 @@ Note
 <section id="ordered-iteration" class="level3">
 <h3 class="anchored" data-anchor-id="ordered-iteration">Ordered Iteration</h3>
 <p>Iterate through samples in their original order:</p>
-<div id="b01d3cf1" class="cell">
+<div id="f610e2e6" class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># With batching (default batch_size=1)</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> dataset.ordered(batch_size<span class="op">=</span><span class="dv">32</span>):</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    images <span class="op">=</span> batch.image  <span class="co"># numpy array (32, H, W, C)</span></span>
@@ -674,7 +687,7 @@ Note
 <section id="shuffled-iteration" class="level3">
 <h3 class="anchored" data-anchor-id="shuffled-iteration">Shuffled Iteration</h3>
 <p>Iterate with randomized order at both shard and sample levels:</p>
-<div id="6e6f41af" class="cell">
+<div id="31fd18b7" class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> dataset.shuffled(batch_size<span class="op">=</span><span class="dv">32</span>):</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Samples are shuffled</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    process(batch)</span>
@@ -705,7 +718,7 @@ Tip
 <section id="samplebatch" class="level2">
 <h2 class="anchored" data-anchor-id="samplebatch">SampleBatch</h2>
 <p>When iterating with a <code>batch_size</code>, each iteration yields a <code>SampleBatch</code> with automatic attribute aggregation.</p>
-<div id="f8dbbfd8" class="cell">
+<div id="a62e95b5" class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Sample:</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    features: NDArray  <span class="co"># shape (256,)</span></span>
@@ -725,7 +738,7 @@ Tip
 <section id="type-transformations-with-lenses" class="level2">
 <h2 class="anchored" data-anchor-id="type-transformations-with-lenses">Type Transformations with Lenses</h2>
 <p>View a dataset through a different sample type using registered lenses:</p>
-<div id="4af800d8" class="cell">
+<div id="18cd1b39" class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> SimplifiedSample:</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    label: <span class="bu">str</span></span>
@@ -747,7 +760,7 @@ Tip
 <section id="shard-list" class="level3">
 <h3 class="anchored" data-anchor-id="shard-list">Shard List</h3>
 <p>Get the list of individual tar files:</p>
-<div id="4b585c57" class="cell">
+<div id="06e7f4d9" class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[Sample](<span class="st">"data-{000000..000009}.tar"</span>)</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>shards <span class="op">=</span> dataset.shard_list</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># ['data-000000.tar', 'data-000001.tar', ..., 'data-000009.tar']</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -756,7 +769,7 @@ Tip
 <section id="metadata" class="level3">
 <h3 class="anchored" data-anchor-id="metadata">Metadata</h3>
 <p>Datasets can have associated metadata from a URL:</p>
-<div id="edb2350d" class="cell">
+<div id="4f4fd9f1" class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[Sample](</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"data-{000000..000009}.tar"</span>,</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    metadata_url<span class="op">=</span><span class="st">"https://example.com/metadata.msgpack"</span></span>
@@ -770,7 +783,7 @@ Tip
 <section id="writing-datasets" class="level2">
 <h2 class="anchored" data-anchor-id="writing-datasets">Writing Datasets</h2>
 <p>Use WebDataset’s <code>TarWriter</code> or <code>ShardWriter</code> to create datasets:</p>
-<div id="21bf922f" class="cell">
+<div id="62cb57ad" class="cell">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> webdataset <span class="im">as</span> wds</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -793,7 +806,7 @@ Tip
 <section id="parquet-export" class="level2">
 <h2 class="anchored" data-anchor-id="parquet-export">Parquet Export</h2>
 <p>Export dataset contents to parquet format:</p>
-<div id="01aee72e" class="cell">
+<div id="d47c5a12" class="cell">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Export entire dataset</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>dataset.to_parquet(<span class="st">"output.parquet"</span>)</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -844,7 +857,7 @@ Tip
 <section id="source" class="level3">
 <h3 class="anchored" data-anchor-id="source">Source</h3>
 <p>Access the underlying <code>DataSource</code>:</p>
-<div id="003a36bf" class="cell">
+<div id="e4036932" class="cell">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[Sample](<span class="st">"data.tar"</span>)</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>source <span class="op">=</span> dataset.source  <span class="co"># URLSource instance</span></span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(source.shard_list)  <span class="co"># ['data.tar']</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -853,7 +866,7 @@ Tip
 <section id="sample-type" class="level3">
 <h3 class="anchored" data-anchor-id="sample-type">Sample Type</h3>
 <p>Get the type parameter used to create the dataset:</p>
-<div id="4630dffb" class="cell">
+<div id="3718300e" class="cell">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[ImageSample](<span class="st">"data.tar"</span>)</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dataset.sample_type)  <span class="co"># &lt;class 'ImageSample'&gt;</span></span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dataset.batch_type)   <span class="co"># SampleBatch[ImageSample]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>

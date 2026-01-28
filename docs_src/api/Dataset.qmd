@@ -1,0 +1,241 @@
+# Dataset { #atdata.Dataset }
+
+```python
+Dataset(source=None, metadata_url=None, *, url=None)
+```
+
+A typed dataset built on WebDataset with lens transformations.
+
+This class wraps WebDataset tar archives and provides type-safe iteration
+over samples of a specific ``PackableSample`` type. Samples are stored as
+msgpack-serialized data within WebDataset shards.
+
+The dataset supports:
+- Ordered and shuffled iteration
+- Automatic batching with ``SampleBatch``
+- Type transformations via the lens system (``as_type()``)
+- Export to parquet format
+
+## Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type   | Description                                                            | Default    |
+|--------|--------|------------------------------------------------------------------------|------------|
+| ST     |        | The sample type for this dataset, must derive from ``PackableSample``. | _required_ |
+
+## Attributes {.doc-section .doc-section-attributes}
+
+| Name   | Type   | Description                                        |
+|--------|--------|----------------------------------------------------|
+| url    |        | WebDataset brace-notation URL for the tar file(s). |
+
+## Example {.doc-section .doc-section-example}
+
+::
+
+    >>> ds = Dataset[MyData]("path/to/data-{000000..000009}.tar")
+    >>> for sample in ds.ordered(batch_size=32):
+    ...     # sample is SampleBatch[MyData] with batch_size samples
+    ...     embeddings = sample.embeddings  # shape: (32, ...)
+    ...
+    >>> # Transform to a different view
+    >>> ds_view = ds.as_type(MyDataView)
+
+## Note {.doc-section .doc-section-note}
+
+This class uses Python's ``__orig_class__`` mechanism to extract the
+type parameter at runtime. Instances must be created using the
+subscripted syntax ``Dataset[MyType](url)`` rather than calling the
+constructor directly with an unsubscripted class.
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [as_type](#atdata.Dataset.as_type) | View this dataset through a different sample type using a registered lens. |
+| [list_shards](#atdata.Dataset.list_shards) | Get list of individual dataset shards. |
+| [ordered](#atdata.Dataset.ordered) | Iterate over the dataset in order |
+| [shuffled](#atdata.Dataset.shuffled) | Iterate over the dataset in random order. |
+| [to_parquet](#atdata.Dataset.to_parquet) | Export dataset contents to parquet format. |
+| [wrap](#atdata.Dataset.wrap) | Wrap a raw msgpack sample into the appropriate dataset-specific type. |
+| [wrap_batch](#atdata.Dataset.wrap_batch) | Wrap a batch of raw msgpack samples into a typed SampleBatch. |
+
+### as_type { #atdata.Dataset.as_type }
+
+```python
+Dataset.as_type(other)
+```
+
+View this dataset through a different sample type using a registered lens.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                               | Description                                                                               | Default    |
+|--------|----------------------------------------------------|-------------------------------------------------------------------------------------------|------------|
+| other  | [Type](`typing.Type`)\[[RT](`atdata.dataset.RT`)\] | The target sample type to transform into. Must be a type derived from ``PackableSample``. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                             | Description                                                      |
+|--------|------------------------------------------------------------------|------------------------------------------------------------------|
+|        | [Dataset](`atdata.dataset.Dataset`)\[[RT](`atdata.dataset.RT`)\] | A new ``Dataset`` instance that yields samples of type ``other`` |
+|        | [Dataset](`atdata.dataset.Dataset`)\[[RT](`atdata.dataset.RT`)\] | by applying the appropriate lens transformation from the global  |
+|        | [Dataset](`atdata.dataset.Dataset`)\[[RT](`atdata.dataset.RT`)\] | ``LensNetwork`` registry.                                        |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                                                                       |
+|--------|----------------------------|-----------------------------------------------------------------------------------|
+|        | [ValueError](`ValueError`) | If no registered lens exists between the current sample type and the target type. |
+
+### list_shards { #atdata.Dataset.list_shards }
+
+```python
+Dataset.list_shards()
+```
+
+Get list of individual dataset shards.
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                           | Description                                                       |
+|--------|--------------------------------|-------------------------------------------------------------------|
+|        | [list](`list`)\[[str](`str`)\] | A full (non-lazy) list of the individual ``tar`` files within the |
+|        | [list](`list`)\[[str](`str`)\] | source WebDataset.                                                |
+
+### ordered { #atdata.Dataset.ordered }
+
+```python
+Dataset.ordered(batch_size=None)
+```
+
+Iterate over the dataset in order
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name         | Type   | Description                                                                                                                                             | Default    |
+|--------------|--------|---------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| batch_size ( |        | obj:`int`, optional): The size of iterated batches. Default: None (unbatched). If ``None``, iterates over one sample at a time with no batch dimension. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                       | Description                                                      |
+|--------|------------------------------------------------------------|------------------------------------------------------------------|
+|        | [Iterable](`typing.Iterable`)\[[ST](`atdata.dataset.ST`)\] | obj:`webdataset.DataPipeline` A data pipeline that iterates over |
+|        | [Iterable](`typing.Iterable`)\[[ST](`atdata.dataset.ST`)\] | the dataset in its original sample order                         |
+
+### shuffled { #atdata.Dataset.shuffled }
+
+```python
+Dataset.shuffled(buffer_shards=100, buffer_samples=10000, batch_size=None)
+```
+
+Iterate over the dataset in random order.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name           | Type                 | Description                                                                                                                       | Default   |
+|----------------|----------------------|-----------------------------------------------------------------------------------------------------------------------------------|-----------|
+| buffer_shards  | [int](`int`)         | Number of shards to buffer for shuffling at the shard level. Larger values increase randomness but use more memory. Default: 100. | `100`     |
+| buffer_samples | [int](`int`)         | Number of samples to buffer for shuffling within shards. Larger values increase randomness but use more memory. Default: 10,000.  | `10000`   |
+| batch_size     | [int](`int`) \| None | The size of iterated batches. Default: None (unbatched). If ``None``, iterates over one sample at a time with no batch dimension. | `None`    |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                       | Description                                                       |
+|--------|------------------------------------------------------------|-------------------------------------------------------------------|
+|        | [Iterable](`typing.Iterable`)\[[ST](`atdata.dataset.ST`)\] | A WebDataset data pipeline that iterates over the dataset in      |
+|        | [Iterable](`typing.Iterable`)\[[ST](`atdata.dataset.ST`)\] | randomized order. If ``batch_size`` is not ``None``, yields       |
+|        | [Iterable](`typing.Iterable`)\[[ST](`atdata.dataset.ST`)\] | ``SampleBatch[ST]`` instances; otherwise yields individual ``ST`` |
+|        | [Iterable](`typing.Iterable`)\[[ST](`atdata.dataset.ST`)\] | samples.                                                          |
+
+### to_parquet { #atdata.Dataset.to_parquet }
+
+```python
+Dataset.to_parquet(path, sample_map=None, maxcount=None, **kwargs)
+```
+
+Export dataset contents to parquet format.
+
+Converts all samples to a pandas DataFrame and saves to parquet file(s).
+Useful for interoperability with data analysis tools.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name       | Type                                                                                 | Description                                                                                                                      | Default    |
+|------------|--------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------|------------|
+| path       | [Pathlike](`atdata.dataset.Pathlike`)                                                | Output path for the parquet file. If ``maxcount`` is specified, files are named ``{stem}-{segment:06d}.parquet``.                | _required_ |
+| sample_map | [Optional](`typing.Optional`)\[[SampleExportMap](`atdata.dataset.SampleExportMap`)\] | Optional function to convert samples to dictionaries. Defaults to ``dataclasses.asdict``.                                        | `None`     |
+| maxcount   | [Optional](`typing.Optional`)\[[int](`int`)\]                                        | If specified, split output into multiple files with at most this many samples each. Recommended for large datasets.              | `None`     |
+| **kwargs   |                                                                                      | Additional arguments passed to ``pandas.DataFrame.to_parquet()``. Common options include ``compression``, ``index``, ``engine``. | `{}`       |
+
+#### Warning {.doc-section .doc-section-warning}
+
+**Memory Usage**: When ``maxcount=None`` (default), this method loads
+the **entire dataset into memory** as a pandas DataFrame before writing.
+For large datasets, this can cause memory exhaustion.
+
+For datasets larger than available RAM, always specify ``maxcount``::
+
+    # Safe for large datasets - processes in chunks
+    ds.to_parquet("output.parquet", maxcount=10000)
+
+This creates multiple parquet files: ``output-000000.parquet``,
+``output-000001.parquet``, etc.
+
+#### Example {.doc-section .doc-section-example}
+
+::
+
+    >>> ds = Dataset[MySample]("data.tar")
+    >>> # Small dataset - load all at once
+    >>> ds.to_parquet("output.parquet")
+    >>>
+    >>> # Large dataset - process in chunks
+    >>> ds.to_parquet("output.parquet", maxcount=50000)
+
+### wrap { #atdata.Dataset.wrap }
+
+```python
+Dataset.wrap(sample)
+```
+
+Wrap a raw msgpack sample into the appropriate dataset-specific type.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                          | Description                                                                          | Default    |
+|--------|-----------------------------------------------|--------------------------------------------------------------------------------------|------------|
+| sample | [WDSRawSample](`atdata.dataset.WDSRawSample`) | A dictionary containing at minimum a ``'msgpack'`` key with serialized sample bytes. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                      | Description                                                          |
+|--------|---------------------------|----------------------------------------------------------------------|
+|        | [ST](`atdata.dataset.ST`) | A deserialized sample of type ``ST``, optionally transformed through |
+|        | [ST](`atdata.dataset.ST`) | a lens if ``as_type()`` was called.                                  |
+
+### wrap_batch { #atdata.Dataset.wrap_batch }
+
+```python
+Dataset.wrap_batch(batch)
+```
+
+Wrap a batch of raw msgpack samples into a typed SampleBatch.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                        | Description                                                                         | Default    |
+|--------|---------------------------------------------|-------------------------------------------------------------------------------------|------------|
+| batch  | [WDSRawBatch](`atdata.dataset.WDSRawBatch`) | A dictionary containing a ``'msgpack'`` key with a list of serialized sample bytes. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                     | Description                                                       |
+|--------|--------------------------------------------------------------------------|-------------------------------------------------------------------|
+|        | [SampleBatch](`atdata.dataset.SampleBatch`)\[[ST](`atdata.dataset.ST`)\] | A ``SampleBatch[ST]`` containing deserialized samples, optionally |
+|        | [SampleBatch](`atdata.dataset.SampleBatch`)\[[ST](`atdata.dataset.ST`)\] | transformed through a lens if ``as_type()`` was called.           |
+
+#### Note {.doc-section .doc-section-note}
+
+This implementation deserializes samples one at a time, then
+aggregates them into a batch.

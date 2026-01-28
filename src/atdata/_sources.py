@@ -14,19 +14,21 @@ By providing streams directly, we can support private repos, custom
 endpoints, and future backends like ATProto blobs.
 
 Example:
-    >>> # Standard URL (uses WebDataset's gopen)
-    >>> source = URLSource("https://example.com/data-{000..009}.tar")
-    >>> ds = Dataset[MySample](source)
-    >>>
-    >>> # Private S3 with credentials
-    >>> source = S3Source(
-    ...     bucket="my-bucket",
-    ...     keys=["train/shard-000.tar", "train/shard-001.tar"],
-    ...     endpoint="https://my-r2.cloudflarestorage.com",
-    ...     access_key="...",
-    ...     secret_key="...",
-    ... )
-    >>> ds = Dataset[MySample](source)
+    ::
+
+        >>> # Standard URL (uses WebDataset's gopen)
+        >>> source = URLSource("https://example.com/data-{000..009}.tar")
+        >>> ds = Dataset[MySample](source)
+        >>>
+        >>> # Private S3 with credentials
+        >>> source = S3Source(
+        ...     bucket="my-bucket",
+        ...     keys=["train/shard-000.tar", "train/shard-001.tar"],
+        ...     endpoint="https://my-r2.cloudflarestorage.com",
+        ...     access_key="...",
+        ...     secret_key="...",
+        ... )
+        >>> ds = Dataset[MySample](source)
 """
 
 from __future__ import annotations
@@ -53,20 +55,28 @@ class URLSource:
         url: URL or brace pattern for the shards.
 
     Example:
-        >>> source = URLSource("https://example.com/train-{000..009}.tar")
-        >>> for shard_id, stream in source.shards():
-        ...     print(f"Streaming {shard_id}")
+        ::
+
+            >>> source = URLSource("https://example.com/train-{000..009}.tar")
+            >>> for shard_id, stream in source.shards:
+            ...     print(f"Streaming {shard_id}")
     """
 
     url: str
 
-    @property
-    def shard_list(self) -> list[str]:
+    def list_shards(self) -> list[str]:
         """Expand brace pattern and return list of shard URLs."""
         return list(braceexpand.braceexpand(self.url))
 
+    # Legacy alias for backwards compatibility
+    @property
+    def shard_list(self) -> list[str]:
+        """Expand brace pattern and return list of shard URLs (deprecated, use list_shards())."""
+        return self.list_shards()
+
+    @property
     def shards(self) -> Iterator[tuple[str, IO[bytes]]]:
-        """Yield (url, stream) pairs for each shard.
+        """Lazily yield (url, stream) pairs for each shard.
 
         Uses WebDataset's gopen to open URLs, which handles various schemes:
         - http/https: via curl
@@ -78,7 +88,7 @@ class URLSource:
         Yields:
             Tuple of (url, file-like stream).
         """
-        for url in self.shard_list:
+        for url in self.list_shards():
             stream = wds.gopen(url, mode="rb")
             yield url, stream
 
@@ -92,9 +102,9 @@ class URLSource:
             File-like stream from gopen.
 
         Raises:
-            KeyError: If shard_id is not in shard_list.
+            KeyError: If shard_id is not in list_shards().
         """
-        if shard_id not in self.shard_list:
+        if shard_id not in self.list_shards():
             raise KeyError(f"Shard not found: {shard_id}")
         return wds.gopen(shard_id, mode="rb")
 
@@ -122,15 +132,17 @@ class S3Source:
         region: Optional AWS region (defaults to us-east-1).
 
     Example:
-        >>> source = S3Source(
-        ...     bucket="my-datasets",
-        ...     keys=["train/shard-000.tar", "train/shard-001.tar"],
-        ...     endpoint="https://abc123.r2.cloudflarestorage.com",
-        ...     access_key="AKIAIOSFODNN7EXAMPLE",
-        ...     secret_key="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
-        ... )
-        >>> for shard_id, stream in source.shards():
-        ...     process(stream)
+        ::
+
+            >>> source = S3Source(
+            ...     bucket="my-datasets",
+            ...     keys=["train/shard-000.tar", "train/shard-001.tar"],
+            ...     endpoint="https://abc123.r2.cloudflarestorage.com",
+            ...     access_key="AKIAIOSFODNN7EXAMPLE",
+            ...     secret_key="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+            ... )
+            >>> for shard_id, stream in source.shards:
+            ...     process(stream)
     """
 
     bucket: str
@@ -166,13 +178,19 @@ class S3Source:
         self._client = boto3.client("s3", **client_kwargs)
         return self._client
 
-    @property
-    def shard_list(self) -> list[str]:
+    def list_shards(self) -> list[str]:
         """Return list of S3 URIs for the shards."""
         return [f"s3://{self.bucket}/{key}" for key in self.keys]
 
+    # Legacy alias for backwards compatibility
+    @property
+    def shard_list(self) -> list[str]:
+        """Return list of S3 URIs for the shards (deprecated, use list_shards())."""
+        return self.list_shards()
+
+    @property
     def shards(self) -> Iterator[tuple[str, IO[bytes]]]:
-        """Yield (s3_uri, stream) pairs for each shard.
+        """Lazily yield (s3_uri, stream) pairs for each shard.
 
         Uses boto3 to get streaming response bodies, which are file-like
         objects that can be read directly by tarfile.
@@ -198,9 +216,9 @@ class S3Source:
             StreamingBody for reading the object.
 
         Raises:
-            KeyError: If shard_id is not in shard_list.
+            KeyError: If shard_id is not in list_shards().
         """
-        if shard_id not in self.shard_list:
+        if shard_id not in self.list_shards():
             raise KeyError(f"Shard not found: {shard_id}")
 
         # Parse s3://bucket/key -> key
@@ -241,10 +259,12 @@ class S3Source:
             ValueError: If URLs are not valid s3:// URLs or span multiple buckets.
 
         Example:
-            >>> source = S3Source.from_urls(
-            ...     ["s3://my-bucket/train-000.tar", "s3://my-bucket/train-001.tar"],
-            ...     endpoint="https://r2.example.com",
-            ... )
+            ::
+
+                >>> source = S3Source.from_urls(
+                ...     ["s3://my-bucket/train-000.tar", "s3://my-bucket/train-001.tar"],
+                ...     endpoint="https://r2.example.com",
+                ... )
         """
         if not urls:
             raise ValueError("urls cannot be empty")
@@ -298,12 +318,14 @@ class S3Source:
             Configured S3Source.
 
         Example:
-            >>> creds = {
-            ...     "AWS_ACCESS_KEY_ID": "...",
-            ...     "AWS_SECRET_ACCESS_KEY": "...",
-            ...     "AWS_ENDPOINT": "https://r2.example.com",
-            ... }
-            >>> source = S3Source.from_credentials(creds, "my-bucket", ["data.tar"])
+            ::
+
+                >>> creds = {
+                ...     "AWS_ACCESS_KEY_ID": "...",
+                ...     "AWS_SECRET_ACCESS_KEY": "...",
+                ...     "AWS_ENDPOINT": "https://r2.example.com",
+                ... }
+                >>> source = S3Source.from_credentials(creds, "my-bucket", ["data.tar"])
         """
         return cls(
             bucket=bucket,
@@ -315,7 +337,179 @@ class S3Source:
         )
 
 
+@dataclass
+class BlobSource:
+    """Data source for ATProto PDS blob storage.
+
+    Streams dataset shards stored as blobs on an ATProto Personal Data Server.
+    Each shard is identified by a blob reference containing the DID and CID.
+
+    This source resolves blob references to HTTP URLs and streams the content
+    directly, supporting efficient iteration over shards without downloading
+    everything upfront.
+
+    Attributes:
+        blob_refs: List of blob reference dicts with 'did' and 'cid' keys.
+        pds_endpoint: Optional PDS endpoint URL. If not provided, resolved from DID.
+
+    Example:
+        ::
+
+            >>> source = BlobSource(
+            ...     blob_refs=[
+            ...         {"did": "did:plc:abc123", "cid": "bafyrei..."},
+            ...         {"did": "did:plc:abc123", "cid": "bafyrei..."},
+            ...     ],
+            ... )
+            >>> for shard_id, stream in source.shards:
+            ...     process(stream)
+    """
+
+    blob_refs: list[dict[str, str]]
+    pds_endpoint: str | None = None
+    _endpoint_cache: dict[str, str] = field(default_factory=dict, repr=False, compare=False)
+
+    def _resolve_pds_endpoint(self, did: str) -> str:
+        """Resolve PDS endpoint for a DID, with caching."""
+        if did in self._endpoint_cache:
+            return self._endpoint_cache[did]
+
+        if self.pds_endpoint:
+            self._endpoint_cache[did] = self.pds_endpoint
+            return self.pds_endpoint
+
+        import requests
+
+        # Resolve via plc.directory
+        if did.startswith("did:plc:"):
+            plc_url = f"https://plc.directory/{did}"
+            response = requests.get(plc_url, timeout=10)
+            response.raise_for_status()
+            doc = response.json()
+
+            for service in doc.get("service", []):
+                if service.get("type") == "AtprotoPersonalDataServer":
+                    endpoint = service.get("serviceEndpoint", "")
+                    self._endpoint_cache[did] = endpoint
+                    return endpoint
+
+        raise ValueError(f"Could not resolve PDS endpoint for {did}")
+
+    def _get_blob_url(self, did: str, cid: str) -> str:
+        """Get HTTP URL for fetching a blob."""
+        endpoint = self._resolve_pds_endpoint(did)
+        return f"{endpoint}/xrpc/com.atproto.sync.getBlob?did={did}&cid={cid}"
+
+    def _make_shard_id(self, ref: dict[str, str]) -> str:
+        """Create shard identifier from blob reference."""
+        return f"at://{ref['did']}/blob/{ref['cid']}"
+
+    def list_shards(self) -> list[str]:
+        """Return list of AT URI-style shard identifiers."""
+        return [self._make_shard_id(ref) for ref in self.blob_refs]
+
+    @property
+    def shards(self) -> Iterator[tuple[str, IO[bytes]]]:
+        """Lazily yield (at_uri, stream) pairs for each shard.
+
+        Fetches blobs via HTTP from the PDS and yields streaming responses.
+
+        Yields:
+            Tuple of (at://did/blob/cid URI, streaming response body).
+        """
+        import requests
+
+        for ref in self.blob_refs:
+            did = ref["did"]
+            cid = ref["cid"]
+            url = self._get_blob_url(did, cid)
+
+            response = requests.get(url, stream=True, timeout=60)
+            response.raise_for_status()
+
+            shard_id = self._make_shard_id(ref)
+            # Wrap response in a file-like object
+            yield shard_id, response.raw
+
+    def open_shard(self, shard_id: str) -> IO[bytes]:
+        """Open a single shard by its AT URI.
+
+        Args:
+            shard_id: AT URI of the shard (at://did/blob/cid).
+
+        Returns:
+            Streaming response body for reading the blob.
+
+        Raises:
+            KeyError: If shard_id is not in list_shards().
+            ValueError: If shard_id format is invalid.
+        """
+        if shard_id not in self.list_shards():
+            raise KeyError(f"Shard not found: {shard_id}")
+
+        # Parse at://did/blob/cid
+        if not shard_id.startswith("at://"):
+            raise ValueError(f"Invalid shard ID format: {shard_id}")
+
+        parts = shard_id[5:].split("/")  # Remove 'at://'
+        if len(parts) != 3 or parts[1] != "blob":
+            raise ValueError(f"Invalid blob URI format: {shard_id}")
+
+        did, _, cid = parts
+        url = self._get_blob_url(did, cid)
+
+        import requests
+        response = requests.get(url, stream=True, timeout=60)
+        response.raise_for_status()
+        return response.raw
+
+    @classmethod
+    def from_refs(
+        cls,
+        refs: list[dict],
+        *,
+        pds_endpoint: str | None = None,
+    ) -> "BlobSource":
+        """Create BlobSource from blob reference dicts.
+
+        Accepts blob references in the format returned by upload_blob:
+        ``{"$type": "blob", "ref": {"$link": "cid"}, ...}``
+
+        Also accepts simplified format: ``{"did": "...", "cid": "..."}``
+
+        Args:
+            refs: List of blob reference dicts.
+            pds_endpoint: Optional PDS endpoint to use for all blobs.
+
+        Returns:
+            Configured BlobSource.
+
+        Raises:
+            ValueError: If refs is empty or format is invalid.
+        """
+        if not refs:
+            raise ValueError("refs cannot be empty")
+
+        blob_refs: list[dict[str, str]] = []
+
+        for ref in refs:
+            if "did" in ref and "cid" in ref:
+                # Simple format
+                blob_refs.append({"did": ref["did"], "cid": ref["cid"]})
+            elif "ref" in ref and "$link" in ref.get("ref", {}):
+                # ATProto blob format - need DID from elsewhere
+                raise ValueError(
+                    "ATProto blob format requires 'did' field. "
+                    "Use from_record_storage() for records with storage.blobs."
+                )
+            else:
+                raise ValueError(f"Invalid blob reference format: {ref}")
+
+        return cls(blob_refs=blob_refs, pds_endpoint=pds_endpoint)
+
+
 __all__ = [
     "URLSource",
     "S3Source",
+    "BlobSource",
 ]

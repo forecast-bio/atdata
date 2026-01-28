@@ -1,0 +1,73 @@
+# SchemaPublisher { #atdata.atmosphere.SchemaPublisher }
+
+```python
+atmosphere.SchemaPublisher(client)
+```
+
+Publishes PackableSample schemas to ATProto.
+
+This class introspects a PackableSample class to extract its field
+definitions and publishes them as an ATProto schema record.
+
+## Example {.doc-section .doc-section-example}
+
+::
+
+    >>> @atdata.packable
+    ... class MySample:
+    ...     image: NDArray
+    ...     label: str
+    ...
+    >>> client = AtmosphereClient()
+    >>> client.login("handle", "password")
+    >>>
+    >>> publisher = SchemaPublisher(client)
+    >>> uri = publisher.publish(MySample, version="1.0.0")
+    >>> print(uri)
+    at://did:plc:.../ac.foundation.dataset.sampleSchema/...
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [publish](#atdata.atmosphere.SchemaPublisher.publish) | Publish a PackableSample schema to ATProto. |
+
+### publish { #atdata.atmosphere.SchemaPublisher.publish }
+
+```python
+atmosphere.SchemaPublisher.publish(
+    sample_type,
+    *,
+    name=None,
+    version='1.0.0',
+    description=None,
+    metadata=None,
+    rkey=None,
+)
+```
+
+Publish a PackableSample schema to ATProto.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name        | Type                                                         | Description                                                        | Default    |
+|-------------|--------------------------------------------------------------|--------------------------------------------------------------------|------------|
+| sample_type | [Type](`typing.Type`)\[[ST](`atdata.atmosphere.schema.ST`)\] | The PackableSample class to publish.                               | _required_ |
+| name        | [Optional](`typing.Optional`)\[[str](`str`)\]                | Human-readable name. Defaults to the class name.                   | `None`     |
+| version     | [str](`str`)                                                 | Semantic version string (e.g., '1.0.0').                           | `'1.0.0'`  |
+| description | [Optional](`typing.Optional`)\[[str](`str`)\]                | Human-readable description.                                        | `None`     |
+| metadata    | [Optional](`typing.Optional`)\[[dict](`dict`)\]              | Arbitrary metadata dictionary.                                     | `None`     |
+| rkey        | [Optional](`typing.Optional`)\[[str](`str`)\]                | Optional explicit record key. If not provided, a TID is generated. | `None`     |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                      | Description                              |
+|--------|-------------------------------------------|------------------------------------------|
+|        | [AtUri](`atdata.atmosphere._types.AtUri`) | The AT URI of the created schema record. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                                                       |
+|--------|----------------------------|-------------------------------------------------------------------|
+|        | [ValueError](`ValueError`) | If sample_type is not a dataclass or client is not authenticated. |
+|        | [TypeError](`TypeError`)   | If a field type is not supported.                                 |

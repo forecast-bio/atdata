@@ -32,18 +32,20 @@ class DatasetPublisher:
     external storage (WebDataset URLs) or ATProto blobs.
 
     Example:
-        >>> dataset = atdata.Dataset[MySample]("s3://bucket/data-{000000..000009}.tar")
-        >>>
-        >>> client = AtmosphereClient()
-        >>> client.login("handle", "password")
-        >>>
-        >>> publisher = DatasetPublisher(client)
-        >>> uri = publisher.publish(
-        ...     dataset,
-        ...     name="My Training Data",
-        ...     description="Training data for my model",
-        ...     tags=["computer-vision", "training"],
-        ... )
+        ::
+
+            >>> dataset = atdata.Dataset[MySample]("s3://bucket/data-{000000..000009}.tar")
+            >>>
+            >>> client = AtmosphereClient()
+            >>> client.login("handle", "password")
+            >>>
+            >>> publisher = DatasetPublisher(client)
+            >>> uri = publisher.publish(
+            ...     dataset,
+            ...     name="My Training Data",
+            ...     description="Training data for my model",
+            ...     tags=["computer-vision", "training"],
+            ... )
     """
 
     def __init__(self, client: AtmosphereClient):
@@ -266,16 +268,18 @@ class DatasetLoader:
     Python class for the sample type.
 
     Example:
-        >>> client = AtmosphereClient()
-        >>> loader = DatasetLoader(client)
-        >>>
-        >>> # List available datasets
-        >>> datasets = loader.list()
-        >>> for ds in datasets:
-        ...     print(ds["name"], ds["schemaRef"])
-        >>>
-        >>> # Get a specific dataset record
-        >>> record = loader.get("at://did:plc:abc/ac.foundation.dataset.record/xyz")
+        ::
+
+            >>> client = AtmosphereClient()
+            >>> loader = DatasetLoader(client)
+            >>>
+            >>> # List available datasets
+            >>> datasets = loader.list()
+            >>> for ds in datasets:
+            ...     print(ds["name"], ds["schemaRef"])
+            >>>
+            >>> # Get a specific dataset record
+            >>> record = loader.get("at://did:plc:abc/ac.foundation.dataset.record/xyz")
     """
 
     def __init__(self, client: AtmosphereClient):
@@ -475,10 +479,12 @@ class DatasetLoader:
             ValueError: If no storage URLs can be resolved.
 
         Example:
-            >>> loader = DatasetLoader(client)
-            >>> dataset = loader.to_dataset(uri, MySampleType)
-            >>> for batch in dataset.shuffled(batch_size=32):
-            ...     process(batch)
+            ::
+
+                >>> loader = DatasetLoader(client)
+                >>> dataset = loader.to_dataset(uri, MySampleType)
+                >>> for batch in dataset.shuffled(batch_size=32):
+                ...     process(batch)
         """
         # Import here to avoid circular import
         from ..dataset import Dataset

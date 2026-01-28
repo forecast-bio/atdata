@@ -1,0 +1,14 @@
+# AtmosphereIndexEntry { #atdata.atmosphere.AtmosphereIndexEntry }
+
+```python
+atmosphere.AtmosphereIndexEntry(uri, record)
+```
+
+Entry wrapper for ATProto dataset records implementing IndexEntry protocol.
+
+## Attributes {.doc-section .doc-section-attributes}
+
+| Name    | Type   | Description            |
+|---------|--------|------------------------|
+| _uri    |        | AT URI of the record.  |
+| _record |        | Raw record dictionary. |

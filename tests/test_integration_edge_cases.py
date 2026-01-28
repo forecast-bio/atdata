@@ -13,10 +13,12 @@ from pathlib import Path
 
 import numpy as np
 from numpy.typing import NDArray
-import webdataset as wds
 
 import atdata
 from atdata.local import LocalIndex, LocalDatasetEntry
+
+# Use centralized tar creation helper from conftest
+from conftest import create_tar_with_samples
 
 
 ##
@@ -73,18 +75,6 @@ class NDArraySample:
 
 
 ##
-# Helper Functions
-
-
-def create_tar_with_samples(tar_path: Path, samples: list) -> None:
-    """Create a tar file with the given samples."""
-    tar_path.parent.mkdir(parents=True, exist_ok=True)
-    with wds.writer.TarWriter(str(tar_path)) as writer:
-        for sample in samples:
-            writer.write(sample.as_wds)
-
-
-##
 # Empty and Single Sample Tests
 
 
@@ -114,6 +104,37 @@ class TestEmptyAndMinimalDatasets:
 
         assert len(batches) >= 1
         assert len(batches[0].samples) == 1
+
+    def test_empty_tar_iteration(self, tmp_path):
+        """Iteration over empty tar file should yield no samples."""
+        import webdataset as wds
+
+        tar_path = tmp_path / "empty-000000.tar"
+        # Create empty tar file with no samples
+        with wds.writer.TarWriter(str(tar_path)):
+            pass
+
+        ds = atdata.Dataset[EmptyCompatSample](str(tar_path))
+
+        # Ordered iteration should yield nothing
+        samples = list(ds.ordered(batch_size=None))
+        assert samples == []
+
+        # Batched iteration should also yield nothing
+        batches = list(ds.ordered(batch_size=10))
+        assert batches == []
+
+    def test_empty_tar_shuffled_iteration(self, tmp_path):
+        """Shuffled iteration over empty tar should yield no samples."""
+        import webdataset as wds
+
+        tar_path = tmp_path / "empty-shuffled-000000.tar"
+        with wds.writer.TarWriter(str(tar_path)):
+            pass
+
+        ds = atdata.Dataset[EmptyCompatSample](str(tar_path))
+        samples = list(ds.shuffled(batch_size=None))
+        assert samples == []
 
 
 ##

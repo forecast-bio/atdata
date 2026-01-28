@@ -1,0 +1,97 @@
+# local.S3DataStore { #atdata.local.S3DataStore }
+
+```python
+local.S3DataStore(credentials, *, bucket)
+```
+
+S3-compatible data store implementing AbstractDataStore protocol.
+
+Handles writing dataset shards to S3-compatible object storage and
+resolving URLs for reading.
+
+## Attributes {.doc-section .doc-section-attributes}
+
+| Name        | Type   | Description                |
+|-------------|--------|----------------------------|
+| credentials |        | S3 credentials dictionary. |
+| bucket      |        | Target bucket name.        |
+| _fs         |        | S3FileSystem instance.     |
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [read_url](#atdata.local.S3DataStore.read_url) | Resolve an S3 URL for reading/streaming. |
+| [supports_streaming](#atdata.local.S3DataStore.supports_streaming) | S3 supports streaming reads. |
+| [write_shards](#atdata.local.S3DataStore.write_shards) | Write dataset shards to S3. |
+
+### read_url { #atdata.local.S3DataStore.read_url }
+
+```python
+local.S3DataStore.read_url(url)
+```
+
+Resolve an S3 URL for reading/streaming.
+
+For S3-compatible stores with custom endpoints (like Cloudflare R2,
+MinIO, etc.), converts s3:// URLs to HTTPS URLs that WebDataset can
+stream directly.
+
+For standard AWS S3 (no custom endpoint), URLs are returned unchanged
+since WebDataset's built-in s3fs integration handles them.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type         | Description                                            | Default    |
+|--------|--------------|--------------------------------------------------------|------------|
+| url    | [str](`str`) | S3 URL to resolve (e.g., 's3://bucket/path/file.tar'). | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name    | Type         | Description                                                      |
+|---------|--------------|------------------------------------------------------------------|
+|         | [str](`str`) | HTTPS URL if custom endpoint is configured, otherwise unchanged. |
+| Example | [str](`str`) | 's3://bucket/path' -> 'https://endpoint.com/bucket/path'         |
+
+### supports_streaming { #atdata.local.S3DataStore.supports_streaming }
+
+```python
+local.S3DataStore.supports_streaming()
+```
+
+S3 supports streaming reads.
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type           | Description   |
+|--------|----------------|---------------|
+|        | [bool](`bool`) | True.         |
+
+### write_shards { #atdata.local.S3DataStore.write_shards }
+
+```python
+local.S3DataStore.write_shards(ds, *, prefix, cache_local=False, **kwargs)
+```
+
+Write dataset shards to S3.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name        | Type                        | Description                                                 | Default    |
+|-------------|-----------------------------|-------------------------------------------------------------|------------|
+| ds          | [Dataset](`atdata.Dataset`) | The Dataset to write.                                       | _required_ |
+| prefix      | [str](`str`)                | Path prefix within bucket (e.g., 'datasets/mnist/v1').      | _required_ |
+| cache_local | [bool](`bool`)              | If True, write locally first then copy to S3.               | `False`    |
+| **kwargs    |                             | Additional args passed to wds.ShardWriter (e.g., maxcount). | `{}`       |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                           | Description                             |
+|--------|--------------------------------|-----------------------------------------|
+|        | [list](`list`)\[[str](`str`)\] | List of S3 URLs for the written shards. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                           | Description                |
+|--------|--------------------------------|----------------------------|
+|        | [RuntimeError](`RuntimeError`) | If no shards were written. |

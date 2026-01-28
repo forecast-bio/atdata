@@ -1,0 +1,26 @@
+# IndexEntry { #atdata.IndexEntry }
+
+```python
+IndexEntry()
+```
+
+Common interface for index entries (local or atmosphere).
+
+Both LocalDatasetEntry and atmosphere DatasetRecord-based entries
+should satisfy this protocol, enabling code that works with either.
+
+## Properties {.doc-section .doc-section-properties}
+
+name: Human-readable dataset name
+schema_ref: Reference to schema (local:// path or AT URI)
+data_urls: WebDataset URLs for the data
+metadata: Arbitrary metadata dict, or None
+
+## Attributes
+
+| Name | Description |
+| --- | --- |
+| [data_urls](#atdata.IndexEntry.data_urls) | WebDataset URLs for the data. |
+| [metadata](#atdata.IndexEntry.metadata) | Arbitrary metadata dictionary, or None if not set. |
+| [name](#atdata.IndexEntry.name) | Human-readable dataset name. |
+| [schema_ref](#atdata.IndexEntry.schema_ref) | Reference to the schema for this dataset. |

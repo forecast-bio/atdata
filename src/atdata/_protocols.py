@@ -20,13 +20,15 @@ Protocols:
     AbstractDataStore: Protocol for data storage operations
 
 Example:
-    >>> def process_datasets(index: AbstractIndex) -> None:
-    ...     for entry in index.list_datasets():
-    ...         print(f"{entry.name}: {entry.data_urls}")
-    ...
-    >>> # Works with either LocalIndex or AtmosphereIndex
-    >>> process_datasets(local_index)
-    >>> process_datasets(atmosphere_index)
+    ::
+
+        >>> def process_datasets(index: AbstractIndex) -> None:
+        ...     for entry in index.list_datasets():
+        ...         print(f"{entry.name}: {entry.data_urls}")
+        ...
+        >>> # Works with either LocalIndex or AtmosphereIndex
+        >>> process_datasets(local_index)
+        >>> process_datasets(atmosphere_index)
 """
 
 from typing import (
@@ -42,7 +44,7 @@ from typing import (
 )
 
 if TYPE_CHECKING:
-    from .dataset import PackableSample, Dataset
+    from .dataset import Dataset
 
 
 ##
@@ -54,21 +56,49 @@ class Packable(Protocol):
     """Structural protocol for packable sample types.
 
     This protocol allows classes decorated with ``@packable`` to be recognized
-    as valid types for lens transformations, even though the decorator doesn't
-    change the class's nominal type at static analysis time.
+    as valid types for lens transformations and schema operations, even though
+    the decorator doesn't change the class's nominal type at static analysis time.
 
     Both ``PackableSample`` subclasses and ``@packable``-decorated classes
     satisfy this protocol structurally.
 
-    Note:
-        This protocol is intentionally minimal - it only requires what's needed
-        for structural compatibility. The actual ``PackableSample`` class has
-        more methods, but lenses only need to know the type is packable.
+    The protocol captures the full interface needed for:
+    - Lens type transformations (as_wds, from_data)
+    - Schema publishing (class introspection via dataclass fields)
+    - Serialization/deserialization (packed, from_bytes)
+
+    Example:
+        ::
+
+            >>> @packable
+            ... class MySample:
+            ...     name: str
+            ...     value: int
+            ...
+            >>> def process(sample_type: Type[Packable]) -> None:
+            ...     # Type checker knows sample_type has from_bytes, packed, etc.
+            ...     instance = sample_type.from_bytes(data)
+            ...     print(instance.packed)
     """
+
+    @classmethod
+    def from_data(cls, data: dict[str, Any]) -> "Packable":
+        """Create instance from unpacked msgpack data dictionary."""
+        ...
+
+    @classmethod
+    def from_bytes(cls, bs: bytes) -> "Packable":
+        """Create instance from raw msgpack bytes."""
+        ...
+
+    @property
+    def packed(self) -> bytes:
+        """Pack this sample's data into msgpack bytes."""
+        ...
 
     @property
     def as_wds(self) -> dict[str, Any]:
-        """WebDataset-compatible representation."""
+        """WebDataset-compatible representation with __key__ and msgpack."""
         ...
 
 
@@ -134,20 +164,45 @@ class AbstractIndex(Protocol):
     A single index can hold datasets of many different sample types. The sample
     type is tracked via schema references, not as a generic parameter on the index.
 
+    Optional Extensions:
+        Some index implementations support additional features:
+        - ``data_store``: An AbstractDataStore for reading/writing dataset shards.
+          If present, ``load_dataset`` will use it for S3 credential resolution.
+
     Example:
-        >>> def publish_and_list(index: AbstractIndex) -> None:
-        ...     # Publish schemas for different types
-        ...     schema1 = index.publish_schema(ImageSample, version="1.0.0")
-        ...     schema2 = index.publish_schema(TextSample, version="1.0.0")
-        ...
-        ...     # Insert datasets of different types
-        ...     index.insert_dataset(image_ds, name="images")
-        ...     index.insert_dataset(text_ds, name="texts")
-        ...
-        ...     # List all datasets (mixed types)
-        ...     for entry in index.list_datasets():
-        ...         print(f"{entry.name} -> {entry.schema_ref}")
+        ::
+
+            >>> def publish_and_list(index: AbstractIndex) -> None:
+            ...     # Publish schemas for different types
+            ...     schema1 = index.publish_schema(ImageSample, version="1.0.0")
+            ...     schema2 = index.publish_schema(TextSample, version="1.0.0")
+            ...
+            ...     # Insert datasets of different types
+            ...     index.insert_dataset(image_ds, name="images")
+            ...     index.insert_dataset(text_ds, name="texts")
+            ...
+            ...     # List all datasets (mixed types)
+            ...     for entry in index.list_datasets():
+            ...         print(f"{entry.name} -> {entry.schema_ref}")
     """
+
+    @property
+    def data_store(self) -> Optional["AbstractDataStore"]:
+        """Optional data store for reading/writing shards.
+
+        If present, ``load_dataset`` will use it for credential resolution
+        (e.g., S3 credentials from S3DataStore).
+
+        Returns:
+            AbstractDataStore instance, or None if this index doesn't have
+            an associated data store.
+
+        Note:
+            Not all index implementations provide a data_store. Use
+            ``hasattr(index, 'data_store') and index.data_store is not None``
+            for safe access.
+        """
+        ...
 
     # Dataset operations
 
@@ -190,11 +245,20 @@ class AbstractIndex(Protocol):
         """
         ...
 
-    def list_datasets(self) -> Iterator[IndexEntry]:
-        """List all dataset entries in this index.
+    @property
+    def datasets(self) -> Iterator[IndexEntry]:
+        """Lazily iterate over all dataset entries in this index.
 
         Yields:
             IndexEntry for each dataset (may be of different sample types).
+        """
+        ...
+
+    def list_datasets(self) -> list[IndexEntry]:
+        """Get all dataset entries as a materialized list.
+
+        Returns:
+            List of IndexEntry for each dataset.
         """
         ...
 
@@ -202,15 +266,20 @@ class AbstractIndex(Protocol):
 
     def publish_schema(
         self,
-        sample_type: "Type[PackableSample]",
+        sample_type: type,
         *,
         version: str = "1.0.0",
         **kwargs,
     ) -> str:
         """Publish a schema for a sample type.
 
+        The sample_type is accepted as ``type`` rather than ``Type[Packable]`` to
+        support ``@packable``-decorated classes, which satisfy the Packable protocol
+        at runtime but cannot be statically verified by type checkers.
+
         Args:
-            sample_type: The PackableSample subclass to publish.
+            sample_type: A Packable type (PackableSample subclass or @packable-decorated).
+                Validated at runtime via the @runtime_checkable Packable protocol.
             version: Semantic version string for the schema.
             **kwargs: Additional backend-specific options.
 
@@ -236,27 +305,36 @@ class AbstractIndex(Protocol):
         """
         ...
 
-    def list_schemas(self) -> Iterator[dict]:
-        """List all schema records in this index.
+    @property
+    def schemas(self) -> Iterator[dict]:
+        """Lazily iterate over all schema records in this index.
 
         Yields:
             Schema records as dictionaries.
         """
         ...
 
-    def decode_schema(self, ref: str) -> "Type[PackableSample]":
-        """Reconstruct a Python PackableSample type from a stored schema.
+    def list_schemas(self) -> list[dict]:
+        """Get all schema records as a materialized list.
+
+        Returns:
+            List of schema records as dictionaries.
+        """
+        ...
+
+    def decode_schema(self, ref: str) -> Type[Packable]:
+        """Reconstruct a Python Packable type from a stored schema.
 
         This method enables loading datasets without knowing the sample type
         ahead of time. The index retrieves the schema record and dynamically
-        generates a PackableSample subclass matching the schema definition.
+        generates a Packable class matching the schema definition.
 
         Args:
             ref: Schema reference string (local:// or at://).
 
         Returns:
-            A dynamically generated PackableSample subclass with fields
-            matching the schema definition. The class can be used with
+            A dynamically generated Packable class with fields matching
+            the schema definition. The class can be used with
             ``Dataset[T]`` to load and iterate over samples.
 
         Raises:
@@ -264,11 +342,13 @@ class AbstractIndex(Protocol):
             ValueError: If schema cannot be decoded (unsupported field types).
 
         Example:
-            >>> entry = index.get_dataset("my-dataset")
-            >>> SampleType = index.decode_schema(entry.schema_ref)
-            >>> ds = Dataset[SampleType](entry.data_urls[0])
-            >>> for sample in ds.ordered():
-            ...     print(sample)  # sample is instance of SampleType
+            ::
+
+                >>> entry = index.get_dataset("my-dataset")
+                >>> SampleType = index.decode_schema(entry.schema_ref)
+                >>> ds = Dataset[SampleType](entry.data_urls[0])
+                >>> for sample in ds.ordered():
+                ...     print(sample)  # sample is instance of SampleType
         """
         ...
 
@@ -289,10 +369,12 @@ class AbstractDataStore(Protocol):
     S3 storage, or atmosphere index with PDS blobs.
 
     Example:
-        >>> store = S3DataStore(credentials, bucket="my-bucket")
-        >>> urls = store.write_shards(dataset, prefix="training/v1")
-        >>> print(urls)
-        ['s3://my-bucket/training/v1/shard-000000.tar', ...]
+        ::
+
+            >>> store = S3DataStore(credentials, bucket="my-bucket")
+            >>> urls = store.write_shards(dataset, prefix="training/v1")
+            >>> print(urls)
+            ['s3://my-bucket/training/v1/shard-000000.tar', ...]
     """
 
     def write_shards(
@@ -362,19 +444,22 @@ class DataSource(Protocol):
     - Any other source that can provide file-like objects
 
     Example:
-        >>> source = S3Source(
-        ...     bucket="my-bucket",
-        ...     keys=["data-000.tar", "data-001.tar"],
-        ...     endpoint="https://r2.example.com",
-        ...     credentials=creds,
-        ... )
-        >>> ds = Dataset[MySample](source)
-        >>> for sample in ds.ordered():
-        ...     print(sample)
+        ::
+
+            >>> source = S3Source(
+            ...     bucket="my-bucket",
+            ...     keys=["data-000.tar", "data-001.tar"],
+            ...     endpoint="https://r2.example.com",
+            ...     credentials=creds,
+            ... )
+            >>> ds = Dataset[MySample](source)
+            >>> for sample in ds.ordered():
+            ...     print(sample)
     """
 
+    @property
     def shards(self) -> Iterator[tuple[str, IO[bytes]]]:
-        """Yield (identifier, stream) pairs for each shard.
+        """Lazily yield (identifier, stream) pairs for each shard.
 
         The identifier is used for error messages and __url__ metadata.
         The stream must be a file-like object that can be read by tarfile.
@@ -383,19 +468,20 @@ class DataSource(Protocol):
             Tuple of (shard_identifier, file_like_stream).
 
         Example:
-            >>> for shard_id, stream in source.shards():
-            ...     print(f"Processing {shard_id}")
-            ...     data = stream.read()
+            ::
+
+                >>> for shard_id, stream in source.shards:
+                ...     print(f"Processing {shard_id}")
+                ...     data = stream.read()
         """
         ...
 
-    @property
-    def shard_list(self) -> list[str]:
-        """List of shard identifiers without opening streams.
+    def list_shards(self) -> list[str]:
+        """Get list of shard identifiers without opening streams.
 
         Used for metadata queries like counting shards without actually
         streaming data. Implementations should return identifiers that
-        match what shards() would yield.
+        match what shards would yield.
 
         Returns:
             List of shard identifier strings.

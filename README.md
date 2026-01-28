@@ -9,6 +9,7 @@ A loose federation of distributed, typed datasets built on WebDataset.
 ## Features
 
 - **Typed Samples** - Define dataset schemas using Python dataclasses with automatic msgpack serialization
+- **Schema-free Exploration** - Load datasets without defining a schema first using `DictSample`
 - **Lens Transformations** - Bidirectional, composable transformations between different dataset views
 - **Automatic Batching** - Smart batch aggregation with numpy array stacking
 - **WebDataset Integration** - Efficient storage and streaming for large-scale datasets
@@ -26,9 +27,27 @@ Requires Python 3.12 or later.
 
 ## Quick Start
 
-### Defining Sample Types
+### Loading Datasets
 
-Use the `@packable` decorator to create typed dataset samples:
+The primary way to load datasets is with `load_dataset()`:
+
+```python
+from atdata import load_dataset
+
+# Load without specifying a type - returns Dataset[DictSample]
+ds = load_dataset("path/to/data.tar", split="train")
+
+# Explore the data
+for sample in ds.ordered():
+    print(sample.keys())      # See available fields
+    print(sample["text"])     # Dict-style access
+    print(sample.label)       # Attribute access
+    break
+```
+
+### Defining Typed Schemas
+
+Once you understand your data, define a typed schema with `@packable`:
 
 ```python
 import atdata
@@ -41,18 +60,21 @@ class ImageSample:
     metadata: dict
 ```
 
-### Creating Datasets
+### Loading with Types
 
 ```python
-# Create a dataset
-dataset = atdata.Dataset[ImageSample]("path/to/data-{000000..000009}.tar")
+# Load with explicit type
+ds = load_dataset("path/to/data-{000000..000009}.tar", ImageSample, split="train")
 
-# Iterate over samples in order
-for sample in dataset.ordered(batch_size=None):
+# Or convert from DictSample
+ds = load_dataset("path/to/data.tar", split="train").as_type(ImageSample)
+
+# Iterate over samples
+for sample in ds.ordered():
     print(f"Label: {sample.label}, Image shape: {sample.image.shape}")
 
 # Iterate with shuffling and batching
-for batch in dataset.shuffled(batch_size=32):
+for batch in ds.shuffled(batch_size=32):
     # batch.image is automatically stacked into shape (32, ...)
     # batch.label is a list of 32 labels
     process_batch(batch.image, batch.label)
@@ -83,9 +105,28 @@ for sample in processed_ds.ordered(batch_size=None):
 
 ## Core Concepts
 
+### DictSample
+
+The default sample type for schema-free exploration. Provides both attribute and dict-style access:
+
+```python
+ds = load_dataset("data.tar", split="train")
+
+for sample in ds.ordered():
+    # Dict-style access
+    print(sample["field_name"])
+
+    # Attribute access
+    print(sample.field_name)
+
+    # Introspection
+    print(sample.keys())
+    print(sample.to_dict())
+```
+
 ### PackableSample
 
-Base class for serializable samples. Fields annotated as `NDArray` are automatically handled:
+Base class for typed, serializable samples. Fields annotated as `NDArray` are automatically handled:
 
 ```python
 @atdata.packable
@@ -94,6 +135,8 @@ class MySample:
     optional_array: NDArray | None
     regular_field: str
 ```
+
+Every `@packable` class automatically registers a lens from `DictSample`, enabling seamless conversion via `.as_type()`.
 
 ### Lens
 
@@ -145,14 +188,22 @@ Load datasets with a familiar interface:
 ```python
 from atdata import load_dataset
 
-# Load from local path with glob patterns
-ds = load_dataset("./data/train-*.tar", sample_type=ImageSample)
+# Load without type for exploration (returns Dataset[DictSample])
+ds = load_dataset("./data/train-*.tar", split="train")
 
-# Load from brace notation
-ds = load_dataset("s3://bucket/data-{000000..000099}.tar", sample_type=ImageSample)
+# Load with explicit type
+ds = load_dataset("./data/train-*.tar", ImageSample, split="train")
 
-# Load with train/test splits
-ds = load_dataset("./data", sample_type=ImageSample, split="train")
+# Load from S3 with brace notation
+ds = load_dataset("s3://bucket/data-{000000..000099}.tar", ImageSample, split="train")
+
+# Load all splits (returns DatasetDict)
+ds_dict = load_dataset("./data", ImageSample)
+train_ds = ds_dict["train"]
+test_ds = ds_dict["test"]
+
+# Convert DictSample to typed schema
+ds = load_dataset("./data/train.tar", split="train").as_type(ImageSample)
 ```
 
 ## Development
@@ -171,13 +222,13 @@ uv sync
 
 ```bash
 # Run all tests with coverage
-pytest
+uv run pytest
 
 # Run specific test file
-pytest tests/test_dataset.py
+uv run pytest tests/test_dataset.py
 
 # Run single test
-pytest tests/test_lens.py::test_lens
+uv run pytest tests/test_lens.py::test_lens
 ```
 
 ### Building
