@@ -64,6 +64,8 @@ from typing import (
     TypeVar,
     TypeAlias,
     dataclass_transform,
+    overload,
+    Literal,
 )
 from numpy.typing import NDArray
 
@@ -721,20 +723,37 @@ class Dataset( Generic[ST] ):
         # Use our cached values
         return self._metadata
     
+    @overload
+    def ordered( self,
+                batch_size: None = None,
+            ) -> Iterable[ST]: ...
+
+    @overload
+    def ordered( self,
+                batch_size: int,
+            ) -> Iterable[SampleBatch[ST]]: ...
+
     def ordered( self,
                 batch_size: int | None = None,
-            ) -> Iterable[ST]:
-        """Iterate over the dataset in order
+            ) -> Iterable[ST] | Iterable[SampleBatch[ST]]:
+        """Iterate over the dataset in order.
 
         Args:
-            batch_size (:obj:`int`, optional): The size of iterated batches.
-                Default: None (unbatched). If ``None``, iterates over one
-                sample at a time with no batch dimension.
+            batch_size: The size of iterated batches. Default: None (unbatched).
+                If ``None``, iterates over one sample at a time with no batch
+                dimension.
 
         Returns:
-            :obj:`webdataset.DataPipeline` A data pipeline that iterates over
-            the dataset in its original sample order
+            A data pipeline that iterates over the dataset in its original
+            sample order. When ``batch_size`` is ``None``, yields individual
+            samples of type ``ST``. When ``batch_size`` is an integer, yields
+            ``SampleBatch[ST]`` instances containing that many samples.
 
+        Examples:
+            >>> for sample in ds.ordered():
+            ...     process(sample)  # sample is ST
+            >>> for batch in ds.ordered(batch_size=32):
+            ...     process(batch)  # batch is SampleBatch[ST]
         """
         if batch_size is None:
             return wds.pipeline.DataPipeline(
@@ -756,11 +775,26 @@ class Dataset( Generic[ST] ):
             wds.filters.map( self.wrap_batch ),
         )
 
+    @overload
+    def shuffled( self,
+                buffer_shards: int = 100,
+                buffer_samples: int = 10_000,
+                batch_size: None = None,
+            ) -> Iterable[ST]: ...
+
+    @overload
+    def shuffled( self,
+                buffer_shards: int = 100,
+                buffer_samples: int = 10_000,
+                *,
+                batch_size: int,
+            ) -> Iterable[SampleBatch[ST]]: ...
+
     def shuffled( self,
                 buffer_shards: int = 100,
                 buffer_samples: int = 10_000,
                 batch_size: int | None = None,
-            ) -> Iterable[ST]:
+            ) -> Iterable[ST] | Iterable[SampleBatch[ST]]:
         """Iterate over the dataset in random order.
 
         Args:
@@ -775,10 +809,16 @@ class Dataset( Generic[ST] ):
                 dimension.
 
         Returns:
-            A WebDataset data pipeline that iterates over the dataset in
-            randomized order. If ``batch_size`` is not ``None``, yields
-            ``SampleBatch[ST]`` instances; otherwise yields individual ``ST``
-            samples.
+            A data pipeline that iterates over the dataset in randomized order.
+            When ``batch_size`` is ``None``, yields individual samples of type
+            ``ST``. When ``batch_size`` is an integer, yields ``SampleBatch[ST]``
+            instances containing that many samples.
+
+        Examples:
+            >>> for sample in ds.shuffled():
+            ...     process(sample)  # sample is ST
+            >>> for batch in ds.shuffled(batch_size=32):
+            ...     process(batch)  # batch is SampleBatch[ST]
         """
         if batch_size is None:
             return wds.pipeline.DataPipeline(
