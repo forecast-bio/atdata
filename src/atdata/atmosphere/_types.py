@@ -20,13 +20,15 @@ class AtUri:
     AT URIs follow the format: at://<authority>/<collection>/<rkey>
 
     Example:
-        >>> uri = AtUri.parse("at://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz")
-        >>> uri.authority
-        'did:plc:abc123'
-        >>> uri.collection
-        'ac.foundation.dataset.sampleSchema'
-        >>> uri.rkey
-        'xyz'
+        ::
+
+            >>> uri = AtUri.parse("at://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz")
+            >>> uri.authority
+            'did:plc:abc123'
+            >>> uri.collection
+            'ac.foundation.dataset.sampleSchema'
+            >>> uri.rkey
+            'xyz'
     """
 
     authority: str

@@ -13,13 +13,21 @@
         "msgpack",
         "ndarray",
         "NSID",
+        "ormsgpack",
         "pypi",
         "pyproject",
         "pytest",
+        "qualnames",
+        "quartodoc",
         "randn",
         "rkey",
         "schemamodels",
+        "shardlists",
+        "tariterators",
         "unpackb",
         "webdataset"
+    ],  
+    "python.analysis.extraPaths": [
+        "~/.atdata/stubs"
     ]
 }

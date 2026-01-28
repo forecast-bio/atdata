@@ -39,20 +39,53 @@ Main Components:
 # Expose components
 
 from .dataset import (
-    PackableSample,
-    SampleBatch,
-    Dataset,
-    packable,
+    DictSample as DictSample,
+    PackableSample as PackableSample,
+    SampleBatch as SampleBatch,
+    Dataset as Dataset,
+    packable as packable,
 )
 
 from .lens import (
-    Lens,
-    LensNetwork,
-    lens,
+    Lens as Lens,
+    LensNetwork as LensNetwork,
+    lens as lens,
+)
+
+from ._hf_api import (
+    load_dataset as load_dataset,
+    DatasetDict as DatasetDict,
+)
+
+from ._protocols import (
+    Packable as Packable,
+    IndexEntry as IndexEntry,
+    AbstractIndex as AbstractIndex,
+    AbstractDataStore as AbstractDataStore,
+    DataSource as DataSource,
+)
+
+from ._sources import (
+    URLSource as URLSource,
+    S3Source as S3Source,
+    BlobSource as BlobSource,
+)
+
+from ._schema_codec import (
+    schema_to_type as schema_to_type,
+)
+
+from ._cid import (
+    generate_cid as generate_cid,
+    verify_cid as verify_cid,
+)
+
+from .promote import (
+    promote_to_atmosphere as promote_to_atmosphere,
 )
 
 # ATProto integration (lazy import to avoid requiring atproto package)
-from . import atmosphere
+from . import atmosphere as atmosphere
 
-
-#
+# CLI entry point
+from .cli import main as main

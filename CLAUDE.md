@@ -41,6 +41,28 @@ uv run pytest tests/test_lens.py::test_lens
 uv build
 ```
 
+### Development Scripts (justfile)
+
+Development tasks are managed with [just](https://github.com/casey/just), a command runner. Available commands:
+
+```bash
+# Build documentation (runs quartodoc + quarto)
+just docs
+```
+
+The `justfile` is in the project root. Add new dev tasks there rather than creating shell scripts.
+
+### Running Python
+```bash
+# Always use uv run for Python commands to use the correct virtual environment
+uv run python -c "import atdata; print(atdata.__version__)"
+uv run python script.py
+
+# Never use bare python/python3 - it may not have project dependencies
+# BAD: python3 -c "import webdataset"
+# GOOD: uv run python -c "import webdataset"
+```
+
 ## Architecture
 
 ### Core Components
@@ -120,6 +142,23 @@ Datasets use WebDataset brace-notation URLs:
 - Single shard: `path/to/file-000000.tar`
 - Multiple shards: `path/to/file-{000000..000009}.tar`
 
+### Naming Conventions
+
+**Property vs Method Pattern for Collections**
+
+When exposing collections of items, follow this convention:
+
+- `foo.xs` - `@property` returning `Iterator[X]` (lazy iteration)
+- `foo.list_xs()` - method returning `list[X]` (eager, fully evaluated)
+
+Examples:
+- `index.datasets` / `index.list_datasets()`
+- `index.schemas` / `index.list_schemas()`
+- `dataset.shards` / `dataset.list_shards()`
+
+The lazy property enables memory-efficient iteration over large collections,
+while the method provides a concrete list when needed.
+
 ### Important Implementation Details
 
 **Type Parameters**
@@ -168,6 +207,110 @@ def test_repo_insert_with_s3(mock_s3, clean_redis):
     ...
 ```
 
+## Docstring Formatting
+
+This project uses **Google-style docstrings** with quartodoc for API documentation generation. The most important formatting requirement is for **Example sections**.
+
+### Example Section Format
+
+Example sections must use reStructuredText literal block syntax (`::`) to render correctly in quartodoc-generated documentation:
+
+```python
+def my_function():
+    """Short description.
+
+    Longer description if needed.
+
+    Args:
+        param: Description of parameter.
+
+    Returns:
+        Description of return value.
+
+    Example:
+        ::
+
+            >>> result = my_function()
+            >>> print(result)
+            'output'
+    """
+```
+
+**Key formatting rules:**
+
+1. `Example:` with a colon, 4-space indented from the docstring margin
+2. `::` on its own line, 8-space indented (4 more than `Example:`)
+3. Blank line after `::`
+4. Code examples indented 12 spaces (4 more than `::`)
+5. Use `>>>` for Python prompts and `...` for continuation lines
+
+**Incorrect format (will not render properly):**
+```python
+    Example:
+        >>> code_here()  # Wrong - missing :: and extra indentation
+```
+
+**Correct format:**
+```python
+    Example:
+        ::
+
+            >>> code_here()  # Correct - has :: and proper indentation
+```
+
+### Multiple Examples
+
+For multiple examples, use the same pattern:
+
+```python
+    Example:
+        ::
+
+            >>> # First example
+            >>> x = create_thing()
+
+            >>> # Second example
+            >>> y = other_thing()
+```
+
+### Class and Method Docstrings
+
+Apply the same format to class docstrings and method docstrings:
+
+```python
+class MyClass:
+    """Class description.
+
+    Example:
+        ::
+
+            >>> obj = MyClass()
+            >>> obj.do_something()
+    """
+
+    def method(self):
+        """Method description.
+
+        Example:
+            ::
+
+                >>> self.method()
+        """
+```
+
+## Issue Tracking
+
+This project uses **chainlink** for issue tracking. Chainlink commands do NOT need to be prefixed with `uv run`:
+```bash
+# Correct - run chainlink directly
+chainlink list
+chainlink close 123
+chainlink show 123
+
+# Incorrect - don't use uv run
+uv run chainlink list  # Not needed
+```
+
 ## Git Workflow
 
 ### Committing Changes
@@ -176,6 +319,12 @@ When using the `/commit` command or creating commits:
 - **Always include `.chainlink/issues.db`** in commits alongside code changes
 - This ensures issue tracking history is preserved across sessions
 - The issues.db file tracks all chainlink issues, comments, and status changes
+
+### CLI Module
+
+- **Track `src/atdata/cli/`** - Always include the CLI module in commits
+- The CLI provides `atdata local up/down/status` and `atdata diagnose` commands
+- Changes to CLI should be committed with the related feature changes
 
 ### Planning Documents
 

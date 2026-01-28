@@ -1,0 +1,329 @@
+---
+title: "Deployment Guide"
+description: "Production deployment for local storage and ATProto integration"
+---
+
+This guide covers deploying atdata in production environments, including Redis setup for LocalIndex, S3 storage configuration, and ATProto publishing considerations.
+
+## Local Storage Deployment
+
+The local storage backend uses Redis for metadata indexing and S3-compatible storage for dataset files.
+
+### Redis Setup
+
+#### Requirements
+
+- Redis 6.0+ (for Redis-OM compatibility)
+- Sufficient memory for index metadata (typically < 100MB for most deployments)
+
+#### Docker Deployment
+
+```bash
+# Basic Redis
+docker run -d \
+  --name atdata-redis \
+  -p 6379:6379 \
+  -v redis-data:/data \
+  redis:7-alpine \
+  redis-server --appendonly yes
+
+# With password
+docker run -d \
+  --name atdata-redis \
+  -p 6379:6379 \
+  -v redis-data:/data \
+  redis:7-alpine \
+  redis-server --appendonly yes --requirepass yourpassword
+```
+
+#### Configuration
+
+```python
+from redis import Redis
+from atdata.local import LocalIndex
+
+# Basic connection
+redis = Redis(host="localhost", port=6379)
+index = LocalIndex(redis=redis)
+
+# With authentication
+redis = Redis(
+    host="redis.example.com",
+    port=6379,
+    password="yourpassword",
+    ssl=True,  # For production
+)
+index = LocalIndex(redis=redis)
+```
+
+#### Redis Clustering
+
+For high-availability deployments:
+
+```python
+from redis.cluster import RedisCluster
+
+# Redis Cluster connection
+redis = RedisCluster(
+    host="redis-cluster.example.com",
+    port=6379,
+    password="yourpassword",
+)
+index = LocalIndex(redis=redis)
+```
+
+::: {.callout-note}
+Redis-OM (used internally) supports Redis Cluster mode. Ensure all nodes have the same configuration.
+:::
+
+### S3 Storage Setup
+
+#### AWS S3
+
+```python
+from atdata.local import S3DataStore
+
+# Using environment credentials (recommended for AWS)
+# Set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
+store = S3DataStore(
+    bucket="my-atdata-bucket",
+    prefix="datasets/",
+)
+
+# Explicit credentials
+store = S3DataStore(
+    bucket="my-atdata-bucket",
+    prefix="datasets/",
+    credentials={
+        "AWS_ACCESS_KEY_ID": "...",
+        "AWS_SECRET_ACCESS_KEY": "...",
+        "AWS_DEFAULT_REGION": "us-west-2",
+    },
+)
+```
+
+#### S3-Compatible Storage (MinIO, Cloudflare R2, etc.)
+
+```python
+store = S3DataStore(
+    bucket="my-bucket",
+    prefix="datasets/",
+    endpoint_url="https://s3.example.com",
+    credentials={
+        "AWS_ACCESS_KEY_ID": "...",
+        "AWS_SECRET_ACCESS_KEY": "...",
+    },
+)
+```
+
+#### MinIO Deployment
+
+```bash
+# Docker deployment
+docker run -d \
+  --name minio \
+  -p 9000:9000 \
+  -p 9001:9001 \
+  -v minio-data:/data \
+  -e MINIO_ROOT_USER=minioadmin \
+  -e MINIO_ROOT_PASSWORD=minioadmin \
+  minio/minio server /data --console-address ":9001"
+```
+
+```python
+store = S3DataStore(
+    bucket="atdata",
+    endpoint_url="http://localhost:9000",
+    credentials={
+        "AWS_ACCESS_KEY_ID": "minioadmin",
+        "AWS_SECRET_ACCESS_KEY": "minioadmin",
+    },
+)
+```
+
+### Production Checklist
+
+- [ ] Redis persistence enabled (`appendonly yes`)
+- [ ] Redis password authentication configured
+- [ ] Redis TLS enabled for remote connections
+- [ ] S3 bucket access policies configured (least privilege)
+- [ ] S3 bucket versioning enabled (for data recovery)
+- [ ] Monitoring for Redis memory usage
+- [ ] Backup strategy for Redis data
+
+## ATProto Deployment
+
+### Account Setup
+
+1. Create a Bluesky account or use your existing account
+2. Generate an app-specific password at [bsky.app/settings/app-passwords](https://bsky.app/settings/app-passwords)
+3. Never use your main account password in code
+
+::: {.callout-warning}
+**Security**: Always use app passwords, never your main password. App passwords can be revoked without affecting your account.
+:::
+
+### Authentication Patterns
+
+#### Environment Variables (Recommended)
+
+```python
+import os
+from atdata.atmosphere import AtmosphereClient
+
+client = AtmosphereClient()
+client.login(
+    os.environ["ATPROTO_HANDLE"],
+    os.environ["ATPROTO_APP_PASSWORD"],
+)
+```
+
+#### Session Persistence
+
+For long-running services, persist and reuse sessions:
+
+```python
+import os
+from pathlib import Path
+
+SESSION_FILE = Path("~/.atdata/session").expanduser()
+
+client = AtmosphereClient()
+
+if SESSION_FILE.exists():
+    # Restore existing session
+    session_string = SESSION_FILE.read_text()
+    try:
+        client.login_with_session(session_string)
+    except Exception:
+        # Session expired, re-authenticate
+        client.login(handle, app_password)
+        SESSION_FILE.parent.mkdir(parents=True, exist_ok=True)
+        SESSION_FILE.write_text(client.export_session())
+else:
+    # Initial login
+    client.login(handle, app_password)
+    SESSION_FILE.parent.mkdir(parents=True, exist_ok=True)
+    SESSION_FILE.write_text(client.export_session())
+```
+
+### Custom PDS Deployment
+
+For self-hosted ATProto infrastructure:
+
+```python
+client = AtmosphereClient(base_url="https://pds.example.com")
+client.login("handle.example.com", "app-password")
+```
+
+See [ATProto PDS documentation](https://github.com/bluesky-social/pds) for self-hosting setup.
+
+### Rate Limiting Considerations
+
+ATProto has rate limits. For bulk operations:
+
+- Space out record creation (1-2 per second for bulk uploads)
+- Use batch operations where available
+- Implement exponential backoff for retries
+- Consider blob storage limits (~50MB per blob)
+
+```python
+import time
+
+for i, dataset in enumerate(datasets_to_publish):
+    index.insert_dataset(dataset, name=f"dataset-{i}", ...)
+    time.sleep(1)  # Rate limiting
+```
+
+## Docker Compose Example
+
+Complete local deployment with Redis and MinIO:
+
+```yaml
+# docker-compose.yml
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
+    volumes:
+      - minio-data:/data
+
+volumes:
+  redis-data:
+  minio-data:
+```
+
+```bash
+# .env
+REDIS_PASSWORD=your-redis-password
+MINIO_USER=minioadmin
+MINIO_PASSWORD=your-minio-password
+```
+
+## Monitoring
+
+### Redis Metrics
+
+Key metrics to monitor:
+
+- `used_memory`: Memory usage
+- `connected_clients`: Active connections
+- `keyspace_hits/misses`: Cache efficiency
+- `aof_last_write_status`: Persistence health
+
+```bash
+redis-cli INFO | grep -E "used_memory|connected_clients|keyspace"
+```
+
+### S3 Metrics
+
+- Request counts and latency
+- Error rates (4xx, 5xx)
+- Storage usage by prefix
+- Data transfer costs
+
+## Security Best Practices
+
+1. **Network Isolation**: Run Redis and S3 in private networks
+2. **TLS Everywhere**: Encrypt connections to Redis and S3
+3. **Credential Rotation**: Rotate API keys and passwords regularly
+4. **Access Logging**: Enable S3 access logging for audit trails
+5. **Least Privilege**: Use minimal IAM permissions for S3 access
+
+### S3 IAM Policy Example
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::my-atdata-bucket",
+        "arn:aws:s3:::my-atdata-bucket/*"
+      ]
+    }
+  ]
+}
+```

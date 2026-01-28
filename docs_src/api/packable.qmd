@@ -1,0 +1,45 @@
+# packable { #atdata.packable }
+
+```python
+packable(cls)
+```
+
+Decorator to convert a regular class into a ``PackableSample``.
+
+This decorator transforms a class into a dataclass that inherits from
+``PackableSample``, enabling automatic msgpack serialization/deserialization
+with special handling for NDArray fields.
+
+The resulting class satisfies the ``Packable`` protocol, making it compatible
+with all atdata APIs that accept packable types (e.g., ``publish_schema``,
+lens transformations, etc.).
+
+## Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                        | Description                                                        | Default    |
+|--------|---------------------------------------------|--------------------------------------------------------------------|------------|
+| cls    | [type](`type`)\[[_T](`atdata.dataset._T`)\] | The class to convert. Should have type annotations for its fields. | _required_ |
+
+## Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                        | Description                                                               |
+|--------|---------------------------------------------|---------------------------------------------------------------------------|
+|        | [type](`type`)\[[_T](`atdata.dataset._T`)\] | A new dataclass that inherits from ``PackableSample`` with the same       |
+|        | [type](`type`)\[[_T](`atdata.dataset._T`)\] | name and annotations as the original class. The class satisfies the       |
+|        | [type](`type`)\[[_T](`atdata.dataset._T`)\] | ``Packable`` protocol and can be used with ``Type[Packable]`` signatures. |
+
+## Examples {.doc-section .doc-section-examples}
+
+This is a test of the functionality::
+
+    @packable
+    class MyData:
+        name: str
+        values: NDArray
+    
+    sample = MyData(name="test", values=np.array([1, 2, 3]))
+    bytes_data = sample.packed
+    restored = MyData.from_bytes(bytes_data)
+    
+    # Works with Packable-typed APIs
+    index.publish_schema(MyData, version="1.0.0")  # Type-safe

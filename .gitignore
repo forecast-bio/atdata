@@ -7,8 +7,8 @@
 # Don't commit `uv` lockfiles
 **/uv.lock
 # Development tooling (keep local, not in upstream)
-.chainlink/
-.claude/
+# .chainlink/
+# .claude/
 
 ##
 
@@ -219,3 +219,4 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+testing.env

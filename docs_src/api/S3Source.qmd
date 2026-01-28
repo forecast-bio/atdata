@@ -1,0 +1,177 @@
+# S3Source { #atdata.S3Source }
+
+```python
+S3Source(
+    bucket,
+    keys,
+    endpoint=None,
+    access_key=None,
+    secret_key=None,
+    region=None,
+    _client=None,
+)
+```
+
+Data source for S3-compatible storage with explicit credentials.
+
+Uses boto3 to stream directly from S3, supporting:
+- Standard AWS S3
+- S3-compatible endpoints (Cloudflare R2, MinIO, etc.)
+- Private buckets with credentials
+- IAM role authentication (when keys not provided)
+
+Unlike URL-based approaches, this doesn't require URL transformation
+or global gopen_schemes registration. Credentials are scoped to the
+source instance.
+
+## Attributes {.doc-section .doc-section-attributes}
+
+| Name       | Type                           | Description                                              |
+|------------|--------------------------------|----------------------------------------------------------|
+| bucket     | [str](`str`)                   | S3 bucket name.                                          |
+| keys       | [list](`list`)\[[str](`str`)\] | List of object keys (paths within bucket).               |
+| endpoint   | [str](`str`) \| None           | Optional custom endpoint URL for S3-compatible services. |
+| access_key | [str](`str`) \| None           | Optional AWS access key ID.                              |
+| secret_key | [str](`str`) \| None           | Optional AWS secret access key.                          |
+| region     | [str](`str`) \| None           | Optional AWS region (defaults to us-east-1).             |
+
+## Example {.doc-section .doc-section-example}
+
+::
+
+    >>> source = S3Source(
+    ...     bucket="my-datasets",
+    ...     keys=["train/shard-000.tar", "train/shard-001.tar"],
+    ...     endpoint="https://abc123.r2.cloudflarestorage.com",
+    ...     access_key="AKIAIOSFODNN7EXAMPLE",
+    ...     secret_key="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+    ... )
+    >>> for shard_id, stream in source.shards:
+    ...     process(stream)
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [from_credentials](#atdata.S3Source.from_credentials) | Create S3Source from a credentials dictionary. |
+| [from_urls](#atdata.S3Source.from_urls) | Create S3Source from s3:// URLs. |
+| [list_shards](#atdata.S3Source.list_shards) | Return list of S3 URIs for the shards. |
+| [open_shard](#atdata.S3Source.open_shard) | Open a single shard by S3 URI. |
+
+### from_credentials { #atdata.S3Source.from_credentials }
+
+```python
+S3Source.from_credentials(credentials, bucket, keys)
+```
+
+Create S3Source from a credentials dictionary.
+
+Accepts the same credential format used by S3DataStore.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name        | Type                                         | Description                                                                      | Default    |
+|-------------|----------------------------------------------|----------------------------------------------------------------------------------|------------|
+| credentials | [dict](`dict`)\[[str](`str`), [str](`str`)\] | Dict with AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and optionally AWS_ENDPOINT. | _required_ |
+| bucket      | [str](`str`)                                 | S3 bucket name.                                                                  | _required_ |
+| keys        | [list](`list`)\[[str](`str`)\]               | List of object keys.                                                             | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type         | Description          |
+|--------|--------------|----------------------|
+|        | \'S3Source\' | Configured S3Source. |
+
+#### Example {.doc-section .doc-section-example}
+
+::
+
+    >>> creds = {
+    ...     "AWS_ACCESS_KEY_ID": "...",
+    ...     "AWS_SECRET_ACCESS_KEY": "...",
+    ...     "AWS_ENDPOINT": "https://r2.example.com",
+    ... }
+    >>> source = S3Source.from_credentials(creds, "my-bucket", ["data.tar"])
+
+### from_urls { #atdata.S3Source.from_urls }
+
+```python
+S3Source.from_urls(
+    urls,
+    *,
+    endpoint=None,
+    access_key=None,
+    secret_key=None,
+    region=None,
+)
+```
+
+Create S3Source from s3:// URLs.
+
+Parses s3://bucket/key URLs and extracts bucket and keys.
+All URLs must be in the same bucket.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name       | Type                           | Description               | Default    |
+|------------|--------------------------------|---------------------------|------------|
+| urls       | [list](`list`)\[[str](`str`)\] | List of s3:// URLs.       | _required_ |
+| endpoint   | [str](`str`) \| None           | Optional custom endpoint. | `None`     |
+| access_key | [str](`str`) \| None           | Optional access key.      | `None`     |
+| secret_key | [str](`str`) \| None           | Optional secret key.      | `None`     |
+| region     | [str](`str`) \| None           | Optional region.          | `None`     |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type         | Description                             |
+|--------|--------------|-----------------------------------------|
+|        | \'S3Source\' | S3Source configured for the given URLs. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                                                |
+|--------|----------------------------|------------------------------------------------------------|
+|        | [ValueError](`ValueError`) | If URLs are not valid s3:// URLs or span multiple buckets. |
+
+#### Example {.doc-section .doc-section-example}
+
+::
+
+    >>> source = S3Source.from_urls(
+    ...     ["s3://my-bucket/train-000.tar", "s3://my-bucket/train-001.tar"],
+    ...     endpoint="https://r2.example.com",
+    ... )
+
+### list_shards { #atdata.S3Source.list_shards }
+
+```python
+S3Source.list_shards()
+```
+
+Return list of S3 URIs for the shards.
+
+### open_shard { #atdata.S3Source.open_shard }
+
+```python
+S3Source.open_shard(shard_id)
+```
+
+Open a single shard by S3 URI.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name     | Type         | Description                            | Default    |
+|----------|--------------|----------------------------------------|------------|
+| shard_id | [str](`str`) | S3 URI of the shard (s3://bucket/key). | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                  | Description                           |
+|--------|---------------------------------------|---------------------------------------|
+|        | [IO](`typing.IO`)\[[bytes](`bytes`)\] | StreamingBody for reading the object. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                   | Description                          |
+|--------|------------------------|--------------------------------------|
+|        | [KeyError](`KeyError`) | If shard_id is not in list_shards(). |

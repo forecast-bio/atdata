@@ -1,0 +1,75 @@
+# API Reference {.doc .doc-index}
+
+## Core
+
+Core types, decorators, and dataset classes
+
+| | |
+| --- | --- |
+| [packable](packable.qmd#atdata.packable) | Decorator to convert a regular class into a ``PackableSample``. |
+| [PackableSample](PackableSample.qmd#atdata.PackableSample) | Base class for samples that can be serialized with msgpack. |
+| [DictSample](DictSample.qmd#atdata.DictSample) | Dynamic sample type providing dict-like access to raw msgpack data. |
+| [Dataset](Dataset.qmd#atdata.Dataset) | A typed dataset built on WebDataset with lens transformations. |
+| [SampleBatch](SampleBatch.qmd#atdata.SampleBatch) | A batch of samples with automatic attribute aggregation. |
+| [Lens](Lens.qmd#atdata.Lens) | A bidirectional transformation between two sample types. |
+| [lens](lens.qmd#atdata.lens) | Lens-based type transformations for datasets. |
+| [load_dataset](load_dataset.qmd#atdata.load_dataset) | Load a dataset from local files, remote URLs, or an index. |
+| [DatasetDict](DatasetDict.qmd#atdata.DatasetDict) | A dictionary of split names to Dataset instances. |
+
+## Protocols
+
+Abstract protocols for storage backends
+
+| | |
+| --- | --- |
+| [Packable](Packable-protocol.qmd#atdata.Packable) | Structural protocol for packable sample types. |
+| [IndexEntry](IndexEntry.qmd#atdata.IndexEntry) | Common interface for index entries (local or atmosphere). |
+| [AbstractIndex](AbstractIndex.qmd#atdata.AbstractIndex) | Protocol for index operations - implemented by LocalIndex and AtmosphereIndex. |
+| [AbstractDataStore](AbstractDataStore.qmd#atdata.AbstractDataStore) | Protocol for data storage operations. |
+| [DataSource](DataSource.qmd#atdata.DataSource) | Protocol for data sources that provide streams to Dataset. |
+
+## Data Sources
+
+Data source implementations for streaming
+
+| | |
+| --- | --- |
+| [URLSource](URLSource.qmd#atdata.URLSource) | Data source for WebDataset-compatible URLs. |
+| [S3Source](S3Source.qmd#atdata.S3Source) | Data source for S3-compatible storage with explicit credentials. |
+| [BlobSource](BlobSource.qmd#atdata.BlobSource) | Data source for ATProto PDS blob storage. |
+
+## Local Storage
+
+Local Redis/S3 storage backend
+
+| | |
+| --- | --- |
+| [local.Index](local.Index.qmd#atdata.local.Index) | Redis-backed index for tracking datasets in a repository. |
+| [local.LocalDatasetEntry](local.LocalDatasetEntry.qmd#atdata.local.LocalDatasetEntry) | Index entry for a dataset stored in the local repository. |
+| [local.S3DataStore](local.S3DataStore.qmd#atdata.local.S3DataStore) | S3-compatible data store implementing AbstractDataStore protocol. |
+
+## Atmosphere
+
+ATProto federation
+
+| | |
+| --- | --- |
+| [AtmosphereClient](AtmosphereClient.qmd#atdata.atmosphere.AtmosphereClient) | ATProto client wrapper for atdata operations. |
+| [AtmosphereIndex](AtmosphereIndex.qmd#atdata.atmosphere.AtmosphereIndex) | ATProto index implementing AbstractIndex protocol. |
+| [AtmosphereIndexEntry](AtmosphereIndexEntry.qmd#atdata.atmosphere.AtmosphereIndexEntry) | Entry wrapper for ATProto dataset records implementing IndexEntry protocol. |
+| [PDSBlobStore](PDSBlobStore.qmd#atdata.atmosphere.PDSBlobStore) | PDS blob store implementing AbstractDataStore protocol. |
+| [SchemaPublisher](SchemaPublisher.qmd#atdata.atmosphere.SchemaPublisher) | Publishes PackableSample schemas to ATProto. |
+| [SchemaLoader](SchemaLoader.qmd#atdata.atmosphere.SchemaLoader) | Loads PackableSample schemas from ATProto. |
+| [DatasetPublisher](DatasetPublisher.qmd#atdata.atmosphere.DatasetPublisher) | Publishes dataset index records to ATProto. |
+| [DatasetLoader](DatasetLoader.qmd#atdata.atmosphere.DatasetLoader) | Loads dataset records from ATProto. |
+| [LensPublisher](LensPublisher.qmd#atdata.atmosphere.LensPublisher) | Publishes Lens transformation records to ATProto. |
+| [LensLoader](LensLoader.qmd#atdata.atmosphere.LensLoader) | Loads lens records from ATProto. |
+| [AtUri](AtUri.qmd#atdata.atmosphere.AtUri) | Parsed AT Protocol URI. |
+
+## Promotion
+
+Local to atmosphere migration
+
+| | |
+| --- | --- |
+| [promote_to_atmosphere](promote_to_atmosphere.qmd#atdata.promote.promote_to_atmosphere) | Promote a local dataset to the atmosphere network. |

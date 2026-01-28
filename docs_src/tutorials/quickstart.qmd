@@ -1,0 +1,224 @@
+---
+title: "Quick Start"
+description: "Get up and running with atdata in 5 minutes"
+---
+
+This guide walks you through the basics of atdata: defining sample types, writing datasets, and iterating over them. You'll learn the foundational patterns that enable type-safe, efficient dataset handling—the first layer of atdata's three-layer architecture.
+
+## Where This Fits
+
+atdata is built around a simple progression:
+
+```
+Local Development → Team Storage → Federation
+```
+
+This tutorial covers **local development**—the foundation. Everything you learn here (typed samples, efficient iteration, lens transformations) carries forward as you scale to team storage and federated sharing. The key insight is that your sample types remain the same across all three layers; only the storage backend changes.
+
+## Installation
+
+```bash
+pip install atdata
+
+# With ATProto support
+pip install atdata[atmosphere]
+```
+
+## Define a Sample Type
+
+The core abstraction in atdata is the **PackableSample**—a typed, serializable data structure. Unlike raw dictionaries or ad-hoc classes, PackableSamples provide:
+
+- **Type safety**: Know your schema at write time, not training time
+- **Automatic serialization**: msgpack encoding with efficient NDArray handling
+- **Round-trip fidelity**: Data survives serialization without loss
+
+Use the `@packable` decorator to create a typed sample:
+
+```{python}
+#| eval: false
+import numpy as np
+from numpy.typing import NDArray
+import atdata
+
+@atdata.packable
+class ImageSample:
+    """A sample containing an image with label and confidence."""
+    image: NDArray
+    label: str
+    confidence: float
+```
+
+The `@packable` decorator:
+
+- Converts your class into a dataclass
+- Adds automatic msgpack serialization
+- Handles NDArray conversion to/from bytes
+
+## Create Sample Instances
+
+```{python}
+#| eval: false
+# Create a single sample
+sample = ImageSample(
+    image=np.random.rand(224, 224, 3).astype(np.float32),
+    label="cat",
+    confidence=0.95,
+)
+
+# Check serialization
+packed_bytes = sample.packed
+print(f"Serialized size: {len(packed_bytes):,} bytes")
+
+# Verify round-trip
+restored = ImageSample.from_bytes(packed_bytes)
+assert np.allclose(sample.image, restored.image)
+print("Round-trip successful!")
+```
+
+## Write a Dataset
+
+atdata uses **WebDataset's tar format** for storage. This choice is deliberate:
+
+- **Streaming**: Process data without downloading entire datasets
+- **Sharding**: Split large datasets across multiple files for parallel I/O
+- **Proven**: Battle-tested at scale by organizations like Google, NVIDIA, and OpenAI
+
+The `as_wds` property on your sample provides the dictionary format WebDataset expects:
+
+Use WebDataset's `TarWriter` to create dataset files:
+
+```{python}
+#| eval: false
+import webdataset as wds
+
+# Create 100 samples
+samples = [
+    ImageSample(
+        image=np.random.rand(224, 224, 3).astype(np.float32),
+        label=f"class_{i % 10}",
+        confidence=np.random.rand(),
+    )
+    for i in range(100)
+]
+
+# Write to tar file
+with wds.writer.TarWriter("my-dataset-000000.tar") as sink:
+    for i, sample in enumerate(samples):
+        sink.write({**sample.as_wds, "__key__": f"sample_{i:06d}"})
+
+print("Wrote 100 samples to my-dataset-000000.tar")
+```
+
+## Load and Iterate
+
+The generic `Dataset[T]` class connects your sample type to WebDataset's streaming infrastructure. When you specify `Dataset[ImageSample]`, atdata knows how to deserialize the msgpack bytes back into fully-typed objects.
+
+**Automatic batch aggregation** is a key feature: when you iterate with `batch_size`, atdata returns `SampleBatch` objects that intelligently combine samples:
+
+- NDArray fields are **stacked** into a single array with a batch dimension
+- Other fields become **lists** of values
+
+This eliminates boilerplate collation code and works automatically with any PackableSample type.
+
+Create a typed `Dataset` and iterate with batching:
+
+```{python}
+#| eval: false
+# Load dataset with type
+dataset = atdata.Dataset[ImageSample]("my-dataset-000000.tar")
+
+# Iterate in order with batching
+for batch in dataset.ordered(batch_size=16):
+    # NDArray fields are stacked
+    images = batch.image        # shape: (16, 224, 224, 3)
+
+    # Other fields become lists
+    labels = batch.label        # list of 16 strings
+    confidences = batch.confidence  # list of 16 floats
+
+    print(f"Batch shape: {images.shape}")
+    print(f"Labels: {labels[:3]}...")
+    break
+```
+
+## Shuffled Iteration
+
+Proper shuffling is critical for training. WebDataset provides **two-level shuffling**:
+
+1. **Shard shuffling**: Randomize the order of tar files
+2. **Sample shuffling**: Randomize samples within a buffer
+
+This approach balances randomness with streaming efficiency—you get well-shuffled data without needing random access to the entire dataset.
+
+For training, use shuffled iteration:
+
+```{python}
+#| eval: false
+for batch in dataset.shuffled(batch_size=32):
+    # Samples are shuffled at shard and sample level
+    images = batch.image
+    labels = batch.label
+
+    # Train your model
+    # model.train(images, labels)
+    break
+```
+
+## Use Lenses for Type Transformations
+
+**Lenses** are bidirectional transformations between sample types. They solve a common problem: you have a dataset with a rich schema, but a particular task only needs a subset of fields—or needs derived fields computed on-the-fly.
+
+Instead of creating separate datasets for each use case (duplicating storage and maintenance burden), lenses let you **view** the same underlying data through different type schemas. This is inspired by functional programming concepts and enables:
+
+- **Schema reduction**: Drop fields you don't need
+- **Schema migration**: Handle version differences between datasets
+- **Derived features**: Compute fields on-the-fly during iteration
+
+View datasets through different schemas:
+
+```{python}
+#| eval: false
+# Define a simplified view type
+@atdata.packable
+class SimplifiedSample:
+    label: str
+    confidence: float
+
+# Create a lens transformation
+@atdata.lens
+def simplify(src: ImageSample) -> SimplifiedSample:
+    return SimplifiedSample(label=src.label, confidence=src.confidence)
+
+# View dataset through lens
+simple_ds = dataset.as_type(SimplifiedSample)
+
+for batch in simple_ds.ordered(batch_size=8):
+    print(f"Labels: {batch.label}")
+    print(f"Confidences: {batch.confidence}")
+    break
+```
+
+## What You've Learned
+
+You now understand atdata's foundational concepts:
+
+| Concept | Purpose |
+|---------|---------|
+| `@packable` | Create typed, serializable sample classes |
+| `Dataset[T]` | Typed iteration over WebDataset tar files |
+| `SampleBatch[T]` | Automatic aggregation with NDArray stacking |
+| `@lens` | Transform between sample types without data duplication |
+
+These patterns work identically whether your data lives on local disk, in team S3 storage, or published to the ATProto network. The next tutorials show how to scale beyond local files.
+
+## Next Steps
+
+::: {.callout-tip}
+## Ready to Share with Your Team?
+The [Local Workflow](local-workflow.qmd) tutorial shows how to set up Redis + S3 storage for team-wide dataset discovery and sharing.
+:::
+
+- **[Local Workflow](local-workflow.qmd)** - Store datasets with Redis + S3
+- **[Atmosphere Publishing](atmosphere.qmd)** - Publish to ATProto federation
+- **[Packable Samples](../reference/packable-samples.qmd)** - Deep dive into sample types
+- **[Datasets](../reference/datasets.qmd)** - Advanced dataset operations

@@ -21,7 +21,6 @@ import atdata.dataset as atds
 from numpy.typing import NDArray
 from typing import (
     Type,
-    Any,
 )
 
 
@@ -131,7 +130,7 @@ test_cases = [
 )
 def test_create_sample(
             SampleType: Type[atdata.PackableSample],
-            sample_data: atds.MsgpackRawSample,
+            sample_data: atds.WDSRawSample,
         ):
     """Test our ability to create samples from semi-structured data"""
 
@@ -142,7 +141,7 @@ def test_create_sample(
     for k, v in sample_data.items():
         cur_assertion: bool
         if isinstance( v, np.ndarray ):
-            cur_assertion = np.all( getattr( sample, k ) == v ) == True
+            cur_assertion = np.all( getattr( sample, k ) == v )
         else:
             cur_assertion = getattr( sample, k ) == v
         assert cur_assertion, \
@@ -156,7 +155,7 @@ def test_create_sample(
 )
 def test_wds(
             SampleType: Type[atdata.PackableSample],
-            sample_data: atds.MsgpackRawSample,
+            sample_data: atds.WDSRawSample,
             sample_wds_stem: str,
             tmp_path
         ):
@@ -339,7 +338,7 @@ def test_wds(
 )
 def test_parquet_export(
             SampleType: Type[atdata.PackableSample],
-            sample_data: atds.MsgpackRawSample,
+            sample_data: atds.WDSRawSample,
             sample_wds_stem: str,
             test_parquet: bool,
             tmp_path
@@ -583,6 +582,321 @@ def test_dataset_with_lens_batched(tmp_path):
         batches_seen += 1
 
     assert batches_seen == n_samples // batch_size
+
+
+def test_from_bytes_invalid_msgpack():
+    """Test from_bytes raises on invalid msgpack data."""
+    @atdata.packable
+    class SimpleSample:
+        value: int
+
+    with pytest.raises(Exception):  # ormsgpack raises on invalid data
+        SimpleSample.from_bytes(b"not valid msgpack data")
+
+
+def test_from_bytes_missing_field():
+    """Test from_bytes raises when required field is missing."""
+    @atdata.packable
+    class RequiredFieldSample:
+        name: str
+        count: int
+
+    import ormsgpack
+    # Only provide 'name', missing 'count'
+    incomplete_data = ormsgpack.packb({"name": "test"})
+
+    with pytest.raises(TypeError):  # Missing required argument
+        RequiredFieldSample.from_bytes(incomplete_data)
+
+
+def test_wrap_missing_msgpack_key(tmp_path):
+    """Test wrap raises ValueError on sample missing msgpack key."""
+    @atdata.packable
+    class WrapTestSample:
+        value: int
+
+    wds_filename = (tmp_path / "wrap_test.tar").as_posix()
+    with wds.writer.TarWriter(wds_filename) as sink:
+        sample = WrapTestSample(value=42)
+        sink.write(sample.as_wds)
+
+    dataset = atdata.Dataset[WrapTestSample](wds_filename)
+
+    # Directly call wrap with missing key
+    with pytest.raises(ValueError, match="missing 'msgpack' key"):
+        dataset.wrap({"__key__": "test"})  # Missing 'msgpack' key
+
+
+def test_wrap_wrong_msgpack_type(tmp_path):
+    """Test wrap raises ValueError when msgpack value is not bytes."""
+    @atdata.packable
+    class WrapTypeSample:
+        value: int
+
+    wds_filename = (tmp_path / "wrap_type_test.tar").as_posix()
+    with wds.writer.TarWriter(wds_filename) as sink:
+        sample = WrapTypeSample(value=42)
+        sink.write(sample.as_wds)
+
+    dataset = atdata.Dataset[WrapTypeSample](wds_filename)
+
+    # Directly call wrap with wrong type
+    with pytest.raises(ValueError, match="to be bytes"):
+        dataset.wrap({"__key__": "test", "msgpack": "not bytes"})
+
+
+def test_wrap_corrupted_msgpack(tmp_path):
+    """Test wrap raises on corrupted msgpack bytes."""
+    @atdata.packable
+    class CorruptedSample:
+        value: int
+
+    wds_filename = (tmp_path / "corrupted_test.tar").as_posix()
+    with wds.writer.TarWriter(wds_filename) as sink:
+        sample = CorruptedSample(value=42)
+        sink.write(sample.as_wds)
+
+    dataset = atdata.Dataset[CorruptedSample](wds_filename)
+
+    # Corrupted msgpack bytes should raise during deserialization
+    with pytest.raises(Exception):  # ormsgpack raises on corrupted data
+        dataset.wrap({"__key__": "test", "msgpack": b"\xff\xfe\x00\x01invalid"})
+
+
+def test_dataset_nonexistent_file():
+    """Test Dataset raises on nonexistent tar file during iteration."""
+    @atdata.packable
+    class NonexistentSample:
+        value: int
+
+    dataset = atdata.Dataset[NonexistentSample]("/nonexistent/path/data.tar")
+
+    # Dataset creation succeeds (lazy loading)
+    assert dataset is not None
+
+    # Iteration fails when file doesn't exist
+    with pytest.raises(Exception):  # FileNotFoundError or similar
+        list(dataset.ordered(batch_size=None))
+
+
+def test_dataset_invalid_batch_size(tmp_path):
+    """Test Dataset raises on invalid batch_size values."""
+    @atdata.packable
+    class BatchSizeSample:
+        value: int
+
+    wds_filename = (tmp_path / "batch_test.tar").as_posix()
+    with wds.writer.TarWriter(wds_filename) as sink:
+        sample = BatchSizeSample(value=42)
+        sink.write(sample.as_wds)
+
+    dataset = atdata.Dataset[BatchSizeSample](wds_filename)
+
+    # batch_size=0 produces empty batches, causing IndexError in webdataset
+    with pytest.raises((ValueError, AssertionError, IndexError)):
+        list(dataset.ordered(batch_size=0))
+
+
+##
+# DictSample tests
+
+
+def test_dictsample_creation():
+    """Test DictSample can be created with keyword args or dict."""
+    # From keyword args
+    ds1 = atdata.DictSample(name="test", value=42)
+    assert ds1.name == "test"
+    assert ds1.value == 42
+
+    # From _data dict
+    ds2 = atdata.DictSample(_data={"name": "test2", "value": 100})
+    assert ds2.name == "test2"
+    assert ds2.value == 100
+
+
+def test_dictsample_getattr():
+    """Test DictSample attribute access."""
+    sample = atdata.DictSample(text="hello", label=1)
+
+    assert sample.text == "hello"
+    assert sample.label == 1
+
+    # Non-existent attribute raises AttributeError
+    with pytest.raises(AttributeError, match="has no field"):
+        _ = sample.nonexistent
+
+
+def test_dictsample_getitem():
+    """Test DictSample dict-style access."""
+    sample = atdata.DictSample(text="hello", label=1)
+
+    assert sample["text"] == "hello"
+    assert sample["label"] == 1
+
+    # Non-existent key raises KeyError
+    with pytest.raises(KeyError):
+        _ = sample["nonexistent"]
+
+
+def test_dictsample_dict_methods():
+    """Test DictSample dict-like methods."""
+    sample = atdata.DictSample(a=1, b=2, c=3)
+
+    assert set(sample.keys()) == {"a", "b", "c"}
+    assert set(sample.values()) == {1, 2, 3}
+    assert set(sample.items()) == {("a", 1), ("b", 2), ("c", 3)}
+    assert "a" in sample
+    assert "x" not in sample
+    assert sample.get("a") == 1
+    assert sample.get("x", "default") == "default"
+
+
+def test_dictsample_to_dict():
+    """Test DictSample.to_dict returns a copy."""
+    sample = atdata.DictSample(name="test", value=42)
+    d = sample.to_dict()
+
+    assert d == {"name": "test", "value": 42}
+    # Should be a copy
+    d["name"] = "modified"
+    assert sample.name == "test"
+
+
+def test_dictsample_serialization():
+    """Test DictSample can be serialized and deserialized."""
+    original = atdata.DictSample(text="hello", count=42)
+
+    # Serialize
+    packed = original.packed
+
+    # Deserialize
+    restored = atdata.DictSample.from_bytes(packed)
+
+    assert restored.text == "hello"
+    assert restored.count == 42
+
+
+def test_dictsample_as_wds():
+    """Test DictSample.as_wds produces valid WebDataset format."""
+    sample = atdata.DictSample(name="test", value=123)
+    wds_dict = sample.as_wds
+
+    assert "__key__" in wds_dict
+    assert "msgpack" in wds_dict
+    assert isinstance(wds_dict["msgpack"], bytes)
+
+
+def test_dictsample_repr():
+    """Test DictSample has a useful repr."""
+    sample = atdata.DictSample(name="test", value=42)
+    repr_str = repr(sample)
+
+    assert "DictSample" in repr_str
+    assert "name" in repr_str
+    assert "value" in repr_str
+
+
+def test_dictsample_dataset_iteration(tmp_path):
+    """Test Dataset[DictSample] can iterate over data."""
+    # Create typed sample data
+    @atdata.packable
+    class SourceSample:
+        text: str
+        label: int
+
+    wds_filename = (tmp_path / "dictsample_test.tar").as_posix()
+    with wds.writer.TarWriter(wds_filename) as sink:
+        for i in range(5):
+            sample = SourceSample(text=f"item_{i}", label=i)
+            sink.write(sample.as_wds)
+
+    # Read as DictSample
+    dataset = atdata.Dataset[atdata.DictSample](wds_filename)
+
+    samples = list(dataset.ordered())
+    assert len(samples) == 5
+
+    for i, sample in enumerate(samples):
+        assert isinstance(sample, atdata.DictSample)
+        assert sample.text == f"item_{i}"
+        assert sample["label"] == i
+
+
+def test_dictsample_to_typed_via_as_type(tmp_path):
+    """Test converting DictSample dataset to typed via as_type."""
+    @atdata.packable
+    class TypedSample:
+        text: str
+        label: int
+
+    # Create data using typed sample
+    wds_filename = (tmp_path / "astype_test.tar").as_posix()
+    with wds.writer.TarWriter(wds_filename) as sink:
+        for i in range(5):
+            sample = TypedSample(text=f"item_{i}", label=i)
+            sink.write(sample.as_wds)
+
+    # Load as DictSample first
+    ds_dict = atdata.Dataset[atdata.DictSample](wds_filename)
+
+    # Convert to typed
+    ds_typed = ds_dict.as_type(TypedSample)
+
+    # Verify typed iteration works
+    samples = list(ds_typed.ordered())
+    assert len(samples) == 5
+
+    for i, sample in enumerate(samples):
+        assert isinstance(sample, TypedSample)
+        assert sample.text == f"item_{i}"
+        assert sample.label == i
+
+
+def test_packable_auto_registers_dictsample_lens():
+    """Test @packable decorator auto-registers lens from DictSample."""
+    @atdata.packable
+    class AutoLensSample:
+        name: str
+        value: int
+
+    # The lens should be registered automatically
+    network = atdata.LensNetwork()
+    lens = network.transform(atdata.DictSample, AutoLensSample)
+
+    # Test the lens works
+    dict_sample = atdata.DictSample(name="test", value=42)
+    typed_sample = lens(dict_sample)
+
+    assert isinstance(typed_sample, AutoLensSample)
+    assert typed_sample.name == "test"
+    assert typed_sample.value == 42
+
+
+def test_dictsample_batched_iteration(tmp_path):
+    """Test Dataset[DictSample] works with batched iteration."""
+    @atdata.packable
+    class BatchSource:
+        text: str
+        value: int
+
+    wds_filename = (tmp_path / "batch_dictsample_test.tar").as_posix()
+    with wds.writer.TarWriter(wds_filename) as sink:
+        for i in range(10):
+            sample = BatchSource(text=f"item_{i}", value=i)
+            sink.write(sample.as_wds)
+
+    # Read as DictSample with batching
+    dataset = atdata.Dataset[atdata.DictSample](wds_filename)
+
+    batch_count = 0
+    for batch in dataset.ordered(batch_size=4):
+        assert isinstance(batch, atdata.SampleBatch)
+        assert len(batch.samples) <= 4
+        for sample in batch.samples:
+            assert isinstance(sample, atdata.DictSample)
+        batch_count += 1
+
+    assert batch_count == 3  # 10 samples / 4 per batch = 2 full + 1 partial
 
 
 ##

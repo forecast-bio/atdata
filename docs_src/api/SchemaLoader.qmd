@@ -1,0 +1,77 @@
+# SchemaLoader { #atdata.atmosphere.SchemaLoader }
+
+```python
+atmosphere.SchemaLoader(client)
+```
+
+Loads PackableSample schemas from ATProto.
+
+This class fetches schema records from ATProto and can list available
+schemas from a repository.
+
+## Example {.doc-section .doc-section-example}
+
+::
+
+    >>> client = AtmosphereClient()
+    >>> client.login("handle", "password")
+    >>>
+    >>> loader = SchemaLoader(client)
+    >>> schema = loader.get("at://did:plc:.../ac.foundation.dataset.sampleSchema/...")
+    >>> print(schema["name"])
+    'MySample'
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [get](#atdata.atmosphere.SchemaLoader.get) | Fetch a schema record by AT URI. |
+| [list_all](#atdata.atmosphere.SchemaLoader.list_all) | List schema records from a repository. |
+
+### get { #atdata.atmosphere.SchemaLoader.get }
+
+```python
+atmosphere.SchemaLoader.get(uri)
+```
+
+Fetch a schema record by AT URI.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                      | Description                      | Default    |
+|--------|-----------------------------------------------------------|----------------------------------|------------|
+| uri    | [str](`str`) \| [AtUri](`atdata.atmosphere._types.AtUri`) | The AT URI of the schema record. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type           | Description                        |
+|--------|----------------|------------------------------------|
+|        | [dict](`dict`) | The schema record as a dictionary. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                                                                                                            | Description                           |
+|--------|-----------------------------------------------------------------------------------------------------------------|---------------------------------------|
+|        | [ValueError](`ValueError`)                                                                                      | If the record is not a schema record. |
+|        | [atproto](`atproto`).[exceptions](`atproto.exceptions`).[AtProtocolError](`atproto.exceptions.AtProtocolError`) | If record not found.                  |
+
+### list_all { #atdata.atmosphere.SchemaLoader.list_all }
+
+```python
+atmosphere.SchemaLoader.list_all(repo=None, limit=100)
+```
+
+List schema records from a repository.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                          | Description                                                | Default   |
+|--------|-----------------------------------------------|------------------------------------------------------------|-----------|
+| repo   | [Optional](`typing.Optional`)\[[str](`str`)\] | The DID of the repository. Defaults to authenticated user. | `None`    |
+| limit  | [int](`int`)                                  | Maximum number of records to return.                       | `100`     |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                             | Description             |
+|--------|----------------------------------|-------------------------|
+|        | [list](`list`)\[[dict](`dict`)\] | List of schema records. |

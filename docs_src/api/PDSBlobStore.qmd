@@ -1,0 +1,157 @@
+# PDSBlobStore { #atdata.atmosphere.PDSBlobStore }
+
+```python
+atmosphere.PDSBlobStore(client)
+```
+
+PDS blob store implementing AbstractDataStore protocol.
+
+Stores dataset shards as ATProto blobs, enabling decentralized dataset
+storage on the AT Protocol network.
+
+Each shard is written to a temporary tar file, then uploaded as a blob
+to the user's PDS. The returned URLs are AT URIs that can be resolved
+to HTTP URLs for streaming.
+
+## Attributes {.doc-section .doc-section-attributes}
+
+| Name   | Type                 | Description                              |
+|--------|----------------------|------------------------------------------|
+| client | \'AtmosphereClient\' | Authenticated AtmosphereClient instance. |
+
+## Example {.doc-section .doc-section-example}
+
+::
+
+    >>> store = PDSBlobStore(client)
+    >>> urls = store.write_shards(dataset, prefix="training/v1")
+    >>> # Returns AT URIs like:
+    >>> # ['at://did:plc:abc/blob/bafyrei...', ...]
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [create_source](#atdata.atmosphere.PDSBlobStore.create_source) | Create a BlobSource for reading these AT URIs. |
+| [read_url](#atdata.atmosphere.PDSBlobStore.read_url) | Resolve an AT URI blob reference to an HTTP URL. |
+| [supports_streaming](#atdata.atmosphere.PDSBlobStore.supports_streaming) | PDS blobs support streaming via HTTP. |
+| [write_shards](#atdata.atmosphere.PDSBlobStore.write_shards) | Write dataset shards as PDS blobs. |
+
+### create_source { #atdata.atmosphere.PDSBlobStore.create_source }
+
+```python
+atmosphere.PDSBlobStore.create_source(urls)
+```
+
+Create a BlobSource for reading these AT URIs.
+
+This is a convenience method for creating a DataSource that can
+stream the blobs written by this store.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                           | Description                          | Default    |
+|--------|--------------------------------|--------------------------------------|------------|
+| urls   | [list](`list`)\[[str](`str`)\] | List of AT URIs from write_shards(). | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type           | Description                               |
+|--------|----------------|-------------------------------------------|
+|        | \'BlobSource\' | BlobSource configured for the given URLs. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                    |
+|--------|----------------------------|--------------------------------|
+|        | [ValueError](`ValueError`) | If URLs are not valid AT URIs. |
+
+### read_url { #atdata.atmosphere.PDSBlobStore.read_url }
+
+```python
+atmosphere.PDSBlobStore.read_url(url)
+```
+
+Resolve an AT URI blob reference to an HTTP URL.
+
+Transforms ``at://did/blob/cid`` URIs to HTTP URLs that can be
+streamed by WebDataset.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type         | Description                                 | Default    |
+|--------|--------------|---------------------------------------------|------------|
+| url    | [str](`str`) | AT URI in format ``at://{did}/blob/{cid}``. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type         | Description                                 |
+|--------|--------------|---------------------------------------------|
+|        | [str](`str`) | HTTP URL for fetching the blob via PDS API. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                                         |
+|--------|----------------------------|-----------------------------------------------------|
+|        | [ValueError](`ValueError`) | If URL format is invalid or PDS cannot be resolved. |
+
+### supports_streaming { #atdata.atmosphere.PDSBlobStore.supports_streaming }
+
+```python
+atmosphere.PDSBlobStore.supports_streaming()
+```
+
+PDS blobs support streaming via HTTP.
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type           | Description   |
+|--------|----------------|---------------|
+|        | [bool](`bool`) | True.         |
+
+### write_shards { #atdata.atmosphere.PDSBlobStore.write_shards }
+
+```python
+atmosphere.PDSBlobStore.write_shards(
+    ds,
+    *,
+    prefix,
+    maxcount=10000,
+    maxsize=3000000000.0,
+    **kwargs,
+)
+```
+
+Write dataset shards as PDS blobs.
+
+Creates tar archives from the dataset and uploads each as a blob
+to the authenticated user's PDS.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name     | Type                | Description                                                | Default        |
+|----------|---------------------|------------------------------------------------------------|----------------|
+| ds       | \'Dataset\'         | The Dataset to write.                                      | _required_     |
+| prefix   | [str](`str`)        | Logical path prefix for naming (used in shard names only). | _required_     |
+| maxcount | [int](`int`)        | Maximum samples per shard (default: 10000).                | `10000`        |
+| maxsize  | [float](`float`)    | Maximum shard size in bytes (default: 3GB, PDS limit).     | `3000000000.0` |
+| **kwargs | [Any](`typing.Any`) | Additional args passed to wds.ShardWriter.                 | `{}`           |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                           | Description                                       |
+|--------|--------------------------------|---------------------------------------------------|
+|        | [list](`list`)\[[str](`str`)\] | List of AT URIs for the written blobs, in format: |
+|        | [list](`list`)\[[str](`str`)\] | ``at://{did}/blob/{cid}``                         |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                           | Description                |
+|--------|--------------------------------|----------------------------|
+|        | [ValueError](`ValueError`)     | If not authenticated.      |
+|        | [RuntimeError](`RuntimeError`) | If no shards were written. |
+
+#### Note {.doc-section .doc-section-note}
+
+PDS blobs have size limits (typically 50MB-5GB depending on PDS).
+Adjust maxcount/maxsize to stay within limits.
