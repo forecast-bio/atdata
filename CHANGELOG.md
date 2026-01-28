@@ -25,6 +25,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Add SQLite/PostgreSQL providers for LocalIndex (in addition to Redis) (#407)
+- Fix type hints for @atdata.packable decorator to show PackableSample methods (#406)
 - Review GitHub workflows and recommend CI improvements (#405)
 - Fix type signatures for Dataset.ordered and Dataset.shuffled (GH#28) (#404)
 - Investigate quartodoc Example section rendering - missing CSS classes on pre/code tags (#401)

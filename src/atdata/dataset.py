@@ -1009,7 +1009,7 @@ _T = TypeVar("_T")
 
 
 @dataclass_transform()
-def packable(cls: type[_T]) -> type[_T]:
+def packable(cls: type[_T]) -> type[PackableSample]:
     """Decorator to convert a regular class into a ``PackableSample``.
 
     This decorator transforms a class into a dataclass that inherits from
@@ -1019,6 +1019,13 @@ def packable(cls: type[_T]) -> type[_T]:
     The resulting class satisfies the ``Packable`` protocol, making it compatible
     with all atdata APIs that accept packable types (e.g., ``publish_schema``,
     lens transformations, etc.).
+
+    Type Checking:
+        The return type is annotated as ``type[PackableSample]`` so that IDEs
+        and type checkers recognize the ``PackableSample`` methods (``packed``,
+        ``as_wds``, ``from_bytes``, etc.). The ``@dataclass_transform()``
+        decorator ensures that field access from the original class is also
+        preserved for type checking.
 
     Args:
         cls: The class to convert. Should have type annotations for its fields.
