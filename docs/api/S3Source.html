@@ -403,7 +403,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#atdata.S3Source" id="toc-atdata.S3Source" class="nav-link active" data-scroll-target="#atdata.S3Source">S3Source</a>
   <ul class="collapse">
   <li><a href="#attributes" id="toc-attributes" class="nav-link" data-scroll-target="#attributes">Attributes</a></li>
-  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
   <li><a href="#atdata.S3Source.from_credentials" id="toc-atdata.S3Source.from_credentials" class="nav-link" data-scroll-target="#atdata.S3Source.from_credentials">from_credentials</a></li>
@@ -480,18 +480,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="example" class="level2 doc-section doc-section-example">
-<h2 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h2>
-<p>::</p>
-<pre><code>&gt;&gt;&gt; source = S3Source(
-...     bucket="my-datasets",
-...     keys=["train/shard-000.tar", "train/shard-001.tar"],
-...     endpoint="https://abc123.r2.cloudflarestorage.com",
-...     access_key="AKIAIOSFODNN7EXAMPLE",
-...     secret_key="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
-... )
-&gt;&gt;&gt; for shard_id, stream in source.shards:
-...     process(stream)</code></pre>
+<section id="examples" class="level2 doc-section doc-section-examples">
+<h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> source <span class="op">=</span> S3Source(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>...     bucket<span class="op">=</span><span class="st">"my-datasets"</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>...     keys<span class="op">=</span>[<span class="st">"train/shard-000.tar"</span>, <span class="st">"train/shard-001.tar"</span>],</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>...     endpoint<span class="op">=</span><span class="st">"https://abc123.r2.cloudflarestorage.com"</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>...     access_key<span class="op">=</span><span class="st">"AKIAIOSFODNN7EXAMPLE"</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>...     secret_key<span class="op">=</span><span class="st">"wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>... )</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="cf">for</span> shard_id, stream <span class="kw">in</span> source.shards:</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>...     process(stream)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>
@@ -578,15 +577,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="example-1" class="level4 doc-section doc-section-example">
-<h4 class="doc-section doc-section-example anchored" data-anchor-id="example-1">Example</h4>
-<p>::</p>
-<pre><code>&gt;&gt;&gt; creds = {
-...     "AWS_ACCESS_KEY_ID": "...",
-...     "AWS_SECRET_ACCESS_KEY": "...",
-...     "AWS_ENDPOINT": "https://r2.example.com",
-... }
-&gt;&gt;&gt; source = S3Source.from_credentials(creds, "my-bucket", ["data.tar"])</code></pre>
+<section id="examples-1" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-1">Examples</h4>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> creds <span class="op">=</span> {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>...     <span class="st">"AWS_ACCESS_KEY_ID"</span>: <span class="st">"..."</span>,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>...     <span class="st">"AWS_SECRET_ACCESS_KEY"</span>: <span class="st">"..."</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>...     <span class="st">"AWS_ENDPOINT"</span>: <span class="st">"https://r2.example.com"</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>... }</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> source <span class="op">=</span> S3Source.from_credentials(creds, <span class="st">"my-bucket"</span>, [<span class="st">"data.tar"</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
 <section id="atdata.S3Source.from_urls" class="level3">
@@ -684,13 +682,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="example-2" class="level4 doc-section doc-section-example">
-<h4 class="doc-section doc-section-example anchored" data-anchor-id="example-2">Example</h4>
-<p>::</p>
-<pre><code>&gt;&gt;&gt; source = S3Source.from_urls(
-...     ["s3://my-bucket/train-000.tar", "s3://my-bucket/train-001.tar"],
-...     endpoint="https://r2.example.com",
-... )</code></pre>
+<section id="examples-2" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-2">Examples</h4>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> source <span class="op">=</span> S3Source.from_urls(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>...     [<span class="st">"s3://my-bucket/train-000.tar"</span>, <span class="st">"s3://my-bucket/train-001.tar"</span>],</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>...     endpoint<span class="op">=</span><span class="st">"https://r2.example.com"</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>... )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
 <section id="atdata.S3Source.list_shards" class="level3">

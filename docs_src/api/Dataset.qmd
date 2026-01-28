@@ -28,17 +28,17 @@ The dataset supports:
 |--------|--------|----------------------------------------------------|
 | url    |        | WebDataset brace-notation URL for the tar file(s). |
 
-## Example {.doc-section .doc-section-example}
+## Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> ds = Dataset[MyData]("path/to/data-{000000..000009}.tar")
-    >>> for sample in ds.ordered(batch_size=32):
-    ...     # sample is SampleBatch[MyData] with batch_size samples
-    ...     embeddings = sample.embeddings  # shape: (32, ...)
-    ...
-    >>> # Transform to a different view
-    >>> ds_view = ds.as_type(MyDataView)
+```python
+>>> ds = Dataset[MyData]("path/to/data-{000000..000009}.tar")
+>>> for sample in ds.ordered(batch_size=32):
+...     # sample is SampleBatch[MyData] with batch_size samples
+...     embeddings = sample.embeddings  # shape: (32, ...)
+...
+>>> # Transform to a different view
+>>> ds_view = ds.as_type(MyDataView)
+```
 
 ## Note {.doc-section .doc-section-note}
 
@@ -182,16 +182,16 @@ For datasets larger than available RAM, always specify ``maxcount``::
 This creates multiple parquet files: ``output-000000.parquet``,
 ``output-000001.parquet``, etc.
 
-#### Example {.doc-section .doc-section-example}
+#### Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> ds = Dataset[MySample]("data.tar")
-    >>> # Small dataset - load all at once
-    >>> ds.to_parquet("output.parquet")
-    >>>
-    >>> # Large dataset - process in chunks
-    >>> ds.to_parquet("output.parquet", maxcount=50000)
+```python
+>>> ds = Dataset[MySample]("data.tar")
+>>> # Small dataset - load all at once
+>>> ds.to_parquet("output.parquet")
+>>>
+>>> # Large dataset - process in chunks
+>>> ds.to_parquet("output.parquet", maxcount=50000)
+```
 
 ### wrap { #atdata.Dataset.wrap }
 

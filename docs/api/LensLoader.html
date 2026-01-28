@@ -402,7 +402,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#atdata.atmosphere.LensLoader" id="toc-atdata.atmosphere.LensLoader" class="nav-link active" data-scroll-target="#atdata.atmosphere.LensLoader">LensLoader</a>
   <ul class="collapse">
-  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
   <li><a href="#atdata.atmosphere.LensLoader.find_by_schemas" id="toc-atdata.atmosphere.LensLoader.find_by_schemas" class="nav-link" data-scroll-target="#atdata.atmosphere.LensLoader.find_by_schemas">find_by_schemas</a></li>
@@ -425,16 +425,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>atmosphere.LensLoader(client)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Loads lens records from ATProto.</p>
 <p>This class fetches lens transformation records. Note that actually using a lens requires installing the referenced code and importing it manually.</p>
-<section id="example" class="level2 doc-section doc-section-example">
-<h2 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h2>
-<p>::</p>
-<pre><code>&gt;&gt;&gt; client = AtmosphereClient()
-&gt;&gt;&gt; loader = LensLoader(client)
-&gt;&gt;&gt;
-&gt;&gt;&gt; record = loader.get("at://did:plc:abc/ac.foundation.dataset.lens/xyz")
-&gt;&gt;&gt; print(record["name"])
-&gt;&gt;&gt; print(record["sourceSchema"])
-&gt;&gt;&gt; print(record.get("getterCode", {}).get("repository"))</code></pre>
+<section id="examples" class="level2 doc-section doc-section-examples">
+<h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> client <span class="op">=</span> AtmosphereClient()</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> loader <span class="op">=</span> LensLoader(client)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> record <span class="op">=</span> loader.get(<span class="st">"at://did:plc:abc/ac.foundation.dataset.lens/xyz"</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="bu">print</span>(record[<span class="st">"name"</span>])</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="bu">print</span>(record[<span class="st">"sourceSchema"</span>])</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="bu">print</span>(record.get(<span class="st">"getterCode"</span>, {}).get(<span class="st">"repository"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>

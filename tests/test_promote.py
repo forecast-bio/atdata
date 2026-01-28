@@ -15,6 +15,7 @@ from atdata.local import LocalDatasetEntry
 @atdata.packable
 class PromoteTestSample:
     """Sample type for promotion tests."""
+
     name: str
     value: int
 
@@ -35,14 +36,12 @@ class TestFindExistingSchema:
                     "value": {
                         "name": "test_promote.PromoteTestSample",
                         "version": "1.0.0",
-                    }
+                    },
                 }
             ]
 
             result = _find_existing_schema(
-                mock_client,
-                "test_promote.PromoteTestSample",
-                "1.0.0"
+                mock_client, "test_promote.PromoteTestSample", "1.0.0"
             )
 
             assert result == "at://did:plc:test/ac.foundation.dataset.sampleSchema/abc"
@@ -59,14 +58,12 @@ class TestFindExistingSchema:
                     "value": {
                         "name": "other.OtherSample",
                         "version": "1.0.0",
-                    }
+                    },
                 }
             ]
 
             result = _find_existing_schema(
-                mock_client,
-                "test_promote.PromoteTestSample",
-                "1.0.0"
+                mock_client, "test_promote.PromoteTestSample", "1.0.0"
             )
 
             assert result is None
@@ -83,14 +80,12 @@ class TestFindExistingSchema:
                     "value": {
                         "name": "test_promote.PromoteTestSample",
                         "version": "2.0.0",  # Different version
-                    }
+                    },
                 }
             ]
 
             result = _find_existing_schema(
-                mock_client,
-                "test_promote.PromoteTestSample",
-                "1.0.0"
+                mock_client, "test_promote.PromoteTestSample", "1.0.0"
             )
 
             assert result is None
@@ -125,7 +120,9 @@ class TestFindOrPublishSchema:
 
             with patch("atdata.atmosphere.SchemaPublisher") as MockPublisher:
                 mock_publisher = MockPublisher.return_value
-                mock_publisher.publish.return_value = Mock(__str__=lambda s: "at://new/schema/uri")
+                mock_publisher.publish.return_value = Mock(
+                    __str__=lambda s: "at://new/schema/uri"
+                )
 
                 result = _find_or_publish_schema(
                     PromoteTestSample,
@@ -167,8 +164,16 @@ class TestPromoteToAtmosphere:
             "name": "test_promote.PromoteTestSample",
             "version": "1.0.0",
             "fields": [
-                {"name": "name", "fieldType": {"$type": "local#primitive", "primitive": "str"}, "optional": False},
-                {"name": "value", "fieldType": {"$type": "local#primitive", "primitive": "int"}, "optional": False},
+                {
+                    "name": "name",
+                    "fieldType": {"$type": "local#primitive", "primitive": "str"},
+                    "optional": False,
+                },
+                {
+                    "name": "value",
+                    "fieldType": {"$type": "local#primitive", "primitive": "int"},
+                    "optional": False,
+                },
             ],
         }
 
@@ -207,7 +212,11 @@ class TestPromoteToAtmosphere:
             "name": "TestSample",
             "version": "1.0.0",
             "fields": [
-                {"name": "value", "fieldType": {"$type": "local#primitive", "primitive": "int"}, "optional": False},
+                {
+                    "name": "value",
+                    "fieldType": {"$type": "local#primitive", "primitive": "int"},
+                    "optional": False,
+                },
             ],
         }
 
@@ -218,7 +227,9 @@ class TestPromoteToAtmosphere:
 
             with patch("atdata.atmosphere.DatasetPublisher") as MockPublisher:
                 mock_publisher = MockPublisher.return_value
-                mock_publisher.publish_with_urls.return_value = Mock(__str__=lambda s: "at://result")
+                mock_publisher.publish_with_urls.return_value = Mock(
+                    __str__=lambda s: "at://result"
+                )
 
                 promote_to_atmosphere(
                     entry,
@@ -247,7 +258,11 @@ class TestPromoteToAtmosphere:
             "name": "TestSample",
             "version": "1.0.0",
             "fields": [
-                {"name": "value", "fieldType": {"$type": "local#primitive", "primitive": "int"}, "optional": False},
+                {
+                    "name": "value",
+                    "fieldType": {"$type": "local#primitive", "primitive": "int"},
+                    "optional": False,
+                },
             ],
         }
 
@@ -262,7 +277,9 @@ class TestPromoteToAtmosphere:
 
             with patch("atdata.atmosphere.DatasetPublisher") as MockPublisher:
                 mock_publisher = MockPublisher.return_value
-                mock_publisher.publish_with_urls.return_value = Mock(__str__=lambda s: "at://result")
+                mock_publisher.publish_with_urls.return_value = Mock(
+                    __str__=lambda s: "at://result"
+                )
 
                 with patch("atdata.dataset.Dataset"):
                     promote_to_atmosphere(

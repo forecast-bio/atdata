@@ -309,7 +309,10 @@ class TestPolymorphicBehavior:
                 {
                     "name": "dataset-b",
                     "schemaRef": "at://schema",
-                    "storage": {"$type": "ac.foundation.dataset.storageExternal", "urls": ["url2"]},
+                    "storage": {
+                        "$type": "ac.foundation.dataset.storageExternal",
+                        "urls": ["url2"],
+                    },
                 },
             ),
         ]
@@ -343,7 +346,10 @@ class TestPolymorphicBehavior:
                 {
                     "name": "ds2",
                     "schemaRef": "at://s",
-                    "storage": {"$type": "ac.foundation.dataset.storageExternal", "urls": ["s3://b/1.tar"]},
+                    "storage": {
+                        "$type": "ac.foundation.dataset.storageExternal",
+                        "urls": ["s3://b/1.tar"],
+                    },
                 },
             ),
         ]

@@ -16,17 +16,17 @@ methods that operate across all splits.
 |--------|--------|------------------------------------------------|------------|
 | ST     |        | The sample type for all datasets in this dict. | _required_ |
 
-## Example {.doc-section .doc-section-example}
+## Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> ds_dict = load_dataset("path/to/data", MyData)
-    >>> train = ds_dict["train"]
-    >>> test = ds_dict["test"]
-    >>>
-    >>> # Iterate over all splits
-    >>> for split_name, dataset in ds_dict.items():
-    ...     print(f"{split_name}: {len(dataset.shard_list)} shards")
+```python
+>>> ds_dict = load_dataset("path/to/data", MyData)
+>>> train = ds_dict["train"]
+>>> test = ds_dict["test"]
+>>>
+>>> # Iterate over all splits
+>>> for split_name, dataset in ds_dict.items():
+...     print(f"{split_name}: {len(dataset.shard_list)} shards")
+```
 
 ## Attributes
 

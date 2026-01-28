@@ -18,19 +18,19 @@ The protocol captures the full interface needed for:
 - Schema publishing (class introspection via dataclass fields)
 - Serialization/deserialization (packed, from_bytes)
 
-## Example {.doc-section .doc-section-example}
+## Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> @packable
-    ... class MySample:
-    ...     name: str
-    ...     value: int
-    ...
-    >>> def process(sample_type: Type[Packable]) -> None:
-    ...     # Type checker knows sample_type has from_bytes, packed, etc.
-    ...     instance = sample_type.from_bytes(data)
-    ...     print(instance.packed)
+```python
+>>> @packable
+... class MySample:
+...     name: str
+...     value: int
+...
+>>> def process(sample_type: Type[Packable]) -> None:
+...     # Type checker knows sample_type has from_bytes, packed, etc.
+...     instance = sample_type.from_bytes(data)
+...     print(instance.packed)
+```
 
 ## Attributes
 

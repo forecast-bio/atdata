@@ -10,17 +10,17 @@ This class fetches lens transformation records. Note that actually
 using a lens requires installing the referenced code and importing
 it manually.
 
-## Example {.doc-section .doc-section-example}
+## Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> client = AtmosphereClient()
-    >>> loader = LensLoader(client)
-    >>>
-    >>> record = loader.get("at://did:plc:abc/ac.foundation.dataset.lens/xyz")
-    >>> print(record["name"])
-    >>> print(record["sourceSchema"])
-    >>> print(record.get("getterCode", {}).get("repository"))
+```python
+>>> client = AtmosphereClient()
+>>> loader = LensLoader(client)
+>>>
+>>> record = loader.get("at://did:plc:abc/ac.foundation.dataset.lens/xyz")
+>>> print(record["name"])
+>>> print(record["sourceSchema"])
+>>> print(record.get("getterCode", {}).get("repository"))
+```
 
 ## Methods
 

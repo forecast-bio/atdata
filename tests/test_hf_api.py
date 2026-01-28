@@ -855,7 +855,10 @@ class TestLoadDatasetWithIndex:
         mock_index = Mock()
         mock_index.data_store = mock_store
         mock_entry = Mock()
-        mock_entry.data_urls = ["s3://my-bucket/train-000.tar", "s3://my-bucket/train-001.tar"]
+        mock_entry.data_urls = [
+            "s3://my-bucket/train-000.tar",
+            "s3://my-bucket/train-001.tar",
+        ]
         mock_entry.schema_ref = "local://schemas/test@1.0.0"
         mock_index.get_dataset.return_value = mock_entry
 

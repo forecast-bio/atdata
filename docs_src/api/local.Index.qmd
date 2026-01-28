@@ -150,16 +150,16 @@ stub file for the schema and want full IDE support.
 |--------|-----------------------------------------|----------------------------------------------------------------|
 |        | [type](`type`)\[[T](`atdata.local.T`)\] | The decoded type, cast to match the type_hint for IDE support. |
 
-#### Example {.doc-section .doc-section-example}
+#### Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> # After enabling auto_stubs and configuring IDE extraPaths:
-    >>> from local.MySample_1_0_0 import MySample
-    >>>
-    >>> # This gives full IDE autocomplete:
-    >>> DecodedType = index.decode_schema_as(ref, MySample)
-    >>> sample = DecodedType(text="hello", value=42)  # IDE knows signature!
+```python
+>>> # After enabling auto_stubs and configuring IDE extraPaths:
+>>> from local.MySample_1_0_0 import MySample
+>>>
+>>> # This gives full IDE autocomplete:
+>>> DecodedType = index.decode_schema_as(ref, MySample)
+>>> sample = DecodedType(text="hello", value=42)  # IDE knows signature!
+```
 
 #### Note {.doc-section .doc-section-note}
 
@@ -269,17 +269,17 @@ be used to import the schema type with full IDE support.
 |        | [str](`str`) \| None | Import path like "local.MySample_1_0_0", or None if auto_stubs |
 |        | [str](`str`) \| None | is disabled.                                                   |
 
-#### Example {.doc-section .doc-section-example}
+#### Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> index = LocalIndex(auto_stubs=True)
-    >>> ref = index.publish_schema(MySample, version="1.0.0")
-    >>> index.load_schema(ref)
-    >>> print(index.get_import_path(ref))
-    local.MySample_1_0_0
-    >>> # Then in your code:
-    >>> # from local.MySample_1_0_0 import MySample
+```python
+>>> index = LocalIndex(auto_stubs=True)
+>>> ref = index.publish_schema(MySample, version="1.0.0")
+>>> index.load_schema(ref)
+>>> print(index.get_import_path(ref))
+local.MySample_1_0_0
+>>> # Then in your code:
+>>> # from local.MySample_1_0_0 import MySample
+```
 
 ### get_schema { #atdata.local.Index.get_schema }
 
@@ -440,17 +440,17 @@ in the :attr:`types` namespace for easy access.
 |        | [KeyError](`KeyError`)     | If schema not found.         |
 |        | [ValueError](`ValueError`) | If schema cannot be decoded. |
 
-#### Example {.doc-section .doc-section-example}
+#### Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> # Load and use immediately
-    >>> MyType = index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
-    >>> sample = MyType(name="hello", value=42)
-    >>>
-    >>> # Or access later via namespace
-    >>> index.load_schema("atdata://local/sampleSchema/OtherType@1.0.0")
-    >>> other = index.types.OtherType(data="test")
+```python
+>>> # Load and use immediately
+>>> MyType = index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
+>>> sample = MyType(name="hello", value=42)
+>>>
+>>> # Or access later via namespace
+>>> index.load_schema("atdata://local/sampleSchema/OtherType@1.0.0")
+>>> other = index.types.OtherType(data="test")
+```
 
 ### publish_schema { #atdata.local.Index.publish_schema }
 

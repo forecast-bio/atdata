@@ -19,16 +19,14 @@ class AtUri:
 
     AT URIs follow the format: at://<authority>/<collection>/<rkey>
 
-    Example:
-        ::
-
-            >>> uri = AtUri.parse("at://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz")
-            >>> uri.authority
-            'did:plc:abc123'
-            >>> uri.collection
-            'ac.foundation.dataset.sampleSchema'
-            >>> uri.rkey
-            'xyz'
+    Examples:
+        >>> uri = AtUri.parse("at://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz")
+        >>> uri.authority
+        'did:plc:abc123'
+        >>> uri.collection
+        'ac.foundation.dataset.sampleSchema'
+        >>> uri.rkey
+        'xyz'
     """
 
     authority: str
@@ -58,7 +56,9 @@ class AtUri:
 
         parts = uri[5:].split("/")
         if len(parts) < 3:
-            raise ValueError(f"Invalid AT URI: expected authority/collection/rkey: {uri}")
+            raise ValueError(
+                f"Invalid AT URI: expected authority/collection/rkey: {uri}"
+            )
 
         return cls(
             authority=parts[0],

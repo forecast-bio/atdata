@@ -402,7 +402,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#atdata.atmosphere.LensPublisher" id="toc-atdata.atmosphere.LensPublisher" class="nav-link active" data-scroll-target="#atdata.atmosphere.LensPublisher">LensPublisher</a>
   <ul class="collapse">
-  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
   <li><a href="#security-note" id="toc-security-note" class="nav-link" data-scroll-target="#security-note">Security Note</a></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
@@ -425,26 +425,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>atmosphere.LensPublisher(client)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Publishes Lens transformation records to ATProto.</p>
 <p>This class creates lens records that reference source and target schemas and point to the transformation code in a git repository.</p>
-<section id="example" class="level2 doc-section doc-section-example">
-<h2 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h2>
-<p>::</p>
-<pre><code>&gt;&gt;&gt; @atdata.lens
-... def my_lens(source: SourceType) -&gt; TargetType:
-...     return TargetType(field=source.other_field)
-&gt;&gt;&gt;
-&gt;&gt;&gt; client = AtmosphereClient()
-&gt;&gt;&gt; client.login("handle", "password")
-&gt;&gt;&gt;
-&gt;&gt;&gt; publisher = LensPublisher(client)
-&gt;&gt;&gt; uri = publisher.publish(
-...     name="my_lens",
-...     source_schema_uri="at://did:plc:abc/ac.foundation.dataset.sampleSchema/source",
-...     target_schema_uri="at://did:plc:abc/ac.foundation.dataset.sampleSchema/target",
-...     code_repository="https://github.com/user/repo",
-...     code_commit="abc123def456",
-...     getter_path="mymodule.lenses:my_lens",
-...     putter_path="mymodule.lenses:my_lens_putter",
-... )</code></pre>
+<section id="examples" class="level2 doc-section doc-section-examples">
+<h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="op">@</span>atdata.lens</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>... <span class="kw">def</span> my_lens(source: SourceType) <span class="op">-&gt;</span> TargetType:</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>...     <span class="cf">return</span> TargetType(field<span class="op">=</span>source.other_field)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> client <span class="op">=</span> AtmosphereClient()</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> client.login(<span class="st">"handle"</span>, <span class="st">"password"</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> publisher <span class="op">=</span> LensPublisher(client)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> uri <span class="op">=</span> publisher.publish(</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>...     name<span class="op">=</span><span class="st">"my_lens"</span>,</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>...     source_schema_uri<span class="op">=</span><span class="st">"at://did:plc:abc/ac.foundation.dataset.sampleSchema/source"</span>,</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>...     target_schema_uri<span class="op">=</span><span class="st">"at://did:plc:abc/ac.foundation.dataset.sampleSchema/target"</span>,</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>...     code_repository<span class="op">=</span><span class="st">"https://github.com/user/repo"</span>,</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>...     code_commit<span class="op">=</span><span class="st">"abc123def456"</span>,</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>...     getter_path<span class="op">=</span><span class="st">"mymodule.lenses:my_lens"</span>,</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>...     putter_path<span class="op">=</span><span class="st">"mymodule.lenses:my_lens_putter"</span>,</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>... )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="security-note" class="level2 doc-section doc-section-security-note">
 <h2 class="doc-section doc-section-security-note anchored" data-anchor-id="security-note">Security Note</h2>

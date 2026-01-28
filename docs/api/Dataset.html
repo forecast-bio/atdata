@@ -404,7 +404,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#parameters" id="toc-parameters" class="nav-link" data-scroll-target="#parameters">Parameters</a></li>
   <li><a href="#attributes" id="toc-attributes" class="nav-link" data-scroll-target="#attributes">Attributes</a></li>
-  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
   <li><a href="#note" id="toc-note" class="nav-link" data-scroll-target="#note">Note</a></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
@@ -479,16 +479,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="example" class="level2 doc-section doc-section-example">
-<h2 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h2>
-<p>::</p>
-<pre><code>&gt;&gt;&gt; ds = Dataset[MyData]("path/to/data-{000000..000009}.tar")
-&gt;&gt;&gt; for sample in ds.ordered(batch_size=32):
-...     # sample is SampleBatch[MyData] with batch_size samples
-...     embeddings = sample.embeddings  # shape: (32, ...)
-...
-&gt;&gt;&gt; # Transform to a different view
-&gt;&gt;&gt; ds_view = ds.as_type(MyDataView)</code></pre>
+<section id="examples" class="level2 doc-section doc-section-examples">
+<h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> ds <span class="op">=</span> Dataset[MyData](<span class="st">"path/to/data-{000000..000009}.tar"</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="cf">for</span> sample <span class="kw">in</span> ds.ordered(batch_size<span class="op">=</span><span class="dv">32</span>):</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>...     <span class="co"># sample is SampleBatch[MyData] with batch_size samples</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>...     embeddings <span class="op">=</span> sample.embeddings  <span class="co"># shape: (32, ...)</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="co"># Transform to a different view</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> ds_view <span class="op">=</span> ds.as_type(MyDataView)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="note" class="level2 doc-section doc-section-note">
 <h2 class="doc-section doc-section-note anchored" data-anchor-id="note">Note</h2>
@@ -817,15 +816,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 ds.to_parquet("output.parquet", maxcount=10000)</code></pre>
 <p>This creates multiple parquet files: <code>output-000000.parquet</code>, <code>output-000001.parquet</code>, etc.</p>
 </section>
-<section id="example-1" class="level4 doc-section doc-section-example">
-<h4 class="doc-section doc-section-example anchored" data-anchor-id="example-1">Example</h4>
-<p>::</p>
-<pre><code>&gt;&gt;&gt; ds = Dataset[MySample]("data.tar")
-&gt;&gt;&gt; # Small dataset - load all at once
-&gt;&gt;&gt; ds.to_parquet("output.parquet")
-&gt;&gt;&gt;
-&gt;&gt;&gt; # Large dataset - process in chunks
-&gt;&gt;&gt; ds.to_parquet("output.parquet", maxcount=50000)</code></pre>
+<section id="examples-1" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-1">Examples</h4>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> ds <span class="op">=</span> Dataset[MySample](<span class="st">"data.tar"</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="co"># Small dataset - load all at once</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> ds.to_parquet(<span class="st">"output.parquet"</span>)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="co"># Large dataset - process in chunks</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> ds.to_parquet(<span class="st">"output.parquet"</span>, maxcount<span class="op">=</span><span class="dv">50000</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
 <section id="atdata.Dataset.wrap" class="level3">

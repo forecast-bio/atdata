@@ -3,12 +3,14 @@
 This module provides shared fixtures and sample types for the test suite.
 """
 
-import pytest
-from redis import Redis
-from typing import Optional
+from pathlib import Path
+from typing import Optional, TypeVar
 
 import numpy as np
+import pytest
+import webdataset as wds
 from numpy.typing import NDArray
+from redis import Redis
 
 import atdata
 
@@ -41,6 +43,7 @@ class SharedBasicSample:
 
     Fields: name (str), value (int)
     """
+
     name: str
     value: int
 
@@ -51,6 +54,7 @@ class SharedNumpySample:
 
     Fields: data (NDArray), label (str)
     """
+
     data: NDArray
     label: str
 
@@ -61,6 +65,7 @@ class SharedOptionalSample:
 
     Fields: required (str), optional_int (int|None), optional_array (NDArray|None)
     """
+
     required: str
     optional_int: Optional[int] = None
     optional_array: Optional[NDArray] = None
@@ -72,6 +77,7 @@ class SharedAllTypesSample:
 
     Fields: str_field, int_field, float_field, bool_field, bytes_field
     """
+
     str_field: str
     int_field: int
     float_field: float
@@ -85,6 +91,7 @@ class SharedListSample:
 
     Fields: tags (list[str]), scores (list[float])
     """
+
     tags: list[str]
     scores: list[float]
 
@@ -95,6 +102,7 @@ class SharedMetadataSample:
 
     Fields: id (int), content (str), score (float)
     """
+
     id: int
     content: str
     score: float
@@ -108,10 +116,6 @@ class SharedMetadataSample:
 # Import and use these instead of duplicating TarWriter boilerplate.
 #
 # =============================================================================
-
-import webdataset as wds
-from pathlib import Path
-from typing import Type, TypeVar
 
 ST = TypeVar("ST")
 
@@ -150,8 +154,7 @@ def create_basic_dataset(
     """
     tar_path = tmp_path / f"{name}-000000.tar"
     samples = [
-        SharedBasicSample(name=f"sample_{i}", value=i * 10)
-        for i in range(num_samples)
+        SharedBasicSample(name=f"sample_{i}", value=i * 10) for i in range(num_samples)
     ]
     create_tar_with_samples(tar_path, samples)
     return atdata.Dataset[SharedBasicSample](url=str(tar_path))
@@ -190,6 +193,7 @@ def create_numpy_dataset(
 # Fixtures
 # =============================================================================
 
+
 @pytest.fixture
 def redis_connection():
     """Provide a Redis connection, skip test if Redis is not available."""
@@ -208,8 +212,9 @@ def clean_redis(redis_connection):
     Clears LocalDatasetEntry, BasicIndexEntry (legacy), and LocalSchema keys
     before and after each test to ensure test isolation.
     """
+
     def _clear_all():
-        for pattern in ('LocalDatasetEntry:*', 'BasicIndexEntry:*', 'LocalSchema:*'):
+        for pattern in ("LocalDatasetEntry:*", "BasicIndexEntry:*", "LocalSchema:*"):
             for key in redis_connection.scan_iter(match=pattern):
                 redis_connection.delete(key)
 

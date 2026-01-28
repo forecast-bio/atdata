@@ -45,11 +45,11 @@ making it discoverable on the federated atmosphere network.
 |        | [KeyError](`KeyError`)     | If schema not found in local index. |
 |        | [ValueError](`ValueError`) | If local entry has no data URLs.    |
 
-## Example {.doc-section .doc-section-example}
+## Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> entry = local_index.get_dataset("mnist-train")
-    >>> uri = promote_to_atmosphere(entry, local_index, client)
-    >>> print(uri)
-    at://did:plc:abc123/ac.foundation.dataset.datasetIndex/...
+```python
+>>> entry = local_index.get_dataset("mnist-train")
+>>> uri = promote_to_atmosphere(entry, local_index, client)
+>>> print(uri)
+at://did:plc:abc123/ac.foundation.dataset.datasetIndex/...
+```

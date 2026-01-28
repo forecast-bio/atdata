@@ -28,6 +28,7 @@ from atdata.atmosphere._types import LEXICON_NAMESPACE
 @atdata.packable
 class PromotionSample:
     """Sample for promotion tests."""
+
     name: str
     value: int
 
@@ -35,6 +36,7 @@ class PromotionSample:
 @atdata.packable
 class PromotionArraySample:
     """Sample with NDArray for promotion tests."""
+
     label: str
     features: NDArray
 
@@ -110,10 +112,14 @@ class TestFullPromotionWorkflow:
 
         # Setup mock responses for atmosphere operations
         schema_response = Mock()
-        schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/promoted-schema"
+        schema_response.uri = (
+            f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/promoted-schema"
+        )
 
         dataset_response = Mock()
-        dataset_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.dataset/promoted-dataset"
+        dataset_response.uri = (
+            f"at://did:plc:test/{LEXICON_NAMESPACE}.dataset/promoted-dataset"
+        )
 
         mock_atproto_client.com.atproto.repo.create_record.side_effect = [
             schema_response,
@@ -124,7 +130,9 @@ class TestFullPromotionWorkflow:
         mock_list_response = Mock()
         mock_list_response.records = []
         mock_list_response.cursor = None
-        mock_atproto_client.com.atproto.repo.list_records.return_value = mock_list_response
+        mock_atproto_client.com.atproto.repo.list_records.return_value = (
+            mock_list_response
+        )
 
         # Promote
         result_uri = promote_to_atmosphere(
@@ -146,7 +154,9 @@ class TestFullPromotionWorkflow:
         mock_list_response = Mock()
         mock_list_response.records = []
         mock_list_response.cursor = None
-        mock_atproto_client.com.atproto.repo.list_records.return_value = mock_list_response
+        mock_atproto_client.com.atproto.repo.list_records.return_value = (
+            mock_list_response
+        )
 
         schema_response = Mock()
         schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/s1"
@@ -177,7 +187,9 @@ class TestFullPromotionWorkflow:
         mock_list_response = Mock()
         mock_list_response.records = []
         mock_list_response.cursor = None
-        mock_atproto_client.com.atproto.repo.list_records.return_value = mock_list_response
+        mock_atproto_client.com.atproto.repo.list_records.return_value = (
+            mock_list_response
+        )
 
         schema_response = Mock()
         schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/s1"
@@ -215,12 +227,16 @@ class TestSchemaDeduplication:
 
         # Patch _find_existing_schema to return an existing schema URI
         with patch("atdata.promote._find_existing_schema") as mock_find:
-            mock_find.return_value = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/existing"
+            mock_find.return_value = (
+                f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/existing"
+            )
 
             # Only dataset should be created (schema exists)
             dataset_response = Mock()
             dataset_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.dataset/d1"
-            mock_atproto_client.com.atproto.repo.create_record.return_value = dataset_response
+            mock_atproto_client.com.atproto.repo.create_record.return_value = (
+                dataset_response
+            )
 
             promote_to_atmosphere(local_entry, local_index, authenticated_client)
 
@@ -228,7 +244,9 @@ class TestSchemaDeduplication:
             assert mock_atproto_client.com.atproto.repo.create_record.call_count == 1
 
             # Verify it was the dataset call
-            call_kwargs = mock_atproto_client.com.atproto.repo.create_record.call_args.kwargs
+            call_kwargs = (
+                mock_atproto_client.com.atproto.repo.create_record.call_args.kwargs
+            )
             assert "dataset" in call_kwargs["data"]["collection"]
 
     def test_creates_schema_when_not_found(
@@ -241,7 +259,9 @@ class TestSchemaDeduplication:
         mock_list_response = Mock()
         mock_list_response.records = []
         mock_list_response.cursor = None
-        mock_atproto_client.com.atproto.repo.list_records.return_value = mock_list_response
+        mock_atproto_client.com.atproto.repo.list_records.return_value = (
+            mock_list_response
+        )
 
         # Both schema and dataset should be created
         schema_response = Mock()
@@ -277,11 +297,15 @@ class TestSchemaDeduplication:
         mock_list_response = Mock()
         mock_list_response.records = [existing_schema]
         mock_list_response.cursor = None
-        mock_atproto_client.com.atproto.repo.list_records.return_value = mock_list_response
+        mock_atproto_client.com.atproto.repo.list_records.return_value = (
+            mock_list_response
+        )
 
         # Both should be created (version mismatch)
         schema_response = Mock()
-        schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/v1new"
+        schema_response.uri = (
+            f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/v1new"
+        )
 
         dataset_response = Mock()
         dataset_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.dataset/d1"
@@ -314,7 +338,9 @@ class TestMetadataPreservation:
         mock_list_response = Mock()
         mock_list_response.records = []
         mock_list_response.cursor = None
-        mock_atproto_client.com.atproto.repo.list_records.return_value = mock_list_response
+        mock_atproto_client.com.atproto.repo.list_records.return_value = (
+            mock_list_response
+        )
 
         schema_response = Mock()
         schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/s1"
@@ -337,7 +363,9 @@ class TestMetadataPreservation:
         # The metadata should be in the record (may be msgpack encoded)
         assert "metadata" in record
 
-    def test_none_metadata_handled(self, clean_redis, authenticated_client, mock_atproto_client):
+    def test_none_metadata_handled(
+        self, clean_redis, authenticated_client, mock_atproto_client
+    ):
         """Entry without metadata should promote successfully."""
         index = LocalIndex(redis=clean_redis)
         schema_ref = index.publish_schema(PromotionSample, version="1.0.0")
@@ -354,7 +382,9 @@ class TestMetadataPreservation:
         mock_list_response = Mock()
         mock_list_response.records = []
         mock_list_response.cursor = None
-        mock_atproto_client.com.atproto.repo.list_records.return_value = mock_list_response
+        mock_atproto_client.com.atproto.repo.list_records.return_value = (
+            mock_list_response
+        )
 
         schema_response = Mock()
         schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/s1"
@@ -423,7 +453,9 @@ class TestMultiDatasetPromotion:
             dataset_responses[2],  # Third dataset
         ]
 
-        with patch("atdata.promote._find_existing_schema", side_effect=mock_find_existing):
+        with patch(
+            "atdata.promote._find_existing_schema", side_effect=mock_find_existing
+        ):
             # Promote all three
             for i, entry in enumerate(entries):
                 promote_to_atmosphere(entry, index, authenticated_client)
@@ -462,7 +494,9 @@ class TestLargeDatasetPromotion:
         mock_list_response = Mock()
         mock_list_response.records = []
         mock_list_response.cursor = None
-        mock_atproto_client.com.atproto.repo.list_records.return_value = mock_list_response
+        mock_atproto_client.com.atproto.repo.list_records.return_value = (
+            mock_list_response
+        )
 
         schema_response = Mock()
         schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/s1"
@@ -543,7 +577,9 @@ class TestPromotionOptions:
         mock_list_response = Mock()
         mock_list_response.records = []
         mock_list_response.cursor = None
-        mock_atproto_client.com.atproto.repo.list_records.return_value = mock_list_response
+        mock_atproto_client.com.atproto.repo.list_records.return_value = (
+            mock_list_response
+        )
 
         schema_response = Mock()
         schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/s1"
@@ -578,7 +614,9 @@ class TestPromotionOptions:
         mock_list_response = Mock()
         mock_list_response.records = []
         mock_list_response.cursor = None
-        mock_atproto_client.com.atproto.repo.list_records.return_value = mock_list_response
+        mock_atproto_client.com.atproto.repo.list_records.return_value = (
+            mock_list_response
+        )
 
         schema_response = Mock()
         schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/s1"
@@ -616,7 +654,9 @@ class TestPromotionOptions:
         mock_list_response = Mock()
         mock_list_response.records = []
         mock_list_response.cursor = None
-        mock_atproto_client.com.atproto.repo.list_records.return_value = mock_list_response
+        mock_atproto_client.com.atproto.repo.list_records.return_value = (
+            mock_list_response
+        )
 
         schema_response = Mock()
         schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/s1"

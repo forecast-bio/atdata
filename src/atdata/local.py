@@ -24,13 +24,12 @@ from atdata import (
 )
 from atdata._cid import generate_cid
 from atdata._type_utils import (
-    numpy_dtype_to_string,
     PRIMITIVE_TYPE_MAP,
     unwrap_optional,
     is_ndarray_type,
     extract_ndarray_dtype,
 )
-from atdata._protocols import IndexEntry, AbstractDataStore, Packable
+from atdata._protocols import AbstractDataStore, Packable
 
 from pathlib import Path
 from uuid import uuid4
@@ -57,7 +56,6 @@ from typing import (
     Generator,
     Iterator,
     BinaryIO,
-    Union,
     Optional,
     Literal,
     cast,
@@ -70,7 +68,7 @@ from datetime import datetime, timezone
 import json
 import warnings
 
-T = TypeVar( 'T', bound = PackableSample )
+T = TypeVar("T", bound=PackableSample)
 
 # Redis key prefixes for index entries and schemas
 REDIS_KEY_DATASET_ENTRY = "LocalDatasetEntry"
@@ -84,12 +82,10 @@ class SchemaNamespace:
     loaded schema types. After calling ``index.load_schema(uri)``, the
     schema's class becomes available as an attribute on this namespace.
 
-    Example:
-        ::
-
-            >>> index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
-            >>> MyType = index.types.MySample
-            >>> sample = MyType(field1="hello", field2=42)
+    Examples:
+        >>> index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
+        >>> MyType = index.types.MySample
+        >>> sample = MyType(field1="hello", field2=42)
 
     The namespace supports:
     - Attribute access: ``index.types.MySample``
@@ -357,9 +353,10 @@ class LocalSchemaRecord:
 ##
 # Helpers
 
-def _kind_str_for_sample_type( st: Type[Packable] ) -> str:
+
+def _kind_str_for_sample_type(st: Type[Packable]) -> str:
     """Return fully-qualified 'module.name' string for a sample type."""
-    return f'{st.__module__}.{st.__name__}'
+    return f"{st.__module__}.{st.__name__}"
 
 
 def _create_s3_write_callbacks(
@@ -387,17 +384,17 @@ def _create_s3_write_callbacks(
         import boto3
 
         s3_client_kwargs = {
-            'aws_access_key_id': credentials['AWS_ACCESS_KEY_ID'],
-            'aws_secret_access_key': credentials['AWS_SECRET_ACCESS_KEY']
+            "aws_access_key_id": credentials["AWS_ACCESS_KEY_ID"],
+            "aws_secret_access_key": credentials["AWS_SECRET_ACCESS_KEY"],
         }
-        if 'AWS_ENDPOINT' in credentials:
-            s3_client_kwargs['endpoint_url'] = credentials['AWS_ENDPOINT']
-        s3_client = boto3.client('s3', **s3_client_kwargs)
+        if "AWS_ENDPOINT" in credentials:
+            s3_client_kwargs["endpoint_url"] = credentials["AWS_ENDPOINT"]
+        s3_client = boto3.client("s3", **s3_client_kwargs)
 
         def _writer_opener(p: str):
             local_path = Path(temp_dir) / p
             local_path.parent.mkdir(parents=True, exist_ok=True)
-            return open(local_path, 'wb')
+            return open(local_path, "wb")
 
         def _writer_post(p: str):
             local_path = Path(temp_dir) / p
@@ -405,7 +402,7 @@ def _create_s3_write_callbacks(
             bucket = path_parts[0]
             key = str(Path(*path_parts[1:]))
 
-            with open(local_path, 'rb') as f_in:
+            with open(local_path, "rb") as f_in:
                 s3_client.put_object(Bucket=bucket, Key=key, Body=f_in.read())
 
             local_path.unlink()
@@ -419,7 +416,7 @@ def _create_s3_write_callbacks(
         assert fs is not None, "S3FileSystem required when cache_local=False"
 
         def _direct_opener(s: str):
-            return cast(BinaryIO, fs.open(f's3://{s}', 'wb'))
+            return cast(BinaryIO, fs.open(f"s3://{s}", "wb"))
 
         def _direct_post(s: str):
             if add_s3_prefix:
@@ -428,6 +425,7 @@ def _create_s3_write_callbacks(
                 written_shards.append(s)
 
         return _direct_opener, _direct_post
+
 
 ##
 # Schema helpers
@@ -454,9 +452,9 @@ def _parse_schema_ref(ref: str) -> tuple[str, str]:
     and legacy format: 'local://schemas/{module.Class}@{version}'
     """
     if ref.startswith(_ATDATA_URI_PREFIX):
-        path = ref[len(_ATDATA_URI_PREFIX):]
+        path = ref[len(_ATDATA_URI_PREFIX) :]
     elif ref.startswith(_LEGACY_URI_PREFIX):
-        path = ref[len(_LEGACY_URI_PREFIX):]
+        path = ref[len(_LEGACY_URI_PREFIX) :]
     else:
         raise ValueError(f"Invalid schema reference: {ref}")
 
@@ -487,7 +485,10 @@ def _increment_patch(version: str) -> str:
 def _python_type_to_field_type(python_type: Any) -> dict:
     """Convert Python type annotation to schema field type dict."""
     if python_type in PRIMITIVE_TYPE_MAP:
-        return {"$type": "local#primitive", "primitive": PRIMITIVE_TYPE_MAP[python_type]}
+        return {
+            "$type": "local#primitive",
+            "primitive": PRIMITIVE_TYPE_MAP[python_type],
+        }
 
     if is_ndarray_type(python_type):
         return {"$type": "local#ndarray", "dtype": extract_ndarray_dtype(python_type)}
@@ -495,7 +496,11 @@ def _python_type_to_field_type(python_type: Any) -> dict:
     origin = get_origin(python_type)
     if origin is list:
         args = get_args(python_type)
-        items = _python_type_to_field_type(args[0]) if args else {"$type": "local#primitive", "primitive": "str"}
+        items = (
+            _python_type_to_field_type(args[0])
+            if args
+            else {"$type": "local#primitive", "primitive": "str"}
+        )
         return {"$type": "local#array", "items": items}
 
     if is_dataclass(python_type):
@@ -543,11 +548,13 @@ def _build_schema_record(
         field_type, is_optional = unwrap_optional(field_type)
         field_type_dict = _python_type_to_field_type(field_type)
 
-        field_defs.append({
-            "name": f.name,
-            "fieldType": field_type_dict,
-            "optional": is_optional,
-        })
+        field_defs.append(
+            {
+                "name": f.name,
+                "fieldType": field_type_dict,
+                "optional": is_optional,
+            }
+        )
 
     return {
         "name": sample_type.__name__,
@@ -560,6 +567,7 @@ def _build_schema_record(
 
 ##
 # Redis object model
+
 
 @dataclass
 class LocalDatasetEntry:
@@ -579,6 +587,7 @@ class LocalDatasetEntry:
         data_urls: WebDataset URLs for the data.
         metadata: Arbitrary metadata dictionary, or None if not set.
     """
+
     ##
 
     name: str
@@ -640,17 +649,17 @@ class LocalDatasetEntry:
         Args:
             redis: Redis connection to write to.
         """
-        save_key = f'{REDIS_KEY_DATASET_ENTRY}:{self.cid}'
+        save_key = f"{REDIS_KEY_DATASET_ENTRY}:{self.cid}"
         data = {
-            'name': self.name,
-            'schema_ref': self.schema_ref,
-            'data_urls': msgpack.packb(self.data_urls),  # Serialize list
-            'cid': self.cid,
+            "name": self.name,
+            "schema_ref": self.schema_ref,
+            "data_urls": msgpack.packb(self.data_urls),  # Serialize list
+            "cid": self.cid,
         }
         if self.metadata is not None:
-            data['metadata'] = msgpack.packb(self.metadata)
+            data["metadata"] = msgpack.packb(self.metadata)
         if self._legacy_uuid is not None:
-            data['legacy_uuid'] = self._legacy_uuid
+            data["legacy_uuid"] = self._legacy_uuid
 
         redis.hset(save_key, mapping=data)  # type: ignore[arg-type]
 
@@ -668,23 +677,23 @@ class LocalDatasetEntry:
         Raises:
             KeyError: If entry not found.
         """
-        save_key = f'{REDIS_KEY_DATASET_ENTRY}:{cid}'
+        save_key = f"{REDIS_KEY_DATASET_ENTRY}:{cid}"
         raw_data = redis.hgetall(save_key)
         if not raw_data:
             raise KeyError(f"{REDIS_KEY_DATASET_ENTRY} not found: {cid}")
 
         # Decode string fields, keep binary fields as bytes for msgpack
         raw_data_typed = cast(dict[bytes, bytes], raw_data)
-        name = raw_data_typed[b'name'].decode('utf-8')
-        schema_ref = raw_data_typed[b'schema_ref'].decode('utf-8')
-        cid_value = raw_data_typed.get(b'cid', b'').decode('utf-8') or None
-        legacy_uuid = raw_data_typed.get(b'legacy_uuid', b'').decode('utf-8') or None
+        name = raw_data_typed[b"name"].decode("utf-8")
+        schema_ref = raw_data_typed[b"schema_ref"].decode("utf-8")
+        cid_value = raw_data_typed.get(b"cid", b"").decode("utf-8") or None
+        legacy_uuid = raw_data_typed.get(b"legacy_uuid", b"").decode("utf-8") or None
 
         # Deserialize msgpack fields (stored as raw bytes)
-        data_urls = msgpack.unpackb(raw_data_typed[b'data_urls'])
+        data_urls = msgpack.unpackb(raw_data_typed[b"data_urls"])
         metadata = None
-        if b'metadata' in raw_data_typed:
-            metadata = msgpack.unpackb(raw_data_typed[b'metadata'])
+        if b"metadata" in raw_data_typed:
+            metadata = msgpack.unpackb(raw_data_typed[b"metadata"])
 
         return cls(
             name=name,
@@ -699,7 +708,8 @@ class LocalDatasetEntry:
 # Backwards compatibility alias
 BasicIndexEntry = LocalDatasetEntry
 
-def _s3_env( credentials_path: str | Path ) -> dict[str, Any]:
+
+def _s3_env(credentials_path: str | Path) -> dict[str, Any]:
     """Load S3 credentials from .env file.
 
     Args:
@@ -712,34 +722,38 @@ def _s3_env( credentials_path: str | Path ) -> dict[str, Any]:
     Raises:
         ValueError: If any required key is missing from the .env file.
     """
-    credentials_path = Path( credentials_path )
-    env_values = dotenv_values( credentials_path )
+    credentials_path = Path(credentials_path)
+    env_values = dotenv_values(credentials_path)
 
-    required_keys = ('AWS_ENDPOINT', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY')
+    required_keys = ("AWS_ENDPOINT", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY")
     missing = [k for k in required_keys if k not in env_values]
     if missing:
-        raise ValueError(f"Missing required keys in {credentials_path}: {', '.join(missing)}")
+        raise ValueError(
+            f"Missing required keys in {credentials_path}: {', '.join(missing)}"
+        )
 
     return {k: env_values[k] for k in required_keys}
 
-def _s3_from_credentials( creds: str | Path | dict ) -> S3FileSystem:
+
+def _s3_from_credentials(creds: str | Path | dict) -> S3FileSystem:
     """Create S3FileSystem from credentials dict or .env file path."""
-    if not isinstance( creds, dict ):
-        creds = _s3_env( creds )
+    if not isinstance(creds, dict):
+        creds = _s3_env(creds)
 
     # Build kwargs, making endpoint_url optional
     kwargs = {
-        'key': creds['AWS_ACCESS_KEY_ID'],
-        'secret': creds['AWS_SECRET_ACCESS_KEY']
+        "key": creds["AWS_ACCESS_KEY_ID"],
+        "secret": creds["AWS_SECRET_ACCESS_KEY"],
     }
-    if 'AWS_ENDPOINT' in creds:
-        kwargs['endpoint_url'] = creds['AWS_ENDPOINT']
+    if "AWS_ENDPOINT" in creds:
+        kwargs["endpoint_url"] = creds["AWS_ENDPOINT"]
 
     return S3FileSystem(**kwargs)
 
 
 ##
 # Classes
+
 
 class Repo:
     """Repository for storing and managing atdata datasets.
@@ -797,20 +811,20 @@ class Repo:
 
         if s3_credentials is None:
             self.s3_credentials = None
-        elif isinstance( s3_credentials, dict ):
+        elif isinstance(s3_credentials, dict):
             self.s3_credentials = s3_credentials
         else:
-            self.s3_credentials = _s3_env( s3_credentials )
+            self.s3_credentials = _s3_env(s3_credentials)
 
         if self.s3_credentials is None:
             self.bucket_fs = None
         else:
-            self.bucket_fs = _s3_from_credentials( self.s3_credentials )
+            self.bucket_fs = _s3_from_credentials(self.s3_credentials)
 
         if self.bucket_fs is not None:
             if hive_path is None:
-                raise ValueError( 'Must specify hive path within bucket' )
-            self.hive_path = Path( hive_path )
+                raise ValueError("Must specify hive path within bucket")
+            self.hive_path = Path(hive_path)
             self.hive_bucket = self.hive_path.parts[0]
         else:
             self.hive_path = None
@@ -818,18 +832,19 @@ class Repo:
 
         #
 
-        self.index = Index( redis = redis )
+        self.index = Index(redis=redis)
 
     ##
 
-    def insert(self,
-               ds: Dataset[T],
-               *,
-               name: str,
-               cache_local: bool = False,
-               schema_ref: str | None = None,
-               **kwargs
-               ) -> tuple[LocalDatasetEntry, Dataset[T]]:
+    def insert(
+        self,
+        ds: Dataset[T],
+        *,
+        name: str,
+        cache_local: bool = False,
+        schema_ref: str | None = None,
+        **kwargs,
+    ) -> tuple[LocalDatasetEntry, Dataset[T]]:
         """Insert a dataset into the repository.
 
         Writes the dataset to S3 as WebDataset tar files, stores metadata,
@@ -853,35 +868,35 @@ class Repo:
             RuntimeError: If no shards were written.
         """
         if self.s3_credentials is None:
-            raise ValueError("S3 credentials required for insert(). Initialize Repo with s3_credentials.")
+            raise ValueError(
+                "S3 credentials required for insert(). Initialize Repo with s3_credentials."
+            )
         if self.hive_bucket is None or self.hive_path is None:
-            raise ValueError("hive_path required for insert(). Initialize Repo with hive_path.")
+            raise ValueError(
+                "hive_path required for insert(). Initialize Repo with hive_path."
+            )
 
-        new_uuid = str( uuid4() )
+        new_uuid = str(uuid4())
 
-        hive_fs = _s3_from_credentials( self.s3_credentials )
+        hive_fs = _s3_from_credentials(self.s3_credentials)
 
         # Write metadata
         metadata_path = (
-            self.hive_path
-            / 'metadata'
-            / f'atdata-metadata--{new_uuid}.msgpack'
+            self.hive_path / "metadata" / f"atdata-metadata--{new_uuid}.msgpack"
         )
         # Note: S3 doesn't need directories created beforehand - s3fs handles this
 
         if ds.metadata is not None:
             # Use s3:// prefix to ensure s3fs treats this as an S3 path
-            with cast( BinaryIO, hive_fs.open( f's3://{metadata_path.as_posix()}', 'wb' ) ) as f:
-                meta_packed = msgpack.packb( ds.metadata )
+            with cast(
+                BinaryIO, hive_fs.open(f"s3://{metadata_path.as_posix()}", "wb")
+            ) as f:
+                meta_packed = msgpack.packb(ds.metadata)
                 assert meta_packed is not None
-                f.write( cast( bytes, meta_packed ) )
-
+                f.write(cast(bytes, meta_packed))
 
         # Write data
-        shard_pattern = (
-            self.hive_path
-            / f'atdata--{new_uuid}--%06d.tar'
-        ).as_posix()
+        shard_pattern = (self.hive_path / f"atdata--{new_uuid}--%06d.tar").as_posix()
 
         written_shards: list[str] = []
         with TemporaryDirectory() as temp_dir:
@@ -904,24 +919,22 @@ class Repo:
                     sink.write(sample.as_wds)
 
         # Make a new Dataset object for the written dataset copy
-        if len( written_shards ) == 0:
-            raise RuntimeError( 'Cannot form new dataset entry -- did not write any shards' )
-        
-        elif len( written_shards ) < 2:
+        if len(written_shards) == 0:
+            raise RuntimeError(
+                "Cannot form new dataset entry -- did not write any shards"
+            )
+
+        elif len(written_shards) < 2:
             new_dataset_url = (
-                self.hive_path
-                / ( Path( written_shards[0] ).name )
+                self.hive_path / (Path(written_shards[0]).name)
             ).as_posix()
 
         else:
             shard_s3_format = (
-                (
-                    self.hive_path
-                    / f'atdata--{new_uuid}'
-                ).as_posix()
-            ) + '--{shard_id}.tar'
-            shard_id_braced = '{' + f'{0:06d}..{len( written_shards ) - 1:06d}' + '}'
-            new_dataset_url = shard_s3_format.format( shard_id = shard_id_braced )
+                (self.hive_path / f"atdata--{new_uuid}").as_posix()
+            ) + "--{shard_id}.tar"
+            shard_id_braced = "{" + f"{0:06d}..{len(written_shards) - 1:06d}" + "}"
+            new_dataset_url = shard_s3_format.format(shard_id=shard_id_braced)
 
         new_dataset = Dataset[ds.sample_type](
             url=new_dataset_url,
@@ -995,6 +1008,7 @@ class Index:
         # Providing stub_dir implies auto_stubs=True
         if auto_stubs or stub_dir is not None:
             from ._stub_manager import StubManager
+
             self._stub_manager: StubManager | None = StubManager(stub_dir=stub_dir)
         else:
             self._stub_manager = None
@@ -1027,12 +1041,10 @@ class Index:
         After calling :meth:`load_schema`, schema types become available
         as attributes on this namespace.
 
-        Example:
-            ::
-
-                >>> index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
-                >>> MyType = index.types.MySample
-                >>> sample = MyType(name="hello", value=42)
+        Examples:
+            >>> index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
+            >>> MyType = index.types.MySample
+            >>> sample = MyType(name="hello", value=42)
 
         Returns:
             SchemaNamespace containing all loaded schema types.
@@ -1058,16 +1070,14 @@ class Index:
             KeyError: If schema not found.
             ValueError: If schema cannot be decoded.
 
-        Example:
-            ::
-
-                >>> # Load and use immediately
-                >>> MyType = index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
-                >>> sample = MyType(name="hello", value=42)
-                >>>
-                >>> # Or access later via namespace
-                >>> index.load_schema("atdata://local/sampleSchema/OtherType@1.0.0")
-                >>> other = index.types.OtherType(data="test")
+        Examples:
+            >>> # Load and use immediately
+            >>> MyType = index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
+            >>> sample = MyType(name="hello", value=42)
+            >>>
+            >>> # Or access later via namespace
+            >>> index.load_schema("atdata://local/sampleSchema/OtherType@1.0.0")
+            >>> other = index.types.OtherType(data="test")
         """
         # Decode the schema (uses generated module if auto_stubs enabled)
         cls = self.decode_schema(ref)
@@ -1090,16 +1100,14 @@ class Index:
             Import path like "local.MySample_1_0_0", or None if auto_stubs
             is disabled.
 
-        Example:
-            ::
-
-                >>> index = LocalIndex(auto_stubs=True)
-                >>> ref = index.publish_schema(MySample, version="1.0.0")
-                >>> index.load_schema(ref)
-                >>> print(index.get_import_path(ref))
-                local.MySample_1_0_0
-                >>> # Then in your code:
-                >>> # from local.MySample_1_0_0 import MySample
+        Examples:
+            >>> index = LocalIndex(auto_stubs=True)
+            >>> ref = index.publish_schema(MySample, version="1.0.0")
+            >>> index.load_schema(ref)
+            >>> print(index.get_import_path(ref))
+            local.MySample_1_0_0
+            >>> # Then in your code:
+            >>> # from local.MySample_1_0_0 import MySample
         """
         if self._stub_manager is None:
             return None
@@ -1138,19 +1146,20 @@ class Index:
         Yields:
             LocalDatasetEntry objects from the index.
         """
-        prefix = f'{REDIS_KEY_DATASET_ENTRY}:'
-        for key in self._redis.scan_iter(match=f'{prefix}*'):
-            key_str = key.decode('utf-8') if isinstance(key, bytes) else key
-            cid = key_str[len(prefix):]
+        prefix = f"{REDIS_KEY_DATASET_ENTRY}:"
+        for key in self._redis.scan_iter(match=f"{prefix}*"):
+            key_str = key.decode("utf-8") if isinstance(key, bytes) else key
+            cid = key_str[len(prefix) :]
             yield LocalDatasetEntry.from_redis(self._redis, cid)
 
-    def add_entry(self,
-                  ds: Dataset,
-                  *,
-                  name: str,
-                  schema_ref: str | None = None,
-                  metadata: dict | None = None,
-                  ) -> LocalDatasetEntry:
+    def add_entry(
+        self,
+        ds: Dataset,
+        *,
+        name: str,
+        schema_ref: str | None = None,
+        metadata: dict | None = None,
+    ) -> LocalDatasetEntry:
         """Add a dataset to the index.
 
         Creates a LocalDatasetEntry for the dataset and persists it to Redis.
@@ -1166,7 +1175,9 @@ class Index:
         """
         ##
         if schema_ref is None:
-            schema_ref = f"local://schemas/{_kind_str_for_sample_type(ds.sample_type)}@1.0.0"
+            schema_ref = (
+                f"local://schemas/{_kind_str_for_sample_type(ds.sample_type)}@1.0.0"
+            )
 
         # Normalize URL to list
         data_urls = [ds.url]
@@ -1245,12 +1256,12 @@ class Index:
         Returns:
             IndexEntry for the inserted dataset.
         """
-        metadata = kwargs.get('metadata')
+        metadata = kwargs.get("metadata")
 
         if self._data_store is not None:
             # Write shards to data store, then index the new URLs
-            prefix = kwargs.get('prefix', name)
-            cache_local = kwargs.get('cache_local', False)
+            prefix = kwargs.get("prefix", name)
+            cache_local = kwargs.get("cache_local", False)
 
             written_urls = self._data_store.write_shards(
                 ds,
@@ -1314,10 +1325,10 @@ class Index:
         latest_version: tuple[int, int, int] | None = None
         latest_version_str: str | None = None
 
-        prefix = f'{REDIS_KEY_SCHEMA}:'
-        for key in self._redis.scan_iter(match=f'{prefix}*'):
-            key_str = key.decode('utf-8') if isinstance(key, bytes) else key
-            schema_id = key_str[len(prefix):]
+        prefix = f"{REDIS_KEY_SCHEMA}:"
+        for key in self._redis.scan_iter(match=f"{prefix}*"):
+            key_str = key.decode("utf-8") if isinstance(key, bytes) else key
+            schema_id = key_str[len(prefix) :]
 
             if "@" not in schema_id:
                 continue
@@ -1369,10 +1380,12 @@ class Index:
         # This catches non-packable types early with a clear error message
         try:
             # Check protocol compliance by verifying required methods exist
-            if not (hasattr(sample_type, 'from_data') and
-                    hasattr(sample_type, 'from_bytes') and
-                    callable(getattr(sample_type, 'from_data', None)) and
-                    callable(getattr(sample_type, 'from_bytes', None))):
+            if not (
+                hasattr(sample_type, "from_data")
+                and hasattr(sample_type, "from_bytes")
+                and callable(getattr(sample_type, "from_data", None))
+                and callable(getattr(sample_type, "from_bytes", None))
+            ):
                 raise TypeError(
                     f"{sample_type.__name__} does not satisfy the Packable protocol. "
                     "Use @packable decorator or inherit from PackableSample."
@@ -1430,10 +1443,10 @@ class Index:
             raise KeyError(f"Schema not found: {ref}")
 
         if isinstance(schema_json, bytes):
-            schema_json = schema_json.decode('utf-8')
+            schema_json = schema_json.decode("utf-8")
 
         schema = json.loads(schema_json)
-        schema['$ref'] = _make_schema_ref(name, version)
+        schema["$ref"] = _make_schema_ref(name, version)
 
         # Auto-generate stub if enabled
         if self._stub_manager is not None:
@@ -1468,29 +1481,29 @@ class Index:
         Yields:
             LocalSchemaRecord for each schema.
         """
-        prefix = f'{REDIS_KEY_SCHEMA}:'
-        for key in self._redis.scan_iter(match=f'{prefix}*'):
-            key_str = key.decode('utf-8') if isinstance(key, bytes) else key
+        prefix = f"{REDIS_KEY_SCHEMA}:"
+        for key in self._redis.scan_iter(match=f"{prefix}*"):
+            key_str = key.decode("utf-8") if isinstance(key, bytes) else key
             # Extract name@version from key
-            schema_id = key_str[len(prefix):]
+            schema_id = key_str[len(prefix) :]
 
             schema_json = self._redis.get(key)
             if schema_json is None:
                 continue
 
             if isinstance(schema_json, bytes):
-                schema_json = schema_json.decode('utf-8')
+                schema_json = schema_json.decode("utf-8")
 
             schema = json.loads(schema_json)
             # Handle legacy keys that have module.Class format
             if "." in schema_id.split("@")[0]:
                 name = schema_id.split("@")[0].rsplit(".", 1)[1]
                 version = schema_id.split("@")[1]
-                schema['$ref'] = _make_schema_ref(name, version)
+                schema["$ref"] = _make_schema_ref(name, version)
             else:
                 # schema_id is already "name@version"
                 name, version = schema_id.rsplit("@", 1)
-                schema['$ref'] = _make_schema_ref(name, version)
+                schema["$ref"] = _make_schema_ref(name, version)
             yield LocalSchemaRecord.from_dict(schema)
 
     def list_schemas(self) -> list[dict]:
@@ -1534,6 +1547,7 @@ class Index:
 
         # Fall back to dynamic type generation
         from atdata._schema_codec import schema_to_type
+
         return schema_to_type(schema_dict)
 
     def decode_schema_as(self, ref: str, type_hint: type[T]) -> type[T]:
@@ -1551,15 +1565,13 @@ class Index:
         Returns:
             The decoded type, cast to match the type_hint for IDE support.
 
-        Example:
-            ::
-
-                >>> # After enabling auto_stubs and configuring IDE extraPaths:
-                >>> from local.MySample_1_0_0 import MySample
-                >>>
-                >>> # This gives full IDE autocomplete:
-                >>> DecodedType = index.decode_schema_as(ref, MySample)
-                >>> sample = DecodedType(text="hello", value=42)  # IDE knows signature!
+        Examples:
+            >>> # After enabling auto_stubs and configuring IDE extraPaths:
+            >>> from local.MySample_1_0_0 import MySample
+            >>>
+            >>> # This gives full IDE autocomplete:
+            >>> DecodedType = index.decode_schema_as(ref, MySample)
+            >>> sample = DecodedType(text="hello", value=42)  # IDE knows signature!
 
         Note:
             The type_hint is only used for static type checking - at runtime,
@@ -1567,6 +1579,7 @@ class Index:
             stub matches the schema to avoid runtime surprises.
         """
         from typing import cast
+
         return cast(type[T], self.decode_schema(ref))
 
     def clear_stubs(self) -> int:
@@ -1687,11 +1700,11 @@ class S3DataStore:
             HTTPS URL if custom endpoint is configured, otherwise unchanged.
             Example: 's3://bucket/path' -> 'https://endpoint.com/bucket/path'
         """
-        endpoint = self.credentials.get('AWS_ENDPOINT')
-        if endpoint and url.startswith('s3://'):
+        endpoint = self.credentials.get("AWS_ENDPOINT")
+        if endpoint and url.startswith("s3://"):
             # s3://bucket/path -> https://endpoint/bucket/path
             path = url[5:]  # Remove 's3://' prefix
-            endpoint = endpoint.rstrip('/')
+            endpoint = endpoint.rstrip("/")
             return f"{endpoint}/{path}"
         return url
 

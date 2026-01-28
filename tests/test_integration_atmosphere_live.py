@@ -52,7 +52,9 @@ def skip_if_no_credentials():
     """Skip test if credentials not available."""
     handle, password = get_test_credentials()
     if not handle or not password:
-        pytest.skip("Live test credentials not configured (set ATDATA_TEST_HANDLE and ATDATA_TEST_APP_PASSWORD)")
+        pytest.skip(
+            "Live test credentials not configured (set ATDATA_TEST_HANDLE and ATDATA_TEST_APP_PASSWORD)"
+        )
 
 
 ##
@@ -62,6 +64,7 @@ def skip_if_no_credentials():
 @atdata.packable
 class LiveTestSample:
     """Simple sample for live tests."""
+
     name: str
     value: int
 
@@ -69,6 +72,7 @@ class LiveTestSample:
 @atdata.packable
 class LiveTestArraySample:
     """Sample with NDArray for live tests."""
+
     label: str
     data: NDArray
 
@@ -215,6 +219,7 @@ class TestLiveSchemaOperations:
 
     def test_publish_schema(self, live_client, unique_name):
         """Should publish a schema to ATProto."""
+
         # Create a unique sample type for this test
         @atdata.packable
         class UniqueTestSample:
@@ -241,6 +246,7 @@ class TestLiveSchemaOperations:
 
     def test_publish_and_retrieve_schema(self, live_client, unique_name):
         """Should publish then retrieve a schema by URI."""
+
         @atdata.packable
         class RetrievableTestSample:
             field1: str
@@ -265,6 +271,7 @@ class TestLiveSchemaOperations:
 
     def test_schema_with_ndarray_field(self, live_client, unique_name):
         """Should publish schema with NDArray field type."""
+
         @atdata.packable
         class ArrayTestSample:
             label: str
@@ -296,6 +303,7 @@ class TestLiveDatasetOperations:
 
     def test_publish_dataset_with_urls(self, live_client, unique_name):
         """Should publish a dataset record with external URLs."""
+
         # First publish a schema
         @atdata.packable
         class DatasetTestSample:
@@ -327,6 +335,7 @@ class TestLiveDatasetOperations:
 
     def test_publish_and_retrieve_dataset(self, live_client, unique_name):
         """Should publish then retrieve a dataset."""
+
         @atdata.packable
         class RetrievableDatasetSample:
             value: int
@@ -360,7 +369,9 @@ class TestLiveDatasetOperations:
         assert dataset["name"] == unique_name
         assert dataset["description"] == "Retrievable test dataset"
 
-    def test_to_dataset_with_fake_urls_fails_on_iteration(self, live_client, unique_name):
+    def test_to_dataset_with_fake_urls_fails_on_iteration(
+        self, live_client, unique_name
+    ):
         """Attempting to iterate a dataset with fake URLs should fail.
 
         This test documents a known limitation: we can publish and retrieve
@@ -369,6 +380,7 @@ class TestLiveDatasetOperations:
         1. Real external URLs (e.g., S3 with test data)
         2. ATProto blob storage support (not yet implemented)
         """
+
         @atdata.packable
         class IterationTestSample:
             value: int
@@ -560,6 +572,7 @@ class TestLiveAtmosphereIndex:
 
     def test_index_publish_schema(self, live_index, unique_name):
         """Should publish schema via AtmosphereIndex."""
+
         @atdata.packable
         class IndexTestSample:
             data: str
@@ -573,6 +586,7 @@ class TestLiveAtmosphereIndex:
 
     def test_index_get_schema(self, live_index, unique_name):
         """Should retrieve schema via AtmosphereIndex."""
+
         @atdata.packable
         class GetSchemaTestSample:
             field: int
@@ -599,7 +613,9 @@ class TestLiveErrorHandling:
         """Should raise on getting non-existent record."""
         loader = SchemaLoader(live_client)
 
-        fake_uri = f"at://{live_client.did}/{LEXICON_NAMESPACE}.sampleSchema/nonexistent12345"
+        fake_uri = (
+            f"at://{live_client.did}/{LEXICON_NAMESPACE}.sampleSchema/nonexistent12345"
+        )
 
         with pytest.raises(Exception):
             loader.get(fake_uri)
@@ -629,7 +645,9 @@ class TestZZZCleanup:
         schemas_deleted = cleanup_test_schemas(live_client)
         datasets_deleted = cleanup_test_datasets(live_client)
 
-        print(f"\nCleanup: deleted {schemas_deleted} schemas, {datasets_deleted} datasets")
+        print(
+            f"\nCleanup: deleted {schemas_deleted} schemas, {datasets_deleted} datasets"
+        )
 
         # Just verify cleanup ran without error
         assert True

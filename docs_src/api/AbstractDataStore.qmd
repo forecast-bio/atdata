@@ -14,14 +14,14 @@ The separation of index (metadata) from data store (actual files) allows
 flexible deployment: local index with S3 storage, atmosphere index with
 S3 storage, or atmosphere index with PDS blobs.
 
-## Example {.doc-section .doc-section-example}
+## Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> store = S3DataStore(credentials, bucket="my-bucket")
-    >>> urls = store.write_shards(dataset, prefix="training/v1")
-    >>> print(urls)
-    ['s3://my-bucket/training/v1/shard-000000.tar', ...]
+```python
+>>> store = S3DataStore(credentials, bucket="my-bucket")
+>>> urls = store.write_shards(dataset, prefix="training/v1")
+>>> print(urls)
+['s3://my-bucket/training/v1/shard-000000.tar', ...]
+```
 
 ## Methods
 

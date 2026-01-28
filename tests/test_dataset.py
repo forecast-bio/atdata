@@ -27,16 +27,19 @@ from typing import (
 ##
 # Sample test cases
 
+
 @dataclass
-class BasicTestSample( atdata.PackableSample ):
+class BasicTestSample(atdata.PackableSample):
     name: str
     position: int
     value: float
 
+
 @dataclass
-class NumpyTestSample( atdata.PackableSample ):
+class NumpyTestSample(atdata.PackableSample):
     label: int
     image: NDArray
+
 
 @atdata.packable
 class BasicTestSampleDecorated:
@@ -44,10 +47,12 @@ class BasicTestSampleDecorated:
     position: int
     value: float
 
+
 @atdata.packable
 class NumpyTestSampleDecorated:
     label: int
     image: NDArray
+
 
 @atdata.packable
 class NumpyOptionalSampleDecorated:
@@ -55,110 +60,111 @@ class NumpyOptionalSampleDecorated:
     image: NDArray
     embeddings: NDArray | None = None
 
+
 test_cases = [
     {
-        'SampleType': BasicTestSample,
-        'sample_data': {
-            'name': 'Hello, world!',
-            'position': 42,
-            'value': 1024.768,
+        "SampleType": BasicTestSample,
+        "sample_data": {
+            "name": "Hello, world!",
+            "position": 42,
+            "value": 1024.768,
         },
-        'sample_wds_stem': 'basic_test',
-        'test_parquet': True,
+        "sample_wds_stem": "basic_test",
+        "test_parquet": True,
     },
     {
-        'SampleType': NumpyTestSample,
-        'sample_data':
-        {
-            'label': 9_001,
-            'image': np.random.randn( 1024, 1024 ),
+        "SampleType": NumpyTestSample,
+        "sample_data": {
+            "label": 9_001,
+            "image": np.random.randn(1024, 1024),
         },
-        'sample_wds_stem': 'numpy_test',
-        'test_parquet': False,
+        "sample_wds_stem": "numpy_test",
+        "test_parquet": False,
     },
     {
-        'SampleType': BasicTestSampleDecorated,
-        'sample_data': {
-            'name': 'Hello, world!',
-            'position': 42,
-            'value': 1024.768,
+        "SampleType": BasicTestSampleDecorated,
+        "sample_data": {
+            "name": "Hello, world!",
+            "position": 42,
+            "value": 1024.768,
         },
-        'sample_wds_stem': 'basic_test_decorated',
-        'test_parquet': True,
+        "sample_wds_stem": "basic_test_decorated",
+        "test_parquet": True,
     },
     {
-        'SampleType': NumpyTestSampleDecorated,
-        'sample_data':
-        {
-            'label': 9_001,
-            'image': np.random.randn( 1024, 1024 ),
+        "SampleType": NumpyTestSampleDecorated,
+        "sample_data": {
+            "label": 9_001,
+            "image": np.random.randn(1024, 1024),
         },
-        'sample_wds_stem': 'numpy_test_decorated',
-        'test_parquet': False,
+        "sample_wds_stem": "numpy_test_decorated",
+        "test_parquet": False,
     },
     {
-        'SampleType': NumpyOptionalSampleDecorated,
-        'sample_data':
-        {
-            'label': 9_001,
-            'image': np.random.randn( 1024, 1024 ),
-            'embeddings': np.random.randn( 512 ),
+        "SampleType": NumpyOptionalSampleDecorated,
+        "sample_data": {
+            "label": 9_001,
+            "image": np.random.randn(1024, 1024),
+            "embeddings": np.random.randn(512),
         },
-        'sample_wds_stem': 'numpy_optional_decorated',
-        'test_parquet': False,
+        "sample_wds_stem": "numpy_optional_decorated",
+        "test_parquet": False,
     },
     {
-        'SampleType': NumpyOptionalSampleDecorated,
-        'sample_data':
-        {
-            'label': 9_001,
-            'image': np.random.randn( 1024, 1024 ),
-            'embeddings': None,
+        "SampleType": NumpyOptionalSampleDecorated,
+        "sample_data": {
+            "label": 9_001,
+            "image": np.random.randn(1024, 1024),
+            "embeddings": None,
         },
-        'sample_wds_stem': 'numpy_optional_decorated_none',
-        'test_parquet': False,
+        "sample_wds_stem": "numpy_optional_decorated_none",
+        "test_parquet": False,
     },
 ]
 
 
 ## Tests
 
+
 @pytest.mark.parametrize(
-    ('SampleType', 'sample_data'),
-    [ (case['SampleType'], case['sample_data'])
-      for case in test_cases ]
+    ("SampleType", "sample_data"),
+    [(case["SampleType"], case["sample_data"]) for case in test_cases],
 )
 def test_create_sample(
-            SampleType: Type[atdata.PackableSample],
-            sample_data: atds.WDSRawSample,
-        ):
+    SampleType: Type[atdata.PackableSample],
+    sample_data: atds.WDSRawSample,
+):
     """Test our ability to create samples from semi-structured data"""
 
-    sample = SampleType.from_data( sample_data )
-    assert isinstance( sample, SampleType ), \
-        f'Did not properly form sample for test type {SampleType}'
+    sample = SampleType.from_data(sample_data)
+    assert isinstance(sample, SampleType), (
+        f"Did not properly form sample for test type {SampleType}"
+    )
 
     for k, v in sample_data.items():
         cur_assertion: bool
-        if isinstance( v, np.ndarray ):
-            cur_assertion = np.all( getattr( sample, k ) == v )
+        if isinstance(v, np.ndarray):
+            cur_assertion = np.all(getattr(sample, k) == v)
         else:
-            cur_assertion = getattr( sample, k ) == v
-        assert cur_assertion, \
-            f'Did not properly incorporate property {k} of test type {SampleType}'
+            cur_assertion = getattr(sample, k) == v
+        assert cur_assertion, (
+            f"Did not properly incorporate property {k} of test type {SampleType}"
+        )
 
 
 @pytest.mark.parametrize(
-    ('SampleType', 'sample_data', 'sample_wds_stem'),
-    [ (case['SampleType'], case['sample_data'], case['sample_wds_stem'])
-      for case in test_cases ]
+    ("SampleType", "sample_data", "sample_wds_stem"),
+    [
+        (case["SampleType"], case["sample_data"], case["sample_wds_stem"])
+        for case in test_cases
+    ],
 )
 def test_wds(
-            SampleType: Type[atdata.PackableSample],
-            sample_data: atds.WDSRawSample,
-            sample_wds_stem: str,
-            tmp_path
-        ):
+    SampleType: Type[atdata.PackableSample],
+    sample_data: atds.WDSRawSample,
+    sample_wds_stem: str,
+    tmp_path,
+):
     """Test our ability to write samples as `WebDatasets` to disk"""
 
     ## Testing hyperparameters
@@ -170,179 +176,190 @@ def test_wds(
 
     ## Write sharded dataset
 
-    file_pattern = (
-        tmp_path
-        / (f'{sample_wds_stem}' + '-{shard_id}.tar')
-    ).as_posix()
-    file_wds_pattern = file_pattern.format( shard_id = '%06d' )
+    file_pattern = (tmp_path / (f"{sample_wds_stem}" + "-{shard_id}.tar")).as_posix()
+    file_wds_pattern = file_pattern.format(shard_id="%06d")
 
     with wds.writer.ShardWriter(
-        pattern = file_wds_pattern,
-        maxcount = shard_maxcount,
+        pattern=file_wds_pattern,
+        maxcount=shard_maxcount,
     ) as sink:
-        
-        for i_sample in range( n_copies ):
-            new_sample = SampleType.from_data( sample_data )
-            assert isinstance( new_sample, SampleType ), \
-                f'Did not properly form sample for test type {SampleType}'
+        for i_sample in range(n_copies):
+            new_sample = SampleType.from_data(sample_data)
+            assert isinstance(new_sample, SampleType), (
+                f"Did not properly form sample for test type {SampleType}"
+            )
 
-            sink.write( new_sample.as_wds )
-    
+            sink.write(new_sample.as_wds)
 
     ## Ordered
 
     # Read first shard, no batches
 
-    first_filename = file_pattern.format( shard_id = f'{0:06d}' )
-    dataset = atdata.Dataset[SampleType]( first_filename )
+    first_filename = file_pattern.format(shard_id=f"{0:06d}")
+    dataset = atdata.Dataset[SampleType](first_filename)
 
     iterations_run = 0
-    for i_iterate, cur_sample in enumerate( dataset.ordered( batch_size = None ) ):
+    for i_iterate, cur_sample in enumerate(dataset.ordered(batch_size=None)):
+        assert isinstance(cur_sample, SampleType), (
+            f"Single sample for {SampleType} written to `wds` is of wrong type"
+        )
 
-        assert isinstance( cur_sample, SampleType ), \
-            f'Single sample for {SampleType} written to `wds` is of wrong type'
-        
         # Check sample values
-        
+
         for k, v in sample_data.items():
-            if isinstance( v, np.ndarray ):
-                is_correct = np.all( getattr( cur_sample, k ) == v )
+            if isinstance(v, np.ndarray):
+                is_correct = np.all(getattr(cur_sample, k) == v)
             else:
-                is_correct = getattr( cur_sample, k ) == v
-            assert is_correct, \
-                f'{SampleType}: Incorrect sample value found for {k} - {type( getattr( cur_sample, k ) )}'
+                is_correct = getattr(cur_sample, k) == v
+            assert is_correct, (
+                f"{SampleType}: Incorrect sample value found for {k} - {type(getattr(cur_sample, k))}"
+            )
 
         iterations_run += 1
         if iterations_run >= n_iterate:
             break
 
-    assert iterations_run == n_iterate, \
+    assert iterations_run == n_iterate, (
         f"Only found {iterations_run} samples, not {n_iterate}"
+    )
 
     # Read all shards, batches
 
-    start_id = f'{0:06d}'
-    end_id = f'{9:06d}'
-    first_filename = file_pattern.format( shard_id = '{' + start_id + '..' + end_id + '}' )
-    dataset = atdata.Dataset[SampleType]( first_filename )
+    start_id = f"{0:06d}"
+    end_id = f"{9:06d}"
+    first_filename = file_pattern.format(shard_id="{" + start_id + ".." + end_id + "}")
+    dataset = atdata.Dataset[SampleType](first_filename)
 
     iterations_run = 0
-    for i_iterate, cur_batch in enumerate( dataset.ordered( batch_size = batch_size ) ):
-        
-        assert isinstance( cur_batch, atdata.SampleBatch ), \
-            f'{SampleType}: Batch sample is not correctly a batch'
-        
-        assert cur_batch.sample_type == SampleType, \
-            f'{SampleType}: Batch `sample_type` is incorrect type'
-        
+    for i_iterate, cur_batch in enumerate(dataset.ordered(batch_size=batch_size)):
+        assert isinstance(cur_batch, atdata.SampleBatch), (
+            f"{SampleType}: Batch sample is not correctly a batch"
+        )
+
+        assert cur_batch.sample_type == SampleType, (
+            f"{SampleType}: Batch `sample_type` is incorrect type"
+        )
+
         if i_iterate == 0:
-            cur_n = len( cur_batch.samples )
-            assert cur_n == batch_size, \
-                f'{SampleType}: Batch has {cur_n} samples, not {batch_size}'
-        
-        assert isinstance( cur_batch.samples[0], SampleType ), \
-            f'{SampleType}: Batch sample of wrong type ({type( cur_batch.samples[0])})'
-        
+            cur_n = len(cur_batch.samples)
+            assert cur_n == batch_size, (
+                f"{SampleType}: Batch has {cur_n} samples, not {batch_size}"
+            )
+
+        assert isinstance(cur_batch.samples[0], SampleType), (
+            f"{SampleType}: Batch sample of wrong type ({type(cur_batch.samples[0])})"
+        )
+
         # Check batch values
         for k, v in sample_data.items():
-            cur_batch_data = getattr( cur_batch, k )
+            cur_batch_data = getattr(cur_batch, k)
 
-            if isinstance( v, np.ndarray ):
-                assert isinstance( cur_batch_data, np.ndarray ), \
-                    f'{SampleType}: `NDArray` not carried through to batch'
-                
-                is_correct = all( 
-                    [ np.all( cur_batch_data[i] == v )
-                      for i in range( cur_batch_data.shape[0] ) ]
+            if isinstance(v, np.ndarray):
+                assert isinstance(cur_batch_data, np.ndarray), (
+                    f"{SampleType}: `NDArray` not carried through to batch"
+                )
+
+                is_correct = all(
+                    [
+                        np.all(cur_batch_data[i] == v)
+                        for i in range(cur_batch_data.shape[0])
+                    ]
                 )
 
             else:
-                is_correct = all( 
-                    [ cur_batch_data[i] == v
-                      for i in range( len( cur_batch_data ) ) ]
+                is_correct = all(
+                    [cur_batch_data[i] == v for i in range(len(cur_batch_data))]
                 )
 
-            assert is_correct, \
-                f'{SampleType}: Incorrect sample value found for {k}'
+            assert is_correct, f"{SampleType}: Incorrect sample value found for {k}"
 
         iterations_run += 1
         if iterations_run >= n_iterate:
             break
 
-    assert iterations_run == n_iterate, \
+    assert iterations_run == n_iterate, (
         f"Only found {iterations_run} samples, not {n_iterate}"
-    
+    )
 
     ## Shuffled
 
     # Read first shard, no batches
 
-    first_filename = file_pattern.format( shard_id = f'{0:06d}' )
-    dataset = atdata.Dataset[SampleType]( first_filename )
+    first_filename = file_pattern.format(shard_id=f"{0:06d}")
+    dataset = atdata.Dataset[SampleType](first_filename)
 
     iterations_run = 0
-    for i_iterate, cur_sample in enumerate( dataset.shuffled( batch_size = None ) ):
-        
-        assert isinstance( cur_sample, SampleType ), \
-            f'Single sample for {SampleType} written to `wds` is of wrong type'
-        
+    for i_iterate, cur_sample in enumerate(dataset.shuffled(batch_size=None)):
+        assert isinstance(cur_sample, SampleType), (
+            f"Single sample for {SampleType} written to `wds` is of wrong type"
+        )
+
         iterations_run += 1
         if iterations_run >= n_iterate:
             break
 
-    assert iterations_run == n_iterate, \
+    assert iterations_run == n_iterate, (
         f"Only found {iterations_run} samples, not {n_iterate}"
+    )
 
     # Read all shards, batches
 
-    start_id = f'{0:06d}'
-    end_id = f'{9:06d}'
-    first_filename = file_pattern.format( shard_id = '{' + start_id + '..' + end_id + '}' )
-    dataset = atdata.Dataset[SampleType]( first_filename )
+    start_id = f"{0:06d}"
+    end_id = f"{9:06d}"
+    first_filename = file_pattern.format(shard_id="{" + start_id + ".." + end_id + "}")
+    dataset = atdata.Dataset[SampleType](first_filename)
 
     iterations_run = 0
-    for i_iterate, cur_sample in enumerate( dataset.shuffled( batch_size = batch_size ) ):
-        
-        assert isinstance( cur_sample, atdata.SampleBatch ), \
-            f'{SampleType}: Batch sample is not correctly a batch'
-        
-        assert cur_sample.sample_type == SampleType, \
-            f'{SampleType}: Batch `sample_type` is incorrect type'
-        
+    for i_iterate, cur_sample in enumerate(dataset.shuffled(batch_size=batch_size)):
+        assert isinstance(cur_sample, atdata.SampleBatch), (
+            f"{SampleType}: Batch sample is not correctly a batch"
+        )
+
+        assert cur_sample.sample_type == SampleType, (
+            f"{SampleType}: Batch `sample_type` is incorrect type"
+        )
+
         if i_iterate == 0:
-            cur_n = len( cur_sample.samples )
-            assert cur_n == batch_size, \
-                f'{SampleType}: Batch has {cur_n} samples, not {batch_size}'
-        
-        assert isinstance( cur_sample.samples[0], SampleType ), \
-            f'{SampleType}: Batch sample of wrong type ({type( cur_sample.samples[0])})'
-        
+            cur_n = len(cur_sample.samples)
+            assert cur_n == batch_size, (
+                f"{SampleType}: Batch has {cur_n} samples, not {batch_size}"
+            )
+
+        assert isinstance(cur_sample.samples[0], SampleType), (
+            f"{SampleType}: Batch sample of wrong type ({type(cur_sample.samples[0])})"
+        )
+
         iterations_run += 1
         if iterations_run >= n_iterate:
             break
 
-    assert iterations_run == n_iterate, \
+    assert iterations_run == n_iterate, (
         f"Only found {iterations_run} samples, not {n_iterate}"
+    )
+
 
 #
 
+
 @pytest.mark.parametrize(
-    ('SampleType', 'sample_data', 'sample_wds_stem', 'test_parquet'),
-    [ (
-        case['SampleType'],
-        case['sample_data'],
-        case['sample_wds_stem'],
-        case['test_parquet']
-      )
-      for case in test_cases ]
+    ("SampleType", "sample_data", "sample_wds_stem", "test_parquet"),
+    [
+        (
+            case["SampleType"],
+            case["sample_data"],
+            case["sample_wds_stem"],
+            case["test_parquet"],
+        )
+        for case in test_cases
+    ],
 )
 def test_parquet_export(
-            SampleType: Type[atdata.PackableSample],
-            sample_data: atds.WDSRawSample,
-            sample_wds_stem: str,
-            test_parquet: bool,
-            tmp_path
-        ):
+    SampleType: Type[atdata.PackableSample],
+    sample_data: atds.WDSRawSample,
+    sample_wds_stem: str,
+    test_parquet: bool,
+    tmp_path,
+):
     """Test our ability to export a dataset to `parquet` format"""
 
     # Skip irrelevant test cases
@@ -356,20 +373,20 @@ def test_parquet_export(
 
     ## Start out by writing tar dataset
 
-    wds_filename = (tmp_path / f'{sample_wds_stem}.tar').as_posix()
-    with wds.writer.TarWriter( wds_filename ) as sink:
-        for _ in range( n_copies_dataset ):
-            new_sample = SampleType.from_data( sample_data )
-            sink.write( new_sample.as_wds )
-    
+    wds_filename = (tmp_path / f"{sample_wds_stem}.tar").as_posix()
+    with wds.writer.TarWriter(wds_filename) as sink:
+        for _ in range(n_copies_dataset):
+            new_sample = SampleType.from_data(sample_data)
+            sink.write(new_sample.as_wds)
+
     ## Now export to `parquet`
 
-    dataset = atdata.Dataset[SampleType]( wds_filename )
-    parquet_filename = tmp_path / f'{sample_wds_stem}.parquet'
-    dataset.to_parquet( parquet_filename )
+    dataset = atdata.Dataset[SampleType](wds_filename)
+    parquet_filename = tmp_path / f"{sample_wds_stem}.parquet"
+    dataset.to_parquet(parquet_filename)
 
-    parquet_filename = tmp_path / f'{sample_wds_stem}-segments.parquet'
-    dataset.to_parquet( parquet_filename, maxcount = n_per_file )
+    parquet_filename = tmp_path / f"{sample_wds_stem}-segments.parquet"
+    dataset.to_parquet(parquet_filename, maxcount=n_per_file)
 
 
 ##
@@ -384,6 +401,7 @@ def test_batch_aggregate_empty():
 
 def test_sample_batch_attribute_error():
     """Test SampleBatch raises AttributeError for non-existent attributes."""
+
     @atdata.packable
     class SimpleSample:
         name: str
@@ -398,6 +416,7 @@ def test_sample_batch_attribute_error():
 
 def test_sample_batch_type_property():
     """Test SampleBatch.sample_type property."""
+
     @atdata.packable
     class TypedSample:
         data: str
@@ -410,6 +429,7 @@ def test_sample_batch_type_property():
 
 def test_dataset_batch_type_property(tmp_path):
     """Test Dataset.batch_type property."""
+
     @atdata.packable
     class BatchTypeSample:
         value: int
@@ -429,6 +449,7 @@ def test_dataset_batch_type_property(tmp_path):
 
 def test_dataset_shard_list_property(tmp_path):
     """Test Dataset.shard_list property returns list of shard URLs."""
+
     @atdata.packable
     class ShardListSample:
         value: int
@@ -474,14 +495,15 @@ def test_dataset_metadata_property(tmp_path):
 
     with patch("atdata.dataset.requests.get", return_value=mock_response) as mock_get:
         dataset = atdata.Dataset[MetadataSample](
-            wds_filename,
-            metadata_url="http://example.com/metadata.msgpack"
+            wds_filename, metadata_url="http://example.com/metadata.msgpack"
         )
 
         # First call should fetch
         metadata = dataset.metadata
         assert metadata == mock_metadata
-        mock_get.assert_called_once_with("http://example.com/metadata.msgpack", stream=True)
+        mock_get.assert_called_once_with(
+            "http://example.com/metadata.msgpack", stream=True
+        )
 
         # Second call should use cache
         metadata2 = dataset.metadata
@@ -491,6 +513,7 @@ def test_dataset_metadata_property(tmp_path):
 
 def test_dataset_metadata_property_none(tmp_path):
     """Test Dataset.metadata returns None when no metadata_url is set."""
+
     @atdata.packable
     class NoMetadataSample:
         value: int
@@ -506,6 +529,7 @@ def test_dataset_metadata_property_none(tmp_path):
 
 def test_parquet_export_with_remainder(tmp_path):
     """Test parquet export with maxcount that doesn't divide evenly."""
+
     @atdata.packable
     class RemainderSample:
         name: str
@@ -527,6 +551,7 @@ def test_parquet_export_with_remainder(tmp_path):
 
     # Should have created 3 segment files
     import pandas as pd
+
     segment_files = list(tmp_path.glob("remainder_output-*.parquet"))
     assert len(segment_files) == 3
 
@@ -586,6 +611,7 @@ def test_dataset_with_lens_batched(tmp_path):
 
 def test_from_bytes_invalid_msgpack():
     """Test from_bytes raises on invalid msgpack data."""
+
     @atdata.packable
     class SimpleSample:
         value: int
@@ -596,12 +622,14 @@ def test_from_bytes_invalid_msgpack():
 
 def test_from_bytes_missing_field():
     """Test from_bytes raises when required field is missing."""
+
     @atdata.packable
     class RequiredFieldSample:
         name: str
         count: int
 
     import ormsgpack
+
     # Only provide 'name', missing 'count'
     incomplete_data = ormsgpack.packb({"name": "test"})
 
@@ -611,6 +639,7 @@ def test_from_bytes_missing_field():
 
 def test_wrap_missing_msgpack_key(tmp_path):
     """Test wrap raises ValueError on sample missing msgpack key."""
+
     @atdata.packable
     class WrapTestSample:
         value: int
@@ -629,6 +658,7 @@ def test_wrap_missing_msgpack_key(tmp_path):
 
 def test_wrap_wrong_msgpack_type(tmp_path):
     """Test wrap raises ValueError when msgpack value is not bytes."""
+
     @atdata.packable
     class WrapTypeSample:
         value: int
@@ -647,6 +677,7 @@ def test_wrap_wrong_msgpack_type(tmp_path):
 
 def test_wrap_corrupted_msgpack(tmp_path):
     """Test wrap raises on corrupted msgpack bytes."""
+
     @atdata.packable
     class CorruptedSample:
         value: int
@@ -665,6 +696,7 @@ def test_wrap_corrupted_msgpack(tmp_path):
 
 def test_dataset_nonexistent_file():
     """Test Dataset raises on nonexistent tar file during iteration."""
+
     @atdata.packable
     class NonexistentSample:
         value: int
@@ -681,6 +713,7 @@ def test_dataset_nonexistent_file():
 
 def test_dataset_invalid_batch_size(tmp_path):
     """Test Dataset raises on invalid batch_size values."""
+
     @atdata.packable
     class BatchSizeSample:
         value: int
@@ -798,6 +831,7 @@ def test_dictsample_repr():
 
 def test_dictsample_dataset_iteration(tmp_path):
     """Test Dataset[DictSample] can iterate over data."""
+
     # Create typed sample data
     @atdata.packable
     class SourceSample:
@@ -824,6 +858,7 @@ def test_dictsample_dataset_iteration(tmp_path):
 
 def test_dictsample_to_typed_via_as_type(tmp_path):
     """Test converting DictSample dataset to typed via as_type."""
+
     @atdata.packable
     class TypedSample:
         text: str
@@ -854,6 +889,7 @@ def test_dictsample_to_typed_via_as_type(tmp_path):
 
 def test_packable_auto_registers_dictsample_lens():
     """Test @packable decorator auto-registers lens from DictSample."""
+
     @atdata.packable
     class AutoLensSample:
         name: str
@@ -874,6 +910,7 @@ def test_packable_auto_registers_dictsample_lens():
 
 def test_dictsample_batched_iteration(tmp_path):
     """Test Dataset[DictSample] works with batched iteration."""
+
     @atdata.packable
     class BatchSource:
         text: str

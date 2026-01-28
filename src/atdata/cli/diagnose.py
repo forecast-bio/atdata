@@ -5,7 +5,6 @@ and other infrastructure components.
 """
 
 import sys
-from typing import Any
 
 
 def _print_status(label: str, ok: bool, detail: str = "") -> None:
@@ -41,6 +40,7 @@ def diagnose_redis(host: str = "localhost", port: int = 6379) -> int:
     # Try to connect
     try:
         from redis import Redis
+
         redis = Redis(host=host, port=port, socket_connect_timeout=5)
         redis.ping()
         _print_status("Connection", True, "connected")
@@ -70,7 +70,7 @@ def diagnose_redis(host: str = "localhost", port: int = 6379) -> int:
         _print_status(
             "AOF Persistence",
             aof_ok,
-            "enabled" if aof_ok else "DISABLED - data may be lost on restart!"
+            "enabled" if aof_ok else "DISABLED - data may be lost on restart!",
         )
         if not aof_ok:
             issues_found = True
@@ -85,7 +85,7 @@ def diagnose_redis(host: str = "localhost", port: int = 6379) -> int:
         _print_status(
             "RDB Persistence",
             rdb_ok,
-            f"configured ({save_config})" if rdb_ok else "DISABLED"
+            f"configured ({save_config})" if rdb_ok else "DISABLED",
         )
         # RDB disabled is only a warning if AOF is enabled
     except Exception as e:
@@ -95,7 +95,13 @@ def diagnose_redis(host: str = "localhost", port: int = 6379) -> int:
     try:
         policy = redis.config_get("maxmemory-policy").get("maxmemory-policy", "unknown")
         # Safe policies that won't evict index data
-        safe_policies = {"noeviction", "volatile-lru", "volatile-lfu", "volatile-ttl", "volatile-random"}
+        safe_policies = {
+            "noeviction",
+            "volatile-lru",
+            "volatile-lfu",
+            "volatile-ttl",
+            "volatile-random",
+        }
         policy_ok = policy in safe_policies
 
         if policy_ok:
@@ -104,7 +110,7 @@ def diagnose_redis(host: str = "localhost", port: int = 6379) -> int:
             _print_status(
                 "Memory Policy",
                 False,
-                f"{policy} - may evict index data! Use 'noeviction' or 'volatile-*'"
+                f"{policy} - may evict index data! Use 'noeviction' or 'volatile-*'",
             )
             issues_found = True
     except Exception as e:
@@ -141,9 +147,7 @@ def diagnose_redis(host: str = "localhost", port: int = 6379) -> int:
         for key in redis.scan_iter(match="LocalSchema:*", count=100):
             schema_count += 1
         _print_status(
-            "atdata Keys",
-            True,
-            f"{dataset_count} datasets, {schema_count} schemas"
+            "atdata Keys", True, f"{dataset_count} datasets, {schema_count} schemas"
         )
     except Exception as e:
         _print_status("atdata Keys", False, f"check failed: {e}")

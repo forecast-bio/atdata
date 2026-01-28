@@ -26,13 +26,13 @@ Other fields are aggregated into a list.
 |---------|--------|---------------------------------------------|
 | samples |        | The list of sample instances in this batch. |
 
-## Example {.doc-section .doc-section-example}
+## Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> batch = SampleBatch[MyData]([sample1, sample2, sample3])
-    >>> batch.embeddings  # Returns stacked numpy array of shape (3, ...)
-    >>> batch.names  # Returns list of names
+```python
+>>> batch = SampleBatch[MyData]([sample1, sample2, sample3])
+>>> batch.embeddings  # Returns stacked numpy array of shape (3, ...)
+>>> batch.names  # Returns list of names
+```
 
 ## Note {.doc-section .doc-section-note}
 

@@ -5,8 +5,10 @@
 # Don't commit any .env files
 **/*.env
 # Don't commit `uv` lockfiles
-**/uv.lock
+# (SIKE it turns out we actually do want to commit)
+# **/uv.lock
 # Development tooling (keep local, not in upstream)
+# (SIKE it turns out we actually do want to commit)
 # .chainlink/
 # .claude/
 

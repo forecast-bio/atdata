@@ -10,20 +10,20 @@ This class fetches dataset index records and can create Dataset objects
 from them. Note that loading a dataset requires having the corresponding
 Python class for the sample type.
 
-## Example {.doc-section .doc-section-example}
+## Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> client = AtmosphereClient()
-    >>> loader = DatasetLoader(client)
-    >>>
-    >>> # List available datasets
-    >>> datasets = loader.list()
-    >>> for ds in datasets:
-    ...     print(ds["name"], ds["schemaRef"])
-    >>>
-    >>> # Get a specific dataset record
-    >>> record = loader.get("at://did:plc:abc/ac.foundation.dataset.record/xyz")
+```python
+>>> client = AtmosphereClient()
+>>> loader = DatasetLoader(client)
+>>>
+>>> # List available datasets
+>>> datasets = loader.list()
+>>> for ds in datasets:
+...     print(ds["name"], ds["schemaRef"])
+>>>
+>>> # Get a specific dataset record
+>>> record = loader.get("at://did:plc:abc/ac.foundation.dataset.record/xyz")
+```
 
 ## Methods
 
@@ -245,11 +245,11 @@ Supports both external URL storage and ATProto blob storage.
 |--------|----------------------------|-------------------------------------|
 |        | [ValueError](`ValueError`) | If no storage URLs can be resolved. |
 
-#### Example {.doc-section .doc-section-example}
+#### Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> loader = DatasetLoader(client)
-    >>> dataset = loader.to_dataset(uri, MySampleType)
-    >>> for batch in dataset.shuffled(batch_size=32):
-    ...     process(batch)
+```python
+>>> loader = DatasetLoader(client)
+>>> dataset = loader.to_dataset(uri, MySampleType)
+>>> for batch in dataset.shuffled(batch_size=32):
+...     process(batch)
+```

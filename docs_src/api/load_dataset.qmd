@@ -50,23 +50,23 @@ convert to a typed schema.
 |        | [FileNotFoundError](`FileNotFoundError`) | If no data files are found at the path. |
 |        | [KeyError](`KeyError`)                   | If dataset not found in index.          |
 
-## Example {.doc-section .doc-section-example}
+## Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> # Load without type - get DictSample for exploration
-    >>> ds = load_dataset("./data/train.tar", split="train")
-    >>> for sample in ds.ordered():
-    ...     print(sample.keys())  # Explore fields
-    ...     print(sample["text"]) # Dict-style access
-    ...     print(sample.label)   # Attribute access
-    >>>
-    >>> # Convert to typed schema
-    >>> typed_ds = ds.as_type(TextData)
-    >>>
-    >>> # Or load with explicit type directly
-    >>> train_ds = load_dataset("./data/train-*.tar", TextData, split="train")
-    >>>
-    >>> # Load from index with auto-type resolution
-    >>> index = LocalIndex()
-    >>> ds = load_dataset("@local/my-dataset", index=index, split="train")
+```python
+>>> # Load without type - get DictSample for exploration
+>>> ds = load_dataset("./data/train.tar", split="train")
+>>> for sample in ds.ordered():
+...     print(sample.keys())  # Explore fields
+...     print(sample["text"]) # Dict-style access
+...     print(sample.label)   # Attribute access
+>>>
+>>> # Convert to typed schema
+>>> typed_ds = ds.as_type(TextData)
+>>>
+>>> # Or load with explicit type directly
+>>> train_ds = load_dataset("./data/train-*.tar", TextData, split="train")
+>>>
+>>> # Load from index with auto-type resolution
+>>> index = LocalIndex()
+>>> ds = load_dataset("@local/my-dataset", index=index, split="train")
+```

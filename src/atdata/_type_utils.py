@@ -9,15 +9,29 @@ from typing import Any, get_origin, get_args, Union
 
 # Mapping from numpy dtype strings to schema dtype names
 NUMPY_DTYPE_MAP = {
-    "float16": "float16", "float32": "float32", "float64": "float64",
-    "int8": "int8", "int16": "int16", "int32": "int32", "int64": "int64",
-    "uint8": "uint8", "uint16": "uint16", "uint32": "uint32", "uint64": "uint64",
-    "bool": "bool", "complex64": "complex64", "complex128": "complex128",
+    "float16": "float16",
+    "float32": "float32",
+    "float64": "float64",
+    "int8": "int8",
+    "int16": "int16",
+    "int32": "int32",
+    "int64": "int64",
+    "uint8": "uint8",
+    "uint16": "uint16",
+    "uint32": "uint32",
+    "uint64": "uint64",
+    "bool": "bool",
+    "complex64": "complex64",
+    "complex128": "complex128",
 }
 
 # Mapping from Python primitive types to schema type names
 PRIMITIVE_TYPE_MAP = {
-    str: "str", int: "int", float: "float", bool: "bool", bytes: "bytes",
+    str: "str",
+    int: "int",
+    float: "float",
+    bool: "bool",
+    bytes: "bytes",
 }
 
 

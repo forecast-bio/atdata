@@ -19,19 +19,19 @@ resolution entirely. This enables:
 - ATProto blob streaming
 - Any other source that can provide file-like objects
 
-## Example {.doc-section .doc-section-example}
+## Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> source = S3Source(
-    ...     bucket="my-bucket",
-    ...     keys=["data-000.tar", "data-001.tar"],
-    ...     endpoint="https://r2.example.com",
-    ...     credentials=creds,
-    ... )
-    >>> ds = Dataset[MySample](source)
-    >>> for sample in ds.ordered():
-    ...     print(sample)
+```python
+>>> source = S3Source(
+...     bucket="my-bucket",
+...     keys=["data-000.tar", "data-001.tar"],
+...     endpoint="https://r2.example.com",
+...     credentials=creds,
+... )
+>>> ds = Dataset[MySample](source)
+>>> for sample in ds.ordered():
+...     print(sample)
+```
 
 ## Attributes
 

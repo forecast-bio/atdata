@@ -402,7 +402,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#atdata.atmosphere.SchemaLoader" id="toc-atdata.atmosphere.SchemaLoader" class="nav-link active" data-scroll-target="#atdata.atmosphere.SchemaLoader">SchemaLoader</a>
   <ul class="collapse">
-  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
   <li><a href="#atdata.atmosphere.SchemaLoader.get" id="toc-atdata.atmosphere.SchemaLoader.get" class="nav-link" data-scroll-target="#atdata.atmosphere.SchemaLoader.get">get</a></li>
@@ -424,16 +424,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>atmosphere.SchemaLoader(client)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Loads PackableSample schemas from ATProto.</p>
 <p>This class fetches schema records from ATProto and can list available schemas from a repository.</p>
-<section id="example" class="level2 doc-section doc-section-example">
-<h2 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h2>
-<p>::</p>
-<pre><code>&gt;&gt;&gt; client = AtmosphereClient()
-&gt;&gt;&gt; client.login("handle", "password")
-&gt;&gt;&gt;
-&gt;&gt;&gt; loader = SchemaLoader(client)
-&gt;&gt;&gt; schema = loader.get("at://did:plc:.../ac.foundation.dataset.sampleSchema/...")
-&gt;&gt;&gt; print(schema["name"])
-'MySample'</code></pre>
+<section id="examples" class="level2 doc-section doc-section-examples">
+<h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> client <span class="op">=</span> AtmosphereClient()</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> client.login(<span class="st">"handle"</span>, <span class="st">"password"</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> loader <span class="op">=</span> SchemaLoader(client)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> schema <span class="op">=</span> loader.get(<span class="st">"at://did:plc:.../ac.foundation.dataset.sampleSchema/..."</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="bu">print</span>(schema[<span class="st">"name"</span>])</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co">'MySample'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>

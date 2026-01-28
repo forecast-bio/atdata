@@ -22,7 +22,8 @@ import numpy as np
 
 ##
 
-def array_to_bytes( x: np.ndarray ) -> bytes:
+
+def array_to_bytes(x: np.ndarray) -> bytes:
     """Convert a numpy array to bytes for msgpack serialization.
 
     Uses numpy's native ``save()`` format to preserve array dtype and shape.
@@ -37,10 +38,11 @@ def array_to_bytes( x: np.ndarray ) -> bytes:
         Uses ``allow_pickle=True`` to support object dtypes.
     """
     np_bytes = BytesIO()
-    np.save( np_bytes, x, allow_pickle = True )
+    np.save(np_bytes, x, allow_pickle=True)
     return np_bytes.getvalue()
 
-def bytes_to_array( b: bytes ) -> np.ndarray:
+
+def bytes_to_array(b: bytes) -> np.ndarray:
     """Convert serialized bytes back to a numpy array.
 
     Reverses the serialization performed by ``array_to_bytes()``.
@@ -54,5 +56,5 @@ def bytes_to_array( b: bytes ) -> np.ndarray:
     Note:
         Uses ``allow_pickle=True`` to support object dtypes.
     """
-    np_bytes = BytesIO( b )
-    return np.load( np_bytes, allow_pickle = True )
+    np_bytes = BytesIO(b)
+    return np.load(np_bytes, allow_pickle=True)

@@ -474,18 +474,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="examples" class="level2 doc-section doc-section-examples">
 <h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
-<p>This is a test of the functionality::</p>
-<pre><code>@packable
-class MyData:
-    name: str
-    values: NDArray
-
-sample = MyData(name="test", values=np.array([1, 2, 3]))
-bytes_data = sample.packed
-restored = MyData.from_bytes(bytes_data)
-
-# Works with Packable-typed APIs
-index.publish_schema(MyData, version="1.0.0")  # Type-safe</code></pre>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="op">@</span>packable</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>... <span class="kw">class</span> MyData:</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>...     name: <span class="bu">str</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>...     values: NDArray</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> sample <span class="op">=</span> MyData(name<span class="op">=</span><span class="st">"test"</span>, values<span class="op">=</span>np.array([<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>]))</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> bytes_data <span class="op">=</span> sample.packed</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> restored <span class="op">=</span> MyData.from_bytes(bytes_data)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="co"># Works with Packable-typed APIs</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> index.publish_schema(MyData, version<span class="op">=</span><span class="st">"1.0.0"</span>)  <span class="co"># Type-safe</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 
 </section>

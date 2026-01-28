@@ -18,13 +18,13 @@ This is the default source type when a string URL is passed to Dataset.
 |--------|--------------|--------------------------------------|
 | url    | [str](`str`) | URL or brace pattern for the shards. |
 
-## Example {.doc-section .doc-section-example}
+## Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> source = URLSource("https://example.com/train-{000..009}.tar")
-    >>> for shard_id, stream in source.shards:
-    ...     print(f"Streaming {shard_id}")
+```python
+>>> source = URLSource("https://example.com/train-{000..009}.tar")
+>>> for shard_id, stream in source.shards:
+...     print(f"Streaming {shard_id}")
+```
 
 ## Methods
 

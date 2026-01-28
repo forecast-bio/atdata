@@ -20,18 +20,18 @@ To convert to a typed schema, use ``Dataset.as_type()`` with a
 ``@packable``-decorated class. Every ``@packable`` class automatically
 registers a lens from ``DictSample``, making this conversion seamless.
 
-## Example {.doc-section .doc-section-example}
+## Examples {.doc-section .doc-section-examples}
 
-::
-
-    >>> ds = load_dataset("path/to/data.tar")  # Returns Dataset[DictSample]
-    >>> for sample in ds.ordered():
-    ...     print(sample.some_field)      # Attribute access
-    ...     print(sample["other_field"])  # Dict access
-    ...     print(sample.keys())          # Inspect available fields
-    ...
-    >>> # Convert to typed schema
-    >>> typed_ds = ds.as_type(MyTypedSample)
+```python
+>>> ds = load_dataset("path/to/data.tar")  # Returns Dataset[DictSample]
+>>> for sample in ds.ordered():
+...     print(sample.some_field)      # Attribute access
+...     print(sample["other_field"])  # Dict access
+...     print(sample.keys())          # Inspect available fields
+...
+>>> # Convert to typed schema
+>>> typed_ds = ds.as_type(MyTypedSample)
+```
 
 ## Note {.doc-section .doc-section-note}
 

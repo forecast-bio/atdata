@@ -402,7 +402,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#atdata.atmosphere.DatasetLoader" id="toc-atdata.atmosphere.DatasetLoader" class="nav-link active" data-scroll-target="#atdata.atmosphere.DatasetLoader">DatasetLoader</a>
   <ul class="collapse">
-  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
   <li><a href="#atdata.atmosphere.DatasetLoader.get" id="toc-atdata.atmosphere.DatasetLoader.get" class="nav-link" data-scroll-target="#atdata.atmosphere.DatasetLoader.get">get</a></li>
@@ -430,19 +430,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>atmosphere.DatasetLoader(client)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Loads dataset records from ATProto.</p>
 <p>This class fetches dataset index records and can create Dataset objects from them. Note that loading a dataset requires having the corresponding Python class for the sample type.</p>
-<section id="example" class="level2 doc-section doc-section-example">
-<h2 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h2>
-<p>::</p>
-<pre><code>&gt;&gt;&gt; client = AtmosphereClient()
-&gt;&gt;&gt; loader = DatasetLoader(client)
-&gt;&gt;&gt;
-&gt;&gt;&gt; # List available datasets
-&gt;&gt;&gt; datasets = loader.list()
-&gt;&gt;&gt; for ds in datasets:
-...     print(ds["name"], ds["schemaRef"])
-&gt;&gt;&gt;
-&gt;&gt;&gt; # Get a specific dataset record
-&gt;&gt;&gt; record = loader.get("at://did:plc:abc/ac.foundation.dataset.record/xyz")</code></pre>
+<section id="examples" class="level2 doc-section doc-section-examples">
+<h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> client <span class="op">=</span> AtmosphereClient()</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> loader <span class="op">=</span> DatasetLoader(client)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="co"># List available datasets</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> datasets <span class="op">=</span> loader.<span class="bu">list</span>()</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="cf">for</span> ds <span class="kw">in</span> datasets:</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>...     <span class="bu">print</span>(ds[<span class="st">"name"</span>], ds[<span class="st">"schemaRef"</span>])</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="co"># Get a specific dataset record</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> record <span class="op">=</span> loader.get(<span class="st">"at://did:plc:abc/ac.foundation.dataset.record/xyz"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>
@@ -976,13 +975,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="example-1" class="level4 doc-section doc-section-example">
-<h4 class="doc-section doc-section-example anchored" data-anchor-id="example-1">Example</h4>
-<p>::</p>
-<pre><code>&gt;&gt;&gt; loader = DatasetLoader(client)
-&gt;&gt;&gt; dataset = loader.to_dataset(uri, MySampleType)
-&gt;&gt;&gt; for batch in dataset.shuffled(batch_size=32):
-...     process(batch)</code></pre>
+<section id="examples-1" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-1">Examples</h4>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> loader <span class="op">=</span> DatasetLoader(client)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> dataset <span class="op">=</span> loader.to_dataset(uri, MySampleType)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="cf">for</span> batch <span class="kw">in</span> dataset.shuffled(batch_size<span class="op">=</span><span class="dv">32</span>):</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>...     process(batch)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 
 </section>

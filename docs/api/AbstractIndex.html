@@ -403,7 +403,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#atdata.AbstractIndex" id="toc-atdata.AbstractIndex" class="nav-link active" data-scroll-target="#atdata.AbstractIndex">AbstractIndex</a>
   <ul class="collapse">
   <li><a href="#optional-extensions" id="toc-optional-extensions" class="nav-link" data-scroll-target="#optional-extensions">Optional Extensions</a></li>
-  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
+  <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
   <li><a href="#attributes" id="toc-attributes" class="nav-link" data-scroll-target="#attributes">Attributes</a></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
@@ -436,21 +436,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="doc-section doc-section-optional-extensions anchored" data-anchor-id="optional-extensions">Optional Extensions</h2>
 <p>Some index implementations support additional features: - <code>data_store</code>: An AbstractDataStore for reading/writing dataset shards. If present, <code>load_dataset</code> will use it for S3 credential resolution.</p>
 </section>
-<section id="example" class="level2 doc-section doc-section-example">
-<h2 class="doc-section doc-section-example anchored" data-anchor-id="example">Example</h2>
-<p>::</p>
-<pre><code>&gt;&gt;&gt; def publish_and_list(index: AbstractIndex) -&gt; None:
-...     # Publish schemas for different types
-...     schema1 = index.publish_schema(ImageSample, version="1.0.0")
-...     schema2 = index.publish_schema(TextSample, version="1.0.0")
-...
-...     # Insert datasets of different types
-...     index.insert_dataset(image_ds, name="images")
-...     index.insert_dataset(text_ds, name="texts")
-...
-...     # List all datasets (mixed types)
-...     for entry in index.list_datasets():
-...         print(f"{entry.name} -&gt; {entry.schema_ref}")</code></pre>
+<section id="examples" class="level2 doc-section doc-section-examples">
+<h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="kw">def</span> publish_and_list(index: AbstractIndex) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>...     <span class="co"># Publish schemas for different types</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>...     schema1 <span class="op">=</span> index.publish_schema(ImageSample, version<span class="op">=</span><span class="st">"1.0.0"</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>...     schema2 <span class="op">=</span> index.publish_schema(TextSample, version<span class="op">=</span><span class="st">"1.0.0"</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>...     <span class="co"># Insert datasets of different types</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>...     index.insert_dataset(image_ds, name<span class="op">=</span><span class="st">"images"</span>)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>...     index.insert_dataset(text_ds, name<span class="op">=</span><span class="st">"texts"</span>)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>...</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>...     <span class="co"># List all datasets (mixed types)</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>...     <span class="cf">for</span> entry <span class="kw">in</span> index.list_datasets():</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>...         <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>entry<span class="sc">.</span>name<span class="sc">}</span><span class="ss"> -&gt; </span><span class="sc">{</span>entry<span class="sc">.</span>schema_ref<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="attributes" class="level2">
 <h2 class="anchored" data-anchor-id="attributes">Attributes</h2>
@@ -596,14 +595,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="example-1" class="level4 doc-section doc-section-example">
-<h4 class="doc-section doc-section-example anchored" data-anchor-id="example-1">Example</h4>
-<p>::</p>
-<pre><code>&gt;&gt;&gt; entry = index.get_dataset("my-dataset")
-&gt;&gt;&gt; SampleType = index.decode_schema(entry.schema_ref)
-&gt;&gt;&gt; ds = Dataset[SampleType](entry.data_urls[0])
-&gt;&gt;&gt; for sample in ds.ordered():
-...     print(sample)  # sample is instance of SampleType</code></pre>
+<section id="examples-1" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-1">Examples</h4>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> entry <span class="op">=</span> index.get_dataset(<span class="st">"my-dataset"</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> SampleType <span class="op">=</span> index.decode_schema(entry.schema_ref)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> ds <span class="op">=</span> Dataset[SampleType](entry.data_urls[<span class="dv">0</span>])</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="cf">for</span> sample <span class="kw">in</span> ds.ordered():</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>...     <span class="bu">print</span>(sample)  <span class="co"># sample is instance of SampleType</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
 <section id="atdata.AbstractIndex.get_dataset" class="level3">

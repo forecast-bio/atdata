@@ -14,30 +14,28 @@ Key components:
 Lenses support the functional programming concept of composable, well-behaved
 transformations that satisfy lens laws (GetPut and PutGet).
 
-Example:
-    ::
-
-        >>> @packable
-        ... class FullData:
-        ...     name: str
-        ...     age: int
-        ...     embedding: NDArray
-        ...
-        >>> @packable
-        ... class NameOnly:
-        ...     name: str
-        ...
-        >>> @lens
-        ... def name_view(full: FullData) -> NameOnly:
-        ...     return NameOnly(name=full.name)
-        ...
-        >>> @name_view.putter
-        ... def name_view_put(view: NameOnly, source: FullData) -> FullData:
-        ...     return FullData(name=view.name, age=source.age,
-        ...                     embedding=source.embedding)
-        ...
-        >>> ds = Dataset[FullData]("data.tar")
-        >>> ds_names = ds.as_type(NameOnly)  # Uses registered lens
+Examples:
+    >>> @packable
+    ... class FullData:
+    ...     name: str
+    ...     age: int
+    ...     embedding: NDArray
+    ...
+    >>> @packable
+    ... class NameOnly:
+    ...     name: str
+    ...
+    >>> @lens
+    ... def name_view(full: FullData) -> NameOnly:
+    ...     return NameOnly(name=full.name)
+    ...
+    >>> @name_view.putter
+    ... def name_view_put(view: NameOnly, source: FullData) -> FullData:
+    ...     return FullData(name=view.name, age=source.age,
+    ...                     embedding=source.embedding)
+    ...
+    >>> ds = Dataset[FullData]("data.tar")
+    >>> ds_names = ds.as_type(NameOnly)  # Uses registered lens
 """
 
 ##
@@ -56,7 +54,7 @@ from typing import (
     Optional,
     Generic,
     #
-    TYPE_CHECKING
+    TYPE_CHECKING,
 )
 
 if TYPE_CHECKING:
@@ -68,11 +66,11 @@ from ._protocols import Packable
 ##
 # Typing helpers
 
-DatasetType: TypeAlias = Type['PackableSample']
+DatasetType: TypeAlias = Type["PackableSample"]
 LensSignature: TypeAlias = Tuple[DatasetType, DatasetType]
 
-S = TypeVar( 'S', bound = Packable )
-V = TypeVar( 'V', bound = Packable )
+S = TypeVar("S", bound=Packable)
+V = TypeVar("V", bound=Packable)
 type LensGetter[S, V] = Callable[[S], V]
 type LensPutter[S, V] = Callable[[V, S], S]
 
@@ -80,7 +78,8 @@ type LensPutter[S, V] = Callable[[V, S], S]
 ##
 # Shortcut decorators
 
-class Lens( Generic[S, V] ):
+
+class Lens(Generic[S, V]):
     """A bidirectional transformation between two sample types.
 
     A lens provides a way to view and update data of type ``S`` (source) as if
@@ -92,22 +91,21 @@ class Lens( Generic[S, V] ):
         S: The source type, must derive from ``PackableSample``.
         V: The view type, must derive from ``PackableSample``.
 
-    Example:
-        ::
-
-            >>> @lens
-            ... def name_lens(full: FullData) -> NameOnly:
-            ...     return NameOnly(name=full.name)
-            ...
-            >>> @name_lens.putter
-            ... def name_lens_put(view: NameOnly, source: FullData) -> FullData:
-            ...     return FullData(name=view.name, age=source.age)
+    Examples:
+        >>> @lens
+        ... def name_lens(full: FullData) -> NameOnly:
+        ...     return NameOnly(name=full.name)
+        ...
+        >>> @name_lens.putter
+        ... def name_lens_put(view: NameOnly, source: FullData) -> FullData:
+        ...     return FullData(name=view.name, age=source.age)
     """
+
     # TODO The above has a line for "Parameters:" that should be "Type Parameters:"; this is a temporary fix for `quartodoc` auto-generation bugs.
 
-    def __init__( self, get: LensGetter[S, V],
-                put: Optional[LensPutter[S, V]] = None
-            ) -> None:
+    def __init__(
+        self, get: LensGetter[S, V], put: Optional[LensPutter[S, V]] = None
+    ) -> None:
         """Initialize a lens with a getter and optional putter function.
 
         Args:
@@ -126,8 +124,8 @@ class Lens( Generic[S, V] ):
 
         # Check argument validity
 
-        sig = inspect.signature( get )
-        input_types = list( sig.parameters.values() )
+        sig = inspect.signature(get)
+        input_types = list(sig.parameters.values())
         if len(input_types) != 1:
             raise ValueError(
                 f"Lens getter must have exactly one parameter, got {len(input_types)}: "
@@ -135,7 +133,7 @@ class Lens( Generic[S, V] ):
             )
 
         # Update function details for this object as returned by annotation
-        functools.update_wrapper( self, get )
+        functools.update_wrapper(self, get)
 
         self.source_type: Type[Packable] = input_types[0].annotation
         self.view_type: Type[Packable] = sig.return_annotation
@@ -146,14 +144,15 @@ class Lens( Generic[S, V] ):
         # Determine and store the putter
         if put is None:
             # Trivial putter does not update the source
-            def _trivial_put( v: V, s: S ) -> S:
+            def _trivial_put(v: V, s: S) -> S:
                 return s
+
             put = _trivial_put
         self._putter = put
-    
+
     #
 
-    def putter( self, put: LensPutter[S, V] ) -> LensPutter[S, V]:
+    def putter(self, put: LensPutter[S, V]) -> LensPutter[S, V]:
         """Decorator to register a putter function for this lens.
 
         Args:
@@ -163,20 +162,18 @@ class Lens( Generic[S, V] ):
         Returns:
             The putter function, allowing this to be used as a decorator.
 
-        Example:
-            ::
-
-                >>> @my_lens.putter
-                ... def my_lens_put(view: ViewType, source: SourceType) -> SourceType:
-                ...     return SourceType(...)
+        Examples:
+            >>> @my_lens.putter
+            ... def my_lens_put(view: ViewType, source: SourceType) -> SourceType:
+            ...     return SourceType(field=view.field, other=source.other)
         """
         ##
         self._putter = put
         return put
-    
+
     # Methods to actually execute transformations
 
-    def put( self, v: V, s: S ) -> S:
+    def put(self, v: V, s: S) -> S:
         """Update the source based on a modified view.
 
         Args:
@@ -186,9 +183,9 @@ class Lens( Generic[S, V] ):
         Returns:
             An updated source of type ``S`` that reflects changes from the view.
         """
-        return self._putter( v, s )
+        return self._putter(v, s)
 
-    def get( self, s: S ) -> V:
+    def get(self, s: S) -> V:
         """Transform the source into the view type.
 
         Args:
@@ -197,14 +194,14 @@ class Lens( Generic[S, V] ):
         Returns:
             A view of the source as type ``V``.
         """
-        return self( s )
+        return self(s)
 
-    def __call__( self, s: S ) -> V:
+    def __call__(self, s: S) -> V:
         """Apply the lens transformation (same as ``get()``)."""
-        return self._getter( s )
+        return self._getter(s)
 
 
-def lens(  f: LensGetter[S, V] ) -> Lens[S, V]:
+def lens(f: LensGetter[S, V]) -> Lens[S, V]:
     """Decorator to create and register a lens transformation.
 
     This decorator converts a getter function into a ``Lens`` object and
@@ -218,19 +215,17 @@ def lens(  f: LensGetter[S, V] ) -> Lens[S, V]:
         A ``Lens[S, V]`` object that can be called to apply the transformation
         or decorated with ``@lens_name.putter`` to add a putter function.
 
-    Example:
-        ::
-
-            >>> @lens
-            ... def extract_name(full: FullData) -> NameOnly:
-            ...     return NameOnly(name=full.name)
-            ...
-            >>> @extract_name.putter
-            ... def extract_name_put(view: NameOnly, source: FullData) -> FullData:
-            ...     return FullData(name=view.name, age=source.age)
+    Examples:
+        >>> @lens
+        ... def extract_name(full: FullData) -> NameOnly:
+        ...     return NameOnly(name=full.name)
+        ...
+        >>> @extract_name.putter
+        ... def extract_name_put(view: NameOnly, source: FullData) -> FullData:
+        ...     return FullData(name=view.name, age=source.age)
     """
-    ret = Lens[S, V]( f )
-    _network.register( ret )
+    ret = Lens[S, V](f)
+    _network.register(ret)
     return ret
 
 
@@ -259,11 +254,11 @@ class LensNetwork:
 
     def __init__(self):
         """Initialize the lens registry (only on first instantiation)."""
-        if not hasattr(self, '_initialized'):  # Check if already initialized
+        if not hasattr(self, "_initialized"):  # Check if already initialized
             self._registry: Dict[LensSignature, Lens] = dict()
             self._initialized = True
-    
-    def register( self, _lens: Lens ):
+
+    def register(self, _lens: Lens):
         """Register a lens as the canonical transformation between two types.
 
         Args:
@@ -275,8 +270,8 @@ class LensNetwork:
             overwritten.
         """
         self._registry[_lens.source_type, _lens.view_type] = _lens
-    
-    def transform( self, source: DatasetType, view: DatasetType ) -> Lens:
+
+    def transform(self, source: DatasetType, view: DatasetType) -> Lens:
         """Look up the lens transformation between two sample types.
 
         Args:
@@ -293,9 +288,9 @@ class LensNetwork:
             Currently only supports direct transformations. Compositional
             transformations (chaining multiple lenses) are not yet implemented.
         """
-        ret = self._registry.get( (source, view), None )
+        ret = self._registry.get((source, view), None)
         if ret is None:
-            raise ValueError( f'No registered lens from source {source} to view {view}' )
+            raise ValueError(f"No registered lens from source {source} to view {view}")
 
         return ret
 
