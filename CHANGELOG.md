@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-## [0.2.1a1] - 2026-01-20
+## [0.2.2b1] - 2026-01-28
 
 ### Added
 - **Blob storage for atmosphere datasets**: Full support for storing dataset shards as ATProto blobs via PDS
