@@ -25,6 +25,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Split local.py monolith into local/ package (#452)
+- Verify tests and lint pass (#459)
+- Create __init__.py re-export facade and delete local.py (#458)
+- Create _repo_legacy.py with deprecated Repo class (#457)
+- Create _index.py with Index class and LocalIndex factory (#456)
+- Create _s3.py with S3DataStore and S3 helpers (#455)
+- Create _schema.py with schema models and helpers (#454)
+- Create _entry.py with LocalDatasetEntry and constants (#453)
 - Migrate CLI from argparse to typer (#449)
 - Investigate test failures (#450)
 - Fix ensure_stub receiving LocalSchemaRecord instead of dict (#451)
