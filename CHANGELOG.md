@@ -25,6 +25,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Migrate CLI from argparse to typer (#449)
+- Investigate test failures (#450)
+- Fix ensure_stub receiving LocalSchemaRecord instead of dict (#451)
 - GH#38: Developer experience improvements (#437)
 - CLI: atdata preview command (#440)
 - CLI: atdata schema show/diff commands (#439)
