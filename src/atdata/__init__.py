@@ -55,6 +55,8 @@ from .lens import (
 from ._hf_api import (
     load_dataset as load_dataset,
     DatasetDict as DatasetDict,
+    get_default_index as get_default_index,
+    set_default_index as set_default_index,
 )
 
 from ._protocols import (
@@ -73,6 +75,11 @@ from ._sources import (
 
 from ._schema_codec import (
     schema_to_type as schema_to_type,
+)
+
+from .repository import (
+    Repository as Repository,
+    create_repository as create_repository,
 )
 
 from ._cid import (

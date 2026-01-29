@@ -54,6 +54,61 @@ ST = TypeVar("ST", bound=PackableSample)
 
 
 ##
+# Default Index singleton
+
+import threading
+
+_default_index: "Index | None" = None  # noqa: F821 (forward ref)
+_default_index_lock = threading.Lock()
+
+
+def get_default_index() -> "Index":  # noqa: F821
+    """Get or create the module-level default Index.
+
+    The default Index uses Redis for local storage (backwards-compatible
+    default) and an anonymous AtmosphereClient for read-only public data
+    resolution.
+
+    The default is created lazily on first access and cached for the
+    lifetime of the process.
+
+    Returns:
+        The default Index instance.
+
+    Examples:
+        >>> index = get_default_index()
+        >>> entry = index.get_dataset("local/mnist")
+    """
+    global _default_index
+    if _default_index is None:
+        with _default_index_lock:
+            if _default_index is None:
+                from .local import Index
+
+                _default_index = Index()
+    return _default_index
+
+
+def set_default_index(index: "Index") -> None:  # noqa: F821
+    """Override the module-level default Index.
+
+    Use this to configure a custom default Index with specific repositories,
+    an authenticated atmosphere client, or non-default providers.
+
+    Args:
+        index: The Index instance to use as the default.
+
+    Examples:
+        >>> from atdata.local import Index
+        >>> from atdata.providers import create_provider
+        >>> custom = Index(provider=create_provider("sqlite"))
+        >>> set_default_index(custom)
+    """
+    global _default_index
+    _default_index = index
+
+
+##
 # DatasetDict - container for multiple splits
 
 
@@ -631,10 +686,7 @@ def load_dataset(
     # Handle @handle/dataset indexed path resolution
     if _is_indexed_path(path):
         if index is None:
-            raise ValueError(
-                f"Index required for indexed path: {path}. "
-                "Pass index=LocalIndex() or index=AtmosphereIndex(client)."
-            )
+            index = get_default_index()
 
         source, schema_ref = _resolve_indexed_path(path, index)
 

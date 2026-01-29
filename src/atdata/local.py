@@ -1,18 +1,12 @@
-"""Local repository storage for atdata datasets.
+"""Local storage backend for atdata datasets.
 
-This module provides a local storage backend for atdata datasets using:
-- S3-compatible object storage for dataset tar files and metadata
-- Redis for indexing and tracking datasets
+Key classes:
 
-The main classes are:
-- Repo: Manages dataset storage in S3 with Redis indexing
-- LocalIndex: Redis-backed index for tracking dataset metadata
-- LocalDatasetEntry: Index entry representing a stored dataset
-
-This is intended for development and small-scale deployment before
-migrating to the full atproto PDS infrastructure. The implementation
-uses ATProto-compatible CIDs for content addressing, enabling seamless
-promotion from local storage to the atmosphere (ATProto network).
+- ``Index``: Unified index with pluggable providers (SQLite default),
+  named repositories, and optional atmosphere backend.
+- ``LocalDatasetEntry``: Index entry with ATProto-compatible CIDs.
+- ``S3DataStore``: S3-compatible shard storage.
+- ``LocalIndex()``: Factory for creating Index with a named provider.
 """
 
 ##
@@ -79,29 +73,17 @@ REDIS_KEY_SCHEMA = "LocalSchema"
 class SchemaNamespace:
     """Namespace for accessing loaded schema types as attributes.
 
-    This class provides a module-like interface for accessing dynamically
-    loaded schema types. After calling ``index.load_schema(uri)``, the
-    schema's class becomes available as an attribute on this namespace.
+    After ``index.load_schema(uri)``, the type is available as an attribute.
+    Supports attribute access, iteration, ``len()``, and ``in`` checks.
 
     Examples:
         >>> index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
         >>> MyType = index.types.MySample
         >>> sample = MyType(field1="hello", field2=42)
 
-    The namespace supports:
-    - Attribute access: ``index.types.MySample``
-    - Iteration: ``for name in index.types: ...``
-    - Length: ``len(index.types)``
-    - Contains check: ``"MySample" in index.types``
-
     Note:
-        For full IDE autocomplete support, import from the generated module::
-
-            # After load_schema with auto_stubs=True
-            from local.MySample_1_0_0 import MySample
-            sample = MySample(name="hello", value=42)  # IDE knows signature!
-
-        Add ``index.stub_dir`` to your IDE's extraPaths for imports to resolve.
+        For full IDE autocomplete, enable ``auto_stubs=True`` and add
+        ``index.stub_dir`` to your IDE's extraPaths.
     """
 
     def __init__(self) -> None:
@@ -246,23 +228,6 @@ class SchemaField:
             "optional": self.optional,
         }
 
-    def __getitem__(self, key: str) -> Any:
-        """Dict-style access for backwards compatibility."""
-        if key == "name":
-            return self.name
-        elif key == "fieldType":
-            return self.field_type.to_dict()
-        elif key == "optional":
-            return self.optional
-        raise KeyError(key)
-
-    def get(self, key: str, default: Any = None) -> Any:
-        """Dict-style get() for backwards compatibility."""
-        try:
-            return self[key]
-        except KeyError:
-            return default
-
 
 @dataclass
 class LocalSchemaRecord:
@@ -322,33 +287,6 @@ class LocalSchemaRecord:
         if self.created_at:
             result["createdAt"] = self.created_at.isoformat()
         return result
-
-    def __getitem__(self, key: str) -> Any:
-        """Dict-style access for backwards compatibility."""
-        if key == "name":
-            return self.name
-        elif key == "version":
-            return self.version
-        elif key == "fields":
-            return self.fields  # Returns list of SchemaField (also subscriptable)
-        elif key == "$ref":
-            return self.ref
-        elif key == "description":
-            return self.description
-        elif key == "createdAt":
-            return self.created_at.isoformat() if self.created_at else None
-        raise KeyError(key)
-
-    def __contains__(self, key: str) -> bool:
-        """Support 'in' operator for backwards compatibility."""
-        return key in ("name", "version", "fields", "$ref", "description", "createdAt")
-
-    def get(self, key: str, default: Any = None) -> Any:
-        """Dict-style get() for backwards compatibility."""
-        try:
-            return self[key]
-        except KeyError:
-            return default
 
 
 ##
@@ -947,26 +885,35 @@ class Repo:
 
 
 class Index:
-    """Provider-backed index for tracking datasets.
+    """Unified index for tracking datasets across multiple repositories.
 
     Implements the AbstractIndex protocol. Maintains a registry of
-    LocalDatasetEntry objects, allowing enumeration and lookup
-    of stored datasets.
+    dataset entries across a built-in ``"local"`` repository, optional
+    named repositories, and an optional atmosphere (ATProto) backend.
 
-    The storage backend is determined by the ``provider`` argument.
-    When no provider is given, falls back to Redis for backwards
-    compatibility.
+    The ``"local"`` repository is always present and uses the storage backend
+    determined by the ``provider`` argument. When no provider is given, defaults
+    to SQLite (zero external dependencies). Pass a ``redis`` connection or
+    Redis ``**kwargs`` for backwards-compatible Redis behaviour.
 
-    When initialized with a data_store, insert_dataset() will write dataset
-    shards to storage before indexing. Without a data_store, insert_dataset()
-    only indexes existing URLs.
+    Additional named repositories can be mounted via the ``repos`` parameter,
+    each pairing an IndexProvider with an optional data store.
+
+    An AtmosphereClient is available by default for anonymous read-only
+    resolution of ``@handle/dataset`` paths. Pass an authenticated client
+    for write operations, or ``atmosphere=None`` to disable.
 
     Attributes:
-        _provider: IndexProvider handling persistence.
-        _data_store: Optional AbstractDataStore for writing dataset shards.
+        _provider: IndexProvider for the built-in ``"local"`` repository.
+        _data_store: Optional AbstractDataStore for the local repository.
+        _repos: Named repositories beyond ``"local"``.
+        _atmosphere: Optional atmosphere backend for ATProto operations.
     """
 
     ##
+
+    # Sentinel for default atmosphere behaviour (lazy anonymous client)
+    _ATMOSPHERE_DEFAULT = object()
 
     def __init__(
         self,
@@ -974,6 +921,8 @@ class Index:
         *,
         redis: Redis | None = None,
         data_store: AbstractDataStore | None = None,
+        repos: "dict[str, Repository] | None" = None,
+        atmosphere: "Any | None" = _ATMOSPHERE_DEFAULT,
         auto_stubs: bool = False,
         stub_dir: Path | str | None = None,
         **kwargs,
@@ -981,22 +930,58 @@ class Index:
         """Initialize an index.
 
         Args:
-            provider: Storage backend.  If provided, all persistence is
-                delegated to this provider.  Mutually exclusive with *redis*
-                and extra *kwargs*.
+            provider: Storage backend for the ``"local"`` repository.  If
+                provided, all local persistence is delegated to this provider.
+                Mutually exclusive with *redis* and extra *kwargs*.
             redis: Redis connection to use (backwards-compat shorthand for
                 ``RedisProvider(redis)``).  Ignored when *provider* is given.
-            data_store: Optional data store for writing dataset shards.
-                If provided, insert_dataset() will write shards to this store.
-                If None, insert_dataset() only indexes existing URLs.
+            data_store: Optional data store for writing dataset shards in the
+                ``"local"`` repository.  If provided, ``insert_dataset()`` will
+                write shards to this store.  If None, only indexes existing URLs.
+            repos: Named repositories to mount alongside ``"local"``.  Keys are
+                repository names (e.g. ``"lab"``, ``"shared"``).  The name
+                ``"local"`` is reserved for the built-in repository.
+            atmosphere: ATProto client for distributed network operations.
+                - Default (sentinel): creates an anonymous read-only client
+                  lazily on first access.
+                - ``AtmosphereClient`` instance: uses that client directly.
+                - ``None``: disables atmosphere backend entirely.
             auto_stubs: If True, automatically generate .pyi stub files when
                 schemas are accessed via get_schema() or decode_schema().
                 This enables IDE autocomplete for dynamically decoded types.
             stub_dir: Directory to write stub files. Only used if auto_stubs
                 is True or if this parameter is provided (which implies auto_stubs).
                 Defaults to ~/.atdata/stubs/ if not specified.
-            **kwargs: Additional arguments passed to Redis() constructor if
-                neither *provider* nor *redis* is given.
+            **kwargs: Additional arguments passed to Redis() constructor when
+                *redis* is not given.  If any kwargs are provided (without an
+                explicit *provider*), Redis is used instead of the SQLite default.
+
+        Raises:
+            TypeError: If provider is not an IndexProvider.
+            ValueError: If repos contains the reserved name ``"local"``.
+
+        Examples:
+            >>> # Default: local SQLite + anonymous atmosphere
+            >>> index = Index()
+            >>>
+            >>> # SQLite local + authenticated atmosphere
+            >>> from atdata.providers import create_provider
+            >>> from atdata.atmosphere import AtmosphereClient
+            >>> client = AtmosphereClient()
+            >>> client.login("alice.bsky.social", "app-password")
+            >>> index = Index(
+            ...     provider=create_provider("sqlite"),
+            ...     atmosphere=client,
+            ... )
+            >>>
+            >>> # Multiple repositories
+            >>> from atdata.repository import Repository, create_repository
+            >>> index = Index(
+            ...     provider=create_provider("sqlite"),
+            ...     repos={
+            ...         "lab": create_repository("sqlite", path="/data/lab.db"),
+            ...     },
+            ... )
         """
         ##
 
@@ -1008,16 +993,56 @@ class Index:
                     f"provider must be an IndexProvider, got {type(provider).__name__}"
                 )
             self._provider: _IP = provider
-        else:
-            # Backwards-compatible Redis path
+        elif redis is not None:
+            # Explicit Redis connection provided
             from .providers._redis import RedisProvider
 
-            if redis is not None:
-                self._provider = RedisProvider(redis)
-            else:
-                self._provider = RedisProvider(Redis(**kwargs))
+            self._provider = RedisProvider(redis)
+        elif kwargs:
+            # kwargs provided — assume Redis constructor args for compat
+            from .providers._redis import RedisProvider
+
+            self._provider = RedisProvider(Redis(**kwargs))
+        else:
+            # Default: zero-dependency SQLite
+            from .providers._sqlite import SqliteProvider
+
+            self._provider = SqliteProvider()
 
         self._data_store = data_store
+
+        # Validate and store named repositories
+        from .repository import Repository as _Repo
+
+        if repos is not None:
+            if "local" in repos:
+                raise ValueError(
+                    '"local" is reserved for the built-in repository. '
+                    "Use a different name for your repository."
+                )
+            for name, repo in repos.items():
+                if not isinstance(repo, _Repo):
+                    raise TypeError(
+                        f"repos[{name!r}] must be a Repository, "
+                        f"got {type(repo).__name__}"
+                    )
+            self._repos: dict[str, _Repo] = dict(repos)
+        else:
+            self._repos = {}
+
+        # Atmosphere backend (lazy or explicit)
+        from .repository import _AtmosphereBackend
+
+        if atmosphere is Index._ATMOSPHERE_DEFAULT:
+            # Deferred: create anonymous client on first use
+            self._atmosphere: _AtmosphereBackend | None = None
+            self._atmosphere_deferred = True
+        elif atmosphere is None:
+            self._atmosphere = None
+            self._atmosphere_deferred = False
+        else:
+            self._atmosphere = _AtmosphereBackend(atmosphere)
+            self._atmosphere_deferred = False
 
         # Initialize stub manager if auto-stubs enabled
         # Providing stub_dir implies auto_stubs=True
@@ -1030,6 +1055,90 @@ class Index:
 
         # Initialize schema namespace for load_schema/schemas API
         self._schema_namespace = SchemaNamespace()
+
+    # -- Repository access --
+
+    def _get_atmosphere(self) -> "_AtmosphereBackend | None":
+        """Get the atmosphere backend, lazily creating anonymous client if needed."""
+        if self._atmosphere_deferred and self._atmosphere is None:
+            try:
+                from .atmosphere.client import AtmosphereClient
+                from .repository import _AtmosphereBackend
+
+                client = AtmosphereClient()
+                self._atmosphere = _AtmosphereBackend(client)
+            except ImportError:
+                # atproto package not installed -- atmosphere unavailable
+                self._atmosphere_deferred = False
+                return None
+        return self._atmosphere
+
+    def _resolve_prefix(
+        self, ref: str
+    ) -> tuple[str, str, str | None]:
+        """Route a dataset/schema reference to the correct backend.
+
+        Returns:
+            Tuple of ``(backend_key, resolved_ref, handle_or_did)``.
+
+            - ``backend_key``: ``"local"``, a named repository, or
+              ``"_atmosphere"``.
+            - ``resolved_ref``: The dataset/schema name or AT URI to pass
+              to the backend.
+            - ``handle_or_did``: Populated only for atmosphere paths.
+        """
+        # AT URIs go to atmosphere
+        if ref.startswith("at://"):
+            return ("_atmosphere", ref, None)
+
+        # @ prefix -> atmosphere
+        if ref.startswith("@"):
+            rest = ref[1:]
+            parts = rest.split("/", 1)
+            if len(parts) == 2:
+                return ("_atmosphere", parts[1], parts[0])
+            return ("_atmosphere", rest, None)
+
+        # atdata:// full URI
+        if ref.startswith("atdata://"):
+            path = ref[len("atdata://"):]
+            parts = path.split("/")
+            # atdata://mount/collection/name  or  atdata://mount/name
+            repo_name = parts[0]
+            dataset_name = parts[-1]
+            if repo_name == "local" or repo_name in self._repos:
+                return (repo_name, dataset_name, None)
+            # Unknown prefix -- might be an atmosphere handle
+            return ("_atmosphere", dataset_name, repo_name)
+
+        # prefix/name where prefix is a known repository
+        if "/" in ref:
+            prefix, rest = ref.split("/", 1)
+            if prefix == "local":
+                return ("local", rest, None)
+            if prefix in self._repos:
+                return (prefix, rest, None)
+
+        # Bare name -> local repository
+        return ("local", ref, None)
+
+    @property
+    def repos(self) -> dict[str, "Repository"]:
+        """Named repositories mounted on this index (excluding ``"local"``)."""
+        from .repository import Repository as _Repo
+
+        return dict(self._repos)
+
+    @property
+    def atmosphere(self) -> Any:
+        """The AtmosphereClient for this index, or None if disabled.
+
+        Returns the underlying client (not the internal backend wrapper).
+        """
+        backend = self._get_atmosphere()
+        if backend is not None:
+            return backend.client
+        return None
 
     @property
     def provider(self) -> "IndexProvider":  # noqa: F821
@@ -1190,9 +1299,7 @@ class Index:
         schema_ref: str | None = None,
         metadata: dict | None = None,
     ) -> LocalDatasetEntry:
-        """Add a dataset to the index.
-
-        Creates a LocalDatasetEntry for the dataset and persists it.
+        """Add a dataset to the local repository index.
 
         Args:
             ds: The dataset to add to the index.
@@ -1203,29 +1310,14 @@ class Index:
         Returns:
             The created LocalDatasetEntry object.
         """
-        ##
-        if schema_ref is None:
-            schema_ref = (
-                f"local://schemas/{_kind_str_for_sample_type(ds.sample_type)}@1.0.0"
-            )
-
-        # Normalize URL to list
-        data_urls = [ds.url]
-
-        # Use provided metadata, or fall back to dataset's cached metadata
-        # (avoid triggering network requests via ds.metadata property)
-        entry_metadata = metadata if metadata is not None else ds._metadata
-
-        entry = LocalDatasetEntry(
+        return self._insert_dataset_to_provider(
+            ds,
             name=name,
             schema_ref=schema_ref,
-            data_urls=data_urls,
-            metadata=entry_metadata,
+            provider=self._provider,
+            store=None,
+            metadata=metadata,
         )
-
-        self._provider.store_entry(entry)
-
-        return entry
 
     def get_entry(self, cid: str) -> LocalDatasetEntry:
         """Get an entry by its CID.
@@ -1257,6 +1349,62 @@ class Index:
 
     # AbstractIndex protocol methods
 
+    def _insert_dataset_to_provider(
+        self,
+        ds: Dataset,
+        *,
+        name: str,
+        schema_ref: str | None = None,
+        provider: "IndexProvider",  # noqa: F821
+        store: AbstractDataStore | None = None,
+        **kwargs,
+    ) -> LocalDatasetEntry:
+        """Insert a dataset into a specific provider/store pair.
+
+        This is the internal implementation shared by all local and named
+        repository inserts.
+        """
+        metadata = kwargs.get("metadata")
+
+        if store is not None:
+            prefix = kwargs.get("prefix", name)
+            cache_local = kwargs.get("cache_local", False)
+
+            written_urls = store.write_shards(
+                ds,
+                prefix=prefix,
+                cache_local=cache_local,
+            )
+
+            if schema_ref is None:
+                schema_ref = _schema_ref_from_type(ds.sample_type, version="1.0.0")
+
+            entry_metadata = metadata if metadata is not None else ds._metadata
+            entry = LocalDatasetEntry(
+                name=name,
+                schema_ref=schema_ref,
+                data_urls=written_urls,
+                metadata=entry_metadata,
+            )
+            provider.store_entry(entry)
+            return entry
+
+        # No data store - just index the existing URL
+        if schema_ref is None:
+            schema_ref = _schema_ref_from_type(ds.sample_type, version="1.0.0")
+
+        data_urls = [ds.url]
+        entry_metadata = metadata if metadata is not None else ds._metadata
+
+        entry = LocalDatasetEntry(
+            name=name,
+            schema_ref=schema_ref,
+            data_urls=data_urls,
+            metadata=entry_metadata,
+        )
+        provider.store_entry(entry)
+        return entry
+
     def insert_dataset(
         self,
         ds: Dataset,
@@ -1264,16 +1412,21 @@ class Index:
         name: str,
         schema_ref: str | None = None,
         **kwargs,
-    ) -> LocalDatasetEntry:
+    ) -> "IndexEntry":
         """Insert a dataset into the index (AbstractIndex protocol).
 
-        If a data_store was provided at initialization, writes dataset shards
-        to storage first, then indexes the new URLs. Otherwise, indexes the
-        dataset's existing URL.
+        The target repository is determined by a prefix in the ``name``
+        argument (e.g. ``"lab/mnist"``). If no prefix is given, or the
+        prefix is ``"local"``, the built-in local repository is used.
+
+        If the target repository has a data_store, shards are written to
+        storage first, then indexed. Otherwise, the dataset's existing URL
+        is indexed directly.
 
         Args:
             ds: The Dataset to register.
-            name: Human-readable name for the dataset.
+            name: Human-readable name for the dataset, optionally prefixed
+                with a repository name (e.g. ``"lab/mnist"``).
             schema_ref: Optional schema reference.
             **kwargs: Additional options:
                 - metadata: Optional metadata dict
@@ -1283,67 +1436,121 @@ class Index:
         Returns:
             IndexEntry for the inserted dataset.
         """
-        metadata = kwargs.get("metadata")
+        backend_key, resolved_name, handle_or_did = self._resolve_prefix(name)
 
-        if self._data_store is not None:
-            # Write shards to data store, then index the new URLs
-            prefix = kwargs.get("prefix", name)
-            cache_local = kwargs.get("cache_local", False)
+        if backend_key == "_atmosphere":
+            atmo = self._get_atmosphere()
+            if atmo is None:
+                raise ValueError(
+                    f"Atmosphere backend required for name {name!r} but not available."
+                )
+            return atmo.insert_dataset(
+                ds, name=resolved_name, schema_ref=schema_ref, **kwargs
+            )
 
-            written_urls = self._data_store.write_shards(
+        if backend_key == "local":
+            return self._insert_dataset_to_provider(
                 ds,
-                prefix=prefix,
-                cache_local=cache_local,
-            )
-
-            # Generate schema_ref if not provided
-            if schema_ref is None:
-                schema_ref = _schema_ref_from_type(ds.sample_type, version="1.0.0")
-
-            # Create entry with the written URLs
-            entry_metadata = metadata if metadata is not None else ds._metadata
-            entry = LocalDatasetEntry(
-                name=name,
+                name=resolved_name,
                 schema_ref=schema_ref,
-                data_urls=written_urls,
-                metadata=entry_metadata,
+                provider=self._provider,
+                store=self._data_store,
+                **kwargs,
             )
-            self._provider.store_entry(entry)
-            return entry
 
-        # No data store - just index the existing URL
-        return self.add_entry(ds, name=name, schema_ref=schema_ref, metadata=metadata)
+        # Named repository
+        repo = self._repos.get(backend_key)
+        if repo is None:
+            raise KeyError(f"Unknown repository {backend_key!r} in name {name!r}")
+        return self._insert_dataset_to_provider(
+            ds,
+            name=resolved_name,
+            schema_ref=schema_ref,
+            provider=repo.provider,
+            store=repo.data_store,
+            **kwargs,
+        )
 
-    def get_dataset(self, ref: str) -> LocalDatasetEntry:
-        """Get a dataset entry by name (AbstractIndex protocol).
+    def get_dataset(self, ref: str) -> "IndexEntry":
+        """Get a dataset entry by name or prefixed reference.
+
+        Supports repository-prefixed lookups (e.g. ``"lab/mnist"``),
+        atmosphere paths (``"@handle/dataset"``), AT URIs, and bare names
+        (which default to the ``"local"`` repository).
 
         Args:
-            ref: Dataset name.
+            ref: Dataset name, prefixed name, or AT URI.
 
         Returns:
             IndexEntry for the dataset.
 
         Raises:
             KeyError: If dataset not found.
+            ValueError: If the atmosphere backend is required but unavailable.
         """
-        return self.get_entry_by_name(ref)
+        backend_key, resolved_ref, handle_or_did = self._resolve_prefix(ref)
+
+        if backend_key == "_atmosphere":
+            atmo = self._get_atmosphere()
+            if atmo is None:
+                raise ValueError(
+                    f"Atmosphere backend required for path {ref!r} but not available. "
+                    "Install 'atproto' or pass an AtmosphereClient."
+                )
+            return atmo.get_dataset(resolved_ref)
+
+        if backend_key == "local":
+            return self._provider.get_entry_by_name(resolved_ref)
+
+        # Named repository
+        repo = self._repos.get(backend_key)
+        if repo is None:
+            raise KeyError(f"Unknown repository {backend_key!r} in ref {ref!r}")
+        return repo.provider.get_entry_by_name(resolved_ref)
 
     @property
-    def datasets(self) -> Generator[LocalDatasetEntry, None, None]:
-        """Lazily iterate over all dataset entries (AbstractIndex protocol).
+    def datasets(self) -> Generator["IndexEntry", None, None]:
+        """Lazily iterate over all dataset entries across local repositories.
+
+        Yields entries from the ``"local"`` repository and all named
+        repositories. Atmosphere entries are not included (use
+        ``list_datasets(repo="_atmosphere")`` for those).
 
         Yields:
             IndexEntry for each dataset.
         """
-        return self.entries
+        yield from self._provider.iter_entries()
+        for repo in self._repos.values():
+            yield from repo.provider.iter_entries()
 
-    def list_datasets(self) -> list[LocalDatasetEntry]:
-        """Get all dataset entries as a materialized list (AbstractIndex protocol).
+    def list_datasets(self, repo: str | None = None) -> list["IndexEntry"]:
+        """Get dataset entries as a materialized list (AbstractIndex protocol).
+
+        Args:
+            repo: Optional repository filter. If ``None``, aggregates entries
+                from ``"local"`` and all named repositories. Use ``"local"``
+                for only the built-in repository, a named repo key, or
+                ``"_atmosphere"`` for atmosphere entries.
 
         Returns:
             List of IndexEntry for each dataset.
         """
-        return self.list_entries()
+        if repo is None:
+            return list(self.datasets)
+
+        if repo == "local":
+            return self.list_entries()
+
+        if repo == "_atmosphere":
+            atmo = self._get_atmosphere()
+            if atmo is None:
+                return []
+            return atmo.list_datasets()
+
+        named = self._repos.get(repo)
+        if named is None:
+            raise KeyError(f"Unknown repository {repo!r}")
+        return list(named.provider.iter_entries())
 
     # Schema operations
 
@@ -1622,6 +1829,7 @@ def LocalIndex(
     return Index(
         provider=backend,
         data_store=data_store,
+        atmosphere=None,
         auto_stubs=auto_stubs,
         stub_dir=stub_dir,
     )

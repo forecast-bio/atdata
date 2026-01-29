@@ -395,16 +395,17 @@ def test_index_implements_abstract_index_protocol():
 # Index tests
 
 
-def test_index_init_default_redis():
-    """Test creating an Index with default Redis connection.
+def test_index_init_default_sqlite():
+    """Test creating an Index with default SQLite provider.
 
-    Should create a new Redis connection using default parameters when no
-    redis argument is provided.
+    When no provider or redis argument is given, the Index should use
+    SQLite as the zero-dependency default.
     """
+    from atdata.providers._sqlite import SqliteProvider
+
     index = atlocal.Index()
 
-    assert index._redis is not None
-    assert isinstance(index._redis, Redis)
+    assert isinstance(index.provider, SqliteProvider)
 
 
 def test_index_init_with_redis_connection():

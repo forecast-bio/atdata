@@ -99,6 +99,11 @@ class AtmosphereIndexEntry:
 class AtmosphereIndex:
     """ATProto index implementing AbstractIndex protocol.
 
+    .. deprecated::
+        Use ``atdata.Index(atmosphere=client)`` instead.  ``AtmosphereIndex``
+        is retained for backwards compatibility and will be removed in a
+        future release.
+
     Wraps SchemaPublisher/Loader and DatasetPublisher/Loader to provide
     a unified interface compatible with LocalIndex.
 
@@ -106,16 +111,13 @@ class AtmosphereIndex:
     ATProto blobs, enabling fully decentralized dataset storage.
 
     Examples:
-        >>> client = AtmosphereClient()
-        >>> client.login("handle.bsky.social", "app-password")
+        >>> # Preferred: use unified Index
+        >>> from atdata.local import Index
+        >>> from atdata.atmosphere import AtmosphereClient
+        >>> index = Index(atmosphere=client)
         >>>
-        >>> # Without blob storage (external URLs only)
+        >>> # Legacy (deprecated)
         >>> index = AtmosphereIndex(client)
-        >>>
-        >>> # With PDS blob storage
-        >>> store = PDSBlobStore(client)
-        >>> index = AtmosphereIndex(client, data_store=store)
-        >>> entry = index.insert_dataset(dataset, name="my-data")
     """
 
     def __init__(
@@ -131,6 +133,14 @@ class AtmosphereIndex:
             data_store: Optional PDSBlobStore for writing shards as blobs.
                 If provided, insert_dataset will upload shards to PDS.
         """
+        import warnings
+
+        warnings.warn(
+            "AtmosphereIndex is deprecated. Use atdata.Index(atmosphere=client) "
+            "instead for unified index access.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.client = client
         self._schema_publisher = SchemaPublisher(client)
         self._schema_loader = SchemaLoader(client)
