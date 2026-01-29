@@ -61,6 +61,7 @@ if TYPE_CHECKING:
     from .dataset import PackableSample
 
 from ._protocols import Packable
+from ._exceptions import LensNotFoundError
 
 
 ##
@@ -291,7 +292,12 @@ class LensNetwork:
         """
         ret = self._registry.get((source, view), None)
         if ret is None:
-            raise ValueError(f"No registered lens from source {source} to view {view}")
+            available_targets = [
+                (sig[1], lens_obj.__name__)
+                for sig, lens_obj in self._registry.items()
+                if sig[0] is source and hasattr(lens_obj, "__name__")
+            ]
+            raise LensNotFoundError(source, view, available_targets)
 
         return ret
 
