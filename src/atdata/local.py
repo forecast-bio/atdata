@@ -1,18 +1,12 @@
-"""Local repository storage for atdata datasets.
+"""Local storage backend for atdata datasets.
 
-This module provides a local storage backend for atdata datasets using:
-- S3-compatible object storage for dataset tar files and metadata
-- Redis for indexing and tracking datasets
+Key classes:
 
-The main classes are:
-- Repo: Manages dataset storage in S3 with Redis indexing
-- LocalIndex: Redis-backed index for tracking dataset metadata
-- LocalDatasetEntry: Index entry representing a stored dataset
-
-This is intended for development and small-scale deployment before
-migrating to the full atproto PDS infrastructure. The implementation
-uses ATProto-compatible CIDs for content addressing, enabling seamless
-promotion from local storage to the atmosphere (ATProto network).
+- ``Index``: Unified index with pluggable providers (SQLite default),
+  named repositories, and optional atmosphere backend.
+- ``LocalDatasetEntry``: Index entry with ATProto-compatible CIDs.
+- ``S3DataStore``: S3-compatible shard storage.
+- ``LocalIndex()``: Factory for creating Index with a named provider.
 """
 
 ##
@@ -79,29 +73,17 @@ REDIS_KEY_SCHEMA = "LocalSchema"
 class SchemaNamespace:
     """Namespace for accessing loaded schema types as attributes.
 
-    This class provides a module-like interface for accessing dynamically
-    loaded schema types. After calling ``index.load_schema(uri)``, the
-    schema's class becomes available as an attribute on this namespace.
+    After ``index.load_schema(uri)``, the type is available as an attribute.
+    Supports attribute access, iteration, ``len()``, and ``in`` checks.
 
     Examples:
         >>> index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
         >>> MyType = index.types.MySample
         >>> sample = MyType(field1="hello", field2=42)
 
-    The namespace supports:
-    - Attribute access: ``index.types.MySample``
-    - Iteration: ``for name in index.types: ...``
-    - Length: ``len(index.types)``
-    - Contains check: ``"MySample" in index.types``
-
     Note:
-        For full IDE autocomplete support, import from the generated module::
-
-            # After load_schema with auto_stubs=True
-            from local.MySample_1_0_0 import MySample
-            sample = MySample(name="hello", value=42)  # IDE knows signature!
-
-        Add ``index.stub_dir`` to your IDE's extraPaths for imports to resolve.
+        For full IDE autocomplete, enable ``auto_stubs=True`` and add
+        ``index.stub_dir`` to your IDE's extraPaths.
     """
 
     def __init__(self) -> None:
@@ -246,23 +228,6 @@ class SchemaField:
             "optional": self.optional,
         }
 
-    def __getitem__(self, key: str) -> Any:
-        """Dict-style access for backwards compatibility."""
-        if key == "name":
-            return self.name
-        elif key == "fieldType":
-            return self.field_type.to_dict()
-        elif key == "optional":
-            return self.optional
-        raise KeyError(key)
-
-    def get(self, key: str, default: Any = None) -> Any:
-        """Dict-style get() for backwards compatibility."""
-        try:
-            return self[key]
-        except KeyError:
-            return default
-
 
 @dataclass
 class LocalSchemaRecord:
@@ -322,33 +287,6 @@ class LocalSchemaRecord:
         if self.created_at:
             result["createdAt"] = self.created_at.isoformat()
         return result
-
-    def __getitem__(self, key: str) -> Any:
-        """Dict-style access for backwards compatibility."""
-        if key == "name":
-            return self.name
-        elif key == "version":
-            return self.version
-        elif key == "fields":
-            return self.fields  # Returns list of SchemaField (also subscriptable)
-        elif key == "$ref":
-            return self.ref
-        elif key == "description":
-            return self.description
-        elif key == "createdAt":
-            return self.created_at.isoformat() if self.created_at else None
-        raise KeyError(key)
-
-    def __contains__(self, key: str) -> bool:
-        """Support 'in' operator for backwards compatibility."""
-        return key in ("name", "version", "fields", "$ref", "description", "createdAt")
-
-    def get(self, key: str, default: Any = None) -> Any:
-        """Dict-style get() for backwards compatibility."""
-        try:
-            return self[key]
-        except KeyError:
-            return default
 
 
 ##
@@ -1361,9 +1299,7 @@ class Index:
         schema_ref: str | None = None,
         metadata: dict | None = None,
     ) -> LocalDatasetEntry:
-        """Add a dataset to the index.
-
-        Creates a LocalDatasetEntry for the dataset and persists it.
+        """Add a dataset to the local repository index.
 
         Args:
             ds: The dataset to add to the index.
@@ -1374,29 +1310,14 @@ class Index:
         Returns:
             The created LocalDatasetEntry object.
         """
-        ##
-        if schema_ref is None:
-            schema_ref = (
-                f"local://schemas/{_kind_str_for_sample_type(ds.sample_type)}@1.0.0"
-            )
-
-        # Normalize URL to list
-        data_urls = [ds.url]
-
-        # Use provided metadata, or fall back to dataset's cached metadata
-        # (avoid triggering network requests via ds.metadata property)
-        entry_metadata = metadata if metadata is not None else ds._metadata
-
-        entry = LocalDatasetEntry(
+        return self._insert_dataset_to_provider(
+            ds,
             name=name,
             schema_ref=schema_ref,
-            data_urls=data_urls,
-            metadata=entry_metadata,
+            provider=self._provider,
+            store=None,
+            metadata=metadata,
         )
-
-        self._provider.store_entry(entry)
-
-        return entry
 
     def get_entry(self, cid: str) -> LocalDatasetEntry:
         """Get an entry by its CID.
@@ -1470,9 +1391,7 @@ class Index:
 
         # No data store - just index the existing URL
         if schema_ref is None:
-            schema_ref = (
-                f"local://schemas/{_kind_str_for_sample_type(ds.sample_type)}@1.0.0"
-            )
+            schema_ref = _schema_ref_from_type(ds.sample_type, version="1.0.0")
 
         data_urls = [ds.url]
         entry_metadata = metadata if metadata is not None else ds._metadata

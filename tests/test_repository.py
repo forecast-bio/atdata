@@ -201,6 +201,22 @@ class TestResolvePrefix:
         assert key == "local"
         assert ref == "unknownrepo/dataset"
 
+    def test_at_handle_no_slash(self, index):
+        """@handle with no slash returns the handle as ref, no handle_or_did."""
+        key, ref, handle = index._resolve_prefix("@maxine.science")
+        assert key == "_atmosphere"
+        assert ref == "maxine.science"
+        assert handle is None
+
+    def test_atdata_uri_unknown_prefix_routes_to_atmosphere(self, index):
+        """atdata:// with unrecognized prefix routes to atmosphere."""
+        key, ref, handle = index._resolve_prefix(
+            "atdata://unknownrepo/record/mnist"
+        )
+        assert key == "_atmosphere"
+        assert ref == "mnist"
+        assert handle == "unknownrepo"
+
 
 # ---------------------------------------------------------------------------
 # Cross-repository dataset operations
@@ -300,6 +316,24 @@ class TestCrossRepoOperations:
         index = Index(provider=sqlite_provider, atmosphere=None)
         with pytest.raises(ValueError, match="Atmosphere backend required"):
             index.get_dataset("@handle/dataset")
+
+    def test_insert_dataset_atmosphere_disabled_raises(
+        self, sqlite_provider, tar_file
+    ):
+        index = Index(provider=sqlite_provider, atmosphere=None)
+        ds = atdata.Dataset[RepoTestSample](str(tar_file))
+        with pytest.raises(ValueError, match="Atmosphere backend required"):
+            index.insert_dataset(ds, name="@handle/dataset")
+
+    def test_list_datasets_unknown_repo_raises(self, sqlite_provider):
+        index = Index(provider=sqlite_provider, atmosphere=None)
+        with pytest.raises(KeyError, match="Unknown repository"):
+            index.list_datasets(repo="nonexistent")
+
+    def test_list_datasets_atmosphere_disabled_returns_empty(self, sqlite_provider):
+        index = Index(provider=sqlite_provider, atmosphere=None)
+        result = index.list_datasets(repo="_atmosphere")
+        assert result == []
 
 
 # ---------------------------------------------------------------------------

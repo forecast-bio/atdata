@@ -25,6 +25,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Adversarial review: Post-Repository consolidation assessment (#430)
+- Remove backwards-compat dict-access methods from SchemaField and LocalSchemaRecord (#436)
+- Add missing test coverage for Repository prefix routing edge cases and error paths (#435)
+- Trim over-verbose docstrings in local.py module/class level (#434)
+- Fix formally incorrect test assertions (batch_size, CID, brace notation) (#433)
+- Consolidate duplicate test sample types across test files into conftest.py (#432)
+- Consolidate duplicate entry-creation logic in Index (add_entry vs _insert_dataset_to_provider) (#431)
 - Switch default Index provider from Redis to SQLite (#429)
 - Consolidated Index with Repository system (#424)
 - Phase 4: Deprecate AtmosphereIndex, update exports (#428)
