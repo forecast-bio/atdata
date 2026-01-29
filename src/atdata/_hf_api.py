@@ -74,10 +74,11 @@ class DatasetDict(Generic[ST], dict):
         >>>
         >>> # Iterate over all splits
         >>> for split_name, dataset in ds_dict.items():
-        ...     print(f"{split_name}: {len(dataset.shard_list)} shards")
+        ...     print(f"{split_name}: {len(dataset.list_shards())} shards")
     """
 
-    # TODO The above has a line for "Parameters:" that should be "Type Parameters:"; this is a temporary fix for `quartodoc` auto-generation bugs.
+    # Note: The docstring uses "Parameters:" for type parameters as a workaround
+    # for quartodoc not supporting "Type Parameters:" sections.
 
     def __init__(
         self,

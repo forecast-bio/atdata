@@ -1,199 +1,199 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://github.com/your-org/atdata/reference/protocols.html</loc>
+    <loc>https://github.com/forecast-bio/atdata/reference/protocols.html</loc>
     <lastmod>2026-01-28T18:46:20.894Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/reference/datasets.html</loc>
+    <loc>https://github.com/forecast-bio/atdata/reference/datasets.html</loc>
     <lastmod>2026-01-28T18:46:20.893Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/reference/architecture.html</loc>
+    <loc>https://github.com/forecast-bio/atdata/reference/architecture.html</loc>
     <lastmod>2026-01-28T19:56:53.889Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/reference/atmosphere.html</loc>
+    <loc>https://github.com/forecast-bio/atdata/reference/atmosphere.html</loc>
     <lastmod>2026-01-28T19:56:53.889Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/reference/local-storage.html</loc>
+    <loc>https://github.com/forecast-bio/atdata/reference/local-storage.html</loc>
     <lastmod>2026-01-28T18:46:20.894Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/reference/uri-spec.html</loc>
+    <loc>https://github.com/forecast-bio/atdata/reference/uri-spec.html</loc>
     <lastmod>2026-01-28T18:46:20.895Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/tutorials/quickstart.html</loc>
+    <loc>https://github.com/forecast-bio/atdata/tutorials/quickstart.html</loc>
     <lastmod>2026-01-28T19:56:53.890Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/tutorials/atmosphere.html</loc>
+    <loc>https://github.com/forecast-bio/atdata/tutorials/atmosphere.html</loc>
     <lastmod>2026-01-28T19:56:53.889Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/SchemaLoader.html</loc>
-    <lastmod>2026-01-28T20:31:19.270Z</lastmod>
+    <loc>https://github.com/forecast-bio/atdata/api/SchemaLoader.html</loc>
+    <lastmod>2026-01-28T23:14:22.367Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/BlobSource.html</loc>
-    <lastmod>2026-01-28T20:31:19.167Z</lastmod>
+    <loc>https://github.com/forecast-bio/atdata/api/BlobSource.html</loc>
+    <lastmod>2026-01-28T23:14:22.363Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/AtmosphereClient.html</loc>
-    <lastmod>2026-01-28T20:31:19.237Z</lastmod>
+    <loc>https://github.com/forecast-bio/atdata/api/AtmosphereClient.html</loc>
+    <lastmod>2026-01-28T23:14:22.363Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/load_dataset.html</loc>
-    <lastmod>2026-01-28T20:31:19.114Z</lastmod>
+    <loc>https://github.com/forecast-bio/atdata/api/load_dataset.html</loc>
+    <lastmod>2026-01-28T23:14:22.367Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/promote_to_atmosphere.html</loc>
-    <lastmod>2026-01-28T20:31:19.321Z</lastmod>
+    <loc>https://github.com/forecast-bio/atdata/api/promote_to_atmosphere.html</loc>
+    <lastmod>2026-01-28T23:14:22.368Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/SchemaPublisher.html</loc>
-    <lastmod>2026-01-28T20:31:19.265Z</lastmod>
+    <loc>https://github.com/forecast-bio/atdata/api/SchemaPublisher.html</loc>
+    <lastmod>2026-01-28T23:14:22.367Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/DatasetPublisher.html</loc>
-    <lastmod>2026-01-28T20:31:19.283Z</lastmod>
+    <loc>https://github.com/forecast-bio/atdata/api/DatasetPublisher.html</loc>
+    <lastmod>2026-01-28T23:14:22.364Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/URLSource.html</loc>
-    <lastmod>2026-01-28T20:31:19.150Z</lastmod>
+    <loc>https://github.com/forecast-bio/atdata/api/URLSource.html</loc>
+    <lastmod>2026-01-28T23:14:22.367Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/index.html</loc>
-    <lastmod>2026-01-28T20:50:17.801Z</lastmod>
+    <loc>https://github.com/forecast-bio/atdata/api/index.html</loc>
+    <lastmod>2026-01-29T18:18:59.106Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/IndexEntry.html</loc>
+    <loc>https://github.com/forecast-bio/atdata/api/IndexEntry.html</loc>
     <lastmod>2026-01-28T19:56:53.885Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/S3Source.html</loc>
-    <lastmod>2026-01-28T20:31:19.160Z</lastmod>
+    <loc>https://github.com/forecast-bio/atdata/api/S3Source.html</loc>
+    <lastmod>2026-01-28T23:14:22.366Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/local.LocalDatasetEntry.html</loc>
+    <loc>https://github.com/forecast-bio/atdata/api/local.LocalDatasetEntry.html</loc>
     <lastmod>2026-01-28T19:56:53.887Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/AbstractIndex.html</loc>
-    <lastmod>2026-01-28T20:31:19.135Z</lastmod>
+    <loc>https://github.com/forecast-bio/atdata/api/AbstractIndex.html</loc>
+    <lastmod>2026-01-28T23:14:22.362Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/AtmosphereIndexEntry.html</loc>
+    <loc>https://github.com/forecast-bio/atdata/api/AtmosphereIndexEntry.html</loc>
     <lastmod>2026-01-28T19:56:53.884Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/LensPublisher.html</loc>
-    <lastmod>2026-01-28T20:31:19.307Z</lastmod>
+    <loc>https://github.com/forecast-bio/atdata/api/LensPublisher.html</loc>
+    <lastmod>2026-01-28T23:14:22.365Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/SampleBatch.html</loc>
-    <lastmod>2026-01-28T20:31:19.088Z</lastmod>
+    <loc>https://github.com/forecast-bio/atdata/api/SampleBatch.html</loc>
+    <lastmod>2026-01-28T23:14:22.367Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/index.html</loc>
-    <lastmod>2026-01-28T19:56:53.888Z</lastmod>
+    <loc>https://github.com/forecast-bio/atdata/index.html</loc>
+    <lastmod>2026-01-29T17:56:19.802Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/packable.html</loc>
-    <lastmod>2026-01-28T20:31:19.057Z</lastmod>
+    <loc>https://github.com/forecast-bio/atdata/api/packable.html</loc>
+    <lastmod>2026-01-29T17:53:59.006Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/Packable-protocol.html</loc>
-    <lastmod>2026-01-28T20:31:19.119Z</lastmod>
+    <loc>https://github.com/forecast-bio/atdata/api/Packable-protocol.html</loc>
+    <lastmod>2026-01-28T23:14:22.366Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/AtUri.html</loc>
-    <lastmod>2026-01-28T20:31:19.317Z</lastmod>
+    <loc>https://github.com/forecast-bio/atdata/api/AtUri.html</loc>
+    <lastmod>2026-01-28T23:14:22.363Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/local.S3DataStore.html</loc>
+    <loc>https://github.com/forecast-bio/atdata/api/local.S3DataStore.html</loc>
     <lastmod>2026-01-28T19:56:53.887Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/AbstractDataStore.html</loc>
-    <lastmod>2026-01-28T20:31:19.141Z</lastmod>
+    <loc>https://github.com/forecast-bio/atdata/api/AbstractDataStore.html</loc>
+    <lastmod>2026-01-28T23:14:22.362Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/Dataset.html</loc>
-    <lastmod>2026-01-28T20:31:19.086Z</lastmod>
+    <loc>https://github.com/forecast-bio/atdata/api/Dataset.html</loc>
+    <lastmod>2026-01-29T17:53:59.036Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/local.Index.html</loc>
-    <lastmod>2026-01-28T20:31:19.196Z</lastmod>
+    <loc>https://github.com/forecast-bio/atdata/api/local.Index.html</loc>
+    <lastmod>2026-01-28T23:14:22.368Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/Lens.html</loc>
-    <lastmod>2026-01-28T20:50:17.859Z</lastmod>
+    <loc>https://github.com/forecast-bio/atdata/api/Lens.html</loc>
+    <lastmod>2026-01-29T18:18:59.167Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/DatasetLoader.html</loc>
-    <lastmod>2026-01-28T20:31:19.298Z</lastmod>
+    <loc>https://github.com/forecast-bio/atdata/api/DatasetLoader.html</loc>
+    <lastmod>2026-01-28T23:14:22.364Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/DataSource.html</loc>
-    <lastmod>2026-01-28T20:31:19.146Z</lastmod>
+    <loc>https://github.com/forecast-bio/atdata/api/DataSource.html</loc>
+    <lastmod>2026-01-28T23:14:22.364Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/AtmosphereIndex.html</loc>
-    <lastmod>2026-01-28T20:31:19.251Z</lastmod>
+    <loc>https://github.com/forecast-bio/atdata/api/AtmosphereIndex.html</loc>
+    <lastmod>2026-01-28T23:14:22.363Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/LensLoader.html</loc>
-    <lastmod>2026-01-28T20:31:19.314Z</lastmod>
+    <loc>https://github.com/forecast-bio/atdata/api/LensLoader.html</loc>
+    <lastmod>2026-01-28T23:14:22.365Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/DictSample.html</loc>
-    <lastmod>2026-01-28T20:31:19.071Z</lastmod>
+    <loc>https://github.com/forecast-bio/atdata/api/DictSample.html</loc>
+    <lastmod>2026-01-28T23:14:22.365Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/PDSBlobStore.html</loc>
-    <lastmod>2026-01-28T20:31:19.261Z</lastmod>
+    <loc>https://github.com/forecast-bio/atdata/api/PDSBlobStore.html</loc>
+    <lastmod>2026-01-28T23:14:22.366Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/PackableSample.html</loc>
-    <lastmod>2026-01-28T20:31:19.062Z</lastmod>
+    <loc>https://github.com/forecast-bio/atdata/api/PackableSample.html</loc>
+    <lastmod>2026-01-28T23:14:22.366Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/api/DatasetDict.html</loc>
-    <lastmod>2026-01-28T20:31:19.116Z</lastmod>
+    <loc>https://github.com/forecast-bio/atdata/api/DatasetDict.html</loc>
+    <lastmod>2026-01-28T23:14:22.364Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/tutorials/promotion.html</loc>
+    <loc>https://github.com/forecast-bio/atdata/tutorials/promotion.html</loc>
     <lastmod>2026-01-28T19:56:53.890Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/tutorials/local-workflow.html</loc>
+    <loc>https://github.com/forecast-bio/atdata/tutorials/local-workflow.html</loc>
     <lastmod>2026-01-28T19:56:53.890Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/reference/promotion.html</loc>
+    <loc>https://github.com/forecast-bio/atdata/reference/promotion.html</loc>
     <lastmod>2026-01-28T18:46:20.894Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/reference/load-dataset.html</loc>
+    <loc>https://github.com/forecast-bio/atdata/reference/load-dataset.html</loc>
     <lastmod>2026-01-28T18:46:20.894Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/reference/lenses.html</loc>
+    <loc>https://github.com/forecast-bio/atdata/reference/lenses.html</loc>
     <lastmod>2026-01-18T03:31:39.823Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/reference/packable-samples.html</loc>
+    <loc>https://github.com/forecast-bio/atdata/reference/packable-samples.html</loc>
     <lastmod>2026-01-18T03:31:39.824Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/reference/deployment.html</loc>
+    <loc>https://github.com/forecast-bio/atdata/reference/deployment.html</loc>
     <lastmod>2026-01-28T19:56:53.889Z</lastmod>
   </url>
   <url>
-    <loc>https://github.com/your-org/atdata/reference/troubleshooting.html</loc>
+    <loc>https://github.com/forecast-bio/atdata/reference/troubleshooting.html</loc>
     <lastmod>2026-01-28T19:56:53.889Z</lastmod>
   </url>
 </urlset>

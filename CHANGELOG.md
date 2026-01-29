@@ -25,6 +25,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Adversarial review: Post-IndexProvider pluggable storage assessment (#417)
+- Convert TODO comments to tracked issues or remove (#422)
+- Remove deprecated shard_list property references from docstrings (#421)
+- Replace bare except in _stub_manager.py and cli/local.py with specific exceptions (#423)
+- Tighten generic pytest.raises(Exception) to specific exception types in tests (#420)
+- Replace assert statements with ValueError in production code (#419)
+- Consolidate duplicated _parse_semver into _type_utils.py (#418)
+- feat: Add SQLite/PostgreSQL index providers (GH #42) (#409)
+- Update documentation and public API exports (#416)
+- Add tests for all providers (#415)
+- Refactor Index class to accept provider parameter (#414)
+- Implement PostgresIndexProvider (#413)
+- Implement SqliteIndexProvider (#412)
+- Implement RedisIndexProvider (extract from Index class) (#411)
+- Define IndexProvider protocol in _protocols.py (#410)
+- Add just lint command to justfile (#408)
 - Add SQLite/PostgreSQL providers for LocalIndex (in addition to Redis) (#407)
 - Fix type hints for @atdata.packable decorator to show PackableSample methods (#406)
 - Review GitHub workflows and recommend CI improvements (#405)

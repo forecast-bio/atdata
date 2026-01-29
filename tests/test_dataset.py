@@ -616,7 +616,7 @@ def test_from_bytes_invalid_msgpack():
     class SimpleSample:
         value: int
 
-    with pytest.raises(Exception):  # ormsgpack raises on invalid data
+    with pytest.raises(TypeError):  # unpacked data is not a mapping
         SimpleSample.from_bytes(b"not valid msgpack data")
 
 
@@ -690,7 +690,7 @@ def test_wrap_corrupted_msgpack(tmp_path):
     dataset = atdata.Dataset[CorruptedSample](wds_filename)
 
     # Corrupted msgpack bytes should raise during deserialization
-    with pytest.raises(Exception):  # ormsgpack raises on corrupted data
+    with pytest.raises(TypeError):  # unpacked data is not a mapping
         dataset.wrap({"__key__": "test", "msgpack": b"\xff\xfe\x00\x01invalid"})
 
 
@@ -707,7 +707,7 @@ def test_dataset_nonexistent_file():
     assert dataset is not None
 
     # Iteration fails when file doesn't exist
-    with pytest.raises(Exception):  # FileNotFoundError or similar
+    with pytest.raises(FileNotFoundError):
         list(dataset.ordered(batch_size=None))
 
 
