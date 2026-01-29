@@ -2,6 +2,8 @@ project:
   type: website
   output-dir: ../docs
 
+##
+
 quartodoc:
   title: "API Reference"
 
@@ -95,6 +97,8 @@ quartodoc:
       package: atdata.promote
       contents:
         - name: promote_to_atmosphere
+
+#
 
 website:
   title: "atdata"

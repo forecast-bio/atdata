@@ -953,18 +953,22 @@ class Repo:
 
 
 class Index:
-    """Redis-backed index for tracking datasets in a repository.
+    """Provider-backed index for tracking datasets.
 
     Implements the AbstractIndex protocol. Maintains a registry of
-    LocalDatasetEntry objects in Redis, allowing enumeration and lookup
+    LocalDatasetEntry objects, allowing enumeration and lookup
     of stored datasets.
+
+    The storage backend is determined by the ``provider`` argument.
+    When no provider is given, falls back to Redis for backwards
+    compatibility.
 
     When initialized with a data_store, insert_dataset() will write dataset
     shards to storage before indexing. Without a data_store, insert_dataset()
     only indexes existing URLs.
 
     Attributes:
-        _redis: Redis connection for index storage.
+        _provider: IndexProvider handling persistence.
         _data_store: Optional AbstractDataStore for writing dataset shards.
     """
 
@@ -972,6 +976,8 @@ class Index:
 
     def __init__(
         self,
+        provider: "IndexProvider | None" = None,  # noqa: F821
+        *,
         redis: Redis | None = None,
         data_store: AbstractDataStore | None = None,
         auto_stubs: bool = False,
@@ -981,8 +987,11 @@ class Index:
         """Initialize an index.
 
         Args:
-            redis: Redis connection to use. If None, creates a new connection
-                using the provided kwargs.
+            provider: Storage backend.  If provided, all persistence is
+                delegated to this provider.  Mutually exclusive with *redis*
+                and extra *kwargs*.
+            redis: Redis connection to use (backwards-compat shorthand for
+                ``RedisProvider(redis)``).  Ignored when *provider* is given.
             data_store: Optional data store for writing dataset shards.
                 If provided, insert_dataset() will write shards to this store.
                 If None, insert_dataset() only indexes existing URLs.
@@ -993,14 +1002,26 @@ class Index:
                 is True or if this parameter is provided (which implies auto_stubs).
                 Defaults to ~/.atdata/stubs/ if not specified.
             **kwargs: Additional arguments passed to Redis() constructor if
-                redis is None.
+                neither *provider* nor *redis* is given.
         """
         ##
 
-        if redis is not None:
-            self._redis = redis
+        from .providers._base import IndexProvider as _IP
+
+        if provider is not None:
+            if not isinstance(provider, _IP):
+                raise TypeError(
+                    f"provider must be an IndexProvider, got {type(provider).__name__}"
+                )
+            self._provider: _IP = provider
         else:
-            self._redis: Redis = Redis(**kwargs)
+            # Backwards-compatible Redis path
+            from .providers._redis import RedisProvider
+
+            if redis is not None:
+                self._provider = RedisProvider(redis)
+            else:
+                self._provider = RedisProvider(Redis(**kwargs))
 
         self._data_store = data_store
 
@@ -1015,6 +1036,27 @@ class Index:
 
         # Initialize schema namespace for load_schema/schemas API
         self._schema_namespace = SchemaNamespace()
+
+    @property
+    def provider(self) -> "IndexProvider":  # noqa: F821
+        """The storage provider backing this index."""
+        return self._provider
+
+    @property
+    def _redis(self) -> Redis:
+        """Backwards-compatible access to the underlying Redis connection.
+
+        Raises:
+            AttributeError: If the current provider is not Redis-backed.
+        """
+        from .providers._redis import RedisProvider
+
+        if isinstance(self._provider, RedisProvider):
+            return self._provider.redis
+        raise AttributeError(
+            "Index._redis is only available with a Redis provider. "
+            "Use index.provider instead."
+        )
 
     @property
     def data_store(self) -> AbstractDataStore | None:
@@ -1141,16 +1183,10 @@ class Index:
     def entries(self) -> Generator[LocalDatasetEntry, None, None]:
         """Iterate over all index entries.
 
-        Scans Redis for LocalDatasetEntry keys and yields them one at a time.
-
         Yields:
             LocalDatasetEntry objects from the index.
         """
-        prefix = f"{REDIS_KEY_DATASET_ENTRY}:"
-        for key in self._redis.scan_iter(match=f"{prefix}*"):
-            key_str = key.decode("utf-8") if isinstance(key, bytes) else key
-            cid = key_str[len(prefix) :]
-            yield LocalDatasetEntry.from_redis(self._redis, cid)
+        yield from self._provider.iter_entries()
 
     def add_entry(
         self,
@@ -1162,7 +1198,7 @@ class Index:
     ) -> LocalDatasetEntry:
         """Add a dataset to the index.
 
-        Creates a LocalDatasetEntry for the dataset and persists it to Redis.
+        Creates a LocalDatasetEntry for the dataset and persists it.
 
         Args:
             ds: The dataset to add to the index.
@@ -1193,7 +1229,7 @@ class Index:
             metadata=entry_metadata,
         )
 
-        entry.write_to(self._redis)
+        self._provider.store_entry(entry)
 
         return entry
 
@@ -1209,7 +1245,7 @@ class Index:
         Raises:
             KeyError: If entry not found.
         """
-        return LocalDatasetEntry.from_redis(self._redis, cid)
+        return self._provider.get_entry_by_cid(cid)
 
     def get_entry_by_name(self, name: str) -> LocalDatasetEntry:
         """Get an entry by its human-readable name.
@@ -1223,10 +1259,7 @@ class Index:
         Raises:
             KeyError: If no entry with that name exists.
         """
-        for entry in self.entries:
-            if entry.name == name:
-                return entry
-        raise KeyError(f"No entry with name: {name}")
+        return self._provider.get_entry_by_name(name)
 
     # AbstractIndex protocol methods
 
@@ -1281,7 +1314,7 @@ class Index:
                 data_urls=written_urls,
                 metadata=entry_metadata,
             )
-            entry.write_to(self._redis)
+            self._provider.store_entry(entry)
             return entry
 
         # No data store - just index the existing URL
@@ -1322,34 +1355,7 @@ class Index:
 
     def _get_latest_schema_version(self, name: str) -> str | None:
         """Get the latest version for a schema by name, or None if not found."""
-        latest_version: tuple[int, int, int] | None = None
-        latest_version_str: str | None = None
-
-        prefix = f"{REDIS_KEY_SCHEMA}:"
-        for key in self._redis.scan_iter(match=f"{prefix}*"):
-            key_str = key.decode("utf-8") if isinstance(key, bytes) else key
-            schema_id = key_str[len(prefix) :]
-
-            if "@" not in schema_id:
-                continue
-
-            schema_name, version_str = schema_id.rsplit("@", 1)
-            # Handle legacy format: module.Class -> Class
-            if "." in schema_name:
-                schema_name = schema_name.rsplit(".", 1)[1]
-
-            if schema_name != name:
-                continue
-
-            try:
-                version_tuple = _parse_semver(version_str)
-                if latest_version is None or version_tuple > latest_version:
-                    latest_version = version_tuple
-                    latest_version_str = version_str
-            except ValueError:
-                continue
-
-        return latest_version_str
+        return self._provider.find_latest_version(name)
 
     def publish_schema(
         self,
@@ -1412,10 +1418,9 @@ class Index:
         schema_ref = _schema_ref_from_type(sample_type, version)
         name, _ = _parse_schema_ref(schema_ref)
 
-        # Store in Redis
-        redis_key = f"{REDIS_KEY_SCHEMA}:{name}@{version}"
+        # Store via provider
         schema_json = json.dumps(schema_record)
-        self._redis.set(redis_key, schema_json)
+        self._provider.store_schema(name, version, schema_json)
 
         return schema_ref
 
@@ -1436,14 +1441,10 @@ class Index:
             ValueError: If reference format is invalid.
         """
         name, version = _parse_schema_ref(ref)
-        redis_key = f"{REDIS_KEY_SCHEMA}:{name}@{version}"
 
-        schema_json = self._redis.get(redis_key)
+        schema_json = self._provider.get_schema_json(name, version)
         if schema_json is None:
             raise KeyError(f"Schema not found: {ref}")
-
-        if isinstance(schema_json, bytes):
-            schema_json = schema_json.decode("utf-8")
 
         schema = json.loads(schema_json)
         schema["$ref"] = _make_schema_ref(name, version)
@@ -1481,29 +1482,9 @@ class Index:
         Yields:
             LocalSchemaRecord for each schema.
         """
-        prefix = f"{REDIS_KEY_SCHEMA}:"
-        for key in self._redis.scan_iter(match=f"{prefix}*"):
-            key_str = key.decode("utf-8") if isinstance(key, bytes) else key
-            # Extract name@version from key
-            schema_id = key_str[len(prefix) :]
-
-            schema_json = self._redis.get(key)
-            if schema_json is None:
-                continue
-
-            if isinstance(schema_json, bytes):
-                schema_json = schema_json.decode("utf-8")
-
+        for name, version, schema_json in self._provider.iter_schemas():
             schema = json.loads(schema_json)
-            # Handle legacy keys that have module.Class format
-            if "." in schema_id.split("@")[0]:
-                name = schema_id.split("@")[0].rsplit(".", 1)[1]
-                version = schema_id.split("@")[1]
-                schema["$ref"] = _make_schema_ref(name, version)
-            else:
-                # schema_id is already "name@version"
-                name, version = schema_id.rsplit("@", 1)
-                schema["$ref"] = _make_schema_ref(name, version)
+            schema["$ref"] = _make_schema_ref(name, version)
             yield LocalSchemaRecord.from_dict(schema)
 
     def list_schemas(self) -> list[dict]:
@@ -1595,8 +1576,61 @@ class Index:
         return 0
 
 
-# Backwards compatibility alias
-LocalIndex = Index
+def LocalIndex(
+    provider: str = "redis",
+    *,
+    path: str | Path | None = None,
+    dsn: str | None = None,
+    redis: Redis | None = None,
+    data_store: AbstractDataStore | None = None,
+    auto_stubs: bool = False,
+    stub_dir: Path | str | None = None,
+    **kwargs,
+) -> Index:
+    """Create an Index with the specified storage backend.
+
+    This is the recommended entry point for creating index instances.
+    It wraps the ``Index`` class with a convenient provider-selection API.
+
+    Args:
+        provider: Backend type — ``"redis"``, ``"sqlite"``, or ``"postgres"``.
+        path: Database file path (SQLite only).  Defaults to
+            ``~/.atdata/index.db`` when *provider* is ``"sqlite"``.
+        dsn: PostgreSQL connection string (postgres only).
+        redis: Existing Redis connection (redis only).  If ``None`` and
+            *provider* is ``"redis"``, a new connection is created from
+            *kwargs*.
+        data_store: Optional data store for writing dataset shards.
+        auto_stubs: Enable automatic stub file generation.
+        stub_dir: Directory for stub files.
+        **kwargs: Passed to the Redis constructor when *provider* is
+            ``"redis"`` and *redis* is ``None``.
+
+    Returns:
+        A configured ``Index`` instance.
+
+    Raises:
+        ValueError: If *provider* is not a recognised backend name.
+
+    Examples:
+        >>> # SQLite (zero-dependency local storage)
+        >>> index = LocalIndex(provider="sqlite", path="~/.atdata/index.db")
+
+        >>> # Redis (default, backwards-compatible)
+        >>> index = LocalIndex()
+
+        >>> # PostgreSQL
+        >>> index = LocalIndex(provider="postgres", dsn="postgresql://user:pass@host/db")
+    """
+    from .providers._factory import create_provider
+
+    backend = create_provider(provider, path=path, dsn=dsn, redis=redis, **kwargs)
+    return Index(
+        provider=backend,
+        data_store=data_store,
+        auto_stubs=auto_stubs,
+        stub_dir=stub_dir,
+    )
 
 
 class S3DataStore:

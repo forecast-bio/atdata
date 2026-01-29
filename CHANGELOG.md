@@ -25,6 +25,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- feat: Add SQLite/PostgreSQL index providers (GH #42) (#409)
+- Update documentation and public API exports (#416)
+- Add tests for all providers (#415)
+- Refactor Index class to accept provider parameter (#414)
+- Implement PostgresIndexProvider (#413)
+- Implement SqliteIndexProvider (#412)
+- Implement RedisIndexProvider (extract from Index class) (#411)
+- Define IndexProvider protocol in _protocols.py (#410)
 - Add just lint command to justfile (#408)
 - Add SQLite/PostgreSQL providers for LocalIndex (in addition to Redis) (#407)
 - Fix type hints for @atdata.packable decorator to show PackableSample methods (#406)
