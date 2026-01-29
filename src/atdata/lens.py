@@ -101,7 +101,8 @@ class Lens(Generic[S, V]):
         ...     return FullData(name=view.name, age=source.age)
     """
 
-    # TODO The above has a line for "Parameters:" that should be "Type Parameters:"; this is a temporary fix for `quartodoc` auto-generation bugs.
+    # Note: The docstring uses "Parameters:" for type parameters as a workaround
+    # for quartodoc not supporting "Type Parameters:" sections.
 
     def __init__(
         self, get: LensGetter[S, V], put: Optional[LensPutter[S, V]] = None

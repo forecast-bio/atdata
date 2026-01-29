@@ -13,18 +13,11 @@ import msgpack
 from redis import Redis
 
 from ._base import IndexProvider
+from .._type_utils import parse_semver
 
 # Redis key prefixes — kept in sync with local.py constants
 _KEY_DATASET_ENTRY = "LocalDatasetEntry"
 _KEY_SCHEMA = "LocalSchema"
-
-
-def _parse_semver(version: str) -> tuple[int, int, int]:
-    """Parse ``"major.minor.patch"`` into a comparable tuple."""
-    parts = version.split(".")
-    if len(parts) != 3:
-        raise ValueError(f"Invalid semver: {version}")
-    return int(parts[0]), int(parts[1]), int(parts[2])
 
 
 class RedisProvider(IndexProvider):
@@ -130,7 +123,7 @@ class RedisProvider(IndexProvider):
             if schema_name != name:
                 continue
             try:
-                v = _parse_semver(version)
+                v = parse_semver(version)
                 if latest is None or v > latest:
                     latest = v
                     latest_str = version

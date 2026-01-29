@@ -102,3 +102,25 @@ def extract_ndarray_dtype(python_type: Any) -> str:
         if dtype_arg is not None:
             return numpy_dtype_to_string(dtype_arg)
     return "float32"
+
+
+def parse_semver(version: str) -> tuple[int, int, int]:
+    """Parse a semantic version string into a comparable tuple.
+
+    Args:
+        version: A ``"major.minor.patch"`` version string.
+
+    Returns:
+        Tuple of (major, minor, patch) integers.
+
+    Raises:
+        ValueError: If the version string is not valid semver.
+
+    Examples:
+        >>> parse_semver("1.2.3")
+        (1, 2, 3)
+    """
+    parts = version.split(".")
+    if len(parts) != 3:
+        raise ValueError(f"Invalid semver: {version}")
+    return int(parts[0]), int(parts[1]), int(parts[2])

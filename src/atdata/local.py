@@ -28,6 +28,7 @@ from atdata._type_utils import (
     unwrap_optional,
     is_ndarray_type,
     extract_ndarray_dtype,
+    parse_semver,
 )
 from atdata._protocols import AbstractDataStore, Packable
 
@@ -413,7 +414,8 @@ def _create_s3_write_callbacks(
 
         return _writer_opener, _writer_post
     else:
-        assert fs is not None, "S3FileSystem required when cache_local=False"
+        if fs is None:
+            raise ValueError("S3FileSystem required when cache_local=False")
 
         def _direct_opener(s: str):
             return cast(BinaryIO, fs.open(f"s3://{s}", "wb"))
@@ -468,17 +470,9 @@ def _parse_schema_ref(ref: str) -> tuple[str, str]:
     return name, version
 
 
-def _parse_semver(version: str) -> tuple[int, int, int]:
-    """Parse semantic version string into (major, minor, patch) tuple."""
-    parts = version.split(".")
-    if len(parts) != 3:
-        raise ValueError(f"Invalid semver format: {version}")
-    return int(parts[0]), int(parts[1]), int(parts[2])
-
-
 def _increment_patch(version: str) -> str:
     """Increment patch version: 1.0.0 -> 1.0.1"""
-    major, minor, patch = _parse_semver(version)
+    major, minor, patch = parse_semver(version)
     return f"{major}.{minor}.{patch + 1}"
 
 
@@ -626,7 +620,8 @@ class LocalDatasetEntry:
     @property
     def cid(self) -> str:
         """Content identifier (ATProto-compatible CID)."""
-        assert self._cid is not None
+        if self._cid is None:
+            raise RuntimeError("CID not initialized; this should not happen after __post_init__")
         return self._cid
 
     # Legacy compatibility
@@ -892,7 +887,6 @@ class Repo:
                 BinaryIO, hive_fs.open(f"s3://{metadata_path.as_posix()}", "wb")
             ) as f:
                 meta_packed = msgpack.packb(ds.metadata)
-                assert meta_packed is not None
                 f.write(cast(bytes, meta_packed))
 
         # Write data

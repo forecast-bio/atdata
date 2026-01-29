@@ -16,6 +16,7 @@ from typing import Iterator
 import msgpack
 
 from ._base import IndexProvider
+from .._type_utils import parse_semver
 
 _CREATE_TABLES = """\
 CREATE TABLE IF NOT EXISTS dataset_entries (
@@ -39,13 +40,6 @@ CREATE TABLE IF NOT EXISTS schemas (
     PRIMARY KEY (name, version)
 );
 """
-
-
-def _parse_semver(version: str) -> tuple[int, int, int]:
-    parts = version.split(".")
-    if len(parts) != 3:
-        raise ValueError(f"Invalid semver: {version}")
-    return int(parts[0]), int(parts[1]), int(parts[2])
 
 
 class SqliteProvider(IndexProvider):
@@ -160,7 +154,7 @@ class SqliteProvider(IndexProvider):
         latest_str: str | None = None
         for (version_str,) in cursor:
             try:
-                v = _parse_semver(version_str)
+                v = parse_semver(version_str)
                 if latest is None or v > latest:
                     latest = v
                     latest_str = version_str

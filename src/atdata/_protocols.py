@@ -481,13 +481,13 @@ class DataSource(Protocol):
         only its assigned shards rather than iterating all shards.
 
         Args:
-            shard_id: Shard identifier from shard_list.
+            shard_id: Shard identifier from list_shards().
 
         Returns:
             File-like stream for reading the shard.
 
         Raises:
-            KeyError: If shard_id is not in shard_list.
+            KeyError: If shard_id is not in list_shards().
         """
         ...
 

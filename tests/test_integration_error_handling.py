@@ -14,7 +14,7 @@ from unittest.mock import Mock, MagicMock, patch
 import tarfile
 import io
 
-
+from redis.exceptions import RedisError
 import atdata
 import webdataset as wds
 from atdata.local import LocalIndex, LocalDatasetEntry
@@ -111,15 +111,9 @@ class TestMalformedMsgpack:
         """Tar with invalid msgpack should raise on iteration."""
         tar_path = tmp_path / "corrupted-000000.tar"
 
-        # Create tar with invalid msgpack data
+        # Create tar with invalid msgpack data (no explicit __key__ file;
+        # WebDataset derives __key__ from the filename prefix automatically)
         with tarfile.open(tar_path, "w") as tar:
-            # Add a valid key file
-            key_data = b"sample-0"
-            key_info = tarfile.TarInfo(name="sample-0.__key__")
-            key_info.size = len(key_data)
-            tar.addfile(key_info, fileobj=io.BytesIO(key_data))
-
-            # Add invalid msgpack data
             invalid_data = b"\xff\xff\xff\xff\xff"  # Not valid msgpack
             info = tarfile.TarInfo(name="sample-0.msgpack")
             info.size = len(invalid_data)
@@ -128,7 +122,7 @@ class TestMalformedMsgpack:
         ds = atdata.Dataset[ErrorTestSample](str(tar_path))
 
         # Should raise an error when trying to deserialize
-        with pytest.raises(Exception):  # Could be msgpack error or ValueError
+        with pytest.raises(TypeError):  # unpacked data is not a mapping
             list(ds.ordered(batch_size=None))
 
 
@@ -154,7 +148,7 @@ class TestCorruptedTar:
 
         ds = atdata.Dataset[ErrorTestSample](str(tar_path))
 
-        with pytest.raises(Exception):  # tarfile.ReadError or similar
+        with pytest.raises((tarfile.TarError, EOFError)):
             list(ds.ordered(batch_size=None))
 
     def test_not_a_tar_file_raises(self, tmp_path):
@@ -167,7 +161,7 @@ class TestCorruptedTar:
 
         ds = atdata.Dataset[ErrorTestSample](str(fake_tar))
 
-        with pytest.raises(Exception):  # tarfile.ReadError
+        with pytest.raises(tarfile.TarError):
             list(ds.ordered(batch_size=None))
 
 
@@ -457,7 +451,7 @@ class TestTimeoutScenarios:
         index = LocalIndex(redis=redis)
 
         # Should timeout quickly rather than hang
-        with pytest.raises(Exception):  # TimeoutError or ConnectionError
+        with pytest.raises(RedisError):
             index.publish_schema(ErrorTestSample, version="1.0.0")
 
     def test_slow_iteration_continues(self, tmp_path):
@@ -518,7 +512,7 @@ class TestPartialFailures:
         ds = atdata.Dataset[ErrorTestSample](url)
 
         # Should fail when hitting corrupted shard
-        with pytest.raises(Exception):  # tarfile.ReadError or similar
+        with pytest.raises(tarfile.TarError):
             list(ds.ordered(batch_size=None))
 
     def test_empty_shard_in_multi_shard(self, tmp_path):

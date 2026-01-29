@@ -25,6 +25,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Adversarial review: Post-IndexProvider pluggable storage assessment (#417)
+- Convert TODO comments to tracked issues or remove (#422)
+- Remove deprecated shard_list property references from docstrings (#421)
+- Replace bare except in _stub_manager.py and cli/local.py with specific exceptions (#423)
+- Tighten generic pytest.raises(Exception) to specific exception types in tests (#420)
+- Replace assert statements with ValueError in production code (#419)
+- Consolidate duplicated _parse_semver into _type_utils.py (#418)
 - feat: Add SQLite/PostgreSQL index providers (GH #42) (#409)
 - Update documentation and public API exports (#416)
 - Add tests for all providers (#415)
