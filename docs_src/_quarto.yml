@@ -3,9 +3,11 @@ project:
   output-dir: ../docs
 
 quartodoc:
+  title: "API Reference"
+
   package: atdata
   dir: api
-  title: "API Reference"
+  
   style: pkgdown
   parser: google
   render_interlinks: true
@@ -96,17 +98,20 @@ quartodoc:
 
 website:
   title: "atdata"
-  description: "A loose federation of distributed, typed datasets built on WebDataset"
-  site-url: https://github.com/your-org/atdata
-  repo-url: https://github.com/your-org/atdata
-  repo-actions: [edit, issue]
+  description: "A loose federation of distributed, typed datasets built on ATProto and WebDataset"
+  site-url: https://github.com/forecast-bio/atdata
+
+  repo-url: https://github.com/forecast-bio/atdata
+  repo-actions: [issue]
+
+  bread-crumbs: false
 
   navbar:
-    background: primary
+    # background: primary
     title: "atdata"
     left:
-      - text: "Guide"
-        href: index.qmd
+      # - text: "Guide"
+      #   href: index.qmd
       - text: "Tutorials"
         menu:
           - text: "Quick Start"
@@ -147,7 +152,7 @@ website:
         href: api/index.qmd
     right:
       - icon: github
-        href: https://github.com/your-org/atdata
+        href: https://github.com/forecast-bio/atdata
 
   sidebar:
     - title: "Guide"
@@ -179,14 +184,49 @@ website:
     left: "Built with [Quarto](https://quarto.org/)"
     right: "MIT License"
 
+#
+
 format:
   html:
+
     theme:
-      light: cosmo
-      dark: darkly
-    css: assets/styles.css
+      - pandoc
+      - brand
+      - theme-light.scss
+    css:
+      - styles.css
+      - assets/styles.css
     toc: true
-    toc-depth: 3
+    toc-location: right
+    include-in-header:
+    - text: |
+        <style>
+        .navbar-logo {
+          max-height: unset;
+          height: 18px;
+          margin-top: -1px;
+        }
+        .navbar-brand {
+          margin-top: 6px;
+        }
+        .navbar-brand.navbar-brand-logo {
+          margin-right: 0px;
+        }
+        .navbar-title {
+          color: #F95838;
+          font-size: 19pt;
+          font-family: 'Times New Roman';
+          font-style: italic;
+          letter-spacing: -0.6px;
+        }
+        </style>
+    
+    # theme:
+    #   light: cosmo
+    #   dark: darkly
+    # css: assets/styles.css
+    # toc: true
+    # toc-depth: 3
     code-copy: true
     code-overflow: wrap
     highlight-style: github

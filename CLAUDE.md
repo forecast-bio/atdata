@@ -46,8 +46,10 @@ uv build
 Development tasks are managed with [just](https://github.com/casey/just), a command runner. Available commands:
 
 ```bash
-# Build documentation (runs quartodoc + quarto)
-just docs
+just test              # Run all tests with coverage
+just test tests/test_dataset.py  # Run specific test file
+just lint              # Run ruff check + format check
+just docs              # Build documentation (runs quartodoc + quarto)
 ```
 
 The `justfile` is in the project root. Add new dev tasks there rather than creating shell scripts.

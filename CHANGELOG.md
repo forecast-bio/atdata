@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Add just lint command to justfile (#408)
 - Add SQLite/PostgreSQL providers for LocalIndex (in addition to Redis) (#407)
 - Fix type hints for @atdata.packable decorator to show PackableSample methods (#406)
 - Review GitHub workflows and recommend CI improvements (#405)
