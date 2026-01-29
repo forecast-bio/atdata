@@ -1652,8 +1652,7 @@ class Index:
 
         # Auto-generate stub if enabled
         if self._stub_manager is not None:
-            record = LocalSchemaRecord.from_dict(schema)
-            self._stub_manager.ensure_stub(record)
+            self._stub_manager.ensure_stub(schema)
 
         return schema
 

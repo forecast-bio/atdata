@@ -25,6 +25,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Migrate CLI from argparse to typer (#449)
+- Investigate test failures (#450)
+- Fix ensure_stub receiving LocalSchemaRecord instead of dict (#451)
+- GH#38: Developer experience improvements (#437)
+- CLI: atdata preview command (#440)
+- CLI: atdata schema show/diff commands (#439)
+- CLI: atdata inspect command (#438)
+- Dataset.__len__ and Dataset.select() for sample count and indexed access (#447)
+- Dataset.to_pandas() and Dataset.to_dict() export methods (#446)
+- Dataset.filter() and Dataset.map() streaming transforms (#445)
+- Dataset.get(key) for keyed sample access (#442)
+- Dataset.describe() summary statistics (#444)
+- Dataset.schema property and column_names (#443)
+- Dataset.head(n) and Dataset.__iter__ convenience methods (#441)
+- Custom exception hierarchy with actionable error messages (#448)
 - Adversarial review: Post-Repository consolidation assessment (#430)
 - Remove backwards-compat dict-access methods from SchemaField and LocalSchemaRecord (#436)
 - Add missing test coverage for Repository prefix routing edge cases and error paths (#435)

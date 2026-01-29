@@ -31,6 +31,7 @@ Examples:
 import webdataset as wds
 
 from pathlib import Path
+import itertools
 import uuid
 
 import dataclasses
@@ -43,6 +44,7 @@ from abc import ABC
 
 from ._sources import URLSource
 from ._protocols import DataSource
+from ._exceptions import SampleKeyError
 
 from tqdm import tqdm
 import numpy as np
@@ -728,6 +730,317 @@ class Dataset(Generic[ST]):
         # Use our cached values
         return self._metadata
 
+    ##
+    # Convenience methods (GH#38 developer experience)
+
+    @property
+    def schema(self) -> dict[str, type]:
+        """Field names and types for this dataset's sample type.
+
+        For typed datasets (``Dataset[MyType]``), returns the dataclass field
+        annotations. For ``Dataset[DictSample]``, returns ``{"_data": dict}``
+        since the schema is dynamic.
+
+        Returns:
+            Dictionary mapping field names to their type annotations.
+
+        Examples:
+            >>> ds = Dataset[MyData]("data.tar")
+            >>> ds.schema
+            {'name': <class 'str'>, 'embedding': numpy.ndarray}
+        """
+        st = self.sample_type
+        if st is DictSample:
+            return {"_data": dict}
+        if dataclasses.is_dataclass(st):
+            return {f.name: f.type for f in dataclasses.fields(st)}
+        return {}
+
+    @property
+    def column_names(self) -> list[str]:
+        """List of field names for this dataset's sample type.
+
+        Returns:
+            Sorted list of field names. Empty for non-dataclass sample types.
+
+        Examples:
+            >>> ds = Dataset[MyData]("data.tar")
+            >>> ds.column_names
+            ['embedding', 'name']
+        """
+        st = self.sample_type
+        if dataclasses.is_dataclass(st):
+            return [f.name for f in dataclasses.fields(st)]
+        return []
+
+    def __iter__(self) -> Iterator[ST]:
+        """Iterate over the dataset in order.
+
+        Enables ``for sample in ds:`` syntax as a shorthand for
+        ``for sample in ds.ordered():``.
+
+        Yields:
+            Individual samples of type ``ST``.
+
+        Examples:
+            >>> for sample in ds:
+            ...     print(sample.name)
+        """
+        return iter(self.ordered())
+
+    def __len__(self) -> int:
+        """Return total number of samples in the dataset.
+
+        Warning:
+            This requires iterating through all shards to count samples
+            and may be slow for large datasets. The result is cached after
+            the first call.
+
+        Returns:
+            Total number of samples across all shards.
+
+        Examples:
+            >>> len(ds)
+            50000
+        """
+        if not hasattr(self, "_len_cache"):
+            self._len_cache: int = sum(1 for _ in self.ordered())
+        return self._len_cache
+
+    def head(self, n: int = 5) -> list[ST]:
+        """Return the first *n* samples from the dataset.
+
+        Args:
+            n: Number of samples to return. Default: 5.
+
+        Returns:
+            List of up to *n* samples in shard order.
+
+        Examples:
+            >>> samples = ds.head(3)
+            >>> len(samples)
+            3
+        """
+        return list(itertools.islice(self.ordered(), n))
+
+    def get(self, key: str) -> ST:
+        """Retrieve a single sample by its ``__key__``.
+
+        Scans shards sequentially until a sample with a matching key is found.
+        This is O(n) for streaming datasets.
+
+        Args:
+            key: The WebDataset ``__key__`` string to search for.
+
+        Returns:
+            The matching sample.
+
+        Raises:
+            SampleKeyError: If no sample with the given key exists.
+
+        Examples:
+            >>> sample = ds.get("00000001-0001-1000-8000-010000000000")
+        """
+        pipeline = wds.pipeline.DataPipeline(
+            _ShardListStage(self._source),
+            wds.shardlists.split_by_worker,
+            _StreamOpenerStage(self._source),
+            wds.tariterators.tar_file_expander,
+            wds.tariterators.group_by_keys,
+        )
+        for raw_sample in pipeline:
+            if raw_sample.get("__key__") == key:
+                return self.wrap(raw_sample)
+        raise SampleKeyError(key)
+
+    def describe(self) -> dict[str, Any]:
+        """Summary statistics for this dataset.
+
+        Returns a dictionary with schema, shard, and metadata information.
+        When metadata is available (via ``metadata_url``), uses cached values;
+        otherwise derives information from the source.
+
+        Returns:
+            Dictionary with keys:
+            - ``sample_type``: Name of the sample type
+            - ``fields``: Schema dict from :attr:`schema`
+            - ``num_shards``: Number of shard files
+            - ``shards``: List of shard identifiers
+            - ``url``: Primary dataset URL
+            - ``metadata``: Metadata dict (if available)
+
+        Examples:
+            >>> info = ds.describe()
+            >>> info['num_shards']
+            10
+        """
+        shards = self.list_shards()
+        return {
+            "sample_type": self.sample_type.__name__,
+            "fields": self.schema,
+            "num_shards": len(shards),
+            "shards": shards,
+            "url": self.url,
+            "metadata": self.metadata,
+        }
+
+    def filter(self, predicate: Callable[[ST], bool]) -> "Dataset[ST]":
+        """Return a new dataset that yields only samples matching *predicate*.
+
+        The filter is applied lazily during iteration — no data is copied.
+
+        Args:
+            predicate: A function that takes a sample and returns ``True``
+                to keep it or ``False`` to discard it.
+
+        Returns:
+            A new ``Dataset`` whose iterators apply the filter.
+
+        Examples:
+            >>> long_names = ds.filter(lambda s: len(s.name) > 10)
+            >>> for sample in long_names:
+            ...     assert len(sample.name) > 10
+        """
+        filtered = Dataset[self.sample_type](self._source, self.metadata_url)
+        filtered._sample_type_cache = self._sample_type_cache
+        filtered._output_lens = self._output_lens
+        filtered._filter_fn = predicate
+        # Preserve any existing filters
+        parent_filters = getattr(self, "_filter_fn", None)
+        if parent_filters is not None:
+            outer = parent_filters
+            filtered._filter_fn = lambda s: outer(s) and predicate(s)
+        # Preserve any existing map
+        if hasattr(self, "_map_fn"):
+            filtered._map_fn = self._map_fn
+        return filtered
+
+    def map(self, fn: Callable[[ST], Any]) -> "Dataset":
+        """Return a new dataset that applies *fn* to each sample during iteration.
+
+        The mapping is applied lazily during iteration — no data is copied.
+
+        Args:
+            fn: A function that takes a sample of type ``ST`` and returns
+                a transformed value.
+
+        Returns:
+            A new ``Dataset`` whose iterators apply the mapping.
+
+        Examples:
+            >>> names = ds.map(lambda s: s.name)
+            >>> for name in names:
+            ...     print(name)
+        """
+        mapped = Dataset[self.sample_type](self._source, self.metadata_url)
+        mapped._sample_type_cache = self._sample_type_cache
+        mapped._output_lens = self._output_lens
+        mapped._map_fn = fn
+        # Preserve any existing map
+        if hasattr(self, "_map_fn"):
+            outer = self._map_fn
+            mapped._map_fn = lambda s: fn(outer(s))
+        # Preserve any existing filter
+        if hasattr(self, "_filter_fn"):
+            mapped._filter_fn = self._filter_fn
+        return mapped
+
+    def select(self, indices: Sequence[int]) -> list[ST]:
+        """Return samples at the given integer indices.
+
+        Iterates through the dataset in order and collects samples whose
+        positional index matches. This is O(n) for streaming datasets.
+
+        Args:
+            indices: Sequence of zero-based indices to select.
+
+        Returns:
+            List of samples at the requested positions, in index order.
+
+        Examples:
+            >>> samples = ds.select([0, 5, 10])
+            >>> len(samples)
+            3
+        """
+        if not indices:
+            return []
+        target = set(indices)
+        max_idx = max(indices)
+        result: dict[int, ST] = {}
+        for i, sample in enumerate(self.ordered()):
+            if i in target:
+                result[i] = sample
+            if i >= max_idx:
+                break
+        return [result[i] for i in indices if i in result]
+
+    def to_pandas(self, limit: int | None = None) -> "pd.DataFrame":
+        """Materialize the dataset (or first *limit* samples) as a DataFrame.
+
+        Args:
+            limit: Maximum number of samples to include. ``None`` means all
+                samples (may use significant memory for large datasets).
+
+        Returns:
+            A pandas DataFrame with one row per sample and columns matching
+            the sample fields.
+
+        Warning:
+            With ``limit=None`` this loads the entire dataset into memory.
+
+        Examples:
+            >>> df = ds.to_pandas(limit=100)
+            >>> df.columns.tolist()
+            ['name', 'embedding']
+        """
+        samples = self.head(limit) if limit is not None else list(self.ordered())
+        rows = [
+            asdict(s) if dataclasses.is_dataclass(s) else s.to_dict()
+            for s in samples
+        ]
+        return pd.DataFrame(rows)
+
+    def to_dict(self, limit: int | None = None) -> dict[str, list[Any]]:
+        """Materialize the dataset as a column-oriented dictionary.
+
+        Args:
+            limit: Maximum number of samples to include. ``None`` means all.
+
+        Returns:
+            Dictionary mapping field names to lists of values (one entry
+            per sample).
+
+        Warning:
+            With ``limit=None`` this loads the entire dataset into memory.
+
+        Examples:
+            >>> d = ds.to_dict(limit=10)
+            >>> d.keys()
+            dict_keys(['name', 'embedding'])
+            >>> len(d['name'])
+            10
+        """
+        samples = self.head(limit) if limit is not None else list(self.ordered())
+        if not samples:
+            return {}
+        if dataclasses.is_dataclass(samples[0]):
+            fields = [f.name for f in dataclasses.fields(samples[0])]
+            return {f: [getattr(s, f) for s in samples] for f in fields}
+        # DictSample path
+        keys = samples[0].keys()
+        return {k: [s[k] for s in samples] for k in keys}
+
+    def _post_wrap_stages(self) -> list:
+        """Build extra pipeline stages for filter/map set via .filter()/.map()."""
+        stages: list = []
+        filter_fn = getattr(self, "_filter_fn", None)
+        if filter_fn is not None:
+            stages.append(wds.filters.select(filter_fn))
+        map_fn = getattr(self, "_map_fn", None)
+        if map_fn is not None:
+            stages.append(wds.filters.map(map_fn))
+        return stages
+
     @overload
     def ordered(
         self,
@@ -771,6 +1084,7 @@ class Dataset(Generic[ST]):
                 wds.tariterators.tar_file_expander,
                 wds.tariterators.group_by_keys,
                 wds.filters.map(self.wrap),
+                *self._post_wrap_stages(),
             )
 
         return wds.pipeline.DataPipeline(
@@ -841,6 +1155,7 @@ class Dataset(Generic[ST]):
                 wds.tariterators.group_by_keys,
                 wds.filters.shuffle(buffer_samples),
                 wds.filters.map(self.wrap),
+                *self._post_wrap_stages(),
             )
 
         return wds.pipeline.DataPipeline(

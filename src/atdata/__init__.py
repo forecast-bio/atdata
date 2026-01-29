@@ -73,6 +73,14 @@ from ._sources import (
     BlobSource as BlobSource,
 )
 
+from ._exceptions import (
+    AtdataError as AtdataError,
+    LensNotFoundError as LensNotFoundError,
+    SchemaError as SchemaError,
+    SampleKeyError as SampleKeyError,
+    ShardError as ShardError,
+)
+
 from ._schema_codec import (
     schema_to_type as schema_to_type,
 )
