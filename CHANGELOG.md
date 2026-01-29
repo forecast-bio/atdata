@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Switch default Index provider from Redis to SQLite (#429)
 - Consolidated Index with Repository system (#424)
 - Phase 4: Deprecate AtmosphereIndex, update exports (#428)
 - Phase 3: Default Index singleton and load_dataset integration (#427)

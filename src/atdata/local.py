@@ -954,8 +954,9 @@ class Index:
     named repositories, and an optional atmosphere (ATProto) backend.
 
     The ``"local"`` repository is always present and uses the storage backend
-    determined by the ``provider`` argument. When no provider is given, falls
-    back to Redis for backwards compatibility.
+    determined by the ``provider`` argument. When no provider is given, defaults
+    to SQLite (zero external dependencies). Pass a ``redis`` connection or
+    Redis ``**kwargs`` for backwards-compatible Redis behaviour.
 
     Additional named repositories can be mounted via the ``repos`` parameter,
     each pairing an IndexProvider with an optional data store.
@@ -1013,15 +1014,16 @@ class Index:
             stub_dir: Directory to write stub files. Only used if auto_stubs
                 is True or if this parameter is provided (which implies auto_stubs).
                 Defaults to ~/.atdata/stubs/ if not specified.
-            **kwargs: Additional arguments passed to Redis() constructor if
-                neither *provider* nor *redis* is given.
+            **kwargs: Additional arguments passed to Redis() constructor when
+                *redis* is not given.  If any kwargs are provided (without an
+                explicit *provider*), Redis is used instead of the SQLite default.
 
         Raises:
             TypeError: If provider is not an IndexProvider.
             ValueError: If repos contains the reserved name ``"local"``.
 
         Examples:
-            >>> # Default: local Redis + anonymous atmosphere
+            >>> # Default: local SQLite + anonymous atmosphere
             >>> index = Index()
             >>>
             >>> # SQLite local + authenticated atmosphere
@@ -1053,14 +1055,21 @@ class Index:
                     f"provider must be an IndexProvider, got {type(provider).__name__}"
                 )
             self._provider: _IP = provider
-        else:
-            # Backwards-compatible Redis path
+        elif redis is not None:
+            # Explicit Redis connection provided
             from .providers._redis import RedisProvider
 
-            if redis is not None:
-                self._provider = RedisProvider(redis)
-            else:
-                self._provider = RedisProvider(Redis(**kwargs))
+            self._provider = RedisProvider(redis)
+        elif kwargs:
+            # kwargs provided — assume Redis constructor args for compat
+            from .providers._redis import RedisProvider
+
+            self._provider = RedisProvider(Redis(**kwargs))
+        else:
+            # Default: zero-dependency SQLite
+            from .providers._sqlite import SqliteProvider
+
+            self._provider = SqliteProvider()
 
         self._data_store = data_store
 
