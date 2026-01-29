@@ -109,6 +109,56 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="Show status of local infrastructure",
     )
 
+    # 'inspect' command
+    inspect_parser = subparsers.add_parser(
+        "inspect",
+        help="Show dataset summary (sample count, schema, shards)",
+    )
+    inspect_parser.add_argument(
+        "url",
+        help="Dataset URL, local path, or atmosphere URI",
+    )
+
+    # 'schema' command group
+    schema_parser = subparsers.add_parser(
+        "schema",
+        help="Show or compare dataset schemas",
+    )
+    schema_subparsers = schema_parser.add_subparsers(
+        dest="schema_command",
+        help="Schema commands",
+    )
+    schema_show_parser = schema_subparsers.add_parser(
+        "show",
+        help="Display dataset schema",
+    )
+    schema_show_parser.add_argument(
+        "dataset_ref",
+        help="Dataset URL, local path, or index reference",
+    )
+    schema_diff_parser = schema_subparsers.add_parser(
+        "diff",
+        help="Compare two dataset schemas",
+    )
+    schema_diff_parser.add_argument("url_a", help="First dataset URL")
+    schema_diff_parser.add_argument("url_b", help="Second dataset URL")
+
+    # 'preview' command
+    preview_parser = subparsers.add_parser(
+        "preview",
+        help="Preview first N samples of a dataset",
+    )
+    preview_parser.add_argument(
+        "url",
+        help="Dataset URL, local path, or atmosphere URI",
+    )
+    preview_parser.add_argument(
+        "--limit",
+        type=int,
+        default=5,
+        help="Number of samples to preview (default: 5)",
+    )
+
     # 'diagnose' command
     diagnose_parser = subparsers.add_parser(
         "diagnose",
@@ -154,6 +204,24 @@ def main(argv: Sequence[str] | None = None) -> int:
         else:
             local_parser.print_help()
             return 1
+
+    # Handle 'inspect' command
+    if args.command == "inspect":
+        return _cmd_inspect(url=args.url)
+
+    # Handle 'schema' commands
+    if args.command == "schema":
+        if args.schema_command == "show":
+            return _cmd_schema_show(dataset_ref=args.dataset_ref)
+        elif args.schema_command == "diff":
+            return _cmd_schema_diff(url_a=args.url_a, url_b=args.url_b)
+        else:
+            schema_parser.print_help()
+            return 1
+
+    # Handle 'preview' command
+    if args.command == "preview":
+        return _cmd_preview(url=args.url, limit=args.limit)
 
     # Handle 'diagnose' command
     if args.command == "diagnose":
@@ -209,6 +277,34 @@ def _cmd_local_status() -> int:
     from .local import local_status
 
     return local_status()
+
+
+def _cmd_inspect(url: str) -> int:
+    """Inspect a dataset."""
+    from .inspect import inspect_dataset
+
+    return inspect_dataset(url=url)
+
+
+def _cmd_schema_show(dataset_ref: str) -> int:
+    """Show dataset schema."""
+    from .schema import schema_show
+
+    return schema_show(dataset_ref=dataset_ref)
+
+
+def _cmd_schema_diff(url_a: str, url_b: str) -> int:
+    """Diff two dataset schemas."""
+    from .schema import schema_diff
+
+    return schema_diff(url_a=url_a, url_b=url_b)
+
+
+def _cmd_preview(url: str, limit: int) -> int:
+    """Preview dataset samples."""
+    from .preview import preview_dataset
+
+    return preview_dataset(url=url, limit=limit)
 
 
 def _cmd_diagnose(host: str, port: int) -> int:

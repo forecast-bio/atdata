@@ -16,7 +16,7 @@ class AtdataError(Exception):
     """Base exception for all atdata errors."""
 
 
-class LensNotFoundError(AtdataError):
+class LensNotFoundError(AtdataError, ValueError):
     """No lens registered to transform between two sample types.
 
     Attributes:

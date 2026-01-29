@@ -230,7 +230,7 @@ def test_lens_network_missing_lens():
 
     network = LensNetwork()
 
-    with pytest.raises(ValueError, match="No registered lens"):
+    with pytest.raises(ValueError, match="No lens transforms"):
         network.transform(UnregisteredSource, UnregisteredView)
 
 
