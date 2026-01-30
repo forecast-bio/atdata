@@ -60,7 +60,7 @@ class TestMissingSchema:
 
         # Entry exists but schema doesn't
         retrieved = index.get_entry_by_name("orphan-dataset")
-        assert retrieved is not None
+        assert retrieved.name == "orphan-dataset"
 
         # Attempting to decode schema should fail
         with pytest.raises(KeyError):
@@ -202,7 +202,7 @@ class TestRedisErrors:
 
         # Entry should be retrievable
         retrieved = index.get_entry_by_name("test-entry")
-        assert retrieved is not None
+        assert retrieved.name == "test-entry"
 
 
 ##
@@ -394,7 +394,7 @@ class TestRecovery:
 
         # Index should still work
         schema_ref = index.publish_schema(ErrorTestSample, version="1.0.0")
-        assert schema_ref is not None
+        assert "ErrorTestSample" in schema_ref
 
         schema = index.get_schema(schema_ref)
         assert schema["name"] == "ErrorTestSample"
@@ -415,7 +415,7 @@ class TestInputValidation:
         schema_ref = index.publish_schema(ErrorTestSample, version="")
         # If it accepts, it should store and retrieve correctly
         schema = index.get_schema(schema_ref)
-        assert schema is not None
+        assert schema["name"] == "ErrorTestSample"
 
     def test_special_chars_in_version(self, clean_redis):
         """Special characters in version should be handled."""

@@ -25,6 +25,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Adversarial review: Post-benchmark suite assessment (#494)
+- Remove redundant protocol docstrings that restate signatures (#500)
+- Add missing unit tests for _type_utils.py (#499)
+- Strengthen weak assertions (assert X is not None → value checks) (#498)
+- Trim verbose exception constructor docstrings (#501)
+- Analyze benchmark results for performance improvement opportunities (#502)
 - Consolidate remaining duplicate sample types in test files (#497)
 - Remove dead code: _repo_legacy.py legacy UUID field, unused imports (#496)
 - Trim verbose docstrings in dataset.py and _index.py (#495)

@@ -399,7 +399,7 @@ class TestMetadataPreservation:
 
         # Should not raise
         result = promote_to_atmosphere(entry, index, authenticated_client)
-        assert result is not None
+        assert isinstance(result, str)
 
 
 ##
