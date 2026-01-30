@@ -40,7 +40,7 @@ from typing import (
     overload,
 )
 
-from .dataset import Dataset, PackableSample, DictSample
+from .dataset import Dataset, DictSample
 from ._sources import URLSource, S3Source
 from ._protocols import DataSource, Packable
 

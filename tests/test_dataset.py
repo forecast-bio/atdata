@@ -703,8 +703,8 @@ def test_dataset_nonexistent_file():
 
     dataset = atdata.Dataset[NonexistentSample]("/nonexistent/path/data.tar")
 
-    # Dataset creation succeeds (lazy loading)
-    assert dataset is not None
+    # Dataset creation succeeds (lazy loading) — verify type is correct
+    assert dataset.sample_type is NonexistentSample
 
     # Iteration fails when file doesn't exist
     with pytest.raises(FileNotFoundError):

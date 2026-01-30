@@ -1,8 +1,7 @@
 """Helper utilities for numpy array serialization.
 
 This module provides utility functions for converting numpy arrays to and from
-bytes for msgpack serialization. The functions use numpy's native save/load
-format to preserve array dtype and shape information.
+bytes for msgpack serialization.
 
 Functions:
     - ``array_to_bytes()``: Serialize numpy array to bytes
@@ -15,9 +14,13 @@ handling of NDArray fields during msgpack packing/unpacking.
 ##
 # Imports
 
+import struct
 from io import BytesIO
 
 import numpy as np
+
+# .npy format magic prefix (used for backward-compatible deserialization)
+_NPY_MAGIC = b"\x93NUMPY"
 
 
 ##
@@ -26,35 +29,46 @@ import numpy as np
 def array_to_bytes(x: np.ndarray) -> bytes:
     """Convert a numpy array to bytes for msgpack serialization.
 
-    Uses numpy's native ``save()`` format to preserve array dtype and shape.
+    Uses a compact binary format: a short header (dtype + shape) followed by
+    raw array bytes via ``ndarray.tobytes()``. Falls back to numpy's ``.npy``
+    format for object dtypes that cannot be represented as raw bytes.
 
     Args:
         x: A numpy array to serialize.
 
     Returns:
         Raw bytes representing the serialized array.
-
-    Note:
-        Uses ``allow_pickle=True`` to support object dtypes.
     """
-    np_bytes = BytesIO()
-    np.save(np_bytes, x, allow_pickle=True)
-    return np_bytes.getvalue()
+    if x.dtype == object:
+        buf = BytesIO()
+        np.save(buf, x, allow_pickle=True)
+        return buf.getvalue()
+
+    dtype_str = x.dtype.str.encode()  # e.g. b'<f4'
+    header = struct.pack(f"<B{len(x.shape)}q", len(x.shape), *x.shape)
+    return struct.pack("<B", len(dtype_str)) + dtype_str + header + x.tobytes()
 
 
 def bytes_to_array(b: bytes) -> np.ndarray:
     """Convert serialized bytes back to a numpy array.
 
-    Reverses the serialization performed by ``array_to_bytes()``.
+    Transparently handles both the compact format produced by the current
+    ``array_to_bytes()`` and the legacy ``.npy`` format.
 
     Args:
         b: Raw bytes from a serialized numpy array.
 
     Returns:
         The deserialized numpy array with original dtype and shape.
-
-    Note:
-        Uses ``allow_pickle=True`` to support object dtypes.
     """
-    np_bytes = BytesIO(b)
-    return np.load(np_bytes, allow_pickle=True)
+    if b[:6] == _NPY_MAGIC:
+        return np.load(BytesIO(b), allow_pickle=True)
+
+    # Compact format: dtype_len(1B) + dtype_str + ndim(1B) + shape(ndim×8B) + data
+    dlen = b[0]
+    dtype = np.dtype(b[1 : 1 + dlen].decode())
+    ndim = b[1 + dlen]
+    offset = 2 + dlen
+    shape = struct.unpack_from(f"<{ndim}q", b, offset)
+    offset += ndim * 8
+    return np.frombuffer(b, dtype=dtype, offset=offset).reshape(shape).copy()

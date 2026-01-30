@@ -45,9 +45,13 @@ def numpy_dtype_to_string(dtype: Any) -> str:
         Schema dtype string (e.g., "float32", "int64"). Defaults to "float32".
     """
     dtype_str = str(dtype)
-    for key, value in NUMPY_DTYPE_MAP.items():
+    # Exact match first (handles "float32", "int64", etc.)
+    if dtype_str in NUMPY_DTYPE_MAP:
+        return NUMPY_DTYPE_MAP[dtype_str]
+    # Substring match, longest keys first to avoid "int8" matching "uint8"
+    for key in sorted(NUMPY_DTYPE_MAP, key=len, reverse=True):
         if key in dtype_str:
-            return value
+            return NUMPY_DTYPE_MAP[key]
     return "float32"
 
 
