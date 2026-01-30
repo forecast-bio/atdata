@@ -25,6 +25,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Benchmark report: replace mean/stddev with median/IQR, add per-sample columns (#492)
+- Add parameter descriptions to benchmark suite with automatic report introspection (#491)
+- HTML benchmark reports with CI integration (#487)
+- Add bench + render step to CI on highest Python version only (#490)
+- Update justfile bench commands to export JSON and render (#489)
+- Create render_report.py script to convert JSON to HTML (#488)
 - Increase test coverage for low-coverage modules (#480)
 - Add providers/_postgres.py tests (mock-based) (#485)
 - Add _stub_manager.py tests (#484)

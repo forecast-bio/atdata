@@ -55,8 +55,11 @@ def _prepopulate_schemas(provider, name: str, n: int) -> list[str]:
 # =============================================================================
 
 
+@pytest.mark.bench_index
 class TestProviderWriteBenchmarks:
     """Write operation benchmarks across all providers."""
+
+    PARAM_LABELS = {"n": "entries to store", "any_provider": "storage backend"}
 
     def test_store_single_entry(self, benchmark, any_provider):
         entry = _make_entry(0)
@@ -97,8 +100,11 @@ class TestProviderWriteBenchmarks:
 # =============================================================================
 
 
+@pytest.mark.bench_index
 class TestProviderReadBenchmarks:
     """Read operation benchmarks across all providers."""
+
+    PARAM_LABELS = {"n": "entries in index", "any_provider": "storage backend"}
 
     def test_get_entry_by_name(self, benchmark, any_provider):
         entries = _prepopulate_entries(any_provider, 100)
@@ -136,6 +142,7 @@ class TestProviderReadBenchmarks:
 # =============================================================================
 
 
+@pytest.mark.bench_index
 class TestIndexBenchmarks:
     """Benchmarks through the full Index API."""
 

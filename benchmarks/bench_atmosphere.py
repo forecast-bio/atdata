@@ -16,6 +16,7 @@ from moto import mock_aws
 import atdata
 
 from .conftest import (
+    IMAGE_SHAPE,
     BenchBasicSample,
     BenchManifestSample,
     BenchNumpySample,
@@ -76,13 +77,17 @@ def _make_source_dataset(tmp_path, samples):
 # =============================================================================
 
 
+@pytest.mark.bench_s3
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 class TestS3WriteBenchmarks:
     """S3 shard writing benchmarks via moto mock."""
 
+    PARAM_LABELS = {"n": "samples per shard"}
+
     @pytest.mark.parametrize("n", [100, 500], ids=["100", "500"])
     def test_s3_write_shards(self, benchmark, tmp_path, mock_s3, n):
+        benchmark.extra_info["n_samples"] = n
         samples = generate_basic_samples(n)
         ds = _make_source_dataset(tmp_path, samples)
         store = _make_s3_store(mock_s3)
@@ -96,6 +101,7 @@ class TestS3WriteBenchmarks:
         benchmark(_write)
 
     def test_s3_write_with_manifest(self, benchmark, tmp_path, mock_s3):
+        benchmark.extra_info["n_samples"] = 200
         samples = generate_manifest_samples(200)
         ds = _make_source_dataset(tmp_path, samples)
         store = _make_s3_store(mock_s3)
@@ -112,6 +118,7 @@ class TestS3WriteBenchmarks:
         benchmark(_write)
 
     def test_s3_write_cache_local(self, benchmark, tmp_path, mock_s3):
+        benchmark.extra_info["n_samples"] = 200
         samples = generate_basic_samples(200)
         ds = _make_source_dataset(tmp_path, samples)
         store = _make_s3_store(mock_s3)
@@ -127,6 +134,7 @@ class TestS3WriteBenchmarks:
         benchmark(_write)
 
     def test_s3_write_direct(self, benchmark, tmp_path, mock_s3):
+        benchmark.extra_info["n_samples"] = 200
         samples = generate_basic_samples(200)
         ds = _make_source_dataset(tmp_path, samples)
         store = _make_s3_store(mock_s3)
@@ -142,7 +150,8 @@ class TestS3WriteBenchmarks:
         benchmark(_write)
 
     def test_s3_write_numpy(self, benchmark, tmp_path, mock_s3):
-        samples = generate_numpy_samples(100, shape=(32, 32))
+        benchmark.extra_info["n_samples"] = 100
+        samples = generate_numpy_samples(100)
         ds = _make_source_dataset(tmp_path, samples)
         store = _make_s3_store(mock_s3)
         counter = [0]

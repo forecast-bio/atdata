@@ -65,6 +65,7 @@ def query_dataset_large(tmp_path):
 # =============================================================================
 
 
+@pytest.mark.bench_query
 class TestQueryPredicateBenchmarks:
     """Benchmark different query predicate types on a medium dataset."""
 
@@ -110,6 +111,7 @@ class TestQueryPredicateBenchmarks:
 # =============================================================================
 
 
+@pytest.mark.bench_query
 class TestQueryScaleBenchmarks:
     """Benchmark query performance at different scales."""
 
@@ -131,8 +133,11 @@ class TestQueryScaleBenchmarks:
 # =============================================================================
 
 
+@pytest.mark.bench_query
 class TestManifestLoadBenchmarks:
     """Benchmark manifest loading from disk."""
+
+    PARAM_LABELS = {"n_shards": "number of shards (100 samples each)"}
 
     @pytest.mark.parametrize("n_shards", [2, 5, 10, 20], ids=["2s", "5s", "10s", "20s"])
     def test_load_from_directory(self, benchmark, tmp_path, n_shards):
@@ -159,11 +164,15 @@ class TestManifestLoadBenchmarks:
 # =============================================================================
 
 
+@pytest.mark.bench_query
 class TestManifestBuildBenchmarks:
     """Benchmark manifest construction from samples."""
 
+    PARAM_LABELS = {"n": "samples in manifest"}
+
     @pytest.mark.parametrize("n", [100, 1000, 5000], ids=["100", "1k", "5k"])
     def test_manifest_build(self, benchmark, n):
+        benchmark.extra_info["n_samples"] = n
         samples = generate_manifest_samples(n)
 
         def _build():
@@ -188,6 +197,7 @@ class TestManifestBuildBenchmarks:
 
     @pytest.mark.parametrize("n", [100, 1000], ids=["100", "1k"])
     def test_manifest_write(self, benchmark, tmp_path, n):
+        benchmark.extra_info["n_samples"] = n
         samples = generate_manifest_samples(n)
 
         builder = ManifestBuilder(

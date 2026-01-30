@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import numpy as np
 import pytest
 import webdataset as wds
-from numpy.typing import NDArray
+from numpy.typing import NDArray, DTypeLike
 
 import atdata
 from atdata.manifest import ManifestBuilder, ManifestField, ManifestWriter
@@ -47,6 +47,23 @@ class BenchManifestSample:
 
 
 # =============================================================================
+# Benchmark Constants
+# =============================================================================
+
+# Standard image: 3-channel 224x224 uint8 (ImageNet-style)
+IMAGE_SHAPE = (3, 224, 224)
+IMAGE_DTYPE = np.uint8
+
+# Large biological timeseries: 1024x1024 spatial x 600 frames, float32
+TSERIES_SHAPE = (1024, 1024, 60)
+TSERIES_DTYPE = np.float32
+
+# Small array for manifest/overhead benchmarks (keeps manifests fast)
+MANIFEST_ARRAY_SHAPE = (4, 4)
+MANIFEST_ARRAY_DTYPE = np.float32
+
+
+# =============================================================================
 # Sample Generators
 # =============================================================================
 
@@ -65,11 +82,15 @@ def generate_basic_samples(n: int) -> list[BenchBasicSample]:
 
 
 def generate_numpy_samples(
-    n: int, shape: tuple[int, ...] = (10, 10)
+    n: int,
+    shape: tuple[int, ...] = IMAGE_SHAPE,
+    dtype: np.dtype = IMAGE_DTYPE,
 ) -> list[BenchNumpySample]:
     return [
         BenchNumpySample(
-            data=np.random.randn(*shape).astype(np.float32),
+            data=np.random.randint(0, 256, size=shape, dtype=dtype)
+            if np.issubdtype(dtype, np.integer)
+            else np.random.randn(*shape).astype(dtype),
             label=f"array_{i:06d}",
         )
         for i in range(n)

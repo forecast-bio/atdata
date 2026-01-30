@@ -52,6 +52,9 @@ MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
 
+# Benchmark results
+.bench/
+
 # Unit test / coverage reports
 htmlcov/
 .tox/
