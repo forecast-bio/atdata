@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from atdata import (
-    PackableSample,
     Dataset,
 )
 from atdata._protocols import AbstractDataStore, Packable
@@ -35,7 +34,7 @@ if TYPE_CHECKING:
     from atdata.repository import Repository, _AtmosphereBackend
     from atdata._protocols import IndexEntry
 
-T = TypeVar("T", bound=PackableSample)
+T = TypeVar("T", bound=Packable)
 
 
 class Index:

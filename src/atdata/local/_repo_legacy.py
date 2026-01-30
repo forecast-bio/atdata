@@ -15,9 +15,9 @@ import msgpack
 import webdataset as wds
 import warnings
 
-from atdata import PackableSample
+from atdata._protocols import Packable
 
-T = TypeVar("T", bound=PackableSample)
+T = TypeVar("T", bound=Packable)
 
 
 class Repo:

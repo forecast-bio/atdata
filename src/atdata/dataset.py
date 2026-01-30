@@ -43,7 +43,7 @@ from dataclasses import (
 from abc import ABC
 
 from ._sources import URLSource
-from ._protocols import DataSource
+from ._protocols import DataSource, Packable
 from ._exceptions import SampleKeyError
 
 from tqdm import tqdm
@@ -495,8 +495,8 @@ class SampleBatch(Generic[DT]):
         raise AttributeError(f"No sample attribute named {name}")
 
 
-ST = TypeVar("ST", bound=PackableSample)
-RT = TypeVar("RT", bound=PackableSample)
+ST = TypeVar("ST", bound=Packable)
+RT = TypeVar("RT", bound=Packable)
 
 
 class _ShardListStage(wds.utils.PipelineStage):
@@ -1326,7 +1326,7 @@ _T = TypeVar("_T")
 
 
 @dataclass_transform()
-def packable(cls: type[_T]) -> type[PackableSample]:
+def packable(cls: type[_T]) -> type[Packable]:
     """Decorator to convert a regular class into a ``PackableSample``.
 
     This decorator transforms a class into a dataclass that inherits from

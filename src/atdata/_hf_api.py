@@ -42,7 +42,7 @@ from typing import (
 
 from .dataset import Dataset, PackableSample, DictSample
 from ._sources import URLSource, S3Source
-from ._protocols import DataSource
+from ._protocols import DataSource, Packable
 
 if TYPE_CHECKING:
     from ._protocols import AbstractIndex
@@ -50,7 +50,7 @@ if TYPE_CHECKING:
 ##
 # Type variables
 
-ST = TypeVar("ST", bound=PackableSample)
+ST = TypeVar("ST", bound=Packable)
 
 
 ##

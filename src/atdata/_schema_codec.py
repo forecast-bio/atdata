@@ -28,13 +28,14 @@ import hashlib
 
 from numpy.typing import NDArray
 
-# Import PackableSample for inheritance
+# Import PackableSample for inheritance in dynamic class generation
 from .dataset import PackableSample
+from ._protocols import Packable
 
 
 # Type cache to avoid regenerating identical types
 # Uses insertion order (Python 3.7+) for simple FIFO eviction
-_type_cache: dict[str, Type[PackableSample]] = {}
+_type_cache: dict[str, Type[Packable]] = {}
 _TYPE_CACHE_MAX_SIZE = 256
 
 
@@ -130,7 +131,7 @@ def schema_to_type(
     schema: dict,
     *,
     use_cache: bool = True,
-) -> Type[PackableSample]:
+) -> Type[Packable]:
     """Generate a PackableSample subclass from a schema record.
 
     This function dynamically creates a dataclass that inherits from PackableSample,
@@ -420,7 +421,7 @@ def clear_type_cache() -> None:
     _type_cache.clear()
 
 
-def get_cached_types() -> dict[str, Type[PackableSample]]:
+def get_cached_types() -> dict[str, Type[Packable]]:
     """Get a copy of the current type cache.
 
     Returns:
