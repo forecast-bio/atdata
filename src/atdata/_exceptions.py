@@ -122,3 +122,47 @@ class ShardError(AtdataError):
         self.shard_id = shard_id
         self.reason = reason
         super().__init__(f"Failed to read shard '{shard_id}': {reason}")
+
+
+class PartialFailureError(AtdataError):
+    """Some shards succeeded but others failed during processing.
+
+    Raised by :meth:`Dataset.process_shards` when at least one shard fails.
+    Provides access to both the successful results and the per-shard errors,
+    enabling retry of only the failed shards.
+
+    Attributes:
+        succeeded_shards: List of shard identifiers that succeeded.
+        failed_shards: List of shard identifiers that failed.
+        errors: Mapping from shard identifier to the exception that occurred.
+        results: Mapping from shard identifier to the result for succeeded shards.
+    """
+
+    def __init__(
+        self,
+        succeeded_shards: list[str],
+        failed_shards: list[str],
+        errors: dict[str, Exception],
+        results: dict[str, object],
+    ) -> None:
+        self.succeeded_shards = succeeded_shards
+        self.failed_shards = failed_shards
+        self.errors = errors
+        self.results = results
+
+        n_ok = len(succeeded_shards)
+        n_fail = len(failed_shards)
+        total = n_ok + n_fail
+
+        lines = [f"{n_fail}/{total} shards failed during processing"]
+        for shard_id in failed_shards[:5]:
+            lines.append(f"  {shard_id}: {errors[shard_id]}")
+        if n_fail > 5:
+            lines.append(f"  ... and {n_fail - 5} more")
+        lines.append("")
+        lines.append(
+            f"Access .succeeded_shards ({n_ok}) and .failed_shards ({n_fail}) "
+            f"to inspect or retry."
+        )
+
+        super().__init__("\n".join(lines))
