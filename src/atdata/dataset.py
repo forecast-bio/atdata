@@ -974,6 +974,39 @@ class Dataset(Generic[ST]):
                 break
         return [result[i] for i in indices if i in result]
 
+    def query(
+        self,
+        where: "Callable[[pd.DataFrame], pd.Series]",
+    ) -> "list[SampleLocation]":
+        """Query this dataset using per-shard manifest metadata.
+
+        Requires manifests to have been generated during shard writing.
+        Discovers manifest files alongside the tar shards, loads them,
+        and executes a two-phase query (shard-level aggregate pruning,
+        then sample-level parquet filtering).
+
+        Args:
+            where: Predicate function that receives a pandas DataFrame
+                of manifest fields and returns a boolean Series selecting
+                matching rows.
+
+        Returns:
+            List of ``SampleLocation`` for matching samples.
+
+        Raises:
+            FileNotFoundError: If no manifest files are found alongside shards.
+
+        Examples:
+            >>> locs = ds.query(where=lambda df: df["confidence"] > 0.9)
+            >>> len(locs)
+            42
+        """
+        from .manifest import QueryExecutor, SampleLocation
+
+        shard_urls = self.list_shards()
+        executor = QueryExecutor.from_shard_urls(shard_urls)
+        return executor.query(where=where)
+
     def to_pandas(self, limit: int | None = None) -> "pd.DataFrame":
         """Materialize the dataset (or first *limit* samples) as a DataFrame.
 

@@ -162,6 +162,11 @@ class S3DataStore:
         *,
         prefix: str,
         cache_local: bool = False,
+        manifest: bool = False,
+        schema_version: str = "1.0.0",
+        source_job_id: str | None = None,
+        parent_shards: list[str] | None = None,
+        pipeline_version: str | None = None,
         **kwargs,
     ) -> list[str]:
         """Write dataset shards to S3.
@@ -170,6 +175,12 @@ class S3DataStore:
             ds: The Dataset to write.
             prefix: Path prefix within bucket (e.g., 'datasets/mnist/v1').
             cache_local: If True, write locally first then copy to S3.
+            manifest: If True, generate per-shard manifest files alongside
+                each tar shard (``.manifest.json`` + ``.manifest.parquet``).
+            schema_version: Schema version for manifest headers.
+            source_job_id: Optional provenance job identifier for manifests.
+            parent_shards: Optional list of input shard identifiers for provenance.
+            pipeline_version: Optional pipeline version string for provenance.
             **kwargs: Additional args passed to wds.ShardWriter (e.g., maxcount).
 
         Returns:
@@ -183,8 +194,29 @@ class S3DataStore:
 
         written_shards: list[str] = []
 
+        # Manifest tracking state shared with the post callback
+        manifest_builders: list = []
+        current_builder: list = [None]  # mutable ref for closure
+        shard_counter: list[int] = [0]
+
+        if manifest:
+            from atdata.manifest import ManifestBuilder, ManifestWriter
+
+            def _make_builder(shard_idx: int) -> ManifestBuilder:
+                shard_id = f"{self.bucket}/{prefix}/data--{new_uuid}--{shard_idx:06d}"
+                return ManifestBuilder(
+                    sample_type=ds.sample_type,
+                    shard_id=shard_id,
+                    schema_version=schema_version,
+                    source_job_id=source_job_id,
+                    parent_shards=parent_shards,
+                    pipeline_version=pipeline_version,
+                )
+
+            current_builder[0] = _make_builder(0)
+
         with TemporaryDirectory() as temp_dir:
-            writer_opener, writer_post = _create_s3_write_callbacks(
+            writer_opener, writer_post_orig = _create_s3_write_callbacks(
                 credentials=self.credentials,
                 temp_dir=temp_dir,
                 written_shards=written_shards,
@@ -193,6 +225,21 @@ class S3DataStore:
                 add_s3_prefix=True,
             )
 
+            if manifest:
+                def writer_post(p: str):
+                    # Finalize the current manifest builder when a shard completes
+                    builder = current_builder[0]
+                    if builder is not None:
+                        manifest_builders.append(builder)
+                    # Advance to the next shard's builder
+                    shard_counter[0] += 1
+                    current_builder[0] = _make_builder(shard_counter[0])
+                    # Call original post callback
+                    writer_post_orig(p)
+            else:
+                writer_post = writer_post_orig
+
+            offset = 0
             with wds.writer.ShardWriter(
                 shard_pattern,
                 opener=writer_opener,
@@ -200,7 +247,61 @@ class S3DataStore:
                 **kwargs,
             ) as sink:
                 for sample in ds.ordered(batch_size=None):
-                    sink.write(sample.as_wds)
+                    wds_dict = sample.as_wds
+                    sink.write(wds_dict)
+
+                    if manifest and current_builder[0] is not None:
+                        packed_size = len(wds_dict.get("msgpack", b""))
+                        current_builder[0].add_sample(
+                            key=wds_dict["__key__"],
+                            offset=offset,
+                            size=packed_size,
+                            sample=sample,
+                        )
+                        # Approximate tar entry: 512-byte header + data rounded to 512
+                        offset += 512 + packed_size + (512 - packed_size % 512) % 512
+
+            # Finalize the last shard's builder (post isn't called for the last shard
+            # until ShardWriter closes, but we handle it here for safety)
+            if manifest and current_builder[0] is not None:
+                builder = current_builder[0]
+                if builder._rows:  # Only if samples were added
+                    manifest_builders.append(builder)
+
+            # Write all manifest files
+            if manifest:
+                for builder in manifest_builders:
+                    built = builder.build()
+                    writer = ManifestWriter(Path(temp_dir) / Path(built.shard_id))
+                    json_path, parquet_path = writer.write(built)
+
+                    # Upload manifest files to S3 alongside shards
+                    shard_id = built.shard_id
+                    json_key = f"{shard_id}.manifest.json"
+                    parquet_key = f"{shard_id}.manifest.parquet"
+
+                    if cache_local:
+                        import boto3
+
+                        s3_kwargs = {
+                            "aws_access_key_id": self.credentials["AWS_ACCESS_KEY_ID"],
+                            "aws_secret_access_key": self.credentials["AWS_SECRET_ACCESS_KEY"],
+                        }
+                        if "AWS_ENDPOINT" in self.credentials:
+                            s3_kwargs["endpoint_url"] = self.credentials["AWS_ENDPOINT"]
+                        s3_client = boto3.client("s3", **s3_kwargs)
+
+                        bucket_name = Path(shard_id).parts[0]
+                        json_s3_key = str(Path(*Path(json_key).parts[1:]))
+                        parquet_s3_key = str(Path(*Path(parquet_key).parts[1:]))
+
+                        with open(json_path, "rb") as f:
+                            s3_client.put_object(Bucket=bucket_name, Key=json_s3_key, Body=f.read())
+                        with open(parquet_path, "rb") as f:
+                            s3_client.put_object(Bucket=bucket_name, Key=parquet_s3_key, Body=f.read())
+                    else:
+                        self._fs.put(str(json_path), f"s3://{json_key}")
+                        self._fs.put(str(parquet_path), f"s3://{parquet_key}")
 
         if len(written_shards) == 0:
             raise RuntimeError("No shards written")

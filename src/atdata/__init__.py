@@ -99,6 +99,15 @@ from .promote import (
     promote_to_atmosphere as promote_to_atmosphere,
 )
 
+from .manifest import (
+    ManifestField as ManifestField,
+    ManifestBuilder as ManifestBuilder,
+    ShardManifest as ShardManifest,
+    ManifestWriter as ManifestWriter,
+    QueryExecutor as QueryExecutor,
+    SampleLocation as SampleLocation,
+)
+
 # ATProto integration (lazy import to avoid requiring atproto package)
 from . import atmosphere as atmosphere
 
