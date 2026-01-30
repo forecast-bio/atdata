@@ -25,6 +25,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Consolidate remaining duplicate sample types in test files (#497)
+- Remove dead code: _repo_legacy.py legacy UUID field, unused imports (#496)
+- Trim verbose docstrings in dataset.py and _index.py (#495)
 - Benchmark report: replace mean/stddev with median/IQR, add per-sample columns (#492)
 - Add parameter descriptions to benchmark suite with automatic report introspection (#491)
 - HTML benchmark reports with CI integration (#487)

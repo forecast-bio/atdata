@@ -22,6 +22,7 @@ from typer.testing import CliRunner
 
 import atdata
 from atdata.cli import app, main
+from conftest import SharedBasicSample
 from atdata.cli.diagnose import diagnose_redis, _print_status
 from atdata.cli.local import (
     _check_docker,
@@ -47,16 +48,8 @@ runner = CliRunner()
 
 
 @dataclass
-class CliTestSample(atdata.PackableSample):
-    """Simple sample type for CLI tests."""
-
-    name: str
-    value: int
-
-
-@dataclass
 class CliTestSampleAlt(atdata.PackableSample):
-    """Alternative sample with a different schema."""
+    """Alternative sample with a different schema (name + score)."""
 
     name: str
     score: float
@@ -64,11 +57,11 @@ class CliTestSampleAlt(atdata.PackableSample):
 
 @pytest.fixture()
 def sample_tar(tmp_path):
-    """Create a tar file with two CliTestSample records."""
+    """Create a tar file with three SharedBasicSample records."""
     tar_path = tmp_path / "test-000000.tar"
     with wds.writer.TarWriter(str(tar_path)) as sink:
         for i in range(3):
-            s = CliTestSample(name=f"s{i}", value=i * 10)
+            s = SharedBasicSample(name=f"s{i}", value=i * 10)
             sink.write(s.as_wds)
     return str(tar_path)
 
