@@ -26,9 +26,9 @@ from .._type_utils import (
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ..dataset import PackableSample
+    from .._protocols import Packable
 
-ST = TypeVar("ST", bound="PackableSample")
+ST = TypeVar("ST", bound="Packable")
 
 
 class SchemaPublisher:

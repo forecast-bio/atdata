@@ -131,7 +131,7 @@ test_cases = [
     [(case["SampleType"], case["sample_data"]) for case in test_cases],
 )
 def test_create_sample(
-    SampleType: Type[atdata.PackableSample],
+    SampleType: Type[atdata.Packable],
     sample_data: atds.WDSRawSample,
 ):
     """Test our ability to create samples from semi-structured data"""
@@ -160,7 +160,7 @@ def test_create_sample(
     ],
 )
 def test_wds(
-    SampleType: Type[atdata.PackableSample],
+    SampleType: Type[atdata.Packable],
     sample_data: atds.WDSRawSample,
     sample_wds_stem: str,
     tmp_path,
@@ -354,7 +354,7 @@ def test_wds(
     ],
 )
 def test_parquet_export(
-    SampleType: Type[atdata.PackableSample],
+    SampleType: Type[atdata.Packable],
     sample_data: atds.WDSRawSample,
     sample_wds_stem: str,
     test_parquet: bool,

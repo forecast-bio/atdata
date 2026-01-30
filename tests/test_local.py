@@ -2023,8 +2023,8 @@ class TestAutoStubs:
         assert sample.name == "hello"
         assert sample.value == 42
 
-        # The class should be a PackableSample subclass
-        assert isinstance(sample, atdata.PackableSample)
+        # The class should satisfy the Packable protocol
+        assert isinstance(sample, atdata.Packable)
 
         # Verify the module was generated
         module_path = stub_dir / "local" / "SimpleTestSample_1_0_0.py"
