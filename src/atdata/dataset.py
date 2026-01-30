@@ -44,7 +44,7 @@ from abc import ABC
 
 from ._sources import URLSource
 from ._protocols import DataSource, Packable
-from ._exceptions import SampleKeyError
+from ._exceptions import SampleKeyError, PartialFailureError
 
 import numpy as np
 import pandas as pd
@@ -702,6 +702,83 @@ class Dataset(Generic[ST]):
         if hasattr(self, "_filter_fn"):
             mapped._filter_fn = self._filter_fn
         return mapped
+
+    def process_shards(
+        self,
+        fn: Callable[[list[ST]], Any],
+        *,
+        shards: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Process each shard independently, collecting per-shard results.
+
+        Unlike :meth:`map` (which is lazy and per-sample), this method eagerly
+        processes each shard in turn, calling *fn* with the full list of samples
+        from that shard. If some shards fail, raises
+        :class:`~atdata._exceptions.PartialFailureError` containing both the
+        successful results and the per-shard errors.
+
+        Args:
+            fn: Function receiving a list of samples from one shard and
+                returning an arbitrary result.
+            shards: Optional list of shard identifiers to process. If ``None``,
+                processes all shards in the dataset. Useful for retrying only
+                the failed shards from a previous ``PartialFailureError``.
+
+        Returns:
+            Dict mapping shard identifier to *fn*'s return value for each shard.
+
+        Raises:
+            PartialFailureError: If at least one shard fails. The exception
+                carries ``.succeeded_shards``, ``.failed_shards``, ``.errors``,
+                and ``.results`` for inspection and retry.
+
+        Examples:
+            >>> results = ds.process_shards(lambda samples: len(samples))
+            >>> # On partial failure, retry just the failed shards:
+            >>> try:
+            ...     results = ds.process_shards(expensive_fn)
+            ... except PartialFailureError as e:
+            ...     retry = ds.process_shards(expensive_fn, shards=e.failed_shards)
+        """
+        from ._logging import get_logger
+
+        log = get_logger()
+        shard_ids = shards or self.list_shards()
+        log.info("process_shards: starting %d shards", len(shard_ids))
+
+        succeeded: list[str] = []
+        failed: list[str] = []
+        errors: dict[str, Exception] = {}
+        results: dict[str, Any] = {}
+
+        for shard_id in shard_ids:
+            try:
+                shard_ds = Dataset[self.sample_type](shard_id)
+                shard_ds._sample_type_cache = self._sample_type_cache
+                samples = list(shard_ds.ordered())
+                results[shard_id] = fn(samples)
+                succeeded.append(shard_id)
+                log.debug("process_shards: shard ok %s", shard_id)
+            except Exception as exc:
+                failed.append(shard_id)
+                errors[shard_id] = exc
+                log.warning("process_shards: shard failed %s: %s", shard_id, exc)
+
+        if failed:
+            log.error(
+                "process_shards: %d/%d shards failed",
+                len(failed),
+                len(shard_ids),
+            )
+            raise PartialFailureError(
+                succeeded_shards=succeeded,
+                failed_shards=failed,
+                errors=errors,
+                results=results,
+            )
+
+        log.info("process_shards: all %d shards succeeded", len(shard_ids))
+        return results
 
     def select(self, indices: Sequence[int]) -> list[ST]:
         """Return samples at the given integer indices.

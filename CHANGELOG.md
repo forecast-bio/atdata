@@ -25,6 +25,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Implement GH#39: Production hardening (observability, error handling, testing infra) (#504)
+- Add pluggable structured logging via atdata.configure_logging (#507)
+- Add PartialFailureError and shard-level error handling to Dataset.map (#506)
+- Add atdata.testing module with mock clients, fixtures, and helpers (#505)
 - Fix CI linting failures (20 ruff errors) (#503)
 - Adversarial review: Post-benchmark suite assessment (#494)
 - Remove redundant protocol docstrings that restate signatures (#500)

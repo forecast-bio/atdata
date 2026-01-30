@@ -79,10 +79,16 @@ from ._exceptions import (
     SchemaError as SchemaError,
     SampleKeyError as SampleKeyError,
     ShardError as ShardError,
+    PartialFailureError as PartialFailureError,
 )
 
 from ._schema_codec import (
     schema_to_type as schema_to_type,
+)
+
+from ._logging import (
+    configure_logging as configure_logging,
+    get_logger as get_logger,
 )
 
 from .repository import (
