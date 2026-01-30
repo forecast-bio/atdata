@@ -105,7 +105,7 @@ class AtmosphereIndex:
         future release.
 
     Wraps SchemaPublisher/Loader and DatasetPublisher/Loader to provide
-    a unified interface compatible with LocalIndex.
+    a unified interface compatible with Index.
 
     Optionally accepts a ``PDSBlobStore`` for writing dataset shards as
     ATProto blobs, enabling fully decentralized dataset storage.

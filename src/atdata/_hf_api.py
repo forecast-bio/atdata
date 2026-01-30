@@ -515,7 +515,7 @@ def _resolve_indexed_path(
     handle_or_did, dataset_name = _parse_indexed_path(path)
 
     # For AtmosphereIndex, we need to resolve handle to DID first
-    # For LocalIndex, the handle is ignored and we just look up by name
+    # For local Index, the handle is ignored and we just look up by name
     entry = index.get_dataset(dataset_name)
     data_urls = entry.data_urls
 
@@ -680,7 +680,7 @@ def load_dataset(
         >>> train_ds = load_dataset("./data/train-*.tar", TextData, split="train")
         >>>
         >>> # Load from index with auto-type resolution
-        >>> index = LocalIndex()
+        >>> index = Index()
         >>> ds = load_dataset("@local/my-dataset", index=index, split="train")
     """
     # Handle @handle/dataset indexed path resolution

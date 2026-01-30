@@ -9,7 +9,7 @@ from unittest.mock import Mock
 from atdata._protocols import (
     IndexEntry,
 )
-from atdata.local import LocalDatasetEntry, Index as LocalIndex, S3DataStore
+from atdata.local import LocalDatasetEntry, Index, S3DataStore
 from atdata.atmosphere import AtmosphereIndex, AtmosphereIndexEntry
 
 
@@ -70,10 +70,10 @@ class TestAbstractIndexProtocol:
     """Tests for AbstractIndex protocol compliance."""
 
     def test_local_index_has_required_methods(self):
-        """LocalIndex should have all AbstractIndex methods."""
+        """Index should have all AbstractIndex methods."""
         # Can't use isinstance with non-runtime_checkable Protocol
         # So we verify methods exist
-        index = LocalIndex()
+        index = Index()
 
         assert hasattr(index, "insert_dataset")
         assert hasattr(index, "get_dataset")
@@ -204,8 +204,8 @@ class TestProtocolInteroperability:
             """Count datasets in an index."""
             return sum(1 for _ in index.list_datasets())
 
-        # LocalIndex with mock redis
-        local_index = LocalIndex()
+        # Index with default SQLite
+        local_index = Index()
         # Empty index returns 0
         assert count_datasets(local_index) == 0
 

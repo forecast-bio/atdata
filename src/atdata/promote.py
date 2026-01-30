@@ -5,12 +5,12 @@ ATProto atmosphere network. This enables sharing datasets with the broader
 federation while maintaining schema consistency.
 
 Examples:
-    >>> from atdata.local import LocalIndex, Repo
+    >>> from atdata.local import Index, Repo
     >>> from atdata.atmosphere import AtmosphereClient, AtmosphereIndex
     >>> from atdata.promote import promote_to_atmosphere
     >>>
     >>> # Setup
-    >>> local_index = LocalIndex()
+    >>> local_index = Index()
     >>> client = AtmosphereClient()
     >>> client.login("handle.bsky.social", "app-password")
     >>>
@@ -22,7 +22,7 @@ Examples:
 from typing import TYPE_CHECKING, Type
 
 if TYPE_CHECKING:
-    from .local import LocalDatasetEntry, Index as LocalIndex
+    from .local import LocalDatasetEntry, Index
     from .atmosphere import AtmosphereClient
     from ._protocols import AbstractDataStore, Packable
 
@@ -94,7 +94,7 @@ def _find_or_publish_schema(
 
 def promote_to_atmosphere(
     local_entry: "LocalDatasetEntry",
-    local_index: "LocalIndex",
+    local_index: "Index",
     atmosphere_client: "AtmosphereClient",
     *,
     data_store: "AbstractDataStore | None" = None,

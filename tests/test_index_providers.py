@@ -423,20 +423,20 @@ class TestIndexWithProvider:
         assert records[0].name == "ProviderTestSample"
 
 
-class TestLocalIndexFactory:
-    """Test the LocalIndex factory function."""
+class TestStringProviderSelection:
+    """Test Index with string-based provider selection."""
 
-    def test_sqlite_factory(self, tmp_path: Path):
-        index = atlocal.LocalIndex(provider="sqlite", path=tmp_path / "factory.db")
+    def test_sqlite_by_name(self, tmp_path: Path):
+        index = atlocal.Index(provider="sqlite", path=tmp_path / "factory.db")
         assert isinstance(index, atlocal.Index)
 
     def test_invalid_provider_raises(self):
         with pytest.raises(ValueError, match="Unknown provider"):
-            atlocal.LocalIndex(provider="mongodb")
+            atlocal.Index(provider="mongodb")
 
     def test_postgres_requires_dsn(self):
         with pytest.raises(ValueError, match="dsn is required"):
-            atlocal.LocalIndex(provider="postgres")
+            atlocal.Index(provider="postgres")
 
 
 # ---------------------------------------------------------------------------
