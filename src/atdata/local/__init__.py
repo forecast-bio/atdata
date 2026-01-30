@@ -6,7 +6,6 @@ Key classes:
   named repositories, and optional atmosphere backend.
 - ``LocalDatasetEntry``: Index entry with ATProto-compatible CIDs.
 - ``S3DataStore``: S3-compatible shard storage.
-- ``LocalIndex()``: Factory for creating Index with a named provider.
 """
 
 from atdata.local._entry import (
@@ -30,7 +29,7 @@ from atdata.local._schema import (
     _python_type_to_field_type,
     _build_schema_record,
 )
-from atdata.local._index import Index, LocalIndex
+from atdata.local._index import Index
 from atdata.local._s3 import (
     S3DataStore,
     _s3_env,
@@ -46,7 +45,6 @@ from s3fs import S3FileSystem  # noqa: F401 — re-exported for backward compat
 __all__ = [
     # Public API
     "Index",
-    "LocalIndex",
     "LocalDatasetEntry",
     "BasicIndexEntry",
     "S3DataStore",

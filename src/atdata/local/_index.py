@@ -1,4 +1,4 @@
-"""Index class and LocalIndex factory for local dataset management."""
+"""Index class for local dataset management."""
 
 from __future__ import annotations
 
@@ -71,12 +71,14 @@ class Index:
 
     def __init__(
         self,
-        provider: "IndexProvider | None" = None,  # noqa: F821
+        provider: IndexProvider | str | None = None,
         *,
+        path: str | Path | None = None,
+        dsn: str | None = None,
         redis: Redis | None = None,
         data_store: AbstractDataStore | None = None,
-        repos: "dict[str, Repository] | None" = None,
-        atmosphere: "Any | None" = _ATMOSPHERE_DEFAULT,
+        repos: dict[str, Repository] | None = None,
+        atmosphere: Any | None = _ATMOSPHERE_DEFAULT,
         auto_stubs: bool = False,
         stub_dir: Path | str | None = None,
         **kwargs,
@@ -84,9 +86,15 @@ class Index:
         """Initialize an index.
 
         Args:
-            provider: Storage backend for the ``"local"`` repository.  If
-                provided, all local persistence is delegated to this provider.
-                Mutually exclusive with *redis* and extra *kwargs*.
+            provider: Storage backend for the ``"local"`` repository.
+                Accepts an ``IndexProvider`` instance or a backend name
+                string (``"sqlite"``, ``"redis"``, or ``"postgres"``).
+                When ``None``, falls back to *redis* / *kwargs* if given,
+                otherwise defaults to SQLite.
+            path: Database file path (SQLite only).  Ignored unless
+                *provider* is ``"sqlite"``.
+            dsn: PostgreSQL connection string.  Required when *provider*
+                is ``"postgres"``.
             redis: Redis connection to use (backwards-compat shorthand for
                 ``RedisProvider(redis)``).  Ignored when *provider* is given.
             data_store: Optional data store for writing dataset shards in the
@@ -111,27 +119,26 @@ class Index:
                 explicit *provider*), Redis is used instead of the SQLite default.
 
         Raises:
-            TypeError: If provider is not an IndexProvider.
+            TypeError: If provider is not an IndexProvider or valid string.
             ValueError: If repos contains the reserved name ``"local"``.
 
         Examples:
             >>> # Default: local SQLite + anonymous atmosphere
             >>> index = Index()
             >>>
-            >>> # SQLite local + authenticated atmosphere
-            >>> from atdata.providers import create_provider
-            >>> from atdata.atmosphere import AtmosphereClient
-            >>> client = AtmosphereClient()
-            >>> client.login("alice.bsky.social", "app-password")
-            >>> index = Index(
-            ...     provider=create_provider("sqlite"),
-            ...     atmosphere=client,
-            ... )
+            >>> # SQLite with explicit path
+            >>> index = Index(provider="sqlite", path="~/.atdata/index.db")
+            >>>
+            >>> # Redis
+            >>> index = Index(redis=redis_conn)
+            >>>
+            >>> # PostgreSQL
+            >>> index = Index(provider="postgres", dsn="postgresql://user:pass@host/db")
             >>>
             >>> # Multiple repositories
             >>> from atdata.repository import Repository, create_repository
             >>> index = Index(
-            ...     provider=create_provider("sqlite"),
+            ...     provider="sqlite",
             ...     repos={
             ...         "lab": create_repository("sqlite", path="/data/lab.db"),
             ...     },
@@ -141,12 +148,20 @@ class Index:
 
         from atdata.providers._base import IndexProvider as _IP
 
-        if provider is not None:
+        if isinstance(provider, str):
+            # String-based provider selection
+            from atdata.providers._factory import create_provider
+
+            self._provider: _IP = create_provider(
+                provider, path=path, dsn=dsn, redis=redis, **kwargs
+            )
+        elif provider is not None:
             if not isinstance(provider, _IP):
                 raise TypeError(
-                    f"provider must be an IndexProvider, got {type(provider).__name__}"
+                    f"provider must be an IndexProvider or backend name string, "
+                    f"got {type(provider).__name__}"
                 )
-            self._provider: _IP = provider
+            self._provider = provider
         elif redis is not None:
             # Explicit Redis connection provided
             from atdata.providers._redis import RedisProvider
@@ -398,7 +413,7 @@ class Index:
             is disabled.
 
         Examples:
-            >>> index = LocalIndex(auto_stubs=True)
+            >>> index = Index(auto_stubs=True)
             >>> ref = index.publish_schema(MySample, version="1.0.0")
             >>> index.load_schema(ref)
             >>> print(index.get_import_path(ref))
@@ -928,59 +943,3 @@ class Index:
         return 0
 
 
-def LocalIndex(
-    provider: str = "redis",
-    *,
-    path: str | Path | None = None,
-    dsn: str | None = None,
-    redis: Redis | None = None,
-    data_store: AbstractDataStore | None = None,
-    auto_stubs: bool = False,
-    stub_dir: Path | str | None = None,
-    **kwargs,
-) -> Index:
-    """Create an Index with the specified storage backend.
-
-    This is the recommended entry point for creating index instances.
-    It wraps the ``Index`` class with a convenient provider-selection API.
-
-    Args:
-        provider: Backend type — ``"redis"``, ``"sqlite"``, or ``"postgres"``.
-        path: Database file path (SQLite only).  Defaults to
-            ``~/.atdata/index.db`` when *provider* is ``"sqlite"``.
-        dsn: PostgreSQL connection string (postgres only).
-        redis: Existing Redis connection (redis only).  If ``None`` and
-            *provider* is ``"redis"``, a new connection is created from
-            *kwargs*.
-        data_store: Optional data store for writing dataset shards.
-        auto_stubs: Enable automatic stub file generation.
-        stub_dir: Directory for stub files.
-        **kwargs: Passed to the Redis constructor when *provider* is
-            ``"redis"`` and *redis* is ``None``.
-
-    Returns:
-        A configured ``Index`` instance.
-
-    Raises:
-        ValueError: If *provider* is not a recognised backend name.
-
-    Examples:
-        >>> # SQLite (zero-dependency local storage)
-        >>> index = LocalIndex(provider="sqlite", path="~/.atdata/index.db")
-
-        >>> # Redis (default, backwards-compatible)
-        >>> index = LocalIndex()
-
-        >>> # PostgreSQL
-        >>> index = LocalIndex(provider="postgres", dsn="postgresql://user:pass@host/db")
-    """
-    from atdata.providers._factory import create_provider
-
-    backend = create_provider(provider, path=path, dsn=dsn, redis=redis, **kwargs)
-    return Index(
-        provider=backend,
-        data_store=data_store,
-        atmosphere=None,
-        auto_stubs=auto_stubs,
-        stub_dir=stub_dir,
-    )

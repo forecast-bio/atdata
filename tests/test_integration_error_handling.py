@@ -17,7 +17,7 @@ import io
 from redis.exceptions import RedisError
 import atdata
 import webdataset as wds
-from atdata.local import LocalIndex, LocalDatasetEntry
+from atdata.local import Index, LocalDatasetEntry
 from atdata.atmosphere import AtmosphereClient, AtUri
 
 
@@ -42,14 +42,14 @@ class TestMissingSchema:
 
     def test_missing_schema_raises_keyerror(self, clean_redis):
         """Accessing non-existent schema should raise KeyError."""
-        index = LocalIndex(redis=clean_redis)
+        index = Index(redis=clean_redis)
 
         with pytest.raises(KeyError):
             index.get_schema("local://schemas/NonExistent@1.0.0")
 
     def test_dataset_with_invalid_schema_ref(self, clean_redis):
         """Dataset entry with invalid schema ref should error on decode."""
-        index = LocalIndex(redis=clean_redis)
+        index = Index(redis=clean_redis)
 
         entry = LocalDatasetEntry(
             name="orphan-dataset",
@@ -76,7 +76,7 @@ class TestMissingDataUrls:
 
     def test_empty_data_urls_raises(self, clean_redis):
         """Dataset entry with empty URLs should be flagged."""
-        index = LocalIndex(redis=clean_redis)
+        index = Index(redis=clean_redis)
         schema_ref = index.publish_schema(ErrorTestSample, version="1.0.0")
 
         entry = LocalDatasetEntry(
@@ -181,7 +181,7 @@ class TestRedisErrors:
             host="nonexistent.invalid.host", port=9999, socket_timeout=0.1
         )
 
-        index = LocalIndex(redis=bad_redis)
+        index = Index(redis=bad_redis)
 
         # Operations should raise connection errors
         with pytest.raises((ConnectionError, Exception)):
@@ -189,7 +189,7 @@ class TestRedisErrors:
 
     def test_entry_lookup_with_bad_redis(self, clean_redis):
         """Entry lookup should fail cleanly if Redis becomes unavailable."""
-        index = LocalIndex(redis=clean_redis)
+        index = Index(redis=clean_redis)
 
         # First, add an entry
         schema_ref = index.publish_schema(ErrorTestSample, version="1.0.0")
@@ -289,14 +289,14 @@ class TestNotFoundErrors:
 
     def test_get_entry_by_name_not_found(self, clean_redis):
         """Getting non-existent entry by name should raise KeyError."""
-        index = LocalIndex(redis=clean_redis)
+        index = Index(redis=clean_redis)
 
         with pytest.raises(KeyError):
             index.get_entry_by_name("nonexistent-dataset")
 
     def test_get_entry_by_cid_not_found(self, clean_redis):
         """Getting non-existent entry by CID should raise KeyError."""
-        index = LocalIndex(redis=clean_redis)
+        index = Index(redis=clean_redis)
 
         with pytest.raises(KeyError):
             index.get_entry("bafyreifake123456789")
@@ -311,7 +311,7 @@ class TestErrorMessageQuality:
 
     def test_missing_schema_error_includes_ref(self, clean_redis):
         """Missing schema error should include the schema reference."""
-        index = LocalIndex(redis=clean_redis)
+        index = Index(redis=clean_redis)
 
         try:
             index.get_schema("local://schemas/MissingType@1.0.0")
@@ -386,7 +386,7 @@ class TestRecovery:
 
     def test_index_usable_after_failed_publish(self, clean_redis):
         """Index should remain usable after a failed operation."""
-        index = LocalIndex(redis=clean_redis)
+        index = Index(redis=clean_redis)
 
         # Try to get a non-existent schema (fails as expected)
         with pytest.raises(KeyError):
@@ -409,7 +409,7 @@ class TestInputValidation:
 
     def test_empty_version_string(self, clean_redis):
         """Empty version string should be handled."""
-        index = LocalIndex(redis=clean_redis)
+        index = Index(redis=clean_redis)
 
         # Empty version - implementation may accept or reject
         schema_ref = index.publish_schema(ErrorTestSample, version="")
@@ -419,7 +419,7 @@ class TestInputValidation:
 
     def test_special_chars_in_version(self, clean_redis):
         """Special characters in version should be handled."""
-        index = LocalIndex(redis=clean_redis)
+        index = Index(redis=clean_redis)
 
         schema_ref = index.publish_schema(
             ErrorTestSample, version="1.0.0-beta+build.123"
@@ -448,7 +448,7 @@ class TestTimeoutScenarios:
             socket_connect_timeout=0.01,
         )
 
-        index = LocalIndex(redis=redis)
+        index = Index(redis=redis)
 
         # Should timeout quickly rather than hang
         with pytest.raises(RedisError):

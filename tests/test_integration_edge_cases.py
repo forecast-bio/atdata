@@ -13,7 +13,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 import atdata
-from atdata.local import LocalIndex, LocalDatasetEntry
+from atdata.local import Index, LocalDatasetEntry
 
 # Use centralized tar creation helper from conftest
 from conftest import create_tar_with_samples
@@ -583,7 +583,7 @@ class TestSchemaEdgeCases:
             f9: float
             f10: float
 
-        index = LocalIndex(redis=clean_redis)
+        index = Index(redis=clean_redis)
         schema_ref = index.publish_schema(ManyFieldsSample, version="1.0.0")
         schema = index.get_schema(schema_ref)
 
@@ -591,7 +591,7 @@ class TestSchemaEdgeCases:
 
     def test_dataset_name_with_special_chars(self, clean_redis):
         """Dataset names with special characters should work."""
-        index = LocalIndex(redis=clean_redis)
+        index = Index(redis=clean_redis)
         schema_ref = index.publish_schema(EmptyCompatSample, version="1.0.0")
 
         # Various special names

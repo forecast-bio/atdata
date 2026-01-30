@@ -10,7 +10,7 @@ formalize that common interface.
 Note:
     Protocol methods use ``...`` (Ellipsis) as the body per PEP 544. This is
     the standard Python syntax for Protocol definitions - these are interface
-    specifications, not stub implementations. Concrete classes (LocalIndex,
+    specifications, not stub implementations. Concrete classes (Index,
     AtmosphereIndex, etc.) provide the actual implementations.
 
 Protocols:
@@ -24,7 +24,7 @@ Examples:
     ...     for entry in index.list_datasets():
     ...         print(f"{entry.name}: {entry.data_urls}")
     ...
-    >>> # Works with either LocalIndex or AtmosphereIndex
+    >>> # Works with either Index or AtmosphereIndex
     >>> process_datasets(local_index)
     >>> process_datasets(atmosphere_index)
 """
@@ -149,7 +149,7 @@ class IndexEntry(Protocol):
 
 
 class AbstractIndex(Protocol):
-    """Protocol for index operations - implemented by LocalIndex and AtmosphereIndex.
+    """Protocol for index operations - implemented by Index and AtmosphereIndex.
 
     This protocol defines the common interface for managing dataset metadata:
     - Publishing and retrieving schemas

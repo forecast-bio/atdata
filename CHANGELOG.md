@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Remove LocalIndex factory — consolidate to Index (#460)
 - Split local.py monolith into local/ package (#452)
 - Verify tests and lint pass (#459)
 - Create __init__.py re-export facade and delete local.py (#458)

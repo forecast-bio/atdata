@@ -15,7 +15,7 @@ from numpy.typing import NDArray
 import webdataset as wds
 
 import atdata
-from atdata.local import LocalIndex, LocalDatasetEntry
+from atdata.local import Index, LocalDatasetEntry
 from atdata.promote import promote_to_atmosphere
 from atdata.atmosphere import AtmosphereClient
 from atdata.atmosphere._types import LEXICON_NAMESPACE
@@ -72,8 +72,8 @@ def authenticated_client(mock_atproto_client):
 
 @pytest.fixture
 def local_index_with_data(clean_redis, tmp_path):
-    """Create a LocalIndex with a sample dataset."""
-    index = LocalIndex(redis=clean_redis)
+    """Create a Index with a sample dataset."""
+    index = Index(redis=clean_redis)
 
     # Publish schema
     schema_ref = index.publish_schema(PromotionSample, version="1.0.0")
@@ -107,7 +107,7 @@ class TestFullPromotionWorkflow:
     def test_promote_local_to_atmosphere(
         self, local_index_with_data, authenticated_client, mock_atproto_client
     ):
-        """Full workflow: LocalIndex dataset → promote → AtmosphereIndex."""
+        """Full workflow: Index dataset → promote → AtmosphereIndex."""
         local_index, local_entry = local_index_with_data
 
         # Setup mock responses for atmosphere operations
@@ -367,7 +367,7 @@ class TestMetadataPreservation:
         self, clean_redis, authenticated_client, mock_atproto_client
     ):
         """Entry without metadata should promote successfully."""
-        index = LocalIndex(redis=clean_redis)
+        index = Index(redis=clean_redis)
         schema_ref = index.publish_schema(PromotionSample, version="1.0.0")
 
         entry = LocalDatasetEntry(
@@ -413,7 +413,7 @@ class TestMultiDatasetPromotion:
         self, clean_redis, authenticated_client, mock_atproto_client
     ):
         """Multiple datasets using same schema should reuse the schema."""
-        index = LocalIndex(redis=clean_redis)
+        index = Index(redis=clean_redis)
         schema_ref = index.publish_schema(PromotionSample, version="1.0.0")
 
         # Create multiple entries with same schema
@@ -478,7 +478,7 @@ class TestLargeDatasetPromotion:
         self, clean_redis, authenticated_client, mock_atproto_client
     ):
         """Dataset with many shards should have all URLs promoted."""
-        index = LocalIndex(redis=clean_redis)
+        index = Index(redis=clean_redis)
         schema_ref = index.publish_schema(PromotionSample, version="1.0.0")
 
         # Create entry with many shards
@@ -531,7 +531,7 @@ class TestPromotionErrors:
 
     def test_empty_data_urls_raises(self, clean_redis, authenticated_client):
         """Promotion of entry with no data URLs should raise."""
-        index = LocalIndex(redis=clean_redis)
+        index = Index(redis=clean_redis)
         schema_ref = index.publish_schema(PromotionSample, version="1.0.0")
 
         entry = LocalDatasetEntry(
@@ -547,7 +547,7 @@ class TestPromotionErrors:
         self, clean_redis, authenticated_client, mock_atproto_client
     ):
         """Promotion with missing local schema should raise."""
-        index = LocalIndex(redis=clean_redis)
+        index = Index(redis=clean_redis)
 
         # Entry references a schema that doesn't exist
         entry = LocalDatasetEntry(

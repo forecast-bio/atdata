@@ -35,11 +35,11 @@ Per the project's testing conventions (see `CLAUDE.md`), warning suppression is 
 @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
 ```
 
-**Cause:** The `Repo` class in `atdata.local` is deprecated in favor of `LocalIndex`. Tests that verify backward compatibility or test the deprecated class directly will trigger this warning.
+**Cause:** The `Repo` class in `atdata.local` is deprecated in favor of `Index`. Tests that verify backward compatibility or test the deprecated class directly will trigger this warning.
 
 **Affected tests:** Tests in `TestRepoWorkflow`, `TestRepoDeprecation`, and any test explicitly using the `Repo` class.
 
-**Impact:** None on test correctness. The deprecation warning is intentional to guide users toward `LocalIndex`.
+**Impact:** None on test correctness. The deprecation warning is intentional to guide users toward `Index`.
 
 **Resolution status:** These warnings will be removed when the `Repo` class is removed in a future major version. Until then, tests maintain backward compatibility verification.
 
