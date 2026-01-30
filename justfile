@@ -45,3 +45,5 @@ bench-compare a b:
 docs:
     uv run quartodoc build
     quarto render
+    mkdir -p ../docs/benchmarks
+    cp ../.bench/report.html ../docs/benchmarks/index.html || echo "No benchmark report found — run 'just bench' first"
