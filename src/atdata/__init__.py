@@ -55,6 +55,8 @@ from .lens import (
 from ._hf_api import (
     load_dataset as load_dataset,
     DatasetDict as DatasetDict,
+    get_default_index as get_default_index,
+    set_default_index as set_default_index,
 )
 
 from ._protocols import (
@@ -71,8 +73,21 @@ from ._sources import (
     BlobSource as BlobSource,
 )
 
+from ._exceptions import (
+    AtdataError as AtdataError,
+    LensNotFoundError as LensNotFoundError,
+    SchemaError as SchemaError,
+    SampleKeyError as SampleKeyError,
+    ShardError as ShardError,
+)
+
 from ._schema_codec import (
     schema_to_type as schema_to_type,
+)
+
+from .repository import (
+    Repository as Repository,
+    create_repository as create_repository,
 )
 
 from ._cid import (
@@ -82,6 +97,15 @@ from ._cid import (
 
 from .promote import (
     promote_to_atmosphere as promote_to_atmosphere,
+)
+
+from .manifest import (
+    ManifestField as ManifestField,
+    ManifestBuilder as ManifestBuilder,
+    ShardManifest as ShardManifest,
+    ManifestWriter as ManifestWriter,
+    QueryExecutor as QueryExecutor,
+    SampleLocation as SampleLocation,
 )
 
 # ATProto integration (lazy import to avoid requiring atproto package)

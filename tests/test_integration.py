@@ -207,7 +207,7 @@ class TestLoadDatasetWithIndex:
     """Integration tests for load_dataset with index parameter."""
 
     def test_load_from_local_index(self, tmp_path):
-        """load_dataset with LocalIndex should resolve dataset."""
+        """load_dataset with Index should resolve dataset."""
         # Create actual test data
         wds_file = tmp_path / "test-data.tar"
         with wds.writer.TarWriter(str(wds_file)) as sink:

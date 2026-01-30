@@ -24,12 +24,16 @@ dependencies = [
     "s3fs>=2025.12.0",
     "schemamodels>=0.9.1",
     "tqdm>=4.67.1",
+    "typer>=0.21.1",
     "webdataset>=1.0.2",
 ]
 
 [project.optional-dependencies]
 atmosphere = [
     "atproto>=0.0.55",
+]
+postgres = [
+    "psycopg[binary]>=3.1",
 ]
 
 [project.scripts]
@@ -44,6 +48,12 @@ addopts = "--cov=atdata --cov-report=html"
 markers = [
     "network: marks tests as requiring network access (deselect with '-m \"not network\"')",
     "slow: marks tests as slow running",
+    "benchmark: performance benchmarks",
+    "bench_serial: serialization benchmarks (μs scale)",
+    "bench_index: index provider benchmarks (μs–ms scale)",
+    "bench_io: shard read/write benchmarks (ms scale)",
+    "bench_query: query system benchmarks (ms scale)",
+    "bench_s3: S3 storage benchmarks via moto (ms+ scale)",
 ]
 
 [dependency-groups]
@@ -53,5 +63,6 @@ dev = [
     "pytest>=8.4.2",
     "pytest-cov>=7.0.0",
     "quartodoc>=0.11.1",
+    "pytest-benchmark>=5.1.0",
     "ruff>=0.14.13",
 ]

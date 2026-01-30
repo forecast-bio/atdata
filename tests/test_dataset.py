@@ -131,7 +131,7 @@ test_cases = [
     [(case["SampleType"], case["sample_data"]) for case in test_cases],
 )
 def test_create_sample(
-    SampleType: Type[atdata.PackableSample],
+    SampleType: Type[atdata.Packable],
     sample_data: atds.WDSRawSample,
 ):
     """Test our ability to create samples from semi-structured data"""
@@ -160,7 +160,7 @@ def test_create_sample(
     ],
 )
 def test_wds(
-    SampleType: Type[atdata.PackableSample],
+    SampleType: Type[atdata.Packable],
     sample_data: atds.WDSRawSample,
     sample_wds_stem: str,
     tmp_path,
@@ -354,7 +354,7 @@ def test_wds(
     ],
 )
 def test_parquet_export(
-    SampleType: Type[atdata.PackableSample],
+    SampleType: Type[atdata.Packable],
     sample_data: atds.WDSRawSample,
     sample_wds_stem: str,
     test_parquet: bool,
@@ -616,7 +616,7 @@ def test_from_bytes_invalid_msgpack():
     class SimpleSample:
         value: int
 
-    with pytest.raises(Exception):  # ormsgpack raises on invalid data
+    with pytest.raises(TypeError):  # unpacked data is not a mapping
         SimpleSample.from_bytes(b"not valid msgpack data")
 
 
@@ -690,7 +690,7 @@ def test_wrap_corrupted_msgpack(tmp_path):
     dataset = atdata.Dataset[CorruptedSample](wds_filename)
 
     # Corrupted msgpack bytes should raise during deserialization
-    with pytest.raises(Exception):  # ormsgpack raises on corrupted data
+    with pytest.raises(TypeError):  # unpacked data is not a mapping
         dataset.wrap({"__key__": "test", "msgpack": b"\xff\xfe\x00\x01invalid"})
 
 
@@ -703,11 +703,11 @@ def test_dataset_nonexistent_file():
 
     dataset = atdata.Dataset[NonexistentSample]("/nonexistent/path/data.tar")
 
-    # Dataset creation succeeds (lazy loading)
-    assert dataset is not None
+    # Dataset creation succeeds (lazy loading) — verify type is correct
+    assert dataset.sample_type is NonexistentSample
 
     # Iteration fails when file doesn't exist
-    with pytest.raises(Exception):  # FileNotFoundError or similar
+    with pytest.raises(FileNotFoundError):
         list(dataset.ordered(batch_size=None))
 
 
@@ -725,8 +725,9 @@ def test_dataset_invalid_batch_size(tmp_path):
 
     dataset = atdata.Dataset[BatchSizeSample](wds_filename)
 
-    # batch_size=0 produces empty batches, causing IndexError in webdataset
-    with pytest.raises((ValueError, AssertionError, IndexError)):
+    # batch_size=0 produces empty batches, causing IndexError in webdataset's
+    # batched() when it tries to inspect the first element of an empty group
+    with pytest.raises(IndexError):
         list(dataset.ordered(batch_size=0))
 
 

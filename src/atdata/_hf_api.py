@@ -40,9 +40,9 @@ from typing import (
     overload,
 )
 
-from .dataset import Dataset, PackableSample, DictSample
+from .dataset import Dataset, DictSample
 from ._sources import URLSource, S3Source
-from ._protocols import DataSource
+from ._protocols import DataSource, Packable
 
 if TYPE_CHECKING:
     from ._protocols import AbstractIndex
@@ -50,7 +50,62 @@ if TYPE_CHECKING:
 ##
 # Type variables
 
-ST = TypeVar("ST", bound=PackableSample)
+ST = TypeVar("ST", bound=Packable)
+
+
+##
+# Default Index singleton
+
+import threading
+
+_default_index: "Index | None" = None  # noqa: F821 (forward ref)
+_default_index_lock = threading.Lock()
+
+
+def get_default_index() -> "Index":  # noqa: F821
+    """Get or create the module-level default Index.
+
+    The default Index uses Redis for local storage (backwards-compatible
+    default) and an anonymous AtmosphereClient for read-only public data
+    resolution.
+
+    The default is created lazily on first access and cached for the
+    lifetime of the process.
+
+    Returns:
+        The default Index instance.
+
+    Examples:
+        >>> index = get_default_index()
+        >>> entry = index.get_dataset("local/mnist")
+    """
+    global _default_index
+    if _default_index is None:
+        with _default_index_lock:
+            if _default_index is None:
+                from .local import Index
+
+                _default_index = Index()
+    return _default_index
+
+
+def set_default_index(index: "Index") -> None:  # noqa: F821
+    """Override the module-level default Index.
+
+    Use this to configure a custom default Index with specific repositories,
+    an authenticated atmosphere client, or non-default providers.
+
+    Args:
+        index: The Index instance to use as the default.
+
+    Examples:
+        >>> from atdata.local import Index
+        >>> from atdata.providers import create_provider
+        >>> custom = Index(provider=create_provider("sqlite"))
+        >>> set_default_index(custom)
+    """
+    global _default_index
+    _default_index = index
 
 
 ##
@@ -74,10 +129,11 @@ class DatasetDict(Generic[ST], dict):
         >>>
         >>> # Iterate over all splits
         >>> for split_name, dataset in ds_dict.items():
-        ...     print(f"{split_name}: {len(dataset.shard_list)} shards")
+        ...     print(f"{split_name}: {len(dataset.list_shards())} shards")
     """
 
-    # TODO The above has a line for "Parameters:" that should be "Type Parameters:"; this is a temporary fix for `quartodoc` auto-generation bugs.
+    # Note: The docstring uses "Parameters:" for type parameters as a workaround
+    # for quartodoc not supporting "Type Parameters:" sections.
 
     def __init__(
         self,
@@ -459,7 +515,7 @@ def _resolve_indexed_path(
     handle_or_did, dataset_name = _parse_indexed_path(path)
 
     # For AtmosphereIndex, we need to resolve handle to DID first
-    # For LocalIndex, the handle is ignored and we just look up by name
+    # For local Index, the handle is ignored and we just look up by name
     entry = index.get_dataset(dataset_name)
     data_urls = entry.data_urls
 
@@ -624,16 +680,13 @@ def load_dataset(
         >>> train_ds = load_dataset("./data/train-*.tar", TextData, split="train")
         >>>
         >>> # Load from index with auto-type resolution
-        >>> index = LocalIndex()
+        >>> index = Index()
         >>> ds = load_dataset("@local/my-dataset", index=index, split="train")
     """
     # Handle @handle/dataset indexed path resolution
     if _is_indexed_path(path):
         if index is None:
-            raise ValueError(
-                f"Index required for indexed path: {path}. "
-                "Pass index=LocalIndex() or index=AtmosphereIndex(client)."
-            )
+            index = get_default_index()
 
         source, schema_ref = _resolve_indexed_path(path, index)
 

@@ -45,9 +45,13 @@ def numpy_dtype_to_string(dtype: Any) -> str:
         Schema dtype string (e.g., "float32", "int64"). Defaults to "float32".
     """
     dtype_str = str(dtype)
-    for key, value in NUMPY_DTYPE_MAP.items():
+    # Exact match first (handles "float32", "int64", etc.)
+    if dtype_str in NUMPY_DTYPE_MAP:
+        return NUMPY_DTYPE_MAP[dtype_str]
+    # Substring match, longest keys first to avoid "int8" matching "uint8"
+    for key in sorted(NUMPY_DTYPE_MAP, key=len, reverse=True):
         if key in dtype_str:
-            return value
+            return NUMPY_DTYPE_MAP[key]
     return "float32"
 
 
@@ -102,3 +106,25 @@ def extract_ndarray_dtype(python_type: Any) -> str:
         if dtype_arg is not None:
             return numpy_dtype_to_string(dtype_arg)
     return "float32"
+
+
+def parse_semver(version: str) -> tuple[int, int, int]:
+    """Parse a semantic version string into a comparable tuple.
+
+    Args:
+        version: A ``"major.minor.patch"`` version string.
+
+    Returns:
+        Tuple of (major, minor, patch) integers.
+
+    Raises:
+        ValueError: If the version string is not valid semver.
+
+    Examples:
+        >>> parse_semver("1.2.3")
+        (1, 2, 3)
+    """
+    parts = version.split(".")
+    if len(parts) != 3:
+        raise ValueError(f"Invalid semver: {version}")
+    return int(parts[0]), int(parts[1]), int(parts[2])

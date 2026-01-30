@@ -1,1 +1,1 @@
-Sitemap: https://github.com/your-org/atdata/sitemap.xml
+Sitemap: https://github.com/forecast-bio/atdata/sitemap.xml

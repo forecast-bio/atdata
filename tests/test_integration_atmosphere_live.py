@@ -287,7 +287,6 @@ class TestLiveSchemaOperations:
 
         # Find the embedding field
         embedding_field = next(f for f in schema["fields"] if f["name"] == "embedding")
-        assert embedding_field is not None
         # Field type should indicate ndarray
         assert "ndarray" in embedding_field["fieldType"]["$type"].lower()
 
@@ -649,5 +648,6 @@ class TestZZZCleanup:
             f"\nCleanup: deleted {schemas_deleted} schemas, {datasets_deleted} datasets"
         )
 
-        # Just verify cleanup ran without error
-        assert True
+        # Verify cleanup ran and returned counts
+        assert isinstance(schemas_deleted, int)
+        assert isinstance(datasets_deleted, int)
