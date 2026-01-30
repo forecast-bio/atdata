@@ -12,7 +12,12 @@ from typing import Any
 
 import pandas as pd
 
-from ._aggregates import create_aggregate, CategoricalAggregate, NumericAggregate, SetAggregate
+from ._aggregates import (
+    create_aggregate,
+    CategoricalAggregate,
+    NumericAggregate,
+    SetAggregate,
+)
 from ._fields import resolve_manifest_fields
 from ._manifest import ShardManifest
 
@@ -71,7 +76,9 @@ class ManifestBuilder:
         self._pipeline_version = pipeline_version
 
         self._manifest_fields = resolve_manifest_fields(sample_type)
-        self._aggregates: dict[str, CategoricalAggregate | NumericAggregate | SetAggregate] = {
+        self._aggregates: dict[
+            str, CategoricalAggregate | NumericAggregate | SetAggregate
+        ] = {
             name: create_aggregate(mf.aggregate)
             for name, mf in self._manifest_fields.items()
         }
@@ -104,7 +111,9 @@ class ManifestBuilder:
                 self._aggregates[name].add(value)
                 field_values[name] = value
 
-        self._rows.append(_SampleRow(key=key, offset=offset, size=size, fields=field_values))
+        self._rows.append(
+            _SampleRow(key=key, offset=offset, size=size, fields=field_values)
+        )
         self._total_size += size
 
     def build(self) -> ShardManifest:
@@ -115,9 +124,7 @@ class ManifestBuilder:
             per-sample DataFrame.
         """
         # Build aggregates dict
-        aggregates = {
-            name: agg.to_dict() for name, agg in self._aggregates.items()
-        }
+        aggregates = {name: agg.to_dict() for name, agg in self._aggregates.items()}
 
         # Build per-sample DataFrame
         records: list[dict[str, Any]] = []

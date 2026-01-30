@@ -1,19 +1,18 @@
 """Tests for atdata._stub_manager module."""
 
-import pytest
 from pathlib import Path
 
 from atdata._stub_manager import (
     StubManager,
     _extract_authority,
     DEFAULT_STUB_DIR,
-    DEFAULT_AUTHORITY,
 )
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_schema(
     name: str = "StubTestSample",
@@ -26,12 +25,18 @@ def _make_schema(
         fields = [
             {
                 "name": "text",
-                "fieldType": {"$type": "ac.foundation.dataset.schemaType#primitive", "primitive": "str"},
+                "fieldType": {
+                    "$type": "ac.foundation.dataset.schemaType#primitive",
+                    "primitive": "str",
+                },
                 "optional": False,
             },
             {
                 "name": "value",
-                "fieldType": {"$type": "ac.foundation.dataset.schemaType#primitive", "primitive": "int"},
+                "fieldType": {
+                    "$type": "ac.foundation.dataset.schemaType#primitive",
+                    "primitive": "int",
+                },
                 "optional": False,
             },
         ]
@@ -48,6 +53,7 @@ def _make_schema(
 # ---------------------------------------------------------------------------
 # _extract_authority()
 # ---------------------------------------------------------------------------
+
 
 class TestExtractAuthority:
     def test_none_returns_local(self):
@@ -79,6 +85,7 @@ class TestExtractAuthority:
 # StubManager construction
 # ---------------------------------------------------------------------------
 
+
 class TestStubManagerInit:
     def test_default_stub_dir(self):
         mgr = StubManager()
@@ -97,6 +104,7 @@ class TestStubManagerInit:
 # _module_filename()
 # ---------------------------------------------------------------------------
 
+
 class TestModuleFilename:
     def test_basic(self, tmp_path: Path):
         mgr = StubManager(stub_dir=tmp_path)
@@ -110,6 +118,7 @@ class TestModuleFilename:
 # ---------------------------------------------------------------------------
 # _module_path()
 # ---------------------------------------------------------------------------
+
 
 class TestModulePath:
     def test_default_authority(self, tmp_path: Path):
@@ -126,6 +135,7 @@ class TestModulePath:
 # ---------------------------------------------------------------------------
 # _module_is_current()
 # ---------------------------------------------------------------------------
+
 
 class TestModuleIsCurrent:
     def test_file_does_not_exist(self, tmp_path: Path):
@@ -165,6 +175,7 @@ class TestModuleIsCurrent:
 # _ensure_authority_package()
 # ---------------------------------------------------------------------------
 
+
 class TestEnsureAuthorityPackage:
     def test_creates_directory_and_init(self, tmp_path: Path):
         mgr = StubManager(stub_dir=tmp_path / "stubs")
@@ -194,6 +205,7 @@ class TestEnsureAuthorityPackage:
 # _write_module_atomic()
 # ---------------------------------------------------------------------------
 
+
 class TestWriteModuleAtomic:
     def test_writes_file(self, tmp_path: Path):
         mgr = StubManager(stub_dir=tmp_path)
@@ -215,6 +227,7 @@ class TestWriteModuleAtomic:
 # ---------------------------------------------------------------------------
 # ensure_stub()
 # ---------------------------------------------------------------------------
+
 
 class TestEnsureStub:
     def test_generates_module_file(self, tmp_path: Path):
@@ -248,7 +261,9 @@ class TestEnsureStub:
 
     def test_schema_with_ref_uses_authority(self, tmp_path: Path):
         mgr = StubManager(stub_dir=tmp_path)
-        schema = _make_schema(ref="atdata://alice.bsky.social/sampleSchema/StubTestSample@1.0.0")
+        schema = _make_schema(
+            ref="atdata://alice.bsky.social/sampleSchema/StubTestSample@1.0.0"
+        )
         path = mgr.ensure_stub(schema)
 
         assert path is not None
@@ -271,8 +286,14 @@ class TestEnsureStub:
 
     def test_ide_hint_only_once(self, tmp_path: Path, capsys):
         mgr = StubManager(stub_dir=tmp_path)
-        schema_a = _make_schema(name="SampleA", ref="atdata://local/sampleSchema/SampleA@1.0.0")
-        schema_b = _make_schema(name="SampleB", version="2.0.0", ref="atdata://local/sampleSchema/SampleB@2.0.0")
+        schema_a = _make_schema(
+            name="SampleA", ref="atdata://local/sampleSchema/SampleA@1.0.0"
+        )
+        schema_b = _make_schema(
+            name="SampleB",
+            version="2.0.0",
+            ref="atdata://local/sampleSchema/SampleB@2.0.0",
+        )
         mgr.ensure_stub(schema_a)
         mgr.ensure_stub(schema_b)
         captured = capsys.readouterr()
@@ -282,6 +303,7 @@ class TestEnsureStub:
 # ---------------------------------------------------------------------------
 # ensure_module()
 # ---------------------------------------------------------------------------
+
 
 class TestEnsureModule:
     def test_returns_class(self, tmp_path: Path):
@@ -318,6 +340,7 @@ class TestEnsureModule:
 # list_stubs()
 # ---------------------------------------------------------------------------
 
+
 class TestListStubs:
     def test_empty_directory(self, tmp_path: Path):
         mgr = StubManager(stub_dir=tmp_path / "empty")
@@ -325,8 +348,12 @@ class TestListStubs:
 
     def test_lists_generated_files(self, tmp_path: Path):
         mgr = StubManager(stub_dir=tmp_path)
-        mgr.ensure_stub(_make_schema(name="Alpha", ref="atdata://local/sampleSchema/Alpha@1.0.0"))
-        mgr.ensure_stub(_make_schema(name="Beta", ref="atdata://local/sampleSchema/Beta@1.0.0"))
+        mgr.ensure_stub(
+            _make_schema(name="Alpha", ref="atdata://local/sampleSchema/Alpha@1.0.0")
+        )
+        mgr.ensure_stub(
+            _make_schema(name="Beta", ref="atdata://local/sampleSchema/Beta@1.0.0")
+        )
 
         stubs = mgr.list_stubs()
         names = {p.name for p in stubs}
@@ -342,7 +369,11 @@ class TestListStubs:
 
     def test_filter_by_authority(self, tmp_path: Path):
         mgr = StubManager(stub_dir=tmp_path)
-        mgr.ensure_stub(_make_schema(name="LocalSample", ref="atdata://local/sampleSchema/LocalSample@1.0.0"))
+        mgr.ensure_stub(
+            _make_schema(
+                name="LocalSample", ref="atdata://local/sampleSchema/LocalSample@1.0.0"
+            )
+        )
         mgr.ensure_stub(
             _make_schema(
                 name="RemoteSample",
@@ -368,11 +399,16 @@ class TestListStubs:
 # clear_stubs()
 # ---------------------------------------------------------------------------
 
+
 class TestClearStubs:
     def test_removes_files_and_returns_count(self, tmp_path: Path):
         mgr = StubManager(stub_dir=tmp_path)
-        mgr.ensure_stub(_make_schema(name="A", ref="atdata://local/sampleSchema/A@1.0.0"))
-        mgr.ensure_stub(_make_schema(name="B", ref="atdata://local/sampleSchema/B@1.0.0"))
+        mgr.ensure_stub(
+            _make_schema(name="A", ref="atdata://local/sampleSchema/A@1.0.0")
+        )
+        mgr.ensure_stub(
+            _make_schema(name="B", ref="atdata://local/sampleSchema/B@1.0.0")
+        )
 
         removed = mgr.clear_stubs()
         assert removed == 2
@@ -396,7 +432,11 @@ class TestClearStubs:
 
     def test_clear_stubs_by_authority(self, tmp_path: Path):
         mgr = StubManager(stub_dir=tmp_path)
-        mgr.ensure_stub(_make_schema(name="LocalSample", ref="atdata://local/sampleSchema/LocalSample@1.0.0"))
+        mgr.ensure_stub(
+            _make_schema(
+                name="LocalSample", ref="atdata://local/sampleSchema/LocalSample@1.0.0"
+            )
+        )
         mgr.ensure_stub(
             _make_schema(
                 name="RemoteSample",
@@ -414,7 +454,9 @@ class TestClearStubs:
 
     def test_clear_stubs_authority_clears_only_matching_cache(self, tmp_path: Path):
         mgr = StubManager(stub_dir=tmp_path)
-        local_schema = _make_schema(name="LocalSample", ref="atdata://local/sampleSchema/LocalSample@1.0.0")
+        local_schema = _make_schema(
+            name="LocalSample", ref="atdata://local/sampleSchema/LocalSample@1.0.0"
+        )
         remote_schema = _make_schema(
             name="RemoteSample",
             ref="atdata://alice.bsky.social/sampleSchema/RemoteSample@1.0.0",
@@ -435,6 +477,7 @@ class TestClearStubs:
 # ---------------------------------------------------------------------------
 # clear_stub()
 # ---------------------------------------------------------------------------
+
 
 class TestClearStub:
     def test_removes_specific_file(self, tmp_path: Path):
@@ -462,6 +505,7 @@ class TestClearStub:
 # get_stub_path()
 # ---------------------------------------------------------------------------
 
+
 class TestGetStubPath:
     def test_returns_path_when_exists(self, tmp_path: Path):
         mgr = StubManager(stub_dir=tmp_path)
@@ -477,17 +521,23 @@ class TestGetStubPath:
     def test_respects_authority(self, tmp_path: Path):
         mgr = StubManager(stub_dir=tmp_path)
         mgr.ensure_stub(
-            _make_schema(ref="atdata://alice.bsky.social/sampleSchema/StubTestSample@1.0.0")
+            _make_schema(
+                ref="atdata://alice.bsky.social/sampleSchema/StubTestSample@1.0.0"
+            )
         )
         # Should not find it under default "local" authority
         assert mgr.get_stub_path("StubTestSample", "1.0.0") is None
         # Should find it under correct authority
-        assert mgr.get_stub_path("StubTestSample", "1.0.0", authority="alice.bsky.social") is not None
+        assert (
+            mgr.get_stub_path("StubTestSample", "1.0.0", authority="alice.bsky.social")
+            is not None
+        )
 
 
 # ---------------------------------------------------------------------------
 # Backwards-compatibility aliases
 # ---------------------------------------------------------------------------
+
 
 class TestAliases:
     def test_stub_filename_alias(self, tmp_path: Path):
@@ -501,4 +551,6 @@ class TestAliases:
     def test_stub_is_current_alias(self, tmp_path: Path):
         mgr = StubManager(stub_dir=tmp_path)
         path = tmp_path / "fake.py"
-        assert mgr._stub_is_current(path, "1.0.0") == mgr._module_is_current(path, "1.0.0")
+        assert mgr._stub_is_current(path, "1.0.0") == mgr._module_is_current(
+            path, "1.0.0"
+        )

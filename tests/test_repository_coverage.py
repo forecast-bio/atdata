@@ -176,7 +176,7 @@ def test_insert_dataset_auto_schema(backend) -> None:
     backend._dataset_publisher.publish.return_value = "at://did/col/auto"
     backend._dataset_loader.get.return_value = {"name": "auto-ds"}
 
-    entry = backend.insert_dataset(MagicMock(), name="auto-ds")
+    backend.insert_dataset(MagicMock(), name="auto-ds")
 
     call_kwargs = backend._dataset_publisher.publish.call_args[1]
     assert call_kwargs["auto_publish_schema"] is True
@@ -256,7 +256,9 @@ def test_decode_schema(backend) -> None:
 
     fake_type = type("Decoded", (), {})
 
-    with patch("atdata._schema_codec.schema_to_type", return_value=fake_type) as mock_s2t:
+    with patch(
+        "atdata._schema_codec.schema_to_type", return_value=fake_type
+    ) as mock_s2t:
         result = backend.decode_schema("at://did/schema/decode")
 
     mock_s2t.assert_called_once_with({"name": "Decoded", "fields": []})

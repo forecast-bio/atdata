@@ -72,7 +72,9 @@ class LocalDatasetEntry:
     def cid(self) -> str:
         """Content identifier (ATProto-compatible CID)."""
         if self._cid is None:
-            raise RuntimeError("CID not initialized; this should not happen after __post_init__")
+            raise RuntimeError(
+                "CID not initialized; this should not happen after __post_init__"
+            )
         return self._cid
 
     # Legacy compatibility

@@ -124,9 +124,7 @@ class _AtmosphereBackend:
         from .atmosphere.client import AtmosphereClient
 
         if not isinstance(client, AtmosphereClient):
-            raise TypeError(
-                f"Expected AtmosphereClient, got {type(client).__name__}"
-            )
+            raise TypeError(f"Expected AtmosphereClient, got {type(client).__name__}")
         self.client: AtmosphereClient = client
         self._data_store = data_store
         self._schema_publisher: Any = None

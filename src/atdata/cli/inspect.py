@@ -34,7 +34,7 @@ def inspect_dataset(url: str) -> int:
         samples = ds.head(1)
         if samples:
             sample = samples[0]
-            print(f"Schema:   (inferred from first sample)")
+            print("Schema:   (inferred from first sample)")
             for key in sample.keys():
                 val = sample[key]
                 print(f"  {key}: {_describe_value(val)}")
@@ -61,7 +61,7 @@ def _describe_value(val: Any) -> str:
         return f"bytes len={len(val)}"
     if isinstance(val, str):
         truncated = val[:60] + ("..." if len(val) > 60 else "")
-        return f"str \"{truncated}\""
+        return f'str "{truncated}"'
     if isinstance(val, (int, float, bool)):
         return f"{type(val).__name__} {val}"
     if isinstance(val, list):

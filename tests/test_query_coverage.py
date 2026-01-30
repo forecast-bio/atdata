@@ -10,7 +10,6 @@ from typing import Annotated
 
 import numpy as np
 import pandas as pd
-import pytest
 from numpy.typing import NDArray
 
 import atdata
@@ -19,7 +18,6 @@ from atdata.manifest import (
     ManifestField,
     ManifestWriter,
     QueryExecutor,
-    SampleLocation,
     ShardManifest,
 )
 
@@ -144,10 +142,13 @@ def test_from_directory_both_files(tmp_path: Path) -> None:
 
 def test_from_shard_urls_both_files(tmp_path: Path) -> None:
     """from_shard_urls loads when both .manifest.json and .manifest.parquet exist."""
-    manifest = _build_manifest("shard-000010", [
-        _make_sample("bird", 0.7),
-        _make_sample("fish", 0.3),
-    ])
+    manifest = _build_manifest(
+        "shard-000010",
+        [
+            _make_sample("bird", 0.7),
+            _make_sample("fish", 0.3),
+        ],
+    )
     _write_manifest(tmp_path, "shard-000010", manifest)
 
     shard_url = str(tmp_path / "shard-000010.tar")
@@ -206,7 +207,7 @@ def test_from_shard_urls_mixed(tmp_path: Path) -> None:
     # A (full) + B (json-only) loaded; C skipped
     assert len(executor._manifests) == 2
     assert not executor._manifests[0].samples.empty  # shard-a: full
-    assert executor._manifests[1].samples.empty       # shard-b: json-only
+    assert executor._manifests[1].samples.empty  # shard-b: json-only
 
     results = executor.query(where=lambda df: df["score"] >= 1.0)
     # Only shard-a has queryable samples

@@ -241,9 +241,7 @@ class Index:
                 return None
         return self._atmosphere
 
-    def _resolve_prefix(
-        self, ref: str
-    ) -> tuple[str, str, str | None]:
+    def _resolve_prefix(self, ref: str) -> tuple[str, str, str | None]:
         """Route a dataset/schema reference to the correct backend.
 
         Returns:
@@ -269,7 +267,7 @@ class Index:
 
         # atdata:// full URI
         if ref.startswith("atdata://"):
-            path = ref[len("atdata://"):]
+            path = ref[len("atdata://") :]
             parts = path.split("/")
             # atdata://mount/collection/name  or  atdata://mount/name
             repo_name = parts[0]
@@ -940,5 +938,3 @@ class Index:
         if self._stub_manager is not None:
             return self._stub_manager.clear_stubs()
         return 0
-
-

@@ -16,7 +16,6 @@ import pytest
 import webdataset as wds
 
 import atdata
-import atdata.local as atlocal
 from atdata.repository import Repository, create_repository
 from atdata.providers._sqlite import SqliteProvider
 from atdata.local import Index
@@ -181,16 +180,12 @@ class TestResolvePrefix:
         assert ref == "at://did:plc:abc/collection/rkey"
 
     def test_atdata_uri_local(self, index):
-        key, ref, handle = index._resolve_prefix(
-            "atdata://local/record/mnist"
-        )
+        key, ref, handle = index._resolve_prefix("atdata://local/record/mnist")
         assert key == "local"
         assert ref == "mnist"
 
     def test_atdata_uri_named_repo(self, index):
-        key, ref, handle = index._resolve_prefix(
-            "atdata://lab/record/mnist"
-        )
+        key, ref, handle = index._resolve_prefix("atdata://lab/record/mnist")
         assert key == "lab"
         assert ref == "mnist"
 
@@ -210,9 +205,7 @@ class TestResolvePrefix:
 
     def test_atdata_uri_unknown_prefix_routes_to_atmosphere(self, index):
         """atdata:// with unrecognized prefix routes to atmosphere."""
-        key, ref, handle = index._resolve_prefix(
-            "atdata://unknownrepo/record/mnist"
-        )
+        key, ref, handle = index._resolve_prefix("atdata://unknownrepo/record/mnist")
         assert key == "_atmosphere"
         assert ref == "mnist"
         assert handle == "unknownrepo"
@@ -230,13 +223,11 @@ class TestCrossRepoOperations:
         index = Index(provider=sqlite_provider, atmosphere=None)
         ds = atdata.Dataset[RepoTestSample](str(tar_file))
 
-        entry = index.insert_dataset(ds, name="mnist")
+        index.insert_dataset(ds, name="mnist")
         retrieved = index.get_dataset("mnist")
         assert retrieved.name == "mnist"
 
-    def test_insert_and_get_named_repo(
-        self, sqlite_provider, extra_provider, tar_file
-    ):
+    def test_insert_and_get_named_repo(self, sqlite_provider, extra_provider, tar_file):
         index = Index(
             provider=sqlite_provider,
             repos={"lab": Repository(provider=extra_provider)},
@@ -272,9 +263,7 @@ class TestCrossRepoOperations:
         retrieved = index.get_dataset("local/mnist")
         assert retrieved.name == "mnist"
 
-    def test_list_datasets_aggregates(
-        self, sqlite_provider, extra_provider, tar_file
-    ):
+    def test_list_datasets_aggregates(self, sqlite_provider, extra_provider, tar_file):
         index = Index(
             provider=sqlite_provider,
             repos={"lab": Repository(provider=extra_provider)},
@@ -291,9 +280,7 @@ class TestCrossRepoOperations:
         assert "local_ds" in names
         assert "lab_ds" in names
 
-    def test_list_datasets_filtered(
-        self, sqlite_provider, extra_provider, tar_file
-    ):
+    def test_list_datasets_filtered(self, sqlite_provider, extra_provider, tar_file):
         index = Index(
             provider=sqlite_provider,
             repos={"lab": Repository(provider=extra_provider)},
@@ -317,9 +304,7 @@ class TestCrossRepoOperations:
         with pytest.raises(ValueError, match="Atmosphere backend required"):
             index.get_dataset("@handle/dataset")
 
-    def test_insert_dataset_atmosphere_disabled_raises(
-        self, sqlite_provider, tar_file
-    ):
+    def test_insert_dataset_atmosphere_disabled_raises(self, sqlite_provider, tar_file):
         index = Index(provider=sqlite_provider, atmosphere=None)
         ds = atdata.Dataset[RepoTestSample](str(tar_file))
         with pytest.raises(ValueError, match="Atmosphere backend required"):

@@ -44,12 +44,16 @@ class LensNotFoundError(AtdataError, ValueError):
             lines.append("")
             lines.append(f"Available lenses from {src_name}:")
             for target_type, lens_name in self.available_targets:
-                lines.append(f"  - {src_name} \u2192 {target_type.__name__} (via {lens_name})")
+                lines.append(
+                    f"  - {src_name} \u2192 {target_type.__name__} (via {lens_name})"
+                )
 
         lines.append("")
         lines.append("Did you mean to define:")
-        lines.append(f"  @lens")
-        lines.append(f"  def {src_name.lower()}_to_{view_name.lower()}(source: {src_name}) -> {view_name}:")
+        lines.append("  @lens")
+        lines.append(
+            f"  def {src_name.lower()}_to_{view_name.lower()}(source: {src_name}) -> {view_name}:"
+        )
         lines.append(f"      return {view_name}(...)")
 
         super().__init__("\n".join(lines))

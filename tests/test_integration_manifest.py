@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import Annotated
 
 import numpy as np
-import pytest
 import webdataset as wds
 from numpy.typing import NDArray
 
@@ -106,7 +105,9 @@ class TestManifestWriteDuringShardCreation:
         return tar_paths, json_paths, parquet_paths
 
     def test_manifest_files_created(self, tmp_path: Path):
-        tar_paths, json_paths, parquet_paths = self._write_shards_with_manifests(tmp_path)
+        tar_paths, json_paths, parquet_paths = self._write_shards_with_manifests(
+            tmp_path
+        )
 
         assert len(tar_paths) == 3
         assert len(json_paths) == 3
@@ -120,7 +121,9 @@ class TestManifestWriteDuringShardCreation:
             assert pp.suffix == ".parquet"
 
     def test_manifest_content_matches_data(self, tmp_path: Path):
-        tar_paths, json_paths, parquet_paths = self._write_shards_with_manifests(tmp_path)
+        tar_paths, json_paths, parquet_paths = self._write_shards_with_manifests(
+            tmp_path
+        )
 
         manifest = ShardManifest.from_files(json_paths[0], parquet_paths[0])
         assert manifest.num_samples == 5

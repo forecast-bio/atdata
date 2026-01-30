@@ -110,7 +110,9 @@ def up(
     redis_port: int = typer.Option(6379, help="Redis port."),
     minio_port: int = typer.Option(9000, help="MinIO API port."),
     minio_console_port: int = typer.Option(9001, help="MinIO console port."),
-    detach: bool = typer.Option(True, "--detach", "-d", help="Run containers in detached mode."),
+    detach: bool = typer.Option(
+        True, "--detach", "-d", help="Run containers in detached mode."
+    ),
 ) -> None:
     """Start Redis and MinIO containers."""
     from .local import local_up
@@ -126,7 +128,9 @@ def up(
 
 @local_app.command()
 def down(
-    volumes: bool = typer.Option(False, "--volumes", "-v", help="Also remove volumes (deletes all data)."),
+    volumes: bool = typer.Option(
+        False, "--volumes", "-v", help="Also remove volumes (deletes all data)."
+    ),
 ) -> None:
     """Stop local development containers."""
     from .local import local_down
@@ -151,7 +155,9 @@ def status() -> None:
 
 @schema_app.command("show")
 def schema_show(
-    dataset_ref: str = typer.Argument(help="Dataset URL, local path, or index reference."),
+    dataset_ref: str = typer.Argument(
+        help="Dataset URL, local path, or index reference."
+    ),
 ) -> None:
     """Display dataset schema."""
     from .schema import schema_show as _schema_show

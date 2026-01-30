@@ -29,6 +29,7 @@ Examples:
 from __future__ import annotations
 
 import re
+import threading
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
@@ -55,8 +56,6 @@ ST = TypeVar("ST", bound=Packable)
 
 ##
 # Default Index singleton
-
-import threading
 
 _default_index: "Index | None" = None  # noqa: F821 (forward ref)
 _default_index_lock = threading.Lock()

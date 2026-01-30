@@ -23,7 +23,6 @@ from atdata.manifest import (
     ManifestWriter,
     NumericAggregate,
     QueryExecutor,
-    SampleLocation,
     SetAggregate,
     ShardManifest,
     create_aggregate,
@@ -261,7 +260,11 @@ class TestManifestBuilder:
         assert manifest.aggregates["confidence"]["min"] == 0.80
         assert manifest.aggregates["confidence"]["max"] == 0.95
         assert manifest.aggregates["tags"]["type"] == "set"
-        assert set(manifest.aggregates["tags"]["all_values"]) == {"outdoor", "day", "indoor"}
+        assert set(manifest.aggregates["tags"]["all_values"]) == {
+            "outdoor",
+            "day",
+            "indoor",
+        }
 
         # Check samples DataFrame
         assert len(manifest.samples) == 2
@@ -318,8 +321,18 @@ class TestManifestWriterRoundTrip:
             size_bytes=3584,
             created_at=datetime(2025, 1, 22, 14, 32, 0, tzinfo=timezone.utc),
             aggregates={
-                "label": {"type": "categorical", "cardinality": 2, "value_counts": {"dog": 2, "cat": 1}},
-                "confidence": {"type": "numeric", "min": 0.70, "max": 0.95, "mean": 0.8167, "count": 3},
+                "label": {
+                    "type": "categorical",
+                    "cardinality": 2,
+                    "value_counts": {"dog": 2, "cat": 1},
+                },
+                "confidence": {
+                    "type": "numeric",
+                    "min": 0.70,
+                    "max": 0.95,
+                    "mean": 0.8167,
+                    "count": 3,
+                },
             },
             samples=samples,
         )
@@ -394,8 +407,18 @@ class TestQueryExecutor:
             size_bytes=2048,
             created_at=datetime.now(timezone.utc),
             aggregates={
-                "label": {"type": "categorical", "cardinality": 2, "value_counts": {"dog": 1, "cat": 1}},
-                "confidence": {"type": "numeric", "min": 0.40, "max": 0.95, "mean": 0.675, "count": 2},
+                "label": {
+                    "type": "categorical",
+                    "cardinality": 2,
+                    "value_counts": {"dog": 1, "cat": 1},
+                },
+                "confidence": {
+                    "type": "numeric",
+                    "min": 0.40,
+                    "max": 0.95,
+                    "mean": 0.675,
+                    "count": 2,
+                },
             },
             samples=samples1,
         )
@@ -417,8 +440,18 @@ class TestQueryExecutor:
             size_bytes=1024,
             created_at=datetime.now(timezone.utc),
             aggregates={
-                "label": {"type": "categorical", "cardinality": 2, "value_counts": {"bird": 1, "dog": 1}},
-                "confidence": {"type": "numeric", "min": 0.60, "max": 0.85, "mean": 0.725, "count": 2},
+                "label": {
+                    "type": "categorical",
+                    "cardinality": 2,
+                    "value_counts": {"bird": 1, "dog": 1},
+                },
+                "confidence": {
+                    "type": "numeric",
+                    "min": 0.60,
+                    "max": 0.85,
+                    "mean": 0.725,
+                    "count": 2,
+                },
             },
             samples=samples2,
         )

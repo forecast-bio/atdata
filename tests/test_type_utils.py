@@ -1,6 +1,5 @@
 """Tests for _type_utils module — shared type conversion utilities."""
 
-import types
 from typing import Optional, Union
 
 import numpy as np

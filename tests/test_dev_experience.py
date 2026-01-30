@@ -11,7 +11,6 @@ import pytest
 import numpy as np
 import webdataset as wds
 
-import atdata
 from atdata import (
     Dataset,
     DictSample,

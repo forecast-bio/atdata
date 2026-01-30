@@ -78,7 +78,9 @@ class ShardManifest:
         return header
 
     @classmethod
-    def from_files(cls, json_path: str | Path, parquet_path: str | Path) -> ShardManifest:
+    def from_files(
+        cls, json_path: str | Path, parquet_path: str | Path
+    ) -> ShardManifest:
         """Load a manifest from its JSON + parquet companion files.
 
         Args:

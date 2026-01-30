@@ -52,6 +52,7 @@ import requests
 
 import typing
 from typing import (
+    TYPE_CHECKING,
     Any,
     Optional,
     Dict,
@@ -67,6 +68,9 @@ from typing import (
     dataclass_transform,
     overload,
 )
+
+if TYPE_CHECKING:
+    from .manifest._query import SampleLocation
 from numpy.typing import NDArray
 
 import msgpack
@@ -333,7 +337,9 @@ class SampleBatch(Generic[DT]):
         if self._sample_type_cache is None:
             self._sample_type_cache = typing.get_args(self.__orig_class__)[0]
             if self._sample_type_cache is None:
-                raise TypeError("SampleBatch requires a type parameter, e.g. SampleBatch[MySample]")
+                raise TypeError(
+                    "SampleBatch requires a type parameter, e.g. SampleBatch[MySample]"
+                )
         return self._sample_type_cache
 
     def __getattr__(self, name):
@@ -433,7 +439,9 @@ class Dataset(Generic[ST]):
         if self._sample_type_cache is None:
             self._sample_type_cache = typing.get_args(self.__orig_class__)[0]
             if self._sample_type_cache is None:
-                raise TypeError("Dataset requires a type parameter, e.g. Dataset[MySample]")
+                raise TypeError(
+                    "Dataset requires a type parameter, e.g. Dataset[MySample]"
+                )
         return self._sample_type_cache
 
     @property
@@ -778,8 +786,7 @@ class Dataset(Generic[ST]):
         """
         samples = self.head(limit) if limit is not None else list(self.ordered())
         rows = [
-            asdict(s) if dataclasses.is_dataclass(s) else s.to_dict()
-            for s in samples
+            asdict(s) if dataclasses.is_dataclass(s) else s.to_dict() for s in samples
         ]
         return pd.DataFrame(rows)
 

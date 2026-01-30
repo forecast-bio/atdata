@@ -226,6 +226,7 @@ class S3DataStore:
             )
 
             if manifest:
+
                 def writer_post(p: str):
                     # Finalize the current manifest builder when a shard completes
                     builder = current_builder[0]
@@ -285,7 +286,9 @@ class S3DataStore:
 
                         s3_kwargs = {
                             "aws_access_key_id": self.credentials["AWS_ACCESS_KEY_ID"],
-                            "aws_secret_access_key": self.credentials["AWS_SECRET_ACCESS_KEY"],
+                            "aws_secret_access_key": self.credentials[
+                                "AWS_SECRET_ACCESS_KEY"
+                            ],
                         }
                         if "AWS_ENDPOINT" in self.credentials:
                             s3_kwargs["endpoint_url"] = self.credentials["AWS_ENDPOINT"]
@@ -296,9 +299,13 @@ class S3DataStore:
                         parquet_s3_key = str(Path(*Path(parquet_key).parts[1:]))
 
                         with open(json_path, "rb") as f:
-                            s3_client.put_object(Bucket=bucket_name, Key=json_s3_key, Body=f.read())
+                            s3_client.put_object(
+                                Bucket=bucket_name, Key=json_s3_key, Body=f.read()
+                            )
                         with open(parquet_path, "rb") as f:
-                            s3_client.put_object(Bucket=bucket_name, Key=parquet_s3_key, Body=f.read())
+                            s3_client.put_object(
+                                Bucket=bucket_name, Key=parquet_s3_key, Body=f.read()
+                            )
                     else:
                         self._fs.put(str(json_path), f"s3://{json_key}")
                         self._fs.put(str(parquet_path), f"s3://{parquet_key}")

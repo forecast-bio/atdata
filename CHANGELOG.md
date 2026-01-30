@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Fix CI linting failures (20 ruff errors) (#503)
 - Adversarial review: Post-benchmark suite assessment (#494)
 - Remove redundant protocol docstrings that restate signatures (#500)
 - Add missing unit tests for _type_utils.py (#499)

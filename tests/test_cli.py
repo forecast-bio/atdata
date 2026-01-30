@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import subprocess
 from dataclasses import dataclass
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
@@ -244,7 +244,9 @@ class TestPreviewDataset:
         # The Dataset constructor succeeds for any URL string; the error
         # occurs on iteration. Mock the Dataset to raise at construction.
         mock_ds_cls = MagicMock(side_effect=ValueError("bad url"))
-        with patch("atdata.dataset.Dataset.__class_getitem__", return_value=mock_ds_cls):
+        with patch(
+            "atdata.dataset.Dataset.__class_getitem__", return_value=mock_ds_cls
+        ):
             code = preview_dataset("/no/such/file.tar")
         assert code == 1
         err = capsys.readouterr().err
@@ -293,7 +295,9 @@ class TestSchemaShow:
 
     def test_show_bad_url(self, capsys):
         mock_ds_cls = MagicMock(side_effect=ValueError("bad url"))
-        with patch("atdata.dataset.Dataset.__class_getitem__", return_value=mock_ds_cls):
+        with patch(
+            "atdata.dataset.Dataset.__class_getitem__", return_value=mock_ds_cls
+        ):
             code = schema_show("/no/such.tar")
         assert code == 1
 
@@ -319,7 +323,9 @@ class TestSchemaDiff:
 
     def test_diff_bad_url(self, capsys):
         mock_ds_cls = MagicMock(side_effect=ValueError("bad url"))
-        with patch("atdata.dataset.Dataset.__class_getitem__", return_value=mock_ds_cls):
+        with patch(
+            "atdata.dataset.Dataset.__class_getitem__", return_value=mock_ds_cls
+        ):
             code = schema_diff("/no/a.tar", "/no/b.tar")
         assert code == 2
 
@@ -423,7 +429,7 @@ class TestDiagnoseRedis:
     @patch("redis.Redis")
     def test_rdb_disabled(self, mock_redis_cls, capsys):
         mock_redis_cls.return_value = self._make_redis_mock(save="")
-        code = diagnose_redis()
+        diagnose_redis()
         out = capsys.readouterr().out
         assert "RDB" in out
 
@@ -491,11 +497,9 @@ class TestDiagnoseRedis:
 
     def test_diagnose_via_cli(self):
         """CLI command wires through to diagnose_redis."""
-        with patch("atdata.cli.diagnose.diagnose_redis", return_value=0) as mock_fn:
+        with patch("atdata.cli.diagnose.diagnose_redis", return_value=0):
             # Patch at the import location used by __init__.py
-            with patch(
-                "atdata.cli.diagnose.diagnose_redis", return_value=0
-            ) as mock_fn2:
+            with patch("atdata.cli.diagnose.diagnose_redis", return_value=0):
                 result = runner.invoke(app, ["diagnose"])
                 # May have either exit code depending on import path
                 # Just verify it doesn't crash
@@ -610,15 +614,18 @@ class TestRunCompose:
     def test_compose_v1_fallback(self, mock_which, mock_run, tmp_path):
         # docker exists, but `docker compose version` fails -> fallback to docker-compose
         mock_which.side_effect = lambda cmd: (
-            "/usr/bin/docker" if cmd == "docker" else
-            "/usr/bin/docker-compose" if cmd == "docker-compose" else None
+            "/usr/bin/docker"
+            if cmd == "docker"
+            else "/usr/bin/docker-compose"
+            if cmd == "docker-compose"
+            else None
         )
         mock_run.side_effect = [
             subprocess.CompletedProcess(args=[], returncode=1),  # v2 check fails
             subprocess.CompletedProcess(args=[], returncode=0, stdout="ok"),
         ]
         with patch("atdata.cli.local.Path.home", return_value=tmp_path):
-            result = _run_compose("version: '3'\n", ["up"])
+            _run_compose("version: '3'\n", ["up"])
         call_args = mock_run.call_args_list[1][0][0]
         assert call_args[0] == "docker-compose"
 
@@ -646,9 +653,7 @@ class TestLocalUp:
     @patch("atdata.cli.local._check_docker", return_value=True)
     @patch("atdata.cli.local.time", create=True)
     def test_success(self, mock_time, mock_check, mock_compose, capsys):
-        mock_compose.return_value = subprocess.CompletedProcess(
-            args=[], returncode=0
-        )
+        mock_compose.return_value = subprocess.CompletedProcess(args=[], returncode=0)
         # Patch time.sleep inside local_up
         with patch("time.sleep"):
             code = local_up()
@@ -664,9 +669,7 @@ class TestLocalUp:
     @patch("atdata.cli.local._run_compose")
     @patch("atdata.cli.local._check_docker", return_value=True)
     def test_compose_failure(self, mock_check, mock_compose, capsys):
-        mock_compose.return_value = subprocess.CompletedProcess(
-            args=[], returncode=2
-        )
+        mock_compose.return_value = subprocess.CompletedProcess(args=[], returncode=2)
         code = local_up()
         assert code == 2
 
@@ -679,9 +682,7 @@ class TestLocalUp:
     @patch("atdata.cli.local._run_compose")
     @patch("atdata.cli.local._check_docker", return_value=True)
     def test_detach_flag(self, mock_check, mock_compose, capsys):
-        mock_compose.return_value = subprocess.CompletedProcess(
-            args=[], returncode=0
-        )
+        mock_compose.return_value = subprocess.CompletedProcess(args=[], returncode=0)
         with patch("time.sleep"):
             local_up(detach=True)
         compose_cmd = mock_compose.call_args[0][1]
@@ -690,9 +691,7 @@ class TestLocalUp:
     @patch("atdata.cli.local._run_compose")
     @patch("atdata.cli.local._check_docker", return_value=True)
     def test_no_detach(self, mock_check, mock_compose, capsys):
-        mock_compose.return_value = subprocess.CompletedProcess(
-            args=[], returncode=0
-        )
+        mock_compose.return_value = subprocess.CompletedProcess(args=[], returncode=0)
         with patch("time.sleep"):
             local_up(detach=False)
         compose_cmd = mock_compose.call_args[0][1]
@@ -703,9 +702,7 @@ class TestLocalDown:
     @patch("atdata.cli.local._run_compose")
     @patch("atdata.cli.local._check_docker", return_value=True)
     def test_success(self, mock_check, mock_compose, capsys):
-        mock_compose.return_value = subprocess.CompletedProcess(
-            args=[], returncode=0
-        )
+        mock_compose.return_value = subprocess.CompletedProcess(args=[], returncode=0)
         code = local_down()
         assert code == 0
         out = capsys.readouterr().out
@@ -718,9 +715,7 @@ class TestLocalDown:
     @patch("atdata.cli.local._run_compose")
     @patch("atdata.cli.local._check_docker", return_value=True)
     def test_with_volumes(self, mock_check, mock_compose, capsys):
-        mock_compose.return_value = subprocess.CompletedProcess(
-            args=[], returncode=0
-        )
+        mock_compose.return_value = subprocess.CompletedProcess(args=[], returncode=0)
         local_down(remove_volumes=True)
         compose_cmd = mock_compose.call_args[0][1]
         assert "-v" in compose_cmd
@@ -730,9 +725,7 @@ class TestLocalDown:
     @patch("atdata.cli.local._run_compose")
     @patch("atdata.cli.local._check_docker", return_value=True)
     def test_compose_failure(self, mock_check, mock_compose, capsys):
-        mock_compose.return_value = subprocess.CompletedProcess(
-            args=[], returncode=3
-        )
+        mock_compose.return_value = subprocess.CompletedProcess(args=[], returncode=3)
         code = local_down()
         assert code == 3
 
