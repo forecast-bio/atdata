@@ -107,6 +107,57 @@ class TestQueryPredicateBenchmarks:
 
 
 # =============================================================================
+# Query Result Iteration Benchmarks
+# =============================================================================
+
+
+@pytest.mark.bench_query
+class TestQueryIterationBenchmarks:
+    """Benchmark iterating through query results to access sample locations."""
+
+    def test_iterate_equality_results(self, benchmark, query_dataset_medium):
+        executor, _ = query_dataset_medium
+        # Pre-run to capture result count for per-result normalization
+        n = len(executor.query(where=lambda df: df["label"] == "dog"))
+        benchmark.extra_info["n_samples"] = n
+
+        def _query_and_iterate():
+            results = executor.query(where=lambda df: df["label"] == "dog")
+            keys = [loc.key for loc in results]
+            return len(keys)
+
+        count = benchmark(_query_and_iterate)
+        assert count == n
+
+    def test_iterate_range_results(self, benchmark, query_dataset_medium):
+        executor, _ = query_dataset_medium
+        n = len(executor.query(where=lambda df: df["confidence"] > 0.5))
+        benchmark.extra_info["n_samples"] = n
+
+        def _query_and_iterate():
+            results = executor.query(where=lambda df: df["confidence"] > 0.5)
+            by_shard: dict[str, list[int]] = {}
+            for loc in results:
+                by_shard.setdefault(loc.shard, []).append(loc.offset)
+            return sum(len(v) for v in by_shard.values())
+
+        count = benchmark(_query_and_iterate)
+        assert count == n
+
+    def test_iterate_large_result_set(self, benchmark, query_dataset_large):
+        executor, _ = query_dataset_large
+        benchmark.extra_info["n_samples"] = 10000
+
+        def _query_and_iterate():
+            results = executor.query(where=lambda df: df["confidence"] >= 0.0)
+            keys = [loc.key for loc in results]
+            return len(keys)
+
+        count = benchmark(_query_and_iterate)
+        assert count == 10000
+
+
+# =============================================================================
 # Scale Benchmarks
 # =============================================================================
 
