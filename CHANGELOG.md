@@ -25,6 +25,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Increase test coverage for low-coverage modules (#480)
+- Add providers/_postgres.py tests (mock-based) (#485)
+- Add _stub_manager.py tests (#484)
+- Add manifest/_query.py tests (#483)
+- Add repository.py tests (#482)
+- Add CLI tests (cli/__init__, diagnose, local, preview, schema) (#481)
+- Check test coverage for CLI utils (#479)
 - Add performance benchmark suite for atdata (#471)
 - Verify benchmarks run (#478)
 - Update pyproject.toml and justfile (#477)
