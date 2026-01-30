@@ -25,6 +25,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Add performance benchmark suite for atdata (#471)
+- Verify benchmarks run (#478)
+- Update pyproject.toml and justfile (#477)
+- Create bench_atmosphere.py (#476)
+- Create bench_query.py (#475)
+- Create bench_dataset_io.py (#474)
+- Create bench_index_providers.py (#473)
+- Create benchmarks/conftest.py with shared fixtures (#472)
 - Add per-shard manifest and query system (GH #35) (#462)
 - Write unit and integration tests (#470)
 - Integrate manifest into write path and Dataset.query() (#469)
