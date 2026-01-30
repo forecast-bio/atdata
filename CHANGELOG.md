@@ -25,6 +25,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Add per-shard manifest and query system (GH #35) (#462)
+- Write unit and integration tests (#470)
+- Integrate manifest into write path and Dataset.query() (#469)
+- Implement QueryExecutor and SampleLocation (#468)
+- Implement ManifestWriter (JSON + parquet) (#467)
+- Implement ManifestBuilder (#465)
+- Implement ShardManifest data model (#466)
+- Implement aggregate collectors (categorical, numeric, set) (#464)
+- Implement ManifestField annotation and resolve_manifest_fields() (#463)
 - Migrate type annotations from PackableSample to Packable protocol (#461)
 - Remove LocalIndex factory — consolidate to Index (#460)
 - Split local.py monolith into local/ package (#452)
