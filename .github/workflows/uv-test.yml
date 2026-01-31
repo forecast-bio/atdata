@@ -82,6 +82,7 @@ jobs:
     needs: [lint]
     permissions:
       contents: write
+      actions: write
     steps:
       - uses: actions/checkout@v5
 
