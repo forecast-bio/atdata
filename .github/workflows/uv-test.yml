@@ -83,6 +83,8 @@ jobs:
     name: Benchmarks
     runs-on: ubuntu-latest
     needs: [lint]
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v5
 
@@ -109,6 +111,20 @@ jobs:
 
       - name: Run benchmarks
         run: just bench
+
+      - name: Copy report to docs
+        run: |
+          mkdir -p docs/benchmarks
+          cp .bench/report.html docs/benchmarks/index.html
+
+      - name: Commit updated benchmark docs
+        if: github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/benchmarks/index.html
+          git diff --cached --quiet || git commit -m "docs: update benchmark report [skip ci]"
+          git push
 
       - name: Upload benchmark report
         uses: actions/upload-artifact@v4

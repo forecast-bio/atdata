@@ -25,6 +25,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Scope contents:write permission to benchmark job only (#510)
+- Add benchmark docs auto-commit to CI workflow (#509)
+- Submit PR for v0.3.0b1 release to upstream/main (#508)
 - Implement GH#39: Production hardening (observability, error handling, testing infra) (#504)
 - Add pluggable structured logging via atdata.configure_logging (#507)
 - Add PartialFailureError and shard-level error handling to Dataset.map (#506)
