@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>atdata benchmark report</title>
+<style>
+  :root {
+    --bg: #fdfdfd; --fg: #1a1a1a; --muted: #6b7280;
+    --border: #e5e7eb; --accent: #2563eb; --row-alt: #f9fafb;
+    --green: #16a34a; --header-bg: #f1f5f9;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f172a; --fg: #e2e8f0; --muted: #94a3b8;
+      --border: #334155; --accent: #60a5fa; --row-alt: #1e293b;
+      --green: #4ade80; --header-bg: #1e293b;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg); color: var(--fg);
+    line-height: 1.5; padding: 2rem; max-width: 1200px; margin: 0 auto;
+  }
+  h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+  .subtitle { color: var(--muted); font-size: 0.875rem; margin-bottom: 2rem; }
+  .machine { color: var(--muted); font-size: 0.8rem; margin-bottom: 2rem;
+             padding: 0.75rem; background: var(--row-alt); border-radius: 6px;
+             border: 1px solid var(--border); }
+  .machine code { font-size: 0.8rem; }
+  section { margin-bottom: 2.5rem; }
+  h2 { font-size: 1.15rem; margin-bottom: 0.25rem; color: var(--accent); }
+  .group-desc { color: var(--muted); font-size: 0.85rem; margin-bottom: 0.75rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  th {
+    text-align: left; padding: 0.5rem 0.75rem;
+    background: var(--header-bg); border-bottom: 2px solid var(--border);
+    font-weight: 600; white-space: nowrap;
+  }
+  th.num { text-align: right; }
+  td { padding: 0.45rem 0.75rem; border-bottom: 1px solid var(--border); }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; font-family: monospace; }
+  tr:nth-child(even) td { background: var(--row-alt); }
+  .best { color: var(--green); font-weight: 600; }
+  .test-name { font-family: monospace; font-weight: 600; color: var(--fg); }
+  .test-params { color: var(--accent); font-family: monospace; }
+  .desc { color: var(--muted); font-size: 0.8rem; }
+  .param-legend { color: var(--muted); font-size: 0.8rem; margin-bottom: 0.5rem; }
+  .param-legend code { background: var(--header-bg); padding: 0.1rem 0.35rem;
+                        border-radius: 3px; font-size: 0.8rem; }
+  footer { margin-top: 3rem; color: var(--muted); font-size: 0.75rem;
+           border-top: 1px solid var(--border); padding-top: 1rem; }
+</style>
+</head>
+<body>
+<h1>atdata benchmark report</h1>
+<p class="subtitle">Generated from pytest-benchmark JSON output</p>
+
+
+<div class="machine">
+  <strong>runnervmkj6or</strong> &mdash;
+  AMD EPYC 7763 64-Core Processor (4 cores) &middot;
+  Python 3.12.3 &middot;
+  Linux 6.11.0-1018-azure
+  
+  &middot; <code>release/v0.3.0b1@35e959bf</code>
+  
+</div>
+
+
+
+<section id="index">
+  <h2>Index Providers (μs–ms scale)</h2>
+  
+  <p class="group-desc">Write operation benchmarks across all providers.; Read operation benchmarks across all providers.; Benchmarks through the full Index API.</p>
+  
+  
+  <p class="param-legend">Parameters: <code>n</code> = entries to store, <code>any_provider</code> = storage backend</p>
+  
+  <table>
+    <thead>
+      <tr>
+        <th>Test</th>
+        <th class="num">Median</th>
+        <th class="num">IQR</th>
+        <th class="num">OPS</th>
+        
+      </tr>
+    </thead>
+    <tbody>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_store_single_entry</span><span class="test-params">[sqlite]</span>
+          <br><span class="desc">Store single entry [sqlite storage backend]</span>
+        </td>
+        <td class="num best">126.59 μs</td>
+        <td class="num">240.00 μs</td>
+        <td class="num">4.89 Kops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_store_single_entry</span><span class="test-params">[redis]</span>
+          <br><span class="desc">Store single entry [redis storage backend]</span>
+        </td>
+        <td class="num">157.07 μs</td>
+        <td class="num">25.33 μs</td>
+        <td class="num">6.10 Kops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_store_entries_bulk</span><span class="test-params">[sqlite-10]</span>
+          <br><span class="desc">Store entries bulk [sqlite storage backend, 10 entries to store]</span>
+        </td>
+        <td class="num">1.30 ms</td>
+        <td class="num">197.68 μs</td>
+        <td class="num">617.5 ops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_store_entries_bulk</span><span class="test-params">[sqlite-100]</span>
+          <br><span class="desc">Store entries bulk [sqlite storage backend, 100 entries to store]</span>
+        </td>
+        <td class="num">14.07 ms</td>
+        <td class="num">1.22 ms</td>
+        <td class="num">64.6 ops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_store_entries_bulk</span><span class="test-params">[sqlite-1k]</span>
+          <br><span class="desc">Store entries bulk [sqlite storage backend, 1000 entries to store]</span>
+        </td>
+        <td class="num">138.87 ms</td>
+        <td class="num">2.58 ms</td>
+        <td class="num">7.2 ops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_store_entries_bulk</span><span class="test-params">[redis-10]</span>
+          <br><span class="desc">Store entries bulk [redis storage backend, 10 entries to store]</span>
+        </td>
+        <td class="num">1.63 ms</td>
+        <td class="num">241.54 μs</td>
+        <td class="num">590.3 ops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_store_entries_bulk</span><span class="test-params">[redis-100]</span>
+          <br><span class="desc">Store entries bulk [redis storage backend, 100 entries to store]</span>
+        </td>
+        <td class="num">18.03 ms</td>
+        <td class="num">2.03 ms</td>
+        <td class="num">57.6 ops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_store_entries_bulk</span><span class="test-params">[redis-1k]</span>
+          <br><span class="desc">Store entries bulk [redis storage backend, 1000 entries to store]</span>
+        </td>
+        <td class="num">159.99 ms</td>
+        <td class="num">5.21 ms</td>
+        <td class="num">6.2 ops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_store_schema</span><span class="test-params">[sqlite]</span>
+          <br><span class="desc">Store schema [sqlite storage backend]</span>
+        </td>
+        <td class="num">112.41 μs</td>
+        <td class="num">26.60 μs</td>
+        <td class="num">6.27 Kops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_store_schema</span><span class="test-params">[redis]</span>
+          <br><span class="desc">Store schema [redis storage backend]</span>
+        </td>
+        <td class="num">150.01 μs</td>
+        <td class="num">18.63 μs</td>
+        <td class="num">6.41 Kops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_store_schema_versions</span><span class="test-params">[sqlite-10v]</span>
+          <br><span class="desc">Store schema versions [sqlite storage backend, 10 entries to store]</span>
+        </td>
+        <td class="num">1.10 ms</td>
+        <td class="num">144.69 μs</td>
+        <td class="num">615.3 ops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_store_schema_versions</span><span class="test-params">[sqlite-50v]</span>
+          <br><span class="desc">Store schema versions [sqlite storage backend, 50 entries to store]</span>
+        </td>
+        <td class="num">5.95 ms</td>
+        <td class="num">431.58 μs</td>
+        <td class="num">137.1 ops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_store_schema_versions</span><span class="test-params">[redis-10v]</span>
+          <br><span class="desc">Store schema versions [redis storage backend, 10 entries to store]</span>
+        </td>
+        <td class="num">1.52 ms</td>
+        <td class="num">43.64 μs</td>
+        <td class="num">647.6 ops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_store_schema_versions</span><span class="test-params">[redis-50v]</span>
+          <br><span class="desc">Store schema versions [redis storage backend, 50 entries to store]</span>
+        </td>
+        <td class="num">7.66 ms</td>
+        <td class="num">761.93 μs</td>
+        <td class="num">126.8 ops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_get_entry_by_name</span><span class="test-params">[sqlite]</span>
+          <br><span class="desc">Get entry by name [sqlite storage backend]</span>
+        </td>
+        <td class="num">8.30 μs</td>
+        <td class="num">101.0 ns</td>
+        <td class="num">117.95 Kops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_get_entry_by_name</span><span class="test-params">[redis]</span>
+          <br><span class="desc">Get entry by name [redis storage backend]</span>
+        </td>
+        <td class="num">167.05 ms</td>
+        <td class="num">5.39 ms</td>
+        <td class="num">6.0 ops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_get_entry_by_cid</span><span class="test-params">[sqlite]</span>
+          <br><span class="desc">Get entry by cid [sqlite storage backend]</span>
+        </td>
+        <td class="num">8.55 μs</td>
+        <td class="num">120.0 ns</td>
+        <td class="num">114.48 Kops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_get_entry_by_cid</span><span class="test-params">[redis]</span>
+          <br><span class="desc">Get entry by cid [redis storage backend]</span>
+        </td>
+        <td class="num">165.80 μs</td>
+        <td class="num">23.88 μs</td>
+        <td class="num">5.79 Kops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_iter_entries</span><span class="test-params">[sqlite-10]</span>
+          <br><span class="desc">Iter entries [sqlite storage backend, 10 entries to store]</span>
+        </td>
+        <td class="num">38.12 μs</td>
+        <td class="num">279.0 ns</td>
+        <td class="num">25.78 Kops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_iter_entries</span><span class="test-params">[sqlite-100]</span>
+          <br><span class="desc">Iter entries [sqlite storage backend, 100 entries to store]</span>
+        </td>
+        <td class="num">334.08 μs</td>
+        <td class="num">10.96 μs</td>
+        <td class="num">2.94 Kops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_iter_entries</span><span class="test-params">[sqlite-1k]</span>
+          <br><span class="desc">Iter entries [sqlite storage backend, 1000 entries to store]</span>
+        </td>
+        <td class="num">3.40 ms</td>
+        <td class="num">60.59 μs</td>
+        <td class="num">248.3 ops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_iter_entries</span><span class="test-params">[redis-10]</span>
+          <br><span class="desc">Iter entries [redis storage backend, 10 entries to store]</span>
+        </td>
+        <td class="num">184.40 ms</td>
+        <td class="num">6.27 ms</td>
+        <td class="num">5.3 ops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_iter_entries</span><span class="test-params">[redis-100]</span>
+          <br><span class="desc">Iter entries [redis storage backend, 100 entries to store]</span>
+        </td>
+        <td class="num">186.91 ms</td>
+        <td class="num">5.09 ms</td>
+        <td class="num">5.3 ops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_iter_entries</span><span class="test-params">[redis-1k]</span>
+          <br><span class="desc">Iter entries [redis storage backend, 1000 entries to store]</span>
+        </td>
+        <td class="num">189.61 ms</td>
+        <td class="num">8.75 ms</td>
+        <td class="num">5.3 ops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_get_schema_json</span><span class="test-params">[sqlite]</span>
+          <br><span class="desc">Get schema json [sqlite storage backend]</span>
+        </td>
+        <td class="num">4.68 μs</td>
+        <td class="num">50.0 ns</td>
+        <td class="num">209.48 Kops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_get_schema_json</span><span class="test-params">[redis]</span>
+          <br><span class="desc">Get schema json [redis storage backend]</span>
+        </td>
+        <td class="num">147.94 μs</td>
+        <td class="num">19.89 μs</td>
+        <td class="num">6.50 Kops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_find_latest_version</span><span class="test-params">[sqlite-5v]</span>
+          <br><span class="desc">Find latest version [sqlite storage backend, 5 entries to store]</span>
+        </td>
+        <td class="num">8.64 μs</td>
+        <td class="num">70.0 ns</td>
+        <td class="num">113.93 Kops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_find_latest_version</span><span class="test-params">[sqlite-20v]</span>
+          <br><span class="desc">Find latest version [sqlite storage backend, 20 entries to store]</span>
+        </td>
+        <td class="num">22.34 μs</td>
+        <td class="num">180.0 ns</td>
+        <td class="num">44.06 Kops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_find_latest_version</span><span class="test-params">[sqlite-50v]</span>
+          <br><span class="desc">Find latest version [sqlite storage backend, 50 entries to store]</span>
+        </td>
+        <td class="num">49.37 μs</td>
+        <td class="num">330.0 ns</td>
+        <td class="num">20.00 Kops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_find_latest_version</span><span class="test-params">[redis-5v]</span>
+          <br><span class="desc">Find latest version [redis storage backend, 5 entries to store]</span>
+        </td>
+        <td class="num">15.83 ms</td>
+        <td class="num">592.05 μs</td>
+        <td class="num">62.3 ops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_find_latest_version</span><span class="test-params">[redis-20v]</span>
+          <br><span class="desc">Find latest version [redis storage backend, 20 entries to store]</span>
+        </td>
+        <td class="num">18.60 ms</td>
+        <td class="num">1.31 ms</td>
+        <td class="num">53.0 ops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_find_latest_version</span><span class="test-params">[redis-50v]</span>
+          <br><span class="desc">Find latest version [redis storage backend, 50 entries to store]</span>
+        </td>
+        <td class="num">23.52 ms</td>
+        <td class="num">472.36 μs</td>
+        <td class="num">41.6 ops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_iter_schemas</span><span class="test-params">[sqlite]</span>
+          <br><span class="desc">Iter schemas [sqlite storage backend]</span>
+        </td>
+        <td class="num">16.64 μs</td>
+        <td class="num">111.0 ns</td>
+        <td class="num">58.92 Kops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_iter_schemas</span><span class="test-params">[redis]</span>
+          <br><span class="desc">Iter schemas [redis storage backend]</span>
+        </td>
+        <td class="num">18.93 ms</td>
+        <td class="num">2.30 ms</td>
+        <td class="num">51.5 ops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_index_insert_dataset</span>
+          <br><span class="desc">Index insert dataset</span>
+        </td>
+        <td class="num">138.70 μs</td>
+        <td class="num">23.15 μs</td>
+        <td class="num">5.63 Kops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_index_get_dataset</span>
+          <br><span class="desc">Index get dataset</span>
+        </td>
+        <td class="num">8.47 μs</td>
+        <td class="num">130.0 ns</td>
+        <td class="num">115.22 Kops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_index_list_datasets</span>
+          <br><span class="desc">Index list datasets</span>
+        </td>
+        <td class="num">8.14 μs</td>
+        <td class="num">110.0 ns</td>
+        <td class="num">120.18 Kops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_index_publish_schema</span>
+          <br><span class="desc">Index publish schema</span>
+        </td>
+        <td class="num">227.71 μs</td>
+        <td class="num">210.82 μs</td>
+        <td class="num">3.42 Kops/s</td>
+        
+      </tr>
+    
+    </tbody>
+  </table>
+</section>
+
+<section id="io">
+  <h2>Dataset I/O (ms scale)</h2>
+  
+  <p class="group-desc">Shard writing throughput benchmarks.; Shard reading and iteration benchmarks.; Full write-then-read round-trip benchmarks.</p>
+  
+  
+  <p class="param-legend">Parameters: <code>n</code> = samples per shard, <code>batch_size</code> = samples per batch</p>
+  
+  <table>
+    <thead>
+      <tr>
+        <th>Test</th>
+        <th class="num">Median</th>
+        <th class="num">IQR</th>
+        <th class="num">OPS</th>
+        <th class="num">Med/sample</th>
+        <th class="num">Samples/s</th>
+      </tr>
+    </thead>
+    <tbody>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_write_basic_shard</span><span class="test-params">[100]</span>
+          <br><span class="desc">Write basic shard [100 samples per shard]</span>
+        </td>
+        <td class="num best">8.05 ms</td>
+        <td class="num">116.80 μs</td>
+        <td class="num">123.8 ops/s</td>
+        <td class="num">80.52 μs</td>
+        <td class="num">12.42 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_write_basic_shard</span><span class="test-params">[1k]</span>
+          <br><span class="desc">Write basic shard [1000 samples per shard]</span>
+        </td>
+        <td class="num">76.05 ms</td>
+        <td class="num">807.67 μs</td>
+        <td class="num">13.1 ops/s</td>
+        <td class="num">76.05 μs</td>
+        <td class="num">13.15 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_write_basic_shard</span><span class="test-params">[10k]</span>
+          <br><span class="desc">Write basic shard [10000 samples per shard]</span>
+        </td>
+        <td class="num">760.89 ms</td>
+        <td class="num">9.80 ms</td>
+        <td class="num">1.3 ops/s</td>
+        <td class="num">76.09 μs</td>
+        <td class="num">13.14 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_write_numpy_shard</span><span class="test-params">[100]</span>
+          <br><span class="desc">Write numpy shard [100 samples per shard]</span>
+        </td>
+        <td class="num">32.56 ms</td>
+        <td class="num">1.15 ms</td>
+        <td class="num">30.8 ops/s</td>
+        <td class="num">325.55 μs</td>
+        <td class="num">3.07 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_write_numpy_shard</span><span class="test-params">[1k]</span>
+          <br><span class="desc">Write numpy shard [1000 samples per shard]</span>
+        </td>
+        <td class="num">353.84 ms</td>
+        <td class="num">23.41 ms</td>
+        <td class="num">2.9 ops/s</td>
+        <td class="num">353.84 μs</td>
+        <td class="num">2.83 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_write_large_numpy_shard</span>
+          <br><span class="desc">Write large numpy shard</span>
+        </td>
+        <td class="num">8.398 s</td>
+        <td class="num">42.93 ms</td>
+        <td class="num">0.1 ops/s</td>
+        <td class="num">839.84 ms</td>
+        <td class="num">1.2 ops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_write_with_manifest</span><span class="test-params">[100]</span>
+          <br><span class="desc">Write with manifest [100 samples per shard]</span>
+        </td>
+        <td class="num">14.05 ms</td>
+        <td class="num">166.18 μs</td>
+        <td class="num">71.0 ops/s</td>
+        <td class="num">140.47 μs</td>
+        <td class="num">7.12 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_write_with_manifest</span><span class="test-params">[1k]</span>
+          <br><span class="desc">Write with manifest [1000 samples per shard]</span>
+        </td>
+        <td class="num">97.15 ms</td>
+        <td class="num">1.92 ms</td>
+        <td class="num">10.3 ops/s</td>
+        <td class="num">97.15 μs</td>
+        <td class="num">10.29 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_write_multi_shard</span>
+          <br><span class="desc">Write multi shard</span>
+        </td>
+        <td class="num">750.71 ms</td>
+        <td class="num">4.98 ms</td>
+        <td class="num">1.3 ops/s</td>
+        <td class="num">75.07 μs</td>
+        <td class="num">13.32 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_read_ordered</span><span class="test-params">[100]</span>
+          <br><span class="desc">Read ordered [100 samples per shard]</span>
+        </td>
+        <td class="num">7.30 ms</td>
+        <td class="num">194.08 μs</td>
+        <td class="num">136.2 ops/s</td>
+        <td class="num">73.00 μs</td>
+        <td class="num">13.70 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_read_ordered</span><span class="test-params">[1k]</span>
+          <br><span class="desc">Read ordered [1000 samples per shard]</span>
+        </td>
+        <td class="num">69.70 ms</td>
+        <td class="num">643.40 μs</td>
+        <td class="num">14.3 ops/s</td>
+        <td class="num">69.70 μs</td>
+        <td class="num">14.35 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_read_ordered</span><span class="test-params">[10k]</span>
+          <br><span class="desc">Read ordered [10000 samples per shard]</span>
+        </td>
+        <td class="num">679.09 ms</td>
+        <td class="num">8.89 ms</td>
+        <td class="num">1.5 ops/s</td>
+        <td class="num">67.91 μs</td>
+        <td class="num">14.73 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_read_shuffled</span><span class="test-params">[100]</span>
+          <br><span class="desc">Read shuffled [100 samples per shard]</span>
+        </td>
+        <td class="num">7.14 ms</td>
+        <td class="num">157.25 μs</td>
+        <td class="num">140.3 ops/s</td>
+        <td class="num">71.36 μs</td>
+        <td class="num">14.01 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_read_shuffled</span><span class="test-params">[1k]</span>
+          <br><span class="desc">Read shuffled [1000 samples per shard]</span>
+        </td>
+        <td class="num">72.66 ms</td>
+        <td class="num">675.11 μs</td>
+        <td class="num">13.7 ops/s</td>
+        <td class="num">72.66 μs</td>
+        <td class="num">13.76 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_read_batched</span><span class="test-params">[batch32]</span>
+          <br><span class="desc">Read batched [32 samples per batch]</span>
+        </td>
+        <td class="num">68.12 ms</td>
+        <td class="num">263.95 μs</td>
+        <td class="num">14.7 ops/s</td>
+        <td class="num">68.12 μs</td>
+        <td class="num">14.68 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_read_batched</span><span class="test-params">[batch128]</span>
+          <br><span class="desc">Read batched [128 samples per batch]</span>
+        </td>
+        <td class="num">68.97 ms</td>
+        <td class="num">569.38 μs</td>
+        <td class="num">14.5 ops/s</td>
+        <td class="num">68.97 μs</td>
+        <td class="num">14.50 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_read_numpy_ordered</span><span class="test-params">[100]</span>
+          <br><span class="desc">Read numpy ordered [100 samples per shard]</span>
+        </td>
+        <td class="num">13.74 ms</td>
+        <td class="num">145.69 μs</td>
+        <td class="num">72.7 ops/s</td>
+        <td class="num">137.41 μs</td>
+        <td class="num">7.28 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_read_numpy_ordered</span><span class="test-params">[1k]</span>
+          <br><span class="desc">Read numpy ordered [1000 samples per shard]</span>
+        </td>
+        <td class="num">135.01 ms</td>
+        <td class="num">1.01 ms</td>
+        <td class="num">7.4 ops/s</td>
+        <td class="num">135.01 μs</td>
+        <td class="num">7.41 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_roundtrip_basic</span><span class="test-params">[100]</span>
+          <br><span class="desc">Roundtrip basic [100 samples per shard]</span>
+        </td>
+        <td class="num">15.24 ms</td>
+        <td class="num">231.87 μs</td>
+        <td class="num">65.5 ops/s</td>
+        <td class="num">152.39 μs</td>
+        <td class="num">6.56 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_roundtrip_basic</span><span class="test-params">[1k]</span>
+          <br><span class="desc">Roundtrip basic [1000 samples per shard]</span>
+        </td>
+        <td class="num">143.68 ms</td>
+        <td class="num">598.91 μs</td>
+        <td class="num">7.0 ops/s</td>
+        <td class="num">143.68 μs</td>
+        <td class="num">6.96 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_roundtrip_numpy</span><span class="test-params">[100]</span>
+          <br><span class="desc">Roundtrip numpy [100 samples per shard]</span>
+        </td>
+        <td class="num">40.95 ms</td>
+        <td class="num">173.73 μs</td>
+        <td class="num">24.4 ops/s</td>
+        <td class="num">409.49 μs</td>
+        <td class="num">2.44 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_roundtrip_numpy</span><span class="test-params">[500]</span>
+          <br><span class="desc">Roundtrip numpy [500 samples per shard]</span>
+        </td>
+        <td class="num">200.93 ms</td>
+        <td class="num">394.62 μs</td>
+        <td class="num">5.0 ops/s</td>
+        <td class="num">401.85 μs</td>
+        <td class="num">2.49 Kops/s</td>
+      </tr>
+    
+    </tbody>
+  </table>
+</section>
+
+<section id="query">
+  <h2>Query System (ms scale)</h2>
+  
+  <p class="group-desc">Benchmark different query predicate types on a medium dataset.; Benchmark iterating through query results to access sample locations.; Benchmark query performance at different scales.; Benchmark manifest loading from disk.; Benchmark manifest construction from samples.</p>
+  
+  
+  <p class="param-legend">Parameters: <code>n_shards</code> = number of shards (100 samples each), <code>n</code> = samples in manifest</p>
+  
+  <table>
+    <thead>
+      <tr>
+        <th>Test</th>
+        <th class="num">Median</th>
+        <th class="num">IQR</th>
+        <th class="num">OPS</th>
+        <th class="num">Med/sample</th>
+        <th class="num">Samples/s</th>
+      </tr>
+    </thead>
+    <tbody>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_query_simple_equality</span>
+          <br><span class="desc">Query simple equality</span>
+        </td>
+        <td class="num best">8.50 ms</td>
+        <td class="num">123.88 μs</td>
+        <td class="num">117.5 ops/s</td>
+        <td class="num">&mdash;</td>
+        <td class="num">&mdash;</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_query_numeric_range</span>
+          <br><span class="desc">Query numeric range</span>
+        </td>
+        <td class="num">8.94 ms</td>
+        <td class="num">101.85 μs</td>
+        <td class="num">111.6 ops/s</td>
+        <td class="num">&mdash;</td>
+        <td class="num">&mdash;</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_query_combined</span>
+          <br><span class="desc">Query combined</span>
+        </td>
+        <td class="num">4.28 ms</td>
+        <td class="num">56.66 μs</td>
+        <td class="num">231.1 ops/s</td>
+        <td class="num">&mdash;</td>
+        <td class="num">&mdash;</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_query_isin</span>
+          <br><span class="desc">Query isin</span>
+        </td>
+        <td class="num">14.88 ms</td>
+        <td class="num">128.44 μs</td>
+        <td class="num">67.1 ops/s</td>
+        <td class="num">&mdash;</td>
+        <td class="num">&mdash;</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_query_no_results</span>
+          <br><span class="desc">Query no results</span>
+        </td>
+        <td class="num">1.86 ms</td>
+        <td class="num">25.11 μs</td>
+        <td class="num">536.9 ops/s</td>
+        <td class="num">&mdash;</td>
+        <td class="num">&mdash;</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_query_all_results</span>
+          <br><span class="desc">Query all results</span>
+        </td>
+        <td class="num">31.71 ms</td>
+        <td class="num">285.92 μs</td>
+        <td class="num">31.5 ops/s</td>
+        <td class="num">&mdash;</td>
+        <td class="num">&mdash;</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_iterate_equality_results</span>
+          <br><span class="desc">Iterate equality results</span>
+        </td>
+        <td class="num">8.50 ms</td>
+        <td class="num">111.19 μs</td>
+        <td class="num">117.4 ops/s</td>
+        <td class="num">42.50 μs</td>
+        <td class="num">23.53 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_iterate_range_results</span>
+          <br><span class="desc">Iterate range results</span>
+        </td>
+        <td class="num">19.01 ms</td>
+        <td class="num">279.48 μs</td>
+        <td class="num">52.4 ops/s</td>
+        <td class="num">34.57 μs</td>
+        <td class="num">28.93 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_iterate_large_result_set</span>
+          <br><span class="desc">Iterate large result set</span>
+        </td>
+        <td class="num">293.53 ms</td>
+        <td class="num">16.13 ms</td>
+        <td class="num">3.3 ops/s</td>
+        <td class="num">29.35 μs</td>
+        <td class="num">34.07 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_query_small</span>
+          <br><span class="desc">Query small</span>
+        </td>
+        <td class="num">2.07 ms</td>
+        <td class="num">28.09 μs</td>
+        <td class="num">478.7 ops/s</td>
+        <td class="num">&mdash;</td>
+        <td class="num">&mdash;</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_query_medium</span>
+          <br><span class="desc">Query medium</span>
+        </td>
+        <td class="num">18.77 ms</td>
+        <td class="num">287.13 μs</td>
+        <td class="num">53.1 ops/s</td>
+        <td class="num">&mdash;</td>
+        <td class="num">&mdash;</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_query_large</span>
+          <br><span class="desc">Query large</span>
+        </td>
+        <td class="num">164.18 ms</td>
+        <td class="num">586.08 μs</td>
+        <td class="num">6.1 ops/s</td>
+        <td class="num">&mdash;</td>
+        <td class="num">&mdash;</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_load_from_directory</span><span class="test-params">[2s]</span>
+          <br><span class="desc">Load from directory [2 number of shards (100 samples each)]</span>
+        </td>
+        <td class="num">3.28 ms</td>
+        <td class="num">35.70 μs</td>
+        <td class="num">303.5 ops/s</td>
+        <td class="num">&mdash;</td>
+        <td class="num">&mdash;</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_load_from_directory</span><span class="test-params">[5s]</span>
+          <br><span class="desc">Load from directory [5 number of shards (100 samples each)]</span>
+        </td>
+        <td class="num">8.26 ms</td>
+        <td class="num">60.31 μs</td>
+        <td class="num">115.8 ops/s</td>
+        <td class="num">&mdash;</td>
+        <td class="num">&mdash;</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_load_from_directory</span><span class="test-params">[10s]</span>
+          <br><span class="desc">Load from directory [10 number of shards (100 samples each)]</span>
+        </td>
+        <td class="num">16.48 ms</td>
+        <td class="num">121.81 μs</td>
+        <td class="num">60.6 ops/s</td>
+        <td class="num">&mdash;</td>
+        <td class="num">&mdash;</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_load_from_directory</span><span class="test-params">[20s]</span>
+          <br><span class="desc">Load from directory [20 number of shards (100 samples each)]</span>
+        </td>
+        <td class="num">32.81 ms</td>
+        <td class="num">179.99 μs</td>
+        <td class="num">30.4 ops/s</td>
+        <td class="num">&mdash;</td>
+        <td class="num">&mdash;</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_load_from_shard_urls</span><span class="test-params">[2s]</span>
+          <br><span class="desc">Load from shard urls [2 number of shards (100 samples each)]</span>
+        </td>
+        <td class="num">3.25 ms</td>
+        <td class="num">29.51 μs</td>
+        <td class="num">307.4 ops/s</td>
+        <td class="num">&mdash;</td>
+        <td class="num">&mdash;</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_load_from_shard_urls</span><span class="test-params">[5s]</span>
+          <br><span class="desc">Load from shard urls [5 number of shards (100 samples each)]</span>
+        </td>
+        <td class="num">8.16 ms</td>
+        <td class="num">55.35 μs</td>
+        <td class="num">118.0 ops/s</td>
+        <td class="num">&mdash;</td>
+        <td class="num">&mdash;</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_load_from_shard_urls</span><span class="test-params">[10s]</span>
+          <br><span class="desc">Load from shard urls [10 number of shards (100 samples each)]</span>
+        </td>
+        <td class="num">16.42 ms</td>
+        <td class="num">165.04 μs</td>
+        <td class="num">60.5 ops/s</td>
+        <td class="num">&mdash;</td>
+        <td class="num">&mdash;</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_manifest_build</span><span class="test-params">[100]</span>
+          <br><span class="desc">Manifest build [100 samples in manifest]</span>
+        </td>
+        <td class="num">1.25 ms</td>
+        <td class="num">23.42 μs</td>
+        <td class="num">793.0 ops/s</td>
+        <td class="num">12.55 μs</td>
+        <td class="num">79.68 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_manifest_build</span><span class="test-params">[1k]</span>
+          <br><span class="desc">Manifest build [1000 samples in manifest]</span>
+        </td>
+        <td class="num">7.47 ms</td>
+        <td class="num">129.91 μs</td>
+        <td class="num">118.8 ops/s</td>
+        <td class="num">7.47 μs</td>
+        <td class="num">133.90 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_manifest_build</span><span class="test-params">[5k]</span>
+          <br><span class="desc">Manifest build [5000 samples in manifest]</span>
+        </td>
+        <td class="num">34.98 ms</td>
+        <td class="num">341.23 μs</td>
+        <td class="num">23.9 ops/s</td>
+        <td class="num">7.00 μs</td>
+        <td class="num">142.96 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_manifest_write</span><span class="test-params">[100]</span>
+          <br><span class="desc">Manifest write [100 samples in manifest]</span>
+        </td>
+        <td class="num">3.64 ms</td>
+        <td class="num">75.92 μs</td>
+        <td class="num">273.6 ops/s</td>
+        <td class="num">36.36 μs</td>
+        <td class="num">27.51 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_manifest_write</span><span class="test-params">[1k]</span>
+          <br><span class="desc">Manifest write [1000 samples in manifest]</span>
+        </td>
+        <td class="num">7.00 ms</td>
+        <td class="num">174.76 μs</td>
+        <td class="num">139.4 ops/s</td>
+        <td class="num">7.00 μs</td>
+        <td class="num">142.89 Kops/s</td>
+      </tr>
+    
+    </tbody>
+  </table>
+</section>
+
+<section id="s3">
+  <h2>S3 Storage (ms+ scale)</h2>
+  
+  <p class="group-desc">S3 shard writing benchmarks via moto mock.</p>
+  
+  
+  <p class="param-legend">Parameters: <code>n</code> = samples per shard</p>
+  
+  <table>
+    <thead>
+      <tr>
+        <th>Test</th>
+        <th class="num">Median</th>
+        <th class="num">IQR</th>
+        <th class="num">OPS</th>
+        <th class="num">Med/sample</th>
+        <th class="num">Samples/s</th>
+      </tr>
+    </thead>
+    <tbody>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_s3_write_shards</span><span class="test-params">[100]</span>
+          <br><span class="desc">S3 write shards [100 samples per shard]</span>
+        </td>
+        <td class="num best">19.87 ms</td>
+        <td class="num">268.37 μs</td>
+        <td class="num">49.1 ops/s</td>
+        <td class="num">198.66 μs</td>
+        <td class="num">5.03 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_s3_write_shards</span><span class="test-params">[500]</span>
+          <br><span class="desc">S3 write shards [500 samples per shard]</span>
+        </td>
+        <td class="num">85.54 ms</td>
+        <td class="num">1.14 ms</td>
+        <td class="num">11.7 ops/s</td>
+        <td class="num">171.07 μs</td>
+        <td class="num">5.85 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_s3_write_with_manifest</span>
+          <br><span class="desc">S3 write with manifest</span>
+        </td>
+        <td class="num">57.54 ms</td>
+        <td class="num">549.27 μs</td>
+        <td class="num">15.6 ops/s</td>
+        <td class="num">287.71 μs</td>
+        <td class="num">3.48 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_s3_write_cache_local</span>
+          <br><span class="desc">S3 write cache local</span>
+        </td>
+        <td class="num">42.35 ms</td>
+        <td class="num">852.99 μs</td>
+        <td class="num">21.6 ops/s</td>
+        <td class="num">211.76 μs</td>
+        <td class="num">4.72 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_s3_write_direct</span>
+          <br><span class="desc">S3 write direct</span>
+        </td>
+        <td class="num">36.27 ms</td>
+        <td class="num">654.07 μs</td>
+        <td class="num">27.5 ops/s</td>
+        <td class="num">181.34 μs</td>
+        <td class="num">5.51 Kops/s</td>
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_s3_write_numpy</span>
+          <br><span class="desc">S3 write numpy</span>
+        </td>
+        <td class="num">41.69 ms</td>
+        <td class="num">728.77 μs</td>
+        <td class="num">23.8 ops/s</td>
+        <td class="num">416.90 μs</td>
+        <td class="num">2.40 Kops/s</td>
+      </tr>
+    
+    </tbody>
+  </table>
+</section>
+
+<section id="serial">
+  <h2>Serialization (μs scale)</h2>
+  
+  <p class="group-desc">Pure serialization/deserialization without disk I/O.</p>
+  
+  
+  <table>
+    <thead>
+      <tr>
+        <th>Test</th>
+        <th class="num">Median</th>
+        <th class="num">IQR</th>
+        <th class="num">OPS</th>
+        
+      </tr>
+    </thead>
+    <tbody>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_serialize_basic_sample</span>
+          <br><span class="desc">Serialize basic sample</span>
+        </td>
+        <td class="num best">1.23 μs</td>
+        <td class="num">39.0 ns</td>
+        <td class="num">801.96 Kops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_deserialize_basic_sample</span>
+          <br><span class="desc">Deserialize basic sample</span>
+        </td>
+        <td class="num">1.83 μs</td>
+        <td class="num">50.0 ns</td>
+        <td class="num">528.41 Kops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_serialize_numpy_sample</span>
+          <br><span class="desc">Serialize numpy sample</span>
+        </td>
+        <td class="num">20.73 μs</td>
+        <td class="num">441.0 ns</td>
+        <td class="num">47.13 Kops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_deserialize_numpy_sample</span>
+          <br><span class="desc">Deserialize numpy sample</span>
+        </td>
+        <td class="num">5.61 μs</td>
+        <td class="num">90.0 ns</td>
+        <td class="num">174.28 Kops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_serialize_large_numpy</span>
+          <br><span class="desc">Serialize large numpy</span>
+        </td>
+        <td class="num">404.19 ms</td>
+        <td class="num">1.43 ms</td>
+        <td class="num">2.5 ops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_deserialize_large_numpy</span>
+          <br><span class="desc">Deserialize large numpy</span>
+        </td>
+        <td class="num">32.95 ms</td>
+        <td class="num">332.93 μs</td>
+        <td class="num">30.2 ops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_as_wds_basic</span>
+          <br><span class="desc">As wds basic</span>
+        </td>
+        <td class="num">4.51 μs</td>
+        <td class="num">89.0 ns</td>
+        <td class="num">216.76 Kops/s</td>
+        
+      </tr>
+    
+      <tr>
+        <td>
+          <span class="test-name">test_as_wds_numpy</span>
+          <br><span class="desc">As wds numpy</span>
+        </td>
+        <td class="num">24.42 μs</td>
+        <td class="num">401.0 ns</td>
+        <td class="num">40.08 Kops/s</td>
+        
+      </tr>
+    
+    </tbody>
+  </table>
+</section>
+
+
+<footer>
+  Report generated by <code>benchmarks/render_report.py</code> from
+  5 benchmark groups,
+  98 total benchmarks.
+</footer>
+</body>
+</html>
