@@ -61,6 +61,7 @@ if TYPE_CHECKING:
     from .dataset import PackableSample
 
 from ._protocols import Packable
+from ._exceptions import LensNotFoundError
 
 
 ##
@@ -101,7 +102,8 @@ class Lens(Generic[S, V]):
         ...     return FullData(name=view.name, age=source.age)
     """
 
-    # TODO The above has a line for "Parameters:" that should be "Type Parameters:"; this is a temporary fix for `quartodoc` auto-generation bugs.
+    # Note: The docstring uses "Parameters:" for type parameters as a workaround
+    # for quartodoc not supporting "Type Parameters:" sections.
 
     def __init__(
         self, get: LensGetter[S, V], put: Optional[LensPutter[S, V]] = None
@@ -290,7 +292,12 @@ class LensNetwork:
         """
         ret = self._registry.get((source, view), None)
         if ret is None:
-            raise ValueError(f"No registered lens from source {source} to view {view}")
+            available_targets = [
+                (sig[1], lens_obj.__name__)
+                for sig, lens_obj in self._registry.items()
+                if sig[0] is source and hasattr(lens_obj, "__name__")
+            ]
+            raise LensNotFoundError(source, view, available_targets)
 
         return ret
 

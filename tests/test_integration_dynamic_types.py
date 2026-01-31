@@ -523,8 +523,8 @@ class TestTypeCaching:
         assert "TrackedSample" in list(cache.keys())[0]
 
 
-class TestSchemaFromLocalIndex:
-    """Tests for loading types from LocalIndex schemas."""
+class TestSchemaFromIndex:
+    """Tests for loading types from Index schemas."""
 
     def test_publish_then_decode_schema(self, clean_redis):
         """Published schema should be decodable to usable type."""

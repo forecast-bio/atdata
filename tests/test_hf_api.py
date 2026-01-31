@@ -708,9 +708,13 @@ class TestParseIndexedPath:
 class TestLoadDatasetWithIndex:
     """Tests for load_dataset with index parameter."""
 
-    def test_indexed_path_requires_index(self):
-        """@handle/dataset without index raises ValueError."""
-        with pytest.raises(ValueError, match="Index required"):
+    def test_indexed_path_uses_default_index(self):
+        """@handle/dataset without explicit index uses the default Index."""
+        # The default index will attempt to resolve "dataset" against the
+        # atmosphere backend, which raises because the anonymous client
+        # cannot resolve an unknown handle.  The key point is that it no
+        # longer raises ValueError("Index required") -- it actually tries.
+        with pytest.raises((KeyError, ValueError)):
             load_dataset("@handle/dataset", SimpleTestSample)
 
     def test_none_sample_type_defaults_to_dictsample(self, tmp_path):

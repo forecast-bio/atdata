@@ -1,33 +1,189 @@
 """Command-line interface for atdata.
 
-This module provides CLI commands for managing local development infrastructure
-and diagnosing configuration issues.
+This module provides CLI commands for managing local development infrastructure,
+inspecting datasets, and diagnosing configuration issues.
 
 Commands:
-    atdata local up     Start Redis and MinIO containers for local development
-    atdata local down   Stop local development containers
-    atdata diagnose     Check Redis configuration and connectivity
-    atdata version      Show version information
-
-Example:
-    $ atdata local up
-    Starting Redis on port 6379...
-    Starting MinIO on port 9000...
-    Local infrastructure ready.
-
-    $ atdata diagnose
-    Checking Redis configuration...
-    ✓ Redis connected
-    ✓ Persistence enabled (AOF)
-    ✓ Memory policy: noeviction
+    atdata local up      Start Redis and MinIO containers for local development
+    atdata local down    Stop local development containers
+    atdata local status  Show status of local infrastructure
+    atdata diagnose      Check Redis configuration and connectivity
+    atdata inspect       Show dataset summary information
+    atdata schema show   Display dataset schema
+    atdata schema diff   Compare two dataset schemas
+    atdata preview       Preview first N samples of a dataset
+    atdata version       Show version information
 """
 
-import argparse
 import sys
-from typing import Sequence
+
+import typer
+
+# ---------------------------------------------------------------------------
+# App hierarchy
+# ---------------------------------------------------------------------------
+
+app = typer.Typer(
+    name="atdata",
+    help="A loose federation of distributed, typed datasets.",
+    add_completion=False,
+    no_args_is_help=True,
+)
+
+local_app = typer.Typer(
+    name="local",
+    help="Manage local development infrastructure.",
+    no_args_is_help=True,
+)
+app.add_typer(local_app, name="local")
+
+schema_app = typer.Typer(
+    name="schema",
+    help="Show or compare dataset schemas.",
+    no_args_is_help=True,
+)
+app.add_typer(schema_app, name="schema")
 
 
-def main(argv: Sequence[str] | None = None) -> int:
+# ---------------------------------------------------------------------------
+# Top-level commands
+# ---------------------------------------------------------------------------
+
+
+@app.command()
+def version() -> None:
+    """Show version information."""
+    try:
+        from atdata import __version__
+
+        ver = __version__
+    except ImportError:
+        from importlib.metadata import version as pkg_version
+
+        ver = pkg_version("atdata")
+
+    print(f"atdata {ver}")
+
+
+@app.command()
+def inspect(
+    url: str = typer.Argument(help="Dataset URL, local path, or atmosphere URI"),
+) -> None:
+    """Show dataset summary (sample count, schema, shards)."""
+    from .inspect import inspect_dataset
+
+    code = inspect_dataset(url=url)
+    raise typer.Exit(code=code)
+
+
+@app.command()
+def preview(
+    url: str = typer.Argument(help="Dataset URL, local path, or atmosphere URI"),
+    limit: int = typer.Option(5, help="Number of samples to preview."),
+) -> None:
+    """Preview first N samples of a dataset."""
+    from .preview import preview_dataset
+
+    code = preview_dataset(url=url, limit=limit)
+    raise typer.Exit(code=code)
+
+
+@app.command()
+def diagnose(
+    host: str = typer.Option("localhost", help="Redis host."),
+    port: int = typer.Option(6379, help="Redis port."),
+) -> None:
+    """Diagnose Redis configuration and connectivity."""
+    from .diagnose import diagnose_redis
+
+    code = diagnose_redis(host=host, port=port)
+    raise typer.Exit(code=code)
+
+
+# ---------------------------------------------------------------------------
+# local sub-commands
+# ---------------------------------------------------------------------------
+
+
+@local_app.command()
+def up(
+    redis_port: int = typer.Option(6379, help="Redis port."),
+    minio_port: int = typer.Option(9000, help="MinIO API port."),
+    minio_console_port: int = typer.Option(9001, help="MinIO console port."),
+    detach: bool = typer.Option(
+        True, "--detach", "-d", help="Run containers in detached mode."
+    ),
+) -> None:
+    """Start Redis and MinIO containers."""
+    from .local import local_up
+
+    code = local_up(
+        redis_port=redis_port,
+        minio_port=minio_port,
+        minio_console_port=minio_console_port,
+        detach=detach,
+    )
+    raise typer.Exit(code=code)
+
+
+@local_app.command()
+def down(
+    volumes: bool = typer.Option(
+        False, "--volumes", "-v", help="Also remove volumes (deletes all data)."
+    ),
+) -> None:
+    """Stop local development containers."""
+    from .local import local_down
+
+    code = local_down(remove_volumes=volumes)
+    raise typer.Exit(code=code)
+
+
+@local_app.command()
+def status() -> None:
+    """Show status of local infrastructure."""
+    from .local import local_status
+
+    code = local_status()
+    raise typer.Exit(code=code)
+
+
+# ---------------------------------------------------------------------------
+# schema sub-commands
+# ---------------------------------------------------------------------------
+
+
+@schema_app.command("show")
+def schema_show(
+    dataset_ref: str = typer.Argument(
+        help="Dataset URL, local path, or index reference."
+    ),
+) -> None:
+    """Display dataset schema."""
+    from .schema import schema_show as _schema_show
+
+    code = _schema_show(dataset_ref=dataset_ref)
+    raise typer.Exit(code=code)
+
+
+@schema_app.command("diff")
+def schema_diff(
+    url_a: str = typer.Argument(help="First dataset URL."),
+    url_b: str = typer.Argument(help="Second dataset URL."),
+) -> None:
+    """Compare two dataset schemas."""
+    from .schema import schema_diff as _schema_diff
+
+    code = _schema_diff(url_a=url_a, url_b=url_b)
+    raise typer.Exit(code=code)
+
+
+# ---------------------------------------------------------------------------
+# Entrypoint
+# ---------------------------------------------------------------------------
+
+
+def main(argv: list[str] | None = None) -> int:
     """Main entry point for the atdata CLI.
 
     Args:
@@ -36,186 +192,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     Returns:
         Exit code (0 for success, non-zero for errors).
     """
-    parser = argparse.ArgumentParser(
-        prog="atdata",
-        description="A loose federation of distributed, typed datasets",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
-    parser.add_argument(
-        "--version",
-        "-v",
-        action="store_true",
-        help="Show version information",
-    )
-
-    subparsers = parser.add_subparsers(dest="command", help="Available commands")
-
-    # 'local' command group
-    local_parser = subparsers.add_parser(
-        "local",
-        help="Manage local development infrastructure",
-    )
-    local_subparsers = local_parser.add_subparsers(
-        dest="local_command",
-        help="Local infrastructure commands",
-    )
-
-    # 'local up' command
-    up_parser = local_subparsers.add_parser(
-        "up",
-        help="Start Redis and MinIO containers",
-    )
-    up_parser.add_argument(
-        "--redis-port",
-        type=int,
-        default=6379,
-        help="Redis port (default: 6379)",
-    )
-    up_parser.add_argument(
-        "--minio-port",
-        type=int,
-        default=9000,
-        help="MinIO API port (default: 9000)",
-    )
-    up_parser.add_argument(
-        "--minio-console-port",
-        type=int,
-        default=9001,
-        help="MinIO console port (default: 9001)",
-    )
-    up_parser.add_argument(
-        "--detach",
-        "-d",
-        action="store_true",
-        default=True,
-        help="Run containers in detached mode (default: True)",
-    )
-
-    # 'local down' command
-    down_parser = local_subparsers.add_parser(
-        "down",
-        help="Stop local development containers",
-    )
-    down_parser.add_argument(
-        "--volumes",
-        "-v",
-        action="store_true",
-        help="Also remove volumes (deletes all data)",
-    )
-
-    # 'local status' command
-    local_subparsers.add_parser(
-        "status",
-        help="Show status of local infrastructure",
-    )
-
-    # 'diagnose' command
-    diagnose_parser = subparsers.add_parser(
-        "diagnose",
-        help="Diagnose Redis configuration and connectivity",
-    )
-    diagnose_parser.add_argument(
-        "--host",
-        default="localhost",
-        help="Redis host (default: localhost)",
-    )
-    diagnose_parser.add_argument(
-        "--port",
-        type=int,
-        default=6379,
-        help="Redis port (default: 6379)",
-    )
-
-    # 'version' command (alternative to --version flag)
-    subparsers.add_parser(
-        "version",
-        help="Show version information",
-    )
-
-    args = parser.parse_args(argv)
-
-    # Handle --version flag
-    if args.version or args.command == "version":
-        return _cmd_version()
-
-    # Handle 'local' commands
-    if args.command == "local":
-        if args.local_command == "up":
-            return _cmd_local_up(
-                redis_port=args.redis_port,
-                minio_port=args.minio_port,
-                minio_console_port=args.minio_console_port,
-                detach=args.detach,
-            )
-        elif args.local_command == "down":
-            return _cmd_local_down(remove_volumes=args.volumes)
-        elif args.local_command == "status":
-            return _cmd_local_status()
-        else:
-            local_parser.print_help()
-            return 1
-
-    # Handle 'diagnose' command
-    if args.command == "diagnose":
-        return _cmd_diagnose(host=args.host, port=args.port)
-
-    # No command given
-    parser.print_help()
-    return 0
-
-
-def _cmd_version() -> int:
-    """Show version information."""
     try:
-        from atdata import __version__
-
-        version = __version__
-    except ImportError:
-        # Fallback to package metadata
-        from importlib.metadata import version as pkg_version
-
-        version = pkg_version("atdata")
-
-    print(f"atdata {version}")
-    return 0
-
-
-def _cmd_local_up(
-    redis_port: int,
-    minio_port: int,
-    minio_console_port: int,
-    detach: bool,
-) -> int:
-    """Start local development infrastructure."""
-    from .local import local_up
-
-    return local_up(
-        redis_port=redis_port,
-        minio_port=minio_port,
-        minio_console_port=minio_console_port,
-        detach=detach,
-    )
-
-
-def _cmd_local_down(remove_volumes: bool) -> int:
-    """Stop local development infrastructure."""
-    from .local import local_down
-
-    return local_down(remove_volumes=remove_volumes)
-
-
-def _cmd_local_status() -> int:
-    """Show status of local infrastructure."""
-    from .local import local_status
-
-    return local_status()
-
-
-def _cmd_diagnose(host: str, port: int) -> int:
-    """Diagnose Redis configuration."""
-    from .diagnose import diagnose_redis
-
-    return diagnose_redis(host=host, port=port)
+        if argv is not None:
+            app(args=argv, standalone_mode=False)
+        else:
+            app(standalone_mode=False)
+        return 0
+    except SystemExit as exc:
+        return exc.code if isinstance(exc.code, int) else 0
+    except Exception:
+        return 1
 
 
 if __name__ == "__main__":

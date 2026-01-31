@@ -53,7 +53,7 @@ constructor directly with an unsubscripted class.
 | --- | --- |
 | [as_type](#atdata.Dataset.as_type) | View this dataset through a different sample type using a registered lens. |
 | [list_shards](#atdata.Dataset.list_shards) | Get list of individual dataset shards. |
-| [ordered](#atdata.Dataset.ordered) | Iterate over the dataset in order |
+| [ordered](#atdata.Dataset.ordered) | Iterate over the dataset in order. |
 | [shuffled](#atdata.Dataset.shuffled) | Iterate over the dataset in random order. |
 | [to_parquet](#atdata.Dataset.to_parquet) | Export dataset contents to parquet format. |
 | [wrap](#atdata.Dataset.wrap) | Wrap a raw msgpack sample into the appropriate dataset-specific type. |
@@ -108,20 +108,31 @@ Get list of individual dataset shards.
 Dataset.ordered(batch_size=None)
 ```
 
-Iterate over the dataset in order
+Iterate over the dataset in order.
 
 #### Parameters {.doc-section .doc-section-parameters}
 
-| Name         | Type   | Description                                                                                                                                             | Default    |
-|--------------|--------|---------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
-| batch_size ( |        | obj:`int`, optional): The size of iterated batches. Default: None (unbatched). If ``None``, iterates over one sample at a time with no batch dimension. | _required_ |
+| Name       | Type                 | Description                                                                                                                       | Default   |
+|------------|----------------------|-----------------------------------------------------------------------------------------------------------------------------------|-----------|
+| batch_size | [int](`int`) \| None | The size of iterated batches. Default: None (unbatched). If ``None``, iterates over one sample at a time with no batch dimension. | `None`    |
 
 #### Returns {.doc-section .doc-section-returns}
 
-| Name   | Type                                                       | Description                                                      |
-|--------|------------------------------------------------------------|------------------------------------------------------------------|
-|        | [Iterable](`typing.Iterable`)\[[ST](`atdata.dataset.ST`)\] | obj:`webdataset.DataPipeline` A data pipeline that iterates over |
-|        | [Iterable](`typing.Iterable`)\[[ST](`atdata.dataset.ST`)\] | the dataset in its original sample order                         |
+| Name   | Type                                                                                                                                                                    | Description                                                       |
+|--------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------|
+|        | [Iterable](`typing.Iterable`)\[[ST](`atdata.dataset.ST`)\] \| [Iterable](`typing.Iterable`)\[[SampleBatch](`atdata.dataset.SampleBatch`)\[[ST](`atdata.dataset.ST`)\]\] | A data pipeline that iterates over the dataset in its original    |
+|        | [Iterable](`typing.Iterable`)\[[ST](`atdata.dataset.ST`)\] \| [Iterable](`typing.Iterable`)\[[SampleBatch](`atdata.dataset.SampleBatch`)\[[ST](`atdata.dataset.ST`)\]\] | sample order. When ``batch_size`` is ``None``, yields individual  |
+|        | [Iterable](`typing.Iterable`)\[[ST](`atdata.dataset.ST`)\] \| [Iterable](`typing.Iterable`)\[[SampleBatch](`atdata.dataset.SampleBatch`)\[[ST](`atdata.dataset.ST`)\]\] | samples of type ``ST``. When ``batch_size`` is an integer, yields |
+|        | [Iterable](`typing.Iterable`)\[[ST](`atdata.dataset.ST`)\] \| [Iterable](`typing.Iterable`)\[[SampleBatch](`atdata.dataset.SampleBatch`)\[[ST](`atdata.dataset.ST`)\]\] | ``SampleBatch[ST]`` instances containing that many samples.       |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> for sample in ds.ordered():
+...     process(sample)  # sample is ST
+>>> for batch in ds.ordered(batch_size=32):
+...     process(batch)  # batch is SampleBatch[ST]
+```
 
 ### shuffled { #atdata.Dataset.shuffled }
 
@@ -141,12 +152,21 @@ Iterate over the dataset in random order.
 
 #### Returns {.doc-section .doc-section-returns}
 
-| Name   | Type                                                       | Description                                                       |
-|--------|------------------------------------------------------------|-------------------------------------------------------------------|
-|        | [Iterable](`typing.Iterable`)\[[ST](`atdata.dataset.ST`)\] | A WebDataset data pipeline that iterates over the dataset in      |
-|        | [Iterable](`typing.Iterable`)\[[ST](`atdata.dataset.ST`)\] | randomized order. If ``batch_size`` is not ``None``, yields       |
-|        | [Iterable](`typing.Iterable`)\[[ST](`atdata.dataset.ST`)\] | ``SampleBatch[ST]`` instances; otherwise yields individual ``ST`` |
-|        | [Iterable](`typing.Iterable`)\[[ST](`atdata.dataset.ST`)\] | samples.                                                          |
+| Name   | Type                                                                                                                                                                    | Description                                                           |
+|--------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
+|        | [Iterable](`typing.Iterable`)\[[ST](`atdata.dataset.ST`)\] \| [Iterable](`typing.Iterable`)\[[SampleBatch](`atdata.dataset.SampleBatch`)\[[ST](`atdata.dataset.ST`)\]\] | A data pipeline that iterates over the dataset in randomized order.   |
+|        | [Iterable](`typing.Iterable`)\[[ST](`atdata.dataset.ST`)\] \| [Iterable](`typing.Iterable`)\[[SampleBatch](`atdata.dataset.SampleBatch`)\[[ST](`atdata.dataset.ST`)\]\] | When ``batch_size`` is ``None``, yields individual samples of type    |
+|        | [Iterable](`typing.Iterable`)\[[ST](`atdata.dataset.ST`)\] \| [Iterable](`typing.Iterable`)\[[SampleBatch](`atdata.dataset.SampleBatch`)\[[ST](`atdata.dataset.ST`)\]\] | ``ST``. When ``batch_size`` is an integer, yields ``SampleBatch[ST]`` |
+|        | [Iterable](`typing.Iterable`)\[[ST](`atdata.dataset.ST`)\] \| [Iterable](`typing.Iterable`)\[[SampleBatch](`atdata.dataset.SampleBatch`)\[[ST](`atdata.dataset.ST`)\]\] | instances containing that many samples.                               |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> for sample in ds.shuffled():
+...     process(sample)  # sample is ST
+>>> for batch in ds.shuffled(batch_size=32):
+...     process(batch)  # batch is SampleBatch[ST]
+```
 
 ### to_parquet { #atdata.Dataset.to_parquet }
 

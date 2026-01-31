@@ -505,7 +505,7 @@ class TestLensNetworkDiscovery:
 
         network = LensNetwork()
 
-        with pytest.raises(ValueError, match="No registered lens"):
+        with pytest.raises(ValueError, match="No lens transforms"):
             network.transform(UnknownSource, UnknownView)
 
     def test_multiple_lenses_registered(self):

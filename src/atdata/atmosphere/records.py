@@ -21,9 +21,10 @@ from ._types import (
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ..dataset import PackableSample, Dataset
+    from ..dataset import Dataset
+    from .._protocols import Packable
 
-ST = TypeVar("ST", bound="PackableSample")
+ST = TypeVar("ST", bound="Packable")
 
 
 class DatasetPublisher:

@@ -114,7 +114,7 @@ def _container_running(name: str) -> bool:
             timeout=5,
         )
         return result.returncode == 0 and result.stdout.strip() == "true"
-    except Exception:
+    except (OSError, subprocess.SubprocessError):
         return False
 
 

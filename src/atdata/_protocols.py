@@ -10,7 +10,7 @@ formalize that common interface.
 Note:
     Protocol methods use ``...`` (Ellipsis) as the body per PEP 544. This is
     the standard Python syntax for Protocol definitions - these are interface
-    specifications, not stub implementations. Concrete classes (LocalIndex,
+    specifications, not stub implementations. Concrete classes (Index,
     AtmosphereIndex, etc.) provide the actual implementations.
 
 Protocols:
@@ -24,7 +24,7 @@ Examples:
     ...     for entry in index.list_datasets():
     ...         print(f"{entry.name}: {entry.data_urls}")
     ...
-    >>> # Works with either LocalIndex or AtmosphereIndex
+    >>> # Works with either Index or AtmosphereIndex
     >>> process_datasets(local_index)
     >>> process_datasets(atmosphere_index)
 """
@@ -77,24 +77,16 @@ class Packable(Protocol):
     """
 
     @classmethod
-    def from_data(cls, data: dict[str, Any]) -> "Packable":
-        """Create instance from unpacked msgpack data dictionary."""
-        ...
+    def from_data(cls, data: dict[str, Any]) -> "Packable": ...
 
     @classmethod
-    def from_bytes(cls, bs: bytes) -> "Packable":
-        """Create instance from raw msgpack bytes."""
-        ...
+    def from_bytes(cls, bs: bytes) -> "Packable": ...
 
     @property
-    def packed(self) -> bytes:
-        """Pack this sample's data into msgpack bytes."""
-        ...
+    def packed(self) -> bytes: ...
 
     @property
-    def as_wds(self) -> dict[str, Any]:
-        """WebDataset-compatible representation with __key__ and msgpack."""
-        ...
+    def as_wds(self) -> dict[str, Any]: ...
 
 
 ##
@@ -116,16 +108,14 @@ class IndexEntry(Protocol):
     """
 
     @property
-    def name(self) -> str:
-        """Human-readable dataset name."""
-        ...
+    def name(self) -> str: ...
 
     @property
     def schema_ref(self) -> str:
-        """Reference to the schema for this dataset.
+        """Schema reference string.
 
-        For local: 'local://schemas/{module.Class}@{version}'
-        For atmosphere: 'at://did:plc:.../ac.foundation.dataset.sampleSchema/...'
+        Local: ``local://schemas/{module.Class}@{version}``
+        Atmosphere: ``at://did:plc:.../ac.foundation.dataset.sampleSchema/...``
         """
         ...
 
@@ -139,9 +129,7 @@ class IndexEntry(Protocol):
         ...
 
     @property
-    def metadata(self) -> Optional[dict]:
-        """Arbitrary metadata dictionary, or None if not set."""
-        ...
+    def metadata(self) -> Optional[dict]: ...
 
 
 ##
@@ -149,7 +137,7 @@ class IndexEntry(Protocol):
 
 
 class AbstractIndex(Protocol):
-    """Protocol for index operations - implemented by LocalIndex and AtmosphereIndex.
+    """Protocol for index operations - implemented by Index and AtmosphereIndex.
 
     This protocol defines the common interface for managing dataset metadata:
     - Publishing and retrieving schemas
@@ -239,21 +227,9 @@ class AbstractIndex(Protocol):
         ...
 
     @property
-    def datasets(self) -> Iterator[IndexEntry]:
-        """Lazily iterate over all dataset entries in this index.
+    def datasets(self) -> Iterator[IndexEntry]: ...
 
-        Yields:
-            IndexEntry for each dataset (may be of different sample types).
-        """
-        ...
-
-    def list_datasets(self) -> list[IndexEntry]:
-        """Get all dataset entries as a materialized list.
-
-        Returns:
-            List of IndexEntry for each dataset.
-        """
-        ...
+    def list_datasets(self) -> list[IndexEntry]: ...
 
     # Schema operations
 
@@ -299,21 +275,9 @@ class AbstractIndex(Protocol):
         ...
 
     @property
-    def schemas(self) -> Iterator[dict]:
-        """Lazily iterate over all schema records in this index.
+    def schemas(self) -> Iterator[dict]: ...
 
-        Yields:
-            Schema records as dictionaries.
-        """
-        ...
-
-    def list_schemas(self) -> list[dict]:
-        """Get all schema records as a materialized list.
-
-        Returns:
-            List of schema records as dictionaries.
-        """
-        ...
+    def list_schemas(self) -> list[dict]: ...
 
     def decode_schema(self, ref: str) -> Type[Packable]:
         """Reconstruct a Python Packable type from a stored schema.
@@ -401,14 +365,7 @@ class AbstractDataStore(Protocol):
         """
         ...
 
-    def supports_streaming(self) -> bool:
-        """Whether this store supports streaming reads.
-
-        Returns:
-            True if the store supports efficient streaming (like S3),
-            False if data must be fully downloaded first.
-        """
-        ...
+    def supports_streaming(self) -> bool: ...
 
 
 ##
@@ -481,13 +438,13 @@ class DataSource(Protocol):
         only its assigned shards rather than iterating all shards.
 
         Args:
-            shard_id: Shard identifier from shard_list.
+            shard_id: Shard identifier from list_shards().
 
         Returns:
             File-like stream for reading the shard.
 
         Raises:
-            KeyError: If shard_id is not in shard_list.
+            KeyError: If shard_id is not in list_shards().
         """
         ...
 

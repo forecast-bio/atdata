@@ -1,7 +1,7 @@
 """Integration tests for cross-backend interoperability.
 
 Tests that abstract protocols work consistently across:
-- LocalIndex and AtmosphereIndex (AbstractIndex protocol)
+- Index and AtmosphereIndex (AbstractIndex protocol)
 - LocalDatasetEntry and AtmosphereIndexEntry (IndexEntry protocol)
 - S3DataStore (AbstractDataStore protocol)
 """
@@ -12,7 +12,7 @@ from unittest.mock import Mock, MagicMock
 from numpy.typing import NDArray
 
 import atdata
-from atdata.local import LocalIndex, LocalDatasetEntry
+from atdata.local import Index, LocalDatasetEntry
 from atdata._protocols import IndexEntry
 from atdata.atmosphere import (
     AtmosphereClient,
@@ -73,8 +73,8 @@ def authenticated_atmosphere_client(mock_atproto_client):
 
 @pytest.fixture
 def local_index(clean_redis):
-    """Create a LocalIndex backed by Redis."""
-    return LocalIndex(redis=clean_redis)
+    """Create a Index backed by Redis."""
+    return Index(redis=clean_redis)
 
 
 @pytest.fixture
@@ -223,10 +223,10 @@ class TestIndexEntryProtocol:
 
 
 class TestAbstractIndexProtocol:
-    """Tests that LocalIndex and AtmosphereIndex share common behavior."""
+    """Tests that Index and AtmosphereIndex share common behavior."""
 
     def test_local_index_list_datasets_yields_entries(self, local_index, clean_redis):
-        """LocalIndex.list_datasets should yield IndexEntry objects."""
+        """Index.list_datasets should yield IndexEntry objects."""
         # Insert an entry directly via Redis for testing
         entry = LocalDatasetEntry(
             name="test-list",
@@ -269,7 +269,7 @@ class TestAbstractIndexProtocol:
         assert entries[0].name == "atmo-list"
 
     def test_local_index_publish_schema(self, local_index):
-        """LocalIndex.publish_schema should return schema reference."""
+        """Index.publish_schema should return schema reference."""
         schema_ref = local_index.publish_schema(CrossBackendSample, version="1.0.0")
 
         assert schema_ref is not None
@@ -292,7 +292,7 @@ class TestAbstractIndexProtocol:
         assert "at://" in str(schema_ref)
 
     def test_local_index_get_schema(self, local_index):
-        """LocalIndex should retrieve published schemas."""
+        """Index should retrieve published schemas."""
         schema_ref = local_index.publish_schema(CrossBackendSample, version="2.0.0")
         schema = local_index.get_schema(schema_ref)
 
@@ -451,8 +451,8 @@ class TestListingConsistency:
     """Tests that listing operations behave consistently."""
 
     def test_empty_local_index_lists_no_datasets(self, clean_redis):
-        """Empty LocalIndex should list no datasets."""
-        index = LocalIndex(redis=clean_redis)
+        """Empty Index should list no datasets."""
+        index = Index(redis=clean_redis)
         entries = list(index.list_datasets())
 
         # Should be empty or contain only pre-existing entries
@@ -485,7 +485,7 @@ class TestGenericIndexFunction:
         return [entry.name for entry in index.list_datasets()]
 
     def test_count_works_with_local(self, local_index, clean_redis):
-        """Dataset count function should work with LocalIndex."""
+        """Dataset count function should work with Index."""
         # Insert some entries
         for i in range(3):
             entry = LocalDatasetEntry(
@@ -523,7 +523,7 @@ class TestGenericIndexFunction:
         assert count == 5
 
     def test_get_names_works_with_local(self, local_index, clean_redis):
-        """Name retrieval function should work with LocalIndex."""
+        """Name retrieval function should work with Index."""
         names = ["alpha", "beta", "gamma"]
         for name in names:
             entry = LocalDatasetEntry(
