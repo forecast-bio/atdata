@@ -25,6 +25,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Update promote.py backward compat wrapper (#523)
+- Add Index.promote_entry and promote_dataset (#522)
+- Add Index.write method (#521)
+- Export Index and LocalDiskStore from top-level (#520)
+- Add write_samples function (#519)
+- Add LocalDiskStore (#518)
+- Update git flow branches after v0.3.0b1 release (#516)
+- Provide load_dataset atmosphere example (#515)
+- Provide minimal atdata atmosphere publish example (#514)
+- Create GitHub release and tag for v0.3.0b1 (#513)
 - Investigate upload-artifact not finding benchmark output (#512)
 - Fix duplicate CI runs for push+PR overlap (#511)
 - Scope contents:write permission to benchmark job only (#510)

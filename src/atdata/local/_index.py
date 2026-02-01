@@ -21,6 +21,7 @@ from atdata.local._schema import (
 from pathlib import Path
 from typing import (
     Any,
+    Iterable,
     Type,
     TypeVar,
     Generator,
@@ -635,6 +636,110 @@ class Index:
             **kwargs,
         )
 
+    def write(
+        self,
+        samples: Iterable,
+        *,
+        name: str,
+        schema_ref: str | None = None,
+        description: str | None = None,
+        tags: list[str] | None = None,
+        license: str | None = None,
+        maxcount: int = 10_000,
+        maxsize: int | None = None,
+        metadata: dict | None = None,
+    ) -> "IndexEntry":
+        """Write samples and create an index entry in one step.
+
+        This is the primary method for publishing data. It serializes
+        samples to WebDataset tar files, stores them via the appropriate
+        backend, and creates an index entry.
+
+        The target backend is determined by the *name* prefix:
+
+        - Bare name (e.g., ``"mnist"``): writes to the local repository.
+        - ``"@handle/name"``: writes and publishes to the atmosphere.
+        - ``"repo/name"``: writes to a named repository.
+
+        When the local backend has no ``data_store`` configured, a
+        ``LocalDiskStore`` is created automatically at
+        ``~/.atdata/data/`` so that samples have persistent storage.
+
+        .. note::
+
+            This method is synchronous. Samples are written to a temporary
+            location first, then copied to permanent storage by the backend.
+            Avoid passing lazily-evaluated iterators that depend on external
+            state that may change during the call.
+
+        Args:
+            samples: Iterable of ``Packable`` samples. Must be non-empty.
+            name: Dataset name, optionally prefixed with target.
+            schema_ref: Optional schema reference. Auto-generated if ``None``.
+            description: Optional dataset description (atmosphere only).
+            tags: Optional tags for discovery (atmosphere only).
+            license: Optional license identifier (atmosphere only).
+            maxcount: Max samples per shard. Default: 10,000.
+            maxsize: Max bytes per shard. Default: ``None``.
+            metadata: Optional metadata dict stored with the entry.
+
+        Returns:
+            IndexEntry for the created dataset.
+
+        Raises:
+            ValueError: If *samples* is empty.
+
+        Examples:
+            >>> index = Index()
+            >>> samples = [MySample(key="0", text="hello")]
+            >>> entry = index.write(samples, name="my-dataset")
+        """
+        import tempfile
+
+        from atdata.dataset import write_samples
+
+        backend_key, resolved_name, _ = self._resolve_prefix(name)
+
+        # For local backend without a data_store, create a LocalDiskStore
+        # so that write() always persists data to a permanent location.
+        effective_store = self._data_store
+        if backend_key == "local" and effective_store is None:
+            from atdata.local._disk import LocalDiskStore
+
+            effective_store = LocalDiskStore()
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir) / "data.tar"
+            ds = write_samples(
+                samples,
+                tmp_path,
+                maxcount=maxcount,
+                maxsize=maxsize,
+            )
+
+            # For local without data_store, write directly through the
+            # auto-created LocalDiskStore rather than via insert_dataset
+            # (which would just index the temp path).
+            if backend_key == "local" and self._data_store is None:
+                return self._insert_dataset_to_provider(
+                    ds,
+                    name=resolved_name,
+                    schema_ref=schema_ref,
+                    provider=self._provider,
+                    store=effective_store,
+                    metadata=metadata,
+                )
+
+            return self.insert_dataset(
+                ds,
+                name=name,
+                schema_ref=schema_ref,
+                metadata=metadata,
+                description=description,
+                tags=tags,
+                license=license,
+            )
+
     def get_dataset(self, ref: str) -> "IndexEntry":
         """Get a dataset entry by name or prefixed reference.
 
@@ -938,3 +1043,142 @@ class Index:
         if self._stub_manager is not None:
             return self._stub_manager.clear_stubs()
         return 0
+
+    # -- Atmosphere promotion --
+
+    def promote_entry(
+        self,
+        entry_name: str,
+        *,
+        name: str | None = None,
+        description: str | None = None,
+        tags: list[str] | None = None,
+        license: str | None = None,
+    ) -> str:
+        """Promote a locally-indexed dataset to the atmosphere.
+
+        Looks up the entry by name in the local index, resolves its
+        schema, and publishes both schema and dataset record to ATProto
+        via the index's atmosphere backend.
+
+        Args:
+            entry_name: Name of the local dataset entry to promote.
+            name: Override name for the atmosphere record. Defaults to
+                the local entry name.
+            description: Optional description for the dataset.
+            tags: Optional tags for discovery.
+            license: Optional license identifier.
+
+        Returns:
+            AT URI of the created atmosphere dataset record.
+
+        Raises:
+            ValueError: If atmosphere backend is not available, or
+                the local entry has no data URLs.
+            KeyError: If the entry or its schema is not found.
+
+        Examples:
+            >>> index = Index(atmosphere=client)
+            >>> uri = index.promote_entry("mnist-train")
+        """
+        from atdata.promote import _find_or_publish_schema
+        from atdata.atmosphere import DatasetPublisher
+        from atdata._schema_codec import schema_to_type
+
+        atmo = self._get_atmosphere()
+        if atmo is None:
+            raise ValueError("Atmosphere backend required but not available.")
+
+        entry = self.get_entry_by_name(entry_name)
+        if not entry.data_urls:
+            raise ValueError(f"Local entry {entry_name!r} has no data URLs")
+
+        schema_record = self.get_schema(entry.schema_ref)
+        sample_type = schema_to_type(schema_record)
+        schema_version = schema_record.get("version", "1.0.0")
+
+        atmosphere_schema_uri = _find_or_publish_schema(
+            sample_type,
+            schema_version,
+            atmo.client,
+            description=schema_record.get("description"),
+        )
+
+        publisher = DatasetPublisher(atmo.client)
+        uri = publisher.publish_with_urls(
+            urls=entry.data_urls,
+            schema_uri=atmosphere_schema_uri,
+            name=name or entry.name,
+            description=description,
+            tags=tags,
+            license=license,
+            metadata=entry.metadata,
+        )
+        return str(uri)
+
+    def promote_dataset(
+        self,
+        dataset: Dataset,
+        *,
+        name: str,
+        sample_type: type | None = None,
+        schema_version: str = "1.0.0",
+        description: str | None = None,
+        tags: list[str] | None = None,
+        license: str | None = None,
+    ) -> str:
+        """Publish a Dataset directly to the atmosphere.
+
+        Publishes the schema (with deduplication) and creates a dataset
+        record on ATProto. Uses the index's atmosphere backend.
+
+        Args:
+            dataset: The Dataset to publish.
+            name: Name for the atmosphere dataset record.
+            sample_type: Sample type for schema publishing. Inferred from
+                ``dataset.sample_type`` if not provided.
+            schema_version: Semantic version for the schema. Default: ``"1.0.0"``.
+            description: Optional description for the dataset.
+            tags: Optional tags for discovery.
+            license: Optional license identifier.
+
+        Returns:
+            AT URI of the created atmosphere dataset record.
+
+        Raises:
+            ValueError: If atmosphere backend is not available.
+
+        Examples:
+            >>> index = Index(atmosphere=client)
+            >>> ds = atdata.load_dataset("./data.tar", MySample, split="train")
+            >>> uri = index.promote_dataset(ds, name="my-dataset")
+        """
+        from atdata.promote import _find_or_publish_schema
+        from atdata.atmosphere import DatasetPublisher
+
+        atmo = self._get_atmosphere()
+        if atmo is None:
+            raise ValueError("Atmosphere backend required but not available.")
+
+        st = sample_type or dataset.sample_type
+
+        atmosphere_schema_uri = _find_or_publish_schema(
+            st,
+            schema_version,
+            atmo.client,
+            description=description,
+        )
+
+        data_urls = dataset.list_shards()
+
+        publisher = DatasetPublisher(atmo.client)
+        uri = publisher.publish_with_urls(
+            urls=data_urls,
+            schema_uri=atmosphere_schema_uri,
+            name=name,
+            description=description,
+            tags=tags,
+            license=license,
+            metadata=dataset._metadata,
+        )
+        return str(uri)

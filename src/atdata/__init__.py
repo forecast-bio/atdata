@@ -44,6 +44,7 @@ from .dataset import (
     SampleBatch as SampleBatch,
     Dataset as Dataset,
     packable as packable,
+    write_samples as write_samples,
 )
 
 from .lens import (
@@ -94,6 +95,11 @@ from ._logging import (
 from .repository import (
     Repository as Repository,
     create_repository as create_repository,
+)
+
+from .local import (
+    Index as Index,
+    LocalDiskStore as LocalDiskStore,
 )
 
 from ._cid import (

@@ -29,6 +29,7 @@ from atdata.local._schema import (
     _python_type_to_field_type,
     _build_schema_record,
 )
+from atdata.local._disk import LocalDiskStore
 from atdata.local._index import Index
 from atdata.local._s3 import (
     S3DataStore,
@@ -44,6 +45,7 @@ from s3fs import S3FileSystem  # noqa: F401 — re-exported for backward compat
 
 __all__ = [
     # Public API
+    "LocalDiskStore",
     "Index",
     "LocalDatasetEntry",
     "BasicIndexEntry",

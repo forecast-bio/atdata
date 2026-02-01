@@ -32,6 +32,7 @@ Examples:
 from typing import (
     IO,
     Any,
+    Iterable,
     Iterator,
     Optional,
     Protocol,
@@ -186,6 +187,30 @@ class AbstractIndex(Protocol):
         ...
 
     # Dataset operations
+
+    def write(
+        self,
+        samples: Iterable,
+        *,
+        name: str,
+        schema_ref: Optional[str] = None,
+        **kwargs,
+    ) -> IndexEntry:
+        """Write samples and create an index entry in one step.
+
+        Serializes samples to WebDataset tar files, stores them via the
+        appropriate backend, and creates an index entry.
+
+        Args:
+            samples: Iterable of Packable samples. Must be non-empty.
+            name: Dataset name, optionally prefixed with target backend.
+            schema_ref: Optional schema reference.
+            **kwargs: Backend-specific options (maxcount, description, etc.).
+
+        Returns:
+            IndexEntry for the created dataset.
+        """
+        ...
 
     def insert_dataset(
         self,
