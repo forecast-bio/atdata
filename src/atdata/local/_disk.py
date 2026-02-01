@@ -81,10 +81,14 @@ class LocalDiskStore:
         def _track_shard(path: str) -> None:
             written_shards.append(str(Path(path).resolve()))
 
+        # Filter out kwargs that are specific to other stores (e.g. S3)
+        # and not understood by wds.writer.ShardWriter / TarWriter.
+        writer_kwargs = {k: v for k, v in kwargs.items() if k not in ("cache_local",)}
+
         with wds.writer.ShardWriter(
             shard_pattern,
             post=_track_shard,
-            **kwargs,
+            **writer_kwargs,
         ) as sink:
             for sample in ds.ordered(batch_size=None):
                 sink.write(sample.as_wds)

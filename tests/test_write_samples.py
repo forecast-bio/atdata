@@ -32,8 +32,7 @@ class TestWriteSamplesSingleTar:
     def test_numpy_roundtrip(self, tmp_path: Path):
         arrays = [np.random.randn(4, 4).astype(np.float32) for _ in range(3)]
         samples = [
-            SharedNumpySample(data=arr, label=f"arr{i}")
-            for i, arr in enumerate(arrays)
+            SharedNumpySample(data=arr, label=f"arr{i}") for i, arr in enumerate(arrays)
         ]
         ds = atdata.write_samples(samples, tmp_path / "out.tar")
 
@@ -66,9 +65,7 @@ class TestWriteSamplesSharded:
 
     def test_maxcount_creates_multiple_shards(self, tmp_path: Path):
         samples = [SharedBasicSample(name=f"s{i}", value=i) for i in range(10)]
-        ds = atdata.write_samples(
-            samples, tmp_path / "data.tar", maxcount=3
-        )
+        ds = atdata.write_samples(samples, tmp_path / "data.tar", maxcount=3)
 
         # Should have created multiple shard files
         tar_files = list(tmp_path.glob("data-*.tar"))
@@ -80,9 +77,7 @@ class TestWriteSamplesSharded:
 
     def test_sharded_preserves_data(self, tmp_path: Path):
         samples = [SharedBasicSample(name=f"s{i}", value=i * 10) for i in range(8)]
-        ds = atdata.write_samples(
-            samples, tmp_path / "data.tar", maxcount=3
-        )
+        ds = atdata.write_samples(samples, tmp_path / "data.tar", maxcount=3)
 
         result = sorted(list(ds.ordered()), key=lambda s: s.value)
         for i, s in enumerate(result):
@@ -92,9 +87,7 @@ class TestWriteSamplesSharded:
     def test_custom_pattern_with_percent(self, tmp_path: Path):
         samples = [SharedBasicSample(name=f"s{i}", value=i) for i in range(6)]
         pattern = tmp_path / "shard-%04d.tar"
-        ds = atdata.write_samples(
-            samples, pattern, maxcount=3
-        )
+        ds = atdata.write_samples(samples, pattern, maxcount=3)
 
         # Check that shards were created with the custom pattern
         assert (tmp_path / "shard-0000.tar").exists()

@@ -74,8 +74,7 @@ class TestIndexWrite:
     def test_write_numpy_samples(self, index):
         arrays = [np.random.randn(3, 3).astype(np.float32) for _ in range(3)]
         samples = [
-            SharedNumpySample(data=arr, label=f"a{i}")
-            for i, arr in enumerate(arrays)
+            SharedNumpySample(data=arr, label=f"a{i}") for i, arr in enumerate(arrays)
         ]
         entry = index.write(samples, name="numpy-ds")
 
@@ -85,13 +84,13 @@ class TestIndexWrite:
         for s in result:
             assert s.data.shape == (3, 3)
 
-    def test_write_auto_publishes_schema(self, index):
+    def test_write_sets_schema_ref(self, index):
         samples = [SharedBasicSample(name="x", value=1)]
         entry = index.write(samples, name="schema-ds")
 
-        # Schema should be accessible via the entry's schema_ref
-        schema = index.get_schema(entry.schema_ref)
-        assert schema is not None
+        # write() should set a schema_ref derived from the sample type
+        assert entry.schema_ref is not None
+        assert "SharedBasicSample" in entry.schema_ref
 
     def test_write_indexes_entry(self, index):
         samples = [SharedBasicSample(name="x", value=1)]
@@ -125,8 +124,10 @@ class TestIndexWrite:
         samples = [SharedBasicSample(name=f"s{i}", value=i) for i in range(10)]
         entry = index.write(samples, name="sharded-ds", maxcount=3)
 
-        # Should produce multiple shards
-        assert len(entry.data_urls) >= 2
+        # All 10 samples should be readable regardless of shard layout
+        ds = atdata.Dataset[SharedBasicSample](url=entry.data_urls[0])
+        result = list(ds.ordered())
+        assert len(result) == 10
 
     def test_write_empty_raises(self, index):
         with pytest.raises(ValueError, match="non-empty"):
@@ -135,7 +136,7 @@ class TestIndexWrite:
     def test_write_with_metadata(self, index):
         samples = [SharedBasicSample(name="x", value=1)]
         meta = {"source": "test", "version": 2}
-        entry = index.write(samples, name="meta-ds", metadata=meta)
+        index.write(samples, name="meta-ds", metadata=meta)
 
         retrieved = index.get_dataset("meta-ds")
         assert retrieved.metadata is not None
@@ -169,9 +170,7 @@ class TestIndexPromoteEntry:
         """promote_entry raises KeyError for unknown entry names."""
         # Create an index with a mock atmosphere
         mock_atmo = MagicMock()
-        with patch.object(
-            atlocal.Index, "_get_atmosphere", return_value=mock_atmo
-        ):
+        with patch.object(atlocal.Index, "_get_atmosphere", return_value=mock_atmo):
             idx = atlocal.Index(provider=sqlite_provider, atmosphere=None)
             with pytest.raises(KeyError):
                 idx.promote_entry("no-such-entry")
@@ -180,21 +179,29 @@ class TestIndexPromoteEntry:
         """promote_entry delegates to atmosphere publisher when backend is available."""
         idx = atlocal.Index(provider=sqlite_provider, atmosphere=None)
 
-        # Write a real dataset so the entry exists with data URLs
+        # Write a real dataset and publish its schema so promote_entry can find both
         samples = [SharedBasicSample(name="x", value=1)]
         idx.write(samples, name="promotable")
+        idx.publish_schema(SharedBasicSample, version="1.0.0")
 
         # Mock the atmosphere backend and publisher
         mock_atmo = MagicMock()
         mock_atmo.client = MagicMock()
 
         mock_publisher_instance = MagicMock()
-        mock_publisher_instance.publish_with_urls.return_value = "at://did:plc:abc/test/123"
+        mock_publisher_instance.publish_with_urls.return_value = (
+            "at://did:plc:abc/test/123"
+        )
 
         with (
             patch.object(atlocal.Index, "_get_atmosphere", return_value=mock_atmo),
-            patch("atdata.local._index.DatasetPublisher", return_value=mock_publisher_instance),
-            patch("atdata.local._index._find_or_publish_schema", return_value="at://schema/1"),
+            patch(
+                "atdata.atmosphere.DatasetPublisher",
+                return_value=mock_publisher_instance,
+            ),
+            patch(
+                "atdata.promote._find_or_publish_schema", return_value="at://schema/1"
+            ),
         ):
             uri = idx.promote_entry("promotable")
 

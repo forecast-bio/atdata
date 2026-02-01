@@ -2,9 +2,6 @@
 
 from pathlib import Path
 
-import numpy as np
-import pytest
-
 import atdata
 from conftest import (
     SharedBasicSample,
@@ -70,7 +67,7 @@ class TestLocalDiskStoreWriteShards:
         store = atdata.LocalDiskStore(root=tmp_path / "store")
         ds = create_basic_dataset(tmp_path, num_samples=3)
 
-        urls = store.write_shards(ds, prefix="datasets/mnist/v1")
+        store.write_shards(ds, prefix="datasets/mnist/v1")
 
         shard_dir = tmp_path / "store" / "datasets" / "mnist" / "v1"
         assert shard_dir.exists()
