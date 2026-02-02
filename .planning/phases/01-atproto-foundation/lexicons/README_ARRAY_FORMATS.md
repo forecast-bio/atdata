@@ -32,16 +32,16 @@ Array formats define how numpy NDArray fields are serialized in atdata sample ty
 }
 ```
 
-### Usage in sampleSchema
+### Usage in schema
 
 Schema records declare format versions in `arrayFormatVersions` field:
 
 ```json
 {
-  "$type": "ac.foundation.dataset.sampleSchema",
+  "$type": "ac.foundation.dataset.schema",
   "schemaType": "jsonSchema",
   "schema": {
-    "$type": "ac.foundation.dataset.sampleSchema#jsonSchemaFormat",
+    "$type": "ac.foundation.dataset.schema#jsonSchemaFormat",
     "arrayFormatVersions": {
       "ndarrayBytes": "1.0.0"
     },
@@ -163,7 +163,7 @@ This pattern provides:
 
 ## Relationship to Codegen
 
-When atdata codegen processes a sampleSchema:
+When atdata codegen processes a schema:
 
 1. Reads `arrayFormatVersions` to know which formats are used
 2. Fetches canonical shim schemas from foundation.ac URLs
@@ -173,6 +173,6 @@ When atdata codegen processes a sampleSchema:
 ## References
 
 - [ac.foundation.dataset.arrayFormat Lexicon](./ac.foundation.dataset.arrayFormat.json)
-- [ac.foundation.dataset.sampleSchema Lexicon](./ac.foundation.dataset.sampleSchema.json)
+- [ac.foundation.dataset.schema Lexicon](./ac.foundation.dataset.schema.json)
 - [NDArray Shim Specification](../.planning/ndarray_shim_spec.md)
 - [ATProto Lexicon Token Type](https://atproto.com/guides/lexicon)

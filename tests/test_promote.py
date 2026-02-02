@@ -32,7 +32,7 @@ class TestFindExistingSchema:
             mock_loader = MockLoader.return_value
             mock_loader.list_all.return_value = [
                 {
-                    "uri": "at://did:plc:test/ac.foundation.dataset.sampleSchema/abc",
+                    "uri": "at://did:plc:test/ac.foundation.dataset.schema/abc",
                     "value": {
                         "name": "test_promote.PromoteTestSample",
                         "version": "1.0.0",
@@ -44,7 +44,7 @@ class TestFindExistingSchema:
                 mock_client, "test_promote.PromoteTestSample", "1.0.0"
             )
 
-            assert result == "at://did:plc:test/ac.foundation.dataset.sampleSchema/abc"
+            assert result == "at://did:plc:test/ac.foundation.dataset.schema/abc"
 
     def test_returns_none_when_not_found(self):
         """Test returns None when no matching schema exists."""
@@ -54,7 +54,7 @@ class TestFindExistingSchema:
             mock_loader = MockLoader.return_value
             mock_loader.list_all.return_value = [
                 {
-                    "uri": "at://did:plc:test/ac.foundation.dataset.sampleSchema/abc",
+                    "uri": "at://did:plc:test/ac.foundation.dataset.schema/abc",
                     "value": {
                         "name": "other.OtherSample",
                         "version": "1.0.0",
@@ -76,7 +76,7 @@ class TestFindExistingSchema:
             mock_loader = MockLoader.return_value
             mock_loader.list_all.return_value = [
                 {
-                    "uri": "at://did:plc:test/ac.foundation.dataset.sampleSchema/abc",
+                    "uri": "at://did:plc:test/ac.foundation.dataset.schema/abc",
                     "value": {
                         "name": "test_promote.PromoteTestSample",
                         "version": "2.0.0",  # Different version

@@ -42,8 +42,8 @@ class LensPublisher:
         >>> publisher = LensPublisher(atmo)
         >>> uri = publisher.publish(
         ...     name="my_lens",
-        ...     source_schema_uri="at://did:plc:abc/ac.foundation.dataset.sampleSchema/source",
-        ...     target_schema_uri="at://did:plc:abc/ac.foundation.dataset.sampleSchema/target",
+        ...     source_schema_uri="at://did:plc:abc/ac.foundation.dataset.schema/source",
+        ...     target_schema_uri="at://did:plc:abc/ac.foundation.dataset.schema/target",
         ...     code_repository="https://github.com/user/repo",
         ...     code_commit="abc123def456",
         ...     getter_path="mymodule.lenses:my_lens",

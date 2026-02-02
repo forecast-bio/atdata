@@ -589,7 +589,7 @@ class TestLiveErrorHandling:
         loader = SchemaLoader(live_client)
 
         fake_uri = (
-            f"at://{live_client.did}/{LEXICON_NAMESPACE}.sampleSchema/nonexistent12345"
+            f"at://{live_client.did}/{LEXICON_NAMESPACE}.schema/nonexistent12345"
         )
 
         with pytest.raises(Exception):

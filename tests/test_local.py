@@ -1162,7 +1162,7 @@ def test_index_with_datastore_insert(mock_s3, clean_redis, tmp_path):
     assert entry.name == "stored-dataset"
     assert len(entry.data_urls) >= 1
     assert all(url.startswith("s3://") for url in entry.data_urls)
-    assert entry.schema_ref.startswith("atdata://local/sampleSchema/")
+    assert entry.schema_ref.startswith("atdata://local/schema/")
 
     # Verify it's in the index
     retrieved = index.get_dataset("stored-dataset")
@@ -1227,7 +1227,7 @@ def test_publish_schema(clean_redis):
 
     schema_ref = index.publish_schema(SimpleTestSample, version="1.0.0")
 
-    assert schema_ref.startswith("atdata://local/sampleSchema/")
+    assert schema_ref.startswith("atdata://local/schema/")
     assert "SimpleTestSample" in schema_ref
     assert "@1.0.0" in schema_ref
 
@@ -1299,7 +1299,7 @@ def test_get_schema_not_found(clean_redis):
     index = atlocal.Index(redis=clean_redis)
 
     with pytest.raises(KeyError, match="Schema not found"):
-        index.get_schema("atdata://local/sampleSchema/NonexistentSample@1.0.0")
+        index.get_schema("atdata://local/schema/NonexistentSample@1.0.0")
 
 
 def test_get_schema_invalid_ref(clean_redis):

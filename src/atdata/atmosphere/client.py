@@ -213,7 +213,7 @@ class Atmosphere:
 
         Args:
             collection: The NSID of the record collection
-                (e.g., 'ac.foundation.dataset.sampleSchema').
+                (e.g., 'ac.foundation.dataset.schema').
             record: The record data. Must include a '$type' field.
             rkey: Optional explicit record key. If not provided, a TID is generated.
             validate: Whether to validate against the Lexicon schema. Set to False
@@ -539,7 +539,7 @@ class Atmosphere:
             List of schema records.
         """
         records, _ = self.list_records(
-            f"{LEXICON_NAMESPACE}.sampleSchema",
+            f"{LEXICON_NAMESPACE}.schema",
             repo=repo,
             limit=limit,
         )

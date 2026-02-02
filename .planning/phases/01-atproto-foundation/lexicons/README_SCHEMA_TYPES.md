@@ -9,7 +9,7 @@ Schema types in atdata are managed through the `ac.foundation.dataset.schemaType
 1. **Single Lexicon file**: `ac.foundation.dataset.schemaType.json`
 2. **Main def**: String type with `knownValues` listing supported schema types
 3. **Token defs**: Each schema type has a corresponding token def (e.g., `#jsonSchema`)
-4. **Reference in sampleSchema**: The `schemaType` field refs to `ac.foundation.dataset.schemaType`
+4. **Reference in schema**: The `schemaType` field refs to `ac.foundation.dataset.schemaType`
 
 ## Structure
 
@@ -31,18 +31,18 @@ Schema types in atdata are managed through the `ac.foundation.dataset.schemaType
 }
 ```
 
-## Usage in sampleSchema
+## Usage in schema
 
 The `schemaType` field references the schemaType Lexicon:
 
 ```json
 {
-  "$type": "ac.foundation.dataset.sampleSchema",
+  "$type": "ac.foundation.dataset.schema",
   "name": "ImageSample",
   "version": "1.0.0",
   "schemaType": "jsonSchema",
   "schema": {
-    "$type": "ac.foundation.dataset.sampleSchema#jsonSchemaFormat",
+    "$type": "ac.foundation.dataset.schema#jsonSchemaFormat",
     ...
   }
 }
@@ -83,9 +83,9 @@ Edit `ac.foundation.dataset.schemaType.json`:
 }
 ```
 
-### 2. Add format def to sampleSchema Lexicon
+### 2. Add format def to schema Lexicon
 
-Edit `ac.foundation.dataset.sampleSchema.json`:
+Edit `ac.foundation.dataset.schema.json`:
 
 ```json
 {
@@ -97,7 +97,7 @@ Edit `ac.foundation.dataset.sampleSchema.json`:
       "properties": {
         "$type": {
           "type": "string",
-          "const": "ac.foundation.dataset.sampleSchema#avroFormat"
+          "const": "ac.foundation.dataset.schema#avroFormat"
         },
         "type": {
           "type": "string"
@@ -113,15 +113,15 @@ Edit `ac.foundation.dataset.sampleSchema.json`:
 
 ### 3. Update schema union refs
 
-In sampleSchema main record:
+In schema main record:
 
 ```json
 {
   "schema": {
     "type": "union",
     "refs": [
-      "ac.foundation.dataset.sampleSchema#jsonSchemaFormat",
-      "ac.foundation.dataset.sampleSchema#avroFormat"
+      "ac.foundation.dataset.schema#jsonSchemaFormat",
+      "ac.foundation.dataset.schema#avroFormat"
     ],
     "closed": false
   }

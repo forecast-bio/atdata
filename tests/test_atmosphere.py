@@ -153,15 +153,15 @@ class TestAtUri:
 
     def test_str_roundtrip(self):
         """Verify __str__ produces valid URI that can be re-parsed."""
-        original = "at://did:plc:test123/ac.foundation.dataset.sampleSchema/xyz789"
+        original = "at://did:plc:test123/ac.foundation.dataset.schema/xyz789"
         uri = AtUri.parse(original)
         assert str(uri) == original
 
     def test_parse_atdata_namespace(self):
         """Parse URIs in the atdata namespace."""
-        uri = AtUri.parse(f"at://did:plc:abc/{LEXICON_NAMESPACE}.sampleSchema/test")
+        uri = AtUri.parse(f"at://did:plc:abc/{LEXICON_NAMESPACE}.schema/test")
 
-        assert uri.collection == f"{LEXICON_NAMESPACE}.sampleSchema"
+        assert uri.collection == f"{LEXICON_NAMESPACE}.schema"
 
 
 # =============================================================================
@@ -271,7 +271,7 @@ class TestSchemaRecord:
 
         record = schema.to_record()
 
-        assert record["$type"] == f"{LEXICON_NAMESPACE}.sampleSchema"
+        assert record["$type"] == f"{LEXICON_NAMESPACE}.schema"
         assert record["name"] == "TestSchema"
         assert record["version"] == "1.0.0"
         assert len(record["fields"]) == 1
@@ -387,7 +387,7 @@ class TestDatasetRecord:
         """Convert dataset record with external storage."""
         dataset = DatasetRecord(
             name="TestDataset",
-            schema_ref="at://did:plc:abc/ac.foundation.dataset.sampleSchema/xyz",
+            schema_ref="at://did:plc:abc/ac.foundation.dataset.schema/xyz",
             storage=StorageLocation(
                 kind="external",
                 urls=["s3://bucket/data.tar"],
@@ -400,7 +400,7 @@ class TestDatasetRecord:
         assert record["name"] == "TestDataset"
         assert (
             record["schemaRef"]
-            == "at://did:plc:abc/ac.foundation.dataset.sampleSchema/xyz"
+            == "at://did:plc:abc/ac.foundation.dataset.schema/xyz"
         )
         assert record["storage"]["$type"] == f"{LEXICON_NAMESPACE}.storageExternal"
         assert record["storage"]["urls"] == ["s3://bucket/data.tar"]
@@ -796,7 +796,7 @@ class TestAtmosphere:
         authenticated_client.list_schemas()
 
         call_args = mock_atproto_client.com.atproto.repo.list_records.call_args
-        assert f"{LEXICON_NAMESPACE}.sampleSchema" in str(call_args)
+        assert f"{LEXICON_NAMESPACE}.schema" in str(call_args)
 
 
 # =============================================================================
@@ -811,7 +811,7 @@ class TestSchemaPublisher:
         """Publish a basic sample type schema."""
         mock_response = Mock()
         mock_response.uri = (
-            f"at://did:plc:test123456789/{LEXICON_NAMESPACE}.sampleSchema/abc"
+            f"at://did:plc:test123456789/{LEXICON_NAMESPACE}.schema/abc"
         )
         mock_atproto_client.com.atproto.repo.create_record.return_value = mock_response
 
@@ -819,7 +819,7 @@ class TestSchemaPublisher:
         uri = publisher.publish(BasicSample, version="1.0.0")
 
         assert isinstance(uri, AtUri)
-        assert uri.collection == f"{LEXICON_NAMESPACE}.sampleSchema"
+        assert uri.collection == f"{LEXICON_NAMESPACE}.schema"
 
         # Verify the record structure
         call_args = mock_atproto_client.com.atproto.repo.create_record.call_args
@@ -831,7 +831,7 @@ class TestSchemaPublisher:
     def test_publish_with_custom_name(self, authenticated_client, mock_atproto_client):
         """Publish with custom name override."""
         mock_response = Mock()
-        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/abc"
+        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/abc"
         mock_atproto_client.com.atproto.repo.create_record.return_value = mock_response
 
         publisher = SchemaPublisher(authenticated_client)
@@ -844,7 +844,7 @@ class TestSchemaPublisher:
     def test_publish_numpy_sample(self, authenticated_client, mock_atproto_client):
         """Publish sample type with NDArray field."""
         mock_response = Mock()
-        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/abc"
+        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/abc"
         mock_atproto_client.com.atproto.repo.create_record.return_value = mock_response
 
         publisher = SchemaPublisher(authenticated_client)
@@ -860,7 +860,7 @@ class TestSchemaPublisher:
     def test_publish_optional_fields(self, authenticated_client, mock_atproto_client):
         """Publish sample type with optional fields."""
         mock_response = Mock()
-        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/abc"
+        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/abc"
         mock_atproto_client.com.atproto.repo.create_record.return_value = mock_response
 
         publisher = SchemaPublisher(authenticated_client)
@@ -881,7 +881,7 @@ class TestSchemaPublisher:
     ):
         """Publish sample with all primitive types."""
         mock_response = Mock()
-        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/abc"
+        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/abc"
         mock_atproto_client.com.atproto.repo.create_record.return_value = mock_response
 
         publisher = SchemaPublisher(authenticated_client)
@@ -916,7 +916,7 @@ class TestSchemaLoader:
         """Get a schema by URI."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.sampleSchema",
+            "$type": f"{LEXICON_NAMESPACE}.schema",
             "name": "TestSchema",
             "version": "1.0.0",
             "fields": [],
@@ -924,7 +924,7 @@ class TestSchemaLoader:
         mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
 
         loader = SchemaLoader(authenticated_client)
-        schema = loader.get(f"at://did:plc:abc/{LEXICON_NAMESPACE}.sampleSchema/xyz")
+        schema = loader.get(f"at://did:plc:abc/{LEXICON_NAMESPACE}.schema/xyz")
 
         assert schema["name"] == "TestSchema"
 
@@ -997,7 +997,7 @@ class TestDatasetPublisher:
         # Mock for schema creation
         schema_response = Mock()
         schema_response.uri = (
-            f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/schema123"
+            f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/schema123"
         )
 
         # Mock for dataset creation
@@ -1166,7 +1166,7 @@ class TestDatasetLoader:
         """Get raises error for wrong record type."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.sampleSchema",
+            "$type": f"{LEXICON_NAMESPACE}.schema",
             "name": "NotADataset",
         }
         mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
@@ -1707,7 +1707,7 @@ class TestFieldTypeEdgeCases:
         """Test FieldType for reference type."""
         field_type = FieldType(
             kind="ref",
-            ref="at://did:plc:abc/atdata.sampleSchema/xyz",
+            ref="at://did:plc:abc/atdata.schema/xyz",
         )
 
         schema = SchemaRecord(
@@ -1719,7 +1719,7 @@ class TestFieldTypeEdgeCases:
 
         field = record["fields"][0]
         assert "ref" in field["fieldType"]["$type"]
-        assert field["fieldType"]["ref"] == "at://did:plc:abc/atdata.sampleSchema/xyz"
+        assert field["fieldType"]["ref"] == "at://did:plc:abc/atdata.schema/xyz"
 
     def test_array_type_with_items(self):
         """Test FieldType for array with typed items."""
@@ -1751,7 +1751,7 @@ class TestSchemaPublisherEdgeCases:
             values: List[int]
 
         mock_response = Mock()
-        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/abc"
+        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/abc"
         mock_atproto_client.com.atproto.repo.create_record.return_value = mock_response
 
         publisher = SchemaPublisher(authenticated_client)
@@ -1858,7 +1858,7 @@ class TestAtmosphereIndex:
     def test_publish_schema(self, authenticated_client, mock_atproto_client):
         """publish_schema delegates to SchemaPublisher."""
         mock_response = Mock()
-        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/abc"
+        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/abc"
         mock_atproto_client.com.atproto.repo.create_record.return_value = mock_response
 
         index = AtmosphereIndex(authenticated_client)
@@ -1871,7 +1871,7 @@ class TestAtmosphereIndex:
         """get_schema delegates to SchemaLoader."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.sampleSchema",
+            "$type": f"{LEXICON_NAMESPACE}.schema",
             "name": "TestSchema",
             "version": "1.0.0",
             "fields": [],

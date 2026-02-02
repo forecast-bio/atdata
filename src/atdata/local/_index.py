@@ -352,7 +352,7 @@ class Index:
         as attributes on this namespace.
 
         Examples:
-            >>> index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
+            >>> index.load_schema("atdata://local/schema/MySample@1.0.0")
             >>> MyType = index.types.MySample
             >>> sample = MyType(name="hello", value=42)
 
@@ -369,7 +369,7 @@ class Index:
         in the :attr:`types` namespace for easy access.
 
         Args:
-            ref: Schema reference string (atdata://local/sampleSchema/... or
+            ref: Schema reference string (atdata://local/schema/... or
                 legacy local://schemas/...).
 
         Returns:
@@ -382,11 +382,11 @@ class Index:
 
         Examples:
             >>> # Load and use immediately
-            >>> MyType = index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
+            >>> MyType = index.load_schema("atdata://local/schema/MySample@1.0.0")
             >>> sample = MyType(field1="hello", field2=42)
             >>>
             >>> # Or access later via namespace
-            >>> index.load_schema("atdata://local/sampleSchema/OtherType@1.0.0")
+            >>> index.load_schema("atdata://local/schema/OtherType@1.0.0")
             >>> other = index.types.OtherType(data="test")
         """
         # Decode the schema (uses generated module if auto_stubs enabled)
@@ -845,7 +845,7 @@ class Index:
                 the class docstring.
 
         Returns:
-            Schema reference string: 'atdata://local/sampleSchema/{name}@{version}'.
+            Schema reference string: 'atdata://local/schema/{name}@{version}'.
 
         Raises:
             ValueError: If sample_type is not a dataclass.
@@ -899,7 +899,7 @@ class Index:
 
         Args:
             ref: Schema reference string. Supports both new format
-                (atdata://local/sampleSchema/{name}@{version}) and legacy
+                (atdata://local/schema/{name}@{version}) and legacy
                 format (local://schemas/{module.Class}@{version}).
 
         Returns:
@@ -976,7 +976,7 @@ class Index:
         The returned class has proper type information that IDEs can understand.
 
         Args:
-            ref: Schema reference string (atdata://local/sampleSchema/... or
+            ref: Schema reference string (atdata://local/schema/... or
                 legacy local://schemas/...).
 
         Returns:

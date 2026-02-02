@@ -1,7 +1,7 @@
 """Schema publishing and loading for ATProto.
 
 This module provides classes for publishing PackableSample schemas to ATProto
-and loading them back. Schemas are published as ``ac.foundation.dataset.sampleSchema``
+and loading them back. Schemas are published as ``ac.foundation.dataset.schema``
 records.
 """
 
@@ -48,7 +48,7 @@ class SchemaPublisher:
         >>> publisher = SchemaPublisher(atmo)
         >>> uri = publisher.publish(MySample, version="1.0.0")
         >>> print(uri)
-        at://did:plc:.../ac.foundation.dataset.sampleSchema/...
+        at://did:plc:.../ac.foundation.dataset.schema/...
     """
 
     def __init__(self, client: Atmosphere):
@@ -102,7 +102,7 @@ class SchemaPublisher:
 
         # Publish to ATProto
         return self.client.create_record(
-            collection=f"{LEXICON_NAMESPACE}.sampleSchema",
+            collection=f"{LEXICON_NAMESPACE}.schema",
             record=schema_record.to_record(),
             rkey=rkey,
             validate=False,  # PDS doesn't know our lexicon
@@ -187,7 +187,7 @@ class SchemaLoader:
         >>> atmo = Atmosphere.login("handle", "password")
         >>>
         >>> loader = SchemaLoader(atmo)
-        >>> schema = loader.get("at://did:plc:.../ac.foundation.dataset.sampleSchema/...")
+        >>> schema = loader.get("at://did:plc:.../ac.foundation.dataset.schema/...")
         >>> print(schema["name"])
         'MySample'
     """
@@ -215,7 +215,7 @@ class SchemaLoader:
         """
         record = self.client.get_record(uri)
 
-        expected_type = f"{LEXICON_NAMESPACE}.sampleSchema"
+        expected_type = f"{LEXICON_NAMESPACE}.schema"
         if record.get("$type") != expected_type:
             raise ValueError(
                 f"Record at {uri} is not a schema record. "

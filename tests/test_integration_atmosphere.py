@@ -87,7 +87,7 @@ class TestFullPublishWorkflow:
         # Setup mock responses
         schema_response = Mock()
         schema_response.uri = (
-            f"at://did:plc:integration123/{LEXICON_NAMESPACE}.sampleSchema/schema123"
+            f"at://did:plc:integration123/{LEXICON_NAMESPACE}.schema/schema123"
         )
 
         dataset_response = Mock()
@@ -109,7 +109,7 @@ class TestFullPublishWorkflow:
         schema_uri = schema_pub.publish(AtmoSample, version="1.0.0")
 
         assert isinstance(schema_uri, AtUri)
-        assert schema_uri.collection == f"{LEXICON_NAMESPACE}.sampleSchema"
+        assert schema_uri.collection == f"{LEXICON_NAMESPACE}.schema"
 
         # Publish dataset using correct API
         dataset_pub = DatasetPublisher(client)
@@ -171,11 +171,11 @@ class TestRecordDiscovery:
     def test_list_schemas_returns_all(self, authenticated_client, mock_atproto_client):
         """list_schemas should return all schema records."""
         mock_record1 = Mock()
-        mock_record1.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/s1"
+        mock_record1.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/s1"
         mock_record1.value = {"name": "Schema1", "version": "1.0.0", "fields": []}
 
         mock_record2 = Mock()
-        mock_record2.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/s2"
+        mock_record2.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/s2"
         mock_record2.value = {"name": "Schema2", "version": "1.0.0", "fields": []}
 
         mock_response = Mock()
@@ -192,7 +192,7 @@ class TestRecordDiscovery:
         """get should retrieve schema by URI."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.sampleSchema",
+            "$type": f"{LEXICON_NAMESPACE}.schema",
             "name": "FoundSchema",
             "version": "2.0.0",
             "fields": [
@@ -351,7 +351,7 @@ class TestSchemaPublishing:
     def test_publish_basic_schema(self, authenticated_client, mock_atproto_client):
         """Schema should publish with correct structure."""
         mock_response = Mock()
-        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/basic"
+        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/basic"
         mock_atproto_client.com.atproto.repo.create_record.return_value = mock_response
 
         publisher = SchemaPublisher(authenticated_client)
@@ -373,7 +373,7 @@ class TestSchemaPublishing:
         """Schema with NDArray field should publish correctly."""
         mock_response = Mock()
         mock_response.uri = (
-            f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/ndarray"
+            f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/ndarray"
         )
         mock_atproto_client.com.atproto.repo.create_record.return_value = mock_response
 
@@ -427,15 +427,15 @@ class TestAtUriParsing:
 
     def test_uri_str_roundtrip(self):
         """String conversion should roundtrip."""
-        original = "at://did:plc:test123/ac.foundation.dataset.sampleSchema/xyz789"
+        original = "at://did:plc:test123/ac.foundation.dataset.schema/xyz789"
         uri = AtUri.parse(original)
         assert str(uri) == original
 
     def test_parse_atdata_namespace(self):
         """Parse URIs in the atdata namespace."""
-        uri = AtUri.parse(f"at://did:plc:abc/{LEXICON_NAMESPACE}.sampleSchema/test")
+        uri = AtUri.parse(f"at://did:plc:abc/{LEXICON_NAMESPACE}.schema/test")
 
-        assert uri.collection == f"{LEXICON_NAMESPACE}.sampleSchema"
+        assert uri.collection == f"{LEXICON_NAMESPACE}.schema"
 
 
 class TestPDSBlobStore:

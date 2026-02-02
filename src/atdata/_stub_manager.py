@@ -15,7 +15,7 @@ Examples:
     >>> index = Index(auto_stubs=True)
     >>>
     >>> # Modules are generated automatically on decode_schema
-    >>> MyType = index.decode_schema("atdata://local/sampleSchema/MySample@1.0.0")
+    >>> MyType = index.decode_schema("atdata://local/schema/MySample@1.0.0")
     >>> # MyType is now properly typed for IDE autocomplete!
     >>>
     >>> # Get the stub directory path for IDE configuration
@@ -51,8 +51,8 @@ def _extract_authority(schema_ref: Optional[str]) -> str:
     """Extract authority from a schema reference URI.
 
     Args:
-        schema_ref: Schema ref like "atdata://local/sampleSchema/Name@1.0.0"
-            or "atdata://alice.bsky.social/sampleSchema/Name@1.0.0"
+        schema_ref: Schema ref like "atdata://local/schema/Name@1.0.0"
+            or "atdata://alice.bsky.social/schema/Name@1.0.0"
 
     Returns:
         Authority string (e.g., "local", "alice.bsky.social", "did_plc_xxx").

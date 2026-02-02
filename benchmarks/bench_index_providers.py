@@ -21,7 +21,7 @@ from .conftest import BenchBasicSample, generate_basic_samples
 def _make_entry(i: int) -> LocalDatasetEntry:
     return LocalDatasetEntry(
         name=f"bench_dataset_{i:06d}",
-        schema_ref=f"atdata://local/sampleSchema/BenchBasicSample@1.0.0",
+        schema_ref=f"atdata://local/schema/BenchBasicSample@1.0.0",
         data_urls=[f"/tmp/bench/data-{i:06d}.tar"],
         metadata={"index": i, "split": "train"},
     )
