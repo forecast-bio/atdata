@@ -253,12 +253,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#atdata.Packable" id="toc-atdata.Packable" class="nav-link active" data-scroll-target="#atdata.Packable">Packable</a>
   <ul class="collapse">
   <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
-  <li><a href="#attributes" id="toc-attributes" class="nav-link" data-scroll-target="#attributes">Attributes</a></li>
-  <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
-  <ul class="collapse">
-  <li><a href="#atdata.Packable.from_bytes" id="toc-atdata.Packable.from_bytes" class="nav-link" data-scroll-target="#atdata.Packable.from_bytes">from_bytes</a></li>
-  <li><a href="#atdata.Packable.from_data" id="toc-atdata.Packable.from_data" class="nav-link" data-scroll-target="#atdata.Packable.from_data">from_data</a></li>
-  </ul></li>
   </ul></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/forecast-bio/atdata/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></nav>
@@ -287,60 +281,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>...     <span class="co"># Type checker knows sample_type has from_bytes, packed, etc.</span></span>
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>...     instance <span class="op">=</span> sample_type.from_bytes(data)</span>
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>...     <span class="bu">print</span>(instance.packed)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</section>
-<section id="attributes" class="level2">
-<h2 class="anchored" data-anchor-id="attributes">Attributes</h2>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><a href="#atdata.Packable.as_wds">as_wds</a></td>
-<td>WebDataset-compatible representation with <strong>key</strong> and msgpack.</td>
-</tr>
-<tr class="even">
-<td><a href="#atdata.Packable.packed">packed</a></td>
-<td>Pack this sample’s data into msgpack bytes.</td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="methods" class="level2">
-<h2 class="anchored" data-anchor-id="methods">Methods</h2>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><a href="#atdata.Packable.from_bytes">from_bytes</a></td>
-<td>Create instance from raw msgpack bytes.</td>
-</tr>
-<tr class="even">
-<td><a href="#atdata.Packable.from_data">from_data</a></td>
-<td>Create instance from unpacked msgpack data dictionary.</td>
-</tr>
-</tbody>
-</table>
-<section id="atdata.Packable.from_bytes" class="level3">
-<h3 class="anchored" data-anchor-id="atdata.Packable.from_bytes">from_bytes</h3>
-<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>Packable.from_bytes(bs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Create instance from raw msgpack bytes.</p>
-</section>
-<section id="atdata.Packable.from_data" class="level3">
-<h3 class="anchored" data-anchor-id="atdata.Packable.from_data">from_data</h3>
-<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>Packable.from_data(data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Create instance from unpacked msgpack data dictionary.</p>
 
 
-</section>
 </section>
 </section>
 

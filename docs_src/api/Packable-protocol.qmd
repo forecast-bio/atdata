@@ -31,33 +31,3 @@ The protocol captures the full interface needed for:
 ...     instance = sample_type.from_bytes(data)
 ...     print(instance.packed)
 ```
-
-## Attributes
-
-| Name | Description |
-| --- | --- |
-| [as_wds](#atdata.Packable.as_wds) | WebDataset-compatible representation with __key__ and msgpack. |
-| [packed](#atdata.Packable.packed) | Pack this sample's data into msgpack bytes. |
-
-## Methods
-
-| Name | Description |
-| --- | --- |
-| [from_bytes](#atdata.Packable.from_bytes) | Create instance from raw msgpack bytes. |
-| [from_data](#atdata.Packable.from_data) | Create instance from unpacked msgpack data dictionary. |
-
-### from_bytes { #atdata.Packable.from_bytes }
-
-```python
-Packable.from_bytes(bs)
-```
-
-Create instance from raw msgpack bytes.
-
-### from_data { #atdata.Packable.from_data }
-
-```python
-Packable.from_data(data)
-```
-
-Create instance from unpacked msgpack data dictionary.

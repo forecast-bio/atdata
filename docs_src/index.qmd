@@ -9,7 +9,7 @@ subtitle: "A loose federation of distributed, typed datasets built on WebDataset
 A loose federation of distributed, typed datasets built on WebDataset. -->
 
 [Get Started](tutorials/quickstart.qmd){.btn .btn-primary .btn-lg}
-[View on GitHub](https://github.com/your-org/atdata){.btn .btn-outline-secondary .btn-lg}
+[View on GitHub](https://github.com/forecast-bio/atdata){.btn .btn-outline-secondary .btn-lg}
 :::
 
 ## The Challenge

@@ -4,11 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-`atdata` is a Python library that implements a loose federation of distributed, typed datasets built on top of WebDataset. It provides:
+`atdata` is a Python library that implements a loose federation of distributed, typed datasets built on top of WebDataset and ATProto. It provides:
 
 - **Typed samples** with automatic serialization via msgpack
+- **Local and atmosphere storage** with pluggable index providers (SQLite, Redis, PostgreSQL)
 - **Lens-based transformations** between different dataset schemas
-- **Batch aggregation** with automatic numpy array stacking
+- **ATProto integration** for publishing and discovering datasets on the atmosphere
+- **HuggingFace-style API** with `load_dataset()` for convenient access
 - **WebDataset integration** for efficient large-scale dataset storage
 
 ## Development Commands
@@ -28,11 +30,10 @@ uv run pytest
 
 # Run specific test file
 uv run pytest tests/test_dataset.py
-uv run pytest tests/test_lens.py
+uv run pytest tests/test_local.py
 
 # Run single test
-uv run pytest tests/test_dataset.py::test_create_sample
-uv run pytest tests/test_lens.py::test_lens
+uv run pytest tests/test_dataset.py::test_create_sample -v
 ```
 
 ### Building
@@ -50,6 +51,13 @@ just test              # Run all tests with coverage
 just test tests/test_dataset.py  # Run specific test file
 just lint              # Run ruff check + format check
 just docs              # Build documentation (runs quartodoc + quarto)
+just bench             # Run full benchmark suite
+just bench-io          # Run I/O benchmarks only
+just bench-index       # Run index provider benchmarks
+just bench-query       # Run query benchmarks
+just bench-report      # Generate HTML benchmark report
+just bench-save <name> # Save benchmark results
+just bench-compare a b # Compare two benchmark runs
 ```
 
 The `justfile` is in the project root. Add new dev tasks there rather than creating shell scripts.
@@ -67,23 +75,41 @@ uv run python script.py
 
 ## Architecture
 
-### Core Components
+### Module Overview
 
-The codebase has three main modules under `src/atdata/`:
+The codebase lives under `src/atdata/` with these main components:
 
-1. **dataset.py** - Core dataset and sample infrastructure
-   - `PackableSample`: Base class for samples that can be serialized with msgpack
-   - `Dataset[ST]`: Generic typed dataset wrapping WebDataset tar files
-   - `SampleBatch[DT]`: Automatic batching with attribute aggregation
-   - `@packable` decorator: Converts dataclasses into PackableSample subclasses
+**Core modules:**
+- `dataset.py` — `PackableSample`, `DictSample`, `Dataset[ST]`, `SampleBatch[DT]`, `@packable`, `write_samples()`
+- `lens.py` — `Lens[S, V]`, `LensNetwork`, `@lens` decorator
+- `_protocols.py` — Protocol definitions: `Packable`, `IndexEntry`, `AbstractIndex`, `AbstractDataStore`, `DataSource`
+- `_hf_api.py` — `load_dataset()`, `DatasetDict`, HuggingFace-style path resolution
+- `_exceptions.py` — Custom exception hierarchy (`AtdataError`, `SchemaError`, `ShardError`, etc.)
 
-2. **lens.py** - Type transformation system
-   - `Lens[S, V]`: Bidirectional transformations between sample types (getter/putter)
-   - `LensNetwork`: Singleton registry for lens transformations
-   - `@lens` decorator: Registers lens getters globally
+**Index and storage:**
+- `local/` — `Index`, `LocalDatasetEntry`, `S3DataStore`, `LocalDiskStore`, schema management
+- `providers/` — Pluggable index backends: `SqliteProvider` (default), `RedisProvider`, `PostgresProvider`
+- `repository.py` — `Repository` dataclass pairing provider + data store, prefix routing
 
-3. **_helpers.py** - Serialization utilities
-   - `array_to_bytes()` / `bytes_to_array()`: numpy array serialization
+**ATProto integration:**
+- `atmosphere/` — `AtmosphereClient`, schema/dataset/lens publishers and loaders, `PDSBlobStore`
+- `promote.py` — Local-to-atmosphere promotion (deprecated in favor of `Index.promote_entry()`)
+
+**Data pipeline:**
+- `_sources.py` — `URLSource`, `S3Source`, `BlobSource` (streaming shard data to Dataset)
+- `manifest/` — Per-shard metadata manifests for query-based access (`ManifestField`, `QueryExecutor`)
+
+**Utilities:**
+- `_helpers.py` — NumPy array serialization (`array_to_bytes` / `bytes_to_array`)
+- `_cid.py` — ATProto-compatible CID generation via libipld
+- `_schema_codec.py` — Dynamic Python type generation from stored schemas
+- `_stub_manager.py` — IDE stub file generation for dynamic types
+- `_type_utils.py` — Shared type conversion utilities
+- `_logging.py` — Pluggable structured logging
+- `testing.py` — Mock clients, fixtures, and test helpers
+
+**CLI:**
+- `cli/` — Typer-based CLI: `atdata inspect`, `atdata preview`, `atdata schema show/diff`, `atdata local up/down/status`, `atdata diagnose`
 
 ### Key Design Patterns
 
@@ -103,6 +129,36 @@ class MySample(atdata.PackableSample):
 class MySample:
     field1: str
     field2: NDArray
+```
+
+**Writing and Indexing Data**
+
+```python
+# Write samples directly to tar files
+ds = atdata.write_samples(samples, "output/data.tar")
+
+# Or use Index for managed storage
+index = atdata.Index(data_store=atdata.LocalDiskStore())
+entry = index.write(samples, name="my-dataset")
+```
+
+**Index with Pluggable Storage**
+
+```python
+# SQLite backend (default, zero dependencies)
+index = atdata.Index()
+
+# With local disk storage
+index = atdata.Index(data_store=atdata.LocalDiskStore())
+
+# With S3 storage
+from atdata.local import S3DataStore
+index = atdata.Index(data_store=S3DataStore(credentials, bucket="my-bucket"))
+
+# With atmosphere backend
+from atdata.atmosphere import AtmosphereClient
+client = AtmosphereClient.login("handle", "password")
+index = atdata.Index(atmosphere=client)
 ```
 
 **NDArray Handling**
@@ -129,7 +185,7 @@ def my_lens_put(view: ViewType, source: SourceType) -> SourceType:
 ds = atdata.Dataset[SourceType](url).as_type(ViewType)
 ```
 
-The `LensNetwork` singleton (in `lens.py:183`) maintains a global registry of all lenses decorated with `@lens`.
+The `LensNetwork` singleton (in `lens.py`) maintains a global registry of all lenses decorated with `@lens`.
 
 **Batch Aggregation**
 
@@ -186,26 +242,27 @@ The codebase uses Python 3.12+ generics heavily:
 
 ## Testing Notes
 
-- Tests use parametrization heavily via `@pytest.mark.parametrize`
-- Test cases cover both decorator and inheritance syntax
+- 1155+ tests across 38 test files
+- Tests use parametrization via `@pytest.mark.parametrize` where appropriate
 - Temporary WebDataset tar files created in `tmp_path` fixture
-- Tests verify both serialization and batch aggregation behavior
+- Shared sample types defined in `conftest.py` (`SharedBasicSample`, `SharedNumpySample`)
 - Lens tests verify well-behavedness (GetPut/PutGet/PutPut laws)
+- Integration tests cover local, atmosphere, cross-backend, and error handling scenarios
 
 ### Warning Suppression Convention
 
 **Keep warning suppression local to individual tests, not global.**
 
-When tests generate expected warnings (e.g., from third-party library incompatibilities), suppress them using `@pytest.mark.filterwarnings` decorators on each affected test rather than global suppression in `conftest.py`. This:
+When tests generate expected warnings (e.g., from deprecated APIs or third-party library incompatibilities), suppress them using `@pytest.mark.filterwarnings` decorators on each affected test rather than global suppression in `conftest.py`. This:
 - Documents which specific tests have known warning behaviors
 - Makes it easier to track when warnings appear in unexpected places
 - Avoids masking genuine warnings from new code
 
-Example for s3fs/moto async incompatibility warnings:
+Example for deprecated API tests:
 ```python
-@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
-@pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
-def test_repo_insert_with_s3(mock_s3, clean_redis):
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
+class TestAtmosphereIndex:
+    """Tests for deprecated AtmosphereIndex backward compat."""
     ...
 ```
 
@@ -303,6 +360,16 @@ chainlink show 123
 uv run chainlink list  # Not needed
 ```
 
+## Custom Skills
+
+Project-level Claude Code skills are defined in `.claude/commands/`:
+
+- `/release <version>` — Full release flow: branch, merge, version bump, changelog, PR
+- `/adr` — Adversarial review with docstring-preservation rules for quartodoc
+- `/changelog` — Generate clean CHANGELOG entry from chainlink history
+
+User-level skills (in `~/.claude/commands/`) take precedence over project-level skills with the same name.
+
 ## Git Workflow
 
 ### Committing Changes
@@ -312,20 +379,31 @@ When using the `/commit` command or creating commits:
 - This ensures issue tracking history is preserved across sessions
 - The issues.db file tracks all chainlink issues, comments, and status changes
 
+### Release Flow
+
+Releases follow this pattern (automated by `/release` skill):
+1. Create `release/v<version>` branch from previous release
+2. Merge feature branch with `--no-ff` to preserve topology
+3. Bump version in `pyproject.toml`, run `uv lock`
+4. Write CHANGELOG entry (Keep a Changelog format)
+5. Push and create PR to `upstream/main`
+
 ### CLI Module
 
-- **Track `src/atdata/cli/`** - Always include the CLI module in commits
-- The CLI provides `atdata local up/down/status` and `atdata diagnose` commands
+- **Track `src/atdata/cli/`** — Always include the CLI module in commits
+- The CLI is built with typer and provides `atdata inspect`, `atdata preview`, `atdata schema`, `atdata local`, and `atdata diagnose` commands
 - Changes to CLI should be committed with the related feature changes
 
 ### Planning Documents
 
-- **Track `.planning/` directory in git** - Do not ignore planning documents
-- Planning documents in `.planning/` should be committed to preserve design history
-- This includes architecture notes, implementation plans, and design decisions
+- **Track `.planning/` directory in git** — Do not ignore planning documents
+- Planning documents are organized by phase in `.planning/phases/`:
+  - `01-atproto-foundation/` — Initial ATProto integration design, lexicon definitions, architecture decisions
+  - `02-v0.2-review/` — Human review assessments from v0.2 cycle
+  - `03-v0.3-roadmap/` — Codebase review and synthesis roadmap for v0.3
 
 ### Reference Materials
 
-- **Track `.reference/` directory in git** - Include reference documentation in commits
+- **Track `.reference/` directory in git** — Include reference documentation in commits
 - The `.reference/` directory contains external specifications and reference materials
 - This includes API specs, lexicon definitions, and other reference documentation used for development

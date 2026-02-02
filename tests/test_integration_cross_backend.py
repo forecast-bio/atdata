@@ -80,7 +80,11 @@ def local_index(clean_redis):
 @pytest.fixture
 def atmosphere_index(authenticated_atmosphere_client):
     """Create an AtmosphereIndex."""
-    return AtmosphereIndex(authenticated_atmosphere_client)
+    import warnings
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        return AtmosphereIndex(authenticated_atmosphere_client)
 
 
 ##

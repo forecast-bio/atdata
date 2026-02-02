@@ -170,8 +170,9 @@ class TestParseSemver:
 class TestConstants:
     """Verify constant maps are populated."""
 
-    def test_numpy_dtype_map_populated(self):
-        assert len(NUMPY_DTYPE_MAP) >= 14
+    def test_numpy_dtype_map_has_common_dtypes(self):
+        for dtype_str in ("float32", "float64", "int32", "int64", "uint8", "bool"):
+            assert dtype_str in NUMPY_DTYPE_MAP, f"Missing dtype: {dtype_str}"
 
     def test_primitive_type_map_populated(self):
         assert PRIMITIVE_TYPE_MAP[str] == "str"

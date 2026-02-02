@@ -222,6 +222,6 @@ Both implement the `AbstractIndex` protocol, so code can work with either.
 
 ## Getting Help
 
-- **GitHub Issues**: [github.com/your-org/atdata/issues](https://github.com/your-org/atdata/issues)
+- **GitHub Issues**: [github.com/forecast-bio/atdata/issues](https://github.com/forecast-bio/atdata/issues)
 - **Documentation**: Check the reference pages for detailed API documentation
 - **Examples**: See the `examples/` directory for working code samples

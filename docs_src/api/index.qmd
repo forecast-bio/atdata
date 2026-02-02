@@ -6,7 +6,7 @@ Core types, decorators, and dataset classes
 
 | | |
 | --- | --- |
-| [packable](packable.qmd#atdata.packable) | Decorator to convert a regular class into a ``PackableSample``. |
+| [packable](packable.qmd#atdata.packable) | Convert a class into a ``PackableSample`` dataclass with msgpack serialization. |
 | [PackableSample](PackableSample.qmd#atdata.PackableSample) | Base class for samples that can be serialized with msgpack. |
 | [DictSample](DictSample.qmd#atdata.DictSample) | Dynamic sample type providing dict-like access to raw msgpack data. |
 | [Dataset](Dataset.qmd#atdata.Dataset) | A typed dataset built on WebDataset with lens transformations. |
@@ -24,9 +24,9 @@ Abstract protocols for storage backends
 | --- | --- |
 | [Packable](Packable-protocol.qmd#atdata.Packable) | Structural protocol for packable sample types. |
 | [IndexEntry](IndexEntry.qmd#atdata.IndexEntry) | Common interface for index entries (local or atmosphere). |
-| [AbstractIndex](AbstractIndex.qmd#atdata.AbstractIndex) | Protocol for index operations - implemented by LocalIndex and AtmosphereIndex. |
-| [AbstractDataStore](AbstractDataStore.qmd#atdata.AbstractDataStore) | Protocol for data storage operations. |
-| [DataSource](DataSource.qmd#atdata.DataSource) | Protocol for data sources that provide streams to Dataset. |
+| [AbstractIndex](AbstractIndex.qmd#atdata.AbstractIndex) | Protocol for index operations — implemented by Index and AtmosphereIndex. |
+| [AbstractDataStore](AbstractDataStore.qmd#atdata.AbstractDataStore) | Protocol for data storage backends (S3, local disk, PDS blobs). |
+| [DataSource](DataSource.qmd#atdata.DataSource) | Protocol for data sources that stream shard data to Dataset. |
 
 ## Data Sources
 
@@ -44,7 +44,7 @@ Local Redis/S3 storage backend
 
 | | |
 | --- | --- |
-| [local.Index](local.Index.qmd#atdata.local.Index) | Redis-backed index for tracking datasets in a repository. |
+| [local.Index](local.Index.qmd#atdata.local.Index) | Unified index for tracking datasets across multiple repositories. |
 | [local.LocalDatasetEntry](local.LocalDatasetEntry.qmd#atdata.local.LocalDatasetEntry) | Index entry for a dataset stored in the local repository. |
 | [local.S3DataStore](local.S3DataStore.qmd#atdata.local.S3DataStore) | S3-compatible data store implementing AbstractDataStore protocol. |
 

@@ -6,13 +6,9 @@ SampleBatch(samples)
 
 A batch of samples with automatic attribute aggregation.
 
-This class wraps a sequence of samples and provides magic ``__getattr__``
-access to aggregate sample attributes. When you access an attribute that
-exists on the sample type, it automatically aggregates values across all
-samples in the batch.
-
-NDArray fields are stacked into a numpy array with a batch dimension.
-Other fields are aggregated into a list.
+Accessing an attribute aggregates that field across all samples:
+NDArray fields are stacked into a numpy array with a batch dimension;
+other fields are collected into a list. Results are cached.
 
 ## Parameters {.doc-section .doc-section-parameters}
 
@@ -20,23 +16,16 @@ Other fields are aggregated into a list.
 |--------|--------|-------------------------------------------------------|------------|
 | DT     |        | The sample type, must derive from ``PackableSample``. | _required_ |
 
-## Attributes {.doc-section .doc-section-attributes}
-
-| Name    | Type   | Description                                 |
-|---------|--------|---------------------------------------------|
-| samples |        | The list of sample instances in this batch. |
-
 ## Examples {.doc-section .doc-section-examples}
 
 ```python
 >>> batch = SampleBatch[MyData]([sample1, sample2, sample3])
->>> batch.embeddings  # Returns stacked numpy array of shape (3, ...)
->>> batch.names  # Returns list of names
+>>> batch.embeddings  # Stacked numpy array of shape (3, ...)
+>>> batch.names  # List of names
 ```
 
-## Note {.doc-section .doc-section-note}
+## Attributes
 
-This class uses Python's ``__orig_class__`` mechanism to extract the
-type parameter at runtime. Instances must be created using the
-subscripted syntax ``SampleBatch[MyType](samples)`` rather than
-calling the constructor directly with an unsubscripted class.
+| Name | Description |
+| --- | --- |
+| [sample_type](#atdata.SampleBatch.sample_type) | The type parameter ``DT`` used when creating this batch. |
