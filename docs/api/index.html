@@ -242,7 +242,7 @@ ul.task-list li input[type="checkbox"] {
 <tbody>
 <tr class="odd">
 <td><a href="../api/packable.html#atdata.packable">packable</a></td>
-<td>Decorator to convert a regular class into a <code>PackableSample</code>.</td>
+<td>Convert a class into a <code>PackableSample</code> dataclass with msgpack serialization.</td>
 </tr>
 <tr class="even">
 <td><a href="../api/PackableSample.html#atdata.PackableSample">PackableSample</a></td>
@@ -294,15 +294,15 @@ ul.task-list li input[type="checkbox"] {
 </tr>
 <tr class="odd">
 <td><a href="../api/AbstractIndex.html#atdata.AbstractIndex">AbstractIndex</a></td>
-<td>Protocol for index operations - implemented by LocalIndex and AtmosphereIndex.</td>
+<td>Protocol for index operations — implemented by Index and AtmosphereIndex.</td>
 </tr>
 <tr class="even">
 <td><a href="../api/AbstractDataStore.html#atdata.AbstractDataStore">AbstractDataStore</a></td>
-<td>Protocol for data storage operations.</td>
+<td>Protocol for data storage backends (S3, local disk, PDS blobs).</td>
 </tr>
 <tr class="odd">
 <td><a href="../api/DataSource.html#atdata.DataSource">DataSource</a></td>
-<td>Protocol for data sources that provide streams to Dataset.</td>
+<td>Protocol for data sources that stream shard data to Dataset.</td>
 </tr>
 </tbody>
 </table>
@@ -334,7 +334,7 @@ ul.task-list li input[type="checkbox"] {
 <tbody>
 <tr class="odd">
 <td><a href="../api/local.Index.html#atdata.local.Index">local.Index</a></td>
-<td>Redis-backed index for tracking datasets in a repository.</td>
+<td>Unified index for tracking datasets across multiple repositories.</td>
 </tr>
 <tr class="even">
 <td><a href="../api/local.LocalDatasetEntry.html#atdata.local.LocalDatasetEntry">local.LocalDatasetEntry</a></td>

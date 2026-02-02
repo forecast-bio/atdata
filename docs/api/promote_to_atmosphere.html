@@ -281,6 +281,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Promote a local dataset to the atmosphere network.</p>
 <p>This function takes a locally-indexed dataset and publishes it to ATProto, making it discoverable on the federated atmosphere network.</p>
+<p>.. deprecated:: Prefer <code>Index.promote_entry()</code> or <code>Index.promote_dataset()</code> which provide the same functionality through the unified Index interface without requiring separate client and index arguments.</p>
 <section id="parameters" class="level2 doc-section doc-section-parameters">
 <h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
 <table class="caption-top table">
@@ -301,7 +302,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>local_index</td>
-<td><a href="`atdata.local.Index`">LocalIndex</a></td>
+<td><a href="`atdata.local.Index`">Index</a></td>
 <td>Local index containing the schema for this entry.</td>
 <td><em>required</em></td>
 </tr>

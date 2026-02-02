@@ -531,10 +531,8 @@ class TestPartialFailures:
         url = str(tmp_path / "data-{000000..000001}.tar")
         ds = atdata.Dataset[ErrorTestSample](url)
 
-        # Should handle empty shard gracefully
+        # Should handle empty shard gracefully (iteration completes without crash)
         samples = list(ds.ordered(batch_size=None))
-        # May get 1 sample (from first shard) or error depending on implementation
-        assert len(samples) >= 0  # At minimum, shouldn't crash
 
     def test_good_shards_before_bad_are_processed(self, tmp_path):
         """Samples from good shards before bad one should be accessible."""

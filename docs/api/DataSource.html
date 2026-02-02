@@ -272,20 +272,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="atdata.DataSource" class="level1">
 <h1>DataSource</h1>
 <div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>DataSource()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Protocol for data sources that provide streams to Dataset.</p>
-<p>A DataSource abstracts over different ways of accessing dataset shards: - URLSource: Standard WebDataset-compatible URLs (http, https, pipe, gs, etc.) - S3Source: S3-compatible storage with explicit credentials - BlobSource: ATProto blob references (future)</p>
-<p>The key method is <code>shards()</code>, which yields (identifier, stream) pairs. These are fed directly to WebDataset’s tar_file_expander, bypassing URL resolution entirely. This enables: - Private S3 repos with credentials - Custom endpoints (Cloudflare R2, MinIO) - ATProto blob streaming - Any other source that can provide file-like objects</p>
+<p>Protocol for data sources that stream shard data to Dataset.</p>
+<p>Implementations (URLSource, S3Source, BlobSource) yield <code>(identifier, stream)</code> pairs fed to WebDataset’s tar expander, bypassing URL resolution. This enables private S3, custom endpoints, and ATProto blob streaming.</p>
 <section id="examples" class="level2 doc-section doc-section-examples">
 <h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> source <span class="op">=</span> S3Source(</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>...     bucket<span class="op">=</span><span class="st">"my-bucket"</span>,</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>...     keys<span class="op">=</span>[<span class="st">"data-000.tar"</span>, <span class="st">"data-001.tar"</span>],</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>...     endpoint<span class="op">=</span><span class="st">"https://r2.example.com"</span>,</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>...     credentials<span class="op">=</span>creds,</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>... )</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> ds <span class="op">=</span> Dataset[MySample](source)</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="cf">for</span> sample <span class="kw">in</span> ds.ordered():</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>...     <span class="bu">print</span>(sample)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> source <span class="op">=</span> S3Source(bucket<span class="op">=</span><span class="st">"my-bucket"</span>, keys<span class="op">=</span>[<span class="st">"data-000.tar"</span>])</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> ds <span class="op">=</span> Dataset[MySample](source)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="attributes" class="level2">
 <h2 class="anchored" data-anchor-id="attributes">Attributes</h2>
@@ -299,7 +291,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td><a href="#atdata.DataSource.shards">shards</a></td>
-<td>Lazily yield (identifier, stream) pairs for each shard.</td>
+<td>Lazily yield <code>(shard_id, stream)</code> pairs for each shard.</td>
 </tr>
 </tbody>
 </table>
@@ -316,84 +308,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td><a href="#atdata.DataSource.list_shards">list_shards</a></td>
-<td>Get list of shard identifiers without opening streams.</td>
+<td>Shard identifiers without opening streams.</td>
 </tr>
 <tr class="even">
 <td><a href="#atdata.DataSource.open_shard">open_shard</a></td>
-<td>Open a single shard by its identifier.</td>
+<td>Open a single shard for random access (e.g., DataLoader splitting).</td>
 </tr>
 </tbody>
 </table>
 <section id="atdata.DataSource.list_shards" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.DataSource.list_shards">list_shards</h3>
 <div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>DataSource.list_shards()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Get list of shard identifiers without opening streams.</p>
-<p>Used for metadata queries like counting shards without actually streaming data. Implementations should return identifiers that match what shards would yield.</p>
-<section id="returns" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td></td>
-<td><a href="`list`">list</a>[<a href="`str`">str</a>]</td>
-<td>List of shard identifier strings.</td>
-</tr>
-</tbody>
-</table>
-</section>
+<p>Shard identifiers without opening streams.</p>
 </section>
 <section id="atdata.DataSource.open_shard" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.DataSource.open_shard">open_shard</h3>
 <div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>DataSource.open_shard(shard_id)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Open a single shard by its identifier.</p>
-<p>This method enables random access to individual shards, which is required for PyTorch DataLoader worker splitting. Each worker opens only its assigned shards rather than iterating all shards.</p>
-<section id="parameters" class="level4 doc-section doc-section-parameters">
-<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>shard_id</td>
-<td><a href="`str`">str</a></td>
-<td>Shard identifier from shard_list.</td>
-<td><em>required</em></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="returns-1" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td></td>
-<td><a href="`typing.IO`">IO</a>[<a href="`bytes`">bytes</a>]</td>
-<td>File-like stream for reading the shard.</td>
-</tr>
-</tbody>
-</table>
-</section>
+<p>Open a single shard for random access (e.g., DataLoader splitting).</p>
 <section id="raises" class="level4 doc-section doc-section-raises">
 <h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
 <table class="caption-top table">
@@ -408,7 +339,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><a href="`KeyError`">KeyError</a></td>
-<td>If shard_id is not in shard_list.</td>
+<td>If <em>shard_id</em> is not in <code>list_shards()</code>.</td>
 </tr>
 </tbody>
 </table>

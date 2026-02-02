@@ -4,6 +4,7 @@ These tests verify that concrete implementations satisfy their protocol
 definitions, ensuring interoperability between local and atmosphere backends.
 """
 
+import pytest
 from unittest.mock import Mock
 
 from atdata._protocols import (
@@ -92,6 +93,7 @@ class TestAbstractIndexProtocol:
         assert callable(index.list_schemas)
         assert callable(index.decode_schema)
 
+    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
     def test_atmosphere_index_has_required_methods(self):
         """AtmosphereIndex should have all AbstractIndex methods."""
         mock_client = Mock()

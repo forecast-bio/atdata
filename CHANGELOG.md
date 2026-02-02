@@ -25,6 +25,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Comprehensive integration test suite**: 593 tests covering E2E flows, error handling, edge cases
 
 ### Changed
+- Add local filterwarnings to tests exercising deprecated APIs (#533)
+- Simplify atdata user-facing API for publishing (#517)
+- Add tests for all new APIs (#524)
+- Adversarial review: Post user-API-streamline assessment (#525)
+- Deduplicate _field_type_to_stub_str and _field_type_to_python in _schema_codec.py (#532)
+- Remove dead code: parse_cid, deprecated shard_list properties (#530)
+- Trim verbose source docstrings that restate signatures (#529)
+- Strengthen weak test assertions (isinstance checks, tautological tests) (#528)
+- Remove remaining duplicate sample types from test files (#527)
+- Trim verbose test docstrings across test suite (#526)
+- Fix DictSample.as_wds generating new UUID on every call (#531)
 - Update promote.py backward compat wrapper (#523)
 - Add Index.promote_entry and promote_dataset (#522)
 - Add Index.write method (#521)

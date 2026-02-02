@@ -252,9 +252,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#atdata.packable" id="toc-atdata.packable" class="nav-link active" data-scroll-target="#atdata.packable">packable</a>
   <ul class="collapse">
-  <li><a href="#type-checking" id="toc-type-checking" class="nav-link" data-scroll-target="#type-checking">Type Checking</a></li>
-  <li><a href="#parameters" id="toc-parameters" class="nav-link" data-scroll-target="#parameters">Parameters</a></li>
-  <li><a href="#returns" id="toc-returns" class="nav-link" data-scroll-target="#returns">Returns</a></li>
   <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
   </ul></li>
   </ul>
@@ -269,63 +266,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="atdata.packable" class="level1">
 <h1>packable</h1>
 <div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>packable(cls)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Decorator to convert a regular class into a <code>PackableSample</code>.</p>
-<p>This decorator transforms a class into a dataclass that inherits from <code>PackableSample</code>, enabling automatic msgpack serialization/deserialization with special handling for NDArray fields.</p>
-<p>The resulting class satisfies the <code>Packable</code> protocol, making it compatible with all atdata APIs that accept packable types (e.g., <code>publish_schema</code>, lens transformations, etc.).</p>
-<section id="type-checking" class="level2 doc-section doc-section-type-checking">
-<h2 class="doc-section doc-section-type-checking anchored" data-anchor-id="type-checking">Type Checking</h2>
-<p>The return type is annotated as <code>type[PackableSample]</code> so that IDEs and type checkers recognize the <code>PackableSample</code> methods (<code>packed</code>, <code>as_wds</code>, <code>from_bytes</code>, etc.). The <code>@dataclass_transform()</code> decorator ensures that field access from the original class is also preserved for type checking.</p>
-</section>
-<section id="parameters" class="level2 doc-section doc-section-parameters">
-<h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>cls</td>
-<td><a href="`type`">type</a>[<a href="`atdata.dataset._T`">_T</a>]</td>
-<td>The class to convert. Should have type annotations for its fields.</td>
-<td><em>required</em></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="returns" class="level2 doc-section doc-section-returns">
-<h2 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h2>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td></td>
-<td><a href="`type`">type</a>[<a href="`atdata.dataset.PackableSample`">PackableSample</a>]</td>
-<td>A new dataclass that inherits from <code>PackableSample</code> with the same</td>
-</tr>
-<tr class="even">
-<td></td>
-<td><a href="`type`">type</a>[<a href="`atdata.dataset.PackableSample`">PackableSample</a>]</td>
-<td>name and annotations as the original class. The class satisfies the</td>
-</tr>
-<tr class="odd">
-<td></td>
-<td><a href="`type`">type</a>[<a href="`atdata.dataset.PackableSample`">PackableSample</a>]</td>
-<td><code>Packable</code> protocol and can be used with <code>Type[Packable]</code> signatures.</td>
-</tr>
-</tbody>
-</table>
-</section>
+<p>Convert a class into a <code>PackableSample</code> dataclass with msgpack serialization.</p>
+<p>The resulting class gains <code>packed</code>, <code>as_wds</code>, <code>from_bytes</code>, and <code>from_data</code> methods, and satisfies the <code>Packable</code> protocol. NDArray fields are automatically handled during serialization.</p>
 <section id="examples" class="level2 doc-section doc-section-examples">
 <h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
 <div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="op">@</span>packable</span>
@@ -334,11 +276,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>...     values: NDArray</span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>...</span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> sample <span class="op">=</span> MyData(name<span class="op">=</span><span class="st">"test"</span>, values<span class="op">=</span>np.array([<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>]))</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> bytes_data <span class="op">=</span> sample.packed</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> restored <span class="op">=</span> MyData.from_bytes(bytes_data)</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="co"># Works with Packable-typed APIs</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> index.publish_schema(MyData, version<span class="op">=</span><span class="st">"1.0.0"</span>)  <span class="co"># Type-safe</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> restored <span class="op">=</span> MyData.from_bytes(sample.packed)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 
 </section>

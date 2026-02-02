@@ -128,10 +128,7 @@ def make_array_dataset(
 
 
 def test_kind_str_for_sample_type():
-    """Test that sample types are converted to correct fully-qualified string identifiers.
-
-    Should produce strings in format 'module.name' that uniquely identify the sample type.
-    """
+    """Test that sample types are converted to correct fully-qualified string identifiers."""
     result = atlocal._kind_str_for_sample_type(SimpleTestSample)
     assert result == f"{SimpleTestSample.__module__}.SimpleTestSample"
 
@@ -140,11 +137,7 @@ def test_kind_str_for_sample_type():
 
 
 def test_s3_env_valid_credentials(tmp_path):
-    """Test loading S3 credentials from a valid .env file.
-
-    Should successfully parse AWS_ENDPOINT, AWS_ACCESS_KEY_ID, and AWS_SECRET_ACCESS_KEY
-    from a properly formatted .env file.
-    """
+    """Test loading S3 credentials from a valid .env file."""
     env_file = tmp_path / ".env"
     env_file.write_text(
         "AWS_ENDPOINT=http://localhost:9000\n"
@@ -179,11 +172,7 @@ def test_s3_env_valid_credentials(tmp_path):
     ],
 )
 def test_s3_env_missing_required_field(tmp_path, missing_field, env_content):
-    """Test that loading S3 credentials fails when a required field is missing.
-
-    Should raise ValueError when .env file lacks any of the required fields:
-    AWS_ENDPOINT, AWS_ACCESS_KEY_ID, or AWS_SECRET_ACCESS_KEY.
-    """
+    """Test that loading S3 credentials fails when a required field is missing."""
     env_file = tmp_path / ".env"
     env_file.write_text(env_content)
 
@@ -192,10 +181,7 @@ def test_s3_env_missing_required_field(tmp_path, missing_field, env_content):
 
 
 def test_s3_from_credentials_with_dict():
-    """Test creating S3FileSystem from a credentials dictionary.
-
-    Should create a properly configured S3FileSystem instance using dict credentials.
-    """
+    """Test creating S3FileSystem from a credentials dictionary."""
     creds = {
         "AWS_ENDPOINT": "http://localhost:9000",
         "AWS_ACCESS_KEY_ID": "minioadmin",
@@ -211,10 +197,7 @@ def test_s3_from_credentials_with_dict():
 
 
 def test_s3_from_credentials_with_path(tmp_path):
-    """Test creating S3FileSystem from a .env file path.
-
-    Should load credentials from file and create S3FileSystem instance.
-    """
+    """Test creating S3FileSystem from a .env file path."""
     env_file = tmp_path / ".env"
     env_file.write_text(
         "AWS_ENDPOINT=http://localhost:9000\n"
@@ -235,10 +218,7 @@ def test_s3_from_credentials_with_path(tmp_path):
 
 
 def test_local_dataset_entry_creation():
-    """Test creating a LocalDatasetEntry with explicit values.
-
-    Should create an entry with provided name, schema_ref, data_urls, and generate CID.
-    """
+    """Test creating a LocalDatasetEntry with explicit values."""
     entry = atlocal.LocalDatasetEntry(
         name="test-dataset",
         schema_ref="local://schemas/test_module.TestSample@1.0.0",
@@ -256,10 +236,7 @@ def test_local_dataset_entry_creation():
 
 
 def test_local_dataset_entry_cid_generation():
-    """Test that LocalDatasetEntry generates deterministic CIDs.
-
-    Same content should produce the same CID.
-    """
+    """Test that LocalDatasetEntry generates deterministic CIDs."""
     entry1 = atlocal.LocalDatasetEntry(
         name="test-dataset",
         schema_ref="local://schemas/test_module.TestSample@1.0.0",
@@ -292,11 +269,7 @@ def test_local_dataset_entry_different_content_different_cid():
 
 
 def test_local_dataset_entry_write_to_redis(clean_redis):
-    """Test persisting a LocalDatasetEntry to Redis.
-
-    Should write the entry to Redis as a hash with key 'LocalDatasetEntry:{cid}'
-    and all fields should be retrievable with correct values.
-    """
+    """Test persisting a LocalDatasetEntry to Redis."""
     entry = atlocal.LocalDatasetEntry(
         name="test-dataset",
         schema_ref="local://schemas/test_module.TestSample@1.0.0",
@@ -319,11 +292,7 @@ def test_local_dataset_entry_write_to_redis(clean_redis):
 
 
 def test_local_dataset_entry_round_trip_redis(clean_redis):
-    """Test writing and reading a LocalDatasetEntry from Redis.
-
-    Should be able to write an entry to Redis and read it back with all fields
-    intact and matching the original values.
-    """
+    """Test writing and reading a LocalDatasetEntry from Redis."""
     original_entry = atlocal.LocalDatasetEntry(
         name="my-dataset",
         schema_ref="local://schemas/module.Sample@2.0.0",
@@ -396,11 +365,7 @@ def test_index_implements_abstract_index_protocol():
 
 
 def test_index_init_default_sqlite():
-    """Test creating an Index with default SQLite provider.
-
-    When no provider or redis argument is given, the Index should use
-    SQLite as the zero-dependency default.
-    """
+    """Test creating an Index with default SQLite provider."""
     from atdata.providers._sqlite import SqliteProvider
 
     index = atlocal.Index()
@@ -409,10 +374,7 @@ def test_index_init_default_sqlite():
 
 
 def test_index_init_with_redis_connection():
-    """Test creating an Index with an existing Redis connection.
-
-    Should use the provided Redis connection instead of creating a new one.
-    """
+    """Test creating an Index with an existing Redis connection."""
     redis = Redis()
     index = atlocal.Index(redis=redis)
 
@@ -420,10 +382,7 @@ def test_index_init_with_redis_connection():
 
 
 def test_index_init_with_redis_kwargs():
-    """Test creating an Index with Redis connection kwargs.
-
-    Should pass custom kwargs to Redis constructor when creating a new connection.
-    """
+    """Test creating an Index with Redis connection kwargs."""
     index = atlocal.Index(host="localhost", port=6379, db=0)
 
     assert index._redis is not None
@@ -431,10 +390,7 @@ def test_index_init_with_redis_kwargs():
 
 
 def test_index_add_entry(clean_redis):
-    """Test adding a dataset entry to the index.
-
-    Should create a LocalDatasetEntry with auto-generated CID and persist it to Redis.
-    """
+    """Test adding a dataset entry to the index."""
     index = atlocal.Index(redis=clean_redis)
 
     ds = atdata.Dataset[SimpleTestSample](
@@ -455,10 +411,7 @@ def test_index_add_entry(clean_redis):
 
 
 def test_index_add_entry_with_schema_ref(clean_redis):
-    """Test adding a dataset entry with explicit schema_ref.
-
-    Should use the provided schema_ref instead of auto-generating.
-    """
+    """Test adding a dataset entry with explicit schema_ref."""
     index = atlocal.Index(redis=clean_redis)
 
     ds = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset.tar")
@@ -471,10 +424,7 @@ def test_index_add_entry_with_schema_ref(clean_redis):
 
 
 def test_index_add_entry_with_metadata(clean_redis):
-    """Test adding a dataset entry with metadata.
-
-    Should store the provided metadata.
-    """
+    """Test adding a dataset entry with metadata."""
     index = atlocal.Index(redis=clean_redis)
 
     ds = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset.tar")
@@ -487,10 +437,7 @@ def test_index_add_entry_with_metadata(clean_redis):
 
 
 def test_index_entries_generator_empty(clean_redis):
-    """Test iterating over entries in an empty index.
-
-    Should yield no entries when the index is empty.
-    """
+    """Test iterating over entries in an empty index."""
     index = atlocal.Index(redis=clean_redis)
 
     entries = list(index.entries)
@@ -498,10 +445,7 @@ def test_index_entries_generator_empty(clean_redis):
 
 
 def test_index_entries_generator_multiple(clean_redis):
-    """Test iterating over multiple entries in the index.
-
-    Should yield all LocalDatasetEntry objects that have been added to the index.
-    """
+    """Test iterating over multiple entries in the index."""
     index = atlocal.Index(redis=clean_redis)
 
     ds1 = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset1.tar")
@@ -519,10 +463,7 @@ def test_index_entries_generator_multiple(clean_redis):
 
 
 def test_index_all_entries_empty(clean_redis):
-    """Test getting all entries as a list from an empty index.
-
-    Should return an empty list when no entries exist.
-    """
+    """Test getting all entries as a list from an empty index."""
     index = atlocal.Index(redis=clean_redis)
 
     entries = index.all_entries
@@ -531,10 +472,7 @@ def test_index_all_entries_empty(clean_redis):
 
 
 def test_index_all_entries_multiple(clean_redis):
-    """Test getting all entries as a list with multiple entries.
-
-    Should return a list containing all LocalDatasetEntry objects in the index.
-    """
+    """Test getting all entries as a list with multiple entries."""
     index = atlocal.Index(redis=clean_redis)
 
     ds1 = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset1.tar")
@@ -549,11 +487,7 @@ def test_index_all_entries_multiple(clean_redis):
 
 
 def test_index_entries_filtering(clean_redis):
-    """Test that index only returns LocalDatasetEntry objects.
-
-    Should only iterate over keys matching 'LocalDatasetEntry:*' pattern and
-    ignore any other Redis keys.
-    """
+    """Test that index only returns LocalDatasetEntry objects."""
     index = atlocal.Index(redis=clean_redis)
 
     # Add a LocalDatasetEntry
@@ -665,10 +599,7 @@ def test_index_list_datasets(clean_redis):
 
 @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
 def test_repo_init_no_s3():
-    """Test creating a Repo without S3 credentials.
-
-    Should create a Repo with s3_credentials=None, bucket_fs=None, and working index.
-    """
+    """Test creating a Repo without S3 credentials."""
     repo = atlocal.Repo()
 
     assert repo.s3_credentials is None
@@ -681,10 +612,7 @@ def test_repo_init_no_s3():
 
 @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
 def test_repo_init_with_s3_dict():
-    """Test creating a Repo with S3 credentials as a dictionary.
-
-    Should create a Repo with S3FileSystem and set hive_path and hive_bucket.
-    """
+    """Test creating a Repo with S3 credentials as a dictionary."""
     creds = {
         "AWS_ENDPOINT": "http://localhost:9000",
         "AWS_ACCESS_KEY_ID": "minioadmin",
@@ -702,10 +630,7 @@ def test_repo_init_with_s3_dict():
 
 @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
 def test_repo_init_with_s3_path(tmp_path):
-    """Test creating a Repo with S3 credentials from a .env file.
-
-    Should load credentials from file and create S3FileSystem with hive configuration.
-    """
+    """Test creating a Repo with S3 credentials from a .env file."""
     env_file = tmp_path / ".env"
     env_file.write_text(
         "AWS_ENDPOINT=http://localhost:9000\n"
@@ -724,10 +649,7 @@ def test_repo_init_with_s3_path(tmp_path):
 
 @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
 def test_repo_init_s3_without_hive_path():
-    """Test that creating a Repo with S3 but no hive_path raises ValueError.
-
-    Should raise ValueError when s3_credentials is provided but hive_path is None.
-    """
+    """Test that creating a Repo with S3 but no hive_path raises ValueError."""
     creds = {
         "AWS_ENDPOINT": "http://localhost:9000",
         "AWS_ACCESS_KEY_ID": "minioadmin",
@@ -740,10 +662,7 @@ def test_repo_init_s3_without_hive_path():
 
 @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
 def test_repo_init_hive_path_parsing():
-    """Test that hive_path is correctly parsed to extract bucket name.
-
-    Should set hive_bucket to the first component of hive_path.
-    """
+    """Test that hive_path is correctly parsed to extract bucket name."""
     creds = {
         "AWS_ENDPOINT": "http://localhost:9000",
         "AWS_ACCESS_KEY_ID": "minioadmin",
@@ -758,10 +677,7 @@ def test_repo_init_hive_path_parsing():
 
 @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
 def test_repo_init_with_custom_redis():
-    """Test creating a Repo with a custom Redis connection.
-
-    Should pass the Redis connection to the Index instance.
-    """
+    """Test creating a Repo with a custom Redis connection."""
     custom_redis = Redis()
     repo = atlocal.Repo(redis=custom_redis)
 
@@ -774,10 +690,7 @@ def test_repo_init_with_custom_redis():
 
 @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
 def test_repo_insert_without_s3():
-    """Test that inserting a dataset without S3 configured raises ValueError.
-
-    Should fail with ValueError when trying to insert without S3 credentials.
-    """
+    """Test that inserting a dataset without S3 configured raises ValueError."""
     repo = atlocal.Repo()
     ds = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset.tar")
 
@@ -789,11 +702,7 @@ def test_repo_insert_without_s3():
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
 def test_repo_insert_single_shard(mock_s3, clean_redis, sample_dataset):
-    """Test inserting a small dataset that fits in a single shard.
-
-    Should write the dataset to S3, create metadata, add index entry, and return
-    a new Dataset pointing to the stored copy with correct URL format.
-    """
+    """Test inserting a small dataset that fits in a single shard."""
     repo = atlocal.Repo(
         s3_credentials=mock_s3["credentials"],
         hive_path=mock_s3["hive_path"],
@@ -818,11 +727,7 @@ def test_repo_insert_single_shard(mock_s3, clean_redis, sample_dataset):
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
 def test_repo_insert_multiple_shards(mock_s3, clean_redis, tmp_path):
-    """Test inserting a large dataset that spans multiple shards.
-
-    Should write multiple tar files to S3, use brace notation in returned URL,
-    and correctly format the shard range.
-    """
+    """Test inserting a large dataset that spans multiple shards."""
     ds = make_simple_dataset(tmp_path, num_samples=50, name="large")
     repo = atlocal.Repo(
         s3_credentials=mock_s3["credentials"],
@@ -841,10 +746,7 @@ def test_repo_insert_multiple_shards(mock_s3, clean_redis, tmp_path):
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
 def test_repo_insert_with_metadata(mock_s3, clean_redis, tmp_path):
-    """Test inserting a dataset with metadata.
-
-    Should write metadata as msgpack to S3 and store metadata in the entry.
-    """
+    """Test inserting a dataset with metadata."""
     ds = make_simple_dataset(tmp_path, num_samples=5)
     ds._metadata = {"description": "test dataset", "version": "1.0"}
 
@@ -865,10 +767,7 @@ def test_repo_insert_with_metadata(mock_s3, clean_redis, tmp_path):
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
 def test_repo_insert_without_metadata(mock_s3, clean_redis, tmp_path):
-    """Test inserting a dataset without metadata.
-
-    Should handle None metadata gracefully and not write a metadata file.
-    """
+    """Test inserting a dataset without metadata."""
     ds = make_simple_dataset(tmp_path, num_samples=5)
     repo = atlocal.Repo(
         s3_credentials=mock_s3["credentials"],
@@ -886,10 +785,7 @@ def test_repo_insert_without_metadata(mock_s3, clean_redis, tmp_path):
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
 def test_repo_insert_cache_local_false(mock_s3, clean_redis, sample_dataset):
-    """Test inserting with cache_local=False (direct S3 write).
-
-    Should write tar shards directly to S3 without local caching.
-    """
+    """Test inserting with cache_local=False (direct S3 write)."""
     repo = atlocal.Repo(
         s3_credentials=mock_s3["credentials"],
         hive_path=mock_s3["hive_path"],
@@ -908,11 +804,7 @@ def test_repo_insert_cache_local_false(mock_s3, clean_redis, sample_dataset):
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
 def test_repo_insert_cache_local_true(mock_s3, clean_redis, sample_dataset):
-    """Test inserting with cache_local=True (local cache then copy).
-
-    Should write to temporary local storage first, then copy to S3, and clean up
-    local cache files after copying.
-    """
+    """Test inserting with cache_local=True (local cache then copy)."""
     repo = atlocal.Repo(
         s3_credentials=mock_s3["credentials"],
         hive_path=mock_s3["hive_path"],
@@ -931,11 +823,7 @@ def test_repo_insert_cache_local_true(mock_s3, clean_redis, sample_dataset):
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
 def test_repo_insert_creates_index_entry(mock_s3, clean_redis, sample_dataset):
-    """Test that insert() creates a valid index entry.
-
-    Should add a LocalDatasetEntry to the index with correct data_urls, schema_ref,
-    and CID.
-    """
+    """Test that insert() creates a valid index entry."""
     repo = atlocal.Repo(
         s3_credentials=mock_s3["credentials"],
         hive_path=mock_s3["hive_path"],
@@ -957,10 +845,7 @@ def test_repo_insert_creates_index_entry(mock_s3, clean_redis, sample_dataset):
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
 def test_repo_insert_cid_generation(mock_s3, clean_redis, sample_dataset):
-    """Test that insert() generates unique CIDs for each dataset.
-
-    Should create different CIDs for datasets with different URLs.
-    """
+    """Test that insert() generates unique CIDs for each dataset."""
     repo = atlocal.Repo(
         s3_credentials=mock_s3["credentials"],
         hive_path=mock_s3["hive_path"],
@@ -979,12 +864,7 @@ def test_repo_insert_cid_generation(mock_s3, clean_redis, sample_dataset):
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
 def test_repo_insert_empty_dataset(mock_s3, clean_redis, tmp_path):
-    """Test inserting an empty dataset.
-
-    WebDataset's ShardWriter creates a shard file even with no samples,
-    so empty datasets succeed (creating an empty shard) rather than raising
-    RuntimeError.
-    """
+    """Test inserting an empty dataset."""
     dataset_path = tmp_path / "empty-dataset-000000.tar"
     with wds.writer.TarWriter(str(dataset_path)):
         pass  # Write no samples
@@ -1006,10 +886,7 @@ def test_repo_insert_empty_dataset(mock_s3, clean_redis, tmp_path):
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
 def test_repo_insert_preserves_sample_type(mock_s3, clean_redis, sample_dataset):
-    """Test that the returned Dataset preserves the original sample type.
-
-    Should return a Dataset[T] with the same sample type as the input dataset.
-    """
+    """Test that the returned Dataset preserves the original sample type."""
     repo = atlocal.Repo(
         s3_credentials=mock_s3["credentials"],
         hive_path=mock_s3["hive_path"],
@@ -1026,10 +903,7 @@ def test_repo_insert_preserves_sample_type(mock_s3, clean_redis, sample_dataset)
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
 def test_repo_insert_with_shard_writer_kwargs(mock_s3, clean_redis, tmp_path):
-    """Test that insert() passes additional kwargs to ShardWriter.
-
-    Should forward kwargs like maxcount, maxsize to the underlying ShardWriter.
-    """
+    """Test that insert() passes additional kwargs to ShardWriter."""
     ds = make_simple_dataset(tmp_path, num_samples=30, name="large")
     repo = atlocal.Repo(
         s3_credentials=mock_s3["credentials"],
@@ -1046,10 +920,7 @@ def test_repo_insert_with_shard_writer_kwargs(mock_s3, clean_redis, tmp_path):
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
 def test_repo_insert_numpy_arrays(mock_s3, clean_redis, tmp_path):
-    """Test inserting a dataset containing samples with numpy arrays.
-
-    Should correctly serialize and store numpy arrays.
-    """
+    """Test inserting a dataset containing samples with numpy arrays."""
     ds = make_array_dataset(tmp_path, num_samples=3, array_shape=(10, 10))
     repo = atlocal.Repo(
         s3_credentials=mock_s3["credentials"],
@@ -1071,11 +942,7 @@ def test_repo_insert_numpy_arrays(mock_s3, clean_redis, tmp_path):
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
 def test_repo_index_integration(mock_s3, clean_redis, sample_dataset):
-    """Test that Repo and Index work together correctly.
-
-    Should be able to insert datasets into Repo and retrieve their entries
-    from the Index.
-    """
+    """Test that Repo and Index work together correctly."""
     repo = atlocal.Repo(
         s3_credentials=mock_s3["credentials"],
         hive_path=mock_s3["hive_path"],
@@ -1094,11 +961,7 @@ def test_repo_index_integration(mock_s3, clean_redis, sample_dataset):
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
 def test_multiple_datasets_same_type(mock_s3, clean_redis, sample_dataset):
-    """Test inserting multiple datasets of the same sample type.
-
-    Should create separate entries with different CIDs and all should be
-    retrievable from the index.
-    """
+    """Test inserting multiple datasets of the same sample type."""
     repo = atlocal.Repo(
         s3_credentials=mock_s3["credentials"],
         hive_path=mock_s3["hive_path"],
@@ -1123,11 +986,7 @@ def test_multiple_datasets_same_type(mock_s3, clean_redis, sample_dataset):
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
 @pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
 def test_multiple_datasets_different_types(mock_s3, clean_redis, tmp_path):
-    """Test inserting datasets with different sample types.
-
-    Should correctly track schema_ref for each dataset and create distinct
-    index entries.
-    """
+    """Test inserting datasets with different sample types."""
     simple_ds = make_simple_dataset(tmp_path, num_samples=3, name="simple")
     array_ds = make_array_dataset(tmp_path, num_samples=3, array_shape=(5, 5))
 
@@ -1147,11 +1006,7 @@ def test_multiple_datasets_different_types(mock_s3, clean_redis, tmp_path):
 
 
 def test_index_persistence_across_instances(clean_redis):
-    """Test that index entries persist across Index instance recreations.
-
-    Should be able to create an Index, add entries, create a new Index instance
-    with the same Redis connection, and retrieve the same entries.
-    """
+    """Test that index entries persist across Index instance recreations."""
     index1 = atlocal.Index(redis=clean_redis)
     ds = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset.tar")
     entry1 = index1.add_entry(ds, name="persistent-dataset")
@@ -1165,11 +1020,7 @@ def test_index_persistence_across_instances(clean_redis):
 
 
 def test_concurrent_index_access(clean_redis):
-    """Test that multiple Index instances can access the same Redis store.
-
-    Should handle concurrent access to the same Redis index from multiple
-    Index instances.
-    """
+    """Test that multiple Index instances can access the same Redis store."""
     index1 = atlocal.Index(redis=clean_redis)
     index2 = atlocal.Index(redis=clean_redis)
 
