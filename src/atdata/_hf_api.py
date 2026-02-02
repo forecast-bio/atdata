@@ -65,7 +65,7 @@ def get_default_index() -> "Index":  # noqa: F821
     """Get or create the module-level default Index.
 
     The default Index uses Redis for local storage (backwards-compatible
-    default) and an anonymous AtmosphereClient for read-only public data
+    default) and an anonymous Atmosphere for read-only public data
     resolution.
 
     The default is created lazily on first access and cached for the

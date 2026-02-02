@@ -296,10 +296,10 @@ class TestIndexEdgeCases:
 
     def test_explicit_atmosphere_client(self, tmp_path):
         """Index accepts an explicit atmosphere client."""
-        from atdata.atmosphere.client import AtmosphereClient
+        from atdata.atmosphere.client import Atmosphere
 
         provider = SqliteProvider(path=tmp_path / "test.db")
-        mock_client = MagicMock(spec=AtmosphereClient)
+        mock_client = MagicMock(spec=Atmosphere)
         with patch("atdata.repository.isinstance", return_value=True):
             # _AtmosphereBackend checks isinstance; patch it
             index = atlocal.Index(provider=provider, atmosphere=mock_client)

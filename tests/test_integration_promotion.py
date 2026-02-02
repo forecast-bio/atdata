@@ -17,7 +17,7 @@ import webdataset as wds
 import atdata
 from atdata.local import Index, LocalDatasetEntry
 from atdata.promote import promote_to_atmosphere
-from atdata.atmosphere import AtmosphereClient
+from atdata.atmosphere import Atmosphere
 from atdata.atmosphere._types import LEXICON_NAMESPACE
 
 
@@ -64,9 +64,9 @@ def mock_atproto_client():
 
 @pytest.fixture
 def authenticated_client(mock_atproto_client):
-    """Create an authenticated AtmosphereClient."""
-    client = AtmosphereClient(_client=mock_atproto_client)
-    client.login("promotion.test.social", "test-password")
+    """Create an authenticated Atmosphere."""
+    client = Atmosphere(_client=mock_atproto_client)
+    client._login("promotion.test.social", "test-password")
     return client
 
 

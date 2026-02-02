@@ -8,7 +8,7 @@ records.
 from dataclasses import fields, is_dataclass
 from typing import Type, TypeVar, Optional, get_type_hints, get_origin, get_args
 
-from .client import AtmosphereClient
+from .client import Atmosphere
 from ._types import (
     AtUri,
     SchemaRecord,
@@ -43,20 +43,19 @@ class SchemaPublisher:
         ...     image: NDArray
         ...     label: str
         ...
-        >>> client = AtmosphereClient()
-        >>> client.login("handle", "password")
+        >>> atmo = Atmosphere.login("handle", "password")
         >>>
-        >>> publisher = SchemaPublisher(client)
+        >>> publisher = SchemaPublisher(atmo)
         >>> uri = publisher.publish(MySample, version="1.0.0")
         >>> print(uri)
         at://did:plc:.../ac.foundation.dataset.sampleSchema/...
     """
 
-    def __init__(self, client: AtmosphereClient):
+    def __init__(self, client: Atmosphere):
         """Initialize the schema publisher.
 
         Args:
-            client: Authenticated AtmosphereClient instance.
+            client: Authenticated Atmosphere instance.
         """
         self.client = client
 
@@ -185,20 +184,19 @@ class SchemaLoader:
     schemas from a repository.
 
     Examples:
-        >>> client = AtmosphereClient()
-        >>> client.login("handle", "password")
+        >>> atmo = Atmosphere.login("handle", "password")
         >>>
-        >>> loader = SchemaLoader(client)
+        >>> loader = SchemaLoader(atmo)
         >>> schema = loader.get("at://did:plc:.../ac.foundation.dataset.sampleSchema/...")
         >>> print(schema["name"])
         'MySample'
     """
 
-    def __init__(self, client: AtmosphereClient):
+    def __init__(self, client: Atmosphere):
         """Initialize the schema loader.
 
         Args:
-            client: AtmosphereClient instance (authentication optional for reads).
+            client: Atmosphere instance (authentication optional for reads).
         """
         self.client = client
 

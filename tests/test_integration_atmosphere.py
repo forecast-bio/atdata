@@ -15,7 +15,7 @@ import msgpack
 
 import atdata
 from atdata.atmosphere import (
-    AtmosphereClient,
+    Atmosphere,
     AtmosphereIndex,
     AtmosphereIndexEntry,
     SchemaPublisher,
@@ -69,9 +69,9 @@ def mock_atproto_client():
 
 @pytest.fixture
 def authenticated_client(mock_atproto_client):
-    """Create an authenticated AtmosphereClient."""
-    client = AtmosphereClient(_client=mock_atproto_client)
-    client.login("integration.test.social", "test-password")
+    """Create an authenticated Atmosphere."""
+    client = Atmosphere(_client=mock_atproto_client)
+    client._login("integration.test.social", "test-password")
     return client
 
 
@@ -101,8 +101,8 @@ class TestFullPublishWorkflow:
         ]
 
         # Execute workflow
-        client = AtmosphereClient(_client=mock_atproto_client)
-        client.login("test.social", "password")
+        client = Atmosphere(_client=mock_atproto_client)
+        client._login("test.social", "password")
 
         # Publish schema
         schema_pub = SchemaPublisher(client)
@@ -134,11 +134,11 @@ class TestSessionPersistence:
 
     def test_login_with_session_restores_auth(self, mock_atproto_client):
         """Login with session string should restore authentication."""
-        client = AtmosphereClient(_client=mock_atproto_client)
+        client = Atmosphere(_client=mock_atproto_client)
 
         assert not client.is_authenticated
 
-        client.login_with_session("saved-session-string")
+        client._login_with_session("saved-session-string")
 
         assert client.is_authenticated
         mock_atproto_client.login.assert_called_with(
@@ -148,8 +148,8 @@ class TestSessionPersistence:
     def test_session_round_trip(self, mock_atproto_client):
         """Export then import session should maintain auth."""
         # First client - login and export
-        client1 = AtmosphereClient(_client=mock_atproto_client)
-        client1.login("user@test.social", "password")
+        client1 = Atmosphere(_client=mock_atproto_client)
+        client1._login("user@test.social", "password")
         session = client1.export_session()
 
         # Second client - restore from session
@@ -158,8 +158,8 @@ class TestSessionPersistence:
         mock_atproto_client2.login.return_value = mock_atproto_client.login.return_value
         mock_atproto_client2.export_session_string.return_value = session
 
-        client2 = AtmosphereClient(_client=mock_atproto_client2)
-        client2.login_with_session(session)
+        client2 = Atmosphere(_client=mock_atproto_client2)
+        client2._login_with_session(session)
 
         assert client2.is_authenticated
         assert client2.did == client1.did
@@ -393,7 +393,7 @@ class TestErrorHandling:
 
     def test_not_authenticated_raises_on_publish(self, mock_atproto_client):
         """Publishing without authentication should raise."""
-        client = AtmosphereClient(_client=mock_atproto_client)
+        client = Atmosphere(_client=mock_atproto_client)
 
         publisher = SchemaPublisher(client)
 
@@ -460,7 +460,7 @@ class TestPDSBlobStore:
         from atdata.atmosphere import PDSBlobStore
 
         # Create client without login
-        client = AtmosphereClient(_client=mock_atproto_client)
+        client = Atmosphere(_client=mock_atproto_client)
         # Clear session
         client._session = None
 

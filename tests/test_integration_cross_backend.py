@@ -15,7 +15,7 @@ import atdata
 from atdata.local import Index, LocalDatasetEntry
 from atdata._protocols import IndexEntry
 from atdata.atmosphere import (
-    AtmosphereClient,
+    Atmosphere,
     AtmosphereIndex,
     AtmosphereIndexEntry,
 )
@@ -65,9 +65,9 @@ def mock_atproto_client():
 
 @pytest.fixture
 def authenticated_atmosphere_client(mock_atproto_client):
-    """Create an authenticated AtmosphereClient."""
-    client = AtmosphereClient(_client=mock_atproto_client)
-    client.login("crossbackend.test.social", "test-password")
+    """Create an authenticated Atmosphere."""
+    client = Atmosphere(_client=mock_atproto_client)
+    client._login("crossbackend.test.social", "test-password")
     return client
 
 

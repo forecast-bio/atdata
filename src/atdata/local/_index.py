@@ -53,7 +53,7 @@ class Index:
     Additional named repositories can be mounted via the ``repos`` parameter,
     each pairing an IndexProvider with an optional data store.
 
-    An AtmosphereClient is available by default for anonymous read-only
+    An Atmosphere is available by default for anonymous read-only
     resolution of ``@handle/dataset`` paths. Pass an authenticated client
     for write operations, or ``atmosphere=None`` to disable.
 
@@ -106,7 +106,7 @@ class Index:
             atmosphere: ATProto client for distributed network operations.
                 - Default (sentinel): creates an anonymous read-only client
                   lazily on first access.
-                - ``AtmosphereClient`` instance: uses that client directly.
+                - ``Atmosphere`` instance: uses that client directly.
                 - ``None``: disables atmosphere backend entirely.
             auto_stubs: If True, automatically generate .pyi stub files when
                 schemas are accessed via get_schema() or decode_schema().
@@ -231,10 +231,10 @@ class Index:
         """Get the atmosphere backend, lazily creating anonymous client if needed."""
         if self._atmosphere_deferred and self._atmosphere is None:
             try:
-                from atdata.atmosphere.client import AtmosphereClient
+                from atdata.atmosphere.client import Atmosphere
                 from atdata.repository import _AtmosphereBackend
 
-                client = AtmosphereClient()
+                client = Atmosphere()
                 self._atmosphere = _AtmosphereBackend(client)
             except ImportError:
                 # atproto package not installed -- atmosphere unavailable
@@ -296,7 +296,7 @@ class Index:
 
     @property
     def atmosphere(self) -> Any:
-        """The AtmosphereClient for this index, or None if disabled.
+        """The Atmosphere for this index, or None if disabled.
 
         Returns the underlying client (not the internal backend wrapper).
         """
@@ -764,7 +764,7 @@ class Index:
             if atmo is None:
                 raise ValueError(
                     f"Atmosphere backend required for path {ref!r} but not available. "
-                    "Install 'atproto' or pass an AtmosphereClient."
+                    "Install 'atproto' or pass an Atmosphere."
                 )
             return atmo.get_dataset(resolved_ref)
 

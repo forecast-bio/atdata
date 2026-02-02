@@ -1,6 +1,6 @@
 """ATProto client wrapper for atdata.
 
-This module provides the ``AtmosphereClient`` class which wraps the atproto SDK
+This module provides the ``Atmosphere`` class which wraps the atproto SDK
 client with atdata-specific helpers for publishing and querying records.
 """
 
@@ -28,16 +28,15 @@ def _get_atproto_client_class():
     return _atproto_client_class
 
 
-class AtmosphereClient:
+class Atmosphere:
     """ATProto client wrapper for atdata operations.
 
     This class wraps the atproto SDK client and provides higher-level methods
     for working with atdata records (schemas, datasets, lenses).
 
     Examples:
-        >>> client = AtmosphereClient()
-        >>> client.login("alice.bsky.social", "app-password")
-        >>> print(client.did)
+        >>> atmo = Atmosphere.login("alice.bsky.social", "app-password")
+        >>> print(atmo.did)
         'did:plc:...'
 
     Note:
@@ -65,7 +64,63 @@ class AtmosphereClient:
 
         self._session: Optional[dict] = None
 
-    def login(self, handle: str, password: str) -> None:
+    @classmethod
+    def login(
+        cls,
+        handle: str,
+        password: str,
+        *,
+        base_url: Optional[str] = None,
+    ) -> "Atmosphere":
+        """Create an authenticated Atmosphere client.
+
+        Args:
+            handle: Your Bluesky handle (e.g., 'alice.bsky.social').
+            password: App-specific password (not your main password).
+            base_url: Optional PDS base URL. Defaults to bsky.social.
+
+        Returns:
+            An authenticated Atmosphere instance.
+
+        Raises:
+            atproto.exceptions.AtProtocolError: If authentication fails.
+
+        Examples:
+            >>> atmo = Atmosphere.login("alice.bsky.social", "app-password")
+            >>> index = Index(atmosphere=atmo)
+        """
+        instance = cls(base_url=base_url)
+        instance._login(handle, password)
+        return instance
+
+    @classmethod
+    def from_session(
+        cls,
+        session_string: str,
+        *,
+        base_url: Optional[str] = None,
+    ) -> "Atmosphere":
+        """Create an Atmosphere client from an exported session string.
+
+        This allows reusing a session without re-authenticating, which helps
+        avoid rate limits on session creation.
+
+        Args:
+            session_string: Session string from ``export_session()``.
+            base_url: Optional PDS base URL. Defaults to bsky.social.
+
+        Returns:
+            An authenticated Atmosphere instance.
+
+        Examples:
+            >>> session = atmo.export_session()
+            >>> atmo2 = Atmosphere.from_session(session)
+        """
+        instance = cls(base_url=base_url)
+        instance._login_with_session(session_string)
+        return instance
+
+    def _login(self, handle: str, password: str) -> None:
         """Authenticate with the ATProto PDS.
 
         Args:
@@ -81,11 +136,8 @@ class AtmosphereClient:
             "handle": profile.handle,
         }
 
-    def login_with_session(self, session_string: str) -> None:
+    def _login_with_session(self, session_string: str) -> None:
         """Authenticate using an exported session string.
-
-        This allows reusing a session without re-authenticating, which helps
-        avoid rate limits on session creation.
 
         Args:
             session_string: Session string from ``export_session()``.

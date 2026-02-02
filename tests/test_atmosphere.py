@@ -17,7 +17,7 @@ from numpy.typing import NDArray
 
 import atdata
 from atdata.atmosphere import (
-    AtmosphereClient,
+    Atmosphere,
     AtmosphereIndex,
     AtmosphereIndexEntry,
     SchemaPublisher,
@@ -67,9 +67,9 @@ def mock_atproto_client():
 
 @pytest.fixture
 def authenticated_client(mock_atproto_client):
-    """Create an authenticated AtmosphereClient with mocked backend."""
-    client = AtmosphereClient(_client=mock_atproto_client)
-    client.login("test.bsky.social", "test-password")
+    """Create an authenticated Atmosphere with mocked backend."""
+    client = Atmosphere(_client=mock_atproto_client)
+    client._login("test.bsky.social", "test-password")
     return client
 
 
@@ -517,12 +517,12 @@ class TestLensRecord:
 
 
 # =============================================================================
-# Tests for client.py - AtmosphereClient
+# Tests for client.py - Atmosphere
 # =============================================================================
 
 
-class TestAtmosphereClient:
-    """Tests for AtmosphereClient."""
+class TestAtmosphere:
+    """Tests for Atmosphere."""
 
     def test_init_default(self):
         """Initialize client with defaults."""
@@ -530,7 +530,7 @@ class TestAtmosphereClient:
             mock_class = Mock()
             mock_get.return_value = mock_class
 
-            client = AtmosphereClient()
+            client = Atmosphere()
 
             mock_class.assert_called_once()
             assert not client.is_authenticated
@@ -541,21 +541,21 @@ class TestAtmosphereClient:
             mock_class = Mock()
             mock_get.return_value = mock_class
 
-            AtmosphereClient(base_url="https://custom.pds.example")
+            Atmosphere(base_url="https://custom.pds.example")
 
             mock_class.assert_called_once_with(base_url="https://custom.pds.example")
 
     def test_init_with_mock_client(self, mock_atproto_client):
         """Initialize with pre-configured mock client."""
-        client = AtmosphereClient(_client=mock_atproto_client)
+        client = Atmosphere(_client=mock_atproto_client)
 
         assert client._client is mock_atproto_client
 
     def test_login_success(self, mock_atproto_client):
         """Successful login sets session."""
-        client = AtmosphereClient(_client=mock_atproto_client)
+        client = Atmosphere(_client=mock_atproto_client)
 
-        client.login("test.bsky.social", "password123")
+        client._login("test.bsky.social", "password123")
 
         assert client.is_authenticated
         assert client.did == "did:plc:test123456789"
@@ -566,9 +566,9 @@ class TestAtmosphereClient:
 
     def test_login_with_session(self, mock_atproto_client):
         """Login with exported session string."""
-        client = AtmosphereClient(_client=mock_atproto_client)
+        client = Atmosphere(_client=mock_atproto_client)
 
-        client.login_with_session("test-session-string")
+        client._login_with_session("test-session-string")
 
         assert client.is_authenticated
         mock_atproto_client.login.assert_called_once_with(
@@ -584,21 +584,21 @@ class TestAtmosphereClient:
 
     def test_export_session_not_authenticated(self, mock_atproto_client):
         """Export session raises when not authenticated."""
-        client = AtmosphereClient(_client=mock_atproto_client)
+        client = Atmosphere(_client=mock_atproto_client)
 
         with pytest.raises(ValueError, match="Not authenticated"):
             client.export_session()
 
     def test_did_not_authenticated(self, mock_atproto_client):
         """Accessing did raises when not authenticated."""
-        client = AtmosphereClient(_client=mock_atproto_client)
+        client = Atmosphere(_client=mock_atproto_client)
 
         with pytest.raises(ValueError, match="Not authenticated"):
             _ = client.did
 
     def test_handle_not_authenticated(self, mock_atproto_client):
         """Accessing handle raises when not authenticated."""
-        client = AtmosphereClient(_client=mock_atproto_client)
+        client = Atmosphere(_client=mock_atproto_client)
 
         with pytest.raises(ValueError, match="Not authenticated"):
             _ = client.handle
@@ -621,7 +621,7 @@ class TestAtmosphereClient:
 
     def test_create_record_not_authenticated(self, mock_atproto_client):
         """Create record raises when not authenticated."""
-        client = AtmosphereClient(_client=mock_atproto_client)
+        client = Atmosphere(_client=mock_atproto_client)
 
         with pytest.raises(ValueError, match="must be authenticated"):
             client.create_record(collection="test", record={})
@@ -691,7 +691,7 @@ class TestAtmosphereClient:
 
     def test_upload_blob_not_authenticated(self, mock_atproto_client):
         """Upload blob raises when not authenticated."""
-        client = AtmosphereClient(_client=mock_atproto_client)
+        client = Atmosphere(_client=mock_atproto_client)
 
         with pytest.raises(ValueError, match="must be authenticated"):
             client.upload_blob(b"data")

@@ -6,7 +6,7 @@ from numpy.typing import NDArray
 
 import atdata
 from atdata.testing import (
-    MockAtmosphereClient,
+    MockAtmosphere,
     make_dataset,
     make_samples,
     mock_index,
@@ -14,13 +14,13 @@ from atdata.testing import (
 
 
 # ---------------------------------------------------------------------------
-# MockAtmosphereClient
+# MockAtmosphere
 # ---------------------------------------------------------------------------
 
 
-class TestMockAtmosphereClient:
+class TestMockAtmosphere:
     def test_login(self):
-        client = MockAtmosphereClient()
+        client = MockAtmosphere()
         assert not client.is_authenticated
         result = client.login("alice.test", "pw")
         assert client.is_authenticated
@@ -28,42 +28,42 @@ class TestMockAtmosphereClient:
         assert result["handle"] == "alice.test"
 
     def test_session_string(self):
-        client = MockAtmosphereClient()
+        client = MockAtmosphere()
         assert client.export_session_string() == "mock-session-string"
 
     def test_create_and_get_record(self):
-        client = MockAtmosphereClient()
+        client = MockAtmosphere()
         uri = client.create_record("app.bsky.feed.post", {"text": "hello"})
         assert uri.startswith("at://did:plc:mock")
         record = client.get_record(uri)
         assert record["text"] == "hello"
 
     def test_get_record_missing_raises(self):
-        client = MockAtmosphereClient()
+        client = MockAtmosphere()
         with pytest.raises(KeyError, match="Record not found"):
             client.get_record("at://did:plc:fake/col/missing")
 
     def test_list_records(self):
-        client = MockAtmosphereClient()
+        client = MockAtmosphere()
         client.create_record("app.bsky.feed.post", {"text": "a"})
         client.create_record("app.bsky.feed.post", {"text": "b"})
         records = client.list_records("app.bsky.feed.post")
         assert len(records) == 2
 
     def test_upload_and_get_blob(self):
-        client = MockAtmosphereClient()
+        client = MockAtmosphere()
         ref = client.upload_blob(b"binary data")
         cid = ref["ref"]["$link"]
         data = client.get_blob(client.did, cid)
         assert data == b"binary data"
 
     def test_get_blob_missing_raises(self):
-        client = MockAtmosphereClient()
+        client = MockAtmosphere()
         with pytest.raises(KeyError, match="Blob not found"):
             client.get_blob("did:plc:x", "nonexistent")
 
     def test_reset(self):
-        client = MockAtmosphereClient()
+        client = MockAtmosphere()
         client.login("u", "p")
         client.create_record("col", {"k": "v"})
         client.upload_blob(b"data")
@@ -74,7 +74,7 @@ class TestMockAtmosphereClient:
         assert len(client._call_log) == 0
 
     def test_call_log(self):
-        client = MockAtmosphereClient()
+        client = MockAtmosphere()
         client.login("u", "p")
         client.create_record("col", {"x": 1})
         assert len(client._call_log) == 2
@@ -82,7 +82,7 @@ class TestMockAtmosphereClient:
         assert client._call_log[1][0] == "create_record"
 
     def test_custom_did_and_handle(self):
-        client = MockAtmosphereClient(did="did:plc:custom", handle="custom.test")
+        client = MockAtmosphere(did="did:plc:custom", handle="custom.test")
         assert client.did == "did:plc:custom"
         assert client.handle == "custom.test"
 

@@ -6,7 +6,7 @@ network.
 
 Key components:
 
-- ``AtmosphereClient``: Authentication and session management for ATProto
+- ``Atmosphere``: Authentication and session management for ATProto
 - ``SchemaPublisher``: Publish PackableSample schemas as ATProto records
 - ``DatasetPublisher``: Publish dataset index records with WebDataset URLs
 - ``LensPublisher``: Publish lens transformation records
@@ -16,13 +16,10 @@ to work unchanged. These features are opt-in for users who want to publish
 or discover datasets on the ATProto network.
 
 Examples:
-    >>> from atdata.atmosphere import AtmosphereClient, SchemaPublisher
+    >>> from atdata.atmosphere import Atmosphere
     >>>
-    >>> client = AtmosphereClient()
-    >>> client.login("handle.bsky.social", "app-password")
-    >>>
-    >>> publisher = SchemaPublisher(client)
-    >>> schema_uri = publisher.publish(MySampleType, version="1.0.0")
+    >>> atmo = Atmosphere.login("handle.bsky.social", "app-password")
+    >>> index = Index(atmosphere=atmo)
 
 Note:
     This module requires the ``atproto`` package to be installed::
@@ -32,7 +29,7 @@ Note:
 
 from typing import Iterator, Optional, Type, TYPE_CHECKING
 
-from .client import AtmosphereClient
+from .client import Atmosphere
 from .schema import SchemaPublisher, SchemaLoader
 from .records import DatasetPublisher, DatasetLoader
 from .lens import LensPublisher, LensLoader
@@ -122,14 +119,14 @@ class AtmosphereIndex:
 
     def __init__(
         self,
-        client: AtmosphereClient,
+        client: Atmosphere,
         *,
         data_store: Optional[PDSBlobStore] = None,
     ):
         """Initialize the atmosphere index.
 
         Args:
-            client: Authenticated AtmosphereClient instance.
+            client: Authenticated Atmosphere instance.
             data_store: Optional PDSBlobStore for writing shards as blobs.
                 If provided, insert_dataset will upload shards to PDS.
         """
@@ -314,9 +311,13 @@ class AtmosphereIndex:
         return schema_to_type(schema)
 
 
+# Deprecated alias for backward compatibility
+AtmosphereClient = Atmosphere
+
 __all__ = [
     # Client
-    "AtmosphereClient",
+    "Atmosphere",
+    "AtmosphereClient",  # deprecated alias
     # Storage
     "PDSBlobStore",
     # Unified index (AbstractIndex protocol)

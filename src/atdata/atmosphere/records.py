@@ -8,7 +8,7 @@ and loading them back. Dataset records are published as
 from typing import Type, TypeVar, Optional
 import msgpack
 
-from .client import AtmosphereClient
+from .client import Atmosphere
 from .schema import SchemaPublisher
 from ._types import (
     AtUri,
@@ -36,10 +36,9 @@ class DatasetPublisher:
     Examples:
         >>> dataset = atdata.Dataset[MySample]("s3://bucket/data-{000000..000009}.tar")
         >>>
-        >>> client = AtmosphereClient()
-        >>> client.login("handle", "password")
+        >>> atmo = Atmosphere.login("handle", "password")
         >>>
-        >>> publisher = DatasetPublisher(client)
+        >>> publisher = DatasetPublisher(atmo)
         >>> uri = publisher.publish(
         ...     dataset,
         ...     name="My Training Data",
@@ -48,11 +47,11 @@ class DatasetPublisher:
         ... )
     """
 
-    def __init__(self, client: AtmosphereClient):
+    def __init__(self, client: Atmosphere):
         """Initialize the dataset publisher.
 
         Args:
-            client: Authenticated AtmosphereClient instance.
+            client: Authenticated Atmosphere instance.
         """
         self.client = client
         self._schema_publisher = SchemaPublisher(client)
@@ -268,8 +267,8 @@ class DatasetLoader:
     Python class for the sample type.
 
     Examples:
-        >>> client = AtmosphereClient()
-        >>> loader = DatasetLoader(client)
+        >>> atmo = Atmosphere.login("handle", "password")
+        >>> loader = DatasetLoader(atmo)
         >>>
         >>> # List available datasets
         >>> datasets = loader.list()
@@ -280,11 +279,11 @@ class DatasetLoader:
         >>> record = loader.get("at://did:plc:abc/ac.foundation.dataset.record/xyz")
     """
 
-    def __init__(self, client: AtmosphereClient):
+    def __init__(self, client: Atmosphere):
         """Initialize the dataset loader.
 
         Args:
-            client: AtmosphereClient instance.
+            client: Atmosphere instance.
         """
         self.client = client
 

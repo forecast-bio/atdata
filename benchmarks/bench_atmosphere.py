@@ -185,9 +185,9 @@ class TestAtmosphereBenchmarks:
         if not handle or not password:
             pytest.skip("ATDATA_BENCH_ATP_HANDLE/PASSWORD not set")
 
-        from atdata.atmosphere.client import AtmosphereClient
+        from atdata.atmosphere.client import Atmosphere
 
-        client = AtmosphereClient(handle=handle, password=password)
+        client = Atmosphere(handle=handle, password=password)
 
         samples = generate_basic_samples(10)
         tar_path = write_tar(tmp_path / "atmo-000000.tar", samples)
