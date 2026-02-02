@@ -26,6 +26,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - 38 new tests: `test_write_samples.py`, `test_disk_store.py`, `test_index_write.py`
 
 ### Changed
+- Update CLAUDE.md to reflect recent additions and fix divergences (#540)
+- Reorganize .planning/ directory for temporal clarity (#547)
 - Investigate and fix code coverage reduction from recent changes (#541)
 - Add tests for dataset.py uncovered edge cases (#546)
 - Add tests for _index.py uncovered error/edge paths (#545)
