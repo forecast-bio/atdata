@@ -43,9 +43,9 @@ The user will provide a version string (e.g. `v0.3.0b2`). Perform the full relea
 
 ### 5. Create PR
 - Create PR to `upstream/main` using `gh pr create`:
-  - `--repo foundation-ac/atdata`
+  - `--repo forecast-bio/atdata`
   - `--base main`
-  - `--head forecast-bio:release/<version>`
+  - `--head release/<version>`
   - Title: `release: <version>`
   - Body: summary of changes from CHANGELOG, test plan with pass counts
 
