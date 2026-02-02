@@ -21,6 +21,4 @@ metadata: Arbitrary metadata dict, or None
 | Name | Description |
 | --- | --- |
 | [data_urls](#atdata.IndexEntry.data_urls) | WebDataset URLs for the data. |
-| [metadata](#atdata.IndexEntry.metadata) | Arbitrary metadata dictionary, or None if not set. |
-| [name](#atdata.IndexEntry.name) | Human-readable dataset name. |
-| [schema_ref](#atdata.IndexEntry.schema_ref) | Reference to the schema for this dataset. |
+| [schema_ref](#atdata.IndexEntry.schema_ref) | Schema reference string. |

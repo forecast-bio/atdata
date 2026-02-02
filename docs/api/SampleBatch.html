@@ -253,9 +253,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#atdata.SampleBatch" id="toc-atdata.SampleBatch" class="nav-link active" data-scroll-target="#atdata.SampleBatch">SampleBatch</a>
   <ul class="collapse">
   <li><a href="#parameters" id="toc-parameters" class="nav-link" data-scroll-target="#parameters">Parameters</a></li>
-  <li><a href="#attributes" id="toc-attributes" class="nav-link" data-scroll-target="#attributes">Attributes</a></li>
   <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
-  <li><a href="#note" id="toc-note" class="nav-link" data-scroll-target="#note">Note</a></li>
+  <li><a href="#attributes" id="toc-attributes" class="nav-link" data-scroll-target="#attributes">Attributes</a></li>
   </ul></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/forecast-bio/atdata/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></nav>
@@ -270,8 +269,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h1>SampleBatch</h1>
 <div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>SampleBatch(samples)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>A batch of samples with automatic attribute aggregation.</p>
-<p>This class wraps a sequence of samples and provides magic <code>__getattr__</code> access to aggregate sample attributes. When you access an attribute that exists on the sample type, it automatically aggregates values across all samples in the batch.</p>
-<p>NDArray fields are stacked into a numpy array with a batch dimension. Other fields are aggregated into a list.</p>
+<p>Accessing an attribute aggregates that field across all samples: NDArray fields are stacked into a numpy array with a batch dimension; other fields are collected into a list. Results are cached.</p>
 <section id="parameters" class="level2 doc-section doc-section-parameters">
 <h2 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h2>
 <table class="caption-top table">
@@ -299,34 +297,28 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="attributes" class="level2 doc-section doc-section-attributes">
-<h2 class="doc-section doc-section-attributes anchored" data-anchor-id="attributes">Attributes</h2>
+<section id="examples" class="level2 doc-section doc-section-examples">
+<h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> batch <span class="op">=</span> SampleBatch[MyData]([sample1, sample2, sample3])</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> batch.embeddings  <span class="co"># Stacked numpy array of shape (3, ...)</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> batch.names  <span class="co"># List of names</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="attributes" class="level2">
+<h2 class="anchored" data-anchor-id="attributes">Attributes</h2>
 <table class="caption-top table">
 <thead>
 <tr class="header">
 <th>Name</th>
-<th>Type</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>samples</td>
-<td></td>
-<td>The list of sample instances in this batch.</td>
+<td><a href="#atdata.SampleBatch.sample_type">sample_type</a></td>
+<td>The type parameter <code>DT</code> used when creating this batch.</td>
 </tr>
 </tbody>
 </table>
-</section>
-<section id="examples" class="level2 doc-section doc-section-examples">
-<h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> batch <span class="op">=</span> SampleBatch[MyData]([sample1, sample2, sample3])</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> batch.embeddings  <span class="co"># Returns stacked numpy array of shape (3, ...)</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> batch.names  <span class="co"># Returns list of names</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</section>
-<section id="note" class="level2 doc-section doc-section-note">
-<h2 class="doc-section doc-section-note anchored" data-anchor-id="note">Note</h2>
-<p>This class uses Python’s <code>__orig_class__</code> mechanism to extract the type parameter at runtime. Instances must be created using the subscripted syntax <code>SampleBatch[MyType](samples)</code> rather than calling the constructor directly with an unsubscripted class.</p>
 
 
 </section>

@@ -46,11 +46,11 @@
   </url>
   <url>
     <loc>https://github.com/forecast-bio/atdata/api/load_dataset.html</loc>
-    <lastmod>2026-01-28T23:14:22.367Z</lastmod>
+    <lastmod>2026-02-02T02:32:30.360Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/forecast-bio/atdata/api/promote_to_atmosphere.html</loc>
-    <lastmod>2026-01-28T23:14:22.368Z</lastmod>
+    <lastmod>2026-02-02T02:32:30.569Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/forecast-bio/atdata/api/SchemaPublisher.html</loc>
@@ -66,11 +66,11 @@
   </url>
   <url>
     <loc>https://github.com/forecast-bio/atdata/api/index.html</loc>
-    <lastmod>2026-01-29T18:18:59.106Z</lastmod>
+    <lastmod>2026-02-02T02:32:30.283Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/forecast-bio/atdata/api/IndexEntry.html</loc>
-    <lastmod>2026-01-28T19:56:53.885Z</lastmod>
+    <lastmod>2026-02-02T02:32:30.365Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/forecast-bio/atdata/api/S3Source.html</loc>
@@ -78,11 +78,11 @@
   </url>
   <url>
     <loc>https://github.com/forecast-bio/atdata/api/local.LocalDatasetEntry.html</loc>
-    <lastmod>2026-01-28T19:56:53.887Z</lastmod>
+    <lastmod>2026-02-02T02:32:30.450Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/forecast-bio/atdata/api/AbstractIndex.html</loc>
-    <lastmod>2026-01-28T23:14:22.362Z</lastmod>
+    <lastmod>2026-02-02T02:32:30.376Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/forecast-bio/atdata/api/AtmosphereIndexEntry.html</loc>
@@ -94,19 +94,19 @@
   </url>
   <url>
     <loc>https://github.com/forecast-bio/atdata/api/SampleBatch.html</loc>
-    <lastmod>2026-01-28T23:14:22.367Z</lastmod>
+    <lastmod>2026-02-02T02:32:30.335Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/forecast-bio/atdata/index.html</loc>
-    <lastmod>2026-01-29T17:56:19.802Z</lastmod>
+    <lastmod>2026-01-31T22:38:41.064Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/forecast-bio/atdata/api/packable.html</loc>
-    <lastmod>2026-01-29T17:53:59.006Z</lastmod>
+    <lastmod>2026-02-02T02:32:30.292Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/forecast-bio/atdata/api/Packable-protocol.html</loc>
-    <lastmod>2026-01-28T23:14:22.366Z</lastmod>
+    <lastmod>2026-02-02T02:32:30.364Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/forecast-bio/atdata/api/AtUri.html</loc>
@@ -114,23 +114,23 @@
   </url>
   <url>
     <loc>https://github.com/forecast-bio/atdata/api/local.S3DataStore.html</loc>
-    <lastmod>2026-01-28T19:56:53.887Z</lastmod>
+    <lastmod>2026-02-02T02:32:30.458Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/forecast-bio/atdata/api/AbstractDataStore.html</loc>
-    <lastmod>2026-01-28T23:14:22.362Z</lastmod>
+    <lastmod>2026-02-02T02:32:30.380Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/forecast-bio/atdata/api/Dataset.html</loc>
-    <lastmod>2026-01-29T17:53:59.036Z</lastmod>
+    <lastmod>2026-02-02T02:32:30.333Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/forecast-bio/atdata/api/local.Index.html</loc>
-    <lastmod>2026-01-28T23:14:22.368Z</lastmod>
+    <lastmod>2026-02-02T02:32:30.444Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/forecast-bio/atdata/api/Lens.html</loc>
-    <lastmod>2026-01-29T18:18:59.167Z</lastmod>
+    <lastmod>2026-02-02T02:32:30.355Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/forecast-bio/atdata/api/DatasetLoader.html</loc>
@@ -138,11 +138,11 @@
   </url>
   <url>
     <loc>https://github.com/forecast-bio/atdata/api/DataSource.html</loc>
-    <lastmod>2026-01-28T23:14:22.364Z</lastmod>
+    <lastmod>2026-02-02T02:32:30.384Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/forecast-bio/atdata/api/AtmosphereIndex.html</loc>
-    <lastmod>2026-01-28T23:14:22.363Z</lastmod>
+    <lastmod>2026-02-02T02:32:30.500Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/forecast-bio/atdata/api/LensLoader.html</loc>
@@ -150,7 +150,7 @@
   </url>
   <url>
     <loc>https://github.com/forecast-bio/atdata/api/DictSample.html</loc>
-    <lastmod>2026-01-28T23:14:22.365Z</lastmod>
+    <lastmod>2026-02-02T02:32:30.301Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/forecast-bio/atdata/api/PDSBlobStore.html</loc>
@@ -158,11 +158,11 @@
   </url>
   <url>
     <loc>https://github.com/forecast-bio/atdata/api/PackableSample.html</loc>
-    <lastmod>2026-01-28T23:14:22.366Z</lastmod>
+    <lastmod>2026-02-02T02:32:30.295Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/forecast-bio/atdata/api/DatasetDict.html</loc>
-    <lastmod>2026-01-28T23:14:22.364Z</lastmod>
+    <lastmod>2026-02-02T02:32:30.362Z</lastmod>
   </url>
   <url>
     <loc>https://github.com/forecast-bio/atdata/tutorials/promotion.html</loc>

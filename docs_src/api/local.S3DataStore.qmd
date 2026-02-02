@@ -70,19 +70,35 @@ S3 supports streaming reads.
 ### write_shards { #atdata.local.S3DataStore.write_shards }
 
 ```python
-local.S3DataStore.write_shards(ds, *, prefix, cache_local=False, **kwargs)
+local.S3DataStore.write_shards(
+    ds,
+    *,
+    prefix,
+    cache_local=False,
+    manifest=False,
+    schema_version='1.0.0',
+    source_job_id=None,
+    parent_shards=None,
+    pipeline_version=None,
+    **kwargs,
+)
 ```
 
 Write dataset shards to S3.
 
 #### Parameters {.doc-section .doc-section-parameters}
 
-| Name        | Type                        | Description                                                 | Default    |
-|-------------|-----------------------------|-------------------------------------------------------------|------------|
-| ds          | [Dataset](`atdata.Dataset`) | The Dataset to write.                                       | _required_ |
-| prefix      | [str](`str`)                | Path prefix within bucket (e.g., 'datasets/mnist/v1').      | _required_ |
-| cache_local | [bool](`bool`)              | If True, write locally first then copy to S3.               | `False`    |
-| **kwargs    |                             | Additional args passed to wds.ShardWriter (e.g., maxcount). | `{}`       |
+| Name             | Type                                   | Description                                                                                                       | Default    |
+|------------------|----------------------------------------|-------------------------------------------------------------------------------------------------------------------|------------|
+| ds               | [Dataset](`atdata.Dataset`)            | The Dataset to write.                                                                                             | _required_ |
+| prefix           | [str](`str`)                           | Path prefix within bucket (e.g., 'datasets/mnist/v1').                                                            | _required_ |
+| cache_local      | [bool](`bool`)                         | If True, write locally first then copy to S3.                                                                     | `False`    |
+| manifest         | [bool](`bool`)                         | If True, generate per-shard manifest files alongside each tar shard (``.manifest.json`` + ``.manifest.parquet``). | `False`    |
+| schema_version   | [str](`str`)                           | Schema version for manifest headers.                                                                              | `'1.0.0'`  |
+| source_job_id    | [str](`str`) \| None                   | Optional provenance job identifier for manifests.                                                                 | `None`     |
+| parent_shards    | [list](`list`)\[[str](`str`)\] \| None | Optional list of input shard identifiers for provenance.                                                          | `None`     |
+| pipeline_version | [str](`str`) \| None                   | Optional pipeline version string for provenance.                                                                  | `None`     |
+| **kwargs         |                                        | Additional args passed to wds.ShardWriter (e.g., maxcount).                                                       | `{}`       |
 
 #### Returns {.doc-section .doc-section-returns}
 

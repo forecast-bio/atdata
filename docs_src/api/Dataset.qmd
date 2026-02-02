@@ -51,13 +51,23 @@ constructor directly with an unsubscripted class.
 
 | Name | Description |
 | --- | --- |
-| [as_type](#atdata.Dataset.as_type) | View this dataset through a different sample type using a registered lens. |
-| [list_shards](#atdata.Dataset.list_shards) | Get list of individual dataset shards. |
+| [as_type](#atdata.Dataset.as_type) | View this dataset through a different sample type via a registered lens. |
+| [describe](#atdata.Dataset.describe) | Summary statistics: sample_type, fields, num_shards, shards, url, metadata. |
+| [filter](#atdata.Dataset.filter) | Return a new dataset that yields only samples matching *predicate*. |
+| [get](#atdata.Dataset.get) | Retrieve a single sample by its ``__key__``. |
+| [head](#atdata.Dataset.head) | Return the first *n* samples from the dataset. |
+| [list_shards](#atdata.Dataset.list_shards) | Return all shard paths/URLs as a list. |
+| [map](#atdata.Dataset.map) | Return a new dataset that applies *fn* to each sample during iteration. |
 | [ordered](#atdata.Dataset.ordered) | Iterate over the dataset in order. |
+| [process_shards](#atdata.Dataset.process_shards) | Process each shard independently, collecting per-shard results. |
+| [query](#atdata.Dataset.query) | Query this dataset using per-shard manifest metadata. |
+| [select](#atdata.Dataset.select) | Return samples at the given integer indices. |
 | [shuffled](#atdata.Dataset.shuffled) | Iterate over the dataset in random order. |
-| [to_parquet](#atdata.Dataset.to_parquet) | Export dataset contents to parquet format. |
-| [wrap](#atdata.Dataset.wrap) | Wrap a raw msgpack sample into the appropriate dataset-specific type. |
-| [wrap_batch](#atdata.Dataset.wrap_batch) | Wrap a batch of raw msgpack samples into a typed SampleBatch. |
+| [to_dict](#atdata.Dataset.to_dict) | Materialize the dataset as a column-oriented dictionary. |
+| [to_pandas](#atdata.Dataset.to_pandas) | Materialize the dataset (or first *limit* samples) as a DataFrame. |
+| [to_parquet](#atdata.Dataset.to_parquet) | Export dataset to parquet file(s). |
+| [wrap](#atdata.Dataset.wrap) | Deserialize a raw WDS sample dict into type ``ST``. |
+| [wrap_batch](#atdata.Dataset.wrap_batch) | Deserialize a raw WDS batch dict into ``SampleBatch[ST]``. |
 
 ### as_type { #atdata.Dataset.as_type }
 
@@ -65,27 +75,114 @@ constructor directly with an unsubscripted class.
 Dataset.as_type(other)
 ```
 
-View this dataset through a different sample type using a registered lens.
-
-#### Parameters {.doc-section .doc-section-parameters}
-
-| Name   | Type                                               | Description                                                                               | Default    |
-|--------|----------------------------------------------------|-------------------------------------------------------------------------------------------|------------|
-| other  | [Type](`typing.Type`)\[[RT](`atdata.dataset.RT`)\] | The target sample type to transform into. Must be a type derived from ``PackableSample``. | _required_ |
-
-#### Returns {.doc-section .doc-section-returns}
-
-| Name   | Type                                                             | Description                                                      |
-|--------|------------------------------------------------------------------|------------------------------------------------------------------|
-|        | [Dataset](`atdata.dataset.Dataset`)\[[RT](`atdata.dataset.RT`)\] | A new ``Dataset`` instance that yields samples of type ``other`` |
-|        | [Dataset](`atdata.dataset.Dataset`)\[[RT](`atdata.dataset.RT`)\] | by applying the appropriate lens transformation from the global  |
-|        | [Dataset](`atdata.dataset.Dataset`)\[[RT](`atdata.dataset.RT`)\] | ``LensNetwork`` registry.                                        |
+View this dataset through a different sample type via a registered lens.
 
 #### Raises {.doc-section .doc-section-raises}
 
-| Name   | Type                       | Description                                                                       |
-|--------|----------------------------|-----------------------------------------------------------------------------------|
-|        | [ValueError](`ValueError`) | If no registered lens exists between the current sample type and the target type. |
+| Name   | Type                       | Description                                             |
+|--------|----------------------------|---------------------------------------------------------|
+|        | [ValueError](`ValueError`) | If no lens exists between the current and target types. |
+
+### describe { #atdata.Dataset.describe }
+
+```python
+Dataset.describe()
+```
+
+Summary statistics: sample_type, fields, num_shards, shards, url, metadata.
+
+### filter { #atdata.Dataset.filter }
+
+```python
+Dataset.filter(predicate)
+```
+
+Return a new dataset that yields only samples matching *predicate*.
+
+The filter is applied lazily during iteration — no data is copied.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name      | Type                                                                           | Description                                                                                | Default    |
+|-----------|--------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|------------|
+| predicate | [Callable](`typing.Callable`)\[\[[ST](`atdata.dataset.ST`)\], [bool](`bool`)\] | A function that takes a sample and returns ``True`` to keep it or ``False`` to discard it. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                             | Description                                         |
+|--------|------------------------------------------------------------------|-----------------------------------------------------|
+|        | [Dataset](`atdata.dataset.Dataset`)\[[ST](`atdata.dataset.ST`)\] | A new ``Dataset`` whose iterators apply the filter. |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> long_names = ds.filter(lambda s: len(s.name) > 10)
+>>> for sample in long_names:
+...     assert len(sample.name) > 10
+```
+
+### get { #atdata.Dataset.get }
+
+```python
+Dataset.get(key)
+```
+
+Retrieve a single sample by its ``__key__``.
+
+Scans shards sequentially until a sample with a matching key is found.
+This is O(n) for streaming datasets.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type         | Description                                      | Default    |
+|--------|--------------|--------------------------------------------------|------------|
+| key    | [str](`str`) | The WebDataset ``__key__`` string to search for. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                      | Description          |
+|--------|---------------------------|----------------------|
+|        | [ST](`atdata.dataset.ST`) | The matching sample. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                                                  | Description                             |
+|--------|-------------------------------------------------------|-----------------------------------------|
+|        | [SampleKeyError](`atdata._exceptions.SampleKeyError`) | If no sample with the given key exists. |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> sample = ds.get("00000001-0001-1000-8000-010000000000")
+```
+
+### head { #atdata.Dataset.head }
+
+```python
+Dataset.head(n=5)
+```
+
+Return the first *n* samples from the dataset.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type         | Description                              | Default   |
+|--------|--------------|------------------------------------------|-----------|
+| n      | [int](`int`) | Number of samples to return. Default: 5. | `5`       |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                        | Description                               |
+|--------|---------------------------------------------|-------------------------------------------|
+|        | [list](`list`)\[[ST](`atdata.dataset.ST`)\] | List of up to *n* samples in shard order. |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> samples = ds.head(3)
+>>> len(samples)
+3
+```
 
 ### list_shards { #atdata.Dataset.list_shards }
 
@@ -93,14 +190,37 @@ View this dataset through a different sample type using a registered lens.
 Dataset.list_shards()
 ```
 
-Get list of individual dataset shards.
+Return all shard paths/URLs as a list.
+
+### map { #atdata.Dataset.map }
+
+```python
+Dataset.map(fn)
+```
+
+Return a new dataset that applies *fn* to each sample during iteration.
+
+The mapping is applied lazily during iteration — no data is copied.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                                | Description                                                                    | Default    |
+|--------|-------------------------------------------------------------------------------------|--------------------------------------------------------------------------------|------------|
+| fn     | [Callable](`typing.Callable`)\[\[[ST](`atdata.dataset.ST`)\], [Any](`typing.Any`)\] | A function that takes a sample of type ``ST`` and returns a transformed value. | _required_ |
 
 #### Returns {.doc-section .doc-section-returns}
 
-| Name   | Type                           | Description                                                       |
-|--------|--------------------------------|-------------------------------------------------------------------|
-|        | [list](`list`)\[[str](`str`)\] | A full (non-lazy) list of the individual ``tar`` files within the |
-|        | [list](`list`)\[[str](`str`)\] | source WebDataset.                                                |
+| Name   | Type                                | Description                                          |
+|--------|-------------------------------------|------------------------------------------------------|
+|        | [Dataset](`atdata.dataset.Dataset`) | A new ``Dataset`` whose iterators apply the mapping. |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> names = ds.map(lambda s: s.name)
+>>> for name in names:
+...     print(name)
+```
 
 ### ordered { #atdata.Dataset.ordered }
 
@@ -132,6 +252,120 @@ Iterate over the dataset in order.
 ...     process(sample)  # sample is ST
 >>> for batch in ds.ordered(batch_size=32):
 ...     process(batch)  # batch is SampleBatch[ST]
+```
+
+### process_shards { #atdata.Dataset.process_shards }
+
+```python
+Dataset.process_shards(fn, *, shards=None)
+```
+
+Process each shard independently, collecting per-shard results.
+
+Unlike :meth:`map` (which is lazy and per-sample), this method eagerly
+processes each shard in turn, calling *fn* with the full list of samples
+from that shard. If some shards fail, raises
+:class:`~atdata._exceptions.PartialFailureError` containing both the
+successful results and the per-shard errors.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                                                  | Description                                                                                                                                                                          | Default    |
+|--------|-------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| fn     | [Callable](`typing.Callable`)\[\[[list](`list`)\[[ST](`atdata.dataset.ST`)\]\], [Any](`typing.Any`)\] | Function receiving a list of samples from one shard and returning an arbitrary result.                                                                                               | _required_ |
+| shards | [list](`list`)\[[str](`str`)\] \| None                                                                | Optional list of shard identifiers to process. If ``None``, processes all shards in the dataset. Useful for retrying only the failed shards from a previous ``PartialFailureError``. | `None`     |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                | Description                                                          |
+|--------|-----------------------------------------------------|----------------------------------------------------------------------|
+|        | [dict](`dict`)\[[str](`str`), [Any](`typing.Any`)\] | Dict mapping shard identifier to *fn*'s return value for each shard. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                                                            | Description                                                                                                                                           |
+|--------|-----------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
+|        | [PartialFailureError](`atdata._exceptions.PartialFailureError`) | If at least one shard fails. The exception carries ``.succeeded_shards``, ``.failed_shards``, ``.errors``, and ``.results`` for inspection and retry. |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> results = ds.process_shards(lambda samples: len(samples))
+>>> # On partial failure, retry just the failed shards:
+>>> try:
+...     results = ds.process_shards(expensive_fn)
+... except PartialFailureError as e:
+...     retry = ds.process_shards(expensive_fn, shards=e.failed_shards)
+```
+
+### query { #atdata.Dataset.query }
+
+```python
+Dataset.query(where)
+```
+
+Query this dataset using per-shard manifest metadata.
+
+Requires manifests to have been generated during shard writing.
+Discovers manifest files alongside the tar shards, loads them,
+and executes a two-phase query (shard-level aggregate pruning,
+then sample-level parquet filtering).
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                                                                                          | Description                                                                                                                  | Default    |
+|--------|-------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|------------|
+| where  | [Callable](`typing.Callable`)\[\[[pd](`pandas`).[DataFrame](`pandas.DataFrame`)\], [pd](`pandas`).[Series](`pandas.Series`)\] | Predicate function that receives a pandas DataFrame of manifest fields and returns a boolean Series selecting matching rows. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                        | Description                                      |
+|--------|-----------------------------------------------------------------------------|--------------------------------------------------|
+|        | [list](`list`)\[[SampleLocation](`atdata.manifest._query.SampleLocation`)\] | List of ``SampleLocation`` for matching samples. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                                     | Description                                      |
+|--------|------------------------------------------|--------------------------------------------------|
+|        | [FileNotFoundError](`FileNotFoundError`) | If no manifest files are found alongside shards. |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> locs = ds.query(where=lambda df: df["confidence"] > 0.9)
+>>> len(locs)
+42
+```
+
+### select { #atdata.Dataset.select }
+
+```python
+Dataset.select(indices)
+```
+
+Return samples at the given integer indices.
+
+Iterates through the dataset in order and collects samples whose
+positional index matches. This is O(n) for streaming datasets.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name    | Type                                          | Description                               | Default    |
+|---------|-----------------------------------------------|-------------------------------------------|------------|
+| indices | [Sequence](`typing.Sequence`)\[[int](`int`)\] | Sequence of zero-based indices to select. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                        | Description                                                 |
+|--------|---------------------------------------------|-------------------------------------------------------------|
+|        | [list](`list`)\[[ST](`atdata.dataset.ST`)\] | List of samples at the requested positions, in index order. |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> samples = ds.select([0, 5, 10])
+>>> len(samples)
+3
 ```
 
 ### shuffled { #atdata.Dataset.shuffled }
@@ -168,48 +402,94 @@ Iterate over the dataset in random order.
 ...     process(batch)  # batch is SampleBatch[ST]
 ```
 
+### to_dict { #atdata.Dataset.to_dict }
+
+```python
+Dataset.to_dict(limit=None)
+```
+
+Materialize the dataset as a column-oriented dictionary.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                 | Description                                               | Default   |
+|--------|----------------------|-----------------------------------------------------------|-----------|
+| limit  | [int](`int`) \| None | Maximum number of samples to include. ``None`` means all. | `None`    |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                  | Description                                                  |
+|--------|-----------------------------------------------------------------------|--------------------------------------------------------------|
+|        | [dict](`dict`)\[[str](`str`), [list](`list`)\[[Any](`typing.Any`)\]\] | Dictionary mapping field names to lists of values (one entry |
+|        | [dict](`dict`)\[[str](`str`), [list](`list`)\[[Any](`typing.Any`)\]\] | per sample).                                                 |
+
+#### Warning {.doc-section .doc-section-warning}
+
+With ``limit=None`` this loads the entire dataset into memory.
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> d = ds.to_dict(limit=10)
+>>> d.keys()
+dict_keys(['name', 'embedding'])
+>>> len(d['name'])
+10
+```
+
+### to_pandas { #atdata.Dataset.to_pandas }
+
+```python
+Dataset.to_pandas(limit=None)
+```
+
+Materialize the dataset (or first *limit* samples) as a DataFrame.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                 | Description                                                                                                       | Default   |
+|--------|----------------------|-------------------------------------------------------------------------------------------------------------------|-----------|
+| limit  | [int](`int`) \| None | Maximum number of samples to include. ``None`` means all samples (may use significant memory for large datasets). | `None`    |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                           | Description                                                     |
+|--------|------------------------------------------------|-----------------------------------------------------------------|
+|        | [pd](`pandas`).[DataFrame](`pandas.DataFrame`) | A pandas DataFrame with one row per sample and columns matching |
+|        | [pd](`pandas`).[DataFrame](`pandas.DataFrame`) | the sample fields.                                              |
+
+#### Warning {.doc-section .doc-section-warning}
+
+With ``limit=None`` this loads the entire dataset into memory.
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> df = ds.to_pandas(limit=100)
+>>> df.columns.tolist()
+['name', 'embedding']
+```
+
 ### to_parquet { #atdata.Dataset.to_parquet }
 
 ```python
 Dataset.to_parquet(path, sample_map=None, maxcount=None, **kwargs)
 ```
 
-Export dataset contents to parquet format.
-
-Converts all samples to a pandas DataFrame and saves to parquet file(s).
-Useful for interoperability with data analysis tools.
+Export dataset to parquet file(s).
 
 #### Parameters {.doc-section .doc-section-parameters}
 
-| Name       | Type                                                                                 | Description                                                                                                                      | Default    |
-|------------|--------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------|------------|
-| path       | [Pathlike](`atdata.dataset.Pathlike`)                                                | Output path for the parquet file. If ``maxcount`` is specified, files are named ``{stem}-{segment:06d}.parquet``.                | _required_ |
-| sample_map | [Optional](`typing.Optional`)\[[SampleExportMap](`atdata.dataset.SampleExportMap`)\] | Optional function to convert samples to dictionaries. Defaults to ``dataclasses.asdict``.                                        | `None`     |
-| maxcount   | [Optional](`typing.Optional`)\[[int](`int`)\]                                        | If specified, split output into multiple files with at most this many samples each. Recommended for large datasets.              | `None`     |
-| **kwargs   |                                                                                      | Additional arguments passed to ``pandas.DataFrame.to_parquet()``. Common options include ``compression``, ``index``, ``engine``. | `{}`       |
-
-#### Warning {.doc-section .doc-section-warning}
-
-**Memory Usage**: When ``maxcount=None`` (default), this method loads
-the **entire dataset into memory** as a pandas DataFrame before writing.
-For large datasets, this can cause memory exhaustion.
-
-For datasets larger than available RAM, always specify ``maxcount``::
-
-    # Safe for large datasets - processes in chunks
-    ds.to_parquet("output.parquet", maxcount=10000)
-
-This creates multiple parquet files: ``output-000000.parquet``,
-``output-000001.parquet``, etc.
+| Name       | Type                                                                                 | Description                                                                                          | Default    |
+|------------|--------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|------------|
+| path       | [Pathlike](`atdata.dataset.Pathlike`)                                                | Output path. With *maxcount*, files are named ``{stem}-{segment:06d}.parquet``.                      | _required_ |
+| sample_map | [Optional](`typing.Optional`)\[[SampleExportMap](`atdata.dataset.SampleExportMap`)\] | Convert sample to dict. Defaults to ``dataclasses.asdict``.                                          | `None`     |
+| maxcount   | [Optional](`typing.Optional`)\[[int](`int`)\]                                        | Split into files of at most this many samples. Without it, the entire dataset is loaded into memory. | `None`     |
+| **kwargs   |                                                                                      | Passed to ``pandas.DataFrame.to_parquet()``.                                                         | `{}`       |
 
 #### Examples {.doc-section .doc-section-examples}
 
 ```python
->>> ds = Dataset[MySample]("data.tar")
->>> # Small dataset - load all at once
->>> ds.to_parquet("output.parquet")
->>>
->>> # Large dataset - process in chunks
 >>> ds.to_parquet("output.parquet", maxcount=50000)
 ```
 
@@ -219,20 +499,7 @@ This creates multiple parquet files: ``output-000000.parquet``,
 Dataset.wrap(sample)
 ```
 
-Wrap a raw msgpack sample into the appropriate dataset-specific type.
-
-#### Parameters {.doc-section .doc-section-parameters}
-
-| Name   | Type                                          | Description                                                                          | Default    |
-|--------|-----------------------------------------------|--------------------------------------------------------------------------------------|------------|
-| sample | [WDSRawSample](`atdata.dataset.WDSRawSample`) | A dictionary containing at minimum a ``'msgpack'`` key with serialized sample bytes. | _required_ |
-
-#### Returns {.doc-section .doc-section-returns}
-
-| Name   | Type                      | Description                                                          |
-|--------|---------------------------|----------------------------------------------------------------------|
-|        | [ST](`atdata.dataset.ST`) | A deserialized sample of type ``ST``, optionally transformed through |
-|        | [ST](`atdata.dataset.ST`) | a lens if ``as_type()`` was called.                                  |
+Deserialize a raw WDS sample dict into type ``ST``.
 
 ### wrap_batch { #atdata.Dataset.wrap_batch }
 
@@ -240,22 +507,4 @@ Wrap a raw msgpack sample into the appropriate dataset-specific type.
 Dataset.wrap_batch(batch)
 ```
 
-Wrap a batch of raw msgpack samples into a typed SampleBatch.
-
-#### Parameters {.doc-section .doc-section-parameters}
-
-| Name   | Type                                        | Description                                                                         | Default    |
-|--------|---------------------------------------------|-------------------------------------------------------------------------------------|------------|
-| batch  | [WDSRawBatch](`atdata.dataset.WDSRawBatch`) | A dictionary containing a ``'msgpack'`` key with a list of serialized sample bytes. | _required_ |
-
-#### Returns {.doc-section .doc-section-returns}
-
-| Name   | Type                                                                     | Description                                                       |
-|--------|--------------------------------------------------------------------------|-------------------------------------------------------------------|
-|        | [SampleBatch](`atdata.dataset.SampleBatch`)\[[ST](`atdata.dataset.ST`)\] | A ``SampleBatch[ST]`` containing deserialized samples, optionally |
-|        | [SampleBatch](`atdata.dataset.SampleBatch`)\[[ST](`atdata.dataset.ST`)\] | transformed through a lens if ``as_type()`` was called.           |
-
-#### Note {.doc-section .doc-section-note}
-
-This implementation deserializes samples one at a time, then
-aggregates them into a batch.
+Deserialize a raw WDS batch dict into ``SampleBatch[ST]``.

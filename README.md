@@ -1,6 +1,6 @@
 # atdata
 
-[![codecov](https://codecov.io/gh/foundation-ac/atdata/branch/main/graph/badge.svg)](https://codecov.io/gh/foundation-ac/atdata)
+[![codecov](https://codecov.io/gh/forecast-bio/atdata/branch/main/graph/badge.svg)](https://codecov.io/gh/forecast-bio/atdata)
 
 A loose federation of distributed, typed datasets built on WebDataset.
 

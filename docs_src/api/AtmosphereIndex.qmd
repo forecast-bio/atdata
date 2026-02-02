@@ -6,8 +6,13 @@ atmosphere.AtmosphereIndex(client, *, data_store=None)
 
 ATProto index implementing AbstractIndex protocol.
 
+.. deprecated::
+    Use ``atdata.Index(atmosphere=client)`` instead.  ``AtmosphereIndex``
+    is retained for backwards compatibility and will be removed in a
+    future release.
+
 Wraps SchemaPublisher/Loader and DatasetPublisher/Loader to provide
-a unified interface compatible with LocalIndex.
+a unified interface compatible with Index.
 
 Optionally accepts a ``PDSBlobStore`` for writing dataset shards as
 ATProto blobs, enabling fully decentralized dataset storage.
@@ -15,16 +20,13 @@ ATProto blobs, enabling fully decentralized dataset storage.
 ## Examples {.doc-section .doc-section-examples}
 
 ```python
->>> client = AtmosphereClient()
->>> client.login("handle.bsky.social", "app-password")
+>>> # Preferred: use unified Index
+>>> from atdata.local import Index
+>>> from atdata.atmosphere import AtmosphereClient
+>>> index = Index(atmosphere=client)
 >>>
->>> # Without blob storage (external URLs only)
+>>> # Legacy (deprecated)
 >>> index = AtmosphereIndex(client)
->>>
->>> # With PDS blob storage
->>> store = PDSBlobStore(client)
->>> index = AtmosphereIndex(client, data_store=store)
->>> entry = index.insert_dataset(dataset, name="my-data")
 ```
 
 ## Attributes

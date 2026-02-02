@@ -270,7 +270,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#atdata.local.Index.list_entries" id="toc-atdata.local.Index.list_entries" class="nav-link" data-scroll-target="#atdata.local.Index.list_entries">list_entries</a></li>
   <li><a href="#atdata.local.Index.list_schemas" id="toc-atdata.local.Index.list_schemas" class="nav-link" data-scroll-target="#atdata.local.Index.list_schemas">list_schemas</a></li>
   <li><a href="#atdata.local.Index.load_schema" id="toc-atdata.local.Index.load_schema" class="nav-link" data-scroll-target="#atdata.local.Index.load_schema">load_schema</a></li>
+  <li><a href="#atdata.local.Index.promote_dataset" id="toc-atdata.local.Index.promote_dataset" class="nav-link" data-scroll-target="#atdata.local.Index.promote_dataset">promote_dataset</a></li>
+  <li><a href="#atdata.local.Index.promote_entry" id="toc-atdata.local.Index.promote_entry" class="nav-link" data-scroll-target="#atdata.local.Index.promote_entry">promote_entry</a></li>
   <li><a href="#atdata.local.Index.publish_schema" id="toc-atdata.local.Index.publish_schema" class="nav-link" data-scroll-target="#atdata.local.Index.publish_schema">publish_schema</a></li>
+  <li><a href="#atdata.local.Index.write" id="toc-atdata.local.Index.write" class="nav-link" data-scroll-target="#atdata.local.Index.write">write</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -285,23 +288,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="atdata.local.Index" class="level1">
 <h1>local.Index</h1>
 <div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>local.Index(</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    redis<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    data_store<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    auto_stubs<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    stub_dir<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Redis-backed index for tracking datasets in a repository.</p>
-<p>Implements the AbstractIndex protocol. Maintains a registry of LocalDatasetEntry objects in Redis, allowing enumeration and lookup of stored datasets.</p>
-<p>When initialized with a data_store, insert_dataset() will write dataset shards to storage before indexing. Without a data_store, insert_dataset() only indexes existing URLs.</p>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    provider<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    path<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    dsn<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    redis<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    data_store<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    repos<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    atmosphere<span class="op">=</span>_ATMOSPHERE_DEFAULT,</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    auto_stubs<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    stub_dir<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Unified index for tracking datasets across multiple repositories.</p>
+<p>Implements the AbstractIndex protocol. Maintains a registry of dataset entries across a built-in <code>"local"</code> repository, optional named repositories, and an optional atmosphere (ATProto) backend.</p>
+<p>The <code>"local"</code> repository is always present and uses the storage backend determined by the <code>provider</code> argument. When no provider is given, defaults to SQLite (zero external dependencies). Pass a <code>redis</code> connection or Redis <code>**kwargs</code> for backwards-compatible Redis behaviour.</p>
+<p>Additional named repositories can be mounted via the <code>repos</code> parameter, each pairing an IndexProvider with an optional data store.</p>
+<p>An AtmosphereClient is available by default for anonymous read-only resolution of <code>@handle/dataset</code> paths. Pass an authenticated client for write operations, or <code>atmosphere=None</code> to disable.</p>
 <section id="attributes" class="level2 doc-section doc-section-attributes">
 <h2 class="doc-section doc-section-attributes anchored" data-anchor-id="attributes">Attributes</h2>
 <table class="caption-top table">
-<colgroup>
-<col style="width: 16%">
-<col style="width: 10%">
-<col style="width: 72%">
-</colgroup>
 <thead>
 <tr class="header">
 <th>Name</th>
@@ -311,14 +317,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td>_redis</td>
-<td></td>
-<td>Redis connection for index storage.</td>
+<td>_provider</td>
+<td><a href="`atdata.providers._base.IndexProvider`">_IP</a></td>
+<td>IndexProvider for the built-in <code>"local"</code> repository.</td>
 </tr>
 <tr class="even">
 <td>_data_store</td>
 <td></td>
-<td>Optional AbstractDataStore for writing dataset shards.</td>
+<td>Optional AbstractDataStore for the local repository.</td>
+</tr>
+<tr class="odd">
+<td>_repos</td>
+<td><a href="`dict`">dict</a>[<a href="`str`">str</a>, <a href="`atdata.repository.Repository`">_Repo</a>]</td>
+<td>Named repositories beyond <code>"local"</code>.</td>
+</tr>
+<tr class="even">
+<td>_atmosphere</td>
+<td><a href="`atdata.repository._AtmosphereBackend`">_AtmosphereBackend</a> | None</td>
+<td>Optional atmosphere backend for ATProto operations.</td>
 </tr>
 </tbody>
 </table>
@@ -335,7 +351,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td><a href="#atdata.local.Index.add_entry">add_entry</a></td>
-<td>Add a dataset to the index.</td>
+<td>Add a dataset to the local repository index.</td>
 </tr>
 <tr class="even">
 <td><a href="#atdata.local.Index.clear_stubs">clear_stubs</a></td>
@@ -351,7 +367,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td><a href="#atdata.local.Index.get_dataset">get_dataset</a></td>
-<td>Get a dataset entry by name (AbstractIndex protocol).</td>
+<td>Get a dataset entry by name or prefixed reference.</td>
 </tr>
 <tr class="even">
 <td><a href="#atdata.local.Index.get_entry">get_entry</a></td>
@@ -379,7 +395,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td><a href="#atdata.local.Index.list_datasets">list_datasets</a></td>
-<td>Get all dataset entries as a materialized list (AbstractIndex protocol).</td>
+<td>Get dataset entries as a materialized list (AbstractIndex protocol).</td>
 </tr>
 <tr class="odd">
 <td><a href="#atdata.local.Index.list_entries">list_entries</a></td>
@@ -394,16 +410,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Load a schema and make it available in the types namespace.</td>
 </tr>
 <tr class="even">
+<td><a href="#atdata.local.Index.promote_dataset">promote_dataset</a></td>
+<td>Publish a Dataset directly to the atmosphere.</td>
+</tr>
+<tr class="odd">
+<td><a href="#atdata.local.Index.promote_entry">promote_entry</a></td>
+<td>Promote a locally-indexed dataset to the atmosphere.</td>
+</tr>
+<tr class="even">
 <td><a href="#atdata.local.Index.publish_schema">publish_schema</a></td>
 <td>Publish a schema for a sample type to Redis.</td>
+</tr>
+<tr class="odd">
+<td><a href="#atdata.local.Index.write">write</a></td>
+<td>Write samples and create an index entry in one step.</td>
 </tr>
 </tbody>
 </table>
 <section id="atdata.local.Index.add_entry" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.local.Index.add_entry">add_entry</h3>
 <div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>local.Index.add_entry(ds, <span class="op">*</span>, name, schema_ref<span class="op">=</span><span class="va">None</span>, metadata<span class="op">=</span><span class="va">None</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Add a dataset to the index.</p>
-<p>Creates a LocalDatasetEntry for the dataset and persists it to Redis.</p>
+<p>Add a dataset to the local repository index.</p>
 <section id="parameters" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
 <table class="caption-top table">
@@ -456,7 +483,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`atdata.local.LocalDatasetEntry`">LocalDatasetEntry</a></td>
+<td><a href="`atdata.local._entry.LocalDatasetEntry`">LocalDatasetEntry</a></td>
 <td>The created LocalDatasetEntry object.</td>
 </tr>
 </tbody>
@@ -589,7 +616,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>type_hint</td>
-<td><a href="`type`">type</a>[<a href="`atdata.local.T`">T</a>]</td>
+<td><a href="`type`">type</a>[<a href="`atdata.local._index.T`">T</a>]</td>
 <td>The stub type to use for type hints. Import this from the generated stub file.</td>
 <td><em>required</em></td>
 </tr>
@@ -609,7 +636,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`type`">type</a>[<a href="`atdata.local.T`">T</a>]</td>
+<td><a href="`type`">type</a>[<a href="`atdata.local._index.T`">T</a>]</td>
 <td>The decoded type, cast to match the type_hint for IDE support.</td>
 </tr>
 </tbody>
@@ -632,7 +659,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="atdata.local.Index.get_dataset" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.local.Index.get_dataset">get_dataset</h3>
 <div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>local.Index.get_dataset(ref)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Get a dataset entry by name (AbstractIndex protocol).</p>
+<p>Get a dataset entry by name or prefixed reference.</p>
+<p>Supports repository-prefixed lookups (e.g.&nbsp;<code>"lab/mnist"</code>), atmosphere paths (<code>"@handle/dataset"</code>), AT URIs, and bare names (which default to the <code>"local"</code> repository).</p>
 <section id="parameters-3" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-3">Parameters</h4>
 <table class="caption-top table">
@@ -648,7 +676,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>ref</td>
 <td><a href="`str`">str</a></td>
-<td>Dataset name.</td>
+<td>Dataset name, prefixed name, or AT URI.</td>
 <td><em>required</em></td>
 </tr>
 </tbody>
@@ -667,7 +695,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`atdata.local.LocalDatasetEntry`">LocalDatasetEntry</a></td>
+<td>'IndexEntry'</td>
 <td>IndexEntry for the dataset.</td>
 </tr>
 </tbody>
@@ -688,6 +716,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td></td>
 <td><a href="`KeyError`">KeyError</a></td>
 <td>If dataset not found.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>If the atmosphere backend is required but unavailable.</td>
 </tr>
 </tbody>
 </table>
@@ -731,7 +764,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`atdata.local.LocalDatasetEntry`">LocalDatasetEntry</a></td>
+<td><a href="`atdata.local._entry.LocalDatasetEntry`">LocalDatasetEntry</a></td>
 <td>LocalDatasetEntry for the given CID.</td>
 </tr>
 </tbody>
@@ -795,7 +828,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`atdata.local.LocalDatasetEntry`">LocalDatasetEntry</a></td>
+<td><a href="`atdata.local._entry.LocalDatasetEntry`">LocalDatasetEntry</a></td>
 <td>LocalDatasetEntry with the given name.</td>
 </tr>
 </tbody>
@@ -873,7 +906,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="examples-1" class="level4 doc-section doc-section-examples">
 <h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-1">Examples</h4>
-<div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> index <span class="op">=</span> LocalIndex(auto_stubs<span class="op">=</span><span class="va">True</span>)</span>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> index <span class="op">=</span> Index(auto_stubs<span class="op">=</span><span class="va">True</span>)</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> ref <span class="op">=</span> index.publish_schema(MySample, version<span class="op">=</span><span class="st">"1.0.0"</span>)</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> index.load_schema(ref)</span>
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="bu">print</span>(index.get_import_path(ref))</span>
@@ -995,7 +1028,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`atdata.local.LocalSchemaRecord`">LocalSchemaRecord</a></td>
+<td><a href="`atdata.local._schema.LocalSchemaRecord`">LocalSchemaRecord</a></td>
 <td>LocalSchemaRecord with schema details.</td>
 </tr>
 </tbody>
@@ -1030,7 +1063,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="atdata.local.Index.insert_dataset">insert_dataset</h3>
 <div class="sourceCode" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>local.Index.insert_dataset(ds, <span class="op">*</span>, name, schema_ref<span class="op">=</span><span class="va">None</span>, <span class="op">**</span>kwargs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Insert a dataset into the index (AbstractIndex protocol).</p>
-<p>If a data_store was provided at initialization, writes dataset shards to storage first, then indexes the new URLs. Otherwise, indexes the dataset’s existing URL.</p>
+<p>The target repository is determined by a prefix in the <code>name</code> argument (e.g.&nbsp;<code>"lab/mnist"</code>). If no prefix is given, or the prefix is <code>"local"</code>, the built-in local repository is used.</p>
+<p>If the target repository has a data_store, shards are written to storage first, then indexed. Otherwise, the dataset’s existing URL is indexed directly.</p>
 <section id="parameters-9" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-9">Parameters</h4>
 <table class="caption-top table">
@@ -1052,7 +1086,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td>name</td>
 <td><a href="`str`">str</a></td>
-<td>Human-readable name for the dataset.</td>
+<td>Human-readable name for the dataset, optionally prefixed with a repository name (e.g.&nbsp;<code>"lab/mnist"</code>).</td>
 <td><em>required</em></td>
 </tr>
 <tr class="odd">
@@ -1083,7 +1117,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`atdata.local.LocalDatasetEntry`">LocalDatasetEntry</a></td>
+<td>'IndexEntry'</td>
 <td>IndexEntry for the inserted dataset.</td>
 </tr>
 </tbody>
@@ -1092,8 +1126,29 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="atdata.local.Index.list_datasets" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.local.Index.list_datasets">list_datasets</h3>
-<div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>local.Index.list_datasets()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Get all dataset entries as a materialized list (AbstractIndex protocol).</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>local.Index.list_datasets(repo<span class="op">=</span><span class="va">None</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Get dataset entries as a materialized list (AbstractIndex protocol).</p>
+<section id="parameters-10" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-10">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>repo</td>
+<td><a href="`str`">str</a> | None</td>
+<td>Optional repository filter. If <code>None</code>, aggregates entries from <code>"local"</code> and all named repositories. Use <code>"local"</code> for only the built-in repository, a named repo key, or <code>"_atmosphere"</code> for atmosphere entries.</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
 <section id="returns-11" class="level4 doc-section doc-section-returns">
 <h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-11">Returns</h4>
 <table class="caption-top table">
@@ -1107,7 +1162,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`list`">list</a>[<a href="`atdata.local.LocalDatasetEntry`">LocalDatasetEntry</a>]</td>
+<td><a href="`list`">list</a>['IndexEntry']</td>
 <td>List of IndexEntry for each dataset.</td>
 </tr>
 </tbody>
@@ -1131,7 +1186,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`list`">list</a>[<a href="`atdata.local.LocalDatasetEntry`">LocalDatasetEntry</a>]</td>
+<td><a href="`list`">list</a>[<a href="`atdata.local._entry.LocalDatasetEntry`">LocalDatasetEntry</a>]</td>
 <td>List of all LocalDatasetEntry objects in the index.</td>
 </tr>
 </tbody>
@@ -1167,8 +1222,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>local.Index.load_schema(ref)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Load a schema and make it available in the types namespace.</p>
 <p>This method decodes the schema, optionally generates a Python module for IDE support (if auto_stubs is enabled), and registers the type in the :attr:<code>types</code> namespace for easy access.</p>
-<section id="parameters-10" class="level4 doc-section doc-section-parameters">
-<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-10">Parameters</h4>
+<section id="parameters-11" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-11">Parameters</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -1240,19 +1295,241 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-2">Examples</h4>
 <div class="sourceCode" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="co"># Load and use immediately</span></span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> MyType <span class="op">=</span> index.load_schema(<span class="st">"atdata://local/sampleSchema/MySample@1.0.0"</span>)</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> sample <span class="op">=</span> MyType(name<span class="op">=</span><span class="st">"hello"</span>, value<span class="op">=</span><span class="dv">42</span>)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> sample <span class="op">=</span> MyType(field1<span class="op">=</span><span class="st">"hello"</span>, field2<span class="op">=</span><span class="dv">42</span>)</span>
 <span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span></span>
 <span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="co"># Or access later via namespace</span></span>
 <span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> index.load_schema(<span class="st">"atdata://local/sampleSchema/OtherType@1.0.0"</span>)</span>
 <span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> other <span class="op">=</span> index.types.OtherType(data<span class="op">=</span><span class="st">"test"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
+<section id="atdata.local.Index.promote_dataset" class="level3">
+<h3 class="anchored" data-anchor-id="atdata.local.Index.promote_dataset">promote_dataset</h3>
+<div class="sourceCode" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>local.Index.promote_dataset(</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    dataset,</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    name,</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    sample_type<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    schema_version<span class="op">=</span><span class="st">'1.0.0'</span>,</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    description<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    tags<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    license<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Publish a Dataset directly to the atmosphere.</p>
+<p>Publishes the schema (with deduplication) and creates a dataset record on ATProto. Uses the index’s atmosphere backend.</p>
+<section id="parameters-12" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-12">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>dataset</td>
+<td><a href="`atdata.Dataset`">Dataset</a></td>
+<td>The Dataset to publish.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>name</td>
+<td><a href="`str`">str</a></td>
+<td>Name for the atmosphere dataset record.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="odd">
+<td>sample_type</td>
+<td><a href="`type`">type</a> | None</td>
+<td>Sample type for schema publishing. Inferred from <code>dataset.sample_type</code> if not provided.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>schema_version</td>
+<td><a href="`str`">str</a></td>
+<td>Semantic version for the schema. Default: <code>"1.0.0"</code>.</td>
+<td><code>'1.0.0'</code></td>
+</tr>
+<tr class="odd">
+<td>description</td>
+<td><a href="`str`">str</a> | None</td>
+<td>Optional description for the dataset.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>tags</td>
+<td><a href="`list`">list</a>[<a href="`str`">str</a>] | None</td>
+<td>Optional tags for discovery.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>license</td>
+<td><a href="`str`">str</a> | None</td>
+<td>Optional license identifier.</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-15" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-15">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`str`">str</a></td>
+<td>AT URI of the created atmosphere dataset record.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-7" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-7">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>If atmosphere backend is not available.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples-3" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-3">Examples</h4>
+<div class="sourceCode" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> index <span class="op">=</span> Index(atmosphere<span class="op">=</span>client)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> ds <span class="op">=</span> atdata.load_dataset(<span class="st">"./data.tar"</span>, MySample, split<span class="op">=</span><span class="st">"train"</span>)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> uri <span class="op">=</span> index.promote_dataset(ds, name<span class="op">=</span><span class="st">"my-dataset"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
+<section id="atdata.local.Index.promote_entry" class="level3">
+<h3 class="anchored" data-anchor-id="atdata.local.Index.promote_entry">promote_entry</h3>
+<div class="sourceCode" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>local.Index.promote_entry(</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    entry_name,</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    description<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    tags<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>    license<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Promote a locally-indexed dataset to the atmosphere.</p>
+<p>Looks up the entry by name in the local index, resolves its schema, and publishes both schema and dataset record to ATProto via the index’s atmosphere backend.</p>
+<section id="parameters-13" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-13">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>entry_name</td>
+<td><a href="`str`">str</a></td>
+<td>Name of the local dataset entry to promote.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>name</td>
+<td><a href="`str`">str</a> | None</td>
+<td>Override name for the atmosphere record. Defaults to the local entry name.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>description</td>
+<td><a href="`str`">str</a> | None</td>
+<td>Optional description for the dataset.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>tags</td>
+<td><a href="`list`">list</a>[<a href="`str`">str</a>] | None</td>
+<td>Optional tags for discovery.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>license</td>
+<td><a href="`str`">str</a> | None</td>
+<td>Optional license identifier.</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-16" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-16">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`str`">str</a></td>
+<td>AT URI of the created atmosphere dataset record.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-8" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-8">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>If atmosphere backend is not available, or the local entry has no data URLs.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><a href="`KeyError`">KeyError</a></td>
+<td>If the entry or its schema is not found.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples-4" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-4">Examples</h4>
+<div class="sourceCode" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> index <span class="op">=</span> Index(atmosphere<span class="op">=</span>client)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> uri <span class="op">=</span> index.promote_entry(<span class="st">"mnist-train"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
 <section id="atdata.local.Index.publish_schema" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.local.Index.publish_schema">publish_schema</h3>
-<div class="sourceCode" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>local.Index.publish_schema(sample_type, <span class="op">*</span>, version<span class="op">=</span><span class="va">None</span>, description<span class="op">=</span><span class="va">None</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>local.Index.publish_schema(sample_type, <span class="op">*</span>, version<span class="op">=</span><span class="va">None</span>, description<span class="op">=</span><span class="va">None</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Publish a schema for a sample type to Redis.</p>
-<section id="parameters-11" class="level4 doc-section doc-section-parameters">
-<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-11">Parameters</h4>
+<section id="parameters-14" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-14">Parameters</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -1284,8 +1561,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="returns-15" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-15">Returns</h4>
+<section id="returns-17" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-17">Returns</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -1303,8 +1580,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="raises-7" class="level4 doc-section doc-section-raises">
-<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-7">Raises</h4>
+<section id="raises-9" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-9">Raises</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -1326,6 +1603,148 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
+</section>
+</section>
+<section id="atdata.local.Index.write" class="level3">
+<h3 class="anchored" data-anchor-id="atdata.local.Index.write">write</h3>
+<div class="sourceCode" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>local.Index.write(</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    samples,</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    name,</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    schema_ref<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>    description<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>    tags<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>    license<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>    maxcount<span class="op">=</span><span class="dv">10000</span>,</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>    maxsize<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>    metadata<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Write samples and create an index entry in one step.</p>
+<p>This is the primary method for publishing data. It serializes samples to WebDataset tar files, stores them via the appropriate backend, and creates an index entry.</p>
+<p>The target backend is determined by the <em>name</em> prefix:</p>
+<ul>
+<li>Bare name (e.g., <code>"mnist"</code>): writes to the local repository.</li>
+<li><code>"@handle/name"</code>: writes and publishes to the atmosphere.</li>
+<li><code>"repo/name"</code>: writes to a named repository.</li>
+</ul>
+<p>When the local backend has no <code>data_store</code> configured, a <code>LocalDiskStore</code> is created automatically at <code>~/.atdata/data/</code> so that samples have persistent storage.</p>
+<p>.. note::</p>
+<pre><code>This method is synchronous. Samples are written to a temporary
+location first, then copied to permanent storage by the backend.
+Avoid passing lazily-evaluated iterators that depend on external
+state that may change during the call.</code></pre>
+<section id="parameters-15" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-15">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>samples</td>
+<td><a href="`typing.Iterable`">Iterable</a></td>
+<td>Iterable of <code>Packable</code> samples. Must be non-empty.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>name</td>
+<td><a href="`str`">str</a></td>
+<td>Dataset name, optionally prefixed with target.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="odd">
+<td>schema_ref</td>
+<td><a href="`str`">str</a> | None</td>
+<td>Optional schema reference. Auto-generated if <code>None</code>.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>description</td>
+<td><a href="`str`">str</a> | None</td>
+<td>Optional dataset description (atmosphere only).</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>tags</td>
+<td><a href="`list`">list</a>[<a href="`str`">str</a>] | None</td>
+<td>Optional tags for discovery (atmosphere only).</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>license</td>
+<td><a href="`str`">str</a> | None</td>
+<td>Optional license identifier (atmosphere only).</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>maxcount</td>
+<td><a href="`int`">int</a></td>
+<td>Max samples per shard. Default: 10,000.</td>
+<td><code>10000</code></td>
+</tr>
+<tr class="even">
+<td>maxsize</td>
+<td><a href="`int`">int</a> | None</td>
+<td>Max bytes per shard. Default: <code>None</code>.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>metadata</td>
+<td><a href="`dict`">dict</a> | None</td>
+<td>Optional metadata dict stored with the entry.</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-18" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-18">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td>'IndexEntry'</td>
+<td>IndexEntry for the created dataset.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-10" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-10">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>If <em>samples</em> is empty.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples-5" class="level4 doc-section doc-section-examples">
+<h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-5">Examples</h4>
+<div class="sourceCode" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> index <span class="op">=</span> Index()</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> samples <span class="op">=</span> [MySample(key<span class="op">=</span><span class="st">"0"</span>, text<span class="op">=</span><span class="st">"hello"</span>)]</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> entry <span class="op">=</span> index.write(samples, name<span class="op">=</span><span class="st">"my-dataset"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 
 </section>

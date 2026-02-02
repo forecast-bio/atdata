@@ -7,7 +7,6 @@ from atdata._cid import (
     generate_cid,
     generate_cid_from_bytes,
     verify_cid,
-    parse_cid,
 )
 
 
@@ -146,49 +145,6 @@ class TestVerifyCid:
         cid = generate_cid(data)
 
         assert verify_cid(cid, data) is True
-
-
-class TestParseCid:
-    """Tests for parse_cid function."""
-
-    def test_parse_cid_components(self):
-        """parse_cid extracts CID components."""
-        data = {"test": "data"}
-        cid = generate_cid(data)
-
-        parsed = parse_cid(cid)
-
-        assert parsed["version"] == 1
-        assert parsed["codec"] == 0x71  # dag-cbor
-        assert parsed["hash"]["code"] == 0x12  # sha256
-        assert parsed["hash"]["size"] == 32
-
-    def test_parse_cid_digest_matches(self):
-        """Parsed digest matches the SHA-256 of the data."""
-        import hashlib
-
-        data = {"test": "data"}
-        cid = generate_cid(data)
-
-        cbor_bytes = libipld.encode_dag_cbor(data)
-        expected_digest = hashlib.sha256(cbor_bytes).digest()
-
-        parsed = parse_cid(cid)
-        assert parsed["hash"]["digest"] == expected_digest
-
-    @pytest.mark.parametrize(
-        "malformed_cid",
-        [
-            "",  # empty
-            "invalid",  # not a CID
-            "bafy123",  # truncated CID
-            "Qm123",  # v0 prefix but invalid
-        ],
-    )
-    def test_parse_cid_malformed_raises_valueerror(self, malformed_cid):
-        """Malformed CID strings raise ValueError."""
-        with pytest.raises(ValueError, match="Failed to decode CID"):
-            parse_cid(malformed_cid)
 
 
 class TestAtprotoCompatibility:

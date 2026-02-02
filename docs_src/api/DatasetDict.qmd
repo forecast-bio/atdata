@@ -25,7 +25,7 @@ methods that operate across all splits.
 >>>
 >>> # Iterate over all splits
 >>> for split_name, dataset in ds_dict.items():
-...     print(f"{split_name}: {len(dataset.shard_list)} shards")
+...     print(f"{split_name}: {len(dataset.list_shards())} shards")
 ```
 
 ## Attributes

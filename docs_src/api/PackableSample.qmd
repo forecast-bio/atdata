@@ -32,15 +32,15 @@ Subclasses should be defined either by:
 
 | Name | Description |
 | --- | --- |
-| [as_wds](#atdata.PackableSample.as_wds) | Pack this sample's data for writing to WebDataset. |
-| [packed](#atdata.PackableSample.packed) | Pack this sample's data into msgpack bytes. |
+| [as_wds](#atdata.PackableSample.as_wds) | Serialize for writing to WebDataset (``__key__`` + ``msgpack``). |
+| [packed](#atdata.PackableSample.packed) | Serialize to msgpack bytes. NDArray fields are auto-converted. |
 
 ## Methods
 
 | Name | Description |
 | --- | --- |
-| [from_bytes](#atdata.PackableSample.from_bytes) | Create a sample instance from raw msgpack bytes. |
-| [from_data](#atdata.PackableSample.from_data) | Create a sample instance from unpacked msgpack data. |
+| [from_bytes](#atdata.PackableSample.from_bytes) | Create an instance from raw msgpack bytes. |
+| [from_data](#atdata.PackableSample.from_data) | Create an instance from unpacked msgpack data. |
 
 ### from_bytes { #atdata.PackableSample.from_bytes }
 
@@ -48,19 +48,7 @@ Subclasses should be defined either by:
 PackableSample.from_bytes(bs)
 ```
 
-Create a sample instance from raw msgpack bytes.
-
-#### Parameters {.doc-section .doc-section-parameters}
-
-| Name   | Type             | Description                                 | Default    |
-|--------|------------------|---------------------------------------------|------------|
-| bs     | [bytes](`bytes`) | Raw bytes from a msgpack-serialized sample. | _required_ |
-
-#### Returns {.doc-section .doc-section-returns}
-
-| Name   | Type                  | Description                                                      |
-|--------|-----------------------|------------------------------------------------------------------|
-|        | [Self](`typing.Self`) | A new instance of this sample class deserialized from the bytes. |
+Create an instance from raw msgpack bytes.
 
 ### from_data { #atdata.PackableSample.from_data }
 
@@ -68,16 +56,4 @@ Create a sample instance from raw msgpack bytes.
 PackableSample.from_data(data)
 ```
 
-Create a sample instance from unpacked msgpack data.
-
-#### Parameters {.doc-section .doc-section-parameters}
-
-| Name   | Type                                          | Description                                             | Default    |
-|--------|-----------------------------------------------|---------------------------------------------------------|------------|
-| data   | [WDSRawSample](`atdata.dataset.WDSRawSample`) | Dictionary with keys matching the sample's field names. | _required_ |
-
-#### Returns {.doc-section .doc-section-returns}
-
-| Name   | Type                  | Description                                                 |
-|--------|-----------------------|-------------------------------------------------------------|
-|        | [Self](`typing.Self`) | New instance with NDArray fields auto-converted from bytes. |
+Create an instance from unpacked msgpack data.

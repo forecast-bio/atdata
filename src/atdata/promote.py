@@ -108,6 +108,11 @@ def promote_to_atmosphere(
     This function takes a locally-indexed dataset and publishes it to ATProto,
     making it discoverable on the federated atmosphere network.
 
+    .. deprecated::
+        Prefer ``Index.promote_entry()`` or ``Index.promote_dataset()``
+        which provide the same functionality through the unified Index
+        interface without requiring separate client and index arguments.
+
     Args:
         local_entry: The LocalDatasetEntry to promote.
         local_index: Local index containing the schema for this entry.

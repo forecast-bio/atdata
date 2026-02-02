@@ -116,29 +116,8 @@ def verify_cid(cid: str, data: Any) -> bool:
     return cid == expected_cid
 
 
-def parse_cid(cid: str) -> dict:
-    """Parse a CID string into its components.
-
-    Args:
-        cid: CID string to parse.
-
-    Returns:
-        Dictionary with 'version', 'codec', and 'hash' keys.
-        The 'hash' value is itself a dict with 'code', 'size', and 'digest'.
-
-    Examples:
-        >>> info = parse_cid('bafyrei...')
-        >>> info['version']
-        1
-        >>> info['codec']
-        113  # 0x71 = dag-cbor
-    """
-    return libipld.decode_cid(cid)
-
-
 __all__ = [
     "generate_cid",
     "generate_cid_from_bytes",
     "verify_cid",
-    "parse_cid",
 ]

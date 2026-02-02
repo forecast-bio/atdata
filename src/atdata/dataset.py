@@ -1188,3 +1188,85 @@ def packable(cls: type[_T]) -> type[Packable]:
     ##
 
     return as_packable
+
+
+# ---------------------------------------------------------------------------
+# write_samples — convenience function for writing samples to tar files
+# ---------------------------------------------------------------------------
+
+
+def write_samples(
+    samples: Iterable[ST],
+    path: str | Path,
+    *,
+    maxcount: int | None = None,
+    maxsize: int | None = None,
+) -> "Dataset[ST]":
+    """Write an iterable of samples to WebDataset tar file(s).
+
+    Args:
+        samples: Iterable of ``PackableSample`` instances. Must be non-empty.
+        path: Output path for the tar file. For sharded output (when
+            *maxcount* or *maxsize* is set), a ``%06d`` pattern is
+            auto-appended if the path does not already contain ``%``.
+        maxcount: Maximum samples per shard. Triggers multi-shard output.
+        maxsize: Maximum bytes per shard. Triggers multi-shard output.
+
+    Returns:
+        A ``Dataset`` wrapping the written file(s), typed to the sample
+        type of the input samples.
+
+    Raises:
+        ValueError: If *samples* is empty.
+
+    Examples:
+        >>> samples = [MySample(key="0", text="hello")]
+        >>> ds = write_samples(samples, "out.tar")
+        >>> list(ds.ordered())
+        [MySample(key='0', text='hello')]
+    """
+    from ._hf_api import _shards_to_wds_url
+
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    use_shard_writer = maxcount is not None or maxsize is not None
+    sample_type: type | None = None
+    written_paths: list[str] = []
+
+    if use_shard_writer:
+        # Build shard pattern from path
+        if "%" not in str(path):
+            pattern = str(path.parent / f"{path.stem}-%06d{path.suffix}")
+        else:
+            pattern = str(path)
+
+        writer_kwargs: dict[str, Any] = {}
+        if maxcount is not None:
+            writer_kwargs["maxcount"] = maxcount
+        if maxsize is not None:
+            writer_kwargs["maxsize"] = maxsize
+
+        def _track(p: str) -> None:
+            written_paths.append(str(Path(p).resolve()))
+
+        with wds.writer.ShardWriter(pattern, post=_track, **writer_kwargs) as sink:
+            for sample in samples:
+                if sample_type is None:
+                    sample_type = type(sample)
+                sink.write(sample.as_wds)
+    else:
+        with wds.writer.TarWriter(str(path)) as sink:
+            for sample in samples:
+                if sample_type is None:
+                    sample_type = type(sample)
+                sink.write(sample.as_wds)
+        written_paths.append(str(path.resolve()))
+
+    if sample_type is None:
+        raise ValueError("samples must be non-empty")
+
+    url = _shards_to_wds_url(written_paths)
+    ds: Dataset = Dataset(url)
+    ds._sample_type_cache = sample_type
+    return ds

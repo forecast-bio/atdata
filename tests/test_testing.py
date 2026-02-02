@@ -203,3 +203,44 @@ class TestMockIndex:
     def test_no_path_uses_tempdir(self):
         index = mock_index()
         assert index is not None
+
+
+# ---------------------------------------------------------------------------
+# make_samples — additional field types
+# ---------------------------------------------------------------------------
+
+
+class TestMakeSamplesAdditionalFields:
+    def test_list_field(self):
+        @atdata.packable
+        class WithList:
+            tags: list
+            name: str
+
+        samples = make_samples(WithList, n=2, seed=0)
+        assert isinstance(samples[0].tags, list)
+        assert len(samples[0].tags) == 3
+
+    def test_optional_field_with_default(self):
+        from dataclasses import field
+
+        @atdata.packable
+        class WithOptional:
+            name: str
+            note: str | None = field(default=None)
+
+        samples = make_samples(WithOptional, n=2, seed=0)
+        assert len(samples) == 2
+        assert samples[0].name == "name_0"
+
+    def test_unknown_field_type_gets_string(self):
+        """Unrecognized types fall back to string-like value."""
+
+        @atdata.packable
+        class WithWeird:
+            name: str
+            stuff: dict  # type: ignore[type-arg]
+
+        # dict isn't handled explicitly; should get a string fallback
+        samples = make_samples(WithWeird, n=1, seed=0)
+        assert len(samples) == 1

@@ -98,3 +98,25 @@ class TestArraySerialization:
         serialized = array_to_bytes(arr)
         result = bytes_to_array(serialized)
         assert isinstance(result, np.ndarray)
+
+    def test_object_dtype_uses_npy_format(self):
+        """Object dtype arrays fall back to np.save format."""
+        original = np.array([{"a": 1}, {"b": 2}], dtype=object)
+        serialized = array_to_bytes(original)
+        # Should use .npy format (starts with magic bytes)
+        assert serialized[:6] == b"\x93NUMPY"
+        restored = bytes_to_array(serialized)
+        assert restored[0] == {"a": 1}
+        assert restored[1] == {"b": 2}
+
+    def test_legacy_npy_format_deserialization(self):
+        """bytes_to_array can read legacy .npy-serialized arrays."""
+        from io import BytesIO
+
+        original = np.array([10, 20, 30], dtype=np.int32)
+        buf = BytesIO()
+        np.save(buf, original)
+        legacy_bytes = buf.getvalue()
+
+        restored = bytes_to_array(legacy_bytes)
+        np.testing.assert_array_equal(restored, original)
