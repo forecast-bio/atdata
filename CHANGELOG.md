@@ -26,6 +26,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - 38 new tests: `test_write_samples.py`, `test_disk_store.py`, `test_index_write.py`
 
 ### Changed
+- Investigate and fix code coverage reduction from recent changes (#541)
+- Add tests for dataset.py uncovered edge cases (#546)
+- Add tests for _index.py uncovered error/edge paths (#545)
+- Add tests for testing.py list field, Optional field, and fixture paths (#544)
+- Add tests for providers/_factory.py postgres and unknown provider paths (#543)
+- Add tests for _helpers.py object dtype and legacy npy paths (#542)
+- Create local skills for release, changelog, and adversarial review (#536)
+- Create /changelog skill (#539)
+- Update /ad skill — less aggressive docstring trimming (#538)
+- Create /release skill (#537)
+- Fix CI failures on v0.3.0b2 release (#535)
+- Release v0.3.0b2 beta (#534)
 - `promote.py` updated as backward-compat wrapper delegating to `Index.promote_entry()`
 - Trimmed `_protocols.py` docstrings by 30% (487 → 343 lines)
 - Trimmed verbose test docstrings across test suite (−173 lines)
