@@ -1,0 +1,61 @@
+---
+allowed-tools: Bash(git *), Bash(gh *), Bash(uv lock*), Bash(uv run ruff*), Bash(uv run pytest*), Bash(chainlink *)
+description: Prepare and submit a beta release
+---
+
+## Context
+
+- Current branch: !`git branch --show-current`
+- Recent commits: !`git log --oneline -15`
+- All branches: !`git branch --list 'release/*' | tail -5`
+- Current version: !`grep '^version' pyproject.toml`
+- Remotes: !`git remote -v`
+
+## Your task
+
+The user will provide a version string (e.g. `v0.3.0b2`). Perform the full release flow:
+
+### 1. Validate preconditions
+- Confirm all tests pass: `uv run pytest tests/ -x -q`
+- Confirm lint is clean: `uv run ruff check src/ tests/`
+- Confirm no uncommitted changes (other than `.chainlink/issues.db`)
+- Identify the previous release branch to branch from (e.g. `release/v0.3.0b1`)
+- Identify the feature branch to merge (current branch or ask user)
+
+### 2. Create release branch
+- Stash any uncommitted changes
+- `git checkout <previous-release-branch>`
+- `git checkout -b release/<version>`
+- `git merge <feature-branch> --no-ff --no-edit`
+- `git stash pop` (if anything was stashed)
+
+### 3. Prepare release
+- Bump version in `pyproject.toml`
+- Run `uv lock` to update the lockfile
+- Run `/changelog` skill to generate a clean CHANGELOG entry (or generate one manually following Keep a Changelog format with Added/Changed/Fixed sections)
+- Run `uv run ruff check src/ tests/` and fix any lint errors
+- Run `uv run pytest tests/ -x -q` to confirm tests pass
+
+### 4. Commit and push
+- `git add pyproject.toml uv.lock CHANGELOG.md .chainlink/issues.db`
+- `git commit -m "release: prepare <version>"`
+- `git push -u origin release/<version>`
+
+### 5. Create PR
+- Create PR to `upstream/main` using `gh pr create`:
+  - `--repo foundation-ac/atdata`
+  - `--base main`
+  - `--head forecast-bio:release/<version>`
+  - Title: `release: <version>`
+  - Body: summary of changes from CHANGELOG, test plan with pass counts
+
+### 6. Track in chainlink
+- Create a chainlink issue for the release, close when PR is submitted
+
+## Constraints
+
+- Always use `--no-ff` for merges to preserve branch topology
+- Always run `uv lock` after version bumps — stale lockfiles break CI
+- Always run lint check before committing — ruff errors break CI
+- Never force-push to release branches
+- The CHANGELOG should follow Keep a Changelog format with proper Added/Changed/Fixed sections, not a flat list of chainlink issues
