@@ -67,6 +67,6 @@ convert to a typed schema.
 >>> train_ds = load_dataset("./data/train-*.tar", TextData, split="train")
 >>>
 >>> # Load from index with auto-type resolution
->>> index = LocalIndex()
+>>> index = Index()
 >>> ds = load_dataset("@local/my-dataset", index=index, split="train")
 ```

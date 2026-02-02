@@ -447,6 +447,7 @@ def test_dataset_batch_type_property(tmp_path):
     assert batch_type.__origin__ == atdata.SampleBatch
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_dataset_shard_list_property(tmp_path):
     """Test Dataset.shard_list property returns list of shard URLs."""
 

@@ -298,11 +298,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td><a href="#atdata.PackableSample.as_wds">as_wds</a></td>
-<td>Pack this sample’s data for writing to WebDataset.</td>
+<td>Serialize for writing to WebDataset (<code>__key__</code> + <code>msgpack</code>).</td>
 </tr>
 <tr class="even">
 <td><a href="#atdata.PackableSample.packed">packed</a></td>
-<td>Pack this sample’s data into msgpack bytes.</td>
+<td>Serialize to msgpack bytes. NDArray fields are auto-converted.</td>
 </tr>
 </tbody>
 </table>
@@ -319,105 +319,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td><a href="#atdata.PackableSample.from_bytes">from_bytes</a></td>
-<td>Create a sample instance from raw msgpack bytes.</td>
+<td>Create an instance from raw msgpack bytes.</td>
 </tr>
 <tr class="even">
 <td><a href="#atdata.PackableSample.from_data">from_data</a></td>
-<td>Create a sample instance from unpacked msgpack data.</td>
+<td>Create an instance from unpacked msgpack data.</td>
 </tr>
 </tbody>
 </table>
 <section id="atdata.PackableSample.from_bytes" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.PackableSample.from_bytes">from_bytes</h3>
 <div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>PackableSample.from_bytes(bs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Create a sample instance from raw msgpack bytes.</p>
-<section id="parameters" class="level4 doc-section doc-section-parameters">
-<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>bs</td>
-<td><a href="`bytes`">bytes</a></td>
-<td>Raw bytes from a msgpack-serialized sample.</td>
-<td><em>required</em></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="returns" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td></td>
-<td><a href="`typing.Self`">Self</a></td>
-<td>A new instance of this sample class deserialized from the bytes.</td>
-</tr>
-</tbody>
-</table>
-</section>
+<p>Create an instance from raw msgpack bytes.</p>
 </section>
 <section id="atdata.PackableSample.from_data" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.PackableSample.from_data">from_data</h3>
 <div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>PackableSample.from_data(data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Create a sample instance from unpacked msgpack data.</p>
-<section id="parameters-1" class="level4 doc-section doc-section-parameters">
-<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>data</td>
-<td><a href="`atdata.dataset.WDSRawSample`">WDSRawSample</a></td>
-<td>Dictionary with keys matching the sample’s field names.</td>
-<td><em>required</em></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="returns-1" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td></td>
-<td><a href="`typing.Self`">Self</a></td>
-<td>New instance with NDArray fields auto-converted from bytes.</td>
-</tr>
-</tbody>
-</table>
+<p>Create an instance from unpacked msgpack data.</p>
 
 
-</section>
 </section>
 </section>
 </section>

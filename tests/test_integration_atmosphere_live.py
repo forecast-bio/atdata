@@ -371,14 +371,7 @@ class TestLiveDatasetOperations:
     def test_to_dataset_with_fake_urls_fails_on_iteration(
         self, live_client, unique_name
     ):
-        """Attempting to iterate a dataset with fake URLs should fail.
-
-        This test documents a known limitation: we can publish and retrieve
-        dataset *metadata* with fake URLs, but actual data iteration fails.
-        For true E2E tests, we need either:
-        1. Real external URLs (e.g., S3 with test data)
-        2. ATProto blob storage support (not yet implemented)
-        """
+        """Attempting to iterate a dataset with fake URLs should fail."""
 
         @atdata.packable
         class IterationTestSample:
@@ -413,15 +406,7 @@ class TestLiveDatasetOperations:
             list(ds.ordered())
 
     def test_full_e2e_with_local_fixture(self, live_client, unique_name):
-        """Full E2E: publish schema + dataset, retrieve, iterate over real data.
-
-        This test uses a local file:// URL to test the complete flow:
-        1. Publish schema to ATProto
-        2. Publish dataset record with local file URL
-        3. Retrieve dataset record
-        4. Load data via to_dataset() and iterate
-        5. Verify we get the expected samples
-        """
+        """Full E2E: publish schema + dataset, retrieve, iterate over real data."""
         from pathlib import Path
 
         # Define sample type matching the fixture
@@ -474,16 +459,7 @@ class TestLiveDatasetOperations:
         assert samples[2].value == [20]
 
     def test_blob_storage_roundtrip(self, live_client, unique_name):
-        """Full E2E: upload blob, publish dataset, retrieve and iterate.
-
-        This tests the complete blob storage workflow:
-        1. Create a WebDataset tar in memory using as_wds
-        2. Upload as blob to PDS
-        3. Publish dataset record with blob storage
-        4. Retrieve record and get blob URLs
-        5. Load data via to_dataset() and iterate
-        6. Verify samples match original data
-        """
+        """Full E2E: upload blob, publish dataset, retrieve and iterate."""
         import io
         import webdataset as wds
 
@@ -648,6 +624,6 @@ class TestZZZCleanup:
             f"\nCleanup: deleted {schemas_deleted} schemas, {datasets_deleted} datasets"
         )
 
-        # Verify cleanup ran and returned counts
-        assert isinstance(schemas_deleted, int)
-        assert isinstance(datasets_deleted, int)
+        # Verify cleanup ran and returned non-negative counts
+        assert schemas_deleted >= 0
+        assert datasets_deleted >= 0

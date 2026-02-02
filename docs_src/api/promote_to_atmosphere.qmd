@@ -19,12 +19,17 @@ Promote a local dataset to the atmosphere network.
 This function takes a locally-indexed dataset and publishes it to ATProto,
 making it discoverable on the federated atmosphere network.
 
+.. deprecated::
+    Prefer ``Index.promote_entry()`` or ``Index.promote_dataset()``
+    which provide the same functionality through the unified Index
+    interface without requiring separate client and index arguments.
+
 ## Parameters {.doc-section .doc-section-parameters}
 
 | Name              | Type                                                               | Description                                                                                           | Default    |
 |-------------------|--------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|------------|
 | local_entry       | [LocalDatasetEntry](`atdata.local.LocalDatasetEntry`)              | The LocalDatasetEntry to promote.                                                                     | _required_ |
-| local_index       | [LocalIndex](`atdata.local.Index`)                                 | Local index containing the schema for this entry.                                                     | _required_ |
+| local_index       | [Index](`atdata.local.Index`)                                      | Local index containing the schema for this entry.                                                     | _required_ |
 | atmosphere_client | [AtmosphereClient](`atdata.atmosphere.AtmosphereClient`)           | Authenticated AtmosphereClient.                                                                       | _required_ |
 | data_store        | [AbstractDataStore](`atdata._protocols.AbstractDataStore`) \| None | Optional data store for copying data to new location. If None, the existing data_urls are used as-is. | `None`     |
 | name              | [str](`str`) \| None                                               | Override name for the atmosphere record. Defaults to local name.                                      | `None`     |

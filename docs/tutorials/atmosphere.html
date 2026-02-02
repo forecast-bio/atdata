@@ -507,7 +507,7 @@ Warning
 </section>
 <section id="setup" class="level2">
 <h2 class="anchored" data-anchor-id="setup">Setup</h2>
-<div id="4bc5bd54" class="cell">
+<div id="93c9f1e4" class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
@@ -527,7 +527,7 @@ Warning
 </section>
 <section id="define-sample-types" class="level2">
 <h2 class="anchored" data-anchor-id="define-sample-types">Define Sample Types</h2>
-<div id="82bfbc1c" class="cell">
+<div id="00294507" class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ImageSample:</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""A sample containing image data with metadata."""</span></span>
@@ -546,7 +546,7 @@ Warning
 <section id="type-introspection" class="level2">
 <h2 class="anchored" data-anchor-id="type-introspection">Type Introspection</h2>
 <p>See what information is available from a PackableSample type:</p>
-<div id="ab58bbfe" class="cell">
+<div id="61f2814b" class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dataclasses <span class="im">import</span> fields, is_dataclass</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Sample type: </span><span class="sc">{</span>ImageSample<span class="sc">.</span><span class="va">__name__</span><span class="sc">}</span><span class="ss">"</span>)</span>
@@ -581,7 +581,7 @@ Warning
 </ul>
 <p>Understanding AT URIs is essential for working with atmosphere datasets, as they’re how you reference schemas, datasets, and lenses.</p>
 <p>ATProto records are identified by AT URIs:</p>
-<div id="135d4177" class="cell">
+<div id="2a9a9a08" class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>uris <span class="op">=</span> [</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"at://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz789"</span>,</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"at://alice.bsky.social/ac.foundation.dataset.record/my-dataset"</span>,</span>
@@ -599,7 +599,7 @@ Warning
 <h2 class="anchored" data-anchor-id="authentication">Authentication</h2>
 <p>The <code>AtmosphereClient</code> handles ATProto authentication. When you authenticate, you’re proving ownership of your decentralized identity (DID), which gives you permission to create and modify records in your Personal Data Server (PDS).</p>
 <p>Connect to ATProto:</p>
-<div id="d058053c" class="cell">
+<div id="739d9752" class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> AtmosphereClient()</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>client.login(<span class="st">"your.handle.social"</span>, <span class="st">"your-app-password"</span>)</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -610,7 +610,7 @@ Warning
 <section id="publish-a-schema" class="level2">
 <h2 class="anchored" data-anchor-id="publish-a-schema">Publish a Schema</h2>
 <p>When you publish a schema to ATProto, it becomes a <strong>public, immutable record</strong> that others can reference. The schema CID ensures that anyone can verify they’re using exactly the same type definition you published.</p>
-<div id="4ea1f82c" class="cell">
+<div id="1e656266" class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>schema_publisher <span class="op">=</span> SchemaPublisher(client)</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>schema_uri <span class="op">=</span> schema_publisher.publish(</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    ImageSample,</span>
@@ -623,7 +623,7 @@ Warning
 </section>
 <section id="list-your-schemas" class="level2">
 <h2 class="anchored" data-anchor-id="list-your-schemas">List Your Schemas</h2>
-<div id="d291d5e4" class="cell">
+<div id="2e1e30b9" class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>schema_loader <span class="op">=</span> SchemaLoader(client)</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>schemas <span class="op">=</span> schema_loader.list_all(limit<span class="op">=</span><span class="dv">10</span>)</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Found </span><span class="sc">{</span><span class="bu">len</span>(schemas)<span class="sc">}</span><span class="ss"> schema(s)"</span>)</span>
@@ -636,7 +636,7 @@ Warning
 <h2 class="anchored" data-anchor-id="publish-a-dataset">Publish a Dataset</h2>
 <section id="with-external-urls" class="level3">
 <h3 class="anchored" data-anchor-id="with-external-urls">With External URLs</h3>
-<div id="4b2bfda3" class="cell">
+<div id="427bf147" class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>dataset_publisher <span class="op">=</span> DatasetPublisher(client)</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>dataset_uri <span class="op">=</span> dataset_publisher.publish_with_urls(</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    urls<span class="op">=</span>[<span class="st">"s3://example-bucket/demo-data-{000000..000009}.tar"</span>],</span>
@@ -658,7 +658,7 @@ Warning
 <li><strong>Federated replication</strong>: Relays can mirror your blobs for availability</li>
 </ul>
 <p>For fully decentralized storage, use <code>PDSBlobStore</code> to store dataset shards directly as ATProto blobs in your PDS:</p>
-<div id="4cc3fb13" class="cell">
+<div id="02ae9529" class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create store and index with blob storage</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>store <span class="op">=</span> PDSBlobStore(client)</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> AtmosphereIndex(client, data_store<span class="op">=</span>store)</span>
@@ -702,7 +702,7 @@ Reading Blob-Stored Datasets
 </div>
 <div class="callout-body-container callout-body">
 <p>Use <code>BlobSource</code> to stream directly from PDS blobs:</p>
-<div id="348b19de" class="cell">
+<div id="9122793e" class="cell">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create source from the blob URLs</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>source <span class="op">=</span> store.create_source(entry.data_urls)</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -723,7 +723,7 @@ Reading Blob-Stored Datasets
 <h3 class="anchored" data-anchor-id="with-external-urls-1">With External URLs</h3>
 <p>For larger datasets that exceed PDS blob limits, or when you already have data in object storage, you can publish a dataset record that references external URLs. The ATProto record serves as the <strong>index entry</strong> while the actual data lives elsewhere.</p>
 <p>For larger datasets or when using existing object storage:</p>
-<div id="05b09359" class="cell">
+<div id="1d2000c3" class="cell">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>dataset_publisher <span class="op">=</span> DatasetPublisher(client)</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>dataset_uri <span class="op">=</span> dataset_publisher.publish_with_urls(</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    urls<span class="op">=</span>[<span class="st">"s3://example-bucket/demo-data-{000000..000009}.tar"</span>],</span>
@@ -739,7 +739,7 @@ Reading Blob-Stored Datasets
 </section>
 <section id="list-and-load-datasets" class="level2">
 <h2 class="anchored" data-anchor-id="list-and-load-datasets">List and Load Datasets</h2>
-<div id="75c8ad94" class="cell">
+<div id="143ed399" class="cell">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>dataset_loader <span class="op">=</span> DatasetLoader(client)</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>datasets <span class="op">=</span> dataset_loader.list_all(limit<span class="op">=</span><span class="dv">10</span>)</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Found </span><span class="sc">{</span><span class="bu">len</span>(datasets)<span class="sc">}</span><span class="ss"> dataset(s)"</span>)</span>
@@ -754,7 +754,7 @@ Reading Blob-Stored Datasets
 </section>
 <section id="load-a-dataset" class="level2">
 <h2 class="anchored" data-anchor-id="load-a-dataset">Load a Dataset</h2>
-<div id="70263cea" class="cell">
+<div id="61fe56bf" class="cell">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check storage type</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>storage_type <span class="op">=</span> dataset_loader.get_storage_type(<span class="bu">str</span>(blob_dataset_uri))</span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Storage type: </span><span class="sc">{</span>storage_type<span class="sc">}</span><span class="ss">"</span>)</span>
@@ -782,7 +782,7 @@ Reading Blob-Stored Datasets
 </ol>
 <p>Notice how similar this is to the local workflow—the same sample types and patterns, just with a different storage backend.</p>
 <p>This example shows the recommended workflow using <code>PDSBlobStore</code> for fully decentralized storage:</p>
-<div id="c1fcf79c" class="cell">
+<div id="3db65564" class="cell">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Define and create samples</span></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> FeatureSample:</span>

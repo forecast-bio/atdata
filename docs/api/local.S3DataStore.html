@@ -405,7 +405,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="atdata.local.S3DataStore.write_shards" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.local.S3DataStore.write_shards">write_shards</h3>
-<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>local.S3DataStore.write_shards(ds, <span class="op">*</span>, prefix, cache_local<span class="op">=</span><span class="va">False</span>, <span class="op">**</span>kwargs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>local.S3DataStore.write_shards(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    ds,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    prefix,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    cache_local<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    manifest<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    schema_version<span class="op">=</span><span class="st">'1.0.0'</span>,</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    source_job_id<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    parent_shards<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    pipeline_version<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Write dataset shards to S3.</p>
 <section id="parameters-1" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
@@ -438,6 +449,36 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><code>False</code></td>
 </tr>
 <tr class="even">
+<td>manifest</td>
+<td><a href="`bool`">bool</a></td>
+<td>If True, generate per-shard manifest files alongside each tar shard (<code>.manifest.json</code> + <code>.manifest.parquet</code>).</td>
+<td><code>False</code></td>
+</tr>
+<tr class="odd">
+<td>schema_version</td>
+<td><a href="`str`">str</a></td>
+<td>Schema version for manifest headers.</td>
+<td><code>'1.0.0'</code></td>
+</tr>
+<tr class="even">
+<td>source_job_id</td>
+<td><a href="`str`">str</a> | None</td>
+<td>Optional provenance job identifier for manifests.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>parent_shards</td>
+<td><a href="`list`">list</a>[<a href="`str`">str</a>] | None</td>
+<td>Optional list of input shard identifiers for provenance.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>pipeline_version</td>
+<td><a href="`str`">str</a> | None</td>
+<td>Optional pipeline version string for provenance.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
 <td>**kwargs</td>
 <td></td>
 <td>Additional args passed to wds.ShardWriter (e.g., maxcount).</td>

@@ -2,51 +2,70 @@
 
 ```python
 local.Index(
+    provider=None,
+    *,
+    path=None,
+    dsn=None,
     redis=None,
     data_store=None,
+    repos=None,
+    atmosphere=_ATMOSPHERE_DEFAULT,
     auto_stubs=False,
     stub_dir=None,
     **kwargs,
 )
 ```
 
-Redis-backed index for tracking datasets in a repository.
+Unified index for tracking datasets across multiple repositories.
 
 Implements the AbstractIndex protocol. Maintains a registry of
-LocalDatasetEntry objects in Redis, allowing enumeration and lookup
-of stored datasets.
+dataset entries across a built-in ``"local"`` repository, optional
+named repositories, and an optional atmosphere (ATProto) backend.
 
-When initialized with a data_store, insert_dataset() will write dataset
-shards to storage before indexing. Without a data_store, insert_dataset()
-only indexes existing URLs.
+The ``"local"`` repository is always present and uses the storage backend
+determined by the ``provider`` argument. When no provider is given, defaults
+to SQLite (zero external dependencies). Pass a ``redis`` connection or
+Redis ``**kwargs`` for backwards-compatible Redis behaviour.
+
+Additional named repositories can be mounted via the ``repos`` parameter,
+each pairing an IndexProvider with an optional data store.
+
+An AtmosphereClient is available by default for anonymous read-only
+resolution of ``@handle/dataset`` paths. Pass an authenticated client
+for write operations, or ``atmosphere=None`` to disable.
 
 ## Attributes {.doc-section .doc-section-attributes}
 
-| Name        | Type   | Description                                            |
-|-------------|--------|--------------------------------------------------------|
-| _redis      |        | Redis connection for index storage.                    |
-| _data_store |        | Optional AbstractDataStore for writing dataset shards. |
+| Name        | Type                                                                    | Description                                            |
+|-------------|-------------------------------------------------------------------------|--------------------------------------------------------|
+| _provider   | [_IP](`atdata.providers._base.IndexProvider`)                           | IndexProvider for the built-in ``"local"`` repository. |
+| _data_store |                                                                         | Optional AbstractDataStore for the local repository.   |
+| _repos      | [dict](`dict`)\[[str](`str`), [_Repo](`atdata.repository.Repository`)\] | Named repositories beyond ``"local"``.                 |
+| _atmosphere | [_AtmosphereBackend](`atdata.repository._AtmosphereBackend`) \| None    | Optional atmosphere backend for ATProto operations.    |
 
 ## Methods
 
 | Name | Description |
 | --- | --- |
-| [add_entry](#atdata.local.Index.add_entry) | Add a dataset to the index. |
+| [add_entry](#atdata.local.Index.add_entry) | Add a dataset to the local repository index. |
 | [clear_stubs](#atdata.local.Index.clear_stubs) | Remove all auto-generated stub files. |
 | [decode_schema](#atdata.local.Index.decode_schema) | Reconstruct a Python PackableSample type from a stored schema. |
 | [decode_schema_as](#atdata.local.Index.decode_schema_as) | Decode a schema with explicit type hint for IDE support. |
-| [get_dataset](#atdata.local.Index.get_dataset) | Get a dataset entry by name (AbstractIndex protocol). |
+| [get_dataset](#atdata.local.Index.get_dataset) | Get a dataset entry by name or prefixed reference. |
 | [get_entry](#atdata.local.Index.get_entry) | Get an entry by its CID. |
 | [get_entry_by_name](#atdata.local.Index.get_entry_by_name) | Get an entry by its human-readable name. |
 | [get_import_path](#atdata.local.Index.get_import_path) | Get the import path for a schema's generated module. |
 | [get_schema](#atdata.local.Index.get_schema) | Get a schema record by reference (AbstractIndex protocol). |
 | [get_schema_record](#atdata.local.Index.get_schema_record) | Get a schema record as LocalSchemaRecord object. |
 | [insert_dataset](#atdata.local.Index.insert_dataset) | Insert a dataset into the index (AbstractIndex protocol). |
-| [list_datasets](#atdata.local.Index.list_datasets) | Get all dataset entries as a materialized list (AbstractIndex protocol). |
+| [list_datasets](#atdata.local.Index.list_datasets) | Get dataset entries as a materialized list (AbstractIndex protocol). |
 | [list_entries](#atdata.local.Index.list_entries) | Get all index entries as a materialized list. |
 | [list_schemas](#atdata.local.Index.list_schemas) | Get all schema records as a materialized list (AbstractIndex protocol). |
 | [load_schema](#atdata.local.Index.load_schema) | Load a schema and make it available in the types namespace. |
+| [promote_dataset](#atdata.local.Index.promote_dataset) | Publish a Dataset directly to the atmosphere. |
+| [promote_entry](#atdata.local.Index.promote_entry) | Promote a locally-indexed dataset to the atmosphere. |
 | [publish_schema](#atdata.local.Index.publish_schema) | Publish a schema for a sample type to Redis. |
+| [write](#atdata.local.Index.write) | Write samples and create an index entry in one step. |
 
 ### add_entry { #atdata.local.Index.add_entry }
 
@@ -54,9 +73,7 @@ only indexes existing URLs.
 local.Index.add_entry(ds, *, name, schema_ref=None, metadata=None)
 ```
 
-Add a dataset to the index.
-
-Creates a LocalDatasetEntry for the dataset and persists it to Redis.
+Add a dataset to the local repository index.
 
 #### Parameters {.doc-section .doc-section-parameters}
 
@@ -69,9 +86,9 @@ Creates a LocalDatasetEntry for the dataset and persists it to Redis.
 
 #### Returns {.doc-section .doc-section-returns}
 
-| Name   | Type                                                  | Description                           |
-|--------|-------------------------------------------------------|---------------------------------------|
-|        | [LocalDatasetEntry](`atdata.local.LocalDatasetEntry`) | The created LocalDatasetEntry object. |
+| Name   | Type                                                         | Description                           |
+|--------|--------------------------------------------------------------|---------------------------------------|
+|        | [LocalDatasetEntry](`atdata.local._entry.LocalDatasetEntry`) | The created LocalDatasetEntry object. |
 
 ### clear_stubs { #atdata.local.Index.clear_stubs }
 
@@ -139,16 +156,16 @@ stub file for the schema and want full IDE support.
 
 #### Parameters {.doc-section .doc-section-parameters}
 
-| Name      | Type                                    | Description                                                                    | Default    |
-|-----------|-----------------------------------------|--------------------------------------------------------------------------------|------------|
-| ref       | [str](`str`)                            | Schema reference string.                                                       | _required_ |
-| type_hint | [type](`type`)\[[T](`atdata.local.T`)\] | The stub type to use for type hints. Import this from the generated stub file. | _required_ |
+| Name      | Type                                           | Description                                                                    | Default    |
+|-----------|------------------------------------------------|--------------------------------------------------------------------------------|------------|
+| ref       | [str](`str`)                                   | Schema reference string.                                                       | _required_ |
+| type_hint | [type](`type`)\[[T](`atdata.local._index.T`)\] | The stub type to use for type hints. Import this from the generated stub file. | _required_ |
 
 #### Returns {.doc-section .doc-section-returns}
 
-| Name   | Type                                    | Description                                                    |
-|--------|-----------------------------------------|----------------------------------------------------------------|
-|        | [type](`type`)\[[T](`atdata.local.T`)\] | The decoded type, cast to match the type_hint for IDE support. |
+| Name   | Type                                           | Description                                                    |
+|--------|------------------------------------------------|----------------------------------------------------------------|
+|        | [type](`type`)\[[T](`atdata.local._index.T`)\] | The decoded type, cast to match the type_hint for IDE support. |
 
 #### Examples {.doc-section .doc-section-examples}
 
@@ -173,25 +190,30 @@ stub matches the schema to avoid runtime surprises.
 local.Index.get_dataset(ref)
 ```
 
-Get a dataset entry by name (AbstractIndex protocol).
+Get a dataset entry by name or prefixed reference.
+
+Supports repository-prefixed lookups (e.g. ``"lab/mnist"``),
+atmosphere paths (``"@handle/dataset"``), AT URIs, and bare names
+(which default to the ``"local"`` repository).
 
 #### Parameters {.doc-section .doc-section-parameters}
 
-| Name   | Type         | Description   | Default    |
-|--------|--------------|---------------|------------|
-| ref    | [str](`str`) | Dataset name. | _required_ |
+| Name   | Type         | Description                             | Default    |
+|--------|--------------|-----------------------------------------|------------|
+| ref    | [str](`str`) | Dataset name, prefixed name, or AT URI. | _required_ |
 
 #### Returns {.doc-section .doc-section-returns}
 
-| Name   | Type                                                  | Description                 |
-|--------|-------------------------------------------------------|-----------------------------|
-|        | [LocalDatasetEntry](`atdata.local.LocalDatasetEntry`) | IndexEntry for the dataset. |
+| Name   | Type           | Description                 |
+|--------|----------------|-----------------------------|
+|        | \'IndexEntry\' | IndexEntry for the dataset. |
 
 #### Raises {.doc-section .doc-section-raises}
 
-| Name   | Type                   | Description           |
-|--------|------------------------|-----------------------|
-|        | [KeyError](`KeyError`) | If dataset not found. |
+| Name   | Type                       | Description                                            |
+|--------|----------------------------|--------------------------------------------------------|
+|        | [KeyError](`KeyError`)     | If dataset not found.                                  |
+|        | [ValueError](`ValueError`) | If the atmosphere backend is required but unavailable. |
 
 ### get_entry { #atdata.local.Index.get_entry }
 
@@ -209,9 +231,9 @@ Get an entry by its CID.
 
 #### Returns {.doc-section .doc-section-returns}
 
-| Name   | Type                                                  | Description                          |
-|--------|-------------------------------------------------------|--------------------------------------|
-|        | [LocalDatasetEntry](`atdata.local.LocalDatasetEntry`) | LocalDatasetEntry for the given CID. |
+| Name   | Type                                                         | Description                          |
+|--------|--------------------------------------------------------------|--------------------------------------|
+|        | [LocalDatasetEntry](`atdata.local._entry.LocalDatasetEntry`) | LocalDatasetEntry for the given CID. |
 
 #### Raises {.doc-section .doc-section-raises}
 
@@ -235,9 +257,9 @@ Get an entry by its human-readable name.
 
 #### Returns {.doc-section .doc-section-returns}
 
-| Name   | Type                                                  | Description                            |
-|--------|-------------------------------------------------------|----------------------------------------|
-|        | [LocalDatasetEntry](`atdata.local.LocalDatasetEntry`) | LocalDatasetEntry with the given name. |
+| Name   | Type                                                         | Description                            |
+|--------|--------------------------------------------------------------|----------------------------------------|
+|        | [LocalDatasetEntry](`atdata.local._entry.LocalDatasetEntry`) | LocalDatasetEntry with the given name. |
 
 #### Raises {.doc-section .doc-section-raises}
 
@@ -272,7 +294,7 @@ be used to import the schema type with full IDE support.
 #### Examples {.doc-section .doc-section-examples}
 
 ```python
->>> index = LocalIndex(auto_stubs=True)
+>>> index = Index(auto_stubs=True)
 >>> ref = index.publish_schema(MySample, version="1.0.0")
 >>> index.load_schema(ref)
 >>> print(index.get_import_path(ref))
@@ -328,9 +350,9 @@ For Protocol-compliant dict access, use get_schema() instead.
 
 #### Returns {.doc-section .doc-section-returns}
 
-| Name   | Type                                                  | Description                            |
-|--------|-------------------------------------------------------|----------------------------------------|
-|        | [LocalSchemaRecord](`atdata.local.LocalSchemaRecord`) | LocalSchemaRecord with schema details. |
+| Name   | Type                                                          | Description                            |
+|--------|---------------------------------------------------------------|----------------------------------------|
+|        | [LocalSchemaRecord](`atdata.local._schema.LocalSchemaRecord`) | LocalSchemaRecord with schema details. |
 
 #### Raises {.doc-section .doc-section-raises}
 
@@ -347,38 +369,48 @@ local.Index.insert_dataset(ds, *, name, schema_ref=None, **kwargs)
 
 Insert a dataset into the index (AbstractIndex protocol).
 
-If a data_store was provided at initialization, writes dataset shards
-to storage first, then indexes the new URLs. Otherwise, indexes the
-dataset's existing URL.
+The target repository is determined by a prefix in the ``name``
+argument (e.g. ``"lab/mnist"``). If no prefix is given, or the
+prefix is ``"local"``, the built-in local repository is used.
+
+If the target repository has a data_store, shards are written to
+storage first, then indexed. Otherwise, the dataset's existing URL
+is indexed directly.
 
 #### Parameters {.doc-section .doc-section-parameters}
 
 | Name       | Type                        | Description                                                                                                                                                | Default    |
 |------------|-----------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
 | ds         | [Dataset](`atdata.Dataset`) | The Dataset to register.                                                                                                                                   | _required_ |
-| name       | [str](`str`)                | Human-readable name for the dataset.                                                                                                                       | _required_ |
+| name       | [str](`str`)                | Human-readable name for the dataset, optionally prefixed with a repository name (e.g. ``"lab/mnist"``).                                                    | _required_ |
 | schema_ref | [str](`str`) \| None        | Optional schema reference.                                                                                                                                 | `None`     |
 | **kwargs   |                             | Additional options: - metadata: Optional metadata dict - prefix: Storage prefix (default: dataset name) - cache_local: If True, cache writes locally first | `{}`       |
 
 #### Returns {.doc-section .doc-section-returns}
 
-| Name   | Type                                                  | Description                          |
-|--------|-------------------------------------------------------|--------------------------------------|
-|        | [LocalDatasetEntry](`atdata.local.LocalDatasetEntry`) | IndexEntry for the inserted dataset. |
+| Name   | Type           | Description                          |
+|--------|----------------|--------------------------------------|
+|        | \'IndexEntry\' | IndexEntry for the inserted dataset. |
 
 ### list_datasets { #atdata.local.Index.list_datasets }
 
 ```python
-local.Index.list_datasets()
+local.Index.list_datasets(repo=None)
 ```
 
-Get all dataset entries as a materialized list (AbstractIndex protocol).
+Get dataset entries as a materialized list (AbstractIndex protocol).
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                 | Description                                                                                                                                                                                                               | Default   |
+|--------|----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------|
+| repo   | [str](`str`) \| None | Optional repository filter. If ``None``, aggregates entries from ``"local"`` and all named repositories. Use ``"local"`` for only the built-in repository, a named repo key, or ``"_atmosphere"`` for atmosphere entries. | `None`    |
 
 #### Returns {.doc-section .doc-section-returns}
 
-| Name   | Type                                                                    | Description                          |
-|--------|-------------------------------------------------------------------------|--------------------------------------|
-|        | [list](`list`)\[[LocalDatasetEntry](`atdata.local.LocalDatasetEntry`)\] | List of IndexEntry for each dataset. |
+| Name   | Type                             | Description                          |
+|--------|----------------------------------|--------------------------------------|
+|        | [list](`list`)\[\'IndexEntry\'\] | List of IndexEntry for each dataset. |
 
 ### list_entries { #atdata.local.Index.list_entries }
 
@@ -390,9 +422,9 @@ Get all index entries as a materialized list.
 
 #### Returns {.doc-section .doc-section-returns}
 
-| Name   | Type                                                                    | Description                                         |
-|--------|-------------------------------------------------------------------------|-----------------------------------------------------|
-|        | [list](`list`)\[[LocalDatasetEntry](`atdata.local.LocalDatasetEntry`)\] | List of all LocalDatasetEntry objects in the index. |
+| Name   | Type                                                                           | Description                                         |
+|--------|--------------------------------------------------------------------------------|-----------------------------------------------------|
+|        | [list](`list`)\[[LocalDatasetEntry](`atdata.local._entry.LocalDatasetEntry`)\] | List of all LocalDatasetEntry objects in the index. |
 
 ### list_schemas { #atdata.local.Index.list_schemas }
 
@@ -445,11 +477,112 @@ in the :attr:`types` namespace for easy access.
 ```python
 >>> # Load and use immediately
 >>> MyType = index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
->>> sample = MyType(name="hello", value=42)
+>>> sample = MyType(field1="hello", field2=42)
 >>>
 >>> # Or access later via namespace
 >>> index.load_schema("atdata://local/sampleSchema/OtherType@1.0.0")
 >>> other = index.types.OtherType(data="test")
+```
+
+### promote_dataset { #atdata.local.Index.promote_dataset }
+
+```python
+local.Index.promote_dataset(
+    dataset,
+    *,
+    name,
+    sample_type=None,
+    schema_version='1.0.0',
+    description=None,
+    tags=None,
+    license=None,
+)
+```
+
+Publish a Dataset directly to the atmosphere.
+
+Publishes the schema (with deduplication) and creates a dataset
+record on ATProto. Uses the index's atmosphere backend.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name           | Type                                   | Description                                                                               | Default    |
+|----------------|----------------------------------------|-------------------------------------------------------------------------------------------|------------|
+| dataset        | [Dataset](`atdata.Dataset`)            | The Dataset to publish.                                                                   | _required_ |
+| name           | [str](`str`)                           | Name for the atmosphere dataset record.                                                   | _required_ |
+| sample_type    | [type](`type`) \| None                 | Sample type for schema publishing. Inferred from ``dataset.sample_type`` if not provided. | `None`     |
+| schema_version | [str](`str`)                           | Semantic version for the schema. Default: ``"1.0.0"``.                                    | `'1.0.0'`  |
+| description    | [str](`str`) \| None                   | Optional description for the dataset.                                                     | `None`     |
+| tags           | [list](`list`)\[[str](`str`)\] \| None | Optional tags for discovery.                                                              | `None`     |
+| license        | [str](`str`) \| None                   | Optional license identifier.                                                              | `None`     |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type         | Description                                      |
+|--------|--------------|--------------------------------------------------|
+|        | [str](`str`) | AT URI of the created atmosphere dataset record. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                             |
+|--------|----------------------------|-----------------------------------------|
+|        | [ValueError](`ValueError`) | If atmosphere backend is not available. |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> index = Index(atmosphere=client)
+>>> ds = atdata.load_dataset("./data.tar", MySample, split="train")
+>>> uri = index.promote_dataset(ds, name="my-dataset")
+```
+
+### promote_entry { #atdata.local.Index.promote_entry }
+
+```python
+local.Index.promote_entry(
+    entry_name,
+    *,
+    name=None,
+    description=None,
+    tags=None,
+    license=None,
+)
+```
+
+Promote a locally-indexed dataset to the atmosphere.
+
+Looks up the entry by name in the local index, resolves its
+schema, and publishes both schema and dataset record to ATProto
+via the index's atmosphere backend.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name        | Type                                   | Description                                                                | Default    |
+|-------------|----------------------------------------|----------------------------------------------------------------------------|------------|
+| entry_name  | [str](`str`)                           | Name of the local dataset entry to promote.                                | _required_ |
+| name        | [str](`str`) \| None                   | Override name for the atmosphere record. Defaults to the local entry name. | `None`     |
+| description | [str](`str`) \| None                   | Optional description for the dataset.                                      | `None`     |
+| tags        | [list](`list`)\[[str](`str`)\] \| None | Optional tags for discovery.                                               | `None`     |
+| license     | [str](`str`) \| None                   | Optional license identifier.                                               | `None`     |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type         | Description                                      |
+|--------|--------------|--------------------------------------------------|
+|        | [str](`str`) | AT URI of the created atmosphere dataset record. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description                                                                  |
+|--------|----------------------------|------------------------------------------------------------------------------|
+|        | [ValueError](`ValueError`) | If atmosphere backend is not available, or the local entry has no data URLs. |
+|        | [KeyError](`KeyError`)     | If the entry or its schema is not found.                                     |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> index = Index(atmosphere=client)
+>>> uri = index.promote_entry("mnist-train")
 ```
 
 ### publish_schema { #atdata.local.Index.publish_schema }
@@ -480,3 +613,77 @@ Publish a schema for a sample type to Redis.
 |--------|----------------------------|--------------------------------------------------------------------------------------------|
 |        | [ValueError](`ValueError`) | If sample_type is not a dataclass.                                                         |
 |        | [TypeError](`TypeError`)   | If sample_type doesn't satisfy the Packable protocol, or if a field type is not supported. |
+
+### write { #atdata.local.Index.write }
+
+```python
+local.Index.write(
+    samples,
+    *,
+    name,
+    schema_ref=None,
+    description=None,
+    tags=None,
+    license=None,
+    maxcount=10000,
+    maxsize=None,
+    metadata=None,
+)
+```
+
+Write samples and create an index entry in one step.
+
+This is the primary method for publishing data. It serializes
+samples to WebDataset tar files, stores them via the appropriate
+backend, and creates an index entry.
+
+The target backend is determined by the *name* prefix:
+
+- Bare name (e.g., ``"mnist"``): writes to the local repository.
+- ``"@handle/name"``: writes and publishes to the atmosphere.
+- ``"repo/name"``: writes to a named repository.
+
+When the local backend has no ``data_store`` configured, a
+``LocalDiskStore`` is created automatically at
+``~/.atdata/data/`` so that samples have persistent storage.
+
+.. note::
+
+    This method is synchronous. Samples are written to a temporary
+    location first, then copied to permanent storage by the backend.
+    Avoid passing lazily-evaluated iterators that depend on external
+    state that may change during the call.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name        | Type                                   | Description                                            | Default    |
+|-------------|----------------------------------------|--------------------------------------------------------|------------|
+| samples     | [Iterable](`typing.Iterable`)          | Iterable of ``Packable`` samples. Must be non-empty.   | _required_ |
+| name        | [str](`str`)                           | Dataset name, optionally prefixed with target.         | _required_ |
+| schema_ref  | [str](`str`) \| None                   | Optional schema reference. Auto-generated if ``None``. | `None`     |
+| description | [str](`str`) \| None                   | Optional dataset description (atmosphere only).        | `None`     |
+| tags        | [list](`list`)\[[str](`str`)\] \| None | Optional tags for discovery (atmosphere only).         | `None`     |
+| license     | [str](`str`) \| None                   | Optional license identifier (atmosphere only).         | `None`     |
+| maxcount    | [int](`int`)                           | Max samples per shard. Default: 10,000.                | `10000`    |
+| maxsize     | [int](`int`) \| None                   | Max bytes per shard. Default: ``None``.                | `None`     |
+| metadata    | [dict](`dict`) \| None                 | Optional metadata dict stored with the entry.          | `None`     |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type           | Description                         |
+|--------|----------------|-------------------------------------|
+|        | \'IndexEntry\' | IndexEntry for the created dataset. |
+
+#### Raises {.doc-section .doc-section-raises}
+
+| Name   | Type                       | Description            |
+|--------|----------------------------|------------------------|
+|        | [ValueError](`ValueError`) | If *samples* is empty. |
+
+#### Examples {.doc-section .doc-section-examples}
+
+```python
+>>> index = Index()
+>>> samples = [MySample(key="0", text="hello")]
+>>> entry = index.write(samples, name="my-dataset")
+```

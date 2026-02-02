@@ -252,7 +252,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#atdata.AbstractIndex" id="toc-atdata.AbstractIndex" class="nav-link active" data-scroll-target="#atdata.AbstractIndex">AbstractIndex</a>
   <ul class="collapse">
-  <li><a href="#optional-extensions" id="toc-optional-extensions" class="nav-link" data-scroll-target="#optional-extensions">Optional Extensions</a></li>
   <li><a href="#examples" id="toc-examples" class="nav-link" data-scroll-target="#examples">Examples</a></li>
   <li><a href="#attributes" id="toc-attributes" class="nav-link" data-scroll-target="#attributes">Attributes</a></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
@@ -261,9 +260,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#atdata.AbstractIndex.get_dataset" id="toc-atdata.AbstractIndex.get_dataset" class="nav-link" data-scroll-target="#atdata.AbstractIndex.get_dataset">get_dataset</a></li>
   <li><a href="#atdata.AbstractIndex.get_schema" id="toc-atdata.AbstractIndex.get_schema" class="nav-link" data-scroll-target="#atdata.AbstractIndex.get_schema">get_schema</a></li>
   <li><a href="#atdata.AbstractIndex.insert_dataset" id="toc-atdata.AbstractIndex.insert_dataset" class="nav-link" data-scroll-target="#atdata.AbstractIndex.insert_dataset">insert_dataset</a></li>
-  <li><a href="#atdata.AbstractIndex.list_datasets" id="toc-atdata.AbstractIndex.list_datasets" class="nav-link" data-scroll-target="#atdata.AbstractIndex.list_datasets">list_datasets</a></li>
-  <li><a href="#atdata.AbstractIndex.list_schemas" id="toc-atdata.AbstractIndex.list_schemas" class="nav-link" data-scroll-target="#atdata.AbstractIndex.list_schemas">list_schemas</a></li>
   <li><a href="#atdata.AbstractIndex.publish_schema" id="toc-atdata.AbstractIndex.publish_schema" class="nav-link" data-scroll-target="#atdata.AbstractIndex.publish_schema">publish_schema</a></li>
+  <li><a href="#atdata.AbstractIndex.write" id="toc-atdata.AbstractIndex.write" class="nav-link" data-scroll-target="#atdata.AbstractIndex.write">write</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -278,27 +276,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="atdata.AbstractIndex" class="level1">
 <h1>AbstractIndex</h1>
 <div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>AbstractIndex()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Protocol for index operations - implemented by LocalIndex and AtmosphereIndex.</p>
-<p>This protocol defines the common interface for managing dataset metadata: - Publishing and retrieving schemas - Inserting and listing datasets - (Future) Publishing and retrieving lenses</p>
-<p>A single index can hold datasets of many different sample types. The sample type is tracked via schema references, not as a generic parameter on the index.</p>
-<section id="optional-extensions" class="level2 doc-section doc-section-optional-extensions">
-<h2 class="doc-section doc-section-optional-extensions anchored" data-anchor-id="optional-extensions">Optional Extensions</h2>
-<p>Some index implementations support additional features: - <code>data_store</code>: An AbstractDataStore for reading/writing dataset shards. If present, <code>load_dataset</code> will use it for S3 credential resolution.</p>
-</section>
+<p>Protocol for index operations — implemented by Index and AtmosphereIndex.</p>
+<p>Manages dataset metadata: publishing/retrieving schemas, inserting/listing datasets. A single index holds datasets of many sample types, tracked via schema references.</p>
 <section id="examples" class="level2 doc-section doc-section-examples">
 <h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
 <div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="kw">def</span> publish_and_list(index: AbstractIndex) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>...     <span class="co"># Publish schemas for different types</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>...     schema1 <span class="op">=</span> index.publish_schema(ImageSample, version<span class="op">=</span><span class="st">"1.0.0"</span>)</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>...     schema2 <span class="op">=</span> index.publish_schema(TextSample, version<span class="op">=</span><span class="st">"1.0.0"</span>)</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>...</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>...     <span class="co"># Insert datasets of different types</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>...     index.insert_dataset(image_ds, name<span class="op">=</span><span class="st">"images"</span>)</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>...     index.insert_dataset(text_ds, name<span class="op">=</span><span class="st">"texts"</span>)</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>...</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>...     <span class="co"># List all datasets (mixed types)</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>...     <span class="cf">for</span> entry <span class="kw">in</span> index.list_datasets():</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>...         <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>entry<span class="sc">.</span>name<span class="sc">}</span><span class="ss"> -&gt; </span><span class="sc">{</span>entry<span class="sc">.</span>schema_ref<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>...     index.publish_schema(ImageSample, version<span class="op">=</span><span class="st">"1.0.0"</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>...     index.insert_dataset(image_ds, name<span class="op">=</span><span class="st">"images"</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>...     <span class="cf">for</span> entry <span class="kw">in</span> index.list_datasets():</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>...         <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>entry<span class="sc">.</span>name<span class="sc">}</span><span class="ss"> -&gt; </span><span class="sc">{</span>entry<span class="sc">.</span>schema_ref<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="attributes" class="level2">
 <h2 class="anchored" data-anchor-id="attributes">Attributes</h2>
@@ -313,14 +299,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td><a href="#atdata.AbstractIndex.data_store">data_store</a></td>
 <td>Optional data store for reading/writing shards.</td>
-</tr>
-<tr class="even">
-<td><a href="#atdata.AbstractIndex.datasets">datasets</a></td>
-<td>Lazily iterate over all dataset entries in this index.</td>
-</tr>
-<tr class="odd">
-<td><a href="#atdata.AbstractIndex.schemas">schemas</a></td>
-<td>Lazily iterate over all schema records in this index.</td>
 </tr>
 </tbody>
 </table>
@@ -337,7 +315,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td><a href="#atdata.AbstractIndex.decode_schema">decode_schema</a></td>
-<td>Reconstruct a Python Packable type from a stored schema.</td>
+<td>Reconstruct a Packable type from a stored schema.</td>
 </tr>
 <tr class="even">
 <td><a href="#atdata.AbstractIndex.get_dataset">get_dataset</a></td>
@@ -349,77 +327,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td><a href="#atdata.AbstractIndex.insert_dataset">insert_dataset</a></td>
-<td>Insert a dataset into the index.</td>
-</tr>
-<tr class="odd">
-<td><a href="#atdata.AbstractIndex.list_datasets">list_datasets</a></td>
-<td>Get all dataset entries as a materialized list.</td>
-</tr>
-<tr class="even">
-<td><a href="#atdata.AbstractIndex.list_schemas">list_schemas</a></td>
-<td>Get all schema records as a materialized list.</td>
+<td>Register an existing dataset in the index.</td>
 </tr>
 <tr class="odd">
 <td><a href="#atdata.AbstractIndex.publish_schema">publish_schema</a></td>
 <td>Publish a schema for a sample type.</td>
+</tr>
+<tr class="even">
+<td><a href="#atdata.AbstractIndex.write">write</a></td>
+<td>Write samples and create an index entry in one step.</td>
 </tr>
 </tbody>
 </table>
 <section id="atdata.AbstractIndex.decode_schema" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.AbstractIndex.decode_schema">decode_schema</h3>
 <div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>AbstractIndex.decode_schema(ref)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Reconstruct a Python Packable type from a stored schema.</p>
-<p>This method enables loading datasets without knowing the sample type ahead of time. The index retrieves the schema record and dynamically generates a Packable class matching the schema definition.</p>
-<section id="parameters" class="level4 doc-section doc-section-parameters">
-<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>ref</td>
-<td><a href="`str`">str</a></td>
-<td>Schema reference string (local:// or at://).</td>
-<td><em>required</em></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="returns" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td></td>
-<td><a href="`typing.Type`">Type</a>[<a href="`atdata._protocols.Packable`">Packable</a>]</td>
-<td>A dynamically generated Packable class with fields matching</td>
-</tr>
-<tr class="even">
-<td></td>
-<td><a href="`typing.Type`">Type</a>[<a href="`atdata._protocols.Packable`">Packable</a>]</td>
-<td>the schema definition. The class can be used with</td>
-</tr>
-<tr class="odd">
-<td></td>
-<td><a href="`typing.Type`">Type</a>[<a href="`atdata._protocols.Packable`">Packable</a>]</td>
-<td><code>Dataset[T]</code> to load and iterate over samples.</td>
-</tr>
-</tbody>
-</table>
-</section>
+<p>Reconstruct a Packable type from a stored schema.</p>
 <section id="raises" class="level4 doc-section doc-section-raises">
 <h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises">Raises</h4>
 <table class="caption-top table">
@@ -439,64 +362,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td></td>
 <td><a href="`ValueError`">ValueError</a></td>
-<td>If schema cannot be decoded (unsupported field types).</td>
+<td>If schema has unsupported field types.</td>
 </tr>
 </tbody>
 </table>
 </section>
 <section id="examples-1" class="level4 doc-section doc-section-examples">
 <h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-1">Examples</h4>
-<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> entry <span class="op">=</span> index.get_dataset(<span class="st">"my-dataset"</span>)</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> SampleType <span class="op">=</span> index.decode_schema(entry.schema_ref)</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> ds <span class="op">=</span> Dataset[SampleType](entry.data_urls[<span class="dv">0</span>])</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="cf">for</span> sample <span class="kw">in</span> ds.ordered():</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>...     <span class="bu">print</span>(sample)  <span class="co"># sample is instance of SampleType</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> SampleType <span class="op">=</span> index.decode_schema(entry.schema_ref)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> ds <span class="op">=</span> Dataset[SampleType](entry.data_urls[<span class="dv">0</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
 <section id="atdata.AbstractIndex.get_dataset" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.AbstractIndex.get_dataset">get_dataset</h3>
 <div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>AbstractIndex.get_dataset(ref)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Get a dataset entry by name or reference.</p>
-<section id="parameters-1" class="level4 doc-section doc-section-parameters">
-<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>ref</td>
-<td><a href="`str`">str</a></td>
-<td>Dataset name, path, or full reference string.</td>
-<td><em>required</em></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="returns-1" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td></td>
-<td><a href="`atdata._protocols.IndexEntry`">IndexEntry</a></td>
-<td>IndexEntry for the dataset.</td>
-</tr>
-</tbody>
-</table>
-</section>
 <section id="raises-1" class="level4 doc-section doc-section-raises">
 <h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-1">Raises</h4>
 <table class="caption-top table">
@@ -521,51 +401,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="atdata.AbstractIndex.get_schema">get_schema</h3>
 <div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>AbstractIndex.get_schema(ref)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Get a schema record by reference.</p>
-<section id="parameters-2" class="level4 doc-section doc-section-parameters">
-<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-2">Parameters</h4>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>ref</td>
-<td><a href="`str`">str</a></td>
-<td>Schema reference string (local:// or at://).</td>
-<td><em>required</em></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="returns-2" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td></td>
-<td><a href="`dict`">dict</a></td>
-<td>Schema record as a dictionary with fields like ‘name’, ‘version’,</td>
-</tr>
-<tr class="even">
-<td></td>
-<td><a href="`dict`">dict</a></td>
-<td>‘fields’, etc.</td>
-</tr>
-</tbody>
-</table>
-</section>
 <section id="raises-2" class="level4 doc-section doc-section-raises">
 <h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-2">Raises</h4>
 <table class="caption-top table">
@@ -589,10 +424,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="atdata.AbstractIndex.insert_dataset" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.AbstractIndex.insert_dataset">insert_dataset</h3>
 <div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>AbstractIndex.insert_dataset(ds, <span class="op">*</span>, name, schema_ref<span class="op">=</span><span class="va">None</span>, <span class="op">**</span>kwargs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Insert a dataset into the index.</p>
-<p>The sample type is inferred from <code>ds.sample_type</code>. If schema_ref is not provided, the schema may be auto-published based on the sample type.</p>
-<section id="parameters-3" class="level4 doc-section doc-section-parameters">
-<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-3">Parameters</h4>
+<p>Register an existing dataset in the index.</p>
+<section id="parameters" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters">Parameters</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -606,93 +440,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>ds</td>
 <td><a href="`atdata.dataset.Dataset`">Dataset</a></td>
-<td>The Dataset to register in the index (any sample type).</td>
+<td>The Dataset to register.</td>
 <td><em>required</em></td>
 </tr>
 <tr class="even">
 <td>name</td>
 <td><a href="`str`">str</a></td>
-<td>Human-readable name for the dataset.</td>
+<td>Human-readable name.</td>
 <td><em>required</em></td>
 </tr>
 <tr class="odd">
 <td>schema_ref</td>
 <td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
-<td>Optional explicit schema reference. If not provided, the schema may be auto-published or inferred from ds.sample_type.</td>
+<td>Explicit schema ref; auto-published if <code>None</code>.</td>
 <td><code>None</code></td>
 </tr>
 <tr class="even">
 <td>**kwargs</td>
 <td></td>
-<td>Additional backend-specific options.</td>
+<td>Backend-specific options.</td>
 <td><code>{}</code></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="returns-3" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-3">Returns</h4>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td></td>
-<td><a href="`atdata._protocols.IndexEntry`">IndexEntry</a></td>
-<td>IndexEntry for the inserted dataset.</td>
-</tr>
-</tbody>
-</table>
-</section>
-</section>
-<section id="atdata.AbstractIndex.list_datasets" class="level3">
-<h3 class="anchored" data-anchor-id="atdata.AbstractIndex.list_datasets">list_datasets</h3>
-<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>AbstractIndex.list_datasets()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Get all dataset entries as a materialized list.</p>
-<section id="returns-4" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-4">Returns</h4>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td></td>
-<td><a href="`list`">list</a>[<a href="`atdata._protocols.IndexEntry`">IndexEntry</a>]</td>
-<td>List of IndexEntry for each dataset.</td>
-</tr>
-</tbody>
-</table>
-</section>
-</section>
-<section id="atdata.AbstractIndex.list_schemas" class="level3">
-<h3 class="anchored" data-anchor-id="atdata.AbstractIndex.list_schemas">list_schemas</h3>
-<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>AbstractIndex.list_schemas()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Get all schema records as a materialized list.</p>
-<section id="returns-5" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-5">Returns</h4>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td></td>
-<td><a href="`list`">list</a>[<a href="`dict`">dict</a>]</td>
-<td>List of schema records as dictionaries.</td>
 </tr>
 </tbody>
 </table>
@@ -700,11 +467,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="atdata.AbstractIndex.publish_schema" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.AbstractIndex.publish_schema">publish_schema</h3>
-<div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>AbstractIndex.publish_schema(sample_type, <span class="op">*</span>, version<span class="op">=</span><span class="st">'1.0.0'</span>, <span class="op">**</span>kwargs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>AbstractIndex.publish_schema(sample_type, <span class="op">*</span>, version<span class="op">=</span><span class="st">'1.0.0'</span>, <span class="op">**</span>kwargs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Publish a schema for a sample type.</p>
-<p>The sample_type is accepted as <code>type</code> rather than <code>Type[Packable]</code> to support <code>@packable</code>-decorated classes, which satisfy the Packable protocol at runtime but cannot be statically verified by type checkers.</p>
-<section id="parameters-4" class="level4 doc-section doc-section-parameters">
-<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-4">Parameters</h4>
+<section id="parameters-1" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-1">Parameters</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -718,26 +484,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>sample_type</td>
 <td><a href="`type`">type</a></td>
-<td>A Packable type (PackableSample subclass or <span class="citation" data-cites="packable-decorated">@packable-decorated</span>). Validated at runtime via the <span class="citation" data-cites="runtime_checkable">@runtime_checkable</span> Packable protocol.</td>
+<td>A Packable type (<code>@packable</code>-decorated or subclass).</td>
 <td><em>required</em></td>
 </tr>
 <tr class="even">
 <td>version</td>
 <td><a href="`str`">str</a></td>
-<td>Semantic version string for the schema.</td>
+<td>Semantic version string.</td>
 <td><code>'1.0.0'</code></td>
 </tr>
 <tr class="odd">
 <td>**kwargs</td>
 <td></td>
-<td>Additional backend-specific options.</td>
+<td>Backend-specific options.</td>
 <td><code>{}</code></td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="returns-6" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-6">Returns</h4>
+<section id="returns" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns">Returns</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -750,17 +516,71 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><a href="`str`">str</a></td>
-<td>Schema reference string:</td>
+<td>Schema reference string (<code>local://...</code> or <code>at://...</code>).</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="atdata.AbstractIndex.write" class="level3">
+<h3 class="anchored" data-anchor-id="atdata.AbstractIndex.write">write</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>AbstractIndex.write(samples, <span class="op">*</span>, name, schema_ref<span class="op">=</span><span class="va">None</span>, <span class="op">**</span>kwargs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Write samples and create an index entry in one step.</p>
+<p>Serializes samples to WebDataset tar files, stores them via the appropriate backend, and creates an index entry.</p>
+<section id="parameters-2" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-2">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>samples</td>
+<td><a href="`typing.Iterable`">Iterable</a></td>
+<td>Iterable of Packable samples. Must be non-empty.</td>
+<td><em>required</em></td>
 </tr>
 <tr class="even">
-<td></td>
+<td>name</td>
 <td><a href="`str`">str</a></td>
-<td>- Local: ‘local://schemas/{module.Class}<span class="citation" data-cites="version">@version</span>’</td>
+<td>Dataset name, optionally prefixed with target backend.</td>
+<td><em>required</em></td>
 </tr>
 <tr class="odd">
+<td>schema_ref</td>
+<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
+<td>Optional schema reference.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>**kwargs</td>
 <td></td>
-<td><a href="`str`">str</a></td>
-<td>- Atmosphere: ‘at://did:plc:…/ac.foundation.dataset.sampleSchema/…’</td>
+<td>Backend-specific options (maxcount, description, etc.).</td>
+<td><code>{}</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-1" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-1">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`atdata._protocols.IndexEntry`">IndexEntry</a></td>
+<td>IndexEntry for the created dataset.</td>
 </tr>
 </tbody>
 </table>

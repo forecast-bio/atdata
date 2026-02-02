@@ -104,12 +104,12 @@ class TestMain:
     def test_main_no_args(self):
         # no_args_is_help=True causes SystemExit; main() catches it
         code = main([])
-        assert isinstance(code, int)
+        assert code != 0
 
     def test_main_bad_command(self):
         code = main(["nonexistent-command-xyz"])
         # Typer raises SystemExit for unknown commands
-        assert isinstance(code, int)
+        assert code != 0
 
     def test_main_none_argv(self):
         """main(None) uses sys.argv; call with patched argv."""

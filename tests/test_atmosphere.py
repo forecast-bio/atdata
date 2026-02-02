@@ -1829,6 +1829,7 @@ class TestAtmosphereIndexEntry:
         assert entry.data_urls == []
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 class TestAtmosphereIndex:
     """Tests for AtmosphereIndex unified interface."""
 

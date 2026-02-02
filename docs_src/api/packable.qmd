@@ -4,37 +4,11 @@
 packable(cls)
 ```
 
-Decorator to convert a regular class into a ``PackableSample``.
+Convert a class into a ``PackableSample`` dataclass with msgpack serialization.
 
-This decorator transforms a class into a dataclass that inherits from
-``PackableSample``, enabling automatic msgpack serialization/deserialization
-with special handling for NDArray fields.
-
-The resulting class satisfies the ``Packable`` protocol, making it compatible
-with all atdata APIs that accept packable types (e.g., ``publish_schema``,
-lens transformations, etc.).
-
-## Type Checking {.doc-section .doc-section-type-checking}
-
-The return type is annotated as ``type[PackableSample]`` so that IDEs
-and type checkers recognize the ``PackableSample`` methods (``packed``,
-``as_wds``, ``from_bytes``, etc.). The ``@dataclass_transform()``
-decorator ensures that field access from the original class is also
-preserved for type checking.
-
-## Parameters {.doc-section .doc-section-parameters}
-
-| Name   | Type                                        | Description                                                        | Default    |
-|--------|---------------------------------------------|--------------------------------------------------------------------|------------|
-| cls    | [type](`type`)\[[_T](`atdata.dataset._T`)\] | The class to convert. Should have type annotations for its fields. | _required_ |
-
-## Returns {.doc-section .doc-section-returns}
-
-| Name   | Type                                                                | Description                                                               |
-|--------|---------------------------------------------------------------------|---------------------------------------------------------------------------|
-|        | [type](`type`)\[[PackableSample](`atdata.dataset.PackableSample`)\] | A new dataclass that inherits from ``PackableSample`` with the same       |
-|        | [type](`type`)\[[PackableSample](`atdata.dataset.PackableSample`)\] | name and annotations as the original class. The class satisfies the       |
-|        | [type](`type`)\[[PackableSample](`atdata.dataset.PackableSample`)\] | ``Packable`` protocol and can be used with ``Type[Packable]`` signatures. |
+The resulting class gains ``packed``, ``as_wds``, ``from_bytes``, and
+``from_data`` methods, and satisfies the ``Packable`` protocol.
+NDArray fields are automatically handled during serialization.
 
 ## Examples {.doc-section .doc-section-examples}
 
@@ -45,9 +19,5 @@ preserved for type checking.
 ...     values: NDArray
 ...
 >>> sample = MyData(name="test", values=np.array([1, 2, 3]))
->>> bytes_data = sample.packed
->>> restored = MyData.from_bytes(bytes_data)
->>>
->>> # Works with Packable-typed APIs
->>> index.publish_schema(MyData, version="1.0.0")  # Type-safe
+>>> restored = MyData.from_bytes(sample.packed)
 ```
