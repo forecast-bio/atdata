@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - 38 new tests: `test_write_samples.py`, `test_disk_store.py`, `test_index_write.py`
 
 ### Changed
+- Update /feature skill to confirm base branch (#550)
 - Fix ruff lint errors in test_coverage_gaps.py (#549)
 - Migrate repo references from foundation-ac to forecast-bio/atdata (#548)
 - Update CLAUDE.md to reflect recent additions and fix divergences (#540)
