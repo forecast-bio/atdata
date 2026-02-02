@@ -9,12 +9,9 @@ Covers missed lines in:
 - local/_disk.py (RuntimeError on no shards written)
 """
 
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import numpy as np
 import pytest
-import webdataset as wds
 
 import atdata
 import atdata.local as atlocal
