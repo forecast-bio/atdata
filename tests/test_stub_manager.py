@@ -403,12 +403,8 @@ class TestListStubs:
 class TestClearStubs:
     def test_removes_files_and_returns_count(self, tmp_path: Path):
         mgr = StubManager(stub_dir=tmp_path)
-        mgr.ensure_stub(
-            _make_schema(name="A", ref="atdata://local/schema/A@1.0.0")
-        )
-        mgr.ensure_stub(
-            _make_schema(name="B", ref="atdata://local/schema/B@1.0.0")
-        )
+        mgr.ensure_stub(_make_schema(name="A", ref="atdata://local/schema/A@1.0.0"))
+        mgr.ensure_stub(_make_schema(name="B", ref="atdata://local/schema/B@1.0.0"))
 
         removed = mgr.clear_stubs()
         assert removed == 2
@@ -521,9 +517,7 @@ class TestGetStubPath:
     def test_respects_authority(self, tmp_path: Path):
         mgr = StubManager(stub_dir=tmp_path)
         mgr.ensure_stub(
-            _make_schema(
-                ref="atdata://alice.bsky.social/schema/StubTestSample@1.0.0"
-            )
+            _make_schema(ref="atdata://alice.bsky.social/schema/StubTestSample@1.0.0")
         )
         # Should not find it under default "local" authority
         assert mgr.get_stub_path("StubTestSample", "1.0.0") is None
@@ -537,5 +531,3 @@ class TestGetStubPath:
 # ---------------------------------------------------------------------------
 # Backwards-compatibility aliases
 # ---------------------------------------------------------------------------
-
-

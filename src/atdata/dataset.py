@@ -1261,7 +1261,9 @@ def write_samples(
         """Start a new manifest builder for a shard."""
         _finalize_builder()
         shard_id = Path(shard_path).stem
-        _current_builder.append(ManifestBuilder(sample_type=sample_type, shard_id=shard_id))
+        _current_builder.append(
+            ManifestBuilder(sample_type=sample_type, shard_id=shard_id)
+        )
         _running_offset[0] = 0
 
     def _record_sample(sample: "PackableSample", wds_dict: dict) -> None:

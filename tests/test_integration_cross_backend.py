@@ -122,10 +122,7 @@ class TestIndexEntryProtocol:
 
         assert isinstance(entry, IndexEntry)
         assert entry.name == "atmo-dataset"
-        assert (
-            entry.schema_ref
-            == "at://did:plc:test/ac.foundation.dataset.schema/abc"
-        )
+        assert entry.schema_ref == "at://did:plc:test/ac.foundation.dataset.schema/abc"
         assert entry.data_urls == ["s3://bucket/atmo.tar"]
         assert entry.metadata is None
 

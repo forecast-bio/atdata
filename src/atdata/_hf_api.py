@@ -191,9 +191,15 @@ class DatasetDict(Generic[ST], dict):
         return {name: len(ds.list_shards()) for name, ds in self.items()}
 
     # Methods proxied to the sole Dataset when only one split exists.
-    _DATASET_METHODS = frozenset({
-        "ordered", "shuffled", "as_type", "list_shards", "head",
-    })
+    _DATASET_METHODS = frozenset(
+        {
+            "ordered",
+            "shuffled",
+            "as_type",
+            "list_shards",
+            "head",
+        }
+    )
 
     def __getattr__(self, name: str) -> Any:
         """Proxy common Dataset methods when this dict has exactly one split.

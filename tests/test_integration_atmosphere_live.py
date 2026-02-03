@@ -588,9 +588,7 @@ class TestLiveErrorHandling:
         """Should raise on getting non-existent record."""
         loader = SchemaLoader(live_client)
 
-        fake_uri = (
-            f"at://{live_client.did}/{LEXICON_NAMESPACE}.schema/nonexistent12345"
-        )
+        fake_uri = f"at://{live_client.did}/{LEXICON_NAMESPACE}.schema/nonexistent12345"
 
         with pytest.raises(Exception):
             loader.get(fake_uri)

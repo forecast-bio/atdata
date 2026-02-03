@@ -303,9 +303,7 @@ class TestSchemaDeduplication:
 
         # Both should be created (version mismatch)
         schema_response = Mock()
-        schema_response.uri = (
-            f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/v1new"
-        )
+        schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/v1new"
 
         dataset_response = Mock()
         dataset_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.dataset/d1"

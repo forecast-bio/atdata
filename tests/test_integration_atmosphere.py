@@ -372,9 +372,7 @@ class TestSchemaPublishing:
     def test_publish_ndarray_schema(self, authenticated_client, mock_atproto_client):
         """Schema with NDArray field should publish correctly."""
         mock_response = Mock()
-        mock_response.uri = (
-            f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/ndarray"
-        )
+        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/ndarray"
         mock_atproto_client.com.atproto.repo.create_record.return_value = mock_response
 
         publisher = SchemaPublisher(authenticated_client)

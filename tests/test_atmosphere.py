@@ -399,8 +399,7 @@ class TestDatasetRecord:
         assert record["$type"] == f"{LEXICON_NAMESPACE}.record"
         assert record["name"] == "TestDataset"
         assert (
-            record["schemaRef"]
-            == "at://did:plc:abc/ac.foundation.dataset.schema/xyz"
+            record["schemaRef"] == "at://did:plc:abc/ac.foundation.dataset.schema/xyz"
         )
         assert record["storage"]["$type"] == f"{LEXICON_NAMESPACE}.storageExternal"
         assert record["storage"]["urls"] == ["s3://bucket/data.tar"]
@@ -810,9 +809,7 @@ class TestSchemaPublisher:
     def test_publish_basic_sample(self, authenticated_client, mock_atproto_client):
         """Publish a basic sample type schema."""
         mock_response = Mock()
-        mock_response.uri = (
-            f"at://did:plc:test123456789/{LEXICON_NAMESPACE}.schema/abc"
-        )
+        mock_response.uri = f"at://did:plc:test123456789/{LEXICON_NAMESPACE}.schema/abc"
         mock_atproto_client.com.atproto.repo.create_record.return_value = mock_response
 
         publisher = SchemaPublisher(authenticated_client)
@@ -996,9 +993,7 @@ class TestDatasetPublisher:
         """Publish dataset with auto schema publishing."""
         # Mock for schema creation
         schema_response = Mock()
-        schema_response.uri = (
-            f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/schema123"
-        )
+        schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/schema123"
 
         # Mock for dataset creation
         dataset_response = Mock()

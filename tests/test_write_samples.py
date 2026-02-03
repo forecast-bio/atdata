@@ -147,9 +147,7 @@ class TestWriteSamplesManifest:
 
     def test_manifest_sharded(self, tmp_path: Path):
         samples = [SharedBasicSample(name=f"s{i}", value=i) for i in range(10)]
-        atdata.write_samples(
-            samples, tmp_path / "data.tar", maxcount=4, manifest=True
-        )
+        atdata.write_samples(samples, tmp_path / "data.tar", maxcount=4, manifest=True)
 
         manifest_jsons = list(tmp_path.glob("*.manifest.json"))
         manifest_parquets = list(tmp_path.glob("*.manifest.parquet"))
