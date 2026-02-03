@@ -7,7 +7,7 @@ This tutorial demonstrates how to use the atmosphere module to publish datasets 
 
 ## Why Federation?
 
-Team storage (Redis + S3) works well within an organization, but sharing across organizations introduces new challenges:
+Managed storage (Index with SQLite/Redis + local disk/S3) works well within an organization, but sharing across organizations introduces new challenges:
 
 - **Discovery**: How do researchers find relevant datasets across institutions?
 - **Trust**: How do you verify a dataset is what it claims to be?
@@ -41,8 +41,7 @@ import numpy as np
 from numpy.typing import NDArray
 import atdata
 from atdata.atmosphere import (
-    AtmosphereClient,
-    AtmosphereIndex,
+    Atmosphere,
     PDSBlobStore,
     SchemaPublisher,
     SchemaLoader,
@@ -51,7 +50,6 @@ from atdata.atmosphere import (
     AtUri,
 )
 from atdata import BlobSource
-import webdataset as wds
 ```
 
 ## Define Sample Types
@@ -132,14 +130,17 @@ for uri_str in uris:
 
 ## Authentication
 
-The `AtmosphereClient` handles ATProto authentication. When you authenticate, you're proving ownership of your decentralized identity (DID), which gives you permission to create and modify records in your Personal Data Server (PDS).
+The `Atmosphere` class handles ATProto authentication. When you authenticate, you're proving ownership of your decentralized identity (DID), which gives you permission to create and modify records in your Personal Data Server (PDS).
 
 Connect to ATProto:
 
 ```{python}
 #| eval: false
-client = AtmosphereClient()
-client.login("your.handle.social", "your-app-password")
+# Factory classmethod — returns an authenticated client
+client = Atmosphere.login("your.handle.social", "your-app-password")
+
+# Or from environment variables (ATDATA_HANDLE, ATDATA_PASSWORD)
+client = Atmosphere.from_env()
 
 print(f"Authenticated as: {client.handle}")
 print(f"DID: {client.did}")
@@ -199,13 +200,13 @@ The `PDSBlobStore` is the **fully decentralized** option: your dataset shards ar
 - **Content-addressed**: Blobs are identified by their CID, ensuring integrity
 - **Federated replication**: Relays can mirror your blobs for availability
 
-For fully decentralized storage, use `PDSBlobStore` to store dataset shards directly as ATProto blobs in your PDS:
+For fully decentralized storage, use `PDSBlobStore` with the unified `Index`:
 
 ```{python}
 #| eval: false
-# Create store and index with blob storage
+# Create index with blob storage and atmosphere backend
 store = PDSBlobStore(client)
-index = AtmosphereIndex(client, data_store=store)
+index = atdata.Index(atmosphere=client, data_store=store)
 
 # Define sample type
 @atdata.packable
@@ -213,20 +214,15 @@ class FeatureSample:
     features: NDArray
     label: int
 
-# Create dataset in memory or from existing tar
+# Create and write samples
 samples = [FeatureSample(features=np.random.randn(64).astype(np.float32), label=i % 10) for i in range(100)]
 
-# Write to temporary tar
-with wds.writer.TarWriter("temp.tar") as sink:
-    for i, s in enumerate(samples):
-        sink.write({**s.as_wds, "__key__": f"{i:06d}"})
-
-dataset = atdata.Dataset[FeatureSample]("temp.tar")
+ds = atdata.write_samples(samples, "temp.tar")
 
 # Publish - shards are uploaded as blobs automatically
 schema_uri = index.publish_schema(FeatureSample, version="1.0.0")
 entry = index.insert_dataset(
-    dataset,
+    ds,
     name="blob-stored-features",
     schema_ref=schema_uri,
     description="Features stored as PDS blobs",
@@ -317,15 +313,12 @@ for batch in ds.ordered():
 Here's the end-to-end workflow for publishing a dataset to the atmosphere:
 
 1. **Define your sample type** using `@packable`
-2. **Create samples and write to tar** (same as local workflow)
+2. **Write samples** with `write_samples()`
 3. **Authenticate** with your ATProto identity
-4. **Create index with blob storage** (`AtmosphereIndex` + `PDSBlobStore`)
-5. **Publish schema** (creates ATProto record)
-6. **Insert dataset** (uploads blobs, creates dataset record)
+4. **Create index with blob storage** (`Index` + `PDSBlobStore`)
+5. **Publish schema and insert dataset**
 
 Notice how similar this is to the local workflow—the same sample types and patterns, just with a different storage backend.
-
-This example shows the recommended workflow using `PDSBlobStore` for fully decentralized storage:
 
 ```{python}
 #| eval: false
@@ -346,16 +339,13 @@ samples = [
 ]
 
 # 2. Write to tar
-with wds.writer.TarWriter("features.tar") as sink:
-    for i, s in enumerate(samples):
-        sink.write({**s.as_wds, "__key__": f"{i:06d}"})
+ds = atdata.write_samples(samples, "features.tar", maxcount=500)
 
 # 3. Authenticate and create index with blob storage
-client = AtmosphereClient()
-client.login("myhandle.bsky.social", "app-password")
+client = Atmosphere.login("myhandle.bsky.social", "app-password")
 
 store = PDSBlobStore(client)
-index = AtmosphereIndex(client, data_store=store)
+index = atdata.Index(atmosphere=client, data_store=store)
 
 # 4. Publish schema
 schema_uri = index.publish_schema(
@@ -365,9 +355,8 @@ schema_uri = index.publish_schema(
 )
 
 # 5. Publish dataset (shards uploaded as blobs automatically)
-dataset = atdata.Dataset[FeatureSample]("features.tar")
 entry = index.insert_dataset(
-    dataset,
+    ds,
     name="synthetic-features-v1",
     schema_ref=schema_uri,
     tags=["features", "synthetic"],
@@ -378,8 +367,8 @@ print(f"Data stored at: {entry.data_urls}")  # at://did/blob/cid URLs
 
 # 6. Later: load from blobs
 source = store.create_source(entry.data_urls)
-ds = atdata.Dataset[FeatureSample](source)
-for batch in ds.ordered(batch_size=32):
+loaded = atdata.Dataset[FeatureSample](source)
+for batch in loaded.ordered(batch_size=32):
     print(f"Loaded batch with {len(batch.label)} samples")
     break
 ```
@@ -390,8 +379,8 @@ You now understand federated dataset publishing in atdata:
 
 | Concept | Purpose |
 |---------|---------|
-| `AtmosphereClient` | ATProto authentication and record management |
-| `AtmosphereIndex` | Federated index implementing `AbstractIndex` |
+| `Atmosphere` | ATProto authentication and record management |
+| `Index(atmosphere=client)` | Unified index with atmosphere backend |
 | `PDSBlobStore` | PDS blob storage implementing `AbstractDataStore` |
 | `BlobSource` | Stream datasets from PDS blobs |
 | AT URIs | Universal identifiers for schemas and datasets |
@@ -403,11 +392,11 @@ The protocol abstractions (`AbstractIndex`, `AbstractDataStore`, `DataSource`) e
 You've now seen atdata's complete architecture:
 
 ```
-Local Development          Team Storage              Federation
-─────────────────          ────────────              ──────────
-tar files                  Redis + S3                ATProto PDS
-Dataset[T]                 LocalIndex                AtmosphereIndex
-                           S3DataStore               PDSBlobStore
+Local Development          Managed Storage           Federation
+─────────────────          ───────────────           ──────────
+tar files                  Index + SQLite/Redis      Index + Atmosphere
+write_samples()            LocalDiskStore / S3       PDSBlobStore
+Dataset[T]                 load_dataset("@local/")   load_dataset("@handle/")
 ```
 
 The same `@packable` sample types, the same `Dataset[T]` iteration patterns, and the same lens transformations work at every layer. Only the storage backend changes.

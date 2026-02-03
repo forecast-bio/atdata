@@ -4,66 +4,101 @@ subtitle: "A loose federation of distributed, typed datasets built on WebDataset
 ---
 
 ::: {.hero}
-<!-- # atdata
-
-A loose federation of distributed, typed datasets built on WebDataset. -->
-
 [Get Started](tutorials/quickstart.qmd){.btn .btn-primary .btn-lg}
-[View on GitHub](https://github.com/forecast-bio/atdata){.btn .btn-outline-secondary .btn-lg}
+[Examples](examples/index.qmd){.btn .btn-outline-secondary .btn-lg}
+[Benchmarks](benchmarks/index.html){.btn .btn-outline-secondary .btn-lg}
+[GitHub](https://github.com/forecast-bio/atdata){.btn .btn-outline-secondary .btn-lg}
 :::
-
-## The Challenge
-
-Machine learning datasets are everywhere—training data, validation sets, embeddings, features, model outputs. Yet working with them often means:
-
-- **Runtime surprises**: Discovering a field is missing or has the wrong type during training
-- **Copy-paste schemas**: Redefining the same sample structure across notebooks and scripts
-- **Storage silos**: Data stuck in one location, invisible to collaborators
-- **Discovery friction**: No standard way to find datasets across teams or organizations
-
-atdata solves these problems with a simple idea: **typed, serializable samples** that flow seamlessly from local development to team storage to federated sharing.
 
 ## What is atdata?
 
-atdata is a Python library that combines:
+atdata is a Python library for **typed, serializable datasets** that flow seamlessly from local development to managed storage to federated sharing---all with the same sample types and consistent APIs.
 
 ::: {.feature-cards}
 
 ::: {.feature-card}
 ### Typed Samples
-Define dataclass-based sample types with automatic msgpack serialization. Catch schema errors at definition time, not training time.
+Define dataclass-based sample types with `@packable`. Automatic msgpack serialization and NDArray handling.
 :::
 
 ::: {.feature-card}
-### Efficient Storage
-Built on WebDataset's proven tar-based format. Stream large datasets without downloading everything first.
-:::
-
-::: {.feature-card}
-### Lens Transformations
-View datasets through different schemas without duplicating data. Perfect for feature extraction, schema migration, and multi-task learning.
+### One-Call Writes
+`write_samples()` handles sharding, key generation, and optional manifest sidecar files.
 :::
 
 ::: {.feature-card}
 ### Batch Aggregation
-Automatic numpy stacking for NDArray fields. No more manual collation code—just iterate and train.
+NDArray fields are stacked automatically. Scalar fields become lists. No manual collation code.
 :::
 
 ::: {.feature-card}
-### Team Storage
-Redis + S3 backend for shared dataset indexes. Publish schemas, track versions, and enable team discovery.
+### Lens Transformations
+View datasets through different schemas without duplicating data. Bidirectional with putters.
+:::
+
+::: {.feature-card}
+### Managed Storage
+`Index` with pluggable providers (SQLite, Redis, PostgreSQL) and data stores (local disk, S3). Schema auto-resolution on load.
 :::
 
 ::: {.feature-card}
 ### ATProto Federation
-Publish datasets to the decentralized AT Protocol network. Enable cross-organization discovery without centralized infrastructure.
+Publish datasets to the decentralized AT Protocol network. Cross-organization discovery via your Bluesky identity.
 :::
 
 :::
+
+## Quick Example
+
+```{python}
+#| eval: false
+import numpy as np
+from numpy.typing import NDArray
+import atdata
+
+@atdata.packable
+class ImageSample:
+    image: NDArray
+    label: str
+    confidence: float
+
+# Write sharded tar files (returns a typed Dataset)
+samples = [ImageSample(image=np.random.rand(224, 224, 3).astype(np.float32),
+                        label="cat", confidence=0.95) for _ in range(100)]
+ds = atdata.write_samples(samples, "data.tar", maxcount=50)
+
+# Iterate with automatic batching
+for batch in ds.shuffled(batch_size=32):
+    images = batch.image          # (32, 224, 224, 3) numpy array
+    labels = batch.label          # list of 32 strings
+    break
+```
+
+## Scaling Up
+
+### Managed storage with Index
+
+```{python}
+#| eval: false
+index = atdata.Index(data_store=atdata.LocalDiskStore())
+entry = index.write(samples, name="training-v1")
+
+# Load by name --- schema auto-resolved, no sample_type needed
+ds = atdata.load_dataset("@local/training-v1", split="train")
+```
+
+### Federation with ATProto
+
+```{python}
+#| eval: false
+from atdata.atmosphere import Atmosphere
+
+client = Atmosphere.login("handle.bsky.social", "app-password")
+index = atdata.Index(atmosphere=client)
+uri = index.promote_entry("training-v1")
+```
 
 ## The Architecture
-
-atdata provides a three-layer progression for your datasets:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -72,17 +107,15 @@ atdata provides a three-layer progression for your datasets:
 └─────────────────────────────────────────────────────────────┘
                               ↑ promote
 ┌─────────────────────────────────────────────────────────────┐
-│  Team Storage: Redis + S3                                   │
-│  Shared index, versioned schemas, S3 data                   │
+│  Managed Storage: Index + SQLite/Redis + Disk/S3            │
+│  Schema registry, versioned datasets, persistent data       │
 └─────────────────────────────────────────────────────────────┘
-                              ↑ insert
+                              ↑ index.write
 ┌─────────────────────────────────────────────────────────────┐
 │  Local Development                                          │
-│  Typed samples, WebDataset files, fast iteration            │
+│  write_samples(), typed iteration, lenses                   │
 └─────────────────────────────────────────────────────────────┘
 ```
-
-Start local, scale to your team, and optionally share with the world—all with the same sample types and consistent APIs.
 
 ## Installation
 
@@ -95,153 +128,11 @@ pip install atdata[atmosphere]
 ```
 :::
 
-## Quick Example
-
-### 1. Define a Sample Type
-
-The `@packable` decorator creates a serializable dataclass:
-
-```{python}
-#| eval: false
-import numpy as np
-from numpy.typing import NDArray
-import atdata
-
-@atdata.packable
-class ImageSample:
-    image: NDArray      # Automatically handled as bytes
-    label: str
-    confidence: float
-```
-
-### 2. Create and Write Samples
-
-Use WebDataset's standard TarWriter:
-
-```{python}
-#| eval: false
-import webdataset as wds
-
-samples = [
-    ImageSample(
-        image=np.random.rand(224, 224, 3).astype(np.float32),
-        label="cat",
-        confidence=0.95,
-    )
-    for _ in range(100)
-]
-
-with wds.writer.TarWriter("data-000000.tar") as sink:
-    for i, sample in enumerate(samples):
-        sink.write({**sample.as_wds, "__key__": f"sample_{i:06d}"})
-```
-
-### 3. Load and Iterate with Type Safety
-
-The generic `Dataset[T]` provides typed access:
-
-```{python}
-#| eval: false
-dataset = atdata.Dataset[ImageSample]("data-000000.tar")
-
-for batch in dataset.shuffled(batch_size=32):
-    images = batch.image      # numpy array (32, 224, 224, 3)
-    labels = batch.label      # list of 32 strings
-    confs = batch.confidence  # list of 32 floats
-```
-
-## Scaling Up
-
-### Team Storage with Redis + S3
-
-When you're ready to share with your team:
-
-```{python}
-#| eval: false
-from atdata.local import LocalIndex, S3DataStore
-
-# Connect to team infrastructure
-store = S3DataStore(
-    credentials={"AWS_ENDPOINT": "http://localhost:9000", ...},
-    bucket="team-datasets",
-)
-index = LocalIndex(data_store=store)
-
-# Publish schema for consistency
-index.publish_schema(ImageSample, version="1.0.0")
-
-# Insert dataset (writes to S3, indexes in Redis)
-dataset = atdata.Dataset[ImageSample]("data.tar")
-entry = index.insert_dataset(dataset, name="training-images-v1")
-
-# Team members can now discover and load
-# ds = atdata.load_dataset("@local/training-images-v1", index=index)
-```
-
-### Federation with ATProto
-
-For public or cross-organization sharing:
-
-```{python}
-#| eval: false
-from atdata.atmosphere import AtmosphereClient, AtmosphereIndex, PDSBlobStore
-from atdata.promote import promote_to_atmosphere
-
-# Authenticate with your ATProto identity
-client = AtmosphereClient()
-client.login("handle.bsky.social", "app-password")
-
-# Option 1: Promote existing local dataset
-entry = index.get_dataset("training-images-v1")
-at_uri = promote_to_atmosphere(entry, index, client)
-
-# Option 2: Publish directly with blob storage
-store = PDSBlobStore(client)
-atm_index = AtmosphereIndex(client, data_store=store)
-atm_index.insert_dataset(dataset, name="public-images", schema_ref=schema_uri)
-```
-
-## HuggingFace-Style Loading
-
-For convenient access to datasets:
-
-```{python}
-#| eval: false
-from atdata import load_dataset
-
-# Load from local files
-ds = load_dataset("path/to/data-{000000..000009}.tar")
-
-# Load with split detection
-ds_dict = load_dataset("path/to/data/")
-train_ds = ds_dict["train"]
-test_ds = ds_dict["test"]
-
-# Load from index
-ds = load_dataset("@local/my-dataset", index=index)
-```
-
-## Why atdata?
-
-| Need | Solution |
-|------|----------|
-| Type-safe samples | `@packable` decorator, `PackableSample` base class |
-| Efficient large-scale storage | WebDataset tar format, streaming iteration |
-| Schema flexibility | Lens transformations, `DictSample` for exploration |
-| Team collaboration | Redis index, S3 data store, schema registry |
-| Public sharing | ATProto federation, content-addressable CIDs |
-| Multiple backends | Protocol abstractions (`AbstractIndex`, `DataSource`) |
-
 ## Next Steps
 
-::: {.callout-tip}
-## Getting Started
-
-**New to atdata?** Start with the [Quick Start Tutorial](tutorials/quickstart.qmd) to learn the basics of typed samples and datasets.
-:::
-
-- **[Architecture Overview](reference/architecture.qmd)** - Understand the design and how components fit together
-- **[Local Workflow](tutorials/local-workflow.qmd)** - Set up team storage with Redis + S3
-- **[Atmosphere Publishing](tutorials/atmosphere.qmd)** - Share datasets on the ATProto network
-- **[Packable Samples](reference/packable-samples.qmd)** - Deep dive into sample type definitions
-- **[Datasets](reference/datasets.qmd)** - Master iteration, batching, and transformations
+- **[Quick Start](tutorials/quickstart.qmd)** --- Define samples, write datasets, iterate with batching
+- **[Examples](examples/index.qmd)** --- Five end-to-end worked examples
+- **[Local Workflow](tutorials/local-workflow.qmd)** --- Index-managed storage for teams
+- **[Atmosphere Publishing](tutorials/atmosphere.qmd)** --- Publish to the ATProto network
+- **[API Reference](reference/architecture.qmd)** --- Architecture overview and API docs
+- **[Benchmarks](benchmarks/index.html)** --- Performance benchmark results

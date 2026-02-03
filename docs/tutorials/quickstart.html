@@ -533,7 +533,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Round-trip fidelity</strong>: Data survives serialization without loss</li>
 </ul>
 <p>Use the <code>@packable</code> decorator to create a typed sample:</p>
-<div id="b3402546" class="cell">
+<div id="6fd557a1" class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
@@ -554,7 +554,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="create-sample-instances" class="level2">
 <h2 class="anchored" data-anchor-id="create-sample-instances">Create Sample Instances</h2>
-<div id="7646cd90" class="cell">
+<div id="3176fb03" class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a single sample</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>sample <span class="op">=</span> ImageSample(</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    image<span class="op">=</span>np.random.rand(<span class="dv">224</span>, <span class="dv">224</span>, <span class="dv">3</span>).astype(np.float32),</span>
@@ -580,27 +580,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Sharding</strong>: Split large datasets across multiple files for parallel I/O</li>
 <li><strong>Proven</strong>: Battle-tested at scale by organizations like Google, NVIDIA, and OpenAI</li>
 </ul>
-<p>The <code>as_wds</code> property on your sample provides the dictionary format WebDataset expects:</p>
-<p>Use WebDataset’s <code>TarWriter</code> to create dataset files:</p>
-<div id="9d01c5b0" class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> webdataset <span class="im">as</span> wds</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create 100 samples</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>samples <span class="op">=</span> [</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    ImageSample(</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        image<span class="op">=</span>np.random.rand(<span class="dv">224</span>, <span class="dv">224</span>, <span class="dv">3</span>).astype(np.float32),</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        label<span class="op">=</span><span class="ss">f"class_</span><span class="sc">{</span>i <span class="op">%</span> <span class="dv">10</span><span class="sc">}</span><span class="ss">"</span>,</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        confidence<span class="op">=</span>np.random.rand(),</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">100</span>)</span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Write to tar file</span></span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> wds.writer.TarWriter(<span class="st">"my-dataset-000000.tar"</span>) <span class="im">as</span> sink:</span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, sample <span class="kw">in</span> <span class="bu">enumerate</span>(samples):</span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>        sink.write({<span class="op">**</span>sample.as_wds, <span class="st">"__key__"</span>: <span class="ss">f"sample_</span><span class="sc">{</span>i<span class="sc">:06d}</span><span class="ss">"</span>})</span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Wrote 100 samples to my-dataset-000000.tar"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><code>write_samples()</code> handles serialization, sharding, and key generation in one call:</p>
+<div id="3deba4f6" class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create 100 samples</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>samples <span class="op">=</span> [</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    ImageSample(</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>        image<span class="op">=</span>np.random.rand(<span class="dv">224</span>, <span class="dv">224</span>, <span class="dv">3</span>).astype(np.float32),</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        label<span class="op">=</span><span class="ss">f"class_</span><span class="sc">{</span>i <span class="op">%</span> <span class="dv">10</span><span class="sc">}</span><span class="ss">"</span>,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        confidence<span class="op">=</span>np.random.rand(),</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">100</span>)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Write to sharded tar files (returns a typed Dataset immediately)</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.write_samples(samples, <span class="st">"my-dataset.tar"</span>, maxcount<span class="op">=</span><span class="dv">50</span>)</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Wrote </span><span class="sc">{</span><span class="bu">len</span>(dataset.list_shards())<span class="sc">}</span><span class="ss"> shards"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="load-and-iterate" class="level2">
@@ -612,23 +606,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Other fields become <strong>lists</strong> of values</li>
 </ul>
 <p>This eliminates boilerplate collation code and works automatically with any PackableSample type.</p>
-<p>Create a typed <code>Dataset</code> and iterate with batching:</p>
-<div id="ccb4ea98" class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load dataset with type</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[ImageSample](<span class="st">"my-dataset-000000.tar"</span>)</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Iterate in order with batching</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> dataset.ordered(batch_size<span class="op">=</span><span class="dv">16</span>):</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="co"># NDArray fields are stacked</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    images <span class="op">=</span> batch.image        <span class="co"># shape: (16, 224, 224, 3)</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Other fields become lists</span></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    labels <span class="op">=</span> batch.label        <span class="co"># list of 16 strings</span></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    confidences <span class="op">=</span> batch.confidence  <span class="co"># list of 16 floats</span></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Batch shape: </span><span class="sc">{</span>images<span class="sc">.</span>shape<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Labels: </span><span class="sc">{</span>labels[:<span class="dv">3</span>]<span class="sc">}</span><span class="ss">..."</span>)</span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">break</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The <code>Dataset</code> returned by <code>write_samples</code> is immediately iterable—or you can load from existing tar files with <code>Dataset[T](url)</code>:</p>
+<div id="8b2d093b" class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Iterate in order with batching</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> dataset.ordered(batch_size<span class="op">=</span><span class="dv">16</span>):</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># NDArray fields are stacked</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    images <span class="op">=</span> batch.image        <span class="co"># shape: (16, 224, 224, 3)</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Other fields become lists</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    labels <span class="op">=</span> batch.label        <span class="co"># list of 16 strings</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    confidences <span class="op">=</span> batch.confidence  <span class="co"># list of 16 floats</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Batch shape: </span><span class="sc">{</span>images<span class="sc">.</span>shape<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Labels: </span><span class="sc">{</span>labels[:<span class="dv">3</span>]<span class="sc">}</span><span class="ss">..."</span>)</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">break</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="shuffled-iteration" class="level2">
@@ -640,7 +631,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ol>
 <p>This approach balances randomness with streaming efficiency—you get well-shuffled data without needing random access to the entire dataset.</p>
 <p>For training, use shuffled iteration:</p>
-<div id="81990f0c" class="cell">
+<div id="bb6fea88" class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> dataset.shuffled(batch_size<span class="op">=</span><span class="dv">32</span>):</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Samples are shuffled at shard and sample level</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    images <span class="op">=</span> batch.image</span>
@@ -661,7 +652,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Derived features</strong>: Compute fields on-the-fly during iteration</li>
 </ul>
 <p>View datasets through different schemas:</p>
-<div id="3a14ba37" class="cell">
+<div id="1308174c" class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Define a simplified view type</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> SimplifiedSample:</span>
@@ -698,14 +689,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Create typed, serializable sample classes</td>
 </tr>
 <tr class="even">
+<td><code>write_samples()</code></td>
+<td>Write and shard samples in one call</td>
+</tr>
+<tr class="odd">
 <td><code>Dataset[T]</code></td>
 <td>Typed iteration over WebDataset tar files</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>SampleBatch[T]</code></td>
 <td>Automatic aggregation with NDArray stacking</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>@lens</code></td>
 <td>Transform between sample types without data duplication</td>
 </tr>
@@ -725,7 +720,7 @@ Ready to Share with Your Team?
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>The <a href="../tutorials/local-workflow.html">Local Workflow</a> tutorial shows how to set up Redis + S3 storage for team-wide dataset discovery and sharing.</p>
+<p>The <a href="../tutorials/local-workflow.html">Local Workflow</a> tutorial shows how to set up Index-managed storage for team-wide dataset discovery and sharing.</p>
 </div>
 </div>
 <ul>

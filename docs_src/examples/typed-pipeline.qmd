@@ -72,6 +72,16 @@ print(f"Packed size: {len(packed):,} bytes")
 print("Round-trip: OK")
 ```
 
+Numpy scalars (like `np.float64` from `rng.normal()`) are automatically
+coerced to Python natives during serialization, so `temperature` comes
+back as a plain `float`:
+
+```{python}
+print(f"Temperature type (original)  : {type(original.temperature).__name__}")
+print(f"Temperature type (restored)  : {type(restored.temperature).__name__}")
+assert isinstance(restored.temperature, float)
+```
+
 ## 4 --- Write sharded tar files
 
 `write_samples` serializes samples to WebDataset tar archives.  Setting
@@ -151,7 +161,8 @@ shutil.rmtree(tmpdir, ignore_errors=True)
 |---------|-----|
 | Type-safe samples | `@atdata.packable` |
 | Automatic serialization | `.packed` / `.from_bytes()` |
-| Sharded writes | `atdata.write_samples(..., maxcount=N)` |
+| Sharded writes with manifests | `atdata.write_samples(..., maxcount=N, manifest=True)` |
+| Numpy scalar coercion | `np.float64` → `float` automatically |
 | Ordered iteration | `ds.ordered(batch_size=N)` |
 | Shuffled iteration | `ds.shuffled(batch_size=N)` |
 | Batch aggregation | `batch.field` (NDArray stacking or list) |

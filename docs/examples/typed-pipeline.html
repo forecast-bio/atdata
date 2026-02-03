@@ -512,7 +512,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="define-a-sample-type" class="level2">
 <h2 class="anchored" data-anchor-id="define-a-sample-type">1 — Define a sample type</h2>
 <p>The <code>@packable</code> decorator turns a plain class into a serializable dataclass with automatic msgpack encoding and transparent NDArray conversion.</p>
-<div id="5334832b" class="cell" data-execution_count="1">
+<div id="462e1d0a" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
@@ -531,7 +531,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="generate-synthetic-samples" class="level2">
 <h2 class="anchored" data-anchor-id="generate-synthetic-samples">2 — Generate synthetic samples</h2>
-<div id="e8898a98" class="cell" data-execution_count="2">
+<div id="330aa79a" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">42</span>)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>samples <span class="op">=</span> [</span>
@@ -555,7 +555,7 @@ Waveform shape: (512,)</code></pre>
 <section id="verify-round-trip-serialization" class="level2">
 <h2 class="anchored" data-anchor-id="verify-round-trip-serialization">3 — Verify round-trip serialization</h2>
 <p>Before writing to disk, confirm that packing and unpacking preserves data.</p>
-<div id="b0bd4a7d" class="cell" data-execution_count="3">
+<div id="6438bc07" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>original <span class="op">=</span> samples[<span class="dv">0</span>]</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>packed <span class="op">=</span> original.packed                         <span class="co"># -&gt; bytes (msgpack)</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>restored <span class="op">=</span> SensorReading.from_bytes(packed)      <span class="co"># -&gt; SensorReading</span></span>
@@ -572,30 +572,41 @@ Waveform shape: (512,)</code></pre>
 Round-trip: OK</code></pre>
 </div>
 </div>
+<p>Numpy scalars (like <code>np.float64</code> from <code>rng.normal()</code>) are automatically coerced to Python natives during serialization, so <code>temperature</code> comes back as a plain <code>float</code>:</p>
+<div id="e503722a" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Temperature type (original)  : </span><span class="sc">{</span><span class="bu">type</span>(original.temperature)<span class="sc">.</span><span class="va">__name__</span><span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Temperature type (restored)  : </span><span class="sc">{</span><span class="bu">type</span>(restored.temperature)<span class="sc">.</span><span class="va">__name__</span><span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="bu">isinstance</span>(restored.temperature, <span class="bu">float</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Temperature type (original)  : float
+Temperature type (restored)  : float</code></pre>
+</div>
+</div>
 </section>
 <section id="write-sharded-tar-files" class="level2">
 <h2 class="anchored" data-anchor-id="write-sharded-tar-files">4 — Write sharded tar files</h2>
 <p><code>write_samples</code> serializes samples to WebDataset tar archives. Setting <code>maxcount</code> splits the output across multiple shards—essential for parallel I/O at scale.</p>
-<div id="336464e7" class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tempfile</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>tmpdir <span class="op">=</span> Path(tempfile.mkdtemp(prefix<span class="op">=</span><span class="st">"atdata_example_"</span>))</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> atdata.write_samples(</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    samples,</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    tmpdir <span class="op">/</span> <span class="st">"readings.tar"</span>,</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    maxcount<span class="op">=</span><span class="dv">500</span>,  <span class="co"># 4 shards of 500 samples each</span></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Dataset URL : </span><span class="sc">{</span>ds<span class="sc">.</span>url<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Sample type : </span><span class="sc">{</span>ds<span class="sc">.</span>sample_type<span class="sc">.</span><span class="va">__name__</span><span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Shard count : </span><span class="sc">{</span><span class="bu">len</span>(ds.list_shards())<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="b860861b" class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tempfile</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>tmpdir <span class="op">=</span> Path(tempfile.mkdtemp(prefix<span class="op">=</span><span class="st">"atdata_example_"</span>))</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> atdata.write_samples(</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    samples,</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    tmpdir <span class="op">/</span> <span class="st">"readings.tar"</span>,</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    maxcount<span class="op">=</span><span class="dv">500</span>,       <span class="co"># 4 shards of 500 samples each</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    manifest<span class="op">=</span><span class="va">True</span>,      <span class="co"># generate per-shard metadata manifests</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Dataset URL : </span><span class="sc">{</span>ds<span class="sc">.</span>url<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Sample type : </span><span class="sc">{</span>ds<span class="sc">.</span>sample_type<span class="sc">.</span><span class="va">__name__</span><span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Shard count : </span><span class="sc">{</span><span class="bu">len</span>(ds.list_shards())<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_example_w_swsk09/readings-000000.tar 0 0.0 GB 0
-# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_example_w_swsk09/readings-000001.tar 500 0.0 GB 500
-# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_example_w_swsk09/readings-000002.tar 500 0.0 GB 1000
-# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_example_w_swsk09/readings-000003.tar 500 0.0 GB 1500
-Dataset URL : /private/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_example_w_swsk09/readings-00000{0,1,2,3}.tar
+<pre><code># writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_example_zdx0dqqm/readings-000000.tar 0 0.0 GB 0
+# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_example_zdx0dqqm/readings-000001.tar 500 0.0 GB 500
+# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_example_zdx0dqqm/readings-000002.tar 500 0.0 GB 1000
+# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_example_zdx0dqqm/readings-000003.tar 500 0.0 GB 1500
+Dataset URL : /private/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_example_zdx0dqqm/readings-00000{0,1,2,3}.tar
 Sample type : SensorReading
 Shard count : 4</code></pre>
 </div>
@@ -609,16 +620,16 @@ Shard count : 4</code></pre>
 <li><strong>NDArray fields</strong> are stacked into a single array with a leading batch dimension.</li>
 <li><strong>Scalar/string fields</strong> become Python lists.</li>
 </ul>
-<div id="79c4de60" class="cell" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> ds.ordered(batch_size<span class="op">=</span><span class="dv">64</span>):</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># NDArray field -&gt; (64, 512) float32 array</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"waveform    : </span><span class="sc">{</span>batch<span class="sc">.</span>waveform<span class="sc">.</span>shape<span class="sc">}</span><span class="ss">, </span><span class="sc">{</span>batch<span class="sc">.</span>waveform<span class="sc">.</span>dtype<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Scalar fields -&gt; plain lists</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"sensor_id   : </span><span class="sc">{</span>batch<span class="sc">.</span>sensor_id[:<span class="dv">3</span>]<span class="sc">}</span><span class="ss">..."</span>)</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"temperature : </span><span class="sc">{</span>[<span class="bu">round</span>(t, <span class="dv">1</span>) <span class="cf">for</span> t <span class="kw">in</span> batch.temperature[:<span class="dv">3</span>]]<span class="sc">}</span><span class="ss">..."</span>)</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"anomaly     : </span><span class="sc">{</span>batch<span class="sc">.</span>anomaly[:<span class="dv">3</span>]<span class="sc">}</span><span class="ss">..."</span>)</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">break</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="80dd9d7a" class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> ds.ordered(batch_size<span class="op">=</span><span class="dv">64</span>):</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># NDArray field -&gt; (64, 512) float32 array</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"waveform    : </span><span class="sc">{</span>batch<span class="sc">.</span>waveform<span class="sc">.</span>shape<span class="sc">}</span><span class="ss">, </span><span class="sc">{</span>batch<span class="sc">.</span>waveform<span class="sc">.</span>dtype<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Scalar fields -&gt; plain lists</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"sensor_id   : </span><span class="sc">{</span>batch<span class="sc">.</span>sensor_id[:<span class="dv">3</span>]<span class="sc">}</span><span class="ss">..."</span>)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"temperature : </span><span class="sc">{</span>[<span class="bu">round</span>(t, <span class="dv">1</span>) <span class="cf">for</span> t <span class="kw">in</span> batch.temperature[:<span class="dv">3</span>]]<span class="sc">}</span><span class="ss">..."</span>)</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"anomaly     : </span><span class="sc">{</span>batch<span class="sc">.</span>anomaly[:<span class="dv">3</span>]<span class="sc">}</span><span class="ss">..."</span>)</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">break</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>waveform    : (64, 512), float32
 sensor_id   : ['sensor_00', 'sensor_01', 'sensor_02']...
@@ -630,15 +641,15 @@ anomaly     : [True, False, False]...</code></pre>
 <section id="shuffled-iteration-for-training" class="level2">
 <h2 class="anchored" data-anchor-id="shuffled-iteration-for-training">6 — Shuffled iteration for training</h2>
 <p>For model training you want randomized order. <code>shuffled()</code> applies two-level shuffling (shard order + in-buffer sample shuffling) to give well-mixed batches while staying streaming-friendly.</p>
-<div id="28e1404f" class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>sensor_ids_seen: <span class="bu">set</span>[<span class="bu">str</span>] <span class="op">=</span> <span class="bu">set</span>()</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> ds.shuffled(batch_size<span class="op">=</span><span class="dv">128</span>):</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    sensor_ids_seen.update(batch.sensor_id)</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">len</span>(sensor_ids_seen) <span class="op">==</span> <span class="dv">8</span>:</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">break</span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Unique sensors in early batches: </span><span class="sc">{</span><span class="bu">sorted</span>(sensor_ids_seen)<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="67094c67" class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>sensor_ids_seen: <span class="bu">set</span>[<span class="bu">str</span>] <span class="op">=</span> <span class="bu">set</span>()</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> ds.shuffled(batch_size<span class="op">=</span><span class="dv">128</span>):</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    sensor_ids_seen.update(batch.sensor_id)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">len</span>(sensor_ids_seen) <span class="op">==</span> <span class="dv">8</span>:</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">break</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Unique sensors in early batches: </span><span class="sc">{</span><span class="bu">sorted</span>(sensor_ids_seen)<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Unique sensors in early batches: ['sensor_00', 'sensor_01', 'sensor_02', 'sensor_03', 'sensor_04', 'sensor_05', 'sensor_06', 'sensor_07']</code></pre>
 </div>
@@ -646,15 +657,19 @@ anomaly     : [True, False, False]...</code></pre>
 </section>
 <section id="clean-up" class="level2">
 <h2 class="anchored" data-anchor-id="clean-up">7 — Clean up</h2>
-<div id="e45e47cf" class="cell" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shutil</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>shutil.rmtree(tmpdir, ignore_errors<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="8005cd8f" class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shutil</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>shutil.rmtree(tmpdir, ignore_errors<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="key-takeaways" class="level2">
 <h2 class="anchored" data-anchor-id="key-takeaways">Key takeaways</h2>
 <table class="caption-top table">
+<colgroup>
+<col style="width: 64%">
+<col style="width: 35%">
+</colgroup>
 <thead>
 <tr class="header">
 <th>Concept</th>
@@ -671,18 +686,22 @@ anomaly     : [True, False, False]...</code></pre>
 <td><code>.packed</code> / <code>.from_bytes()</code></td>
 </tr>
 <tr class="odd">
-<td>Sharded writes</td>
-<td><code>atdata.write_samples(..., maxcount=N)</code></td>
+<td>Sharded writes with manifests</td>
+<td><code>atdata.write_samples(..., maxcount=N, manifest=True)</code></td>
 </tr>
 <tr class="even">
+<td>Numpy scalar coercion</td>
+<td><code>np.float64</code> → <code>float</code> automatically</td>
+</tr>
+<tr class="odd">
 <td>Ordered iteration</td>
 <td><code>ds.ordered(batch_size=N)</code></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Shuffled iteration</td>
 <td><code>ds.shuffled(batch_size=N)</code></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Batch aggregation</td>
 <td><code>batch.field</code> (NDArray stacking or list)</td>
 </tr>

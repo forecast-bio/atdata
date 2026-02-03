@@ -1,38 +1,35 @@
 ---
 title: "Local Workflow"
-description: "Store and manage datasets with Redis + S3"
+description: "Store and manage datasets with Index"
 ---
 
-This tutorial demonstrates how to use the local storage module to store and index datasets using Redis and S3-compatible storage. This is **Layer 2** of atdata's architecture—team-scale storage that bridges local development and federated sharing.
+This tutorial demonstrates how to use the `Index` class to store and manage datasets locally. This is **Layer 2** of atdata's architecture—managed storage that bridges local development and federated sharing.
 
-## Why Team Storage?
+## Why Managed Storage?
 
-Local tar files work well for individual experiments, but teams need:
+Local tar files work well for individual experiments, but growing projects need:
 
 - **Discovery**: "What datasets do we have? What schema does this one use?"
 - **Consistency**: "Is everyone using the same version of this dataset?"
 - **Durability**: "Where's the canonical copy of our training data?"
 
-atdata's local storage module addresses these needs with a two-component architecture:
+atdata's `Index` class addresses these needs with a two-component architecture:
 
 | Component | Purpose |
 |-----------|---------|
-| **Redis Index** | Fast metadata queries, schema registry, dataset discovery |
-| **S3 DataStore** | Scalable object storage for actual data files |
+| **Index Provider** | Metadata queries, schema registry, dataset discovery (SQLite default, also Redis/PostgreSQL) |
+| **Data Store** | Persistent shard storage (`LocalDiskStore` or `S3DataStore`) |
 
-This separation means metadata operations (listing datasets, resolving schemas) are fast and don't touch large data files, while the data itself lives in battle-tested object storage.
+This separation means metadata operations (listing datasets, resolving schemas) are fast and don't touch large data files, while the data itself lives in persistent storage.
 
 ## Prerequisites
 
-- Redis server running (default: `localhost:6379`)
-- S3-compatible storage (MinIO, AWS S3, etc.)
+For the simplest setup, no external services are needed—`Index()` uses SQLite and `LocalDiskStore` by default.
 
-::: {.callout-tip}
-For local development, you can use MinIO:
-```bash
-docker run -p 9000:9000 minio/minio server /data
-```
-:::
+For team-scale deployments you can optionally use:
+
+- Redis or PostgreSQL as the index provider
+- S3-compatible storage (MinIO, AWS S3, etc.) as the data store
 
 ## Setup
 
@@ -41,8 +38,6 @@ docker run -p 9000:9000 minio/minio server /data
 import numpy as np
 from numpy.typing import NDArray
 import atdata
-from atdata.local import LocalIndex, LocalDatasetEntry, S3DataStore
-import webdataset as wds
 ```
 
 ## Define Sample Types
@@ -95,32 +90,46 @@ print(f"CID: {entry.cid}")
 CIDs are generated from content (schema_ref + data_urls), so identical data produces identical CIDs.
 :::
 
-## LocalIndex
+## The Index
 
-The `LocalIndex` is your team's dataset registry. It implements the `AbstractIndex` protocol, meaning code written against `LocalIndex` will also work with `AtmosphereIndex` when you're ready for federated sharing.
+The `Index` is your dataset registry. It implements the `AbstractIndex` protocol, meaning code written against `Index` will also work with atmosphere backends when you're ready for federated sharing.
 
-The index tracks datasets in Redis:
+By default, `Index()` uses SQLite (zero external dependencies):
+
+```{python}
+#| eval: false
+# Zero-config: SQLite in memory
+index = atdata.Index()
+
+# Or persist to disk
+index = atdata.Index(path="~/.atdata/index.db")
+
+# With a data store for shard storage
+index = atdata.Index(
+    data_store=atdata.LocalDiskStore(root="~/.atdata/data/"),
+)
+```
+
+For team deployments, swap in Redis or PostgreSQL:
 
 ```{python}
 #| eval: false
 from redis import Redis
 
-# Connect to Redis
-redis = Redis(host="localhost", port=6379)
-index = LocalIndex(redis=redis)
-
-print("LocalIndex connected")
+index = atdata.Index(redis=Redis(host="localhost", port=6379))
+# or
+index = atdata.Index(provider="postgres", dsn="postgresql://user:pass@host/db")
 ```
 
 ### Schema Management
 
 **Schema publishing** is how you ensure type consistency across your team. When you publish a schema, atdata stores the complete type definition (field names, types, metadata) so anyone can reconstruct the Python class from just the schema reference.
 
-This enables a powerful workflow: share a dataset by sharing its name, and consumers can dynamically reconstruct the sample type without having the original Python code.
+When you use `index.write()`, schemas are **persisted automatically**—no separate `publish_schema()` call needed. Consumers can load datasets by name and the sample type is reconstructed from the stored schema.
 
 ```{python}
 #| eval: false
-# Publish a schema
+# Explicit schema publishing (optional — index.write() does this for you)
 schema_ref = index.publish_schema(TrainingSample, version="1.0.0")
 print(f"Published schema: {schema_ref}")
 
@@ -128,55 +137,52 @@ print(f"Published schema: {schema_ref}")
 for schema in index.list_schemas():
     print(f"  - {schema.get('name', 'Unknown')} v{schema.get('version', '?')}")
 
-# Get schema record
-schema_record = index.get_schema(schema_ref)
-print(f"Schema fields: {[f['name'] for f in schema_record.get('fields', [])]}")
-
 # Decode schema back to a PackableSample class
 decoded_type = index.decode_schema(schema_ref)
 print(f"Decoded type: {decoded_type.__name__}")
 ```
 
-## S3DataStore
+## Data Stores
 
-The `S3DataStore` implements the `AbstractDataStore` protocol for S3-compatible object storage. It works with:
+Data stores implement the `AbstractDataStore` protocol for persistent shard storage:
 
-- **AWS S3**: Production-scale cloud storage
-- **MinIO**: Self-hosted S3-compatible storage (great for development)
-- **Cloudflare R2**: Cost-effective S3-compatible storage
+### LocalDiskStore
 
-The data store handles uploading tar shards and creating signed URLs for streaming access.
-
-For direct S3 operations:
+The simplest option—stores shards on the local filesystem:
 
 ```{python}
 #| eval: false
-creds = {
-    "AWS_ENDPOINT": "http://localhost:9000",
-    "AWS_ACCESS_KEY_ID": "minioadmin",
-    "AWS_SECRET_ACCESS_KEY": "minioadmin",
-}
+store = atdata.LocalDiskStore(root="~/.atdata/data/")
 
-store = S3DataStore(creds, bucket="my-bucket")
+# Or accept the default root (~/.atdata/data/)
+store = atdata.LocalDiskStore()
+```
 
-print(f"Bucket: {store.bucket}")
-print(f"Supports streaming: {store.supports_streaming()}")
+### S3DataStore
+
+For team-scale storage with S3-compatible backends (AWS S3, MinIO, Cloudflare R2):
+
+```{python}
+#| eval: false
+from atdata.stores import S3DataStore
+
+store = S3DataStore(
+    credentials={
+        "AWS_ENDPOINT": "http://localhost:9000",
+        "AWS_ACCESS_KEY_ID": "minioadmin",
+        "AWS_SECRET_ACCESS_KEY": "minioadmin",
+    },
+    bucket="my-bucket",
+)
 ```
 
 ## Complete Index Workflow
 
-Here's the typical workflow for publishing a dataset to your team:
+The typical workflow has just three steps:
 
 1. **Create samples** using your `@packable` type
-2. **Write to local tar** for staging
-3. **Create a Dataset** wrapper
-4. **Connect to index with data store**
-5. **Publish schema** for type consistency
-6. **Insert dataset** (uploads to S3, indexes in Redis)
-
-The index composition pattern (`LocalIndex(data_store=S3DataStore(...))`) is deliberate—it separates the concern of "where is metadata?" from "where is data?", making it easy to swap storage backends.
-
-Use `LocalIndex` with `S3DataStore` to store datasets with S3 storage and Redis indexing:
+2. **Write through the index** (`index.write()` handles sharding, storage, schema persistence, and indexing)
+3. **Load by name** (`load_dataset()` auto-resolves schema and data URLs)
 
 ```{python}
 #| eval: false
@@ -188,72 +194,67 @@ samples = [
     )
     for i in range(1000)
 ]
-print(f"Created {len(samples)} training samples")
 
-# 2. Write to local tar file
-with wds.writer.TarWriter("local-data-000000.tar") as sink:
-    for i, sample in enumerate(samples):
-        sink.write({**sample.as_wds, "__key__": f"sample_{i:06d}"})
-print("Wrote samples to local tar file")
+# 2. Write through the index (schema is persisted automatically)
+index = atdata.Index(data_store=atdata.LocalDiskStore())
+entry = index.write(samples, name="training-v1", maxcount=500)
+print(f"CID: {entry.cid}")
+print(f"Shards: {entry.data_urls}")
 
-# 3. Create Dataset
-ds = atdata.Dataset[TrainingSample]("local-data-000000.tar")
+# 3. Load by name — no sample_type needed
+atdata.set_default_index(index)
+ds = atdata.load_dataset("@local/training-v1", split="train")
 
-# 4. Set up index with S3 data store and insert
+for batch in ds.ordered(batch_size=32):
+    print(f"Batch features shape: {batch.features.shape}")
+    break
+```
+
+For S3-backed team storage, just swap the data store:
+
+```{python}
+#| eval: false
+from atdata.stores import S3DataStore
+
 store = S3DataStore(
     credentials={
         "AWS_ENDPOINT": "http://localhost:9000",
         "AWS_ACCESS_KEY_ID": "minioadmin",
         "AWS_SECRET_ACCESS_KEY": "minioadmin",
     },
-    bucket="my-bucket",
+    bucket="team-datasets",
 )
-index = LocalIndex(redis=redis, data_store=store)
-
-# Publish schema and insert dataset
-index.publish_schema(TrainingSample, version="1.0.0")
-entry = index.insert_dataset(ds, name="training-v1", prefix="datasets")
-print(f"Stored at: {entry.data_urls}")
-print(f"CID: {entry.cid}")
-
-# 5. Retrieve later
-retrieved_entry = index.get_entry_by_name("training-v1")
-dataset = atdata.Dataset[TrainingSample](retrieved_entry.data_urls[0])
-
-for batch in dataset.ordered(batch_size=32):
-    print(f"Batch features shape: {batch.features.shape}")
-    break
+index = atdata.Index(data_store=store)
+entry = index.write(samples, name="training-v1")
 ```
 
 ## Using load_dataset with Index
 
-The `load_dataset()` function provides a HuggingFace-style API that abstracts away the details of where data lives. When you pass an index, it can resolve `@local/` prefixed paths to the actual data URLs and apply the correct credentials automatically.
-
-The `load_dataset()` function supports index lookup:
+The `load_dataset()` function provides a HuggingFace-style API that abstracts away the details of where data lives. It resolves `@local/` prefixed paths to data URLs and **auto-resolves the schema** so you don't need the original Python class.
 
 ```{python}
 #| eval: false
 from atdata import load_dataset
 
-# Load from local index
-ds = load_dataset("@local/my-dataset", index=index, split="train")
+# Schema auto-resolved from index — no sample_type needed
+ds = load_dataset("@local/training-v1", split="train")
 
-# The index resolves the dataset name to URLs and schema
 for batch in ds.shuffled(batch_size=32):
-    process(batch)
+    print(f"Features: {batch.features.shape}")
     break
 ```
 
 ## What You've Learned
 
-You now understand team-scale storage in atdata:
+You now understand managed storage in atdata:
 
 | Concept | Purpose |
 |---------|---------|
-| `LocalIndex` | Redis-backed dataset registry implementing `AbstractIndex` |
-| `S3DataStore` | S3-compatible object storage implementing `AbstractDataStore` |
+| `Index` | Dataset registry with pluggable providers (SQLite, Redis, PostgreSQL) |
+| `index.write()` | Write samples + persist schema + create entry in one call |
+| `LocalDiskStore` / `S3DataStore` | Persistent shard storage implementing `AbstractDataStore` |
+| `load_dataset("@local/...")` | Load by name with auto-resolved schema |
 | `LocalDatasetEntry` | Content-addressed dataset entries with CIDs |
-| Schema publishing | Shared type definitions for team consistency |
 
 The same sample types you defined in the Quick Start work seamlessly here—the only change is where the data lives.
 

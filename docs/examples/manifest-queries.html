@@ -513,7 +513,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="define-a-sample-type-with-manifest-aware-fields" class="level2">
 <h2 class="anchored" data-anchor-id="define-a-sample-type-with-manifest-aware-fields">1 — Define a sample type with manifest-aware fields</h2>
 <p>Primitive fields (<code>str</code>, <code>int</code>, <code>float</code>, <code>bool</code>, <code>list</code>) are automatically included in manifests with inferred aggregate types. You can also use <code>Annotated[..., ManifestField(...)]</code> for explicit control.</p>
-<div id="7246848e" class="cell" data-execution_count="1">
+<div id="e76f4c67" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> Annotated</span>
@@ -539,7 +539,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="see-which-fields-are-manifest-included" class="level2">
 <h2 class="anchored" data-anchor-id="see-which-fields-are-manifest-included">2 — See which fields are manifest-included</h2>
-<div id="01cfced0" class="cell" data-execution_count="2">
+<div id="7681626a" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.manifest <span class="im">import</span> resolve_manifest_fields</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>fields <span class="op">=</span> resolve_manifest_fields(LabeledImage)</span>
@@ -554,76 +554,64 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="generate-data-and-write-shards-with-manifests" class="level2">
 <h2 class="anchored" data-anchor-id="generate-data-and-write-shards-with-manifests">3 — Generate data and write shards with manifests</h2>
-<p>We’ll write samples manually using <code>TarWriter</code> while building manifests with <code>ManifestBuilder</code>, then serialize them with <code>ManifestWriter</code>.</p>
-<div id="89d6882b" class="cell" data-execution_count="3">
+<p>Pass <code>manifest=True</code> to <code>write_samples</code> and atdata builds the sidecar manifest files automatically—no manual <code>ManifestBuilder</code> plumbing needed.</p>
+<div id="a067ed33" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tempfile</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> webdataset <span class="im">as</span> wds</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata <span class="im">import</span> ManifestBuilder, ManifestWriter</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>tmpdir <span class="op">=</span> Path(tempfile.mkdtemp(prefix<span class="op">=</span><span class="st">"atdata_manifest_"</span>))</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">7</span>)</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>categories <span class="op">=</span> [<span class="st">"cat"</span>, <span class="st">"dog"</span>, <span class="st">"bird"</span>, <span class="st">"fish"</span>, <span class="st">"horse"</span>]</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>all_tags <span class="op">=</span> [<span class="st">"outdoor"</span>, <span class="st">"indoor"</span>, <span class="st">"closeup"</span>, <span class="st">"wide"</span>, <span class="st">"blurry"</span>, <span class="st">"sharp"</span>]</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>shard_size <span class="op">=</span> <span class="dv">100</span></span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>num_shards <span class="op">=</span> <span class="dv">3</span></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> shard_idx <span class="kw">in</span> <span class="bu">range</span>(num_shards):</span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    shard_name <span class="op">=</span> <span class="ss">f"images-</span><span class="sc">{</span>shard_idx<span class="sc">:06d}</span><span class="ss">"</span></span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    tar_path <span class="op">=</span> tmpdir <span class="op">/</span> <span class="ss">f"</span><span class="sc">{</span>shard_name<span class="sc">}</span><span class="ss">.tar"</span></span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    builder <span class="op">=</span> ManifestBuilder(</span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>        sample_type<span class="op">=</span>LabeledImage,</span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>        shard_id<span class="op">=</span>shard_name,</span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> wds.writer.TarWriter(<span class="bu">str</span>(tar_path)) <span class="im">as</span> sink:</span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(shard_size):</span>
-<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>            sample <span class="op">=</span> LabeledImage(</span>
-<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>                pixels<span class="op">=</span>rng.integers(<span class="dv">0</span>, <span class="dv">255</span>, (<span class="dv">32</span>, <span class="dv">32</span>, <span class="dv">3</span>), dtype<span class="op">=</span>np.uint8),</span>
-<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>                label<span class="op">=</span>categories[rng.integers(<span class="dv">0</span>, <span class="bu">len</span>(categories))],</span>
-<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>                confidence<span class="op">=</span><span class="bu">round</span>(<span class="bu">float</span>(rng.uniform(<span class="fl">0.5</span>, <span class="fl">1.0</span>)), <span class="dv">3</span>),</span>
-<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>                tags<span class="op">=</span><span class="bu">list</span>(rng.choice(all_tags, size<span class="op">=</span>rng.integers(<span class="dv">1</span>, <span class="dv">4</span>), replace<span class="op">=</span><span class="va">False</span>)),</span>
-<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>            )</span>
-<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>            key <span class="op">=</span> <span class="ss">f"sample_</span><span class="sc">{</span>shard_idx <span class="op">*</span> shard_size <span class="op">+</span> j<span class="sc">:06d}</span><span class="ss">"</span></span>
-<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>            wds_dict <span class="op">=</span> {<span class="op">**</span>sample.as_wds, <span class="st">"__key__"</span>: key}</span>
-<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>            sink.write(wds_dict)</span>
-<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>            builder.add_sample(</span>
-<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>                key<span class="op">=</span>key,</span>
-<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>                offset<span class="op">=</span><span class="dv">0</span>,  <span class="co"># simplified; real pipelines track tar offsets</span></span>
-<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>                size<span class="op">=</span><span class="bu">len</span>(sample.packed),</span>
-<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>                sample<span class="op">=</span>sample,</span>
-<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>            )</span>
-<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>    manifest <span class="op">=</span> builder.build()</span>
-<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>    writer <span class="op">=</span> ManifestWriter(<span class="bu">str</span>(tmpdir <span class="op">/</span> shard_name))</span>
-<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>    json_path, parquet_path <span class="op">=</span> writer.write(manifest)</span>
-<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Wrote </span><span class="sc">{</span>num_shards<span class="sc">}</span><span class="ss"> shards with manifests to </span><span class="sc">{</span>tmpdir<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>tmpdir <span class="op">=</span> Path(tempfile.mkdtemp(prefix<span class="op">=</span><span class="st">"atdata_manifest_"</span>))</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">7</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>categories <span class="op">=</span> [<span class="st">"cat"</span>, <span class="st">"dog"</span>, <span class="st">"bird"</span>, <span class="st">"fish"</span>, <span class="st">"horse"</span>]</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>all_tags <span class="op">=</span> [<span class="st">"outdoor"</span>, <span class="st">"indoor"</span>, <span class="st">"closeup"</span>, <span class="st">"wide"</span>, <span class="st">"blurry"</span>, <span class="st">"sharp"</span>]</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>num_samples <span class="op">=</span> <span class="dv">300</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>samples <span class="op">=</span> [</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    LabeledImage(</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>        pixels<span class="op">=</span>rng.integers(<span class="dv">0</span>, <span class="dv">255</span>, (<span class="dv">32</span>, <span class="dv">32</span>, <span class="dv">3</span>), dtype<span class="op">=</span>np.uint8),</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>        label<span class="op">=</span>categories[rng.integers(<span class="dv">0</span>, <span class="bu">len</span>(categories))],</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>        confidence<span class="op">=</span><span class="bu">round</span>(<span class="bu">float</span>(rng.uniform(<span class="fl">0.5</span>, <span class="fl">1.0</span>)), <span class="dv">3</span>),</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>        tags<span class="op">=</span><span class="bu">list</span>(rng.choice(all_tags, size<span class="op">=</span>rng.integers(<span class="dv">1</span>, <span class="dv">4</span>), replace<span class="op">=</span><span class="va">False</span>)),</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(num_samples)</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> atdata.write_samples(</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    samples,</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    tmpdir <span class="op">/</span> <span class="st">"images.tar"</span>,</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    maxcount<span class="op">=</span><span class="dv">100</span>,       <span class="co"># 3 shards of 100 samples each</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    manifest<span class="op">=</span><span class="va">True</span>,      <span class="co"># auto-build JSON + Parquet sidecar manifests</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Wrote </span><span class="sc">{</span>num_samples<span class="sc">}</span><span class="ss"> samples across </span><span class="sc">{</span><span class="bu">len</span>(ds.list_shards())<span class="sc">}</span><span class="ss"> shards"</span>)</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Manifest files: </span><span class="sc">{</span><span class="bu">sorted</span>(p.name <span class="cf">for</span> p <span class="kw">in</span> tmpdir.glob(<span class="st">'*.manifest.*'</span>))<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Wrote 3 shards with manifests to /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_manifest_deby_1hw</code></pre>
+<pre><code># writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_manifest_pux3rmim/images-000000.tar 0 0.0 GB 0
+# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_manifest_pux3rmim/images-000001.tar 100 0.0 GB 100
+# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_manifest_pux3rmim/images-000002.tar 100 0.0 GB 200
+Wrote 300 samples across 3 shards
+Manifest files: ['images-000000.manifest.json', 'images-000000.manifest.parquet', 'images-000001.manifest.json', 'images-000001.manifest.parquet', 'images-000002.manifest.json', 'images-000002.manifest.parquet']</code></pre>
 </div>
 </div>
 </section>
 <section id="inspect-a-manifest" class="level2">
 <h2 class="anchored" data-anchor-id="inspect-a-manifest">4 — Inspect a manifest</h2>
 <p>Each shard gets a JSON header (aggregates + metadata) and a Parquet file (per-sample columns).</p>
-<div id="dc543665" class="cell" data-execution_count="4">
+<div id="87447733" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(tmpdir <span class="op">/</span> <span class="st">"images-000000.manifest.json"</span>) <span class="im">as</span> f:</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    header <span class="op">=</span> json.load(f)</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Shard:"</span>, header[<span class="st">"shard_id"</span>])</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Samples:"</span>, header[<span class="st">"num_samples"</span>])</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>()</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Aggregates:"</span>)</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> field_name, agg <span class="kw">in</span> header[<span class="st">"aggregates"</span>].items():</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  </span><span class="sc">{</span>field_name<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>agg<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>manifest_json <span class="op">=</span> <span class="bu">sorted</span>(tmpdir.glob(<span class="st">"*.manifest.json"</span>))[<span class="dv">0</span>]</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(manifest_json) <span class="im">as</span> f:</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    header <span class="op">=</span> json.load(f)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Shard:"</span>, header[<span class="st">"shard_id"</span>])</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Samples:"</span>, header[<span class="st">"num_samples"</span>])</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>()</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Aggregates:"</span>)</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> field_name, agg <span class="kw">in</span> header[<span class="st">"aggregates"</span>].items():</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  </span><span class="sc">{</span>field_name<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>agg<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Shard: images-000000
+<pre><code>Shard: images
 Samples: 100
 
 Aggregates:
@@ -636,7 +624,7 @@ Aggregates:
 <section id="query-across-shards" class="level2">
 <h2 class="anchored" data-anchor-id="query-across-shards">5 — Query across shards</h2>
 <p><code>QueryExecutor</code> loads all manifests from a directory and runs a pandas predicate over the per-sample Parquet data.</p>
-<div id="a479b6fe" class="cell" data-execution_count="5">
+<div id="1d9c8d72" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata <span class="im">import</span> QueryExecutor</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>executor <span class="op">=</span> QueryExecutor.from_directory(tmpdir)</span>
@@ -650,19 +638,19 @@ Aggregates:
 <span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> loc <span class="kw">in</span> results[:<span class="dv">5</span>]:</span>
 <span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  shard=</span><span class="sc">{</span>loc<span class="sc">.</span>shard<span class="sc">}</span><span class="ss">  key=</span><span class="sc">{</span>loc<span class="sc">.</span>key<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Found 10 high-confidence dog samples
-  shard=images-000000  key=sample_000062
-  shard=images-000001  key=sample_000119
-  shard=images-000001  key=sample_000129
-  shard=images-000001  key=sample_000132
-  shard=images-000001  key=sample_000167</code></pre>
+<pre><code>Found 6 high-confidence dog samples
+  shard=images  key=5ed03f7c-00d6-11f1-8000-000000000000
+  shard=images-000000  key=5ed2f4e2-00d6-11f1-8000-000000000000
+  shard=images-000000  key=5ed32566-00d6-11f1-8000-000000000000
+  shard=images-000000  key=5ed332fe-00d6-11f1-8000-000000000000
+  shard=images-000000  key=5ed3d6aa-00d6-11f1-8000-000000000000</code></pre>
 </div>
 </div>
 </section>
 <section id="compound-queries" class="level2">
 <h2 class="anchored" data-anchor-id="compound-queries">6 — Compound queries</h2>
 <p>The predicate receives a full DataFrame, so you can compose arbitrarily complex filters.</p>
-<div id="af2cf003" class="cell" data-execution_count="6">
+<div id="246002bf" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Samples tagged "outdoor" with confidence below 0.7</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>results <span class="op">=</span> executor.query(</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    where<span class="op">=</span><span class="kw">lambda</span> df: (df[<span class="st">"confidence"</span>] <span class="op">&lt;</span> <span class="fl">0.7</span>)</span>
@@ -671,10 +659,10 @@ Aggregates:
 <span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Found </span><span class="sc">{</span><span class="bu">len</span>(results)<span class="sc">}</span><span class="ss"> low-confidence outdoor samples"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Found 40 low-confidence outdoor samples</code></pre>
+<pre><code>Found 22 low-confidence outdoor samples</code></pre>
 </div>
 </div>
-<div id="377f5aac" class="cell" data-execution_count="7">
+<div id="ebf8c712" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Count samples per label across all shards</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -683,17 +671,17 @@ Aggregates:
 <span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(combined[<span class="st">"label"</span>].value_counts().to_string())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>label
-fish     74
-bird     64
-horse    61
-dog      52
-cat      49</code></pre>
+fish     50
+bird     45
+horse    38
+dog      36
+cat      31</code></pre>
 </div>
 </div>
 </section>
 <section id="clean-up" class="level2">
 <h2 class="anchored" data-anchor-id="clean-up">7 — Clean up</h2>
-<div id="890ac552" class="cell" data-execution_count="8">
+<div id="535f95fb" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shutil</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>shutil.rmtree(tmpdir, ignore_errors<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -722,18 +710,14 @@ cat      49</code></pre>
 <td><code>resolve_manifest_fields(SampleType)</code></td>
 </tr>
 <tr class="odd">
-<td>Build manifest during writes</td>
-<td><code>ManifestBuilder.add_sample(...)</code> / <code>.build()</code></td>
+<td>Write with manifests</td>
+<td><code>write_samples(samples, path, manifest=True)</code></td>
 </tr>
 <tr class="even">
-<td>Serialize to sidecar files</td>
-<td><code>ManifestWriter(base_path).write(manifest)</code></td>
-</tr>
-<tr class="odd">
 <td>Query across shards</td>
 <td><code>QueryExecutor.from_directory(path).query(where=...)</code></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Locate matching samples</td>
 <td>Returns <code>list[SampleLocation]</code> with shard + key</td>
 </tr>

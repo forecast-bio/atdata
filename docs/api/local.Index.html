@@ -332,7 +332,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Unified index for tracking datasets across multiple repositories.</p>
-<p>Implements the AbstractIndex protocol. Maintains a registry of dataset entries across a built-in <code>"local"</code> repository, optional named repositories, and an optional atmosphere (ATProto) backend.</p>
+<p>Implements the AbstractIndex protocol. Maintains a registry of dataset entries across named repositories (always including a built-in <code>"local"</code> repository) and an optional atmosphere (ATProto) backend.</p>
 <p>The <code>"local"</code> repository is always present and uses the storage backend determined by the <code>provider</code> argument. When no provider is given, defaults to SQLite (zero external dependencies). Pass a <code>redis</code> connection or Redis <code>**kwargs</code> for backwards-compatible Redis behaviour.</p>
 <p>Additional named repositories can be mounted via the <code>repos</code> parameter, each pairing an IndexProvider with an optional data store.</p>
 <p>An Atmosphere is available by default for anonymous read-only resolution of <code>@handle/dataset</code> paths. Pass an authenticated client for write operations, or <code>atmosphere=None</code> to disable.</p>
@@ -348,19 +348,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td>_provider</td>
-<td><a href="`atdata.providers._base.IndexProvider`">_IP</a></td>
-<td>IndexProvider for the built-in <code>"local"</code> repository.</td>
-</tr>
-<tr class="even">
-<td>_data_store</td>
-<td></td>
-<td>Optional AbstractDataStore for the local repository.</td>
-</tr>
-<tr class="odd">
 <td>_repos</td>
 <td><a href="`dict`">dict</a>[<a href="`str`">str</a>, <a href="`atdata.repository.Repository`">_Repo</a>]</td>
-<td>Named repositories beyond <code>"local"</code>.</td>
+<td>All repositories keyed by name. <code>"local"</code> is always present.</td>
 </tr>
 <tr class="even">
 <td>_atmosphere</td>
@@ -1649,7 +1639,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>    maxcount<span class="op">=</span><span class="dv">10000</span>,</span>
 <span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>    maxsize<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>    metadata<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>    manifest<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Write samples and create an index entry in one step.</p>
 <p>This is the primary method for publishing data. It serializes samples to WebDataset tar files, stores them via the appropriate backend, and creates an index entry.</p>
 <p>The target backend is determined by the <em>name</em> prefix:</p>
@@ -1729,6 +1720,12 @@ state that may change during the call.</code></pre>
 <td><a href="`dict`">dict</a> | None</td>
 <td>Optional metadata dict stored with the entry.</td>
 <td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>manifest</td>
+<td><a href="`bool`">bool</a></td>
+<td>If True, write per-shard manifest sidecar files alongside each tar. Default: <code>False</code>.</td>
+<td><code>False</code></td>
 </tr>
 </tbody>
 </table>

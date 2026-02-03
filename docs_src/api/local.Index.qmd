@@ -19,8 +19,8 @@ local.Index(
 Unified index for tracking datasets across multiple repositories.
 
 Implements the AbstractIndex protocol. Maintains a registry of
-dataset entries across a built-in ``"local"`` repository, optional
-named repositories, and an optional atmosphere (ATProto) backend.
+dataset entries across named repositories (always including a built-in
+``"local"`` repository) and an optional atmosphere (ATProto) backend.
 
 The ``"local"`` repository is always present and uses the storage backend
 determined by the ``provider`` argument. When no provider is given, defaults
@@ -36,12 +36,10 @@ for write operations, or ``atmosphere=None`` to disable.
 
 ## Attributes {.doc-section .doc-section-attributes}
 
-| Name        | Type                                                                    | Description                                            |
-|-------------|-------------------------------------------------------------------------|--------------------------------------------------------|
-| _provider   | [_IP](`atdata.providers._base.IndexProvider`)                           | IndexProvider for the built-in ``"local"`` repository. |
-| _data_store |                                                                         | Optional AbstractDataStore for the local repository.   |
-| _repos      | [dict](`dict`)\[[str](`str`), [_Repo](`atdata.repository.Repository`)\] | Named repositories beyond ``"local"``.                 |
-| _atmosphere | [_AtmosphereBackend](`atdata.repository._AtmosphereBackend`) \| None    | Optional atmosphere backend for ATProto operations.    |
+| Name        | Type                                                                    | Description                                                    |
+|-------------|-------------------------------------------------------------------------|----------------------------------------------------------------|
+| _repos      | [dict](`dict`)\[[str](`str`), [_Repo](`atdata.repository.Repository`)\] | All repositories keyed by name. ``"local"`` is always present. |
+| _atmosphere | [_AtmosphereBackend](`atdata.repository._AtmosphereBackend`) \| None    | Optional atmosphere backend for ATProto operations.            |
 
 ## Methods
 
@@ -628,6 +626,7 @@ local.Index.write(
     maxcount=10000,
     maxsize=None,
     metadata=None,
+    manifest=False,
 )
 ```
 
@@ -656,17 +655,18 @@ When the local backend has no ``data_store`` configured, a
 
 #### Parameters {.doc-section .doc-section-parameters}
 
-| Name        | Type                                   | Description                                            | Default    |
-|-------------|----------------------------------------|--------------------------------------------------------|------------|
-| samples     | [Iterable](`typing.Iterable`)          | Iterable of ``Packable`` samples. Must be non-empty.   | _required_ |
-| name        | [str](`str`)                           | Dataset name, optionally prefixed with target.         | _required_ |
-| schema_ref  | [str](`str`) \| None                   | Optional schema reference. Auto-generated if ``None``. | `None`     |
-| description | [str](`str`) \| None                   | Optional dataset description (atmosphere only).        | `None`     |
-| tags        | [list](`list`)\[[str](`str`)\] \| None | Optional tags for discovery (atmosphere only).         | `None`     |
-| license     | [str](`str`) \| None                   | Optional license identifier (atmosphere only).         | `None`     |
-| maxcount    | [int](`int`)                           | Max samples per shard. Default: 10,000.                | `10000`    |
-| maxsize     | [int](`int`) \| None                   | Max bytes per shard. Default: ``None``.                | `None`     |
-| metadata    | [dict](`dict`) \| None                 | Optional metadata dict stored with the entry.          | `None`     |
+| Name        | Type                                   | Description                                                                             | Default    |
+|-------------|----------------------------------------|-----------------------------------------------------------------------------------------|------------|
+| samples     | [Iterable](`typing.Iterable`)          | Iterable of ``Packable`` samples. Must be non-empty.                                    | _required_ |
+| name        | [str](`str`)                           | Dataset name, optionally prefixed with target.                                          | _required_ |
+| schema_ref  | [str](`str`) \| None                   | Optional schema reference. Auto-generated if ``None``.                                  | `None`     |
+| description | [str](`str`) \| None                   | Optional dataset description (atmosphere only).                                         | `None`     |
+| tags        | [list](`list`)\[[str](`str`)\] \| None | Optional tags for discovery (atmosphere only).                                          | `None`     |
+| license     | [str](`str`) \| None                   | Optional license identifier (atmosphere only).                                          | `None`     |
+| maxcount    | [int](`int`)                           | Max samples per shard. Default: 10,000.                                                 | `10000`    |
+| maxsize     | [int](`int`) \| None                   | Max bytes per shard. Default: ``None``.                                                 | `None`     |
+| metadata    | [dict](`dict`) \| None                 | Optional metadata dict stored with the entry.                                           | `None`     |
+| manifest    | [bool](`bool`)                         | If True, write per-shard manifest sidecar files alongside each tar. Default: ``False``. | `False`    |
 
 #### Returns {.doc-section .doc-section-returns}
 

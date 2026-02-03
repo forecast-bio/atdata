@@ -3,7 +3,7 @@ title: "Promotion Workflow"
 description: "Migrate datasets from local storage to ATProto"
 ---
 
-This tutorial demonstrates the workflow for migrating datasets from local Redis/S3 storage to the federated ATProto atmosphere network. Promotion is the bridge between **Layer 2** (team storage) and **Layer 3** (federation).
+This tutorial demonstrates the workflow for migrating datasets from local Index-managed storage to the federated ATProto atmosphere network. Promotion is the bridge between **Layer 2** (managed storage) and **Layer 3** (federation).
 
 ## Why Promotion?
 
@@ -27,9 +27,9 @@ The promotion workflow moves datasets from local storage to the atmosphere:
 ```
 LOCAL                           ATMOSPHERE
 -----                           ----------
-Redis Index                     ATProto PDS
-S3 Storage            -->       (same S3 or new location)
-local://schemas/...             at://did:plc:.../schema/...
+Index (SQLite/Redis)            ATProto PDS
+LocalDiskStore / S3   -->       (same storage or new location)
+atdata://local/schema/...       at://did:plc:.../schema/...
 ```
 
 Key features:
@@ -45,15 +45,12 @@ Key features:
 import numpy as np
 from numpy.typing import NDArray
 import atdata
-from atdata.local import LocalIndex, LocalDatasetEntry, S3DataStore
-from atdata.atmosphere import AtmosphereClient
-from atdata.promote import promote_to_atmosphere
-import webdataset as wds
+from atdata.atmosphere import Atmosphere
 ```
 
 ## Prepare a Local Dataset
 
-First, set up a dataset in local storage:
+First, set up a dataset in local storage using `index.write()`:
 
 ```{python}
 #| eval: false
@@ -75,28 +72,9 @@ samples = [
     for i in range(1000)
 ]
 
-# 3. Write to tar
-with wds.writer.TarWriter("experiment.tar") as sink:
-    for i, s in enumerate(samples):
-        sink.write({**s.as_wds, "__key__": f"{i:06d}"})
-
-# 4. Set up local index with S3 storage
-store = S3DataStore(
-    credentials={
-        "AWS_ENDPOINT": "http://localhost:9000",
-        "AWS_ACCESS_KEY_ID": "minioadmin",
-        "AWS_SECRET_ACCESS_KEY": "minioadmin",
-    },
-    bucket="datasets-bucket",
-)
-local_index = LocalIndex(data_store=store)
-
-# 5. Insert dataset into index
-dataset = atdata.Dataset[ExperimentSample]("experiment.tar")
-local_entry = local_index.insert_dataset(dataset, name="experiment-2024-001", prefix="experiments")
-
-# 6. Publish schema to local index
-local_index.publish_schema(ExperimentSample, version="1.0.0")
+# 3. Write through index (handles sharding, schema, and storage)
+index = atdata.Index(data_store=atdata.LocalDiskStore())
+local_entry = index.write(samples, name="experiment-2024-001", maxcount=500)
 
 print(f"Local entry name: {local_entry.name}")
 print(f"Local entry CID: {local_entry.cid}")
@@ -105,16 +83,16 @@ print(f"Data URLs: {local_entry.data_urls}")
 
 ## Basic Promotion
 
-Promote the dataset to ATProto:
+Promote the dataset to ATProto using `index.promote_entry()`:
 
 ```{python}
 #| eval: false
-# Connect to atmosphere
-client = AtmosphereClient()
-client.login("myhandle.bsky.social", "app-password")
+# Connect to atmosphere and attach to the index
+client = Atmosphere.login("myhandle.bsky.social", "app-password")
+index = atdata.Index(atmosphere=client, data_store=atdata.LocalDiskStore())
 
-# Promote to atmosphere
-at_uri = promote_to_atmosphere(local_entry, local_index, client)
+# Promote by entry name
+at_uri = index.promote_entry("experiment-2024-001")
 print(f"Published: {at_uri}")
 ```
 
@@ -124,10 +102,8 @@ Add description, tags, and license:
 
 ```{python}
 #| eval: false
-at_uri = promote_to_atmosphere(
-    local_entry,
-    local_index,
-    client,
+at_uri = index.promote_entry(
+    "experiment-2024-001",
     name="experiment-2024-001-v2",   # Override name
     description="Sensor measurements from Lab 302",
     tags=["experiment", "physics", "2024"],
@@ -138,30 +114,17 @@ print(f"Published with metadata: {at_uri}")
 
 ## Schema Deduplication
 
-The promotion workflow automatically checks for existing schemas:
+The promotion workflow automatically checks for existing schemas on the
+atmosphere. When you promote multiple datasets with the same sample type,
+the schema is only published once:
 
 ```{python}
 #| eval: false
-from atdata.promote import _find_existing_schema
-
-# Check if schema already exists
-existing = _find_existing_schema(client, "ExperimentSample", "1.0.0")
-if existing:
-    print(f"Found existing schema: {existing}")
-    print("Will reuse instead of republishing")
-else:
-    print("No existing schema found, will publish new one")
-```
-
-When you promote multiple datasets with the same sample type:
-
-```{python}
-#| eval: false
-# First promotion: publishes schema
-uri1 = promote_to_atmosphere(entry1, local_index, client)
+# First promotion: publishes schema to atmosphere
+uri1 = index.promote_entry("experiment-batch-1")
 
 # Second promotion with same schema type + version: reuses existing schema
-uri2 = promote_to_atmosphere(entry2, local_index, client)
+uri2 = index.promote_entry("experiment-batch-2")
 ```
 
 ## Data Migration Options
@@ -174,8 +137,8 @@ By default, promotion keeps the original data URLs:
 
 ```{python}
 #| eval: false
-# Data stays in original S3 location
-at_uri = promote_to_atmosphere(local_entry, local_index, client)
+# Data stays in original storage location
+at_uri = index.promote_entry("experiment-2024-001")
 ```
 
 Benefits:
@@ -186,24 +149,19 @@ Benefits:
 
 ## Copy to New Storage
 
-To copy data to a different storage location:
+To copy data to a different storage location, use `promote_dataset()` with
+a Dataset loaded from the entry's URLs:
 
 ```{python}
 #| eval: false
-from atdata.local import S3DataStore
+# Load the dataset and promote directly
+entry = index.get_entry_by_name("experiment-2024-001")
+ds = atdata.Dataset[ExperimentSample](entry.data_urls[0])
 
-# Create new data store
-new_store = S3DataStore(
-    credentials="new-s3-creds.env",
-    bucket="public-datasets",
-)
-
-# Promote with data copy
-at_uri = promote_to_atmosphere(
-    local_entry,
-    local_index,
-    client,
-    data_store=new_store,  # Copy data to new storage
+at_uri = index.promote_dataset(
+    ds,
+    name="experiment-2024-001",
+    description="Sensor measurements from Lab 302",
 )
 ```
 
@@ -221,18 +179,14 @@ After promotion, verify the dataset is accessible:
 
 ```{python}
 #| eval: false
-from atdata.atmosphere import AtmosphereIndex
-
-atm_index = AtmosphereIndex(client)
-entry = atm_index.get_dataset(at_uri)
+entry = index.get_dataset(at_uri)
 
 print(f"Name: {entry.name}")
 print(f"Schema: {entry.schema_ref}")
 print(f"URLs: {entry.data_urls}")
 
-# Load and iterate
-SampleType = atm_index.decode_schema(entry.schema_ref)
-ds = atdata.Dataset[SampleType](entry.data_urls[0])
+# Load and iterate — schema auto-resolved
+ds = atdata.load_dataset(at_uri, split="train")
 
 for batch in ds.ordered(batch_size=32):
     print(f"Measurement shape: {batch.measurement.shape}")
@@ -244,23 +198,22 @@ for batch in ds.ordered(batch_size=32):
 ```{python}
 #| eval: false
 try:
-    at_uri = promote_to_atmosphere(local_entry, local_index, client)
+    at_uri = index.promote_entry("experiment-2024-001")
 except KeyError as e:
-    # Schema not found in local index
-    print(f"Missing schema: {e}")
-    print("Publish schema first: local_index.publish_schema(SampleType)")
+    # Entry or schema not found in index
+    print(f"Not found: {e}")
 except ValueError as e:
-    # Entry has no data URLs
-    print(f"Invalid entry: {e}")
+    # Entry has no data URLs or atmosphere not available
+    print(f"Invalid state: {e}")
 ```
 
 ## Requirements Checklist
 
 Before promotion:
 
-- [ ] Dataset is in local index (via `LocalIndex.insert_dataset()` or `LocalIndex.add_entry()`)
-- [ ] Schema is published to local index (via `LocalIndex.publish_schema()`)
-- [ ] AtmosphereClient is authenticated
+- [ ] Dataset is in the index (via `index.write()` or `index.insert_dataset()`)
+- [ ] Schema is persisted (automatic when using `index.write()`)
+- [ ] `Atmosphere` client is authenticated and attached to the index
 - [ ] Data URLs are publicly accessible (or will be copied)
 
 ## Complete Workflow
@@ -271,10 +224,7 @@ Before promotion:
 import numpy as np
 from numpy.typing import NDArray
 import atdata
-from atdata.local import LocalIndex, S3DataStore
-from atdata.atmosphere import AtmosphereClient, AtmosphereIndex
-from atdata.promote import promote_to_atmosphere
-import webdataset as wds
+from atdata.atmosphere import Atmosphere
 
 # 1. Define sample type
 @atdata.packable
@@ -282,7 +232,7 @@ class FeatureSample:
     features: NDArray
     label: int
 
-# 2. Create dataset tar
+# 2. Create samples
 samples = [
     FeatureSample(
         features=np.random.randn(128).astype(np.float32),
@@ -291,28 +241,16 @@ samples = [
     for i in range(1000)
 ]
 
-with wds.writer.TarWriter("features.tar") as sink:
-    for i, s in enumerate(samples):
-        sink.write({**s.as_wds, "__key__": f"{i:06d}"})
+# 3. Write through index (schema persisted automatically)
+index = atdata.Index(data_store=atdata.LocalDiskStore())
+entry = index.write(samples, name="feature-vectors-v1", maxcount=500)
 
-# 3. Store in local index with S3 backend
-store = S3DataStore(credentials="creds.env", bucket="bucket")
-local_index = LocalIndex(data_store=store)
+# 4. Promote to atmosphere
+client = Atmosphere.login("myhandle.bsky.social", "app-password")
+index = atdata.Index(atmosphere=client, data_store=atdata.LocalDiskStore())
 
-dataset = atdata.Dataset[FeatureSample]("features.tar")
-local_entry = local_index.insert_dataset(dataset, name="feature-vectors-v1", prefix="features")
-
-# 4. Publish schema locally
-local_index.publish_schema(FeatureSample, version="1.0.0")
-
-# 5. Promote to atmosphere
-client = AtmosphereClient()
-client.login("myhandle.bsky.social", "app-password")
-
-at_uri = promote_to_atmosphere(
-    local_entry,
-    local_index,
-    client,
+at_uri = index.promote_entry(
+    "feature-vectors-v1",
     description="Feature vectors for classification",
     tags=["features", "embeddings"],
     license="MIT",
@@ -320,8 +258,8 @@ at_uri = promote_to_atmosphere(
 
 print(f"Dataset published: {at_uri}")
 
-# 6. Others can now discover and load
-# ds = atdata.load_dataset("@myhandle.bsky.social/feature-vectors-v1")
+# 5. Others can now discover and load
+# ds = atdata.load_dataset("@myhandle.bsky.social/feature-vectors-v1", split="train")
 ```
 
 ## What You've Learned
@@ -330,7 +268,8 @@ You now understand the promotion workflow:
 
 | Concept | Purpose |
 |---------|---------|
-| `promote_to_atmosphere()` | Lift local entries to federated network |
+| `index.promote_entry()` | Lift local entries to federated network by name |
+| `index.promote_dataset()` | Promote a Dataset object directly |
 | Schema deduplication | Avoid publishing duplicate schemas |
 | Data URL preservation | Keep data in place or copy to new storage |
 | Metadata enrichment | Add description, tags, license during promotion |
@@ -340,12 +279,12 @@ Promotion completes atdata's three-layer story: you can now move seamlessly from
 ## The Complete Journey
 
 ```
-┌──────────────────┐     insert     ┌──────────────────┐    promote    ┌──────────────────┐
-│  Local Files     │ ────────────→  │  Team Storage    │ ────────────→ │  Federation      │
-│                  │                │                  │               │                  │
-│  tar files       │                │  Redis + S3      │               │  ATProto PDS     │
-│  Dataset[T]      │                │  LocalIndex      │               │  AtmosphereIndex │
-└──────────────────┘                └──────────────────┘               └──────────────────┘
+┌──────────────────┐   index.write  ┌──────────────────┐   promote    ┌──────────────────┐
+│  Local Files     │ ────────────→  │  Managed Storage │ ───────────→ │  Federation      │
+│                  │                │                  │              │                  │
+│  write_samples() │                │  Index (SQLite)  │              │  Index +         │
+│  Dataset[T]      │                │  LocalDiskStore  │              │  Atmosphere      │
+└──────────────────┘                └──────────────────┘              └──────────────────┘
 ```
 
 ## Next Steps

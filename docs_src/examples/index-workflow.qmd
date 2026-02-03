@@ -151,14 +151,25 @@ for batch in emb_ds.ordered(batch_size=8):
 ## 6 --- Schema tracking
 
 The index records the schema for each dataset, enabling type reconstruction
-at load time.
+at load time.  Schemas are persisted automatically by `index.write()`.
 
 ```{python}
-for schema in index.list_schemas():
-    print(f"  {schema.name:20s}  fields={list(schema.field_types.keys())}")
+for schema in index.schemas:
+    print(f"  {schema.name:20s}  fields={[f.name for f in schema.fields]}")
 ```
 
-## 7 --- Clean up
+## 7 --- Inspect the repository
+
+The index stores all backends in a uniform `repos` dict.  The `"local"`
+repository is always present.
+
+```{python}
+for name, repo in index.repos.items():
+    has_store = "yes" if repo.data_store else "no"
+    print(f"  {name:10s}  provider={type(repo.provider).__name__}  data_store={has_store}")
+```
+
+## 8 --- Clean up
 
 ```{python}
 import shutil
@@ -175,5 +186,6 @@ shutil.rmtree(tmpdir, ignore_errors=True)
 | Write with tracking | `index.write(samples, name=..., tags=...)` |
 | List datasets | `index.list_datasets()` |
 | Schema discovery | `index.list_schemas()` |
+| Inspect repositories | `index.repos` (dict including `"local"`) |
 | Set global index | `atdata.set_default_index(index)` |
 | Load by name (auto-typed) | `atdata.load_dataset("@local/name", split=...)` |

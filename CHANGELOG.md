@@ -13,6 +13,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Bounds checking in `bytes_to_array()` for truncated/corrupted buffers
 
 ### Changed
+- Streamline homepage content and add benchmarks link to hero (#583)
+- Update docs_src examples to use all new streamlined APIs (#582)
 - **Uniform Repository model**: `Index._repos` now includes `"local"` as a regular `Repository`, collapsing 3-way routing (local/named/atmosphere) to 2-way (repo/atmosphere); `provider` and `data_store` properties delegate to `_repos["local"]` (#581)
 - Update example docs to use new APIs: `manifest=True`, schema auto-resolution, DatasetDict proxy
 - Add manifest=True flag to write_samples (#580)
