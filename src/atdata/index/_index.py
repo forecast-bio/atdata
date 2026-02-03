@@ -772,21 +772,17 @@ class Index:
                             f"Pass force=True to bypass."
                         )
 
-                written_urls = effective_store.write_shards(ds, prefix=resolved_name)
+                result = effective_store.write_shards(ds, prefix=resolved_name)
 
-                # Grab blob refs if the store captured them
-                from atdata.atmosphere.store import PDSBlobStore
-
-                store_blob_refs = None
-                if isinstance(effective_store, PDSBlobStore):
-                    store_blob_refs = effective_store._last_blob_refs or None
+                # ShardUploadResult carries blob_refs; plain list does not
+                blob_refs = getattr(result, "blob_refs", None) or None
 
                 return atmo.insert_dataset(
                     ds,
                     name=resolved_name,
                     schema_ref=schema_ref,
-                    data_urls=written_urls,
-                    blob_refs=store_blob_refs,
+                    data_urls=list(result),
+                    blob_refs=blob_refs,
                     description=description,
                     tags=tags,
                     license=license,
@@ -972,14 +968,10 @@ class Index:
                         ds, prefix=resolved_name
                     )
 
-                    # If the store captured blob refs, use storageBlobs
-                    # so the PDS retains the uploaded blobs.  Fall back
-                    # to storageExternal with AT URIs otherwise.
-                    from atdata.atmosphere.store import PDSBlobStore
-
-                    blob_refs = None
-                    if isinstance(effective_store, PDSBlobStore):
-                        blob_refs = effective_store._last_blob_refs or None
+                    # If write_shards returned blob refs (e.g. ShardUploadResult),
+                    # use storageBlobs so the PDS retains the uploaded blobs.
+                    # Fall back to storageExternal with AT URIs otherwise.
+                    blob_refs = getattr(written_urls, "blob_refs", None) or None
 
                     return self.insert_dataset(
                         ds,

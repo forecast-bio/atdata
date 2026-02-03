@@ -462,8 +462,11 @@ class TestInsertDatasetAtmosphere:
         }
 
         def fake_write_shards(self_store, ds, *, prefix, **kwargs):
-            self_store._last_blob_refs = [mock_blob_ref]
-            return ["at://did:plc:test/blob/bafyreiabc"]
+            from atdata.atmosphere.store import ShardUploadResult
+
+            return ShardUploadResult(
+                ["at://did:plc:test/blob/bafyreiabc"], [mock_blob_ref]
+            )
 
         with (
             patch.object(

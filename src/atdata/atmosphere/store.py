@@ -19,7 +19,7 @@ Examples:
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 #: Maximum size in bytes for a single PDS blob upload (50 MB).
@@ -32,6 +32,25 @@ if TYPE_CHECKING:
     from ..dataset import Dataset
     from .._sources import BlobSource
     from .client import Atmosphere
+
+
+class ShardUploadResult(list):
+    """Return type for ``PDSBlobStore.write_shards()``.
+
+    Extends ``list[str]`` (AT URIs) so it satisfies the ``AbstractDataStore``
+    protocol, while also carrying the raw blob reference dicts needed to
+    create ``storageBlobs`` records.
+
+    Attributes:
+        blob_refs: Blob reference dicts as returned by
+            ``Atmosphere.upload_blob()``.
+    """
+
+    blob_refs: list[dict]
+
+    def __init__(self, urls: list[str], blob_refs: list[dict]) -> None:
+        super().__init__(urls)
+        self.blob_refs = blob_refs
 
 
 @dataclass
@@ -56,16 +75,6 @@ class PDSBlobStore:
     """
 
     client: "Atmosphere"
-    _last_blob_refs: list[dict] = field(default_factory=list, repr=False)
-    """Blob ref dicts from the most recent ``write_shards()`` call.
-
-    Each dict has the structure returned by ``Atmosphere.upload_blob()``:
-    ``{"$type": "blob", "ref": {"$link": "<cid>"}, "mimeType": ..., "size": ...}``
-
-    These are needed to embed proper blob references in the ATProto record
-    (``storageBlobs``), since the PDS only retains blobs that are referenced
-    by a committed record via typed blob objects.
-    """
 
     def write_shards(
         self,
@@ -73,7 +82,7 @@ class PDSBlobStore:
         *,
         prefix: str,
         **kwargs: Any,
-    ) -> list[str]:
+    ) -> "ShardUploadResult":
         """Upload existing dataset shards as PDS blobs.
 
         Reads the tar archives already written to disk by the caller and
@@ -86,8 +95,9 @@ class PDSBlobStore:
             **kwargs: Unused, kept for protocol compatibility.
 
         Returns:
-            List of AT URIs for the uploaded blobs, in format:
-            ``at://{did}/blob/{cid}``
+            A ``ShardUploadResult`` (behaves as ``list[str]`` of AT URIs)
+            with a ``blob_refs`` attribute containing the raw blob reference
+            dicts needed for ``storageBlobs`` records.
 
         Raises:
             ValueError: If not authenticated.
@@ -118,8 +128,7 @@ class PDSBlobStore:
             at_uri = f"at://{did}/blob/{cid}"
             blob_urls.append(at_uri)
 
-        self._last_blob_refs = blob_refs
-        return blob_urls
+        return ShardUploadResult(blob_urls, blob_refs)
 
     def read_url(self, url: str) -> str:
         """Resolve an AT URI blob reference to an HTTP URL.
@@ -189,4 +198,9 @@ class PDSBlobStore:
         return BlobSource(blob_refs=blob_refs)
 
 
-__all__ = ["PDS_BLOB_LIMIT_BYTES", "PDS_TOTAL_DATASET_LIMIT_BYTES", "PDSBlobStore"]
+__all__ = [
+    "PDS_BLOB_LIMIT_BYTES",
+    "PDS_TOTAL_DATASET_LIMIT_BYTES",
+    "PDSBlobStore",
+    "ShardUploadResult",
+]

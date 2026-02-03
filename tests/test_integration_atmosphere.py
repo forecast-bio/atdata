@@ -510,9 +510,10 @@ class TestPDSBlobStore:
         # First arg should be bytes (tar data)
         assert isinstance(call_args.args[0], bytes)
 
-        # Verify blob refs were captured for record embedding
-        assert len(store._last_blob_refs) == 1
-        blob_ref = store._last_blob_refs[0]
+        # Verify blob refs are carried on the ShardUploadResult
+        assert hasattr(urls, "blob_refs")
+        assert len(urls.blob_refs) == 1
+        blob_ref = urls.blob_refs[0]
         assert blob_ref["$type"] == "blob"
         assert blob_ref["ref"]["$link"] == "bafyrei123abc"
         assert blob_ref["mimeType"] == "application/x-tar"
