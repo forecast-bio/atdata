@@ -918,7 +918,9 @@ class Index:
                 if data_store is None:
                     from atdata.atmosphere.store import PDSBlobStore
 
-                    effective_store: AbstractDataStore | None = PDSBlobStore(atmo.client)
+                    effective_store: AbstractDataStore | None = PDSBlobStore(
+                        atmo.client
+                    )
                 else:
                     effective_store = data_store
             else:
@@ -955,7 +957,9 @@ class Index:
                 if is_atmosphere:
                     # Write shards through the store, then publish record
                     # with the resulting URLs (not the temp paths).
-                    written_urls = effective_store.write_shards(ds, prefix=resolved_name)
+                    written_urls = effective_store.write_shards(
+                        ds, prefix=resolved_name
+                    )
                     return self.insert_dataset(
                         ds,
                         name=name,

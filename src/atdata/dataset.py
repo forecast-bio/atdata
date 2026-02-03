@@ -69,6 +69,8 @@ from typing import (
 
 if TYPE_CHECKING:
     import pandas
+    import pandas as pd
+    from .manifest._proxy import Predicate
     from .manifest._query import SampleLocation
 from numpy.typing import NDArray
 
@@ -789,9 +791,7 @@ class Dataset(Generic[ST]):
                 except Exception as exc:
                     failed.append(shard_id)
                     errors[shard_id] = exc
-                    log.warning(
-                        "process_shards: shard failed %s: %s", shard_id, exc
-                    )
+                    log.warning("process_shards: shard failed %s: %s", shard_id, exc)
                     if on_shard_error is not None:
                         on_shard_error(shard_id, exc)
 
@@ -1300,7 +1300,9 @@ def write_samples(
     sample_type: type | None = None
     written_paths: list[str] = []
 
-    with log_operation("write_samples", path=str(path), sharded=use_shard_writer, manifest=manifest):
+    with log_operation(
+        "write_samples", path=str(path), sharded=use_shard_writer, manifest=manifest
+    ):
         # Manifest tracking state
         _current_builder: list = []  # single-element list for nonlocal mutation
         _builders: list[tuple[str, "ManifestBuilder"]] = []
@@ -1376,7 +1378,9 @@ def write_samples(
                     if manifest:
                         if not _current_builder and sample_type is not None:
                             _current_builder.append(
-                                ManifestBuilder(sample_type=sample_type, shard_id=path.stem)
+                                ManifestBuilder(
+                                    sample_type=sample_type, shard_id=path.stem
+                                )
                             )
                         _record_sample(sample, wds_dict)
             written_paths.append(str(path.resolve()))

@@ -98,7 +98,6 @@ class Predicate:
 
     def _build(self) -> Callable[[pd.DataFrame], pd.Series]:
         """Recursively build the pandas filter closure."""
-        import pandas as pd  # noqa: F811
 
         if self._kind == "comparison":
             field = self._field
@@ -290,7 +289,9 @@ def query_fields(sample_type: type) -> Any:
         annotations[name] = FieldProxy
     attrs["__annotations__"] = annotations
     attrs["__slots__"] = ()
-    attrs["__repr__"] = lambda self: f"{sample_type.__name__}Fields({', '.join(annotations)})"
+    attrs["__repr__"] = (
+        lambda self: f"{sample_type.__name__}Fields({', '.join(annotations)})"
+    )
 
     proxy_cls = type(f"{sample_type.__name__}Fields", (), attrs)
     return proxy_cls()

@@ -19,11 +19,8 @@ Examples:
 
 from __future__ import annotations
 
-import tempfile
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
-
-import webdataset as wds
 
 #: Maximum size in bytes for a single PDS blob upload (50 MB).
 PDS_BLOB_LIMIT_BYTES: int = 50_000_000
@@ -65,33 +62,26 @@ class PDSBlobStore:
         ds: "Dataset",
         *,
         prefix: str,
-        maxcount: int = 10000,
-        maxsize: float = PDS_BLOB_LIMIT_BYTES,
         **kwargs: Any,
     ) -> list[str]:
-        """Write dataset shards as PDS blobs.
+        """Upload existing dataset shards as PDS blobs.
 
-        Creates tar archives from the dataset and uploads each as a blob
-        to the authenticated user's PDS.
+        Reads the tar archives already written to disk by the caller and
+        uploads each as a blob to the authenticated user's PDS. This
+        avoids re-serializing samples that have already been written.
 
         Args:
-            ds: The Dataset to write.
-            prefix: Logical path prefix for naming (used in shard names only).
-            maxcount: Maximum samples per shard (default: 10000).
-            maxsize: Maximum shard size in bytes (default: 50MB, PDS blob limit).
-            **kwargs: Additional args passed to wds.ShardWriter.
+            ds: The Dataset whose shards to upload.
+            prefix: Logical path prefix (unused, kept for protocol compat).
+            **kwargs: Unused, kept for protocol compatibility.
 
         Returns:
-            List of AT URIs for the written blobs, in format:
+            List of AT URIs for the uploaded blobs, in format:
             ``at://{did}/blob/{cid}``
 
         Raises:
             ValueError: If not authenticated.
-            RuntimeError: If no shards were written.
-
-        Note:
-            PDS blobs have size limits (typically 50MB-5GB depending on PDS).
-            Adjust maxcount/maxsize to stay within limits.
+            RuntimeError: If no shards are found on the dataset.
         """
         if not self.client.did:
             raise ValueError("Client must be authenticated to upload blobs")
@@ -99,42 +89,22 @@ class PDSBlobStore:
         did = self.client.did
         blob_urls: list[str] = []
 
-        # Write shards to temp files, upload each as blob
-        with tempfile.TemporaryDirectory() as temp_dir:
-            shard_pattern = f"{temp_dir}/shard-%06d.tar"
-            written_files: list[str] = []
+        shard_paths = ds.list_shards()
+        if not shard_paths:
+            raise RuntimeError("No shards to upload")
 
-            # Track written files via custom post callback
-            def track_file(fname: str) -> None:
-                written_files.append(fname)
+        for shard_url in shard_paths:
+            with open(shard_url, "rb") as f:
+                shard_data = f.read()
 
-            with wds.writer.ShardWriter(
-                shard_pattern,
-                maxcount=maxcount,
-                maxsize=maxsize,
-                post=track_file,
-                **kwargs,
-            ) as sink:
-                for sample in ds.ordered(batch_size=None):
-                    sink.write(sample.as_wds)
+            blob_ref = self.client.upload_blob(
+                shard_data,
+                mime_type="application/x-tar",
+            )
 
-            if not written_files:
-                raise RuntimeError("No shards written")
-
-            # Upload each shard as a blob
-            for shard_path in written_files:
-                with open(shard_path, "rb") as f:
-                    shard_data = f.read()
-
-                blob_ref = self.client.upload_blob(
-                    shard_data,
-                    mime_type="application/x-tar",
-                )
-
-                # Extract CID from blob reference
-                cid = blob_ref["ref"]["$link"]
-                at_uri = f"at://{did}/blob/{cid}"
-                blob_urls.append(at_uri)
+            cid = blob_ref["ref"]["$link"]
+            at_uri = f"at://{did}/blob/{cid}"
+            blob_urls.append(at_uri)
 
         return blob_urls
 

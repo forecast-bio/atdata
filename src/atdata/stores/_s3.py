@@ -198,7 +198,12 @@ class S3DataStore:
 
         written_shards: list[str] = []
 
-        with log_operation("S3DataStore.write_shards", prefix=prefix, bucket=self.bucket, manifest=manifest):
+        with log_operation(
+            "S3DataStore.write_shards",
+            prefix=prefix,
+            bucket=self.bucket,
+            manifest=manifest,
+        ):
             # Manifest tracking state shared with the post callback
             manifest_builders: list = []
             current_builder: list = [None]  # mutable ref for closure
@@ -208,7 +213,9 @@ class S3DataStore:
                 from atdata.manifest import ManifestBuilder, ManifestWriter
 
                 def _make_builder(shard_idx: int) -> ManifestBuilder:
-                    shard_id = f"{self.bucket}/{prefix}/data--{new_uuid}--{shard_idx:06d}"
+                    shard_id = (
+                        f"{self.bucket}/{prefix}/data--{new_uuid}--{shard_idx:06d}"
+                    )
                     return ManifestBuilder(
                         sample_type=ds.sample_type,
                         shard_id=shard_id,
@@ -265,7 +272,9 @@ class S3DataStore:
                                 sample=sample,
                             )
                             # Approximate tar entry: 512-byte header + data rounded to 512
-                            offset += 512 + packed_size + (512 - packed_size % 512) % 512
+                            offset += (
+                                512 + packed_size + (512 - packed_size % 512) % 512
+                            )
 
                 # Finalize the last shard's builder (post isn't called for the last shard
                 # until ShardWriter closes, but we handle it here for safety)
@@ -290,13 +299,17 @@ class S3DataStore:
                             import boto3
 
                             s3_kwargs = {
-                                "aws_access_key_id": self.credentials["AWS_ACCESS_KEY_ID"],
+                                "aws_access_key_id": self.credentials[
+                                    "AWS_ACCESS_KEY_ID"
+                                ],
                                 "aws_secret_access_key": self.credentials[
                                     "AWS_SECRET_ACCESS_KEY"
                                 ],
                             }
                             if "AWS_ENDPOINT" in self.credentials:
-                                s3_kwargs["endpoint_url"] = self.credentials["AWS_ENDPOINT"]
+                                s3_kwargs["endpoint_url"] = self.credentials[
+                                    "AWS_ENDPOINT"
+                                ]
                             s3_client = boto3.client("s3", **s3_kwargs)
 
                             bucket_name = Path(shard_id).parts[0]
@@ -309,7 +322,9 @@ class S3DataStore:
                                 )
                             with open(parquet_path, "rb") as f:
                                 s3_client.put_object(
-                                    Bucket=bucket_name, Key=parquet_s3_key, Body=f.read()
+                                    Bucket=bucket_name,
+                                    Key=parquet_s3_key,
+                                    Body=f.read(),
                                 )
                         else:
                             self._fs.put(str(json_path), f"s3://{json_key}")
@@ -318,9 +333,7 @@ class S3DataStore:
             if len(written_shards) == 0:
                 raise RuntimeError("No shards written")
 
-            log.info(
-                "S3DataStore.write_shards: wrote %d shard(s)", len(written_shards)
-            )
+            log.info("S3DataStore.write_shards: wrote %d shard(s)", len(written_shards))
 
         return written_shards
 

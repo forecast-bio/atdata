@@ -167,7 +167,9 @@ class DatasetPublisher:
         """
         from atdata._logging import log_operation
 
-        with log_operation("DatasetPublisher.publish_with_urls", name=name, url_count=len(urls)):
+        with log_operation(
+            "DatasetPublisher.publish_with_urls", name=name, url_count=len(urls)
+        ):
             storage = StorageLocation(
                 kind="external",
                 urls=urls,

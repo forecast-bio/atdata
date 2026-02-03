@@ -93,7 +93,9 @@ class SchemaPublisher:
                 f"{sample_type.__name__} must be a dataclass (use @packable)"
             )
 
-        with log_operation("SchemaPublisher.publish", schema=sample_type.__name__, version=version):
+        with log_operation(
+            "SchemaPublisher.publish", schema=sample_type.__name__, version=version
+        ):
             # Build the schema record
             schema_record = self._build_schema_record(
                 sample_type,
