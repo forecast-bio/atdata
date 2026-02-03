@@ -494,7 +494,7 @@ def test_dataset_metadata_property(tmp_path):
     mock_response.__enter__ = Mock(return_value=mock_response)
     mock_response.__exit__ = Mock(return_value=False)
 
-    with patch("atdata.dataset.requests.get", return_value=mock_response) as mock_get:
+    with patch("requests.get", return_value=mock_response) as mock_get:
         dataset = atdata.Dataset[MetadataSample](
             wds_filename, metadata_url="http://example.com/metadata.msgpack"
         )

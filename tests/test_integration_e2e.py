@@ -567,7 +567,7 @@ class TestMetadataRoundTrip:
         mock_response.__enter__ = Mock(return_value=mock_response)
         mock_response.__exit__ = Mock(return_value=False)
 
-        with patch("atdata.dataset.requests.get", return_value=mock_response):
+        with patch("requests.get", return_value=mock_response):
             dataset = atdata.Dataset[SimpleSample](
                 tar_path,
                 metadata_url="http://example.com/meta.msgpack",

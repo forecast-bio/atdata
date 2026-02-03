@@ -210,14 +210,21 @@ class _AtmosphereBackend:
         *,
         name: str,
         schema_ref: str | None = None,
+        data_urls: list[str] | None = None,
         **kwargs: Any,
     ) -> Any:
         """Insert a dataset into ATProto.
+
+        When *data_urls* is provided the record references those URLs
+        (via ``publish_with_urls``) instead of using the Dataset's own
+        URL, which may be a local temp path.
 
         Args:
             ds: The Dataset to publish.
             name: Human-readable name.
             schema_ref: Optional schema AT URI. If None, auto-publishes schema.
+            data_urls: Explicit shard URLs to store in the record.  When
+                provided, these replace whatever ``ds.url`` contains.
             **kwargs: Additional options (description, tags, license).
 
         Returns:
@@ -226,15 +233,42 @@ class _AtmosphereBackend:
         self._ensure_loaders()
         from .atmosphere import AtmosphereIndexEntry
 
-        uri = self._dataset_publisher.publish(
-            ds,
-            name=name,
-            schema_uri=schema_ref,
-            description=kwargs.get("description"),
-            tags=kwargs.get("tags"),
-            license=kwargs.get("license"),
-            auto_publish_schema=(schema_ref is None),
-        )
+        if data_urls is not None:
+            # Ensure schema is published first
+            if schema_ref is None:
+                from .atmosphere import SchemaPublisher
+
+                sp = SchemaPublisher(self.client)
+                schema_uri_obj = sp.publish(
+                    ds.sample_type,
+                    version=kwargs.get("schema_version", "1.0.0"),
+                )
+                schema_ref = str(schema_uri_obj)
+
+            metadata = kwargs.get("metadata")
+            if metadata is None and hasattr(ds, "_metadata"):
+                metadata = ds._metadata
+
+            uri = self._dataset_publisher.publish_with_urls(
+                urls=data_urls,
+                schema_uri=schema_ref,
+                name=name,
+                description=kwargs.get("description"),
+                tags=kwargs.get("tags"),
+                license=kwargs.get("license"),
+                metadata=metadata,
+            )
+        else:
+            uri = self._dataset_publisher.publish(
+                ds,
+                name=name,
+                schema_uri=schema_ref,
+                description=kwargs.get("description"),
+                tags=kwargs.get("tags"),
+                license=kwargs.get("license"),
+                auto_publish_schema=(schema_ref is None),
+            )
+
         record = self._dataset_loader.get(uri)
         return AtmosphereIndexEntry(str(uri), record)
 
