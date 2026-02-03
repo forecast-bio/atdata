@@ -1161,7 +1161,7 @@ _T = TypeVar("_T")
 
 
 @dataclass_transform()
-def packable(cls: type[_T]) -> type[Packable]:
+def packable(cls: type[_T]) -> type[_T]:
     """Convert a class into a ``PackableSample`` dataclass with msgpack serialization.
 
     The resulting class gains ``packed``, ``as_wds``, ``from_bytes``, and
