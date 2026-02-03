@@ -86,27 +86,30 @@ class SchemaPublisher:
             ValueError: If sample_type is not a dataclass or client is not authenticated.
             TypeError: If a field type is not supported.
         """
+        from atdata._logging import log_operation
+
         if not is_dataclass(sample_type):
             raise ValueError(
                 f"{sample_type.__name__} must be a dataclass (use @packable)"
             )
 
-        # Build the schema record
-        schema_record = self._build_schema_record(
-            sample_type,
-            name=name,
-            version=version,
-            description=description,
-            metadata=metadata,
-        )
+        with log_operation("SchemaPublisher.publish", schema=sample_type.__name__, version=version):
+            # Build the schema record
+            schema_record = self._build_schema_record(
+                sample_type,
+                name=name,
+                version=version,
+                description=description,
+                metadata=metadata,
+            )
 
-        # Publish to ATProto
-        return self.client.create_record(
-            collection=f"{LEXICON_NAMESPACE}.schema",
-            record=schema_record.to_record(),
-            rkey=rkey,
-            validate=False,  # PDS doesn't know our lexicon
-        )
+            # Publish to ATProto
+            return self.client.create_record(
+                collection=f"{LEXICON_NAMESPACE}.schema",
+                record=schema_record.to_record(),
+                rkey=rkey,
+                validate=False,  # PDS doesn't know our lexicon
+            )
 
     def _build_schema_record(
         self,

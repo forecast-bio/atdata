@@ -16,6 +16,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Bounds checking in `bytes_to_array()` for truncated/corrupted input buffers
 
 ### Changed
+- Production hardening: observability and checkpoint/resume (GH#39 5.1/5.2) (#590)
+- Expand logging coverage across write/read/index/atmosphere paths (#593)
+- Add checkpoint/resume and on_shard_error to process_shards (#592)
+- Add log_operation context manager to _logging.py (#591)
 - Add version auto-suggest to /release and /publish skills (#588)
 - Create /publish skill for post-merge release tagging and PyPI publish (#587)
 - Fix wheel build: duplicate filename in ZIP archive rejected by PyPI (#586)

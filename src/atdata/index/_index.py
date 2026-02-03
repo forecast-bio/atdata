@@ -551,16 +551,29 @@ class Index:
         This is the internal implementation shared by all local and named
         repository inserts.
         """
+        from atdata._logging import get_logger
+
+        log = get_logger()
         metadata = kwargs.get("metadata")
 
         if store is not None:
             prefix = kwargs.get("prefix", name)
             cache_local = kwargs.get("cache_local", False)
+            log.debug(
+                "_insert_dataset_to_provider: name=%s, store=%s",
+                name,
+                type(store).__name__,
+            )
 
             written_urls = store.write_shards(
                 ds,
                 prefix=prefix,
                 cache_local=cache_local,
+            )
+            log.info(
+                "_insert_dataset_to_provider: %d shard(s) written for %s",
+                len(written_urls),
+                name,
             )
 
             if schema_ref is None:
@@ -576,6 +589,7 @@ class Index:
                 metadata=entry_metadata,
             )
             provider.store_entry(entry)
+            log.debug("_insert_dataset_to_provider: entry stored for %s", name)
             return entry
 
         # No data store - just index the existing URL
@@ -594,6 +608,7 @@ class Index:
             metadata=entry_metadata,
         )
         provider.store_entry(entry)
+        log.debug("_insert_dataset_to_provider: entry stored for %s", name)
         return entry
 
     def insert_dataset(
@@ -715,52 +730,54 @@ class Index:
         import tempfile
 
         from atdata.dataset import write_samples
+        from atdata._logging import log_operation
 
         backend_key, resolved_name, _ = self._resolve_prefix(name)
 
-        # Resolve the target repo's data store; auto-create LocalDiskStore
-        # for repos that have no store so write() always persists data.
-        repo = self._repos.get(backend_key)
-        effective_store = repo.data_store if repo is not None else None
-        needs_auto_store = repo is not None and effective_store is None
+        with log_operation("Index.write", name=name):
+            # Resolve the target repo's data store; auto-create LocalDiskStore
+            # for repos that have no store so write() always persists data.
+            repo = self._repos.get(backend_key)
+            effective_store = repo.data_store if repo is not None else None
+            needs_auto_store = repo is not None and effective_store is None
 
-        if needs_auto_store and backend_key != "_atmosphere":
-            from atdata.stores._disk import LocalDiskStore
+            if needs_auto_store and backend_key != "_atmosphere":
+                from atdata.stores._disk import LocalDiskStore
 
-            effective_store = LocalDiskStore()
+                effective_store = LocalDiskStore()
 
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            tmp_path = Path(tmp_dir) / "data.tar"
-            ds = write_samples(
-                samples,
-                tmp_path,
-                maxcount=maxcount,
-                maxsize=maxsize,
-                manifest=manifest,
-            )
-
-            # When we auto-created a store, write directly through it
-            # rather than via insert_dataset (which would just index
-            # the temp path).
-            if needs_auto_store and repo is not None:
-                return self._insert_dataset_to_provider(
-                    ds,
-                    name=resolved_name,
-                    schema_ref=schema_ref,
-                    provider=repo.provider,
-                    store=effective_store,
-                    metadata=metadata,
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                tmp_path = Path(tmp_dir) / "data.tar"
+                ds = write_samples(
+                    samples,
+                    tmp_path,
+                    maxcount=maxcount,
+                    maxsize=maxsize,
+                    manifest=manifest,
                 )
 
-            return self.insert_dataset(
-                ds,
-                name=name,
-                schema_ref=schema_ref,
-                metadata=metadata,
-                description=description,
-                tags=tags,
-                license=license,
-            )
+                # When we auto-created a store, write directly through it
+                # rather than via insert_dataset (which would just index
+                # the temp path).
+                if needs_auto_store and repo is not None:
+                    return self._insert_dataset_to_provider(
+                        ds,
+                        name=resolved_name,
+                        schema_ref=schema_ref,
+                        provider=repo.provider,
+                        store=effective_store,
+                        metadata=metadata,
+                    )
+
+                return self.insert_dataset(
+                    ds,
+                    name=name,
+                    schema_ref=schema_ref,
+                    metadata=metadata,
+                    description=description,
+                    tags=tags,
+                    license=license,
+                )
 
     def get_dataset(self, ref: str) -> "IndexEntry":
         """Get a dataset entry by name or prefixed reference.
@@ -1098,37 +1115,39 @@ class Index:
         from atdata.promote import _find_or_publish_schema
         from atdata.atmosphere import DatasetPublisher
         from atdata._schema_codec import schema_to_type
+        from atdata._logging import log_operation
 
         atmo = self._get_atmosphere()
         if atmo is None:
             raise ValueError("Atmosphere backend required but not available.")
 
-        entry = self.get_entry_by_name(entry_name)
-        if not entry.data_urls:
-            raise ValueError(f"Local entry {entry_name!r} has no data URLs")
+        with log_operation("Index.promote_entry", entry_name=entry_name):
+            entry = self.get_entry_by_name(entry_name)
+            if not entry.data_urls:
+                raise ValueError(f"Local entry {entry_name!r} has no data URLs")
 
-        schema_record = self.get_schema(entry.schema_ref)
-        sample_type = schema_to_type(schema_record)
-        schema_version = schema_record.get("version", "1.0.0")
+            schema_record = self.get_schema(entry.schema_ref)
+            sample_type = schema_to_type(schema_record)
+            schema_version = schema_record.get("version", "1.0.0")
 
-        atmosphere_schema_uri = _find_or_publish_schema(
-            sample_type,
-            schema_version,
-            atmo.client,
-            description=schema_record.get("description"),
-        )
+            atmosphere_schema_uri = _find_or_publish_schema(
+                sample_type,
+                schema_version,
+                atmo.client,
+                description=schema_record.get("description"),
+            )
 
-        publisher = DatasetPublisher(atmo.client)
-        uri = publisher.publish_with_urls(
-            urls=entry.data_urls,
-            schema_uri=atmosphere_schema_uri,
-            name=name or entry.name,
-            description=description,
-            tags=tags,
-            license=license,
-            metadata=entry.metadata,
-        )
-        return str(uri)
+            publisher = DatasetPublisher(atmo.client)
+            uri = publisher.publish_with_urls(
+                urls=entry.data_urls,
+                schema_uri=atmosphere_schema_uri,
+                name=name or entry.name,
+                description=description,
+                tags=tags,
+                license=license,
+                metadata=entry.metadata,
+            )
+            return str(uri)
 
     def promote_dataset(
         self,
@@ -1169,30 +1188,32 @@ class Index:
         """
         from atdata.promote import _find_or_publish_schema
         from atdata.atmosphere import DatasetPublisher
+        from atdata._logging import log_operation
 
         atmo = self._get_atmosphere()
         if atmo is None:
             raise ValueError("Atmosphere backend required but not available.")
 
-        st = sample_type or dataset.sample_type
+        with log_operation("Index.promote_dataset", name=name):
+            st = sample_type or dataset.sample_type
 
-        atmosphere_schema_uri = _find_or_publish_schema(
-            st,
-            schema_version,
-            atmo.client,
-            description=description,
-        )
+            atmosphere_schema_uri = _find_or_publish_schema(
+                st,
+                schema_version,
+                atmo.client,
+                description=description,
+            )
 
-        data_urls = dataset.list_shards()
+            data_urls = dataset.list_shards()
 
-        publisher = DatasetPublisher(atmo.client)
-        uri = publisher.publish_with_urls(
-            urls=data_urls,
-            schema_uri=atmosphere_schema_uri,
-            name=name,
-            description=description,
-            tags=tags,
-            license=license,
-            metadata=dataset._metadata,
-        )
-        return str(uri)
+            publisher = DatasetPublisher(atmo.client)
+            uri = publisher.publish_with_urls(
+                urls=data_urls,
+                schema_uri=atmosphere_schema_uri,
+                name=name,
+                description=description,
+                tags=tags,
+                license=license,
+                metadata=dataset._metadata,
+            )
+            return str(uri)
