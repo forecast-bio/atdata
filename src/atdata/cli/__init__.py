@@ -1,12 +1,12 @@
 """Command-line interface for atdata.
 
-This module provides CLI commands for managing local development infrastructure,
+This module provides CLI commands for managing development infrastructure,
 inspecting datasets, and diagnosing configuration issues.
 
 Commands:
-    atdata local up      Start Redis and MinIO containers for local development
-    atdata local down    Stop local development containers
-    atdata local status  Show status of local infrastructure
+    atdata infra up      Start Redis and MinIO containers for development
+    atdata infra down    Stop development containers
+    atdata infra status  Show status of infrastructure
     atdata diagnose      Check Redis configuration and connectivity
     atdata inspect       Show dataset summary information
     atdata schema show   Display dataset schema
@@ -30,12 +30,12 @@ app = typer.Typer(
     no_args_is_help=True,
 )
 
-local_app = typer.Typer(
-    name="local",
-    help="Manage local development infrastructure.",
+infra_app = typer.Typer(
+    name="infra",
+    help="Manage development infrastructure.",
     no_args_is_help=True,
 )
-app.add_typer(local_app, name="local")
+app.add_typer(infra_app, name="infra")
 
 schema_app = typer.Typer(
     name="schema",
@@ -101,11 +101,11 @@ def diagnose(
 
 
 # ---------------------------------------------------------------------------
-# local sub-commands
+# infra sub-commands
 # ---------------------------------------------------------------------------
 
 
-@local_app.command()
+@infra_app.command()
 def up(
     redis_port: int = typer.Option(6379, help="Redis port."),
     minio_port: int = typer.Option(9000, help="MinIO API port."),
@@ -115,7 +115,7 @@ def up(
     ),
 ) -> None:
     """Start Redis and MinIO containers."""
-    from .local import local_up
+    from .infra import local_up
 
     code = local_up(
         redis_port=redis_port,
@@ -126,23 +126,23 @@ def up(
     raise typer.Exit(code=code)
 
 
-@local_app.command()
+@infra_app.command()
 def down(
     volumes: bool = typer.Option(
         False, "--volumes", "-v", help="Also remove volumes (deletes all data)."
     ),
 ) -> None:
     """Stop local development containers."""
-    from .local import local_down
+    from .infra import local_down
 
     code = local_down(remove_volumes=volumes)
     raise typer.Exit(code=code)
 
 
-@local_app.command()
+@infra_app.command()
 def status() -> None:
-    """Show status of local infrastructure."""
-    from .local import local_status
+    """Show status of infrastructure."""
+    from .infra import local_status
 
     code = local_status()
     raise typer.Exit(code=code)

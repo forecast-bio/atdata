@@ -7,8 +7,8 @@ from atdata import (
 )
 from atdata._protocols import AbstractDataStore, Packable
 
-from atdata.local._entry import LocalDatasetEntry
-from atdata.local._schema import (
+from atdata.index._entry import LocalDatasetEntry
+from atdata.index._schema import (
     SchemaNamespace,
     LocalSchemaRecord,
     _schema_ref_from_type,
@@ -704,7 +704,7 @@ class Index:
         # so that write() always persists data to a permanent location.
         effective_store = self._data_store
         if backend_key == "local" and effective_store is None:
-            from atdata.local._disk import LocalDiskStore
+            from atdata.stores._disk import LocalDiskStore
 
             effective_store = LocalDiskStore()
 

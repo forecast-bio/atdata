@@ -41,7 +41,7 @@ def _make_provider(mock_psycopg):
 
 def _make_entry(**overrides):
     """Create a LocalDatasetEntry with sensible defaults."""
-    from atdata.local._entry import LocalDatasetEntry
+    from atdata.index._entry import LocalDatasetEntry
 
     defaults = dict(
         name="test_dataset",

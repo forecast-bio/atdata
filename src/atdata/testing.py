@@ -40,7 +40,7 @@ import webdataset as wds
 
 import atdata
 from atdata import Dataset, PackableSample
-from atdata.local._index import Index
+from atdata.index._index import Index
 from atdata.providers._sqlite import SqliteProvider
 
 ST = TypeVar("ST")

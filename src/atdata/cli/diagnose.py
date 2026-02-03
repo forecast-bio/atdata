@@ -51,7 +51,7 @@ def diagnose_redis(host: str = "localhost", port: int = 6379) -> int:
         _print_status("Connection", False, str(e))
         print()
         print("Cannot connect to Redis. Make sure Redis is running:")
-        print("  atdata local up")
+        print("  atdata infra up")
         return 1
 
     # Check Redis version
@@ -162,7 +162,7 @@ def diagnose_redis(host: str = "localhost", port: int = 6379) -> int:
         print("  maxmemory-policy noeviction")
         print()
         print("  # Or use atdata's preconfigured local setup:")
-        print("  atdata local up")
+        print("  atdata infra up")
         return 1
     else:
         print("All checks passed. Redis is properly configured for atdata.")
