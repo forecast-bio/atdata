@@ -13,7 +13,15 @@ description: Tag, create GitHub release, and publish to PyPI after a release PR 
 
 ## Your task
 
-The user will provide a version string (e.g. `v0.3.1b1`). Perform the post-merge publish flow:
+The user will provide a version string (e.g. `v0.3.1b1`). If no version is provided, infer it:
+
+1. Check the current version in `pyproject.toml` — this is the most likely version to publish
+2. Check for recently merged release PRs that match
+3. Present the version to the user for confirmation using `AskUserQuestion` with options:
+   - **`v<current_version>`** (Recommended) — publish the version currently in pyproject.toml
+   - **Other** — let the user type a different version
+
+Perform the post-merge publish flow:
 
 ### 1. Validate preconditions
 - Confirm the release branch PR has been merged to `main`
