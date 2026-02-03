@@ -20,11 +20,11 @@ class AtUri:
     AT URIs follow the format: at://<authority>/<collection>/<rkey>
 
     Examples:
-        >>> uri = AtUri.parse("at://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz")
+        >>> uri = AtUri.parse("at://did:plc:abc123/ac.foundation.dataset.schema/xyz")
         >>> uri.authority
         'did:plc:abc123'
         >>> uri.collection
-        'ac.foundation.dataset.sampleSchema'
+        'ac.foundation.dataset.schema'
         >>> uri.rkey
         'xyz'
     """
@@ -119,7 +119,7 @@ class FieldDef:
 class SchemaRecord:
     """ATProto record for a PackableSample schema.
 
-    Maps to the ``ac.foundation.dataset.sampleSchema`` Lexicon.
+    Maps to the ``ac.foundation.dataset.schema`` Lexicon.
     """
 
     name: str
@@ -143,7 +143,7 @@ class SchemaRecord:
     def to_record(self) -> dict:
         """Convert to ATProto record dict for publishing."""
         record = {
-            "$type": f"{LEXICON_NAMESPACE}.sampleSchema",
+            "$type": f"{LEXICON_NAMESPACE}.schema",
             "name": self.name,
             "version": self.version,
             "fields": [self._field_to_dict(f) for f in self.fields],

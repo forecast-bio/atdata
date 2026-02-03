@@ -223,6 +223,37 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </li>  
     </ul>
   </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-examples" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Examples</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-examples">    
+        <li>
+    <a class="dropdown-item" href="../examples/index.html">
+ <span class="dropdown-text">Overview</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../examples/typed-pipeline.html">
+ <span class="dropdown-text">Typed Dataset Pipeline</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../examples/lens-transforms.html">
+ <span class="dropdown-text">Lens Transformations</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../examples/manifest-queries.html">
+ <span class="dropdown-text">Manifest-Powered Queries</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../examples/index-workflow.html">
+ <span class="dropdown-text">Index-Managed Datasets</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../examples/multi-split.html">
+ <span class="dropdown-text">Multi-Split Datasets</span></a>
+  </li>  
+    </ul>
+  </li>
   <li class="nav-item">
     <a class="nav-link" href="../api/index.html"> 
 <span class="menu-text">API</span></a>
@@ -301,10 +332,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">**</span>kwargs,</span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Unified index for tracking datasets across multiple repositories.</p>
-<p>Implements the AbstractIndex protocol. Maintains a registry of dataset entries across a built-in <code>"local"</code> repository, optional named repositories, and an optional atmosphere (ATProto) backend.</p>
+<p>Implements the AbstractIndex protocol. Maintains a registry of dataset entries across named repositories (always including a built-in <code>"local"</code> repository) and an optional atmosphere (ATProto) backend.</p>
 <p>The <code>"local"</code> repository is always present and uses the storage backend determined by the <code>provider</code> argument. When no provider is given, defaults to SQLite (zero external dependencies). Pass a <code>redis</code> connection or Redis <code>**kwargs</code> for backwards-compatible Redis behaviour.</p>
 <p>Additional named repositories can be mounted via the <code>repos</code> parameter, each pairing an IndexProvider with an optional data store.</p>
-<p>An AtmosphereClient is available by default for anonymous read-only resolution of <code>@handle/dataset</code> paths. Pass an authenticated client for write operations, or <code>atmosphere=None</code> to disable.</p>
+<p>An Atmosphere is available by default for anonymous read-only resolution of <code>@handle/dataset</code> paths. Pass an authenticated client for write operations, or <code>atmosphere=None</code> to disable.</p>
 <section id="attributes" class="level2 doc-section doc-section-attributes">
 <h2 class="doc-section doc-section-attributes anchored" data-anchor-id="attributes">Attributes</h2>
 <table class="caption-top table">
@@ -317,19 +348,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td>_provider</td>
-<td><a href="`atdata.providers._base.IndexProvider`">_IP</a></td>
-<td>IndexProvider for the built-in <code>"local"</code> repository.</td>
-</tr>
-<tr class="even">
-<td>_data_store</td>
-<td></td>
-<td>Optional AbstractDataStore for the local repository.</td>
-</tr>
-<tr class="odd">
 <td>_repos</td>
 <td><a href="`dict`">dict</a>[<a href="`str`">str</a>, <a href="`atdata.repository.Repository`">_Repo</a>]</td>
-<td>Named repositories beyond <code>"local"</code>.</td>
+<td>All repositories keyed by name. <code>"local"</code> is always present.</td>
 </tr>
 <tr class="even">
 <td>_atmosphere</td>
@@ -483,7 +504,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`atdata.local._entry.LocalDatasetEntry`">LocalDatasetEntry</a></td>
+<td><a href="`atdata.index._entry.LocalDatasetEntry`">LocalDatasetEntry</a></td>
 <td>The created LocalDatasetEntry object.</td>
 </tr>
 </tbody>
@@ -536,7 +557,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>ref</td>
 <td><a href="`str`">str</a></td>
-<td>Schema reference string (atdata://local/sampleSchema/… or legacy local://schemas/…).</td>
+<td>Schema reference string (atdata://local/schema/… or legacy local://schemas/…).</td>
 <td><em>required</em></td>
 </tr>
 </tbody>
@@ -616,7 +637,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>type_hint</td>
-<td><a href="`type`">type</a>[<a href="`atdata.local._index.T`">T</a>]</td>
+<td><a href="`type`">type</a>[<a href="`atdata.index._index.T`">T</a>]</td>
 <td>The stub type to use for type hints. Import this from the generated stub file.</td>
 <td><em>required</em></td>
 </tr>
@@ -636,7 +657,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`type`">type</a>[<a href="`atdata.local._index.T`">T</a>]</td>
+<td><a href="`type`">type</a>[<a href="`atdata.index._index.T`">T</a>]</td>
 <td>The decoded type, cast to match the type_hint for IDE support.</td>
 </tr>
 </tbody>
@@ -764,7 +785,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`atdata.local._entry.LocalDatasetEntry`">LocalDatasetEntry</a></td>
+<td><a href="`atdata.index._entry.LocalDatasetEntry`">LocalDatasetEntry</a></td>
 <td>LocalDatasetEntry for the given CID.</td>
 </tr>
 </tbody>
@@ -828,7 +849,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`atdata.local._entry.LocalDatasetEntry`">LocalDatasetEntry</a></td>
+<td><a href="`atdata.index._entry.LocalDatasetEntry`">LocalDatasetEntry</a></td>
 <td>LocalDatasetEntry with the given name.</td>
 </tr>
 </tbody>
@@ -934,7 +955,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>ref</td>
 <td><a href="`str`">str</a></td>
-<td>Schema reference string. Supports both new format (atdata://local/sampleSchema/{name}<span class="citation" data-cites="version">@version</span>) and legacy format (local://schemas/{module.Class}<span class="citation" data-cites="version">@version</span>).</td>
+<td>Schema reference string. Supports both new format (atdata://local/schema/{name}<span class="citation" data-cites="version">@version</span>) and legacy format (local://schemas/{module.Class}<span class="citation" data-cites="version">@version</span>).</td>
 <td><em>required</em></td>
 </tr>
 </tbody>
@@ -1028,7 +1049,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`atdata.local._schema.LocalSchemaRecord`">LocalSchemaRecord</a></td>
+<td><a href="`atdata.index._schema.LocalSchemaRecord`">LocalSchemaRecord</a></td>
 <td>LocalSchemaRecord with schema details.</td>
 </tr>
 </tbody>
@@ -1186,7 +1207,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`list`">list</a>[<a href="`atdata.local._entry.LocalDatasetEntry`">LocalDatasetEntry</a>]</td>
+<td><a href="`list`">list</a>[<a href="`atdata.index._entry.LocalDatasetEntry`">LocalDatasetEntry</a>]</td>
 <td>List of all LocalDatasetEntry objects in the index.</td>
 </tr>
 </tbody>
@@ -1237,7 +1258,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>ref</td>
 <td><a href="`str`">str</a></td>
-<td>Schema reference string (atdata://local/sampleSchema/… or legacy local://schemas/…).</td>
+<td>Schema reference string (atdata://local/schema/… or legacy local://schemas/…).</td>
 <td><em>required</em></td>
 </tr>
 </tbody>
@@ -1294,11 +1315,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="examples-2" class="level4 doc-section doc-section-examples">
 <h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-2">Examples</h4>
 <div class="sourceCode" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="co"># Load and use immediately</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> MyType <span class="op">=</span> index.load_schema(<span class="st">"atdata://local/sampleSchema/MySample@1.0.0"</span>)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> MyType <span class="op">=</span> index.load_schema(<span class="st">"atdata://local/schema/MySample@1.0.0"</span>)</span>
 <span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> sample <span class="op">=</span> MyType(field1<span class="op">=</span><span class="st">"hello"</span>, field2<span class="op">=</span><span class="dv">42</span>)</span>
 <span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span></span>
 <span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="co"># Or access later via namespace</span></span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> index.load_schema(<span class="st">"atdata://local/sampleSchema/OtherType@1.0.0"</span>)</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> index.load_schema(<span class="st">"atdata://local/schema/OtherType@1.0.0"</span>)</span>
 <span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> other <span class="op">=</span> index.types.OtherType(data<span class="op">=</span><span class="st">"test"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 </section>
@@ -1575,7 +1596,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><a href="`str`">str</a></td>
-<td>Schema reference string: ‘atdata://local/sampleSchema/{name}<span class="citation" data-cites="version">@version</span>’.</td>
+<td>Schema reference string: ‘atdata://local/schema/{name}<span class="citation" data-cites="version">@version</span>’.</td>
 </tr>
 </tbody>
 </table>
@@ -1618,7 +1639,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>    maxcount<span class="op">=</span><span class="dv">10000</span>,</span>
 <span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>    maxsize<span class="op">=</span><span class="va">None</span>,</span>
 <span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>    metadata<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>    manifest<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Write samples and create an index entry in one step.</p>
 <p>This is the primary method for publishing data. It serializes samples to WebDataset tar files, stores them via the appropriate backend, and creates an index entry.</p>
 <p>The target backend is determined by the <em>name</em> prefix:</p>
@@ -1698,6 +1720,12 @@ state that may change during the call.</code></pre>
 <td><a href="`dict`">dict</a> | None</td>
 <td>Optional metadata dict stored with the entry.</td>
 <td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>manifest</td>
+<td><a href="`bool`">bool</a></td>
+<td>If True, write per-shard manifest sidecar files alongside each tar. Default: <code>False</code>.</td>
+<td><code>False</code></td>
 </tr>
 </tbody>
 </table>

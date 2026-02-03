@@ -12,11 +12,10 @@ schemas from a repository.
 ## Examples {.doc-section .doc-section-examples}
 
 ```python
->>> client = AtmosphereClient()
->>> client.login("handle", "password")
+>>> atmo = Atmosphere.login("handle", "password")
 >>>
->>> loader = SchemaLoader(client)
->>> schema = loader.get("at://did:plc:.../ac.foundation.dataset.sampleSchema/...")
+>>> loader = SchemaLoader(atmo)
+>>> schema = loader.get("at://did:plc:.../ac.foundation.dataset.schema/...")
 >>> print(schema["name"])
 'MySample'
 ```

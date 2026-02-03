@@ -9,7 +9,7 @@
 
 For this, let's take the following approach:
 
-1. Let's make the `rkey` for the `ac.foundation.dataset.sampleSchema` records be of type `any`.
+1. Let's make the `rkey` for the `ac.foundation.dataset.schema` records be of type `any`.
 2. Then, we can have our own standard for the `rkey` being of the format `{NSID}@{semver}`, where `{NSID}` gives an NSID for the permanent identifier of this sample schema type.
     * This allows us to bookkeep on the version updates
     * We can make a `ac.foundation.dataset.getLatestSchema` `query` Lexicon that will provide the record for the latest version of a given schema, as well

@@ -101,9 +101,11 @@ class TestCreateRepository:
 class TestIndexRepos:
     """Tests for Index with named repositories."""
 
-    def test_default_index_has_no_extra_repos(self, sqlite_provider):
+    def test_default_index_has_local_repo(self, sqlite_provider):
         index = Index(provider=sqlite_provider, atmosphere=None)
-        assert index.repos == {}
+        assert "local" in index.repos
+        assert index.repos["local"].provider is sqlite_provider
+        assert len(index.repos) == 1
 
     def test_index_with_named_repos(self, sqlite_provider, extra_provider):
         lab_repo = Repository(provider=extra_provider)
@@ -366,10 +368,10 @@ class TestAtmosphereIndexDeprecation:
     def test_deprecation_warning(self):
         from unittest.mock import MagicMock
 
-        from atdata.atmosphere import AtmosphereIndex, AtmosphereClient
+        from atdata.atmosphere import AtmosphereIndex, Atmosphere
 
         # Create a mock client to avoid network calls
-        mock_client = MagicMock(spec=AtmosphereClient)
+        mock_client = MagicMock(spec=Atmosphere)
         mock_client.is_authenticated = True
         mock_client.did = "did:plc:test"
 

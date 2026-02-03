@@ -15,7 +15,7 @@ import msgpack
 
 import atdata
 from atdata.atmosphere import (
-    AtmosphereClient,
+    Atmosphere,
     AtmosphereIndex,
     AtmosphereIndexEntry,
     SchemaPublisher,
@@ -69,9 +69,9 @@ def mock_atproto_client():
 
 @pytest.fixture
 def authenticated_client(mock_atproto_client):
-    """Create an authenticated AtmosphereClient."""
-    client = AtmosphereClient(_client=mock_atproto_client)
-    client.login("integration.test.social", "test-password")
+    """Create an authenticated Atmosphere."""
+    client = Atmosphere(_client=mock_atproto_client)
+    client._login("integration.test.social", "test-password")
     return client
 
 
@@ -87,7 +87,7 @@ class TestFullPublishWorkflow:
         # Setup mock responses
         schema_response = Mock()
         schema_response.uri = (
-            f"at://did:plc:integration123/{LEXICON_NAMESPACE}.sampleSchema/schema123"
+            f"at://did:plc:integration123/{LEXICON_NAMESPACE}.schema/schema123"
         )
 
         dataset_response = Mock()
@@ -101,15 +101,15 @@ class TestFullPublishWorkflow:
         ]
 
         # Execute workflow
-        client = AtmosphereClient(_client=mock_atproto_client)
-        client.login("test.social", "password")
+        client = Atmosphere(_client=mock_atproto_client)
+        client._login("test.social", "password")
 
         # Publish schema
         schema_pub = SchemaPublisher(client)
         schema_uri = schema_pub.publish(AtmoSample, version="1.0.0")
 
         assert isinstance(schema_uri, AtUri)
-        assert schema_uri.collection == f"{LEXICON_NAMESPACE}.sampleSchema"
+        assert schema_uri.collection == f"{LEXICON_NAMESPACE}.schema"
 
         # Publish dataset using correct API
         dataset_pub = DatasetPublisher(client)
@@ -134,11 +134,11 @@ class TestSessionPersistence:
 
     def test_login_with_session_restores_auth(self, mock_atproto_client):
         """Login with session string should restore authentication."""
-        client = AtmosphereClient(_client=mock_atproto_client)
+        client = Atmosphere(_client=mock_atproto_client)
 
         assert not client.is_authenticated
 
-        client.login_with_session("saved-session-string")
+        client._login_with_session("saved-session-string")
 
         assert client.is_authenticated
         mock_atproto_client.login.assert_called_with(
@@ -148,8 +148,8 @@ class TestSessionPersistence:
     def test_session_round_trip(self, mock_atproto_client):
         """Export then import session should maintain auth."""
         # First client - login and export
-        client1 = AtmosphereClient(_client=mock_atproto_client)
-        client1.login("user@test.social", "password")
+        client1 = Atmosphere(_client=mock_atproto_client)
+        client1._login("user@test.social", "password")
         session = client1.export_session()
 
         # Second client - restore from session
@@ -158,8 +158,8 @@ class TestSessionPersistence:
         mock_atproto_client2.login.return_value = mock_atproto_client.login.return_value
         mock_atproto_client2.export_session_string.return_value = session
 
-        client2 = AtmosphereClient(_client=mock_atproto_client2)
-        client2.login_with_session(session)
+        client2 = Atmosphere(_client=mock_atproto_client2)
+        client2._login_with_session(session)
 
         assert client2.is_authenticated
         assert client2.did == client1.did
@@ -171,11 +171,11 @@ class TestRecordDiscovery:
     def test_list_schemas_returns_all(self, authenticated_client, mock_atproto_client):
         """list_schemas should return all schema records."""
         mock_record1 = Mock()
-        mock_record1.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/s1"
+        mock_record1.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/s1"
         mock_record1.value = {"name": "Schema1", "version": "1.0.0", "fields": []}
 
         mock_record2 = Mock()
-        mock_record2.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/s2"
+        mock_record2.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/s2"
         mock_record2.value = {"name": "Schema2", "version": "1.0.0", "fields": []}
 
         mock_response = Mock()
@@ -192,7 +192,7 @@ class TestRecordDiscovery:
         """get should retrieve schema by URI."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.sampleSchema",
+            "$type": f"{LEXICON_NAMESPACE}.schema",
             "name": "FoundSchema",
             "version": "2.0.0",
             "fields": [
@@ -351,7 +351,7 @@ class TestSchemaPublishing:
     def test_publish_basic_schema(self, authenticated_client, mock_atproto_client):
         """Schema should publish with correct structure."""
         mock_response = Mock()
-        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/basic"
+        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/basic"
         mock_atproto_client.com.atproto.repo.create_record.return_value = mock_response
 
         publisher = SchemaPublisher(authenticated_client)
@@ -372,9 +372,7 @@ class TestSchemaPublishing:
     def test_publish_ndarray_schema(self, authenticated_client, mock_atproto_client):
         """Schema with NDArray field should publish correctly."""
         mock_response = Mock()
-        mock_response.uri = (
-            f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/ndarray"
-        )
+        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/ndarray"
         mock_atproto_client.com.atproto.repo.create_record.return_value = mock_response
 
         publisher = SchemaPublisher(authenticated_client)
@@ -393,7 +391,7 @@ class TestErrorHandling:
 
     def test_not_authenticated_raises_on_publish(self, mock_atproto_client):
         """Publishing without authentication should raise."""
-        client = AtmosphereClient(_client=mock_atproto_client)
+        client = Atmosphere(_client=mock_atproto_client)
 
         publisher = SchemaPublisher(client)
 
@@ -427,15 +425,15 @@ class TestAtUriParsing:
 
     def test_uri_str_roundtrip(self):
         """String conversion should roundtrip."""
-        original = "at://did:plc:test123/ac.foundation.dataset.sampleSchema/xyz789"
+        original = "at://did:plc:test123/ac.foundation.dataset.schema/xyz789"
         uri = AtUri.parse(original)
         assert str(uri) == original
 
     def test_parse_atdata_namespace(self):
         """Parse URIs in the atdata namespace."""
-        uri = AtUri.parse(f"at://did:plc:abc/{LEXICON_NAMESPACE}.sampleSchema/test")
+        uri = AtUri.parse(f"at://did:plc:abc/{LEXICON_NAMESPACE}.schema/test")
 
-        assert uri.collection == f"{LEXICON_NAMESPACE}.sampleSchema"
+        assert uri.collection == f"{LEXICON_NAMESPACE}.schema"
 
 
 class TestPDSBlobStore:
@@ -460,7 +458,7 @@ class TestPDSBlobStore:
         from atdata.atmosphere import PDSBlobStore
 
         # Create client without login
-        client = AtmosphereClient(_client=mock_atproto_client)
+        client = Atmosphere(_client=mock_atproto_client)
         # Clear session
         client._session = None
 

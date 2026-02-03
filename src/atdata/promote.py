@@ -6,29 +6,28 @@ federation while maintaining schema consistency.
 
 Examples:
     >>> from atdata.local import Index, Repo
-    >>> from atdata.atmosphere import AtmosphereClient, AtmosphereIndex
+    >>> from atdata.atmosphere import Atmosphere
     >>> from atdata.promote import promote_to_atmosphere
     >>>
     >>> # Setup
     >>> local_index = Index()
-    >>> client = AtmosphereClient()
-    >>> client.login("handle.bsky.social", "app-password")
+    >>> atmo = Atmosphere.login("handle.bsky.social", "app-password")
     >>>
     >>> # Promote a dataset
     >>> entry = local_index.get_dataset("my-dataset")
-    >>> at_uri = promote_to_atmosphere(entry, local_index, client)
+    >>> at_uri = promote_to_atmosphere(entry, local_index, atmo)
 """
 
 from typing import TYPE_CHECKING, Type
 
 if TYPE_CHECKING:
     from .local import LocalDatasetEntry, Index
-    from .atmosphere import AtmosphereClient
+    from .atmosphere import Atmosphere
     from ._protocols import AbstractDataStore, Packable
 
 
 def _find_existing_schema(
-    client: "AtmosphereClient",
+    client: "Atmosphere",
     name: str,
     version: str,
 ) -> str | None:
@@ -55,7 +54,7 @@ def _find_existing_schema(
 def _find_or_publish_schema(
     sample_type: "Type[Packable]",
     version: str,
-    client: "AtmosphereClient",
+    client: "Atmosphere",
     description: str | None = None,
 ) -> str:
     """Find existing schema or publish a new one.
@@ -95,7 +94,7 @@ def _find_or_publish_schema(
 def promote_to_atmosphere(
     local_entry: "LocalDatasetEntry",
     local_index: "Index",
-    atmosphere_client: "AtmosphereClient",
+    atmosphere_client: "Atmosphere",
     *,
     data_store: "AbstractDataStore | None" = None,
     name: str | None = None,
@@ -116,7 +115,7 @@ def promote_to_atmosphere(
     Args:
         local_entry: The LocalDatasetEntry to promote.
         local_index: Local index containing the schema for this entry.
-        atmosphere_client: Authenticated AtmosphereClient.
+        atmosphere_client: Authenticated Atmosphere.
         data_store: Optional data store for copying data to new location.
             If None, the existing data_urls are used as-is.
         name: Override name for the atmosphere record. Defaults to local name.
@@ -133,7 +132,7 @@ def promote_to_atmosphere(
 
     Examples:
         >>> entry = local_index.get_dataset("mnist-train")
-        >>> uri = promote_to_atmosphere(entry, local_index, client)
+        >>> uri = promote_to_atmosphere(entry, local_index, atmo)
         >>> print(uri)
         at://did:plc:abc123/ac.foundation.dataset.datasetIndex/...
     """

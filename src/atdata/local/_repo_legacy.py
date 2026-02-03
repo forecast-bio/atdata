@@ -2,8 +2,8 @@
 
 from atdata import Dataset
 
-from atdata.local._entry import LocalDatasetEntry
-from atdata.local._s3 import _s3_env, _s3_from_credentials, _create_s3_write_callbacks
+from atdata.index._entry import LocalDatasetEntry
+from atdata.stores._s3 import _s3_env, _s3_from_credentials, _create_s3_write_callbacks
 
 from pathlib import Path
 from uuid import uuid4
@@ -97,7 +97,7 @@ class Repo:
 
         #
 
-        from atdata.local._index import Index
+        from atdata.index._index import Index
 
         self.index = Index(redis=redis)
 

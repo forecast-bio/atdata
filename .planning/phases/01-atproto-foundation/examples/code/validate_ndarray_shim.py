@@ -312,5 +312,5 @@ print("""
    - Shim definition is sound and reusable
    - Works as both inline $def and external $ref
    - Compatible with JSON Schema tooling
-   - Ready for use in ac.foundation.dataset.sampleSchema Lexicon
+   - Ready for use in ac.foundation.dataset.schema Lexicon
 """)

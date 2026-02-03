@@ -164,11 +164,7 @@ class TestShardsToWdsUrl:
     def test_multiple_shards_common_pattern(self):
         shards = ["data-000.tar", "data-001.tar", "data-002.tar"]
         result = _shards_to_wds_url(shards)
-        # Algorithm finds longest common prefix/suffix, resulting in compact notation
-        # Both "data-{000,001,002}.tar" and "data-00{0,1,2}.tar" are valid
-        assert "{" in result and "}" in result
-        assert ".tar" in result
-        assert "data-" in result
+        assert result == "data-00{0,1,2}.tar"
 
     def test_multiple_shards_different_lengths(self):
         shards = ["data-0.tar", "data-1.tar", "data-10.tar"]
@@ -421,6 +417,46 @@ class TestDatasetDict:
         num_shards = dd.num_shards
         assert "train" in num_shards
         assert num_shards["train"] == 1
+
+    def test_single_split_proxy_ordered(self, tmp_path):
+        """Single-split DatasetDict should proxy .ordered() to the Dataset."""
+        tar_path = tmp_path / "data.tar"
+        with wds.writer.TarWriter(str(tar_path)) as sink:
+            for i in range(5):
+                sample = SimpleTestSample(text=f"s{i}", label=i)
+                sink.write(sample.as_wds)
+
+        dd = DatasetDict({"train": atdata.Dataset[SimpleTestSample](str(tar_path))})
+        results = list(dd.ordered(batch_size=None))
+        assert len(results) == 5
+
+    def test_single_split_proxy_list_shards(self, tmp_path):
+        """Single-split DatasetDict should proxy .list_shards()."""
+        tar_path = tmp_path / "data.tar"
+        with wds.writer.TarWriter(str(tar_path)) as sink:
+            sink.write(SimpleTestSample(text="x", label=0).as_wds)
+
+        dd = DatasetDict({"train": atdata.Dataset[SimpleTestSample](str(tar_path))})
+        shards = dd.list_shards()
+        assert len(shards) == 1
+
+    def test_multi_split_no_proxy(self, tmp_path):
+        """Multi-split DatasetDict should NOT proxy Dataset methods."""
+        tar_path = tmp_path / "data.tar"
+        with wds.writer.TarWriter(str(tar_path)) as sink:
+            sink.write(SimpleTestSample(text="x", label=0).as_wds)
+
+        ds = atdata.Dataset[SimpleTestSample](str(tar_path))
+        dd = DatasetDict({"train": ds, "test": ds})
+
+        with pytest.raises(AttributeError, match="2 splits"):
+            dd.ordered()
+
+    def test_unknown_attr_raises(self):
+        """Non-Dataset attributes should raise normal AttributeError."""
+        dd = DatasetDict()
+        with pytest.raises(AttributeError, match="has no attribute"):
+            dd.nonexistent_method()
 
 
 ##

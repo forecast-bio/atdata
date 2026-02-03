@@ -14,10 +14,9 @@ external storage (WebDataset URLs) or ATProto blobs.
 ```python
 >>> dataset = atdata.Dataset[MySample]("s3://bucket/data-{000000..000009}.tar")
 >>>
->>> client = AtmosphereClient()
->>> client.login("handle", "password")
+>>> atmo = Atmosphere.login("handle", "password")
 >>>
->>> publisher = DatasetPublisher(client)
+>>> publisher = DatasetPublisher(atmo)
 >>> uri = publisher.publish(
 ...     dataset,
 ...     name="My Training Data",

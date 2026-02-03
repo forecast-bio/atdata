@@ -1,6 +1,6 @@
 """Coverage tests for atdata.repository._AtmosphereBackend.
 
-Uses mocked AtmosphereClient and patched atmosphere sub-modules to exercise
+Uses mocked Atmosphere and patched atmosphere sub-modules to exercise
 the backend without requiring a live ATProto connection.
 """
 
@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from atdata.atmosphere.client import AtmosphereClient
+from atdata.atmosphere.client import Atmosphere
 from atdata.repository import _AtmosphereBackend
 
 
@@ -21,8 +21,8 @@ from atdata.repository import _AtmosphereBackend
 
 @pytest.fixture
 def mock_atmo_client():
-    """Return a MagicMock that passes isinstance(x, AtmosphereClient)."""
-    return MagicMock(spec=AtmosphereClient)
+    """Return a MagicMock that passes isinstance(x, Atmosphere)."""
+    return MagicMock(spec=Atmosphere)
 
 
 @pytest.fixture
@@ -44,8 +44,8 @@ def backend_with_store(mock_atmo_client):
 
 
 def test_atmosphere_backend_constructor_validates_type() -> None:
-    """Passing a non-AtmosphereClient object raises TypeError."""
-    with pytest.raises(TypeError, match="Expected AtmosphereClient"):
+    """Passing a non-Atmosphere object raises TypeError."""
+    with pytest.raises(TypeError, match="Expected Atmosphere"):
         _AtmosphereBackend("not-a-client")
 
 

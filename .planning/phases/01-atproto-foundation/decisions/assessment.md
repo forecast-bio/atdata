@@ -16,7 +16,7 @@ The finalized design decisions prioritize **flexibility and future-proofing** ov
 2. **Lens Code (#46)**: External repos (GitHub + tangled.org), language metadata, future attestation
 3. **Storage (#47)**: Hybrid (URLs + blobs) from start, AppView proxy for blobs
 4. **Evolution (#48)**: rkey as {NSID}@{semver}, getLatestSchema query, optional migration Lenses
-5. **Namespace (#49)**: `ac.foundation.dataset.*` (sampleSchema, record, lens)
+5. **Namespace (#49)**: `ac.foundation.dataset.*` (schema, record, lens)
 
 ---
 

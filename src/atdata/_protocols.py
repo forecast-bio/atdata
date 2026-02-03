@@ -103,7 +103,7 @@ class IndexEntry(Protocol):
         """Schema reference string.
 
         Local: ``local://schemas/{module.Class}@{version}``
-        Atmosphere: ``at://did:plc:.../ac.foundation.dataset.sampleSchema/...``
+        Atmosphere: ``at://did:plc:.../ac.foundation.dataset.schema/...``
         """
         ...
 

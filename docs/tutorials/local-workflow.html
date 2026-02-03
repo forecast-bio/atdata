@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Store and manage datasets with Redis + S3">
+<meta name="description" content="Store and manage datasets with Index">
 
 <title>Local Workflow – atdata</title>
 <style>
@@ -224,6 +224,37 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </li>  
     </ul>
   </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-examples" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Examples</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-examples">    
+        <li>
+    <a class="dropdown-item" href="../examples/index.html">
+ <span class="dropdown-text">Overview</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../examples/typed-pipeline.html">
+ <span class="dropdown-text">Typed Dataset Pipeline</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../examples/lens-transforms.html">
+ <span class="dropdown-text">Lens Transformations</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../examples/manifest-queries.html">
+ <span class="dropdown-text">Manifest-Powered Queries</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../examples/index-workflow.html">
+ <span class="dropdown-text">Index-Managed Datasets</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../examples/multi-split.html">
+ <span class="dropdown-text">Multi-Split Datasets</span></a>
+  </li>  
+    </ul>
+  </li>
   <li class="nav-item">
     <a class="nav-link" href="../api/index.html"> 
 <span class="menu-text">API</span></a>
@@ -302,12 +333,59 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
- <span class="menu-text">Reference</span></a>
+ <span class="menu-text">Examples</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
       <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../examples/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Examples</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../examples/typed-pipeline.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Typed Dataset Pipeline</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../examples/lens-transforms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lens Transformations</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../examples/manifest-queries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Manifest-Powered Queries</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../examples/index-workflow.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Index-Managed Datasets</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../examples/multi-split.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Multi-Split Datasets</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Reference</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../reference/architecture.html" class="sidebar-item-text sidebar-link">
@@ -392,16 +470,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#why-team-storage" id="toc-why-team-storage" class="nav-link active" data-scroll-target="#why-team-storage">Why Team Storage?</a></li>
+  <li><a href="#why-managed-storage" id="toc-why-managed-storage" class="nav-link active" data-scroll-target="#why-managed-storage">Why Managed Storage?</a></li>
   <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
   <li><a href="#setup" id="toc-setup" class="nav-link" data-scroll-target="#setup">Setup</a></li>
   <li><a href="#define-sample-types" id="toc-define-sample-types" class="nav-link" data-scroll-target="#define-sample-types">Define Sample Types</a></li>
   <li><a href="#localdatasetentry" id="toc-localdatasetentry" class="nav-link" data-scroll-target="#localdatasetentry">LocalDatasetEntry</a></li>
-  <li><a href="#localindex" id="toc-localindex" class="nav-link" data-scroll-target="#localindex">LocalIndex</a>
+  <li><a href="#the-index" id="toc-the-index" class="nav-link" data-scroll-target="#the-index">The Index</a>
   <ul class="collapse">
   <li><a href="#schema-management" id="toc-schema-management" class="nav-link" data-scroll-target="#schema-management">Schema Management</a></li>
   </ul></li>
+  <li><a href="#data-stores" id="toc-data-stores" class="nav-link" data-scroll-target="#data-stores">Data Stores</a>
+  <ul class="collapse">
+  <li><a href="#localdiskstore" id="toc-localdiskstore" class="nav-link" data-scroll-target="#localdiskstore">LocalDiskStore</a></li>
   <li><a href="#s3datastore" id="toc-s3datastore" class="nav-link" data-scroll-target="#s3datastore">S3DataStore</a></li>
+  </ul></li>
   <li><a href="#complete-index-workflow" id="toc-complete-index-workflow" class="nav-link" data-scroll-target="#complete-index-workflow">Complete Index Workflow</a></li>
   <li><a href="#using-load_dataset-with-index" id="toc-using-load_dataset-with-index" class="nav-link" data-scroll-target="#using-load_dataset-with-index">Using load_dataset with Index</a></li>
   <li><a href="#what-youve-learned" id="toc-what-youve-learned" class="nav-link" data-scroll-target="#what-youve-learned">What You’ve Learned</a></li>
@@ -419,7 +501,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <div>
   <div class="description">
-    Store and manage datasets with Redis + S3
+    Store and manage datasets with Index
   </div>
 </div>
 
@@ -436,16 +518,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>This tutorial demonstrates how to use the local storage module to store and index datasets using Redis and S3-compatible storage. This is <strong>Layer 2</strong> of atdata’s architecture—team-scale storage that bridges local development and federated sharing.</p>
-<section id="why-team-storage" class="level2">
-<h2 class="anchored" data-anchor-id="why-team-storage">Why Team Storage?</h2>
-<p>Local tar files work well for individual experiments, but teams need:</p>
+<p>This tutorial demonstrates how to use the <code>Index</code> class to store and manage datasets locally. This is <strong>Layer 2</strong> of atdata’s architecture—managed storage that bridges local development and federated sharing.</p>
+<section id="why-managed-storage" class="level2">
+<h2 class="anchored" data-anchor-id="why-managed-storage">Why Managed Storage?</h2>
+<p>Local tar files work well for individual experiments, but growing projects need:</p>
 <ul>
 <li><strong>Discovery</strong>: “What datasets do we have? What schema does this one use?”</li>
 <li><strong>Consistency</strong>: “Is everyone using the same version of this dataset?”</li>
 <li><strong>Durability</strong>: “Where’s the canonical copy of our training data?”</li>
 </ul>
-<p>atdata’s local storage module addresses these needs with a two-component architecture:</p>
+<p>atdata’s <code>Index</code> class addresses these needs with a two-component architecture:</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 55%">
@@ -459,62 +541,48 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td><strong>Redis Index</strong></td>
-<td>Fast metadata queries, schema registry, dataset discovery</td>
+<td><strong>Index Provider</strong></td>
+<td>Metadata queries, schema registry, dataset discovery (SQLite default, also Redis/PostgreSQL)</td>
 </tr>
 <tr class="even">
-<td><strong>S3 DataStore</strong></td>
-<td>Scalable object storage for actual data files</td>
+<td><strong>Data Store</strong></td>
+<td>Persistent shard storage (<code>LocalDiskStore</code> or <code>S3DataStore</code>)</td>
 </tr>
 </tbody>
 </table>
-<p>This separation means metadata operations (listing datasets, resolving schemas) are fast and don’t touch large data files, while the data itself lives in battle-tested object storage.</p>
+<p>This separation means metadata operations (listing datasets, resolving schemas) are fast and don’t touch large data files, while the data itself lives in persistent storage.</p>
 </section>
 <section id="prerequisites" class="level2">
 <h2 class="anchored" data-anchor-id="prerequisites">Prerequisites</h2>
+<p>For the simplest setup, no external services are needed—<code>Index()</code> uses SQLite and <code>LocalDiskStore</code> by default.</p>
+<p>For team-scale deployments you can optionally use:</p>
 <ul>
-<li>Redis server running (default: <code>localhost:6379</code>)</li>
-<li>S3-compatible storage (MinIO, AWS S3, etc.)</li>
+<li>Redis or PostgreSQL as the index provider</li>
+<li>S3-compatible storage (MinIO, AWS S3, etc.) as the data store</li>
 </ul>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Tip
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>For local development, you can use MinIO:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">-p</span> 9000:9000 minio/minio server /data</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</div>
 </section>
 <section id="setup" class="level2">
 <h2 class="anchored" data-anchor-id="setup">Setup</h2>
-<div id="e2ca8c26" class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> LocalIndex, LocalDatasetEntry, S3DataStore</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> webdataset <span class="im">as</span> wds</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="8c92fe8c" class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="define-sample-types" class="level2">
 <h2 class="anchored" data-anchor-id="define-sample-types">Define Sample Types</h2>
-<div id="e69e72e0" class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> TrainingSample:</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""A sample containing features and label for training."""</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    features: NDArray</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    label: <span class="bu">int</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> TextSample:</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""A sample containing text data."""</span></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    text: <span class="bu">str</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    category: <span class="bu">str</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="56f38cdb" class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> TrainingSample:</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""A sample containing features and label for training."""</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    features: NDArray</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    label: <span class="bu">int</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> TextSample:</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""A sample containing text data."""</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    text: <span class="bu">str</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    category: <span class="bu">str</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="localdatasetentry" class="level2">
@@ -527,20 +595,20 @@ Tip
 </ul>
 <p>CIDs are computed from the entry’s schema reference and data URLs, so the same logical dataset will have the same CID regardless of where it’s stored.</p>
 <p>Create entries with content-addressable CIDs:</p>
-<div id="328781c5" class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create an entry manually</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>entry <span class="op">=</span> LocalDatasetEntry(</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    _name<span class="op">=</span><span class="st">"my-dataset"</span>,</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    _schema_ref<span class="op">=</span><span class="st">"local://schemas/examples.TrainingSample@1.0.0"</span>,</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    _data_urls<span class="op">=</span>[<span class="st">"s3://bucket/data-000000.tar"</span>, <span class="st">"s3://bucket/data-000001.tar"</span>],</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    _metadata<span class="op">=</span>{<span class="st">"source"</span>: <span class="st">"example"</span>, <span class="st">"samples"</span>: <span class="dv">10000</span>},</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Entry name: </span><span class="sc">{</span>entry<span class="sc">.</span>name<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Schema ref: </span><span class="sc">{</span>entry<span class="sc">.</span>schema_ref<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Data URLs: </span><span class="sc">{</span>entry<span class="sc">.</span>data_urls<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Metadata: </span><span class="sc">{</span>entry<span class="sc">.</span>metadata<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"CID: </span><span class="sc">{</span>entry<span class="sc">.</span>cid<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="94488a24" class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create an entry manually</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>entry <span class="op">=</span> LocalDatasetEntry(</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    _name<span class="op">=</span><span class="st">"my-dataset"</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    _schema_ref<span class="op">=</span><span class="st">"local://schemas/examples.TrainingSample@1.0.0"</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    _data_urls<span class="op">=</span>[<span class="st">"s3://bucket/data-000000.tar"</span>, <span class="st">"s3://bucket/data-000001.tar"</span>],</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    _metadata<span class="op">=</span>{<span class="st">"source"</span>: <span class="st">"example"</span>, <span class="st">"samples"</span>: <span class="dv">10000</span>},</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Entry name: </span><span class="sc">{</span>entry<span class="sc">.</span>name<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Schema ref: </span><span class="sc">{</span>entry<span class="sc">.</span>schema_ref<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Data URLs: </span><span class="sc">{</span>entry<span class="sc">.</span>data_urls<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Metadata: </span><span class="sc">{</span>entry<span class="sc">.</span>metadata<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"CID: </span><span class="sc">{</span>entry<span class="sc">.</span>cid<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -556,25 +624,36 @@ Note
 </div>
 </div>
 </section>
-<section id="localindex" class="level2">
-<h2 class="anchored" data-anchor-id="localindex">LocalIndex</h2>
-<p>The <code>LocalIndex</code> is your team’s dataset registry. It implements the <code>AbstractIndex</code> protocol, meaning code written against <code>LocalIndex</code> will also work with <code>AtmosphereIndex</code> when you’re ready for federated sharing.</p>
-<p>The index tracks datasets in Redis:</p>
-<div id="63892c16" class="cell">
+<section id="the-index" class="level2">
+<h2 class="anchored" data-anchor-id="the-index">The Index</h2>
+<p>The <code>Index</code> is your dataset registry. It implements the <code>AbstractIndex</code> protocol, meaning code written against <code>Index</code> will also work with atmosphere backends when you’re ready for federated sharing.</p>
+<p>By default, <code>Index()</code> uses SQLite (zero external dependencies):</p>
+<div id="b43c9382" class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Zero-config: SQLite in memory</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> atdata.Index()</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Or persist to disk</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> atdata.Index(path<span class="op">=</span><span class="st">"~/.atdata/index.db"</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># With a data store for shard storage</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> atdata.Index(</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    data_store<span class="op">=</span>atdata.LocalDiskStore(root<span class="op">=</span><span class="st">"~/.atdata/data/"</span>),</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>For team deployments, swap in Redis or PostgreSQL:</p>
+<div id="91fc2a27" class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> redis <span class="im">import</span> Redis</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Connect to Redis</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>redis <span class="op">=</span> Redis(host<span class="op">=</span><span class="st">"localhost"</span>, port<span class="op">=</span><span class="dv">6379</span>)</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> LocalIndex(redis<span class="op">=</span>redis)</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"LocalIndex connected"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> atdata.Index(redis<span class="op">=</span>Redis(host<span class="op">=</span><span class="st">"localhost"</span>, port<span class="op">=</span><span class="dv">6379</span>))</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># or</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> atdata.Index(provider<span class="op">=</span><span class="st">"postgres"</span>, dsn<span class="op">=</span><span class="st">"postgresql://user:pass@host/db"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <section id="schema-management" class="level3">
 <h3 class="anchored" data-anchor-id="schema-management">Schema Management</h3>
 <p><strong>Schema publishing</strong> is how you ensure type consistency across your team. When you publish a schema, atdata stores the complete type definition (field names, types, metadata) so anyone can reconstruct the Python class from just the schema reference.</p>
-<p>This enables a powerful workflow: share a dataset by sharing its name, and consumers can dynamically reconstruct the sample type without having the original Python code.</p>
-<div id="d002dd6d" class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Publish a schema</span></span>
+<p>When you use <code>index.write()</code>, schemas are <strong>persisted automatically</strong>—no separate <code>publish_schema()</code> call needed. Consumers can load datasets by name and the sample type is reconstructed from the stored schema.</p>
+<div id="d9132954" class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Explicit schema publishing (optional — index.write() does this for you)</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>schema_ref <span class="op">=</span> index.publish_schema(TrainingSample, version<span class="op">=</span><span class="st">"1.0.0"</span>)</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Published schema: </span><span class="sc">{</span>schema_ref<span class="sc">}</span><span class="ss">"</span>)</span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
@@ -582,117 +661,107 @@ Note
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> schema <span class="kw">in</span> index.list_schemas():</span>
 <span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  - </span><span class="sc">{</span>schema<span class="sc">.</span>get(<span class="st">'name'</span>, <span class="st">'Unknown'</span>)<span class="sc">}</span><span class="ss"> v</span><span class="sc">{</span>schema<span class="sc">.</span>get(<span class="st">'version'</span>, <span class="st">'?'</span>)<span class="sc">}</span><span class="ss">"</span>)</span>
 <span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Get schema record</span></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>schema_record <span class="op">=</span> index.get_schema(schema_ref)</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Schema fields: </span><span class="sc">{</span>[f[<span class="st">'name'</span>] <span class="cf">for</span> f <span class="kw">in</span> schema_record.get(<span class="st">'fields'</span>, [])]<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Decode schema back to a PackableSample class</span></span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>decoded_type <span class="op">=</span> index.decode_schema(schema_ref)</span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Decoded type: </span><span class="sc">{</span>decoded_type<span class="sc">.</span><span class="va">__name__</span><span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Decode schema back to a PackableSample class</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>decoded_type <span class="op">=</span> index.decode_schema(schema_ref)</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Decoded type: </span><span class="sc">{</span>decoded_type<span class="sc">.</span><span class="va">__name__</span><span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 </section>
-<section id="s3datastore" class="level2">
-<h2 class="anchored" data-anchor-id="s3datastore">S3DataStore</h2>
-<p>The <code>S3DataStore</code> implements the <code>AbstractDataStore</code> protocol for S3-compatible object storage. It works with:</p>
-<ul>
-<li><strong>AWS S3</strong>: Production-scale cloud storage</li>
-<li><strong>MinIO</strong>: Self-hosted S3-compatible storage (great for development)</li>
-<li><strong>Cloudflare R2</strong>: Cost-effective S3-compatible storage</li>
-</ul>
-<p>The data store handles uploading tar shards and creating signed URLs for streaming access.</p>
-<p>For direct S3 operations:</p>
-<div id="11cd5eb9" class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>creds <span class="op">=</span> {</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"AWS_ENDPOINT"</span>: <span class="st">"http://localhost:9000"</span>,</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"AWS_ACCESS_KEY_ID"</span>: <span class="st">"minioadmin"</span>,</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"AWS_SECRET_ACCESS_KEY"</span>: <span class="st">"minioadmin"</span>,</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>store <span class="op">=</span> S3DataStore(creds, bucket<span class="op">=</span><span class="st">"my-bucket"</span>)</span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Bucket: </span><span class="sc">{</span>store<span class="sc">.</span>bucket<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Supports streaming: </span><span class="sc">{</span>store<span class="sc">.</span>supports_streaming()<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<section id="data-stores" class="level2">
+<h2 class="anchored" data-anchor-id="data-stores">Data Stores</h2>
+<p>Data stores implement the <code>AbstractDataStore</code> protocol for persistent shard storage:</p>
+<section id="localdiskstore" class="level3">
+<h3 class="anchored" data-anchor-id="localdiskstore">LocalDiskStore</h3>
+<p>The simplest option—stores shards on the local filesystem:</p>
+<div id="f4f0c38e" class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>store <span class="op">=</span> atdata.LocalDiskStore(root<span class="op">=</span><span class="st">"~/.atdata/data/"</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Or accept the default root (~/.atdata/data/)</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>store <span class="op">=</span> atdata.LocalDiskStore()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+</section>
+<section id="s3datastore" class="level3">
+<h3 class="anchored" data-anchor-id="s3datastore">S3DataStore</h3>
+<p>For team-scale storage with S3-compatible backends (AWS S3, MinIO, Cloudflare R2):</p>
+<div id="fd5afeda" class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.stores <span class="im">import</span> S3DataStore</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>store <span class="op">=</span> S3DataStore(</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    credentials<span class="op">=</span>{</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">"AWS_ENDPOINT"</span>: <span class="st">"http://localhost:9000"</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">"AWS_ACCESS_KEY_ID"</span>: <span class="st">"minioadmin"</span>,</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">"AWS_SECRET_ACCESS_KEY"</span>: <span class="st">"minioadmin"</span>,</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    },</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    bucket<span class="op">=</span><span class="st">"my-bucket"</span>,</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
 </section>
 <section id="complete-index-workflow" class="level2">
 <h2 class="anchored" data-anchor-id="complete-index-workflow">Complete Index Workflow</h2>
-<p>Here’s the typical workflow for publishing a dataset to your team:</p>
+<p>The typical workflow has just three steps:</p>
 <ol type="1">
 <li><strong>Create samples</strong> using your <code>@packable</code> type</li>
-<li><strong>Write to local tar</strong> for staging</li>
-<li><strong>Create a Dataset</strong> wrapper</li>
-<li><strong>Connect to index with data store</strong></li>
-<li><strong>Publish schema</strong> for type consistency</li>
-<li><strong>Insert dataset</strong> (uploads to S3, indexes in Redis)</li>
+<li><strong>Write through the index</strong> (<code>index.write()</code> handles sharding, storage, schema persistence, and indexing)</li>
+<li><strong>Load by name</strong> (<code>load_dataset()</code> auto-resolves schema and data URLs)</li>
 </ol>
-<p>The index composition pattern (<code>LocalIndex(data_store=S3DataStore(...))</code>) is deliberate—it separates the concern of “where is metadata?” from “where is data?”, making it easy to swap storage backends.</p>
-<p>Use <code>LocalIndex</code> with <code>S3DataStore</code> to store datasets with S3 storage and Redis indexing:</p>
-<div id="e438ea83" class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Create sample data</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>samples <span class="op">=</span> [</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    TrainingSample(</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>        features<span class="op">=</span>np.random.randn(<span class="dv">128</span>).astype(np.float32),</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        label<span class="op">=</span>i <span class="op">%</span> <span class="dv">10</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1000</span>)</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Created </span><span class="sc">{</span><span class="bu">len</span>(samples)<span class="sc">}</span><span class="ss"> training samples"</span>)</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Write to local tar file</span></span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> wds.writer.TarWriter(<span class="st">"local-data-000000.tar"</span>) <span class="im">as</span> sink:</span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, sample <span class="kw">in</span> <span class="bu">enumerate</span>(samples):</span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>        sink.write({<span class="op">**</span>sample.as_wds, <span class="st">"__key__"</span>: <span class="ss">f"sample_</span><span class="sc">{</span>i<span class="sc">:06d}</span><span class="ss">"</span>})</span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Wrote samples to local tar file"</span>)</span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Create Dataset</span></span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> atdata.Dataset[TrainingSample](<span class="st">"local-data-000000.tar"</span>)</span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Set up index with S3 data store and insert</span></span>
-<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>store <span class="op">=</span> S3DataStore(</span>
-<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>    credentials<span class="op">=</span>{</span>
-<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>        <span class="st">"AWS_ENDPOINT"</span>: <span class="st">"http://localhost:9000"</span>,</span>
-<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>        <span class="st">"AWS_ACCESS_KEY_ID"</span>: <span class="st">"minioadmin"</span>,</span>
-<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>        <span class="st">"AWS_SECRET_ACCESS_KEY"</span>: <span class="st">"minioadmin"</span>,</span>
-<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>    },</span>
-<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>    bucket<span class="op">=</span><span class="st">"my-bucket"</span>,</span>
-<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> LocalIndex(redis<span class="op">=</span>redis, data_store<span class="op">=</span>store)</span>
-<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Publish schema and insert dataset</span></span>
-<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>index.publish_schema(TrainingSample, version<span class="op">=</span><span class="st">"1.0.0"</span>)</span>
-<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>entry <span class="op">=</span> index.insert_dataset(ds, name<span class="op">=</span><span class="st">"training-v1"</span>, prefix<span class="op">=</span><span class="st">"datasets"</span>)</span>
-<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Stored at: </span><span class="sc">{</span>entry<span class="sc">.</span>data_urls<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"CID: </span><span class="sc">{</span>entry<span class="sc">.</span>cid<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Retrieve later</span></span>
-<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>retrieved_entry <span class="op">=</span> index.get_entry_by_name(<span class="st">"training-v1"</span>)</span>
-<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[TrainingSample](retrieved_entry.data_urls[<span class="dv">0</span>])</span>
-<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> dataset.ordered(batch_size<span class="op">=</span><span class="dv">32</span>):</span>
-<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Batch features shape: </span><span class="sc">{</span>batch<span class="sc">.</span>features<span class="sc">.</span>shape<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>    <span class="cf">break</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="23a466ec" class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Create sample data</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>samples <span class="op">=</span> [</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    TrainingSample(</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>        features<span class="op">=</span>np.random.randn(<span class="dv">128</span>).astype(np.float32),</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>        label<span class="op">=</span>i <span class="op">%</span> <span class="dv">10</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1000</span>)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Write through the index (schema is persisted automatically)</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> atdata.Index(data_store<span class="op">=</span>atdata.LocalDiskStore())</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>entry <span class="op">=</span> index.write(samples, name<span class="op">=</span><span class="st">"training-v1"</span>, maxcount<span class="op">=</span><span class="dv">500</span>)</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"CID: </span><span class="sc">{</span>entry<span class="sc">.</span>cid<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Shards: </span><span class="sc">{</span>entry<span class="sc">.</span>data_urls<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Load by name — no sample_type needed</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>atdata.set_default_index(index)</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> atdata.load_dataset(<span class="st">"@local/training-v1"</span>, split<span class="op">=</span><span class="st">"train"</span>)</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> ds.ordered(batch_size<span class="op">=</span><span class="dv">32</span>):</span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Batch features shape: </span><span class="sc">{</span>batch<span class="sc">.</span>features<span class="sc">.</span>shape<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">break</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>For S3-backed team storage, just swap the data store:</p>
+<div id="1069939e" class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.stores <span class="im">import</span> S3DataStore</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>store <span class="op">=</span> S3DataStore(</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    credentials<span class="op">=</span>{</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">"AWS_ENDPOINT"</span>: <span class="st">"http://localhost:9000"</span>,</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">"AWS_ACCESS_KEY_ID"</span>: <span class="st">"minioadmin"</span>,</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">"AWS_SECRET_ACCESS_KEY"</span>: <span class="st">"minioadmin"</span>,</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    },</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    bucket<span class="op">=</span><span class="st">"team-datasets"</span>,</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> atdata.Index(data_store<span class="op">=</span>store)</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>entry <span class="op">=</span> index.write(samples, name<span class="op">=</span><span class="st">"training-v1"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="using-load_dataset-with-index" class="level2">
 <h2 class="anchored" data-anchor-id="using-load_dataset-with-index">Using load_dataset with Index</h2>
-<p>The <code>load_dataset()</code> function provides a HuggingFace-style API that abstracts away the details of where data lives. When you pass an index, it can resolve <code>@local/</code> prefixed paths to the actual data URLs and apply the correct credentials automatically.</p>
-<p>The <code>load_dataset()</code> function supports index lookup:</p>
-<div id="b7404185" class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata <span class="im">import</span> load_dataset</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Load from local index</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"@local/my-dataset"</span>, index<span class="op">=</span>index, split<span class="op">=</span><span class="st">"train"</span>)</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co"># The index resolves the dataset name to URLs and schema</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> ds.shuffled(batch_size<span class="op">=</span><span class="dv">32</span>):</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    process(batch)</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">break</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The <code>load_dataset()</code> function provides a HuggingFace-style API that abstracts away the details of where data lives. It resolves <code>@local/</code> prefixed paths to data URLs and <strong>auto-resolves the schema</strong> so you don’t need the original Python class.</p>
+<div id="ec73fdef" class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata <span class="im">import</span> load_dataset</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Schema auto-resolved from index — no sample_type needed</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> load_dataset(<span class="st">"@local/training-v1"</span>, split<span class="op">=</span><span class="st">"train"</span>)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> ds.shuffled(batch_size<span class="op">=</span><span class="dv">32</span>):</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Features: </span><span class="sc">{</span>batch<span class="sc">.</span>features<span class="sc">.</span>shape<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">break</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="what-youve-learned" class="level2">
 <h2 class="anchored" data-anchor-id="what-youve-learned">What You’ve Learned</h2>
-<p>You now understand team-scale storage in atdata:</p>
+<p>You now understand managed storage in atdata:</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 50%">
@@ -706,20 +775,24 @@ Note
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>LocalIndex</code></td>
-<td>Redis-backed dataset registry implementing <code>AbstractIndex</code></td>
+<td><code>Index</code></td>
+<td>Dataset registry with pluggable providers (SQLite, Redis, PostgreSQL)</td>
 </tr>
 <tr class="even">
-<td><code>S3DataStore</code></td>
-<td>S3-compatible object storage implementing <code>AbstractDataStore</code></td>
+<td><code>index.write()</code></td>
+<td>Write samples + persist schema + create entry in one call</td>
+</tr>
+<tr class="odd">
+<td><code>LocalDiskStore</code> / <code>S3DataStore</code></td>
+<td>Persistent shard storage implementing <code>AbstractDataStore</code></td>
+</tr>
+<tr class="even">
+<td><code>load_dataset("@local/...")</code></td>
+<td>Load by name with auto-resolved schema</td>
 </tr>
 <tr class="odd">
 <td><code>LocalDatasetEntry</code></td>
 <td>Content-addressed dataset entries with CIDs</td>
-</tr>
-<tr class="even">
-<td>Schema publishing</td>
-<td>Shared type definitions for team consistency</td>
 </tr>
 </tbody>
 </table>

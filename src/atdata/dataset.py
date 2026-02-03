@@ -99,9 +99,11 @@ DT = TypeVar("DT")
 
 
 def _make_packable(x):
-    """Convert numpy arrays to bytes; pass through other values unchanged."""
+    """Convert numpy arrays to bytes; coerce numpy scalars to Python natives."""
     if isinstance(x, np.ndarray):
         return eh.array_to_bytes(x)
+    if isinstance(x, np.generic):
+        return x.item()
     return x
 
 
@@ -305,7 +307,7 @@ def _batch_aggregate(xs: Sequence):
     if not xs:
         return []
     if isinstance(xs[0], np.ndarray):
-        return np.array(list(xs))
+        return np.stack(xs)
     return list(xs)
 
 
@@ -1201,6 +1203,7 @@ def write_samples(
     *,
     maxcount: int | None = None,
     maxsize: int | None = None,
+    manifest: bool = False,
 ) -> "Dataset[ST]":
     """Write an iterable of samples to WebDataset tar file(s).
 
@@ -1211,6 +1214,10 @@ def write_samples(
             auto-appended if the path does not already contain ``%``.
         maxcount: Maximum samples per shard. Triggers multi-shard output.
         maxsize: Maximum bytes per shard. Triggers multi-shard output.
+        manifest: If True, write per-shard manifest sidecar files
+            (``.manifest.json`` + ``.manifest.parquet``) alongside each
+            tar file. Manifests enable metadata queries via
+            ``QueryExecutor`` without opening the tars.
 
     Returns:
         A ``Dataset`` wrapping the written file(s), typed to the sample
@@ -1227,12 +1234,51 @@ def write_samples(
     """
     from ._hf_api import _shards_to_wds_url
 
+    if manifest:
+        from .manifest._builder import ManifestBuilder
+        from .manifest._writer import ManifestWriter
+
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
 
     use_shard_writer = maxcount is not None or maxsize is not None
     sample_type: type | None = None
     written_paths: list[str] = []
+
+    # Manifest tracking state
+    _current_builder: list = []  # single-element list for nonlocal mutation
+    _builders: list[tuple[str, "ManifestBuilder"]] = []
+    _running_offset: list[int] = [0]
+
+    def _finalize_builder() -> None:
+        """Finalize the current manifest builder and stash it."""
+        if _current_builder:
+            shard_path = written_paths[-1] if written_paths else ""
+            _builders.append((shard_path, _current_builder[0]))
+            _current_builder.clear()
+
+    def _start_builder(shard_path: str) -> None:
+        """Start a new manifest builder for a shard."""
+        _finalize_builder()
+        shard_id = Path(shard_path).stem
+        _current_builder.append(
+            ManifestBuilder(sample_type=sample_type, shard_id=shard_id)
+        )
+        _running_offset[0] = 0
+
+    def _record_sample(sample: "PackableSample", wds_dict: dict) -> None:
+        """Record a sample in the active manifest builder."""
+        if not _current_builder:
+            return
+        packed_bytes = wds_dict["msgpack"]
+        size = len(packed_bytes)
+        _current_builder[0].add_sample(
+            key=wds_dict["__key__"],
+            offset=_running_offset[0],
+            size=size,
+            sample=sample,
+        )
+        _running_offset[0] += size
 
     if use_shard_writer:
         # Build shard pattern from path
@@ -1249,22 +1295,47 @@ def write_samples(
 
         def _track(p: str) -> None:
             written_paths.append(str(Path(p).resolve()))
+            if manifest and sample_type is not None:
+                _start_builder(p)
 
         with wds.writer.ShardWriter(pattern, post=_track, **writer_kwargs) as sink:
             for sample in samples:
                 if sample_type is None:
                     sample_type = type(sample)
-                sink.write(sample.as_wds)
+                wds_dict = sample.as_wds
+                sink.write(wds_dict)
+                if manifest:
+                    # The first sample triggers _track before we get here when
+                    # ShardWriter opens the first shard, but just in case:
+                    if not _current_builder and sample_type is not None:
+                        _start_builder(str(path))
+                    _record_sample(sample, wds_dict)
     else:
         with wds.writer.TarWriter(str(path)) as sink:
             for sample in samples:
                 if sample_type is None:
                     sample_type = type(sample)
-                sink.write(sample.as_wds)
+                wds_dict = sample.as_wds
+                sink.write(wds_dict)
+                if manifest:
+                    if not _current_builder and sample_type is not None:
+                        _current_builder.append(
+                            ManifestBuilder(sample_type=sample_type, shard_id=path.stem)
+                        )
+                    _record_sample(sample, wds_dict)
         written_paths.append(str(path.resolve()))
 
     if sample_type is None:
         raise ValueError("samples must be non-empty")
+
+    # Finalize and write manifests
+    if manifest:
+        _finalize_builder()
+        for shard_path, builder in _builders:
+            m = builder.build()
+            base = str(Path(shard_path).with_suffix(""))
+            writer = ManifestWriter(base)
+            writer.write(m)
 
     url = _shards_to_wds_url(written_paths)
     ds: Dataset = Dataset(url)

@@ -335,7 +335,7 @@ For reference, an alternative approach that describes the "unpacked" structure:
 
 ## Implementation Checklist
 
-- [ ] Update sampleSchema Lexicon to reference this spec
+- [ ] Update schema Lexicon to reference this spec
 - [ ] Create standard NDArray shim definition
 - [ ] Update schema examples to use the shim correctly
 - [ ] Implement validation helpers in Python SDK

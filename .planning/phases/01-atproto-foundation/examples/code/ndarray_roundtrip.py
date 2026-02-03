@@ -41,7 +41,7 @@ def bytes_to_array(b: bytes) -> np.ndarray:
 # Step 2: Load the JSON Schema for ImageSample
 
 # Get path to the schema example
-schema_path = Path(__file__).parent.parent / "sampleSchema_example.json"
+schema_path = Path(__file__).parent.parent / "schema_example.json"
 with open(schema_path) as f:
     schema_record = json.load(f)
 
