@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.3.2b1] - 2026-02-03
 
 ### Changed
+- Add back py3.10/3.11 to CI matrix and lower requires-python to >=3.10 (#591)
+- CI: add pilot test stage with sequential Lint → Pilot → Matrix flow (#590)
 - **`Index.write()` → `Index.write_samples()`**: Renamed with atmosphere-aware defaults — PDS blob upload, 50 MB shard limit, 1 GB total dataset guard
 - **`Index.insert_dataset()` overhaul**: Smart source routing for atmosphere targets — local files auto-upload via PDSBlobStore, remote URLs referenced as external storage, credentialed S3 sources error by default with `copy=True` opt-in
 - **New `force` and `copy` flags**: `force` bypasses PDS size limits; `copy` forces data transfer from private/remote sources to destination store

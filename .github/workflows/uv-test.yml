@@ -35,16 +35,56 @@ jobs:
       - name: Run ruff format check
         run: uv run ruff format --check src/ tests/
 
+  pilot:
+    name: Pilot (py3.14, redis7)
+    runs-on: ubuntu-latest
+    needs: [lint]
+    environment:
+      name: test
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install the project
+        run: uv sync --locked --all-extras --dev
+
+      - name: Start Redis
+        uses: supercharge/redis-github-action@1.8.1
+        with:
+          redis-version: 7
+
+      - name: Run tests with coverage
+        run: uv run pytest --cov=atdata --cov-report=xml --cov-report=term
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
   test:
     name: Test (py${{ matrix.python-version }}, redis${{ matrix.redis-version }})
     runs-on: ubuntu-latest
+    needs: [pilot]
     environment:
       name: test
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.12", "3.13", "3.14"]
         redis-version: [6, 7]
+        exclude:
+          - python-version: "3.14"
+            redis-version: 7
 
     steps:
       - uses: actions/checkout@v5
@@ -67,14 +107,8 @@ jobs:
         with:
           redis-version: ${{ matrix.redis-version }}
 
-      - name: Run tests with coverage
-        run: uv run pytest --cov=atdata --cov-report=xml --cov-report=term
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
+      - name: Run tests
+        run: uv run pytest
 
   benchmark:
     name: Benchmarks
