@@ -665,6 +665,7 @@ class Index:
         copy: bool = False,
         metadata: dict | None = None,
         _data_urls: list[str] | None = None,
+        _blob_refs: list[dict] | None = None,
         **kwargs,
     ) -> "IndexEntry":
         """Insert a dataset into the index.
@@ -740,6 +741,7 @@ class Index:
                     name=resolved_name,
                     schema_ref=schema_ref,
                     data_urls=_data_urls,
+                    blob_refs=_blob_refs,
                     description=description,
                     tags=tags,
                     license=license,
@@ -771,11 +773,20 @@ class Index:
                         )
 
                 written_urls = effective_store.write_shards(ds, prefix=resolved_name)
+
+                # Grab blob refs if the store captured them
+                from atdata.atmosphere.store import PDSBlobStore
+
+                store_blob_refs = None
+                if isinstance(effective_store, PDSBlobStore):
+                    store_blob_refs = effective_store._last_blob_refs or None
+
                 return atmo.insert_dataset(
                     ds,
                     name=resolved_name,
                     schema_ref=schema_ref,
                     data_urls=written_urls,
+                    blob_refs=store_blob_refs,
                     description=description,
                     tags=tags,
                     license=license,
@@ -960,6 +971,16 @@ class Index:
                     written_urls = effective_store.write_shards(
                         ds, prefix=resolved_name
                     )
+
+                    # If the store captured blob refs, use storageBlobs
+                    # so the PDS retains the uploaded blobs.  Fall back
+                    # to storageExternal with AT URIs otherwise.
+                    from atdata.atmosphere.store import PDSBlobStore
+
+                    blob_refs = None
+                    if isinstance(effective_store, PDSBlobStore):
+                        blob_refs = effective_store._last_blob_refs or None
+
                     return self.insert_dataset(
                         ds,
                         name=name,
@@ -971,6 +992,7 @@ class Index:
                         data_store=data_store,
                         force=force,
                         _data_urls=written_urls,
+                        _blob_refs=blob_refs,
                     )
 
                 # Local / named repo path

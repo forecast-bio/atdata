@@ -196,6 +196,73 @@ class DatasetPublisher:
                 validate=False,
             )
 
+    def publish_with_blob_refs(
+        self,
+        blob_refs: list[dict],
+        schema_uri: str,
+        *,
+        name: str,
+        description: Optional[str] = None,
+        tags: Optional[list[str]] = None,
+        license: Optional[str] = None,
+        metadata: Optional[dict] = None,
+        rkey: Optional[str] = None,
+    ) -> AtUri:
+        """Publish a dataset record with pre-uploaded blob references.
+
+        Unlike ``publish_with_blobs`` (which takes raw bytes and uploads them),
+        this method accepts blob ref dicts that have already been uploaded to
+        the PDS.  The refs are embedded directly in the record so the PDS
+        retains the blobs.
+
+        Args:
+            blob_refs: List of blob reference dicts as returned by
+                ``Atmosphere.upload_blob()``.  Each dict must contain
+                ``$type``, ``ref`` (with ``$link``), ``mimeType``, and ``size``.
+            schema_uri: AT URI of the schema record.
+            name: Human-readable dataset name.
+            description: Human-readable description.
+            tags: Searchable tags for discovery.
+            license: SPDX license identifier.
+            metadata: Arbitrary metadata dictionary.
+            rkey: Optional explicit record key.
+
+        Returns:
+            The AT URI of the created dataset record.
+        """
+        from atdata._logging import log_operation
+
+        with log_operation(
+            "DatasetPublisher.publish_with_blob_refs",
+            name=name,
+            blob_count=len(blob_refs),
+        ):
+            storage = StorageLocation(
+                kind="blobs",
+                blob_refs=blob_refs,
+            )
+
+            metadata_bytes: Optional[bytes] = None
+            if metadata is not None:
+                metadata_bytes = msgpack.packb(metadata)
+
+            dataset_record = DatasetRecord(
+                name=name,
+                schema_ref=schema_uri,
+                storage=storage,
+                description=description,
+                tags=tags or [],
+                license=license,
+                metadata=metadata_bytes,
+            )
+
+            return self.client.create_record(
+                collection=f"{LEXICON_NAMESPACE}.record",
+                record=dataset_record.to_record(),
+                rkey=rkey,
+                validate=False,
+            )
+
     def publish_with_blobs(
         self,
         blobs: list[bytes],

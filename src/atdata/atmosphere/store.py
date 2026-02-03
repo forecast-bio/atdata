@@ -19,7 +19,7 @@ Examples:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 #: Maximum size in bytes for a single PDS blob upload (50 MB).
@@ -56,6 +56,16 @@ class PDSBlobStore:
     """
 
     client: "Atmosphere"
+    _last_blob_refs: list[dict] = field(default_factory=list, repr=False)
+    """Blob ref dicts from the most recent ``write_shards()`` call.
+
+    Each dict has the structure returned by ``Atmosphere.upload_blob()``:
+    ``{"$type": "blob", "ref": {"$link": "<cid>"}, "mimeType": ..., "size": ...}``
+
+    These are needed to embed proper blob references in the ATProto record
+    (``storageBlobs``), since the PDS only retains blobs that are referenced
+    by a committed record via typed blob objects.
+    """
 
     def write_shards(
         self,
@@ -88,6 +98,7 @@ class PDSBlobStore:
 
         did = self.client.did
         blob_urls: list[str] = []
+        blob_refs: list[dict] = []
 
         shard_paths = ds.list_shards()
         if not shard_paths:
@@ -102,10 +113,12 @@ class PDSBlobStore:
                 mime_type="application/x-tar",
             )
 
+            blob_refs.append(blob_ref)
             cid = blob_ref["ref"]["$link"]
             at_uri = f"at://{did}/blob/{cid}"
             blob_urls.append(at_uri)
 
+        self._last_blob_refs = blob_refs
         return blob_urls
 
     def read_url(self, url: str) -> str:
