@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Bounds checking in `bytes_to_array()` for truncated/corrupted input buffers
 
 ### Changed
+- Add reference documentation for atdata's atproto lexicons (#589)
 - Add version auto-suggest to /release and /publish skills (#588)
 - Create /publish skill for post-merge release tagging and PyPI publish (#587)
 - Fix wheel build: duplicate filename in ZIP archive rejected by PyPI (#586)
