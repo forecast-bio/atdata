@@ -23,7 +23,7 @@ from numpy.typing import NDArray
 
 import atdata
 from atdata.atmosphere import (
-    AtmosphereClient,
+    Atmosphere,
     AtmosphereIndex,
     SchemaPublisher,
     SchemaLoader,
@@ -92,7 +92,7 @@ def live_client():
     if not handle or not password:
         pytest.skip("Live test credentials not configured")
 
-    client = AtmosphereClient()
+    client = Atmosphere()
     client.login(handle, password)
 
     yield client
@@ -119,7 +119,7 @@ def unique_name():
 # Cleanup Utilities
 
 
-def cleanup_test_schemas(client: AtmosphereClient):
+def cleanup_test_schemas(client: Atmosphere):
     """Delete all test schema records."""
     loader = SchemaLoader(client)
     deleted = 0
@@ -139,7 +139,7 @@ def cleanup_test_schemas(client: AtmosphereClient):
     return deleted
 
 
-def cleanup_test_datasets(client: AtmosphereClient):
+def cleanup_test_datasets(client: Atmosphere):
     """Delete all test dataset records."""
     loader = DatasetLoader(client)
     deleted = 0
@@ -173,7 +173,7 @@ class TestLiveAuthentication:
         handle, password = get_test_credentials()
         skip_if_no_credentials()
 
-        client = AtmosphereClient()
+        client = Atmosphere()
         client.login(handle, password)
 
         assert client.is_authenticated
@@ -186,7 +186,7 @@ class TestLiveAuthentication:
         skip_if_no_credentials()
 
         # Create first client and login
-        client1 = AtmosphereClient()
+        client1 = Atmosphere()
         client1.login(handle, password)
         session_string = client1.export_session()
 
@@ -194,7 +194,7 @@ class TestLiveAuthentication:
         assert len(session_string) > 0
 
         # Create second client and restore session
-        client2 = AtmosphereClient()
+        client2 = Atmosphere()
         client2.login_with_session(session_string)
 
         assert client2.is_authenticated
@@ -202,7 +202,7 @@ class TestLiveAuthentication:
 
     def test_invalid_credentials_raises(self):
         """Should raise on invalid credentials."""
-        client = AtmosphereClient()
+        client = Atmosphere()
 
         with pytest.raises(Exception):
             client.login("invalid.handle.test", "wrong-password")
@@ -589,7 +589,7 @@ class TestLiveErrorHandling:
         loader = SchemaLoader(live_client)
 
         fake_uri = (
-            f"at://{live_client.did}/{LEXICON_NAMESPACE}.sampleSchema/nonexistent12345"
+            f"at://{live_client.did}/{LEXICON_NAMESPACE}.schema/nonexistent12345"
         )
 
         with pytest.raises(Exception):
@@ -597,7 +597,7 @@ class TestLiveErrorHandling:
 
     def test_publish_without_auth_raises(self):
         """Should raise when publishing without authentication."""
-        client = AtmosphereClient()
+        client = Atmosphere()
         # Not logged in
 
         publisher = SchemaPublisher(client)

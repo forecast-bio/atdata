@@ -185,21 +185,21 @@ class TestProviderEntries:
     def test_store_and_get_by_cid(self, provider: IndexProvider):
         entry = atlocal.LocalDatasetEntry(
             name="ds-1",
-            schema_ref="atdata://local/sampleSchema/Test@1.0.0",
+            schema_ref="atdata://local/schema/Test@1.0.0",
             data_urls=["s3://bucket/data-000000.tar"],
         )
         provider.store_entry(entry)
         loaded = provider.get_entry_by_cid(entry.cid)
 
         assert loaded.name == "ds-1"
-        assert loaded.schema_ref == "atdata://local/sampleSchema/Test@1.0.0"
+        assert loaded.schema_ref == "atdata://local/schema/Test@1.0.0"
         assert loaded.data_urls == ["s3://bucket/data-000000.tar"]
         assert loaded.cid == entry.cid
 
     def test_store_and_get_by_name(self, provider: IndexProvider):
         entry = atlocal.LocalDatasetEntry(
             name="my-dataset",
-            schema_ref="atdata://local/sampleSchema/X@1.0.0",
+            schema_ref="atdata://local/schema/X@1.0.0",
             data_urls=["file:///data.tar"],
         )
         provider.store_entry(entry)
@@ -220,7 +220,7 @@ class TestProviderEntries:
         for i in range(3):
             entry = atlocal.LocalDatasetEntry(
                 name=f"ds-{i}",
-                schema_ref=f"atdata://local/sampleSchema/T@1.0.{i}",
+                schema_ref=f"atdata://local/schema/T@1.0.{i}",
                 data_urls=[f"s3://bucket/data-{i}.tar"],
             )
             provider.store_entry(entry)
@@ -234,7 +234,7 @@ class TestProviderEntries:
         meta = {"author": "test", "version": 2}
         entry = atlocal.LocalDatasetEntry(
             name="meta-ds",
-            schema_ref="atdata://local/sampleSchema/M@1.0.0",
+            schema_ref="atdata://local/schema/M@1.0.0",
             data_urls=["s3://bucket/meta.tar"],
             metadata=meta,
         )
@@ -246,7 +246,7 @@ class TestProviderEntries:
     def test_entry_with_none_metadata(self, provider: IndexProvider):
         entry = atlocal.LocalDatasetEntry(
             name="no-meta",
-            schema_ref="atdata://local/sampleSchema/N@1.0.0",
+            schema_ref="atdata://local/schema/N@1.0.0",
             data_urls=["file:///data.tar"],
             metadata=None,
         )
@@ -259,7 +259,7 @@ class TestProviderEntries:
         urls = [f"s3://bucket/shard-{i:06d}.tar" for i in range(5)]
         entry = atlocal.LocalDatasetEntry(
             name="multi-shard",
-            schema_ref="atdata://local/sampleSchema/S@1.0.0",
+            schema_ref="atdata://local/schema/S@1.0.0",
             data_urls=urls,
         )
         provider.store_entry(entry)
@@ -270,7 +270,7 @@ class TestProviderEntries:
     def test_upsert_overwrites(self, provider: IndexProvider):
         entry1 = atlocal.LocalDatasetEntry(
             name="ds-upsert",
-            schema_ref="atdata://local/sampleSchema/U@1.0.0",
+            schema_ref="atdata://local/schema/U@1.0.0",
             data_urls=["s3://bucket/v1.tar"],
         )
         provider.store_entry(entry1)
@@ -279,7 +279,7 @@ class TestProviderEntries:
         # with a different entry sharing the same CID
         entry2 = atlocal.LocalDatasetEntry(
             name="ds-upsert",
-            schema_ref="atdata://local/sampleSchema/U@1.0.0",
+            schema_ref="atdata://local/schema/U@1.0.0",
             data_urls=["s3://bucket/v1.tar"],
             metadata={"updated": True},
         )

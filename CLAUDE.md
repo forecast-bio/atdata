@@ -87,12 +87,14 @@ The codebase lives under `src/atdata/` with these main components:
 - `_exceptions.py` — Custom exception hierarchy (`AtdataError`, `SchemaError`, `ShardError`, etc.)
 
 **Index and storage:**
-- `local/` — `Index`, `LocalDatasetEntry`, `S3DataStore`, `LocalDiskStore`, schema management
+- `index/` — `Index`, `LocalDatasetEntry`, `LocalSchemaRecord`, schema management
+- `stores/` — `LocalDiskStore`, `S3DataStore` (data store implementations)
+- `local/` — Backward-compat shim re-exporting from `index/` and `stores/`
 - `providers/` — Pluggable index backends: `SqliteProvider` (default), `RedisProvider`, `PostgresProvider`
 - `repository.py` — `Repository` dataclass pairing provider + data store, prefix routing
 
 **ATProto integration:**
-- `atmosphere/` — `AtmosphereClient`, schema/dataset/lens publishers and loaders, `PDSBlobStore`
+- `atmosphere/` — `Atmosphere`, schema/dataset/lens publishers and loaders, `PDSBlobStore`
 - `promote.py` — Local-to-atmosphere promotion (deprecated in favor of `Index.promote_entry()`)
 
 **Data pipeline:**

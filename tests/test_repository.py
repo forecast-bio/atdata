@@ -366,10 +366,10 @@ class TestAtmosphereIndexDeprecation:
     def test_deprecation_warning(self):
         from unittest.mock import MagicMock
 
-        from atdata.atmosphere import AtmosphereIndex, AtmosphereClient
+        from atdata.atmosphere import AtmosphereIndex, Atmosphere
 
         # Create a mock client to avoid network calls
-        mock_client = MagicMock(spec=AtmosphereClient)
+        mock_client = MagicMock(spec=Atmosphere)
         mock_client.is_authenticated = True
         mock_client.did = "did:plc:test"
 

@@ -57,7 +57,7 @@ def mock_s3():
 
 
 def _make_s3_store(mock_s3_env):
-    from atdata.local._s3 import S3DataStore
+    from atdata.stores._s3 import S3DataStore
 
     return S3DataStore(
         credentials=mock_s3_env["credentials"],
@@ -185,9 +185,9 @@ class TestAtmosphereBenchmarks:
         if not handle or not password:
             pytest.skip("ATDATA_BENCH_ATP_HANDLE/PASSWORD not set")
 
-        from atdata.atmosphere.client import AtmosphereClient
+        from atdata.atmosphere.client import Atmosphere
 
-        client = AtmosphereClient(handle=handle, password=password)
+        client = Atmosphere(handle=handle, password=password)
 
         samples = generate_basic_samples(10)
         tar_path = write_tar(tmp_path / "atmo-000000.tar", samples)
@@ -213,7 +213,7 @@ class TestAtmosphereBenchmarks:
         if not ref:
             pytest.skip("ATDATA_BENCH_ATP_DATASET_REF not set")
 
-        from atdata.local._index import Index
+        from atdata.index._index import Index
 
         index = Index()
 

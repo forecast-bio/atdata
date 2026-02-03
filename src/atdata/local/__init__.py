@@ -1,24 +1,22 @@
-"""Local storage backend for atdata datasets.
+"""Backward-compatibility shim for atdata.local.
 
-Key classes:
+.. deprecated::
+    Import from ``atdata.index`` and ``atdata.stores`` instead::
 
-- ``Index``: Unified index with pluggable providers (SQLite default),
-  named repositories, and optional atmosphere backend.
-- ``LocalDatasetEntry``: Index entry with ATProto-compatible CIDs.
-- ``S3DataStore``: S3-compatible shard storage.
+        from atdata.index import Index, LocalDatasetEntry
+        from atdata.stores import S3DataStore, LocalDiskStore
 """
 
-from atdata.local._entry import (
+from atdata.index import (
+    Index,
     LocalDatasetEntry,
     BasicIndexEntry,
-    REDIS_KEY_DATASET_ENTRY,
-    REDIS_KEY_SCHEMA,
-)
-from atdata.local._schema import (
     SchemaNamespace,
     SchemaFieldType,
     SchemaField,
     LocalSchemaRecord,
+    REDIS_KEY_DATASET_ENTRY,
+    REDIS_KEY_SCHEMA,
     _ATDATA_URI_PREFIX,
     _LEGACY_URI_PREFIX,
     _kind_str_for_sample_type,
@@ -29,9 +27,8 @@ from atdata.local._schema import (
     _python_type_to_field_type,
     _build_schema_record,
 )
-from atdata.local._disk import LocalDiskStore
-from atdata.local._index import Index
-from atdata.local._s3 import (
+from atdata.stores import (
+    LocalDiskStore,
     S3DataStore,
     _s3_env,
     _s3_from_credentials,

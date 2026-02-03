@@ -41,11 +41,11 @@ def _make_provider(mock_psycopg):
 
 def _make_entry(**overrides):
     """Create a LocalDatasetEntry with sensible defaults."""
-    from atdata.local._entry import LocalDatasetEntry
+    from atdata.index._entry import LocalDatasetEntry
 
     defaults = dict(
         name="test_dataset",
-        schema_ref="atdata://local/sampleSchema/TestSample@1.0.0",
+        schema_ref="atdata://local/schema/TestSample@1.0.0",
         data_urls=["/data/shard-000000.tar"],
         metadata={"split": "train"},
     )

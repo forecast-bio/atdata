@@ -1,6 +1,6 @@
-"""Local infrastructure management for atdata.
+"""Infrastructure management for atdata.
 
-This module provides commands to start and stop local development infrastructure:
+This module provides commands to start and stop development infrastructure:
 - Redis: For index storage and metadata
 - MinIO: S3-compatible object storage for dataset files
 
@@ -179,7 +179,7 @@ def local_up(
     if not _check_docker():
         return 1
 
-    print("Starting atdata local infrastructure...")
+    print("Starting atdata infrastructure...")
 
     compose_content = _get_compose_file(redis_port, minio_port, minio_console_port)
     command = ["up"]
@@ -202,7 +202,7 @@ def local_up(
 
     # Show status
     print()
-    print("Local infrastructure started:")
+    print("Infrastructure started:")
     print(f"  Redis:        localhost:{redis_port}")
     print(f"  MinIO API:    http://localhost:{minio_port}")
     print(f"  MinIO Console: http://localhost:{minio_console_port}")
@@ -210,7 +210,7 @@ def local_up(
     print("MinIO credentials: minioadmin / minioadmin")
     print()
     print("Example usage:")
-    print("  from atdata.local import Index, S3DataStore")
+    print("  from atdata.stores import S3DataStore")
     print("  ")
     print("  store = S3DataStore.from_credentials({")
     print(f"      'AWS_ENDPOINT': 'http://localhost:{minio_port}',")
@@ -234,7 +234,7 @@ def local_down(remove_volumes: bool = False) -> int:
     if not _check_docker():
         return 1
 
-    print("Stopping atdata local infrastructure...")
+    print("Stopping atdata infrastructure...")
 
     # Use default ports for compose file (actual ports don't matter for down)
     compose_content = _get_compose_file(6379, 9000, 9001)
@@ -252,7 +252,7 @@ def local_down(remove_volumes: bool = False) -> int:
         print(f"Error: {e}", file=sys.stderr)
         return 1
 
-    print("Local infrastructure stopped.")
+    print("Infrastructure stopped.")
     return 0
 
 
@@ -268,16 +268,16 @@ def local_status() -> int:
     redis_running = _container_running(REDIS_CONTAINER)
     minio_running = _container_running(MINIO_CONTAINER)
 
-    print("atdata local infrastructure status:")
+    print("atdata infrastructure status:")
     print()
     print(f"  Redis ({REDIS_CONTAINER}):  {'running' if redis_running else 'stopped'}")
     print(f"  MinIO ({MINIO_CONTAINER}):  {'running' if minio_running else 'stopped'}")
 
     if redis_running or minio_running:
         print()
-        print("To stop: atdata local down")
+        print("To stop: atdata infra down")
     else:
         print()
-        print("To start: atdata local up")
+        print("To start: atdata infra up")
 
     return 0

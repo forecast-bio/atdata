@@ -17,7 +17,7 @@ import webdataset as wds
 import atdata
 from atdata.local import Index, LocalDatasetEntry
 from atdata.promote import promote_to_atmosphere
-from atdata.atmosphere import AtmosphereClient
+from atdata.atmosphere import Atmosphere
 from atdata.atmosphere._types import LEXICON_NAMESPACE
 
 
@@ -64,9 +64,9 @@ def mock_atproto_client():
 
 @pytest.fixture
 def authenticated_client(mock_atproto_client):
-    """Create an authenticated AtmosphereClient."""
-    client = AtmosphereClient(_client=mock_atproto_client)
-    client.login("promotion.test.social", "test-password")
+    """Create an authenticated Atmosphere."""
+    client = Atmosphere(_client=mock_atproto_client)
+    client._login("promotion.test.social", "test-password")
     return client
 
 
@@ -113,7 +113,7 @@ class TestFullPromotionWorkflow:
         # Setup mock responses for atmosphere operations
         schema_response = Mock()
         schema_response.uri = (
-            f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/promoted-schema"
+            f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/promoted-schema"
         )
 
         dataset_response = Mock()
@@ -159,7 +159,7 @@ class TestFullPromotionWorkflow:
         )
 
         schema_response = Mock()
-        schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/s1"
+        schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/s1"
 
         dataset_response = Mock()
         dataset_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.dataset/d1"
@@ -192,7 +192,7 @@ class TestFullPromotionWorkflow:
         )
 
         schema_response = Mock()
-        schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/s1"
+        schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/s1"
 
         dataset_response = Mock()
         dataset_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.dataset/d1"
@@ -228,7 +228,7 @@ class TestSchemaDeduplication:
         # Patch _find_existing_schema to return an existing schema URI
         with patch("atdata.promote._find_existing_schema") as mock_find:
             mock_find.return_value = (
-                f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/existing"
+                f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/existing"
             )
 
             # Only dataset should be created (schema exists)
@@ -265,7 +265,7 @@ class TestSchemaDeduplication:
 
         # Both schema and dataset should be created
         schema_response = Mock()
-        schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/new"
+        schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/new"
 
         dataset_response = Mock()
         dataset_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.dataset/d1"
@@ -288,7 +288,7 @@ class TestSchemaDeduplication:
 
         # Mock existing schema with different version
         existing_schema = Mock()
-        existing_schema.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/v1"
+        existing_schema.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/v1"
         existing_schema.value = {
             "name": "test_integration_promotion.PromotionSample",
             "version": "2.0.0",  # Different version!
@@ -304,7 +304,7 @@ class TestSchemaDeduplication:
         # Both should be created (version mismatch)
         schema_response = Mock()
         schema_response.uri = (
-            f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/v1new"
+            f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/v1new"
         )
 
         dataset_response = Mock()
@@ -343,7 +343,7 @@ class TestMetadataPreservation:
         )
 
         schema_response = Mock()
-        schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/s1"
+        schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/s1"
 
         dataset_response = Mock()
         dataset_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.dataset/d1"
@@ -387,7 +387,7 @@ class TestMetadataPreservation:
         )
 
         schema_response = Mock()
-        schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/s1"
+        schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/s1"
 
         dataset_response = Mock()
         dataset_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.dataset/d1"
@@ -429,7 +429,7 @@ class TestMultiDatasetPromotion:
 
         # Track whether schema has been "published" to atmosphere
         schema_published = {"value": False}
-        schema_uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/shared"
+        schema_uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/shared"
 
         def mock_find_existing(client, name, version):
             # Return schema URI after first promotion
@@ -499,7 +499,7 @@ class TestLargeDatasetPromotion:
         )
 
         schema_response = Mock()
-        schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/s1"
+        schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/s1"
 
         dataset_response = Mock()
         dataset_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.dataset/large"
@@ -582,7 +582,7 @@ class TestPromotionOptions:
         )
 
         schema_response = Mock()
-        schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/s1"
+        schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/s1"
 
         dataset_response = Mock()
         dataset_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.dataset/d1"
@@ -619,7 +619,7 @@ class TestPromotionOptions:
         )
 
         schema_response = Mock()
-        schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/s1"
+        schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/s1"
 
         dataset_response = Mock()
         dataset_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.dataset/d1"
@@ -659,7 +659,7 @@ class TestPromotionOptions:
         )
 
         schema_response = Mock()
-        schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/s1"
+        schema_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/s1"
 
         dataset_response = Mock()
         dataset_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.dataset/d1"

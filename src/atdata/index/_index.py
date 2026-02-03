@@ -7,8 +7,8 @@ from atdata import (
 )
 from atdata._protocols import AbstractDataStore, Packable
 
-from atdata.local._entry import LocalDatasetEntry
-from atdata.local._schema import (
+from atdata.index._entry import LocalDatasetEntry
+from atdata.index._schema import (
     SchemaNamespace,
     LocalSchemaRecord,
     _schema_ref_from_type,
@@ -53,7 +53,7 @@ class Index:
     Additional named repositories can be mounted via the ``repos`` parameter,
     each pairing an IndexProvider with an optional data store.
 
-    An AtmosphereClient is available by default for anonymous read-only
+    An Atmosphere is available by default for anonymous read-only
     resolution of ``@handle/dataset`` paths. Pass an authenticated client
     for write operations, or ``atmosphere=None`` to disable.
 
@@ -106,7 +106,7 @@ class Index:
             atmosphere: ATProto client for distributed network operations.
                 - Default (sentinel): creates an anonymous read-only client
                   lazily on first access.
-                - ``AtmosphereClient`` instance: uses that client directly.
+                - ``Atmosphere`` instance: uses that client directly.
                 - ``None``: disables atmosphere backend entirely.
             auto_stubs: If True, automatically generate .pyi stub files when
                 schemas are accessed via get_schema() or decode_schema().
@@ -231,10 +231,10 @@ class Index:
         """Get the atmosphere backend, lazily creating anonymous client if needed."""
         if self._atmosphere_deferred and self._atmosphere is None:
             try:
-                from atdata.atmosphere.client import AtmosphereClient
+                from atdata.atmosphere.client import Atmosphere
                 from atdata.repository import _AtmosphereBackend
 
-                client = AtmosphereClient()
+                client = Atmosphere()
                 self._atmosphere = _AtmosphereBackend(client)
             except ImportError:
                 # atproto package not installed -- atmosphere unavailable
@@ -296,7 +296,7 @@ class Index:
 
     @property
     def atmosphere(self) -> Any:
-        """The AtmosphereClient for this index, or None if disabled.
+        """The Atmosphere for this index, or None if disabled.
 
         Returns the underlying client (not the internal backend wrapper).
         """
@@ -352,7 +352,7 @@ class Index:
         as attributes on this namespace.
 
         Examples:
-            >>> index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
+            >>> index.load_schema("atdata://local/schema/MySample@1.0.0")
             >>> MyType = index.types.MySample
             >>> sample = MyType(name="hello", value=42)
 
@@ -369,7 +369,7 @@ class Index:
         in the :attr:`types` namespace for easy access.
 
         Args:
-            ref: Schema reference string (atdata://local/sampleSchema/... or
+            ref: Schema reference string (atdata://local/schema/... or
                 legacy local://schemas/...).
 
         Returns:
@@ -382,11 +382,11 @@ class Index:
 
         Examples:
             >>> # Load and use immediately
-            >>> MyType = index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
+            >>> MyType = index.load_schema("atdata://local/schema/MySample@1.0.0")
             >>> sample = MyType(field1="hello", field2=42)
             >>>
             >>> # Or access later via namespace
-            >>> index.load_schema("atdata://local/sampleSchema/OtherType@1.0.0")
+            >>> index.load_schema("atdata://local/schema/OtherType@1.0.0")
             >>> other = index.types.OtherType(data="test")
         """
         # Decode the schema (uses generated module if auto_stubs enabled)
@@ -704,7 +704,7 @@ class Index:
         # so that write() always persists data to a permanent location.
         effective_store = self._data_store
         if backend_key == "local" and effective_store is None:
-            from atdata.local._disk import LocalDiskStore
+            from atdata.stores._disk import LocalDiskStore
 
             effective_store = LocalDiskStore()
 
@@ -764,7 +764,7 @@ class Index:
             if atmo is None:
                 raise ValueError(
                     f"Atmosphere backend required for path {ref!r} but not available. "
-                    "Install 'atproto' or pass an AtmosphereClient."
+                    "Install 'atproto' or pass an Atmosphere."
                 )
             return atmo.get_dataset(resolved_ref)
 
@@ -845,7 +845,7 @@ class Index:
                 the class docstring.
 
         Returns:
-            Schema reference string: 'atdata://local/sampleSchema/{name}@{version}'.
+            Schema reference string: 'atdata://local/schema/{name}@{version}'.
 
         Raises:
             ValueError: If sample_type is not a dataclass.
@@ -899,7 +899,7 @@ class Index:
 
         Args:
             ref: Schema reference string. Supports both new format
-                (atdata://local/sampleSchema/{name}@{version}) and legacy
+                (atdata://local/schema/{name}@{version}) and legacy
                 format (local://schemas/{module.Class}@{version}).
 
         Returns:
@@ -976,7 +976,7 @@ class Index:
         The returned class has proper type information that IDEs can understand.
 
         Args:
-            ref: Schema reference string (atdata://local/sampleSchema/... or
+            ref: Schema reference string (atdata://local/schema/... or
                 legacy local://schemas/...).
 
         Returns:

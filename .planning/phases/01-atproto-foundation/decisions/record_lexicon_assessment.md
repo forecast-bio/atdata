@@ -17,7 +17,7 @@ Comprehensive assessment of `ac.foundation.dataset.record` Lexicon design agains
 The record Lexicon provides a solid foundation for dataset indexing with hybrid storage support. Key strengths include clean union-based storage design and appropriate use of ATProto primitives. However, several issues need addressing:
 
 - ⚠️ **Critical**: schemaRef should use format validation
-- ⚠️ **High**: Metadata structure inconsistency with sampleSchema pattern
+- ⚠️ **High**: Metadata structure inconsistency with schema pattern
 - ⚠️ **Medium**: Missing $type discriminators in union variants
 - ✅ **Strength**: Clean storage union design
 - ✅ **Strength**: Appropriate use of tid keys for datasets
@@ -40,8 +40,8 @@ The record Lexicon provides a solid foundation for dataset indexing with hybrid 
 - Appropriate for records without natural semantic keys
 - Consistent with ATProto patterns for user-generated content
 
-**Comparison to sampleSchema:**
-- sampleSchema uses `"key": "any"` for versioned rkeys like `{NSID}@{semver}`
+**Comparison to schema:**
+- schema uses `"key": "any"` for versioned rkeys like `{NSID}@{semver}`
 - record uses `"key": "tid"` for chronological dataset entries
 - Both choices are appropriate for their use cases
 
@@ -59,14 +59,14 @@ The record Lexicon provides a solid foundation for dataset indexing with hybrid 
 }
 ```
 
-**Problem:** Should use `"format": "at-uri"` like we did for sampleSchema fields.
+**Problem:** Should use `"format": "at-uri"` like we did for schema fields.
 
 **Fix:**
 ```json
 "schemaRef": {
   "type": "string",
   "format": "at-uri",
-  "description": "AT-URI reference to the sampleSchema record",
+  "description": "AT-URI reference to the schema record",
   "maxLength": 500
 }
 ```
@@ -77,7 +77,7 @@ The record Lexicon provides a solid foundation for dataset indexing with hybrid 
 
 #### Issue 2.2: License Field Inconsistency ⚠️ **Medium**
 
-sampleSchema metadata:
+schema metadata:
 ```json
 "license": {
   "type": "string",
@@ -97,7 +97,7 @@ record:
 
 **Problem:** Inconsistent maxLength and less detailed guidance.
 
-**Recommendation:** Align with sampleSchema:
+**Recommendation:** Align with schema:
 - maxLength: 200 (to support full URLs)
 - Enhanced description with examples
 - Reference Schema.org license property
@@ -106,7 +106,7 @@ record:
 
 #### Issue 2.3: Tags Field Inconsistency ⚠️ **Medium**
 
-sampleSchema metadata:
+schema metadata:
 ```json
 "tags": {
   "type": "array",
@@ -145,7 +145,7 @@ record:
 "license": {...}
 ```
 
-sampleSchema:
+schema:
 ```json
 "metadata": {
   "type": "object",
@@ -164,10 +164,10 @@ sampleSchema:
 - Pros: More discoverable (top-level fields, indexed/searchable)
 - Pros: Validated by Lexicon
 - Cons: Duplicates structure with metadata blob
-- Cons: Inconsistent with sampleSchema pattern
+- Cons: Inconsistent with schema pattern
 
 **Option B: Unified Metadata Object**
-- Pros: Consistent with sampleSchema
+- Pros: Consistent with schema
 - Pros: Single source of truth
 - Cons: Less discoverable for search
 - Cons: Can't validate blob contents
@@ -298,7 +298,7 @@ storageExternal:
 
 **Arguments for closed: false (current):**
 - Future extensibility (e.g., IPFS-native, Filecoin, Arweave)
-- Consistent with sampleSchema schema union pattern
+- Consistent with schema schema union pattern
 - Graceful degradation for unknown types
 
 **Recommendation:** Keep open but document in description that external/blobs are the canonical types maintained by foundation.ac.
@@ -307,7 +307,7 @@ storageExternal:
 
 ### 8. Missing Fields from Standard Patterns
 
-Comparing to Schema.org Dataset and sampleSchema patterns:
+Comparing to Schema.org Dataset and schema patterns:
 
 **Consider Adding:**
 
@@ -317,7 +317,7 @@ Comparing to Schema.org Dataset and sampleSchema patterns:
 
 2. **Version** - Dataset versioning?
    - Current approach: New record per version (via tid)
-   - Alternative: Add explicit `version` field like sampleSchema
+   - Alternative: Add explicit `version` field like schema
    - **Recommendation:** Document that versioning is via new records, reference via AT-URI with tid
 
 3. **Citation** - How to cite this dataset?
@@ -357,7 +357,7 @@ Comparing to Schema.org Dataset and sampleSchema patterns:
 {
   "$type": "ac.foundation.dataset.record",
   "name": "CIFAR-10 Training Set",
-  "schemaRef": "at://did:plc:abc123/ac.foundation.dataset.sampleSchema/imageclassification@1.0.0",
+  "schemaRef": "at://did:plc:abc123/ac.foundation.dataset.schema/imageclassification@1.0.0",
   "storage": {"type": "external", "urls": ["..."]}
 }
 ```
@@ -400,7 +400,7 @@ Comparing to Schema.org Dataset and sampleSchema patterns:
 ### High Priority (Should Fix)
 
 4. **Align metadata pattern** - Clarify relationship between top-level fields and metadata blob
-5. **Standardize license field** - Match sampleSchema maxLength and description
+5. **Standardize license field** - Match schema maxLength and description
 6. **Standardize tags field** - Use consistent limits or document rationale
 
 ### Medium Priority (Consider)
@@ -419,9 +419,9 @@ Comparing to Schema.org Dataset and sampleSchema patterns:
 
 ## Consistency Matrix
 
-Comparison of patterns between sampleSchema and record Lexicons:
+Comparison of patterns between schema and record Lexicons:
 
-| Pattern | sampleSchema | record | Status |
+| Pattern | schema | record | Status |
 |---------|--------------|--------|--------|
 | AT-URI format | ✅ Uses format | ❌ Missing | **Fix** |
 | License field | 200 chars, detailed | 100 chars, basic | **Align** |
@@ -440,15 +440,15 @@ Comparison of patterns between sampleSchema and record Lexicons:
 1. Add `"format": "at-uri"` to schemaRef field
 2. Change storage union variants to use `$type` discriminator
 3. Verify blob array item type with ATProto specification
-4. Align license field with sampleSchema (maxLength: 200, enhanced description)
-5. Decide on tags limits (recommend matching sampleSchema: 150/30)
+4. Align license field with schema (maxLength: 200, enhanced description)
+5. Decide on tags limits (recommend matching schema: 150/30)
 
 ### Documentation Improvements
 
 6. Add description clarifying metadata blob vs top-level fields relationship
 7. Document that dataset versioning is via new records (tids)
 8. Add note about storage union extensibility
-9. Cross-reference with sampleSchema Lexicon
+9. Cross-reference with schema Lexicon
 
 ### Consider for Phase 2
 
@@ -460,7 +460,7 @@ Comparison of patterns between sampleSchema and record Lexicons:
 
 ## Conclusion
 
-The record Lexicon provides a solid foundation but needs refinement for ATProto compliance and consistency with sampleSchema patterns. The storage union design is excellent, and the use of tids is appropriate. Primary concerns are format validation, union discriminators, and metadata pattern clarity.
+The record Lexicon provides a solid foundation but needs refinement for ATProto compliance and consistency with schema patterns. The storage union design is excellent, and the use of tids is appropriate. Primary concerns are format validation, union discriminators, and metadata pattern clarity.
 
 **Estimated effort to address critical issues:** 2-3 hours
 **Recommended timeline:** Before Phase 1 completion

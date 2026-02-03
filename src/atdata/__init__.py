@@ -97,8 +97,11 @@ from .repository import (
     create_repository as create_repository,
 )
 
-from .local import (
+from .index import (
     Index as Index,
+)
+
+from .stores import (
     LocalDiskStore as LocalDiskStore,
 )
 

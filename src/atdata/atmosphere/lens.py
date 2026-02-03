@@ -11,7 +11,7 @@ Note:
 
 from typing import Optional
 
-from .client import AtmosphereClient
+from .client import Atmosphere
 from ._types import (
     AtUri,
     LensRecord,
@@ -37,14 +37,13 @@ class LensPublisher:
         ... def my_lens(source: SourceType) -> TargetType:
         ...     return TargetType(field=source.other_field)
         >>>
-        >>> client = AtmosphereClient()
-        >>> client.login("handle", "password")
+        >>> atmo = Atmosphere.login("handle", "password")
         >>>
-        >>> publisher = LensPublisher(client)
+        >>> publisher = LensPublisher(atmo)
         >>> uri = publisher.publish(
         ...     name="my_lens",
-        ...     source_schema_uri="at://did:plc:abc/ac.foundation.dataset.sampleSchema/source",
-        ...     target_schema_uri="at://did:plc:abc/ac.foundation.dataset.sampleSchema/target",
+        ...     source_schema_uri="at://did:plc:abc/ac.foundation.dataset.schema/source",
+        ...     target_schema_uri="at://did:plc:abc/ac.foundation.dataset.schema/target",
         ...     code_repository="https://github.com/user/repo",
         ...     code_commit="abc123def456",
         ...     getter_path="mymodule.lenses:my_lens",
@@ -57,11 +56,11 @@ class LensPublisher:
         records. Users must manually install and trust lens implementations.
     """
 
-    def __init__(self, client: AtmosphereClient):
+    def __init__(self, client: Atmosphere):
         """Initialize the lens publisher.
 
         Args:
-            client: Authenticated AtmosphereClient instance.
+            client: Authenticated Atmosphere instance.
         """
         self.client = client
 
@@ -195,8 +194,8 @@ class LensLoader:
     it manually.
 
     Examples:
-        >>> client = AtmosphereClient()
-        >>> loader = LensLoader(client)
+        >>> atmo = Atmosphere.login("handle", "password")
+        >>> loader = LensLoader(atmo)
         >>>
         >>> record = loader.get("at://did:plc:abc/ac.foundation.dataset.lens/xyz")
         >>> print(record["name"])
@@ -204,11 +203,11 @@ class LensLoader:
         >>> print(record.get("getterCode", {}).get("repository"))
     """
 
-    def __init__(self, client: AtmosphereClient):
+    def __init__(self, client: Atmosphere):
         """Initialize the lens loader.
 
         Args:
-            client: AtmosphereClient instance.
+            client: Atmosphere instance.
         """
         self.client = client
 

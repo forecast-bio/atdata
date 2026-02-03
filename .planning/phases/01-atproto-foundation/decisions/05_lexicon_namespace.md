@@ -16,7 +16,7 @@ ac.foundation.dataset.*
 The choices we have then are
 
 ```
-ac.foundation.dataset.sampleSchema
+ac.foundation.dataset.schema
 ac.foundation.dataset.record
 ac.foundation.dataset.lens
 ```

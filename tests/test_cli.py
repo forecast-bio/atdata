@@ -3,7 +3,7 @@
 Covers:
 - cli/__init__.py (app, main, version, and command wiring)
 - cli/diagnose.py (diagnose_redis, _print_status)
-- cli/local.py (local_up, local_down, local_status, helpers)
+- cli/infra.py (local_up, local_down, local_status, helpers)
 - cli/preview.py (preview_dataset, _format_value)
 - cli/schema.py (schema_show, schema_diff, _type_label)
 - cli/inspect.py (inspect_dataset, _describe_value)
@@ -24,7 +24,7 @@ import atdata
 from atdata.cli import app, main
 from conftest import SharedBasicSample
 from atdata.cli.diagnose import diagnose_redis, _print_status
-from atdata.cli.local import (
+from atdata.cli.infra import (
     _check_docker,
     _container_running,
     _get_compose_file,
@@ -512,14 +512,14 @@ class TestDiagnoseRedis:
 
 
 class TestCheckDocker:
-    @patch("atdata.cli.local.shutil.which", return_value=None)
+    @patch("atdata.cli.infra.shutil.which", return_value=None)
     def test_docker_not_installed(self, mock_which, capsys):
         assert _check_docker() is False
         err = capsys.readouterr().err
         assert "not installed" in err
 
-    @patch("atdata.cli.local.subprocess.run")
-    @patch("atdata.cli.local.shutil.which", return_value="/usr/bin/docker")
+    @patch("atdata.cli.infra.subprocess.run")
+    @patch("atdata.cli.infra.shutil.which", return_value="/usr/bin/docker")
     def test_docker_daemon_not_running(self, mock_which, mock_run, capsys):
         mock_run.return_value = subprocess.CompletedProcess(
             args=[], returncode=1, stdout="", stderr=""
@@ -528,24 +528,24 @@ class TestCheckDocker:
         err = capsys.readouterr().err
         assert "not running" in err
 
-    @patch("atdata.cli.local.subprocess.run")
-    @patch("atdata.cli.local.shutil.which", return_value="/usr/bin/docker")
+    @patch("atdata.cli.infra.subprocess.run")
+    @patch("atdata.cli.infra.shutil.which", return_value="/usr/bin/docker")
     def test_docker_timeout(self, mock_which, mock_run, capsys):
         mock_run.side_effect = subprocess.TimeoutExpired(cmd="docker info", timeout=10)
         assert _check_docker() is False
         err = capsys.readouterr().err
         assert "not responding" in err
 
-    @patch("atdata.cli.local.subprocess.run")
-    @patch("atdata.cli.local.shutil.which", return_value="/usr/bin/docker")
+    @patch("atdata.cli.infra.subprocess.run")
+    @patch("atdata.cli.infra.shutil.which", return_value="/usr/bin/docker")
     def test_docker_other_exception(self, mock_which, mock_run, capsys):
         mock_run.side_effect = OSError("bang")
         assert _check_docker() is False
         err = capsys.readouterr().err
         assert "Error checking Docker" in err
 
-    @patch("atdata.cli.local.subprocess.run")
-    @patch("atdata.cli.local.shutil.which", return_value="/usr/bin/docker")
+    @patch("atdata.cli.infra.subprocess.run")
+    @patch("atdata.cli.infra.shutil.which", return_value="/usr/bin/docker")
     def test_docker_ok(self, mock_which, mock_run):
         mock_run.return_value = subprocess.CompletedProcess(
             args=[], returncode=0, stdout="", stderr=""
@@ -566,35 +566,35 @@ class TestGetComposeFile:
 
 
 class TestContainerRunning:
-    @patch("atdata.cli.local.subprocess.run")
+    @patch("atdata.cli.infra.subprocess.run")
     def test_running(self, mock_run):
         mock_run.return_value = subprocess.CompletedProcess(
             args=[], returncode=0, stdout="true\n", stderr=""
         )
         assert _container_running("my-container") is True
 
-    @patch("atdata.cli.local.subprocess.run")
+    @patch("atdata.cli.infra.subprocess.run")
     def test_not_running(self, mock_run):
         mock_run.return_value = subprocess.CompletedProcess(
             args=[], returncode=0, stdout="false\n", stderr=""
         )
         assert _container_running("my-container") is False
 
-    @patch("atdata.cli.local.subprocess.run")
+    @patch("atdata.cli.infra.subprocess.run")
     def test_container_not_found(self, mock_run):
         mock_run.return_value = subprocess.CompletedProcess(
             args=[], returncode=1, stdout="", stderr=""
         )
         assert _container_running("missing") is False
 
-    @patch("atdata.cli.local.subprocess.run", side_effect=OSError("no docker"))
+    @patch("atdata.cli.infra.subprocess.run", side_effect=OSError("no docker"))
     def test_exception(self, mock_run):
         assert _container_running("x") is False
 
 
 class TestRunCompose:
-    @patch("atdata.cli.local.subprocess.run")
-    @patch("atdata.cli.local.shutil.which", return_value="/usr/bin/docker")
+    @patch("atdata.cli.infra.subprocess.run")
+    @patch("atdata.cli.infra.shutil.which", return_value="/usr/bin/docker")
     def test_compose_v2(self, mock_which, mock_run, tmp_path):
         # First call: docker compose version -> success (v2)
         # Second call: actual compose command
@@ -602,15 +602,15 @@ class TestRunCompose:
             subprocess.CompletedProcess(args=[], returncode=0, stdout="v2.20"),
             subprocess.CompletedProcess(args=[], returncode=0, stdout="ok"),
         ]
-        with patch("atdata.cli.local.Path.home", return_value=tmp_path):
+        with patch("atdata.cli.infra.Path.home", return_value=tmp_path):
             result = _run_compose("version: '3'\n", ["up", "-d"])
         assert result.returncode == 0
         # Verify the second call uses "docker compose"
         call_args = mock_run.call_args_list[1][0][0]
         assert call_args[:2] == ["docker", "compose"]
 
-    @patch("atdata.cli.local.subprocess.run")
-    @patch("atdata.cli.local.shutil.which")
+    @patch("atdata.cli.infra.subprocess.run")
+    @patch("atdata.cli.infra.shutil.which")
     def test_compose_v1_fallback(self, mock_which, mock_run, tmp_path):
         # docker exists, but `docker compose version` fails -> fallback to docker-compose
         mock_which.side_effect = lambda cmd: (
@@ -624,34 +624,34 @@ class TestRunCompose:
             subprocess.CompletedProcess(args=[], returncode=1),  # v2 check fails
             subprocess.CompletedProcess(args=[], returncode=0, stdout="ok"),
         ]
-        with patch("atdata.cli.local.Path.home", return_value=tmp_path):
+        with patch("atdata.cli.infra.Path.home", return_value=tmp_path):
             _run_compose("version: '3'\n", ["up"])
         call_args = mock_run.call_args_list[1][0][0]
         assert call_args[0] == "docker-compose"
 
-    @patch("atdata.cli.local.subprocess.run")
-    @patch("atdata.cli.local.shutil.which")
+    @patch("atdata.cli.infra.subprocess.run")
+    @patch("atdata.cli.infra.shutil.which")
     def test_no_compose_available(self, mock_which, mock_run, tmp_path):
         mock_which.side_effect = lambda cmd: (
             "/usr/bin/docker" if cmd == "docker" else None
         )
         mock_run.return_value = subprocess.CompletedProcess(args=[], returncode=1)
-        with patch("atdata.cli.local.Path.home", return_value=tmp_path):
+        with patch("atdata.cli.infra.Path.home", return_value=tmp_path):
             with pytest.raises(RuntimeError, match="Neither"):
                 _run_compose("version: '3'\n", ["up"])
 
-    @patch("atdata.cli.local.subprocess.run")
-    @patch("atdata.cli.local.shutil.which", return_value=None)
+    @patch("atdata.cli.infra.subprocess.run")
+    @patch("atdata.cli.infra.shutil.which", return_value=None)
     def test_docker_not_found(self, mock_which, mock_run, tmp_path):
-        with patch("atdata.cli.local.Path.home", return_value=tmp_path):
+        with patch("atdata.cli.infra.Path.home", return_value=tmp_path):
             with pytest.raises(RuntimeError, match="Docker not found"):
                 _run_compose("version: '3'\n", ["up"])
 
 
 class TestLocalUp:
-    @patch("atdata.cli.local._run_compose")
-    @patch("atdata.cli.local._check_docker", return_value=True)
-    @patch("atdata.cli.local.time", create=True)
+    @patch("atdata.cli.infra._run_compose")
+    @patch("atdata.cli.infra._check_docker", return_value=True)
+    @patch("atdata.cli.infra.time", create=True)
     def test_success(self, mock_time, mock_check, mock_compose, capsys):
         mock_compose.return_value = subprocess.CompletedProcess(args=[], returncode=0)
         # Patch time.sleep inside local_up
@@ -661,26 +661,26 @@ class TestLocalUp:
         out = capsys.readouterr().out
         assert "Redis:" in out
 
-    @patch("atdata.cli.local._check_docker", return_value=False)
+    @patch("atdata.cli.infra._check_docker", return_value=False)
     def test_docker_unavailable(self, mock_check):
         code = local_up()
         assert code == 1
 
-    @patch("atdata.cli.local._run_compose")
-    @patch("atdata.cli.local._check_docker", return_value=True)
+    @patch("atdata.cli.infra._run_compose")
+    @patch("atdata.cli.infra._check_docker", return_value=True)
     def test_compose_failure(self, mock_check, mock_compose, capsys):
         mock_compose.return_value = subprocess.CompletedProcess(args=[], returncode=2)
         code = local_up()
         assert code == 2
 
-    @patch("atdata.cli.local._run_compose", side_effect=RuntimeError("boom"))
-    @patch("atdata.cli.local._check_docker", return_value=True)
+    @patch("atdata.cli.infra._run_compose", side_effect=RuntimeError("boom"))
+    @patch("atdata.cli.infra._check_docker", return_value=True)
     def test_compose_exception(self, mock_check, mock_compose, capsys):
         code = local_up()
         assert code == 1
 
-    @patch("atdata.cli.local._run_compose")
-    @patch("atdata.cli.local._check_docker", return_value=True)
+    @patch("atdata.cli.infra._run_compose")
+    @patch("atdata.cli.infra._check_docker", return_value=True)
     def test_detach_flag(self, mock_check, mock_compose, capsys):
         mock_compose.return_value = subprocess.CompletedProcess(args=[], returncode=0)
         with patch("time.sleep"):
@@ -688,8 +688,8 @@ class TestLocalUp:
         compose_cmd = mock_compose.call_args[0][1]
         assert "-d" in compose_cmd
 
-    @patch("atdata.cli.local._run_compose")
-    @patch("atdata.cli.local._check_docker", return_value=True)
+    @patch("atdata.cli.infra._run_compose")
+    @patch("atdata.cli.infra._check_docker", return_value=True)
     def test_no_detach(self, mock_check, mock_compose, capsys):
         mock_compose.return_value = subprocess.CompletedProcess(args=[], returncode=0)
         with patch("time.sleep"):
@@ -699,8 +699,8 @@ class TestLocalUp:
 
 
 class TestLocalDown:
-    @patch("atdata.cli.local._run_compose")
-    @patch("atdata.cli.local._check_docker", return_value=True)
+    @patch("atdata.cli.infra._run_compose")
+    @patch("atdata.cli.infra._check_docker", return_value=True)
     def test_success(self, mock_check, mock_compose, capsys):
         mock_compose.return_value = subprocess.CompletedProcess(args=[], returncode=0)
         code = local_down()
@@ -708,12 +708,12 @@ class TestLocalDown:
         out = capsys.readouterr().out
         assert "stopped" in out.lower()
 
-    @patch("atdata.cli.local._check_docker", return_value=False)
+    @patch("atdata.cli.infra._check_docker", return_value=False)
     def test_docker_unavailable(self, mock_check):
         assert local_down() == 1
 
-    @patch("atdata.cli.local._run_compose")
-    @patch("atdata.cli.local._check_docker", return_value=True)
+    @patch("atdata.cli.infra._run_compose")
+    @patch("atdata.cli.infra._check_docker", return_value=True)
     def test_with_volumes(self, mock_check, mock_compose, capsys):
         mock_compose.return_value = subprocess.CompletedProcess(args=[], returncode=0)
         local_down(remove_volumes=True)
@@ -722,22 +722,22 @@ class TestLocalDown:
         out = capsys.readouterr().out
         assert "delete" in out.lower()
 
-    @patch("atdata.cli.local._run_compose")
-    @patch("atdata.cli.local._check_docker", return_value=True)
+    @patch("atdata.cli.infra._run_compose")
+    @patch("atdata.cli.infra._check_docker", return_value=True)
     def test_compose_failure(self, mock_check, mock_compose, capsys):
         mock_compose.return_value = subprocess.CompletedProcess(args=[], returncode=3)
         code = local_down()
         assert code == 3
 
-    @patch("atdata.cli.local._run_compose", side_effect=RuntimeError("fail"))
-    @patch("atdata.cli.local._check_docker", return_value=True)
+    @patch("atdata.cli.infra._run_compose", side_effect=RuntimeError("fail"))
+    @patch("atdata.cli.infra._check_docker", return_value=True)
     def test_compose_exception(self, mock_check, mock_compose):
         assert local_down() == 1
 
 
 class TestLocalStatus:
-    @patch("atdata.cli.local._container_running")
-    @patch("atdata.cli.local._check_docker", return_value=True)
+    @patch("atdata.cli.infra._container_running")
+    @patch("atdata.cli.infra._check_docker", return_value=True)
     def test_both_running(self, mock_check, mock_running, capsys):
         mock_running.return_value = True
         code = local_status()
@@ -746,8 +746,8 @@ class TestLocalStatus:
         assert "running" in out
         assert "To stop" in out
 
-    @patch("atdata.cli.local._container_running", return_value=False)
-    @patch("atdata.cli.local._check_docker", return_value=True)
+    @patch("atdata.cli.infra._container_running", return_value=False)
+    @patch("atdata.cli.infra._check_docker", return_value=True)
     def test_both_stopped(self, mock_check, mock_running, capsys):
         code = local_status()
         assert code == 0
@@ -755,13 +755,13 @@ class TestLocalStatus:
         assert "stopped" in out
         assert "To start" in out
 
-    @patch("atdata.cli.local._check_docker", return_value=False)
+    @patch("atdata.cli.infra._check_docker", return_value=False)
     def test_docker_unavailable(self, mock_check):
         assert local_status() == 1
 
     def test_status_via_cli(self):
-        with patch("atdata.cli.local.local_status", return_value=0):
-            result = runner.invoke(app, ["local", "status"])
+        with patch("atdata.cli.infra.local_status", return_value=0):
+            result = runner.invoke(app, ["infra", "status"])
             assert isinstance(result.exit_code, int)
 
 
@@ -774,13 +774,13 @@ class TestCliWiring:
     """Verify the typer app wires sub-commands correctly."""
 
     def test_local_up_via_cli(self):
-        with patch("atdata.cli.local.local_up", return_value=0):
-            result = runner.invoke(app, ["local", "up"])
+        with patch("atdata.cli.infra.local_up", return_value=0):
+            result = runner.invoke(app, ["infra", "up"])
             assert isinstance(result.exit_code, int)
 
     def test_local_down_via_cli(self):
-        with patch("atdata.cli.local.local_down", return_value=0):
-            result = runner.invoke(app, ["local", "down"])
+        with patch("atdata.cli.infra.local_down", return_value=0):
+            result = runner.invoke(app, ["infra", "down"])
             assert isinstance(result.exit_code, int)
 
     def test_diagnose_via_cli(self):
