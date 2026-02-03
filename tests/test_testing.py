@@ -202,7 +202,7 @@ class TestMockIndex:
 
     def test_no_path_uses_tempdir(self):
         index = mock_index()
-        assert index is not None
+        assert index.list_datasets() == []
 
 
 # ---------------------------------------------------------------------------

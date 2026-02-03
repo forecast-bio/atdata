@@ -16,6 +16,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Bounds checking in `bytes_to_array()` for truncated/corrupted input buffers
 
 ### Changed
+- Adversarial review: test suite and source code quality (#600)
+- Strengthen weak test assertions across test suite (batch) (#605)
+- Trim over-documented private internals (_ShardListStage, _StreamOpenerStage) (#606)
+- Fix double stat() in _estimate_dataset_bytes (#603)
+- Lazy-import pandas and requests in dataset.py to reduce import time (#602)
+- Add deprecation warnings to shard_list properties in URLSource and S3Source (#604)
+- Remove dead code: msgpack None check, deprecated shard_list without warnings, BasicIndexEntry alias (#601)
 - Refactor Index API: write_samples + insert_dataset with PDS blob defaults (#591)
 - Update tests for new API (#599)
 - Update AbstractIndex protocol (#598)

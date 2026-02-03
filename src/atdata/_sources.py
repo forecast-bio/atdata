@@ -64,10 +64,20 @@ class URLSource:
         """Expand brace pattern and return list of shard URLs."""
         return list(braceexpand.braceexpand(self.url))
 
-    # Legacy alias for backwards compatibility
     @property
     def shard_list(self) -> list[str]:
-        """Expand brace pattern and return list of shard URLs (deprecated, use list_shards())."""
+        """Expand brace pattern and return list of shard URLs.
+
+        .. deprecated::
+            Use :meth:`list_shards` instead.
+        """
+        import warnings
+
+        warnings.warn(
+            "shard_list is deprecated, use list_shards()",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self.list_shards()
 
     @property
@@ -178,10 +188,20 @@ class S3Source:
         """Return list of S3 URIs for the shards."""
         return [f"s3://{self.bucket}/{key}" for key in self.keys]
 
-    # Legacy alias for backwards compatibility
     @property
     def shard_list(self) -> list[str]:
-        """Return list of S3 URIs for the shards (deprecated, use list_shards())."""
+        """Return list of S3 URIs for the shards.
+
+        .. deprecated::
+            Use :meth:`list_shards` instead.
+        """
+        import warnings
+
+        warnings.warn(
+            "shard_list is deprecated, use list_shards()",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self.list_shards()
 
     @property

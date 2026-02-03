@@ -758,7 +758,7 @@ class TestLocalStatus:
     def test_status_via_cli(self):
         with patch("atdata.cli.infra.local_status", return_value=0):
             result = runner.invoke(app, ["infra", "status"])
-            assert isinstance(result.exit_code, int)
+            assert result.exit_code == 0
 
 
 # ===================================================================
@@ -772,17 +772,17 @@ class TestCliWiring:
     def test_local_up_via_cli(self):
         with patch("atdata.cli.infra.local_up", return_value=0):
             result = runner.invoke(app, ["infra", "up"])
-            assert isinstance(result.exit_code, int)
+            assert result.exit_code == 0
 
     def test_local_down_via_cli(self):
         with patch("atdata.cli.infra.local_down", return_value=0):
             result = runner.invoke(app, ["infra", "down"])
-            assert isinstance(result.exit_code, int)
+            assert result.exit_code == 0
 
     def test_diagnose_via_cli(self):
         with patch("atdata.cli.diagnose.diagnose_redis", return_value=0):
             result = runner.invoke(app, ["diagnose"])
-            assert isinstance(result.exit_code, int)
+            assert result.exit_code == 0
 
     def test_no_args_shows_help(self):
         result = runner.invoke(app, [])

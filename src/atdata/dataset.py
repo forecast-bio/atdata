@@ -47,8 +47,6 @@ from ._protocols import DataSource, Packable
 from ._exceptions import SampleKeyError, PartialFailureError
 
 import numpy as np
-import pandas as pd
-import requests
 
 import typing
 from typing import (
@@ -70,6 +68,7 @@ from typing import (
 )
 
 if TYPE_CHECKING:
+    import pandas
     from .manifest._query import SampleLocation
 from numpy.typing import NDArray
 
@@ -282,16 +281,9 @@ class PackableSample(ABC):
 
     @property
     def packed(self) -> bytes:
-        """Serialize to msgpack bytes. NDArray fields are auto-converted.
-
-        Raises:
-            RuntimeError: If msgpack serialization fails.
-        """
+        """Serialize to msgpack bytes. NDArray fields are auto-converted."""
         o = {k: _make_packable(v) for k, v in vars(self).items()}
-        ret = msgpack.packb(o)
-        if ret is None:
-            raise RuntimeError(f"Failed to pack sample to bytes: {o}")
-        return ret
+        return msgpack.packb(o)
 
     @property
     def as_wds(self) -> WDSRawSample:
@@ -542,6 +534,8 @@ class Dataset(Generic[ST]):
             return None
 
         if self._metadata is None:
+            import requests
+
             with requests.get(self.metadata_url, stream=True) as response:
                 response.raise_for_status()
                 self._metadata = msgpack.unpackb(response.content, raw=False)
@@ -813,7 +807,7 @@ class Dataset(Generic[ST]):
 
     def query(
         self,
-        where: "Callable[[pd.DataFrame], pd.Series]",
+        where: "Callable[[pandas.DataFrame], pandas.Series]",
     ) -> "list[SampleLocation]":
         """Query this dataset using per-shard manifest metadata.
 
@@ -844,7 +838,7 @@ class Dataset(Generic[ST]):
         executor = QueryExecutor.from_shard_urls(shard_urls)
         return executor.query(where=where)
 
-    def to_pandas(self, limit: int | None = None) -> "pd.DataFrame":
+    def to_pandas(self, limit: int | None = None) -> "pandas.DataFrame":
         """Materialize the dataset (or first *limit* samples) as a DataFrame.
 
         Args:
@@ -867,6 +861,8 @@ class Dataset(Generic[ST]):
         rows = [
             asdict(s) if dataclasses.is_dataclass(s) else s.to_dict() for s in samples
         ]
+        import pandas as pd
+
         return pd.DataFrame(rows)
 
     def to_dict(self, limit: int | None = None) -> dict[str, list[Any]]:
@@ -1061,6 +1057,8 @@ class Dataset(Generic[ST]):
         Examples:
             >>> ds.to_parquet("output.parquet", maxcount=50000)
         """
+        import pandas as pd
+
         path = Path(path)
         if sample_map is None:
             sample_map = asdict
