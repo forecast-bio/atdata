@@ -811,9 +811,25 @@ class Dataset(Generic[ST]):
                 break
         return [result[i] for i in indices if i in result]
 
+    @property
+    def fields(self) -> "Any":
+        """Typed field proxy for manifest queries on this dataset.
+
+        Returns an object whose attributes are ``FieldProxy`` instances,
+        one per manifest-eligible field of this dataset's sample type.
+
+        Examples:
+            >>> ds = atdata.Dataset[MySample](url)
+            >>> Q = ds.fields
+            >>> results = ds.query(where=(Q.confidence > 0.9))
+        """
+        from .manifest._proxy import query_fields
+
+        return query_fields(self.sample_type)
+
     def query(
         self,
-        where: "Callable[[pd.DataFrame], pd.Series]",
+        where: "Callable[[pd.DataFrame], pd.Series] | Predicate",
     ) -> "list[SampleLocation]":
         """Query this dataset using per-shard manifest metadata.
 
@@ -822,10 +838,12 @@ class Dataset(Generic[ST]):
         and executes a two-phase query (shard-level aggregate pruning,
         then sample-level parquet filtering).
 
+        The *where* argument accepts either a lambda/function that operates
+        on a pandas DataFrame, or a ``Predicate`` built from the proxy DSL.
+
         Args:
-            where: Predicate function that receives a pandas DataFrame
-                of manifest fields and returns a boolean Series selecting
-                matching rows.
+            where: Predicate function or ``Predicate`` object that selects
+                matching rows from the per-sample manifest DataFrame.
 
         Returns:
             List of ``SampleLocation`` for matching samples.
@@ -837,6 +855,9 @@ class Dataset(Generic[ST]):
             >>> locs = ds.query(where=lambda df: df["confidence"] > 0.9)
             >>> len(locs)
             42
+
+            >>> Q = ds.fields
+            >>> locs = ds.query(where=(Q.confidence > 0.9))
         """
         from .manifest import QueryExecutor
 

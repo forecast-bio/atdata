@@ -26,3 +26,7 @@ from ._manifest import MANIFEST_FORMAT_VERSION as MANIFEST_FORMAT_VERSION
 from ._writer import ManifestWriter as ManifestWriter
 from ._query import QueryExecutor as QueryExecutor
 from ._query import SampleLocation as SampleLocation
+from ._proxy import FieldProxy as FieldProxy
+from ._proxy import Predicate as Predicate
+from ._proxy import query_fields as query_fields
+from ._proxy import F as F
