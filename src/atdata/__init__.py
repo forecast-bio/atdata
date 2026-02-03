@@ -122,6 +122,7 @@ from .manifest import (
     ManifestWriter as ManifestWriter,
     QueryExecutor as QueryExecutor,
     SampleLocation as SampleLocation,
+    query_fields as query_fields,
 )
 
 # ATProto integration (lazy import to avoid requiring atproto package)
