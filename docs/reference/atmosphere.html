@@ -224,6 +224,37 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </li>  
     </ul>
   </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-examples" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Examples</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-examples">    
+        <li>
+    <a class="dropdown-item" href="../examples/index.html">
+ <span class="dropdown-text">Overview</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../examples/typed-pipeline.html">
+ <span class="dropdown-text">Typed Dataset Pipeline</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../examples/lens-transforms.html">
+ <span class="dropdown-text">Lens Transformations</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../examples/manifest-queries.html">
+ <span class="dropdown-text">Manifest-Powered Queries</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../examples/index-workflow.html">
+ <span class="dropdown-text">Index-Managed Datasets</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../examples/multi-split.html">
+ <span class="dropdown-text">Multi-Split Datasets</span></a>
+  </li>  
+    </ul>
+  </li>
   <li class="nav-item">
     <a class="nav-link" href="../api/index.html"> 
 <span class="menu-text">API</span></a>
@@ -302,12 +333,59 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
- <span class="menu-text">Reference</span></a>
+ <span class="menu-text">Examples</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
       <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../examples/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Examples</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../examples/typed-pipeline.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Typed Dataset Pipeline</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../examples/lens-transforms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lens Transformations</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../examples/manifest-queries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Manifest-Powered Queries</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../examples/index-workflow.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Index-Managed Datasets</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../examples/multi-split.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Multi-Split Datasets</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Reference</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../reference/architecture.html" class="sidebar-item-text sidebar-link">
@@ -475,7 +553,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="atmosphereclient" class="level2">
 <h2 class="anchored" data-anchor-id="atmosphereclient">AtmosphereClient</h2>
 <p>The client handles authentication and record operations:</p>
-<div id="4a1d73a1" class="cell">
+<div id="7d66028a" class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> AtmosphereClient</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> AtmosphereClient()</span>
@@ -502,7 +580,7 @@ Warning
 <section id="session-management" class="level3">
 <h3 class="anchored" data-anchor-id="session-management">Session Management</h3>
 <p>Save and restore sessions to avoid re-authentication:</p>
-<div id="dc555c2b" class="cell">
+<div id="3d38f5f9" class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Export session for later</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>session_string <span class="op">=</span> client.export_session()</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -514,7 +592,7 @@ Warning
 <section id="custom-pds" class="level3">
 <h3 class="anchored" data-anchor-id="custom-pds">Custom PDS</h3>
 <p>Connect to a custom PDS instead of bsky.social:</p>
-<div id="b3580d1a" class="cell">
+<div id="27c4dc2d" class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> AtmosphereClient(base_url<span class="op">=</span><span class="st">"https://pds.example.com"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
@@ -522,7 +600,7 @@ Warning
 <section id="pdsblobstore" class="level2">
 <h2 class="anchored" data-anchor-id="pdsblobstore">PDSBlobStore</h2>
 <p>Store dataset shards as ATProto blobs for fully decentralized storage:</p>
-<div id="187b7f98" class="cell">
+<div id="680d371f" class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> AtmosphereClient, PDSBlobStore</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> AtmosphereClient()</span>
@@ -545,7 +623,7 @@ Warning
 <section id="size-limits" class="level3">
 <h3 class="anchored" data-anchor-id="size-limits">Size Limits</h3>
 <p>PDS blobs typically have size limits (often 50MB-5GB depending on the PDS). Use <code>maxcount</code> and <code>maxsize</code> parameters to control shard sizes:</p>
-<div id="8f30f273" class="cell">
+<div id="6ac42579" class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>urls <span class="op">=</span> store.write_shards(</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    dataset,</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    prefix<span class="op">=</span><span class="st">"large-data/v1"</span>,</span>
@@ -558,7 +636,7 @@ Warning
 <section id="blobsource" class="level2">
 <h2 class="anchored" data-anchor-id="blobsource">BlobSource</h2>
 <p>Read datasets stored as PDS blobs:</p>
-<div id="5c90f995" class="cell">
+<div id="047fb6f0" class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata <span class="im">import</span> BlobSource</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># From blob references</span></span>
@@ -579,7 +657,7 @@ Warning
 <section id="atmosphereindex" class="level2">
 <h2 class="anchored" data-anchor-id="atmosphereindex">AtmosphereIndex</h2>
 <p>The unified interface for ATProto operations, implementing the AbstractIndex protocol:</p>
-<div id="043f74ba" class="cell">
+<div id="5b0422a7" class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> AtmosphereClient, AtmosphereIndex, PDSBlobStore</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> AtmosphereClient()</span>
@@ -594,7 +672,7 @@ Warning
 </div>
 <section id="publishing-schemas" class="level3">
 <h3 class="anchored" data-anchor-id="publishing-schemas">Publishing Schemas</h3>
-<div id="14d2256d" class="cell">
+<div id="4e7fd8f3" class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -615,7 +693,7 @@ Warning
 </section>
 <section id="publishing-datasets" class="level3">
 <h3 class="anchored" data-anchor-id="publishing-datasets">Publishing Datasets</h3>
-<div id="c0951bff" class="cell">
+<div id="f57446dc" class="cell">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[ImageSample](<span class="st">"data-{000000..000009}.tar"</span>)</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>entry <span class="op">=</span> index.insert_dataset(</span>
@@ -633,7 +711,7 @@ Warning
 </section>
 <section id="listing-and-retrieving" class="level3">
 <h3 class="anchored" data-anchor-id="listing-and-retrieving">Listing and Retrieving</h3>
-<div id="1bd08d5c" class="cell">
+<div id="1e5f7f8c" class="cell">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># List your datasets</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> entry <span class="kw">in</span> index.list_datasets():</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>entry<span class="sc">.</span>name<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>entry<span class="sc">.</span>schema_ref<span class="sc">}</span><span class="ss">"</span>)</span>
@@ -659,7 +737,7 @@ Warning
 <p>For more control, use the individual publisher classes:</p>
 <section id="schemapublisher" class="level3">
 <h3 class="anchored" data-anchor-id="schemapublisher">SchemaPublisher</h3>
-<div id="93e0e67a" class="cell">
+<div id="550a2352" class="cell">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> SchemaPublisher</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>publisher <span class="op">=</span> SchemaPublisher(client)</span>
@@ -675,7 +753,7 @@ Warning
 </section>
 <section id="datasetpublisher" class="level3">
 <h3 class="anchored" data-anchor-id="datasetpublisher">DatasetPublisher</h3>
-<div id="f8ddd66c" class="cell">
+<div id="8f36b6da" class="cell">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> DatasetPublisher</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>publisher <span class="op">=</span> DatasetPublisher(client)</span>
@@ -695,7 +773,7 @@ Warning
 <p>There are two approaches to storing data as ATProto blobs:</p>
 <p><strong>Approach 1: PDSBlobStore (Recommended)</strong></p>
 <p>Use <code>PDSBlobStore</code> with <code>AtmosphereIndex</code> for automatic shard management:</p>
-<div id="ffdb8314" class="cell">
+<div id="5ae50d60" class="cell">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> PDSBlobStore, AtmosphereIndex</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>store <span class="op">=</span> PDSBlobStore(client)</span>
@@ -714,7 +792,7 @@ Warning
 </div>
 <p><strong>Approach 2: Manual Blob Publishing</strong></p>
 <p>For more control, use <code>DatasetPublisher.publish_with_blobs()</code> directly:</p>
-<div id="2a42743a" class="cell">
+<div id="36a699c4" class="cell">
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> io</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> webdataset <span class="im">as</span> wds</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -734,7 +812,7 @@ Warning
 <span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p><strong>Loading Blob-Stored Datasets</strong></p>
-<div id="143ee1ce" class="cell">
+<div id="43322bac" class="cell">
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> DatasetLoader</span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata <span class="im">import</span> BlobSource</span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -758,7 +836,7 @@ Warning
 </section>
 <section id="lenspublisher" class="level3">
 <h3 class="anchored" data-anchor-id="lenspublisher">LensPublisher</h3>
-<div id="a3aa57ef" class="cell">
+<div id="e95fabed" class="cell">
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> LensPublisher</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>publisher <span class="op">=</span> LensPublisher(client)</span>
@@ -801,7 +879,7 @@ Warning
 <p>For direct access to records, use the loader classes:</p>
 <section id="schemaloader" class="level3">
 <h3 class="anchored" data-anchor-id="schemaloader">SchemaLoader</h3>
-<div id="f1623f31" class="cell">
+<div id="7a41eb88" class="cell">
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> SchemaLoader</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>loader <span class="op">=</span> SchemaLoader(client)</span>
@@ -817,7 +895,7 @@ Warning
 </section>
 <section id="datasetloader" class="level3">
 <h3 class="anchored" data-anchor-id="datasetloader">DatasetLoader</h3>
-<div id="33646188" class="cell">
+<div id="01c14ed8" class="cell">
 <div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> DatasetLoader</span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>loader <span class="op">=</span> DatasetLoader(client)</span>
@@ -845,7 +923,7 @@ Warning
 </section>
 <section id="lensloader" class="level3">
 <h3 class="anchored" data-anchor-id="lensloader">LensLoader</h3>
-<div id="e42126b8" class="cell">
+<div id="b9da0ba9" class="cell">
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> LensLoader</span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>loader <span class="op">=</span> LensLoader(client)</span>
@@ -870,7 +948,7 @@ Warning
 <section id="at-uris" class="level2">
 <h2 class="anchored" data-anchor-id="at-uris">AT URIs</h2>
 <p>ATProto records are identified by AT URIs:</p>
-<div id="0461d61c" class="cell">
+<div id="00127d71" class="cell">
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> AtUri</span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Parse an AT URI</span></span>
@@ -937,7 +1015,7 @@ Warning
 <section id="complete-example" class="level2">
 <h2 class="anchored" data-anchor-id="complete-example">Complete Example</h2>
 <p>This example shows the full workflow using <code>PDSBlobStore</code> for decentralized storage:</p>
-<div id="dbc3fefb" class="cell">
+<div id="828a8760" class="cell">
 <div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
@@ -1008,7 +1086,7 @@ Warning
 <span id="cb22-68"><a href="#cb22-68" aria-hidden="true" tabindex="-1"></a>        <span class="cf">break</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>For external URL storage (without <code>PDSBlobStore</code>):</p>
-<div id="0dca58d0" class="cell">
+<div id="3605a97a" class="cell">
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Use AtmosphereIndex without data_store</span></span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> AtmosphereIndex(client)</span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>

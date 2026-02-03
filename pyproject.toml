@@ -1,6 +1,6 @@
 [project]
 name = "atdata"
-version = "0.3.0b2"
+version = "0.3.1b1"
 description = "A loose federation of distributed, typed datasets"
 readme = "README.md"
 authors = [

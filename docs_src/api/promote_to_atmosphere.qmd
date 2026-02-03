@@ -30,7 +30,7 @@ making it discoverable on the federated atmosphere network.
 |-------------------|--------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|------------|
 | local_entry       | [LocalDatasetEntry](`atdata.local.LocalDatasetEntry`)              | The LocalDatasetEntry to promote.                                                                     | _required_ |
 | local_index       | [Index](`atdata.local.Index`)                                      | Local index containing the schema for this entry.                                                     | _required_ |
-| atmosphere_client | [AtmosphereClient](`atdata.atmosphere.AtmosphereClient`)           | Authenticated AtmosphereClient.                                                                       | _required_ |
+| atmosphere_client | [Atmosphere](`atdata.atmosphere.Atmosphere`)                       | Authenticated Atmosphere.                                                                             | _required_ |
 | data_store        | [AbstractDataStore](`atdata._protocols.AbstractDataStore`) \| None | Optional data store for copying data to new location. If None, the existing data_urls are used as-is. | `None`     |
 | name              | [str](`str`) \| None                                               | Override name for the atmosphere record. Defaults to local name.                                      | `None`     |
 | description       | [str](`str`) \| None                                               | Optional description for the dataset.                                                                 | `None`     |
@@ -54,7 +54,7 @@ making it discoverable on the federated atmosphere network.
 
 ```python
 >>> entry = local_index.get_dataset("mnist-train")
->>> uri = promote_to_atmosphere(entry, local_index, client)
+>>> uri = promote_to_atmosphere(entry, local_index, atmo)
 >>> print(uri)
 at://did:plc:abc123/ac.foundation.dataset.datasetIndex/...
 ```

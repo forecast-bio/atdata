@@ -223,6 +223,37 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </li>  
     </ul>
   </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-examples" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Examples</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-examples">    
+        <li>
+    <a class="dropdown-item" href="./examples/index.html">
+ <span class="dropdown-text">Overview</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./examples/typed-pipeline.html">
+ <span class="dropdown-text">Typed Dataset Pipeline</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./examples/lens-transforms.html">
+ <span class="dropdown-text">Lens Transformations</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./examples/manifest-queries.html">
+ <span class="dropdown-text">Manifest-Powered Queries</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./examples/index-workflow.html">
+ <span class="dropdown-text">Index-Managed Datasets</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="./examples/multi-split.html">
+ <span class="dropdown-text">Multi-Split Datasets</span></a>
+  </li>  
+    </ul>
+  </li>
   <li class="nav-item">
     <a class="nav-link" href="./api/index.html"> 
 <span class="menu-text">API</span></a>
@@ -301,12 +332,59 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
- <span class="menu-text">Reference</span></a>
+ <span class="menu-text">Examples</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
       <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./examples/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Examples</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./examples/typed-pipeline.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Typed Dataset Pipeline</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./examples/lens-transforms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lens Transformations</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./examples/manifest-queries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Manifest-Powered Queries</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./examples/index-workflow.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Index-Managed Datasets</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./examples/multi-split.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Multi-Split Datasets</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Reference</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./reference/architecture.html" class="sidebar-item-text sidebar-link">
@@ -439,7 +517,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- # atdata
 
 A loose federation of distributed, typed datasets built on WebDataset. -->
-<p><a href="./tutorials/quickstart.html" class="btn btn-primary btn-lg">Get Started</a> <a href="https://github.com/your-org/atdata" class="btn btn-outline-secondary btn-lg">View on GitHub</a></p>
+<p><a href="./tutorials/quickstart.html" class="btn btn-primary btn-lg">Get Started</a> <a href="https://github.com/forecast-bio/atdata" class="btn btn-outline-secondary btn-lg">View on GitHub</a></p>
 </div>
 <section id="the-challenge" class="level2">
 <h2 class="anchored" data-anchor-id="the-challenge">The Challenge</h2>
@@ -515,7 +593,7 @@ A loose federation of distributed, typed datasets built on WebDataset. -->
 <section id="define-a-sample-type" class="level3">
 <h3 class="anchored" data-anchor-id="define-a-sample-type">1. Define a Sample Type</h3>
 <p>The <code>@packable</code> decorator creates a serializable dataclass:</p>
-<div id="4008de51" class="cell">
+<div id="6d35b3f3" class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
@@ -530,7 +608,7 @@ A loose federation of distributed, typed datasets built on WebDataset. -->
 <section id="create-and-write-samples" class="level3">
 <h3 class="anchored" data-anchor-id="create-and-write-samples">2. Create and Write Samples</h3>
 <p>Use WebDataset’s standard TarWriter:</p>
-<div id="62326f0c" class="cell">
+<div id="56736e9d" class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> webdataset <span class="im">as</span> wds</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>samples <span class="op">=</span> [</span>
@@ -550,7 +628,7 @@ A loose federation of distributed, typed datasets built on WebDataset. -->
 <section id="load-and-iterate-with-type-safety" class="level3">
 <h3 class="anchored" data-anchor-id="load-and-iterate-with-type-safety">3. Load and Iterate with Type Safety</h3>
 <p>The generic <code>Dataset[T]</code> provides typed access:</p>
-<div id="d7de79c1" class="cell">
+<div id="a099d4f9" class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> atdata.Dataset[ImageSample](<span class="st">"data-000000.tar"</span>)</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> dataset.shuffled(batch_size<span class="op">=</span><span class="dv">32</span>):</span>
@@ -565,7 +643,7 @@ A loose federation of distributed, typed datasets built on WebDataset. -->
 <section id="team-storage-with-redis-s3" class="level3">
 <h3 class="anchored" data-anchor-id="team-storage-with-redis-s3">Team Storage with Redis + S3</h3>
 <p>When you’re ready to share with your team:</p>
-<div id="71357e11" class="cell">
+<div id="5fca82e1" class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> LocalIndex, S3DataStore</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Connect to team infrastructure</span></span>
@@ -589,7 +667,7 @@ A loose federation of distributed, typed datasets built on WebDataset. -->
 <section id="federation-with-atproto" class="level3">
 <h3 class="anchored" data-anchor-id="federation-with-atproto">Federation with ATProto</h3>
 <p>For public or cross-organization sharing:</p>
-<div id="5d4239aa" class="cell">
+<div id="af25b45b" class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> AtmosphereClient, AtmosphereIndex, PDSBlobStore</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.promote <span class="im">import</span> promote_to_atmosphere</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -611,7 +689,7 @@ A loose federation of distributed, typed datasets built on WebDataset. -->
 <section id="huggingface-style-loading" class="level2">
 <h2 class="anchored" data-anchor-id="huggingface-style-loading">HuggingFace-Style Loading</h2>
 <p>For convenient access to datasets:</p>
-<div id="cc8435cb" class="cell">
+<div id="8f7a780a" class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata <span class="im">import</span> load_dataset</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Load from local files</span></span>

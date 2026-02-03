@@ -164,11 +164,7 @@ class TestShardsToWdsUrl:
     def test_multiple_shards_common_pattern(self):
         shards = ["data-000.tar", "data-001.tar", "data-002.tar"]
         result = _shards_to_wds_url(shards)
-        # Algorithm finds longest common prefix/suffix, resulting in compact notation
-        # Both "data-{000,001,002}.tar" and "data-00{0,1,2}.tar" are valid
-        assert "{" in result and "}" in result
-        assert ".tar" in result
-        assert "data-" in result
+        assert result == "data-00{0,1,2}.tar"
 
     def test_multiple_shards_different_lengths(self):
         shards = ["data-0.tar", "data-1.tar", "data-10.tar"]

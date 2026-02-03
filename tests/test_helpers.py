@@ -120,3 +120,30 @@ class TestArraySerialization:
 
         restored = bytes_to_array(legacy_bytes)
         np.testing.assert_array_equal(restored, original)
+
+
+class TestBytesToArrayBoundsChecking:
+    """Verify bytes_to_array rejects truncated/corrupted buffers."""
+
+    def test_empty_buffer_raises(self):
+        with pytest.raises(ValueError, match="too short"):
+            bytes_to_array(b"")
+
+    def test_single_byte_raises(self):
+        with pytest.raises(ValueError, match="too short"):
+            bytes_to_array(b"\x03")
+
+    def test_truncated_dtype_raises(self):
+        # dtype_len says 3 but only 1 byte of dtype follows
+        with pytest.raises(ValueError, match="too short"):
+            bytes_to_array(b"\x03<f")
+
+    def test_truncated_shape_raises(self):
+        # Valid dtype header but shape data is missing
+        arr = np.array([1.0], dtype=np.float32)
+        full = array_to_bytes(arr)
+        # Chop off shape and data bytes
+        dlen = full[0]
+        truncated = full[: 2 + dlen]  # dtype_len + dtype + ndim only
+        with pytest.raises(ValueError, match="too short"):
+            bytes_to_array(truncated)

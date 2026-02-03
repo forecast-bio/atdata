@@ -305,7 +305,7 @@ def _batch_aggregate(xs: Sequence):
     if not xs:
         return []
     if isinstance(xs[0], np.ndarray):
-        return np.array(list(xs))
+        return np.stack(xs)
     return list(xs)
 
 

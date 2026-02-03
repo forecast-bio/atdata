@@ -6,6 +6,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.3.1b1] - 2026-02-02
+
+### Added
+- **Lexicon packaging**: ATProto lexicon JSON files bundled in `src/atdata/lexicons/` with `importlib.resources` access via `atdata.lexicons.get_lexicon()` and `list_lexicons()`
+- Bounds checking in `bytes_to_array()` for truncated/corrupted buffers
+
+### Changed
+- DX review: friction points discovered building example docs (#574)
+- Add five executable Quarto example docs to docs_src/examples/ (#567)
+- Wire examples into _quarto.yml nav and sidebar (#573)
+- Create example 5: Multi-split datasets with DatasetDict (#572)
+- Create example 4: Index-managed dataset workflow (#571)
+- Create example 3: Manifest-powered queries (#570)
+- Create example 2: Lens transformations and schema views (#569)
+- Create example 1: End-to-end typed dataset pipeline (#568)
+- **`AtmosphereClient` → `Atmosphere`**: Renamed with factory classmethods `Atmosphere.login()` and `Atmosphere.from_env()`; `AtmosphereClient` remains as a deprecated alias
+- **`sampleSchema` → `schema`**: Lexicon record type renamed from `ac.foundation.dataset.sampleSchema` to `ac.foundation.dataset.schema` (clean break, no backward compat)
+- **Module reorganization**: `local/` split into `index/` (Index, entries, schema management) and `stores/` (LocalDiskStore, S3DataStore); `local/` remains as backward-compat re-export shim
+- **CLI rename**: `atdata local` subcommand renamed to `atdata infra`
+- `SampleBatch` aggregation uses `np.stack()` instead of `np.array(list(...))` for efficiency
+- Removed dead legacy aliases in `StubManager` (`_stub_filename`, `_stub_path`, `_stub_is_current`, `_write_stub_atomic`)
+
+### Fixed
+- Test isolation: protocol tests now use temporary SQLite databases instead of shared default
+- Duplicate mock patch in `test_diagnose_via_cli` removed
+- Weak assertion in `test_shards_to_wds_url` replaced with exact expected output
+
 ## [0.3.0b2] - 2026-02-02
 
 ### Added
@@ -26,26 +53,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - 38 new tests: `test_write_samples.py`, `test_disk_store.py`, `test_index_write.py`
 
 ### Changed
-- Finalize and place lexicons in src/atdata/lexicons/ (#556)
-- Rename sampleSchema → schema (clean break) (#555)
-- Rename AtmosphereClient → Atmosphere + add login classmethod (#554)
-- Update /feature skill to confirm base branch (#550)
-- Fix ruff lint errors in test_coverage_gaps.py (#549)
-- Migrate repo references from foundation-ac to forecast-bio/atdata (#548)
-- Update CLAUDE.md to reflect recent additions and fix divergences (#540)
-- Reorganize .planning/ directory for temporal clarity (#547)
-- Investigate and fix code coverage reduction from recent changes (#541)
-- Add tests for dataset.py uncovered edge cases (#546)
-- Add tests for _index.py uncovered error/edge paths (#545)
-- Add tests for testing.py list field, Optional field, and fixture paths (#544)
-- Add tests for providers/_factory.py postgres and unknown provider paths (#543)
-- Add tests for _helpers.py object dtype and legacy npy paths (#542)
-- Create local skills for release, changelog, and adversarial review (#536)
-- Create /changelog skill (#539)
-- Update /ad skill — less aggressive docstring trimming (#538)
-- Create /release skill (#537)
-- Fix CI failures on v0.3.0b2 release (#535)
-- Release v0.3.0b2 beta (#534)
 - `promote.py` updated as backward-compat wrapper delegating to `Index.promote_entry()`
 - Trimmed `_protocols.py` docstrings by 30% (487 → 343 lines)
 - Trimmed verbose test docstrings across test suite (−173 lines)

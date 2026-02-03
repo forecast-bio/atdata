@@ -44,6 +44,6 @@ bench-compare a b:
 [working-directory: 'docs_src']
 docs:
     uv run quartodoc build
-    quarto render
+    QUARTO_PYTHON={{justfile_directory()}}/.venv/bin/python quarto render
     mkdir -p ../docs/benchmarks
     cp ../.bench/report.html ../docs/benchmarks/index.html || echo "No benchmark report found — run 'just bench' first"

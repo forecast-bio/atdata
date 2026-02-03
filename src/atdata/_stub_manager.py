@@ -149,10 +149,6 @@ class StubManager:
         safe_version = version.replace(".", "_")
         return f"{name}_{safe_version}.py"
 
-    def _stub_filename(self, name: str, version: str) -> str:
-        """Alias for _module_filename for backwards compatibility."""
-        return self._module_filename(name, version)
-
     def _module_path(
         self, name: str, version: str, authority: str = DEFAULT_AUTHORITY
     ) -> Path:
@@ -167,12 +163,6 @@ class StubManager:
             Path like ~/.atdata/stubs/local/MySample_1_0_0.py
         """
         return self._stub_dir / authority / self._module_filename(name, version)
-
-    def _stub_path(
-        self, name: str, version: str, authority: str = DEFAULT_AUTHORITY
-    ) -> Path:
-        """Alias for _module_path for backwards compatibility."""
-        return self._module_path(name, version, authority)
 
     def _module_is_current(self, path: Path, version: str) -> bool:
         """Check if an existing module file matches the expected version.
@@ -199,10 +189,6 @@ class StubManager:
             return False
         except (OSError, IOError):
             return False
-
-    def _stub_is_current(self, path: Path, version: str) -> bool:
-        """Alias for _module_is_current for backwards compatibility."""
-        return self._module_is_current(path, version)
 
     def _ensure_authority_package(self, authority: str) -> None:
         """Ensure authority subdirectory exists with __init__.py."""
@@ -260,12 +246,6 @@ class StubManager:
             except OSError:
                 pass  # Temp file cleanup failed, re-raising original error
             raise
-
-    def _write_stub_atomic(self, path: Path, content: str) -> None:
-        """Legacy method - extracts authority from path and calls _write_module_atomic."""
-        # Extract authority from path (parent directory name)
-        authority = path.parent.name
-        self._write_module_atomic(path, content, authority)
 
     def ensure_stub(self, schema: dict) -> Optional[Path]:
         """Ensure a module file exists for the given schema.
@@ -426,7 +406,7 @@ class StubManager:
         Returns:
             Path if stub exists, None otherwise
         """
-        path = self._stub_path(name, version, authority)
+        path = self._module_path(name, version, authority)
         return path if path.exists() else None
 
     def list_stubs(self, authority: Optional[str] = None) -> list[Path]:
@@ -513,7 +493,7 @@ class StubManager:
         Returns:
             True if file was removed, False if it didn't exist
         """
-        path = self._stub_path(name, version, authority)
+        path = self._module_path(name, version, authority)
         if path.exists():
             try:
                 path.unlink()

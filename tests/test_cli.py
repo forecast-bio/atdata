@@ -498,12 +498,8 @@ class TestDiagnoseRedis:
     def test_diagnose_via_cli(self):
         """CLI command wires through to diagnose_redis."""
         with patch("atdata.cli.diagnose.diagnose_redis", return_value=0):
-            # Patch at the import location used by __init__.py
-            with patch("atdata.cli.diagnose.diagnose_redis", return_value=0):
-                result = runner.invoke(app, ["diagnose"])
-                # May have either exit code depending on import path
-                # Just verify it doesn't crash
-                assert isinstance(result.exit_code, int)
+            result = runner.invoke(app, ["diagnose"])
+            assert result.exit_code == 0
 
 
 # ===================================================================

@@ -13,8 +13,8 @@ it manually.
 ## Examples {.doc-section .doc-section-examples}
 
 ```python
->>> client = AtmosphereClient()
->>> loader = LensLoader(client)
+>>> atmo = Atmosphere.login("handle", "password")
+>>> loader = LensLoader(atmo)
 >>>
 >>> record = loader.get("at://did:plc:abc/ac.foundation.dataset.lens/xyz")
 >>> print(record["name"])

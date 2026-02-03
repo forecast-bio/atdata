@@ -13,8 +13,8 @@ Python class for the sample type.
 ## Examples {.doc-section .doc-section-examples}
 
 ```python
->>> client = AtmosphereClient()
->>> loader = DatasetLoader(client)
+>>> atmo = Atmosphere.login("handle", "password")
+>>> loader = DatasetLoader(atmo)
 >>>
 >>> # List available datasets
 >>> datasets = loader.list()

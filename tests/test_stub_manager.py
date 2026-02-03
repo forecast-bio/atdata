@@ -539,18 +539,3 @@ class TestGetStubPath:
 # ---------------------------------------------------------------------------
 
 
-class TestAliases:
-    def test_stub_filename_alias(self, tmp_path: Path):
-        mgr = StubManager(stub_dir=tmp_path)
-        assert mgr._stub_filename("X", "1.0.0") == mgr._module_filename("X", "1.0.0")
-
-    def test_stub_path_alias(self, tmp_path: Path):
-        mgr = StubManager(stub_dir=tmp_path)
-        assert mgr._stub_path("X", "1.0.0") == mgr._module_path("X", "1.0.0")
-
-    def test_stub_is_current_alias(self, tmp_path: Path):
-        mgr = StubManager(stub_dir=tmp_path)
-        path = tmp_path / "fake.py"
-        assert mgr._stub_is_current(path, "1.0.0") == mgr._module_is_current(
-            path, "1.0.0"
-        )
