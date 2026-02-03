@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.3.2b1] - 2026-02-03
+
+### Changed
+- **`Index.write()` → `Index.write_samples()`**: Renamed with atmosphere-aware defaults — PDS blob upload, 50 MB shard limit, 1 GB total dataset guard
+- **`Index.insert_dataset()` overhaul**: Smart source routing for atmosphere targets — local files auto-upload via PDSBlobStore, remote URLs referenced as external storage, credentialed S3 sources error by default with `copy=True` opt-in
+- **New `force` and `copy` flags**: `force` bypasses PDS size limits; `copy` forces data transfer from private/remote sources to destination store
+- **Deprecations**: `Index.add_entry()`, `Index.promote_entry()`, `Index.promote_dataset()` now emit `DeprecationWarning` and delegate to `insert_dataset()`
+- PDS constants: `PDS_BLOB_LIMIT_BYTES` (50 MB) and `PDS_TOTAL_DATASET_LIMIT_BYTES` (1 GB) in `atmosphere/store.py`
+- `_AtmosphereBackend.insert_dataset()` accepts `data_urls` kwarg for pre-uploaded blob references
+- Add deprecation warnings to `shard_list` properties in `URLSource` and `S3Source`
+- Lazy-import `pandas` and `requests` in `dataset.py` to reduce import time
+- Remove dead code: `msgpack.packb` None check, deprecated `shard_list` without warnings
+
+### Fixed
+- **Atmosphere blob uploads**: `Index.write_samples()` targeting atmosphere now uploads data as PDS blobs instead of publishing local temp file paths
+- Strengthened weak test assertions: replaced `isinstance`/`hasattr` checks with value assertions, tautological `len()>0` with exact counts
+
 ## [0.3.1b1] - 2026-02-03
 
 ### Added
@@ -16,22 +33,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Bounds checking in `bytes_to_array()` for truncated/corrupted input buffers
 
 ### Changed
-- Adversarial review: test suite and source code quality (#600)
-- Strengthen weak test assertions across test suite (batch) (#605)
-- Trim over-documented private internals (_ShardListStage, _StreamOpenerStage) (#606)
-- Fix double stat() in _estimate_dataset_bytes (#603)
-- Lazy-import pandas and requests in dataset.py to reduce import time (#602)
-- Add deprecation warnings to shard_list properties in URLSource and S3Source (#604)
-- Remove dead code: msgpack None check, deprecated shard_list without warnings, BasicIndexEntry alias (#601)
-- Refactor Index API: write_samples + insert_dataset with PDS blob defaults (#591)
-- Update tests for new API (#599)
-- Update AbstractIndex protocol (#598)
-- Deprecate add_entry, promote_entry, promote_dataset (#597)
-- Refactor Index.insert_dataset with copy/force flags and credential guard (#596)
-- Rename Index.write to write_samples with atmosphere blob defaults (#595)
-- Refactor _AtmosphereBackend.insert_dataset() to accept data_urls (#594)
-- Add helper functions to index/_index.py (#593)
-- Add PDS constants and update PDSBlobStore defaults (#592)
 - Add version auto-suggest to /release and /publish skills (#588)
 - Create /publish skill for post-merge release tagging and PyPI publish (#587)
 - Fix wheel build: duplicate filename in ZIP archive rejected by PyPI (#586)
