@@ -6,16 +6,16 @@ This directory contains the ATProto Lexicon JSON definitions for the distributed
 
 ### Core Record Types
 
-1. **[ac.foundation.dataset.sampleSchema](ac.foundation.dataset.sampleSchema.json)**
+1. **[ac.foundation.dataset.schema](ac.foundation.dataset.schema.json)**
    - Defines PackableSample-compatible sample types using JSON Schema
    - Supports versioning via rkey format: `{NSID}@{semver}`
    - Includes NDArray shim for ML/scientific data types
-   - Example: [sampleSchema_example.json](../examples/sampleSchema_example.json)
+   - Example: [schema_example.json](../examples/schema_example.json)
 
 2. **[ac.foundation.dataset.record](ac.foundation.dataset.record.json)**
    - Index records for WebDataset-backed datasets
    - Hybrid storage support (external URLs + PDS blobs)
-   - References sampleSchema for type information
+   - References schema for type information
    - Examples:
      - [External storage](../examples/dataset_external_storage.json)
      - [Blob storage](../examples/dataset_blob_storage.json)
@@ -40,7 +40,7 @@ This directory contains the ATProto Lexicon JSON definitions for the distributed
 All Lexicons use the `ac.foundation.dataset.*` namespace:
 - `ac.foundation` - Organization namespace
 - `dataset` - Domain (distributed datasets)
-- Specific record types: `sampleSchema`, `record`, `lens`
+- Specific record types: `schema`, `record`, `lens`
 
 ### 2. Schema Versioning (rkey Convention)
 
@@ -57,7 +57,7 @@ All Lexicons use the `ac.foundation.dataset.*` namespace:
 - Natural query pattern via `getLatestSchema`
 - Clear semantic versioning enforcement
 
-**Implementation**: The sampleSchema Lexicon uses `"key": "any"` to support this custom format.
+**Implementation**: The schema Lexicon uses `"key": "any"` to support this custom format.
 
 ### 3. JSON Schema with NDArray Shim
 
@@ -151,7 +151,7 @@ schema_uri = publisher.publish_schema(
     version="1.0.0",
     description="RGB image with label"
 )
-# Result: at://did:plc:abc123/ac.foundation.dataset.sampleSchema/imagesample@1.0.0
+# Result: at://did:plc:abc123/ac.foundation.dataset.schema/imagesample@1.0.0
 ```
 
 ### Publishing a Dataset
@@ -226,7 +226,7 @@ See [06_lexicon_validation.md](../decisions/06_lexicon_validation.md) for valida
 
 ```bash
 # Validate Lexicon JSON (requires ATProto tooling)
-atproto-lexicon validate ac.foundation.dataset.sampleSchema.json
+atproto-lexicon validate ac.foundation.dataset.schema.json
 
 # Validate example records
 python scripts/validate_examples.py

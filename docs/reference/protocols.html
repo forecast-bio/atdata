@@ -224,6 +224,37 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </li>  
     </ul>
   </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-examples" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Examples</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-examples">    
+        <li>
+    <a class="dropdown-item" href="../examples/index.html">
+ <span class="dropdown-text">Overview</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../examples/typed-pipeline.html">
+ <span class="dropdown-text">Typed Dataset Pipeline</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../examples/lens-transforms.html">
+ <span class="dropdown-text">Lens Transformations</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../examples/manifest-queries.html">
+ <span class="dropdown-text">Manifest-Powered Queries</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../examples/index-workflow.html">
+ <span class="dropdown-text">Index-Managed Datasets</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../examples/multi-split.html">
+ <span class="dropdown-text">Multi-Split Datasets</span></a>
+  </li>  
+    </ul>
+  </li>
   <li class="nav-item">
     <a class="nav-link" href="../api/index.html"> 
 <span class="menu-text">API</span></a>
@@ -302,12 +333,59 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
- <span class="menu-text">Reference</span></a>
+ <span class="menu-text">Examples</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
       <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../examples/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Examples</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../examples/typed-pipeline.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Typed Dataset Pipeline</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../examples/lens-transforms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lens Transformations</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../examples/manifest-queries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Manifest-Powered Queries</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../examples/index-workflow.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Index-Managed Datasets</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../examples/multi-split.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Multi-Split Datasets</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Reference</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../reference/architecture.html" class="sidebar-item-text sidebar-link">
@@ -464,7 +542,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="indexentry-protocol" class="level2">
 <h2 class="anchored" data-anchor-id="indexentry-protocol">IndexEntry Protocol</h2>
 <p>Represents a dataset entry in any index:</p>
-<div id="897ab59c" class="cell">
+<div id="d66697d7" class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata._protocols <span class="im">import</span> IndexEntry</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> process_entry(entry: IndexEntry) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
@@ -518,7 +596,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="abstractindex-protocol" class="level2">
 <h2 class="anchored" data-anchor-id="abstractindex-protocol">AbstractIndex Protocol</h2>
 <p>Defines operations for managing schemas and datasets:</p>
-<div id="4986ee52" class="cell">
+<div id="7a07cb60" class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata._protocols <span class="im">import</span> AbstractIndex</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> list_all_datasets(index: AbstractIndex) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
@@ -528,7 +606,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <section id="dataset-operations" class="level3">
 <h3 class="anchored" data-anchor-id="dataset-operations">Dataset Operations</h3>
-<div id="ea3863ef" class="cell">
+<div id="c022cff6" class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Insert a dataset</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>entry <span class="op">=</span> index.insert_dataset(</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    dataset,</span>
@@ -546,7 +624,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="schema-operations" class="level3">
 <h3 class="anchored" data-anchor-id="schema-operations">Schema Operations</h3>
-<div id="80b00698" class="cell">
+<div id="a6d62427" class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Publish a schema</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>schema_ref <span class="op">=</span> index.publish_schema(</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    MySample,</span>
@@ -577,7 +655,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="abstractdatastore-protocol" class="level2">
 <h2 class="anchored" data-anchor-id="abstractdatastore-protocol">AbstractDataStore Protocol</h2>
 <p>Abstracts over different storage backends:</p>
-<div id="f5784373" class="cell">
+<div id="fe8e77eb" class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata._protocols <span class="im">import</span> AbstractDataStore</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> write_dataset(store: AbstractDataStore, dataset) <span class="op">-&gt;</span> <span class="bu">list</span>[<span class="bu">str</span>]:</span>
@@ -587,7 +665,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <section id="methods" class="level3">
 <h3 class="anchored" data-anchor-id="methods">Methods</h3>
-<div id="4c51b955" class="cell">
+<div id="6d34b545" class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Write dataset shards</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>urls <span class="op">=</span> store.write_shards(</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    dataset,</span>
@@ -614,7 +692,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="datasource-protocol" class="level2">
 <h2 class="anchored" data-anchor-id="datasource-protocol">DataSource Protocol</h2>
 <p>Abstracts over different data source backends for streaming dataset shards:</p>
-<div id="a0e710b4" class="cell">
+<div id="bf8ef61d" class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata._protocols <span class="im">import</span> DataSource</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> load_from_source(source: DataSource) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
@@ -627,7 +705,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <section id="methods-1" class="level3">
 <h3 class="anchored" data-anchor-id="methods-1">Methods</h3>
-<div id="2de4b6eb" class="cell">
+<div id="6bb433a4" class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get list of shard identifiers</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>shard_ids <span class="op">=</span> source.shard_list  <span class="co"># ['data-000000.tar', 'data-000001.tar', ...]</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -650,7 +728,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="creating-custom-data-sources" class="level3">
 <h3 class="anchored" data-anchor-id="creating-custom-data-sources">Creating Custom Data Sources</h3>
 <p>Implement the <code>DataSource</code> protocol for custom backends:</p>
-<div id="063c7f80" class="cell">
+<div id="5e8cacf6" class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> Iterator, IO</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata._protocols <span class="im">import</span> DataSource</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -688,7 +766,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="using-protocols-for-polymorphism" class="level2">
 <h2 class="anchored" data-anchor-id="using-protocols-for-polymorphism">Using Protocols for Polymorphism</h2>
 <p>Write code that works with any backend:</p>
-<div id="73d931ab" class="cell">
+<div id="9ef8cad2" class="cell">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata._protocols <span class="im">import</span> AbstractIndex, IndexEntry</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata <span class="im">import</span> Dataset</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -759,7 +837,7 @@ Note
 <section id="type-checking" class="level2">
 <h2 class="anchored" data-anchor-id="type-checking">Type Checking</h2>
 <p>Protocols are runtime-checkable:</p>
-<div id="7344d5eb" class="cell">
+<div id="ae441636" class="cell">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata._protocols <span class="im">import</span> IndexEntry, AbstractIndex</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Check if object implements protocol</span></span>
@@ -773,7 +851,7 @@ Note
 </section>
 <section id="complete-example" class="level2">
 <h2 class="anchored" data-anchor-id="complete-example">Complete Example</h2>
-<div id="8f8e1b9c" class="cell">
+<div id="0f0a02c1" class="cell">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> LocalIndex, S3DataStore</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.atmosphere <span class="im">import</span> AtmosphereClient, AtmosphereIndex</span>

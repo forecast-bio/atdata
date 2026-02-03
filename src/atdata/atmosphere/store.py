@@ -7,12 +7,11 @@ This enables fully decentralized dataset storage where both metadata (records)
 and data (blobs) live on the AT Protocol network.
 
 Examples:
-    >>> from atdata.atmosphere import AtmosphereClient, PDSBlobStore
+    >>> from atdata.atmosphere import Atmosphere, PDSBlobStore
     >>>
-    >>> client = AtmosphereClient()
-    >>> client.login("handle.bsky.social", "app-password")
+    >>> atmo = Atmosphere.login("handle.bsky.social", "app-password")
     >>>
-    >>> store = PDSBlobStore(client)
+    >>> store = PDSBlobStore(atmo)
     >>> urls = store.write_shards(dataset, prefix="mnist/v1")
     >>> print(urls)
     ['at://did:plc:.../blob/bafyrei...', ...]
@@ -29,7 +28,7 @@ import webdataset as wds
 if TYPE_CHECKING:
     from ..dataset import Dataset
     from .._sources import BlobSource
-    from .client import AtmosphereClient
+    from .client import Atmosphere
 
 
 @dataclass
@@ -44,7 +43,7 @@ class PDSBlobStore:
     to HTTP URLs for streaming.
 
     Attributes:
-        client: Authenticated AtmosphereClient instance.
+        client: Authenticated Atmosphere instance.
 
     Examples:
         >>> store = PDSBlobStore(client)
@@ -53,7 +52,7 @@ class PDSBlobStore:
         >>> # ['at://did:plc:abc/blob/bafyrei...', ...]
     """
 
-    client: "AtmosphereClient"
+    client: "Atmosphere"
 
     def write_shards(
         self,

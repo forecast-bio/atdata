@@ -1,14 +1,14 @@
 """Schema publishing and loading for ATProto.
 
 This module provides classes for publishing PackableSample schemas to ATProto
-and loading them back. Schemas are published as ``ac.foundation.dataset.sampleSchema``
+and loading them back. Schemas are published as ``ac.foundation.dataset.schema``
 records.
 """
 
 from dataclasses import fields, is_dataclass
 from typing import Type, TypeVar, Optional, get_type_hints, get_origin, get_args
 
-from .client import AtmosphereClient
+from .client import Atmosphere
 from ._types import (
     AtUri,
     SchemaRecord,
@@ -43,20 +43,19 @@ class SchemaPublisher:
         ...     image: NDArray
         ...     label: str
         ...
-        >>> client = AtmosphereClient()
-        >>> client.login("handle", "password")
+        >>> atmo = Atmosphere.login("handle", "password")
         >>>
-        >>> publisher = SchemaPublisher(client)
+        >>> publisher = SchemaPublisher(atmo)
         >>> uri = publisher.publish(MySample, version="1.0.0")
         >>> print(uri)
-        at://did:plc:.../ac.foundation.dataset.sampleSchema/...
+        at://did:plc:.../ac.foundation.dataset.schema/...
     """
 
-    def __init__(self, client: AtmosphereClient):
+    def __init__(self, client: Atmosphere):
         """Initialize the schema publisher.
 
         Args:
-            client: Authenticated AtmosphereClient instance.
+            client: Authenticated Atmosphere instance.
         """
         self.client = client
 
@@ -103,7 +102,7 @@ class SchemaPublisher:
 
         # Publish to ATProto
         return self.client.create_record(
-            collection=f"{LEXICON_NAMESPACE}.sampleSchema",
+            collection=f"{LEXICON_NAMESPACE}.schema",
             record=schema_record.to_record(),
             rkey=rkey,
             validate=False,  # PDS doesn't know our lexicon
@@ -185,20 +184,19 @@ class SchemaLoader:
     schemas from a repository.
 
     Examples:
-        >>> client = AtmosphereClient()
-        >>> client.login("handle", "password")
+        >>> atmo = Atmosphere.login("handle", "password")
         >>>
-        >>> loader = SchemaLoader(client)
-        >>> schema = loader.get("at://did:plc:.../ac.foundation.dataset.sampleSchema/...")
+        >>> loader = SchemaLoader(atmo)
+        >>> schema = loader.get("at://did:plc:.../ac.foundation.dataset.schema/...")
         >>> print(schema["name"])
         'MySample'
     """
 
-    def __init__(self, client: AtmosphereClient):
+    def __init__(self, client: Atmosphere):
         """Initialize the schema loader.
 
         Args:
-            client: AtmosphereClient instance (authentication optional for reads).
+            client: Atmosphere instance (authentication optional for reads).
         """
         self.client = client
 
@@ -217,7 +215,7 @@ class SchemaLoader:
         """
         record = self.client.get_record(uri)
 
-        expected_type = f"{LEXICON_NAMESPACE}.sampleSchema"
+        expected_type = f"{LEXICON_NAMESPACE}.schema"
         if record.get("$type") != expected_type:
             raise ValueError(
                 f"Record at {uri} is not a schema record. "

@@ -17,13 +17,12 @@ definitions and publishes them as an ATProto schema record.
 ...     image: NDArray
 ...     label: str
 ...
->>> client = AtmosphereClient()
->>> client.login("handle", "password")
+>>> atmo = Atmosphere.login("handle", "password")
 >>>
->>> publisher = SchemaPublisher(client)
+>>> publisher = SchemaPublisher(atmo)
 >>> uri = publisher.publish(MySample, version="1.0.0")
 >>> print(uri)
-at://did:plc:.../ac.foundation.dataset.sampleSchema/...
+at://did:plc:.../ac.foundation.dataset.schema/...
 ```
 
 ## Methods

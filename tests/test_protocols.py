@@ -12,6 +12,7 @@ from atdata._protocols import (
 )
 from atdata.local import LocalDatasetEntry, Index, S3DataStore
 from atdata.atmosphere import AtmosphereIndex, AtmosphereIndexEntry
+from atdata.providers._sqlite import SqliteProvider
 
 
 class TestIndexEntryProtocol:
@@ -70,11 +71,11 @@ class TestIndexEntryProtocol:
 class TestAbstractIndexProtocol:
     """Tests for AbstractIndex protocol compliance."""
 
-    def test_local_index_has_required_methods(self):
+    def test_local_index_has_required_methods(self, tmp_path):
         """Index should have all AbstractIndex methods."""
         # Can't use isinstance with non-runtime_checkable Protocol
         # So we verify methods exist
-        index = Index()
+        index = Index(provider=SqliteProvider(path=tmp_path / "test.db"))
 
         assert hasattr(index, "insert_dataset")
         assert hasattr(index, "get_dataset")
@@ -199,15 +200,15 @@ class TestProtocolInteroperability:
         )
         assert get_dataset_name(atmo_entry) == "atmo-data"
 
-    def test_function_accepts_any_index(self):
+    def test_function_accepts_any_index(self, tmp_path):
         """Functions typed with AbstractIndex should accept any implementation."""
 
         def count_datasets(index) -> int:
             """Count datasets in an index."""
             return sum(1 for _ in index.list_datasets())
 
-        # Index with default SQLite
-        local_index = Index()
+        # Index with isolated SQLite
+        local_index = Index(provider=SqliteProvider(path=tmp_path / "test.db"))
         # Empty index returns 0
         assert count_datasets(local_index) == 0
 

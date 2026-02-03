@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(git *), Bash(gh *), Bash(uv lock*), Bash(uv run ruff*), Bash(uv run pytest*), Bash(chainlink *)
+allowed-tools: Bash(git *), Bash(gh *), Bash(uv lock*), Bash(uv run ruff*), Bash(uv run pytest*), Bash(chainlink *), Bash(uv run ruff format*)
 description: Prepare and submit a beta release
 ---
 
@@ -18,6 +18,7 @@ The user will provide a version string (e.g. `v0.3.0b2`). Perform the full relea
 ### 1. Validate preconditions
 - Confirm all tests pass: `uv run pytest tests/ -x -q`
 - Confirm lint is clean: `uv run ruff check src/ tests/`
+- Confirm formatting is clean: `uv run ruff format --check src/ tests/` (fix with `uv run ruff format src/ tests/` if needed)
 - Confirm no uncommitted changes (other than `.chainlink/issues.db`)
 - Identify the previous release branch to branch from (e.g. `release/v0.3.0b1`)
 - Identify the feature branch to merge (current branch or ask user)
@@ -34,6 +35,7 @@ The user will provide a version string (e.g. `v0.3.0b2`). Perform the full relea
 - Run `uv lock` to update the lockfile
 - Run `/changelog` skill to generate a clean CHANGELOG entry (or generate one manually following Keep a Changelog format with Added/Changed/Fixed sections)
 - Run `uv run ruff check src/ tests/` and fix any lint errors
+- Run `uv run ruff format --check src/ tests/` and fix any format errors (run `uv run ruff format src/ tests/` to auto-fix)
 - Run `uv run pytest tests/ -x -q` to confirm tests pass
 
 ### 4. Commit and push
@@ -56,6 +58,6 @@ The user will provide a version string (e.g. `v0.3.0b2`). Perform the full relea
 
 - Always use `--no-ff` for merges to preserve branch topology
 - Always run `uv lock` after version bumps — stale lockfiles break CI
-- Always run lint check before committing — ruff errors break CI
+- Always run both `ruff check` and `ruff format --check` before committing — either will fail CI
 - Never force-push to release branches
 - The CHANGELOG should follow Keep a Changelog format with proper Added/Changed/Fixed sections, not a flat list of chainlink issues

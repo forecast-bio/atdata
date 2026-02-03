@@ -19,8 +19,8 @@ local.Index(
 Unified index for tracking datasets across multiple repositories.
 
 Implements the AbstractIndex protocol. Maintains a registry of
-dataset entries across a built-in ``"local"`` repository, optional
-named repositories, and an optional atmosphere (ATProto) backend.
+dataset entries across named repositories (always including a built-in
+``"local"`` repository) and an optional atmosphere (ATProto) backend.
 
 The ``"local"`` repository is always present and uses the storage backend
 determined by the ``provider`` argument. When no provider is given, defaults
@@ -30,18 +30,16 @@ Redis ``**kwargs`` for backwards-compatible Redis behaviour.
 Additional named repositories can be mounted via the ``repos`` parameter,
 each pairing an IndexProvider with an optional data store.
 
-An AtmosphereClient is available by default for anonymous read-only
+An Atmosphere is available by default for anonymous read-only
 resolution of ``@handle/dataset`` paths. Pass an authenticated client
 for write operations, or ``atmosphere=None`` to disable.
 
 ## Attributes {.doc-section .doc-section-attributes}
 
-| Name        | Type                                                                    | Description                                            |
-|-------------|-------------------------------------------------------------------------|--------------------------------------------------------|
-| _provider   | [_IP](`atdata.providers._base.IndexProvider`)                           | IndexProvider for the built-in ``"local"`` repository. |
-| _data_store |                                                                         | Optional AbstractDataStore for the local repository.   |
-| _repos      | [dict](`dict`)\[[str](`str`), [_Repo](`atdata.repository.Repository`)\] | Named repositories beyond ``"local"``.                 |
-| _atmosphere | [_AtmosphereBackend](`atdata.repository._AtmosphereBackend`) \| None    | Optional atmosphere backend for ATProto operations.    |
+| Name        | Type                                                                    | Description                                                    |
+|-------------|-------------------------------------------------------------------------|----------------------------------------------------------------|
+| _repos      | [dict](`dict`)\[[str](`str`), [_Repo](`atdata.repository.Repository`)\] | All repositories keyed by name. ``"local"`` is always present. |
+| _atmosphere | [_AtmosphereBackend](`atdata.repository._AtmosphereBackend`) \| None    | Optional atmosphere backend for ATProto operations.            |
 
 ## Methods
 
@@ -88,7 +86,7 @@ Add a dataset to the local repository index.
 
 | Name   | Type                                                         | Description                           |
 |--------|--------------------------------------------------------------|---------------------------------------|
-|        | [LocalDatasetEntry](`atdata.local._entry.LocalDatasetEntry`) | The created LocalDatasetEntry object. |
+|        | [LocalDatasetEntry](`atdata.index._entry.LocalDatasetEntry`) | The created LocalDatasetEntry object. |
 
 ### clear_stubs { #atdata.local.Index.clear_stubs }
 
@@ -124,9 +122,9 @@ The returned class has proper type information that IDEs can understand.
 
 #### Parameters {.doc-section .doc-section-parameters}
 
-| Name   | Type         | Description                                                                              | Default    |
-|--------|--------------|------------------------------------------------------------------------------------------|------------|
-| ref    | [str](`str`) | Schema reference string (atdata://local/sampleSchema/... or legacy local://schemas/...). | _required_ |
+| Name   | Type         | Description                                                                        | Default    |
+|--------|--------------|------------------------------------------------------------------------------------|------------|
+| ref    | [str](`str`) | Schema reference string (atdata://local/schema/... or legacy local://schemas/...). | _required_ |
 
 #### Returns {.doc-section .doc-section-returns}
 
@@ -159,13 +157,13 @@ stub file for the schema and want full IDE support.
 | Name      | Type                                           | Description                                                                    | Default    |
 |-----------|------------------------------------------------|--------------------------------------------------------------------------------|------------|
 | ref       | [str](`str`)                                   | Schema reference string.                                                       | _required_ |
-| type_hint | [type](`type`)\[[T](`atdata.local._index.T`)\] | The stub type to use for type hints. Import this from the generated stub file. | _required_ |
+| type_hint | [type](`type`)\[[T](`atdata.index._index.T`)\] | The stub type to use for type hints. Import this from the generated stub file. | _required_ |
 
 #### Returns {.doc-section .doc-section-returns}
 
 | Name   | Type                                           | Description                                                    |
 |--------|------------------------------------------------|----------------------------------------------------------------|
-|        | [type](`type`)\[[T](`atdata.local._index.T`)\] | The decoded type, cast to match the type_hint for IDE support. |
+|        | [type](`type`)\[[T](`atdata.index._index.T`)\] | The decoded type, cast to match the type_hint for IDE support. |
 
 #### Examples {.doc-section .doc-section-examples}
 
@@ -233,7 +231,7 @@ Get an entry by its CID.
 
 | Name   | Type                                                         | Description                          |
 |--------|--------------------------------------------------------------|--------------------------------------|
-|        | [LocalDatasetEntry](`atdata.local._entry.LocalDatasetEntry`) | LocalDatasetEntry for the given CID. |
+|        | [LocalDatasetEntry](`atdata.index._entry.LocalDatasetEntry`) | LocalDatasetEntry for the given CID. |
 
 #### Raises {.doc-section .doc-section-raises}
 
@@ -259,7 +257,7 @@ Get an entry by its human-readable name.
 
 | Name   | Type                                                         | Description                            |
 |--------|--------------------------------------------------------------|----------------------------------------|
-|        | [LocalDatasetEntry](`atdata.local._entry.LocalDatasetEntry`) | LocalDatasetEntry with the given name. |
+|        | [LocalDatasetEntry](`atdata.index._entry.LocalDatasetEntry`) | LocalDatasetEntry with the given name. |
 
 #### Raises {.doc-section .doc-section-raises}
 
@@ -313,9 +311,9 @@ Get a schema record by reference (AbstractIndex protocol).
 
 #### Parameters {.doc-section .doc-section-parameters}
 
-| Name   | Type         | Description                                                                                                                                                    | Default    |
-|--------|--------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
-| ref    | [str](`str`) | Schema reference string. Supports both new format (atdata://local/sampleSchema/{name}@{version}) and legacy format (local://schemas/{module.Class}@{version}). | _required_ |
+| Name   | Type         | Description                                                                                                                                              | Default    |
+|--------|--------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| ref    | [str](`str`) | Schema reference string. Supports both new format (atdata://local/schema/{name}@{version}) and legacy format (local://schemas/{module.Class}@{version}). | _required_ |
 
 #### Returns {.doc-section .doc-section-returns}
 
@@ -352,7 +350,7 @@ For Protocol-compliant dict access, use get_schema() instead.
 
 | Name   | Type                                                          | Description                            |
 |--------|---------------------------------------------------------------|----------------------------------------|
-|        | [LocalSchemaRecord](`atdata.local._schema.LocalSchemaRecord`) | LocalSchemaRecord with schema details. |
+|        | [LocalSchemaRecord](`atdata.index._schema.LocalSchemaRecord`) | LocalSchemaRecord with schema details. |
 
 #### Raises {.doc-section .doc-section-raises}
 
@@ -424,7 +422,7 @@ Get all index entries as a materialized list.
 
 | Name   | Type                                                                           | Description                                         |
 |--------|--------------------------------------------------------------------------------|-----------------------------------------------------|
-|        | [list](`list`)\[[LocalDatasetEntry](`atdata.local._entry.LocalDatasetEntry`)\] | List of all LocalDatasetEntry objects in the index. |
+|        | [list](`list`)\[[LocalDatasetEntry](`atdata.index._entry.LocalDatasetEntry`)\] | List of all LocalDatasetEntry objects in the index. |
 
 ### list_schemas { #atdata.local.Index.list_schemas }
 
@@ -454,9 +452,9 @@ in the :attr:`types` namespace for easy access.
 
 #### Parameters {.doc-section .doc-section-parameters}
 
-| Name   | Type         | Description                                                                              | Default    |
-|--------|--------------|------------------------------------------------------------------------------------------|------------|
-| ref    | [str](`str`) | Schema reference string (atdata://local/sampleSchema/... or legacy local://schemas/...). | _required_ |
+| Name   | Type         | Description                                                                        | Default    |
+|--------|--------------|------------------------------------------------------------------------------------|------------|
+| ref    | [str](`str`) | Schema reference string (atdata://local/schema/... or legacy local://schemas/...). | _required_ |
 
 #### Returns {.doc-section .doc-section-returns}
 
@@ -476,11 +474,11 @@ in the :attr:`types` namespace for easy access.
 
 ```python
 >>> # Load and use immediately
->>> MyType = index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
+>>> MyType = index.load_schema("atdata://local/schema/MySample@1.0.0")
 >>> sample = MyType(field1="hello", field2=42)
 >>>
 >>> # Or access later via namespace
->>> index.load_schema("atdata://local/sampleSchema/OtherType@1.0.0")
+>>> index.load_schema("atdata://local/schema/OtherType@1.0.0")
 >>> other = index.types.OtherType(data="test")
 ```
 
@@ -603,9 +601,9 @@ Publish a schema for a sample type to Redis.
 
 #### Returns {.doc-section .doc-section-returns}
 
-| Name   | Type         | Description                                                              |
-|--------|--------------|--------------------------------------------------------------------------|
-|        | [str](`str`) | Schema reference string: 'atdata://local/sampleSchema/{name}@{version}'. |
+| Name   | Type         | Description                                                        |
+|--------|--------------|--------------------------------------------------------------------|
+|        | [str](`str`) | Schema reference string: 'atdata://local/schema/{name}@{version}'. |
 
 #### Raises {.doc-section .doc-section-raises}
 
@@ -628,6 +626,7 @@ local.Index.write(
     maxcount=10000,
     maxsize=None,
     metadata=None,
+    manifest=False,
 )
 ```
 
@@ -656,17 +655,18 @@ When the local backend has no ``data_store`` configured, a
 
 #### Parameters {.doc-section .doc-section-parameters}
 
-| Name        | Type                                   | Description                                            | Default    |
-|-------------|----------------------------------------|--------------------------------------------------------|------------|
-| samples     | [Iterable](`typing.Iterable`)          | Iterable of ``Packable`` samples. Must be non-empty.   | _required_ |
-| name        | [str](`str`)                           | Dataset name, optionally prefixed with target.         | _required_ |
-| schema_ref  | [str](`str`) \| None                   | Optional schema reference. Auto-generated if ``None``. | `None`     |
-| description | [str](`str`) \| None                   | Optional dataset description (atmosphere only).        | `None`     |
-| tags        | [list](`list`)\[[str](`str`)\] \| None | Optional tags for discovery (atmosphere only).         | `None`     |
-| license     | [str](`str`) \| None                   | Optional license identifier (atmosphere only).         | `None`     |
-| maxcount    | [int](`int`)                           | Max samples per shard. Default: 10,000.                | `10000`    |
-| maxsize     | [int](`int`) \| None                   | Max bytes per shard. Default: ``None``.                | `None`     |
-| metadata    | [dict](`dict`) \| None                 | Optional metadata dict stored with the entry.          | `None`     |
+| Name        | Type                                   | Description                                                                             | Default    |
+|-------------|----------------------------------------|-----------------------------------------------------------------------------------------|------------|
+| samples     | [Iterable](`typing.Iterable`)          | Iterable of ``Packable`` samples. Must be non-empty.                                    | _required_ |
+| name        | [str](`str`)                           | Dataset name, optionally prefixed with target.                                          | _required_ |
+| schema_ref  | [str](`str`) \| None                   | Optional schema reference. Auto-generated if ``None``.                                  | `None`     |
+| description | [str](`str`) \| None                   | Optional dataset description (atmosphere only).                                         | `None`     |
+| tags        | [list](`list`)\[[str](`str`)\] \| None | Optional tags for discovery (atmosphere only).                                          | `None`     |
+| license     | [str](`str`) \| None                   | Optional license identifier (atmosphere only).                                          | `None`     |
+| maxcount    | [int](`int`)                           | Max samples per shard. Default: 10,000.                                                 | `10000`    |
+| maxsize     | [int](`int`) \| None                   | Max bytes per shard. Default: ``None``.                                                 | `None`     |
+| metadata    | [dict](`dict`) \| None                 | Optional metadata dict stored with the entry.                                           | `None`     |
+| manifest    | [bool](`bool`)                         | If True, write per-shard manifest sidecar files alongside each tar. Default: ``False``. | `False`    |
 
 #### Returns {.doc-section .doc-section-returns}
 

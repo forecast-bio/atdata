@@ -14,7 +14,7 @@ Usage::
     samples = at_test.make_samples(MyType, n=100)
 
     # Use mock atmosphere client
-    client = at_test.MockAtmosphereClient()
+    client = at_test.MockAtmosphere()
 
     # Use in-memory index (SQLite backed, temporary)
     index = at_test.mock_index(tmp_path)
@@ -40,7 +40,7 @@ import webdataset as wds
 
 import atdata
 from atdata import Dataset, PackableSample
-from atdata.local._index import Index
+from atdata.index._index import Index
 from atdata.providers._sqlite import SqliteProvider
 
 ST = TypeVar("ST")
@@ -51,14 +51,14 @@ ST = TypeVar("ST")
 # ---------------------------------------------------------------------------
 
 
-class MockAtmosphereClient:
-    """In-memory mock of ``AtmosphereClient`` for testing.
+class MockAtmosphere:
+    """In-memory mock of ``Atmosphere`` for testing.
 
     Simulates login, schema publishing, dataset publishing, and record
     retrieval without requiring a live ATProto PDS.
 
     Examples:
-        >>> client = MockAtmosphereClient()
+        >>> client = MockAtmosphere()
         >>> client.login("alice.test", "password")
         >>> client.did
         'did:plc:mock000000000000'
@@ -294,8 +294,8 @@ try:
 
     @pytest.fixture
     def mock_atmosphere():
-        """Provide a fresh ``MockAtmosphereClient`` for each test."""
-        client = MockAtmosphereClient()
+        """Provide a fresh ``MockAtmosphere`` for each test."""
+        client = MockAtmosphere()
         client.login("test.mock.social", "test-password")
         yield client
         client.reset()
@@ -329,8 +329,12 @@ except ImportError:
 # Public API
 # ---------------------------------------------------------------------------
 
+# Deprecated alias for backward compatibility
+MockAtmosphereClient = MockAtmosphere
+
 __all__ = [
-    "MockAtmosphereClient",
+    "MockAtmosphere",
+    "MockAtmosphereClient",  # deprecated alias
     "make_dataset",
     "make_samples",
     "mock_index",

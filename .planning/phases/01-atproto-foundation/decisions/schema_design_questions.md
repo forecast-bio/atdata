@@ -1,6 +1,6 @@
-# sampleSchema Lexicon Design Questions
+# schema Lexicon Design Questions
 
-This document captures open design questions for the `ac.foundation.dataset.sampleSchema` Lexicon that require user decisions before implementation.
+This document captures open design questions for the `ac.foundation.dataset.schema` Lexicon that require user decisions before implementation.
 
 ## Q1: Key Format Validation
 
@@ -156,7 +156,7 @@ Should we add an explicit default value for `ndarrayShimUri`?
 
 ## Notes
 
-These questions should be resolved before finalizing the sampleSchema Lexicon design. Some can be deferred to Phase 2 implementation based on priority.
+These questions should be resolved before finalizing the schema Lexicon design. Some can be deferred to Phase 2 implementation based on priority.
 
 **Priority:**
 - Q1: High (affects rkey strategy)

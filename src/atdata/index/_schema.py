@@ -26,7 +26,7 @@ from typing import (
 T = TypeVar("T", bound=Packable)
 
 # URI scheme prefixes
-_ATDATA_URI_PREFIX = "atdata://local/sampleSchema/"
+_ATDATA_URI_PREFIX = "atdata://local/schema/"
 _LEGACY_URI_PREFIX = "local://schemas/"
 
 
@@ -37,7 +37,7 @@ class SchemaNamespace:
     Supports attribute access, iteration, ``len()``, and ``in`` checks.
 
     Examples:
-        >>> index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
+        >>> index.load_schema("atdata://local/schema/MySample@1.0.0")
         >>> MyType = index.types.MySample
         >>> sample = MyType(field1="hello", field2=42)
 
@@ -207,7 +207,7 @@ class LocalSchemaRecord:
     """List of field definitions."""
 
     ref: str
-    """Schema reference URI (atdata://local/sampleSchema/{name}@{version})."""
+    """Schema reference URI (atdata://local/schema/{name}@{version})."""
 
     description: Optional[str] = None
     """Human-readable description."""
@@ -259,7 +259,7 @@ def _kind_str_for_sample_type(st: Type[Packable]) -> str:
 
 
 def _schema_ref_from_type(sample_type: Type[Packable], version: str) -> str:
-    """Generate 'atdata://local/sampleSchema/{name}@{version}' reference."""
+    """Generate 'atdata://local/schema/{name}@{version}' reference."""
     return _make_schema_ref(sample_type.__name__, version)
 
 
@@ -271,7 +271,7 @@ def _make_schema_ref(name: str, version: str) -> str:
 def _parse_schema_ref(ref: str) -> tuple[str, str]:
     """Parse schema reference into (name, version).
 
-    Supports both new format: 'atdata://local/sampleSchema/{name}@{version}'
+    Supports both new format: 'atdata://local/schema/{name}@{version}'
     and legacy format: 'local://schemas/{module.Class}@{version}'
     """
     if ref.startswith(_ATDATA_URI_PREFIX):

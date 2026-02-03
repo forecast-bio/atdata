@@ -1,7 +1,7 @@
 {
   "$type": "ac.foundation.dataset.record",
   "name": "CIFAR-10 Training Set",
-  "schemaRef": "at://did:plc:abc123/ac.foundation.dataset.sampleSchema/imageclassification@1.0.0",
+  "schemaRef": "at://did:plc:abc123/ac.foundation.dataset.schema/imageclassification@1.0.0",
   "storage": {
     "$type": "ac.foundation.dataset.storageExternal",
     "urls": [

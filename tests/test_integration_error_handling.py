@@ -18,7 +18,7 @@ from redis.exceptions import RedisError
 import atdata
 import webdataset as wds
 from atdata.local import Index, LocalDatasetEntry
-from atdata.atmosphere import AtmosphereClient, AtUri
+from atdata.atmosphere import Atmosphere, AtUri
 
 
 ##
@@ -217,7 +217,7 @@ class TestAtProtoErrors:
         mock_client = Mock()
         mock_client.me = None
 
-        client = AtmosphereClient(_client=mock_client)
+        client = Atmosphere(_client=mock_client)
 
         # Not authenticated
         assert not client.is_authenticated
@@ -257,7 +257,7 @@ class TestAtProtoErrors:
         )
 
         # Create client and authenticate it
-        client = AtmosphereClient(_client=mock_client)
+        client = Atmosphere(_client=mock_client)
         client._session = {"did": "did:plc:test123"}  # Mark as authenticated
 
         from atdata.atmosphere import SchemaPublisher
@@ -274,7 +274,7 @@ class TestAtProtoErrors:
         mock_client.me = None
         mock_client.export_session_string.return_value = None
 
-        client = AtmosphereClient(_client=mock_client)
+        client = Atmosphere(_client=mock_client)
 
         # Should not be authenticated
         assert not client.is_authenticated
@@ -334,7 +334,7 @@ class TestErrorMessageQuality:
         mock_client = Mock()
         mock_client.me = None
 
-        client = AtmosphereClient(_client=mock_client)
+        client = Atmosphere(_client=mock_client)
 
         from atdata.atmosphere import SchemaPublisher
 

@@ -15,9 +15,9 @@ to HTTP URLs for streaming.
 
 ## Attributes {.doc-section .doc-section-attributes}
 
-| Name   | Type                 | Description                              |
-|--------|----------------------|------------------------------------------|
-| client | \'AtmosphereClient\' | Authenticated AtmosphereClient instance. |
+| Name   | Type           | Description                        |
+|--------|----------------|------------------------------------|
+| client | \'Atmosphere\' | Authenticated Atmosphere instance. |
 
 ## Examples {.doc-section .doc-section-examples}
 

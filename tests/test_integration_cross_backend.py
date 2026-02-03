@@ -15,7 +15,7 @@ import atdata
 from atdata.local import Index, LocalDatasetEntry
 from atdata._protocols import IndexEntry
 from atdata.atmosphere import (
-    AtmosphereClient,
+    Atmosphere,
     AtmosphereIndex,
     AtmosphereIndexEntry,
 )
@@ -65,9 +65,9 @@ def mock_atproto_client():
 
 @pytest.fixture
 def authenticated_atmosphere_client(mock_atproto_client):
-    """Create an authenticated AtmosphereClient."""
-    client = AtmosphereClient(_client=mock_atproto_client)
-    client.login("crossbackend.test.social", "test-password")
+    """Create an authenticated Atmosphere."""
+    client = Atmosphere(_client=mock_atproto_client)
+    client._login("crossbackend.test.social", "test-password")
     return client
 
 
@@ -112,7 +112,7 @@ class TestIndexEntryProtocol:
         """AtmosphereIndexEntry should satisfy IndexEntry protocol."""
         record = {
             "name": "atmo-dataset",
-            "schemaRef": "at://did:plc:test/ac.foundation.dataset.sampleSchema/abc",
+            "schemaRef": "at://did:plc:test/ac.foundation.dataset.schema/abc",
             "storage": {
                 "$type": f"{LEXICON_NAMESPACE}.storageExternal",
                 "urls": ["s3://bucket/atmo.tar"],
@@ -122,10 +122,7 @@ class TestIndexEntryProtocol:
 
         assert isinstance(entry, IndexEntry)
         assert entry.name == "atmo-dataset"
-        assert (
-            entry.schema_ref
-            == "at://did:plc:test/ac.foundation.dataset.sampleSchema/abc"
-        )
+        assert entry.schema_ref == "at://did:plc:test/ac.foundation.dataset.schema/abc"
         assert entry.data_urls == ["s3://bucket/atmo.tar"]
         assert entry.metadata is None
 
@@ -285,7 +282,7 @@ class TestAbstractIndexProtocol:
     ):
         """AtmosphereIndex.publish_schema should return AT URI."""
         mock_response = Mock()
-        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/abc"
+        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/abc"
         mock_atproto_client.com.atproto.repo.create_record.return_value = mock_response
 
         schema_ref = atmosphere_index.publish_schema(
@@ -308,7 +305,7 @@ class TestAbstractIndexProtocol:
         """AtmosphereIndex should retrieve schemas."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.sampleSchema",
+            "$type": f"{LEXICON_NAMESPACE}.schema",
             "name": "RetrievedSchema",
             "version": "1.0.0",
             "fields": [
@@ -372,16 +369,16 @@ class TestCrossBackendSchemaResolution:
     """Tests for schema resolution across different backends."""
 
     def test_local_schema_ref_format(self, local_index):
-        """Local schema refs should use atdata://local/sampleSchema/ URI scheme."""
+        """Local schema refs should use atdata://local/schema/ URI scheme."""
         schema_ref = local_index.publish_schema(CrossBackendSample, version="1.0.0")
 
-        assert schema_ref.startswith("atdata://local/sampleSchema/")
+        assert schema_ref.startswith("atdata://local/schema/")
         assert "CrossBackendSample" in schema_ref
 
     def test_atmosphere_schema_ref_format(self, atmosphere_index, mock_atproto_client):
         """Atmosphere schema refs should use at:// URI scheme."""
         mock_response = Mock()
-        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.sampleSchema/abc"
+        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/abc"
         mock_atproto_client.com.atproto.repo.create_record.return_value = mock_response
 
         schema_ref = atmosphere_index.publish_schema(

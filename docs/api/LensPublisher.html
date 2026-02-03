@@ -223,6 +223,37 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </li>  
     </ul>
   </li>
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-examples" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Examples</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-examples">    
+        <li>
+    <a class="dropdown-item" href="../examples/index.html">
+ <span class="dropdown-text">Overview</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../examples/typed-pipeline.html">
+ <span class="dropdown-text">Typed Dataset Pipeline</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../examples/lens-transforms.html">
+ <span class="dropdown-text">Lens Transformations</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../examples/manifest-queries.html">
+ <span class="dropdown-text">Manifest-Powered Queries</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../examples/index-workflow.html">
+ <span class="dropdown-text">Index-Managed Datasets</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../examples/multi-split.html">
+ <span class="dropdown-text">Multi-Split Datasets</span></a>
+  </li>  
+    </ul>
+  </li>
   <li class="nav-item">
     <a class="nav-link" href="../api/index.html"> 
 <span class="menu-text">API</span></a>
@@ -280,19 +311,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>... <span class="kw">def</span> my_lens(source: SourceType) <span class="op">-&gt;</span> TargetType:</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>...     <span class="cf">return</span> TargetType(field<span class="op">=</span>source.other_field)</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> client <span class="op">=</span> AtmosphereClient()</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> client.login(<span class="st">"handle"</span>, <span class="st">"password"</span>)</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> publisher <span class="op">=</span> LensPublisher(client)</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> uri <span class="op">=</span> publisher.publish(</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>...     name<span class="op">=</span><span class="st">"my_lens"</span>,</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>...     source_schema_uri<span class="op">=</span><span class="st">"at://did:plc:abc/ac.foundation.dataset.sampleSchema/source"</span>,</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>...     target_schema_uri<span class="op">=</span><span class="st">"at://did:plc:abc/ac.foundation.dataset.sampleSchema/target"</span>,</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>...     code_repository<span class="op">=</span><span class="st">"https://github.com/user/repo"</span>,</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>...     code_commit<span class="op">=</span><span class="st">"abc123def456"</span>,</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>...     getter_path<span class="op">=</span><span class="st">"mymodule.lenses:my_lens"</span>,</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>...     putter_path<span class="op">=</span><span class="st">"mymodule.lenses:my_lens_putter"</span>,</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>... )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> atmo <span class="op">=</span> Atmosphere.login(<span class="st">"handle"</span>, <span class="st">"password"</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> publisher <span class="op">=</span> LensPublisher(atmo)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> uri <span class="op">=</span> publisher.publish(</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>...     name<span class="op">=</span><span class="st">"my_lens"</span>,</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>...     source_schema_uri<span class="op">=</span><span class="st">"at://did:plc:abc/ac.foundation.dataset.schema/source"</span>,</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>...     target_schema_uri<span class="op">=</span><span class="st">"at://did:plc:abc/ac.foundation.dataset.schema/target"</span>,</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>...     code_repository<span class="op">=</span><span class="st">"https://github.com/user/repo"</span>,</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>...     code_commit<span class="op">=</span><span class="st">"abc123def456"</span>,</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>...     getter_path<span class="op">=</span><span class="st">"mymodule.lenses:my_lens"</span>,</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>...     putter_path<span class="op">=</span><span class="st">"mymodule.lenses:my_lens_putter"</span>,</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>... )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="security-note" class="level2 doc-section doc-section-security-note">
 <h2 class="doc-section doc-section-security-note anchored" data-anchor-id="security-note">Security Note</h2>

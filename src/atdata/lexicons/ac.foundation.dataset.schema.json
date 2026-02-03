@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "ac.foundation.dataset.sampleSchema",
+  "id": "ac.foundation.dataset.schema",
   "defs": {
     "main": {
       "type": "record",
@@ -34,7 +34,7 @@
           },
           "schema": {
             "type": "union",
-            "refs": ["ac.foundation.dataset.sampleSchema#jsonSchemaFormat"],
+            "refs": ["ac.foundation.dataset.schema#jsonSchemaFormat"],
             "closed": false,
             "description": "Schema definition for this sample type. Currently supports JSON Schema Draft 7. Union allows for future schema formats (Avro, Protobuf, etc.) without breaking changes."
           },
@@ -79,7 +79,7 @@
       "properties": {
         "$type": {
           "type": "string",
-          "const": "ac.foundation.dataset.sampleSchema#jsonSchemaFormat"
+          "const": "ac.foundation.dataset.schema#jsonSchemaFormat"
         },
         "$schema": {
           "type": "string",

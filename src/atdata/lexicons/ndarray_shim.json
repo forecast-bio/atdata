@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://foundation.ac/schemas/atdata-ndarray-bytes/1.0.0",
+  "title": "ATDataNDArrayBytes",
+  "description": "Standard definition for numpy NDArray types in JSON Schema, compatible with atdata WebDataset serialization. This type's contents are interpreted as containing the raw bytes data for a serialized numpy NDArray, and serve as a marker for atdata-based code generation to use standard numpy types, rather than generated dataclasses.",
+  "version": "1.0.0",
+  "$defs": {
+    "ndarray": {
+      "type": "string",
+      "format": "byte",
+      "description": "Numpy array serialized using numpy `.npy` format via `np.save` (includes dtype and shape in binary header). When represented in JSON, this is a base64-encoded string. In msgpack, this is raw bytes.",
+      "contentEncoding": "base64",
+      "contentMediaType": "application/octet-stream"
+    }
+  }
+}

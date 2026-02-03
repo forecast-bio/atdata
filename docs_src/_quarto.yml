@@ -152,6 +152,20 @@ website:
             href: reference/troubleshooting.qmd
           - text: "Deployment Guide"
             href: reference/deployment.qmd
+      - text: "Examples"
+        menu:
+          - text: "Overview"
+            href: examples/index.qmd
+          - text: "Typed Dataset Pipeline"
+            href: examples/typed-pipeline.qmd
+          - text: "Lens Transformations"
+            href: examples/lens-transforms.qmd
+          - text: "Manifest-Powered Queries"
+            href: examples/manifest-queries.qmd
+          - text: "Index-Managed Datasets"
+            href: examples/index-workflow.qmd
+          - text: "Multi-Split Datasets"
+            href: examples/multi-split.qmd
       - text: "API"
         href: api/index.qmd
     right:
@@ -169,6 +183,14 @@ website:
             - tutorials/local-workflow.qmd
             - tutorials/atmosphere.qmd
             - tutorials/promotion.qmd
+        - section: "Examples"
+          contents:
+            - examples/index.qmd
+            - examples/typed-pipeline.qmd
+            - examples/lens-transforms.qmd
+            - examples/manifest-queries.qmd
+            - examples/index-workflow.qmd
+            - examples/multi-split.qmd
         - section: "Reference"
           contents:
             - reference/architecture.qmd

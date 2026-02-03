@@ -56,7 +56,7 @@ Load an entry from Redis by CID.
 
 | Name   | Type                                                         | Description                          |
 |--------|--------------------------------------------------------------|--------------------------------------|
-|        | [LocalDatasetEntry](`atdata.local._entry.LocalDatasetEntry`) | LocalDatasetEntry loaded from Redis. |
+|        | [LocalDatasetEntry](`atdata.index._entry.LocalDatasetEntry`) | LocalDatasetEntry loaded from Redis. |
 
 #### Raises {.doc-section .doc-section-raises}
 

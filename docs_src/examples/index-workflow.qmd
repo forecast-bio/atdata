@@ -1,0 +1,191 @@
+---
+title: "Index-Managed Datasets"
+description: "Use Index with LocalDiskStore for managed dataset storage and discovery"
+execute:
+  enabled: true
+---
+
+Writing raw tar files is fine for quick experiments, but as your dataset
+collection grows you need **discovery, versioning, and metadata**.  The
+`Index` class provides this layer---backed by SQLite by default---and pairs
+with `LocalDiskStore` for persistent file storage.
+
+This example creates an index, writes two datasets into it, lists and
+retrieves them, and shows how `load_dataset` resolves from the index.
+
+## 1 --- Define sample types
+
+```{python}
+import numpy as np
+from numpy.typing import NDArray
+import atdata
+
+
+@atdata.packable
+class TextSample:
+    """Simple text document."""
+
+    text: str
+    language: str
+    word_count: int
+
+
+@atdata.packable
+class EmbeddingSample:
+    """Dense embedding with label."""
+
+    vector: NDArray
+    label: str
+    source: str
+```
+
+## 2 --- Create an Index with local disk storage
+
+By default `Index()` uses an in-memory SQLite database.  We pass a custom
+`path` to persist across the example, and a `LocalDiskStore` rooted in a
+temp directory.
+
+```{python}
+import tempfile
+from pathlib import Path
+
+tmpdir = Path(tempfile.mkdtemp(prefix="atdata_index_"))
+
+index = atdata.Index(
+    path=tmpdir / "index.db",
+    data_store=atdata.LocalDiskStore(root=tmpdir / "data"),
+)
+
+print(f"Index DB   : {tmpdir / 'index.db'}")
+print(f"Data root  : {tmpdir / 'data'}")
+```
+
+## 3 --- Write datasets through the index
+
+`index.write()` serializes samples to sharded tars via the data store and
+creates a tracked entry with a content-addressed CID.
+
+```{python}
+rng = np.random.default_rng(99)
+
+# --- Dataset 1: text documents ---
+text_samples = [
+    TextSample(
+        text=f"Document number {i} about topic {i % 5}.",
+        language="en" if i % 3 != 0 else "es",
+        word_count=len(f"Document number {i} about topic {i % 5}.".split()),
+    )
+    for i in range(500)
+]
+
+text_entry = index.write(
+    text_samples,
+    name="docs-v1",
+    description="500 synthetic text documents",
+    tags=["text", "multilingual"],
+    maxcount=250,
+)
+
+print(f"Text dataset CID  : {text_entry.cid[:16]}...")
+print(f"Text dataset shards: {len(text_entry.data_urls)}")
+```
+
+```{python}
+# --- Dataset 2: embeddings ---
+embedding_samples = [
+    EmbeddingSample(
+        vector=rng.standard_normal(128).astype(np.float32),
+        label=f"class_{i % 10}",
+        source="synthetic",
+    )
+    for i in range(300)
+]
+
+emb_entry = index.write(
+    embedding_samples,
+    name="embeddings-v1",
+    description="300 synthetic 128-d embeddings",
+    tags=["embeddings", "synthetic"],
+    maxcount=150,
+)
+
+print(f"Embedding CID     : {emb_entry.cid[:16]}...")
+print(f"Embedding shards  : {len(emb_entry.data_urls)}")
+```
+
+## 4 --- List and discover datasets
+
+```{python}
+print("Datasets in index:")
+for entry in index.list_datasets():
+    print(f"  {entry.name:20s}  shards={len(entry.data_urls)}  cid={entry.cid[:12]}...")
+```
+
+## 5 --- Load a dataset from the index
+
+`load_dataset` can resolve dataset names through the default index.  Because
+the index stores the schema for each dataset, you don't need to pass the
+sample type explicitly---it's reconstructed automatically.
+
+```{python}
+atdata.set_default_index(index)
+
+# No sample_type argument needed -- schema is resolved from the index
+ds = atdata.load_dataset("@local/docs-v1", split="train")
+for batch in ds.ordered(batch_size=10):
+    print(f"Texts     : {batch.text[:2]}...")
+    print(f"Languages : {batch.language[:5]}...")
+    print(f"Counts    : {batch.word_count[:5]}...")
+    break
+```
+
+```{python}
+# Same for embeddings -- type is auto-resolved
+emb_ds = atdata.load_dataset("@local/embeddings-v1", split="train")
+for batch in emb_ds.ordered(batch_size=8):
+    print(f"Vector shape : {batch.vector.shape}")
+    print(f"Labels       : {batch.label}")
+    break
+```
+
+## 6 --- Schema tracking
+
+The index records the schema for each dataset, enabling type reconstruction
+at load time.  Schemas are persisted automatically by `index.write()`.
+
+```{python}
+for schema in index.schemas:
+    print(f"  {schema.name:20s}  fields={[f.name for f in schema.fields]}")
+```
+
+## 7 --- Inspect the repository
+
+The index stores all backends in a uniform `repos` dict.  The `"local"`
+repository is always present.
+
+```{python}
+for name, repo in index.repos.items():
+    has_store = "yes" if repo.data_store else "no"
+    print(f"  {name:10s}  provider={type(repo.provider).__name__}  data_store={has_store}")
+```
+
+## 8 --- Clean up
+
+```{python}
+import shutil
+
+atdata.set_default_index(None)
+shutil.rmtree(tmpdir, ignore_errors=True)
+```
+
+## Key takeaways
+
+| Concept | API |
+|---------|-----|
+| Create an index | `atdata.Index(path=..., data_store=...)` |
+| Write with tracking | `index.write(samples, name=..., tags=...)` |
+| List datasets | `index.list_datasets()` |
+| Schema discovery | `index.list_schemas()` |
+| Inspect repositories | `index.repos` (dict including `"local"`) |
+| Set global index | `atdata.set_default_index(index)` |
+| Load by name (auto-typed) | `atdata.load_dataset("@local/name", split=...)` |

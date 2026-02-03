@@ -7,8 +7,8 @@ from atdata import (
 )
 from atdata._protocols import AbstractDataStore, Packable
 
-from atdata.local._entry import LocalDatasetEntry
-from atdata.local._schema import (
+from atdata.index._entry import LocalDatasetEntry
+from atdata.index._schema import (
     SchemaNamespace,
     LocalSchemaRecord,
     _schema_ref_from_type,
@@ -42,8 +42,8 @@ class Index:
     """Unified index for tracking datasets across multiple repositories.
 
     Implements the AbstractIndex protocol. Maintains a registry of
-    dataset entries across a built-in ``"local"`` repository, optional
-    named repositories, and an optional atmosphere (ATProto) backend.
+    dataset entries across named repositories (always including a built-in
+    ``"local"`` repository) and an optional atmosphere (ATProto) backend.
 
     The ``"local"`` repository is always present and uses the storage backend
     determined by the ``provider`` argument. When no provider is given, defaults
@@ -53,14 +53,12 @@ class Index:
     Additional named repositories can be mounted via the ``repos`` parameter,
     each pairing an IndexProvider with an optional data store.
 
-    An AtmosphereClient is available by default for anonymous read-only
+    An Atmosphere is available by default for anonymous read-only
     resolution of ``@handle/dataset`` paths. Pass an authenticated client
     for write operations, or ``atmosphere=None`` to disable.
 
     Attributes:
-        _provider: IndexProvider for the built-in ``"local"`` repository.
-        _data_store: Optional AbstractDataStore for the local repository.
-        _repos: Named repositories beyond ``"local"``.
+        _repos: All repositories keyed by name. ``"local"`` is always present.
         _atmosphere: Optional atmosphere backend for ATProto operations.
     """
 
@@ -106,7 +104,7 @@ class Index:
             atmosphere: ATProto client for distributed network operations.
                 - Default (sentinel): creates an anonymous read-only client
                   lazily on first access.
-                - ``AtmosphereClient`` instance: uses that client directly.
+                - ``Atmosphere`` instance: uses that client directly.
                 - ``None``: disables atmosphere backend entirely.
             auto_stubs: If True, automatically generate .pyi stub files when
                 schemas are accessed via get_schema() or decode_schema().
@@ -147,12 +145,13 @@ class Index:
         ##
 
         from atdata.providers._base import IndexProvider as _IP
+        from atdata.repository import Repository as _Repo
 
+        # Resolve the local provider
         if isinstance(provider, str):
-            # String-based provider selection
             from atdata.providers._factory import create_provider
 
-            self._provider: _IP = create_provider(
+            local_provider: _IP = create_provider(
                 provider, path=path, dsn=dsn, redis=redis, **kwargs
             )
         elif provider is not None:
@@ -161,27 +160,24 @@ class Index:
                     f"provider must be an IndexProvider or backend name string, "
                     f"got {type(provider).__name__}"
                 )
-            self._provider = provider
+            local_provider = provider
         elif redis is not None:
-            # Explicit Redis connection provided
             from atdata.providers._redis import RedisProvider
 
-            self._provider = RedisProvider(redis)
+            local_provider = RedisProvider(redis)
         elif kwargs:
-            # kwargs provided — assume Redis constructor args for compat
             from atdata.providers._redis import RedisProvider
 
-            self._provider = RedisProvider(Redis(**kwargs))
+            local_provider = RedisProvider(Redis(**kwargs))
         else:
-            # Default: zero-dependency SQLite
             from atdata.providers._sqlite import SqliteProvider
 
-            self._provider = SqliteProvider()
+            local_provider = SqliteProvider()
 
-        self._data_store = data_store
-
-        # Validate and store named repositories
-        from atdata.repository import Repository as _Repo
+        # Build the unified repos dict with "local" always present
+        self._repos: dict[str, _Repo] = {
+            "local": _Repo(provider=local_provider, data_store=data_store),
+        }
 
         if repos is not None:
             if "local" in repos:
@@ -195,9 +191,7 @@ class Index:
                         f"repos[{name!r}] must be a Repository, "
                         f"got {type(repo).__name__}"
                     )
-            self._repos: dict[str, _Repo] = dict(repos)
-        else:
-            self._repos = {}
+            self._repos.update(repos)
 
         # Atmosphere backend (lazy or explicit)
         from atdata.repository import _AtmosphereBackend
@@ -231,10 +225,10 @@ class Index:
         """Get the atmosphere backend, lazily creating anonymous client if needed."""
         if self._atmosphere_deferred and self._atmosphere is None:
             try:
-                from atdata.atmosphere.client import AtmosphereClient
+                from atdata.atmosphere.client import Atmosphere
                 from atdata.repository import _AtmosphereBackend
 
-                client = AtmosphereClient()
+                client = Atmosphere()
                 self._atmosphere = _AtmosphereBackend(client)
             except ImportError:
                 # atproto package not installed -- atmosphere unavailable
@@ -290,13 +284,13 @@ class Index:
         return ("local", ref, None)
 
     @property
-    def repos(self) -> dict[str, Repository]:
-        """Named repositories mounted on this index (excluding ``"local"``)."""
+    def repos(self) -> dict[str, "Repository"]:
+        """All repositories mounted on this index (including ``"local"``)."""
         return dict(self._repos)
 
     @property
     def atmosphere(self) -> Any:
-        """The AtmosphereClient for this index, or None if disabled.
+        """The Atmosphere for this index, or None if disabled.
 
         Returns the underlying client (not the internal backend wrapper).
         """
@@ -306,9 +300,14 @@ class Index:
         return None
 
     @property
+    def _provider(self) -> "IndexProvider":  # noqa: F821
+        """IndexProvider for the ``"local"`` repository (backward compat)."""
+        return self._repos["local"].provider
+
+    @property
     def provider(self) -> "IndexProvider":  # noqa: F821
-        """The storage provider backing this index."""
-        return self._provider
+        """The storage provider backing the ``"local"`` repository."""
+        return self._repos["local"].provider
 
     @property
     def _redis(self) -> Redis:
@@ -319,17 +318,23 @@ class Index:
         """
         from atdata.providers._redis import RedisProvider
 
-        if isinstance(self._provider, RedisProvider):
-            return self._provider.redis
+        prov = self._repos["local"].provider
+        if isinstance(prov, RedisProvider):
+            return prov.redis
         raise AttributeError(
             "Index._redis is only available with a Redis provider. "
             "Use index.provider instead."
         )
 
     @property
+    def _data_store(self) -> AbstractDataStore | None:
+        """Data store for the ``"local"`` repository (backward compat)."""
+        return self._repos["local"].data_store
+
+    @property
     def data_store(self) -> AbstractDataStore | None:
         """The data store for writing shards, or None if index-only."""
-        return self._data_store
+        return self._repos["local"].data_store
 
     @property
     def stub_dir(self) -> Path | None:
@@ -352,7 +357,7 @@ class Index:
         as attributes on this namespace.
 
         Examples:
-            >>> index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
+            >>> index.load_schema("atdata://local/schema/MySample@1.0.0")
             >>> MyType = index.types.MySample
             >>> sample = MyType(name="hello", value=42)
 
@@ -369,7 +374,7 @@ class Index:
         in the :attr:`types` namespace for easy access.
 
         Args:
-            ref: Schema reference string (atdata://local/sampleSchema/... or
+            ref: Schema reference string (atdata://local/schema/... or
                 legacy local://schemas/...).
 
         Returns:
@@ -382,11 +387,11 @@ class Index:
 
         Examples:
             >>> # Load and use immediately
-            >>> MyType = index.load_schema("atdata://local/sampleSchema/MySample@1.0.0")
+            >>> MyType = index.load_schema("atdata://local/schema/MySample@1.0.0")
             >>> sample = MyType(field1="hello", field2=42)
             >>>
             >>> # Or access later via namespace
-            >>> index.load_schema("atdata://local/sampleSchema/OtherType@1.0.0")
+            >>> index.load_schema("atdata://local/schema/OtherType@1.0.0")
             >>> other = index.types.OtherType(data="test")
         """
         # Decode the schema (uses generated module if auto_stubs enabled)
@@ -514,6 +519,23 @@ class Index:
 
     # AbstractIndex protocol methods
 
+    @staticmethod
+    def _ensure_schema_stored(
+        schema_ref: str,
+        sample_type: type,
+        provider: "IndexProvider",  # noqa: F821
+    ) -> None:
+        """Persist the schema definition if not already stored.
+
+        Called during dataset insertion so that ``decode_schema()`` can
+        reconstruct the type later without the caller needing to publish
+        the schema separately.
+        """
+        schema_name, version = _parse_schema_ref(schema_ref)
+        if provider.get_schema_json(schema_name, version) is None:
+            record = _build_schema_record(sample_type, version=version)
+            provider.store_schema(schema_name, version, json.dumps(record))
+
     def _insert_dataset_to_provider(
         self,
         ds: Dataset,
@@ -544,6 +566,8 @@ class Index:
             if schema_ref is None:
                 schema_ref = _schema_ref_from_type(ds.sample_type, version="1.0.0")
 
+            self._ensure_schema_stored(schema_ref, ds.sample_type, provider)
+
             entry_metadata = metadata if metadata is not None else ds._metadata
             entry = LocalDatasetEntry(
                 name=name,
@@ -557,6 +581,8 @@ class Index:
         # No data store - just index the existing URL
         if schema_ref is None:
             schema_ref = _schema_ref_from_type(ds.sample_type, version="1.0.0")
+
+        self._ensure_schema_stored(schema_ref, ds.sample_type, provider)
 
         data_urls = [ds.url]
         entry_metadata = metadata if metadata is not None else ds._metadata
@@ -613,17 +639,6 @@ class Index:
                 ds, name=resolved_name, schema_ref=schema_ref, **kwargs
             )
 
-        if backend_key == "local":
-            return self._insert_dataset_to_provider(
-                ds,
-                name=resolved_name,
-                schema_ref=schema_ref,
-                provider=self._provider,
-                store=self._data_store,
-                **kwargs,
-            )
-
-        # Named repository
         repo = self._repos.get(backend_key)
         if repo is None:
             raise KeyError(f"Unknown repository {backend_key!r} in name {name!r}")
@@ -648,6 +663,7 @@ class Index:
         maxcount: int = 10_000,
         maxsize: int | None = None,
         metadata: dict | None = None,
+        manifest: bool = False,
     ) -> "IndexEntry":
         """Write samples and create an index entry in one step.
 
@@ -682,6 +698,8 @@ class Index:
             maxcount: Max samples per shard. Default: 10,000.
             maxsize: Max bytes per shard. Default: ``None``.
             metadata: Optional metadata dict stored with the entry.
+            manifest: If True, write per-shard manifest sidecar files
+                alongside each tar. Default: ``False``.
 
         Returns:
             IndexEntry for the created dataset.
@@ -700,11 +718,14 @@ class Index:
 
         backend_key, resolved_name, _ = self._resolve_prefix(name)
 
-        # For local backend without a data_store, create a LocalDiskStore
-        # so that write() always persists data to a permanent location.
-        effective_store = self._data_store
-        if backend_key == "local" and effective_store is None:
-            from atdata.local._disk import LocalDiskStore
+        # Resolve the target repo's data store; auto-create LocalDiskStore
+        # for repos that have no store so write() always persists data.
+        repo = self._repos.get(backend_key)
+        effective_store = repo.data_store if repo is not None else None
+        needs_auto_store = repo is not None and effective_store is None
+
+        if needs_auto_store and backend_key != "_atmosphere":
+            from atdata.stores._disk import LocalDiskStore
 
             effective_store = LocalDiskStore()
 
@@ -715,17 +736,18 @@ class Index:
                 tmp_path,
                 maxcount=maxcount,
                 maxsize=maxsize,
+                manifest=manifest,
             )
 
-            # For local without data_store, write directly through the
-            # auto-created LocalDiskStore rather than via insert_dataset
-            # (which would just index the temp path).
-            if backend_key == "local" and self._data_store is None:
+            # When we auto-created a store, write directly through it
+            # rather than via insert_dataset (which would just index
+            # the temp path).
+            if needs_auto_store and repo is not None:
                 return self._insert_dataset_to_provider(
                     ds,
                     name=resolved_name,
                     schema_ref=schema_ref,
-                    provider=self._provider,
+                    provider=repo.provider,
                     store=effective_store,
                     metadata=metadata,
                 )
@@ -764,14 +786,10 @@ class Index:
             if atmo is None:
                 raise ValueError(
                     f"Atmosphere backend required for path {ref!r} but not available. "
-                    "Install 'atproto' or pass an AtmosphereClient."
+                    "Install 'atproto' or pass an Atmosphere."
                 )
             return atmo.get_dataset(resolved_ref)
 
-        if backend_key == "local":
-            return self._provider.get_entry_by_name(resolved_ref)
-
-        # Named repository
         repo = self._repos.get(backend_key)
         if repo is None:
             raise KeyError(f"Unknown repository {backend_key!r} in ref {ref!r}")
@@ -781,14 +799,13 @@ class Index:
     def datasets(self) -> Generator["IndexEntry", None, None]:
         """Lazily iterate over all dataset entries across local repositories.
 
-        Yields entries from the ``"local"`` repository and all named
-        repositories. Atmosphere entries are not included (use
+        Yields entries from all mounted repositories (``"local"`` and named).
+        Atmosphere entries are not included (use
         ``list_datasets(repo="_atmosphere")`` for those).
 
         Yields:
             IndexEntry for each dataset.
         """
-        yield from self._provider.iter_entries()
         for repo in self._repos.values():
             yield from repo.provider.iter_entries()
 
@@ -806,9 +823,6 @@ class Index:
         """
         if repo is None:
             return list(self.datasets)
-
-        if repo == "local":
-            return self.list_entries()
 
         if repo == "_atmosphere":
             atmo = self._get_atmosphere()
@@ -845,7 +859,7 @@ class Index:
                 the class docstring.
 
         Returns:
-            Schema reference string: 'atdata://local/sampleSchema/{name}@{version}'.
+            Schema reference string: 'atdata://local/schema/{name}@{version}'.
 
         Raises:
             ValueError: If sample_type is not a dataclass.
@@ -899,7 +913,7 @@ class Index:
 
         Args:
             ref: Schema reference string. Supports both new format
-                (atdata://local/sampleSchema/{name}@{version}) and legacy
+                (atdata://local/schema/{name}@{version}) and legacy
                 format (local://schemas/{module.Class}@{version}).
 
         Returns:
@@ -976,7 +990,7 @@ class Index:
         The returned class has proper type information that IDEs can understand.
 
         Args:
-            ref: Schema reference string (atdata://local/sampleSchema/... or
+            ref: Schema reference string (atdata://local/schema/... or
                 legacy local://schemas/...).
 
         Returns:

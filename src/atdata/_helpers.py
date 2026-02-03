@@ -65,10 +65,22 @@ def bytes_to_array(b: bytes) -> np.ndarray:
         return np.load(BytesIO(b), allow_pickle=True)
 
     # Compact format: dtype_len(1B) + dtype_str + ndim(1B) + shape(ndim×8B) + data
+    if len(b) < 2:
+        raise ValueError(f"Array buffer too short ({len(b)} bytes): need at least 2")
     dlen = b[0]
+    min_header = 2 + dlen  # dtype_len + dtype_str + ndim
+    if len(b) < min_header:
+        raise ValueError(
+            f"Array buffer too short ({len(b)} bytes): need at least {min_header} for header"
+        )
     dtype = np.dtype(b[1 : 1 + dlen].decode())
     ndim = b[1 + dlen]
     offset = 2 + dlen
+    min_with_shape = offset + ndim * 8
+    if len(b) < min_with_shape:
+        raise ValueError(
+            f"Array buffer too short ({len(b)} bytes): need at least {min_with_shape} for shape"
+        )
     shape = struct.unpack_from(f"<{ndim}q", b, offset)
     offset += ndim * 8
     return np.frombuffer(b, dtype=dtype, offset=offset).reshape(shape).copy()

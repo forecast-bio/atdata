@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-from atdata.local._entry import LocalDatasetEntry
+from atdata.index._entry import LocalDatasetEntry
 
 from .conftest import BenchBasicSample, generate_basic_samples
 
@@ -21,7 +21,7 @@ from .conftest import BenchBasicSample, generate_basic_samples
 def _make_entry(i: int) -> LocalDatasetEntry:
     return LocalDatasetEntry(
         name=f"bench_dataset_{i:06d}",
-        schema_ref=f"atdata://local/sampleSchema/BenchBasicSample@1.0.0",
+        schema_ref=f"atdata://local/schema/BenchBasicSample@1.0.0",
         data_urls=[f"/tmp/bench/data-{i:06d}.tar"],
         metadata={"index": i, "split": "train"},
     )
@@ -148,7 +148,7 @@ class TestIndexBenchmarks:
 
     def test_index_insert_dataset(self, benchmark, tmp_path, sqlite_provider):
         import atdata
-        from atdata.local._index import Index
+        from atdata.index._index import Index
 
         samples = generate_basic_samples(10)
         tar_path = tmp_path / "idx-bench-000000.tar"
@@ -170,7 +170,7 @@ class TestIndexBenchmarks:
 
     def test_index_get_dataset(self, benchmark, tmp_path, sqlite_provider):
         import atdata
-        from atdata.local._index import Index
+        from atdata.index._index import Index
 
         samples = generate_basic_samples(10)
         tar_path = tmp_path / "idx-get-000000.tar"
@@ -186,7 +186,7 @@ class TestIndexBenchmarks:
 
     def test_index_list_datasets(self, benchmark, tmp_path, sqlite_provider):
         import atdata
-        from atdata.local._index import Index
+        from atdata.index._index import Index
 
         samples = generate_basic_samples(5)
         tar_path = tmp_path / "idx-list-000000.tar"
@@ -202,7 +202,7 @@ class TestIndexBenchmarks:
         benchmark(index.list_datasets)
 
     def test_index_publish_schema(self, benchmark, sqlite_provider):
-        from atdata.local._index import Index
+        from atdata.index._index import Index
 
         index = Index(provider=sqlite_provider, atmosphere=None)
         counter = [0]

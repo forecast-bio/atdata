@@ -54,7 +54,7 @@ ATProto federation
 
 | | |
 | --- | --- |
-| [AtmosphereClient](AtmosphereClient.qmd#atdata.atmosphere.AtmosphereClient) | ATProto client wrapper for atdata operations. |
+| [AtmosphereClient](AtmosphereClient.qmd#atdata.atmosphere.AtmosphereClient) |  |
 | [AtmosphereIndex](AtmosphereIndex.qmd#atdata.atmosphere.AtmosphereIndex) | ATProto index implementing AbstractIndex protocol. |
 | [AtmosphereIndexEntry](AtmosphereIndexEntry.qmd#atdata.atmosphere.AtmosphereIndexEntry) | Entry wrapper for ATProto dataset records implementing IndexEntry protocol. |
 | [PDSBlobStore](PDSBlobStore.qmd#atdata.atmosphere.PDSBlobStore) | PDS blob store implementing AbstractDataStore protocol. |

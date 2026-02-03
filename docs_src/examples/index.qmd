@@ -1,0 +1,22 @@
+---
+title: "Examples"
+description: "Hands-on examples showing atdata in action"
+---
+
+These examples are self-contained demonstrations of atdata's key features.
+Each one builds a working pipeline from scratch so you can see real code
+paths end-to-end.
+
+| Example | What It Shows |
+|---------|--------------|
+| [Typed Dataset Pipeline](typed-pipeline.qmd) | Define a sample type, write shards, iterate with batching |
+| [Lens Transformations](lens-transforms.qmd) | View datasets through different schemas without copying data |
+| [Manifest-Powered Queries](manifest-queries.qmd) | Build per-shard manifests and query samples by metadata |
+| [Index-Managed Datasets](index-workflow.qmd) | Use `Index` with `LocalDiskStore` for managed dataset storage |
+| [Multi-Split Datasets](multi-split.qmd) | Work with train/test splits via `DatasetDict` and `load_dataset` |
+
+::: {.callout-tip}
+## New to atdata?
+Start with the [Quick Start tutorial](../tutorials/quickstart.qmd) for foundational
+concepts, then come back here for deeper worked examples.
+:::

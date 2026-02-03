@@ -83,14 +83,10 @@ atdata uses **WebDataset's tar format** for storage. This choice is deliberate:
 - **Sharding**: Split large datasets across multiple files for parallel I/O
 - **Proven**: Battle-tested at scale by organizations like Google, NVIDIA, and OpenAI
 
-The `as_wds` property on your sample provides the dictionary format WebDataset expects:
-
-Use WebDataset's `TarWriter` to create dataset files:
+`write_samples()` handles serialization, sharding, and key generation in one call:
 
 ```{python}
 #| eval: false
-import webdataset as wds
-
 # Create 100 samples
 samples = [
     ImageSample(
@@ -101,12 +97,9 @@ samples = [
     for i in range(100)
 ]
 
-# Write to tar file
-with wds.writer.TarWriter("my-dataset-000000.tar") as sink:
-    for i, sample in enumerate(samples):
-        sink.write({**sample.as_wds, "__key__": f"sample_{i:06d}"})
-
-print("Wrote 100 samples to my-dataset-000000.tar")
+# Write to sharded tar files (returns a typed Dataset immediately)
+dataset = atdata.write_samples(samples, "my-dataset.tar", maxcount=50)
+print(f"Wrote {len(dataset.list_shards())} shards")
 ```
 
 ## Load and Iterate
@@ -120,13 +113,11 @@ The generic `Dataset[T]` class connects your sample type to WebDataset's streami
 
 This eliminates boilerplate collation code and works automatically with any PackableSample type.
 
-Create a typed `Dataset` and iterate with batching:
+The `Dataset` returned by `write_samples` is immediately iterable---or you
+can load from existing tar files with `Dataset[T](url)`:
 
 ```{python}
 #| eval: false
-# Load dataset with type
-dataset = atdata.Dataset[ImageSample]("my-dataset-000000.tar")
-
 # Iterate in order with batching
 for batch in dataset.ordered(batch_size=16):
     # NDArray fields are stacked
@@ -205,6 +196,7 @@ You now understand atdata's foundational concepts:
 | Concept | Purpose |
 |---------|---------|
 | `@packable` | Create typed, serializable sample classes |
+| `write_samples()` | Write and shard samples in one call |
 | `Dataset[T]` | Typed iteration over WebDataset tar files |
 | `SampleBatch[T]` | Automatic aggregation with NDArray stacking |
 | `@lens` | Transform between sample types without data duplication |
@@ -215,7 +207,7 @@ These patterns work identically whether your data lives on local disk, in team S
 
 ::: {.callout-tip}
 ## Ready to Share with Your Team?
-The [Local Workflow](local-workflow.qmd) tutorial shows how to set up Redis + S3 storage for team-wide dataset discovery and sharing.
+The [Local Workflow](local-workflow.qmd) tutorial shows how to set up Index-managed storage for team-wide dataset discovery and sharing.
 :::
 
 - **[Local Workflow](local-workflow.qmd)** - Store datasets with Redis + S3

@@ -5,7 +5,7 @@ optional ``AbstractDataStore`` (shard storage), forming a named storage unit
 that can be mounted into an ``Index``.
 
 The ``_AtmosphereBackend`` is an internal adapter that wraps an
-``AtmosphereClient`` to present the same operational surface as a repository,
+``Atmosphere`` to present the same operational surface as a repository,
 but routes through the ATProto network instead of a local provider.
 
 Examples:
@@ -105,7 +105,7 @@ def create_repository(
 
 
 class _AtmosphereBackend:
-    """Internal adapter wrapping AtmosphereClient for Index routing.
+    """Internal adapter wrapping Atmosphere for Index routing.
 
     This class extracts the operational logic from ``AtmosphereIndex`` into an
     internal component that the unified ``Index`` uses for ATProto resolution.
@@ -117,15 +117,15 @@ class _AtmosphereBackend:
 
     def __init__(
         self,
-        client: Any,  # AtmosphereClient, typed as Any to avoid hard import
+        client: Any,  # Atmosphere, typed as Any to avoid hard import
         *,
         data_store: Optional[AbstractDataStore] = None,
     ) -> None:
-        from .atmosphere.client import AtmosphereClient
+        from .atmosphere.client import Atmosphere
 
-        if not isinstance(client, AtmosphereClient):
-            raise TypeError(f"Expected AtmosphereClient, got {type(client).__name__}")
-        self.client: AtmosphereClient = client
+        if not isinstance(client, Atmosphere):
+            raise TypeError(f"Expected Atmosphere, got {type(client).__name__}")
+        self.client: Atmosphere = client
         self._data_store = data_store
         self._schema_publisher: Any = None
         self._schema_loader: Any = None

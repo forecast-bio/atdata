@@ -284,7 +284,7 @@ def generate_stub(schema: dict) -> str:
         String content for a .pyi stub file.
 
     Examples:
-        >>> schema = index.get_schema("atdata://local/sampleSchema/MySample@1.0.0")
+        >>> schema = index.get_schema("atdata://local/schema/MySample@1.0.0")
         >>> stub_content = generate_stub(schema.to_dict())
         >>> # Save to a stubs directory configured in your IDE
         >>> with open("stubs/my_sample.pyi", "w") as f:
@@ -360,7 +360,7 @@ def generate_module(schema: dict) -> str:
         String content for a .py module file.
 
     Examples:
-        >>> schema = index.get_schema("atdata://local/sampleSchema/MySample@1.0.0")
+        >>> schema = index.get_schema("atdata://local/schema/MySample@1.0.0")
         >>> module_content = generate_module(schema.to_dict())
         >>> # The module can be imported after being saved
     """
