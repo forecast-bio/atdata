@@ -90,6 +90,8 @@ class DatasetPublisher:
         Raises:
             ValueError: If schema_uri is not provided and auto_publish_schema is False.
         """
+        from atdata._logging import log_operation
+
         # Ensure we have a schema reference
         if schema_uri is None:
             if not auto_publish_schema:
@@ -103,34 +105,35 @@ class DatasetPublisher:
             )
             schema_uri = str(schema_uri_obj)
 
-        # Build the storage location
-        storage = StorageLocation(
-            kind="external",
-            urls=[dataset.url],
-        )
+        with log_operation("DatasetPublisher.publish", name=name):
+            # Build the storage location
+            storage = StorageLocation(
+                kind="external",
+                urls=[dataset.url],
+            )
 
-        # Build dataset record
-        metadata_bytes: Optional[bytes] = None
-        if dataset.metadata is not None:
-            metadata_bytes = msgpack.packb(dataset.metadata)
+            # Build dataset record
+            metadata_bytes: Optional[bytes] = None
+            if dataset.metadata is not None:
+                metadata_bytes = msgpack.packb(dataset.metadata)
 
-        dataset_record = DatasetRecord(
-            name=name,
-            schema_ref=schema_uri,
-            storage=storage,
-            description=description,
-            tags=tags or [],
-            license=license,
-            metadata=metadata_bytes,
-        )
+            dataset_record = DatasetRecord(
+                name=name,
+                schema_ref=schema_uri,
+                storage=storage,
+                description=description,
+                tags=tags or [],
+                license=license,
+                metadata=metadata_bytes,
+            )
 
-        # Publish to ATProto
-        return self.client.create_record(
-            collection=f"{LEXICON_NAMESPACE}.record",
-            record=dataset_record.to_record(),
-            rkey=rkey,
-            validate=False,
-        )
+            # Publish to ATProto
+            return self.client.create_record(
+                collection=f"{LEXICON_NAMESPACE}.record",
+                record=dataset_record.to_record(),
+                rkey=rkey,
+                validate=False,
+            )
 
     def publish_with_urls(
         self,
@@ -162,31 +165,34 @@ class DatasetPublisher:
         Returns:
             The AT URI of the created dataset record.
         """
-        storage = StorageLocation(
-            kind="external",
-            urls=urls,
-        )
+        from atdata._logging import log_operation
 
-        metadata_bytes: Optional[bytes] = None
-        if metadata is not None:
-            metadata_bytes = msgpack.packb(metadata)
+        with log_operation("DatasetPublisher.publish_with_urls", name=name, url_count=len(urls)):
+            storage = StorageLocation(
+                kind="external",
+                urls=urls,
+            )
 
-        dataset_record = DatasetRecord(
-            name=name,
-            schema_ref=schema_uri,
-            storage=storage,
-            description=description,
-            tags=tags or [],
-            license=license,
-            metadata=metadata_bytes,
-        )
+            metadata_bytes: Optional[bytes] = None
+            if metadata is not None:
+                metadata_bytes = msgpack.packb(metadata)
 
-        return self.client.create_record(
-            collection=f"{LEXICON_NAMESPACE}.record",
-            record=dataset_record.to_record(),
-            rkey=rkey,
-            validate=False,
-        )
+            dataset_record = DatasetRecord(
+                name=name,
+                schema_ref=schema_uri,
+                storage=storage,
+                description=description,
+                tags=tags or [],
+                license=license,
+                metadata=metadata_bytes,
+            )
+
+            return self.client.create_record(
+                collection=f"{LEXICON_NAMESPACE}.record",
+                record=dataset_record.to_record(),
+                rkey=rkey,
+                validate=False,
+            )
 
     def publish_with_blobs(
         self,

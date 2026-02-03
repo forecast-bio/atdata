@@ -90,6 +90,7 @@ from ._schema_codec import (
 from ._logging import (
     configure_logging as configure_logging,
     get_logger as get_logger,
+    log_operation as log_operation,
 )
 
 from .repository import (
