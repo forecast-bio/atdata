@@ -13,7 +13,22 @@ description: Prepare and submit a beta release
 
 ## Your task
 
-The user will provide a version string (e.g. `v0.3.0b2`). Perform the full release flow:
+The user will provide a version string (e.g. `v0.3.0b2`). If no version is provided, suggest options based on the current version using `AskUserQuestion`:
+
+Given current version `X.Y.ZbN`:
+- **Next beta**: `vX.Y.ZbN+1` (e.g. `0.3.1b1` → `v0.3.1b2`) — increments pre-release number
+- **Stable release**: `vX.Y.Z` (e.g. `0.3.1b1` → `v0.3.1`) — drops pre-release suffix
+- **Next minor beta**: `vX.Y+1.0b1` (e.g. `0.3.1b1` → `v0.4.0b1`) — bumps minor, resets patch and beta
+- **Next patch beta**: `vX.Y.Z+1b1` (e.g. `0.3.1b1` → `v0.3.2b1`) — bumps patch, resets beta
+
+Given current version `X.Y.Z` (stable):
+- **Next patch beta**: `vX.Y.Z+1b1` (e.g. `0.3.1` → `v0.3.2b1`)
+- **Next minor beta**: `vX.Y+1.0b1` (e.g. `0.3.1` → `v0.4.0b1`)
+- **Next major beta**: `vX+1.0.0b1` (e.g. `0.3.1` → `v1.0.0b1`)
+
+Present 3-4 options with the most likely choice first (marked as recommended). Then proceed with the selected version.
+
+Perform the full release flow:
 
 ### 1. Validate preconditions
 - Confirm all tests pass: `uv run pytest tests/ -x -q`
