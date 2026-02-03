@@ -112,7 +112,23 @@ print(f"Train type: {type(ds_dict['train']).__name__}")
 print(f"Test type : {type(ds_dict['test']).__name__}")
 ```
 
-## 6 --- Iterate over each split
+## 6 --- Single-split proxy
+
+When a `DatasetDict` has exactly one split, you can call `Dataset` methods
+directly on it---no need to index by split name first.
+
+```{python}
+single = atdata.DatasetDict({
+    "train": atdata.Dataset[DigitSample](str(tmpdir / "train-{000000..000001}.tar")),
+})
+
+# .ordered() is proxied to the sole split automatically
+for batch in single.ordered(batch_size=32):
+    print(f"Proxy batch shape: {batch.image.shape}")
+    break
+```
+
+## 7 --- Iterate over each split
 
 ```{python}
 for split_name, split_ds in ds_dict.items():
@@ -122,7 +138,7 @@ for split_name, split_ds in ds_dict.items():
     print(f"  {split_name:6s}: {count} samples iterated")
 ```
 
-## 7 --- Cross-split statistics
+## 8 --- Cross-split statistics
 
 Because both splits share the same `DigitSample` type, you can compute
 comparable statistics directly.
@@ -138,7 +154,7 @@ for split_name, split_ds in ds_dict.items():
     print(f"  {split_name:6s}: {len(all_labels)} samples, label distribution: {counts.tolist()}")
 ```
 
-## 8 --- Clean up
+## 9 --- Clean up
 
 ```{python}
 import shutil
@@ -153,5 +169,6 @@ shutil.rmtree(tmpdir, ignore_errors=True)
 | Write split shards | `write_samples(samples, "split.tar", maxcount=N)` |
 | Load single split | `load_dataset("path/train-{000..N}.tar")` |
 | Build a DatasetDict | `DatasetDict({"train": ds1, "test": ds2})` |
+| Single-split proxy | `ds_dict.ordered()` when only one split |
 | Iterate splits | `for name, ds in ds_dict.items()` |
 | Typed across splits | Same `@packable` type works everywhere |

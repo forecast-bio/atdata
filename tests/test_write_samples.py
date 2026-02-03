@@ -109,3 +109,67 @@ class TestWriteSamplesEdgeCases:
 
         ds = atdata.write_samples(gen(), tmp_path / "out.tar")
         assert len(list(ds.ordered())) == 5
+
+
+class TestWriteSamplesManifest:
+    """Tests for write_samples with manifest=True."""
+
+    def test_manifest_creates_sidecar_files(self, tmp_path: Path):
+        samples = [SharedBasicSample(name=f"s{i}", value=i) for i in range(5)]
+        atdata.write_samples(samples, tmp_path / "out.tar", manifest=True)
+
+        assert (tmp_path / "out.manifest.json").exists()
+        assert (tmp_path / "out.manifest.parquet").exists()
+
+    def test_manifest_json_content(self, tmp_path: Path):
+        import json
+
+        samples = [SharedBasicSample(name=f"s{i}", value=i) for i in range(5)]
+        atdata.write_samples(samples, tmp_path / "out.tar", manifest=True)
+
+        with open(tmp_path / "out.manifest.json") as f:
+            header = json.load(f)
+
+        assert header["num_samples"] == 5
+        assert header["schema_type"] == "SharedBasicSample"
+        assert "aggregates" in header
+
+    def test_manifest_parquet_rows(self, tmp_path: Path):
+        import pandas as pd
+
+        samples = [SharedBasicSample(name=f"s{i}", value=i) for i in range(5)]
+        atdata.write_samples(samples, tmp_path / "out.tar", manifest=True)
+
+        df = pd.read_parquet(tmp_path / "out.manifest.parquet")
+        assert len(df) == 5
+        assert "__key__" in df.columns
+        assert "__offset__" in df.columns
+
+    def test_manifest_sharded(self, tmp_path: Path):
+        samples = [SharedBasicSample(name=f"s{i}", value=i) for i in range(10)]
+        atdata.write_samples(
+            samples, tmp_path / "data.tar", maxcount=4, manifest=True
+        )
+
+        manifest_jsons = list(tmp_path.glob("*.manifest.json"))
+        manifest_parquets = list(tmp_path.glob("*.manifest.parquet"))
+        assert len(manifest_jsons) >= 2
+        assert len(manifest_parquets) >= 2
+
+    def test_manifest_false_no_files(self, tmp_path: Path):
+        samples = [SharedBasicSample(name="x", value=0)]
+        atdata.write_samples(samples, tmp_path / "out.tar", manifest=False)
+
+        assert not (tmp_path / "out.manifest.json").exists()
+        assert not (tmp_path / "out.manifest.parquet").exists()
+
+    def test_manifest_queryable(self, tmp_path: Path):
+        """Manifests produced by write_samples should be queryable."""
+        from atdata import QueryExecutor
+
+        samples = [SharedBasicSample(name=f"s{i}", value=i) for i in range(10)]
+        atdata.write_samples(samples, tmp_path / "data.tar", manifest=True)
+
+        executor = QueryExecutor.from_directory(tmp_path)
+        results = executor.query(where=lambda df: df["value"] > 7)
+        assert len(results) == 2  # value=8 and value=9

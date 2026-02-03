@@ -86,7 +86,8 @@ tmpdir = Path(tempfile.mkdtemp(prefix="atdata_example_"))
 ds = atdata.write_samples(
     samples,
     tmpdir / "readings.tar",
-    maxcount=500,  # 4 shards of 500 samples each
+    maxcount=500,       # 4 shards of 500 samples each
+    manifest=True,      # generate per-shard metadata manifests
 )
 
 print(f"Dataset URL : {ds.url}")

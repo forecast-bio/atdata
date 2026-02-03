@@ -56,56 +56,39 @@ for name, mf in fields.items():
 
 ## 3 --- Generate data and write shards with manifests
 
-We'll write samples manually using `TarWriter` while building manifests
-with `ManifestBuilder`, then serialize them with `ManifestWriter`.
+Pass `manifest=True` to `write_samples` and atdata builds the sidecar
+manifest files automatically---no manual `ManifestBuilder` plumbing needed.
 
 ```{python}
 import tempfile
 from pathlib import Path
-import webdataset as wds
-from atdata import ManifestBuilder, ManifestWriter
 
 tmpdir = Path(tempfile.mkdtemp(prefix="atdata_manifest_"))
 rng = np.random.default_rng(7)
 
 categories = ["cat", "dog", "bird", "fish", "horse"]
 all_tags = ["outdoor", "indoor", "closeup", "wide", "blurry", "sharp"]
-shard_size = 100
-num_shards = 3
+num_samples = 300
 
-for shard_idx in range(num_shards):
-    shard_name = f"images-{shard_idx:06d}"
-    tar_path = tmpdir / f"{shard_name}.tar"
-
-    builder = ManifestBuilder(
-        sample_type=LabeledImage,
-        shard_id=shard_name,
+samples = [
+    LabeledImage(
+        pixels=rng.integers(0, 255, (32, 32, 3), dtype=np.uint8),
+        label=categories[rng.integers(0, len(categories))],
+        confidence=round(float(rng.uniform(0.5, 1.0)), 3),
+        tags=list(rng.choice(all_tags, size=rng.integers(1, 4), replace=False)),
     )
+    for _ in range(num_samples)
+]
 
-    with wds.writer.TarWriter(str(tar_path)) as sink:
-        for j in range(shard_size):
-            sample = LabeledImage(
-                pixels=rng.integers(0, 255, (32, 32, 3), dtype=np.uint8),
-                label=categories[rng.integers(0, len(categories))],
-                confidence=round(float(rng.uniform(0.5, 1.0)), 3),
-                tags=list(rng.choice(all_tags, size=rng.integers(1, 4), replace=False)),
-            )
-            key = f"sample_{shard_idx * shard_size + j:06d}"
-            wds_dict = {**sample.as_wds, "__key__": key}
-            sink.write(wds_dict)
+ds = atdata.write_samples(
+    samples,
+    tmpdir / "images.tar",
+    maxcount=100,       # 3 shards of 100 samples each
+    manifest=True,      # auto-build JSON + Parquet sidecar manifests
+)
 
-            builder.add_sample(
-                key=key,
-                offset=0,  # simplified; real pipelines track tar offsets
-                size=len(sample.packed),
-                sample=sample,
-            )
-
-    manifest = builder.build()
-    writer = ManifestWriter(str(tmpdir / shard_name))
-    json_path, parquet_path = writer.write(manifest)
-
-print(f"Wrote {num_shards} shards with manifests to {tmpdir}")
+print(f"Wrote {num_samples} samples across {len(ds.list_shards())} shards")
+print(f"Manifest files: {sorted(p.name for p in tmpdir.glob('*.manifest.*'))}")
 ```
 
 ## 4 --- Inspect a manifest
@@ -116,7 +99,8 @@ Each shard gets a JSON header (aggregates + metadata) and a Parquet file
 ```{python}
 import json
 
-with open(tmpdir / "images-000000.manifest.json") as f:
+manifest_json = sorted(tmpdir.glob("*.manifest.json"))[0]
+with open(manifest_json) as f:
     header = json.load(f)
 
 print("Shard:", header["shard_id"])
@@ -185,7 +169,6 @@ shutil.rmtree(tmpdir, ignore_errors=True)
 |---------|-----|
 | Mark fields for manifests | `Annotated[T, ManifestField("categorical")]` |
 | Resolve manifest fields | `resolve_manifest_fields(SampleType)` |
-| Build manifest during writes | `ManifestBuilder.add_sample(...)` / `.build()` |
-| Serialize to sidecar files | `ManifestWriter(base_path).write(manifest)` |
+| Write with manifests | `write_samples(samples, path, manifest=True)` |
 | Query across shards | `QueryExecutor.from_directory(path).query(where=...)` |
 | Locate matching samples | Returns `list[SampleLocation]` with shard + key |

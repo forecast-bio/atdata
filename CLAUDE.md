@@ -60,6 +60,11 @@ just bench-save <name> # Save benchmark results
 just bench-compare a b # Compare two benchmark runs
 ```
 
+> **Note on `just docs`:** The recipe sets `QUARTO_PYTHON` to the project
+> venv's Python so that Quarto uses the correct interpreter with project
+> dependencies. Without this, Quarto may pick up a system Python that lacks
+> `quartodoc` and other required packages.
+
 The `justfile` is in the project root. Add new dev tasks there rather than creating shell scripts.
 
 ### Running Python

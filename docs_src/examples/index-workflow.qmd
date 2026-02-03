@@ -123,12 +123,15 @@ for entry in index.list_datasets():
 
 ## 5 --- Load a dataset from the index
 
-`load_dataset` can resolve dataset names through the default index.
+`load_dataset` can resolve dataset names through the default index.  Because
+the index stores the schema for each dataset, you don't need to pass the
+sample type explicitly---it's reconstructed automatically.
 
 ```{python}
 atdata.set_default_index(index)
 
-ds = atdata.load_dataset("@local/docs-v1", TextSample, split="train")
+# No sample_type argument needed -- schema is resolved from the index
+ds = atdata.load_dataset("@local/docs-v1", split="train")
 for batch in ds.ordered(batch_size=10):
     print(f"Texts     : {batch.text[:2]}...")
     print(f"Languages : {batch.language[:5]}...")
@@ -137,7 +140,8 @@ for batch in ds.ordered(batch_size=10):
 ```
 
 ```{python}
-emb_ds = atdata.load_dataset("@local/embeddings-v1", EmbeddingSample, split="train")
+# Same for embeddings -- type is auto-resolved
+emb_ds = atdata.load_dataset("@local/embeddings-v1", split="train")
 for batch in emb_ds.ordered(batch_size=8):
     print(f"Vector shape : {batch.vector.shape}")
     print(f"Labels       : {batch.label}")
@@ -172,4 +176,4 @@ shutil.rmtree(tmpdir, ignore_errors=True)
 | List datasets | `index.list_datasets()` |
 | Schema discovery | `index.list_schemas()` |
 | Set global index | `atdata.set_default_index(index)` |
-| Load by name | `atdata.load_dataset("name")` |
+| Load by name (auto-typed) | `atdata.load_dataset("@local/name", split=...)` |

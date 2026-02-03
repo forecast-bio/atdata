@@ -418,6 +418,46 @@ class TestDatasetDict:
         assert "train" in num_shards
         assert num_shards["train"] == 1
 
+    def test_single_split_proxy_ordered(self, tmp_path):
+        """Single-split DatasetDict should proxy .ordered() to the Dataset."""
+        tar_path = tmp_path / "data.tar"
+        with wds.writer.TarWriter(str(tar_path)) as sink:
+            for i in range(5):
+                sample = SimpleTestSample(text=f"s{i}", label=i)
+                sink.write(sample.as_wds)
+
+        dd = DatasetDict({"train": atdata.Dataset[SimpleTestSample](str(tar_path))})
+        results = list(dd.ordered(batch_size=None))
+        assert len(results) == 5
+
+    def test_single_split_proxy_list_shards(self, tmp_path):
+        """Single-split DatasetDict should proxy .list_shards()."""
+        tar_path = tmp_path / "data.tar"
+        with wds.writer.TarWriter(str(tar_path)) as sink:
+            sink.write(SimpleTestSample(text="x", label=0).as_wds)
+
+        dd = DatasetDict({"train": atdata.Dataset[SimpleTestSample](str(tar_path))})
+        shards = dd.list_shards()
+        assert len(shards) == 1
+
+    def test_multi_split_no_proxy(self, tmp_path):
+        """Multi-split DatasetDict should NOT proxy Dataset methods."""
+        tar_path = tmp_path / "data.tar"
+        with wds.writer.TarWriter(str(tar_path)) as sink:
+            sink.write(SimpleTestSample(text="x", label=0).as_wds)
+
+        ds = atdata.Dataset[SimpleTestSample](str(tar_path))
+        dd = DatasetDict({"train": ds, "test": ds})
+
+        with pytest.raises(AttributeError, match="2 splits"):
+            dd.ordered()
+
+    def test_unknown_attr_raises(self):
+        """Non-Dataset attributes should raise normal AttributeError."""
+        dd = DatasetDict()
+        with pytest.raises(AttributeError, match="has no attribute"):
+            dd.nonexistent_method()
+
 
 ##
 # load_dataset tests

@@ -938,4 +938,36 @@ def test_dictsample_batched_iteration(tmp_path):
     assert batch_count == 3  # 10 samples / 4 per batch = 2 full + 1 partial
 
 
+def test_numpy_scalar_coercion_round_trip():
+    """Numpy scalar values should be coerced to Python natives during packing."""
+
+    @atdata.packable
+    class ScalarSample:
+        f: float
+        i: int
+        b: bool
+        s: str
+
+    sample = ScalarSample(
+        f=np.float32(3.14),
+        i=np.int64(42),
+        b=np.bool_(True),
+        s="plain",
+    )
+
+    # Packing should succeed (numpy scalars coerced to Python natives)
+    packed = sample.packed
+    restored = ScalarSample.from_bytes(packed)
+
+    assert restored.f == pytest.approx(3.14, rel=1e-5)
+    assert restored.i == 42
+    assert restored.b is True
+    assert restored.s == "plain"
+
+    # Verify the types are Python natives, not numpy types
+    assert type(restored.f) is float
+    assert type(restored.i) is int
+    assert type(restored.b) is bool
+
+
 ##

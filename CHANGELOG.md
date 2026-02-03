@@ -13,6 +13,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Bounds checking in `bytes_to_array()` for truncated/corrupted buffers
 
 ### Changed
+- **Uniform Repository model**: `Index._repos` now includes `"local"` as a regular `Repository`, collapsing 3-way routing (local/named/atmosphere) to 2-way (repo/atmosphere); `provider` and `data_store` properties delegate to `_repos["local"]` (#581)
+- Update example docs to use new APIs: `manifest=True`, schema auto-resolution, DatasetDict proxy
+- Add manifest=True flag to write_samples (#580)
+- Document QUARTO_PYTHON in justfile/CLAUDE.md (#579)
+- DatasetDict single-split proxy (#578)
+- Fix schema round-trip bug in Index.write (#577)
+- Numpy scalar coercion in _make_packable (#576)
 - DX review: friction points discovered building example docs (#574)
 - Add five executable Quarto example docs to docs_src/examples/ (#567)
 - Wire examples into _quarto.yml nav and sidebar (#573)

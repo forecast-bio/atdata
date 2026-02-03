@@ -189,6 +189,31 @@ class DatasetDict(Generic[ST], dict):
         """
         return {name: len(ds.list_shards()) for name, ds in self.items()}
 
+    # Methods proxied to the sole Dataset when only one split exists.
+    _DATASET_METHODS = frozenset({
+        "ordered", "shuffled", "as_type", "list_shards", "head",
+    })
+
+    def __getattr__(self, name: str) -> Any:
+        """Proxy common Dataset methods when this dict has exactly one split.
+
+        When a ``DatasetDict`` contains a single split, calling iteration
+        methods like ``.ordered()`` or ``.shuffled()`` is forwarded to the
+        contained ``Dataset`` for convenience.  Multi-split dicts raise
+        ``AttributeError`` with a hint to select a split explicitly.
+        """
+        if name in self._DATASET_METHODS:
+            if len(self) == 1:
+                return getattr(next(iter(self.values())), name)
+            splits = ", ".join(f"'{k}'" for k in self.keys())
+            raise AttributeError(
+                f"'{type(self).__name__}' has {len(self)} splits ({splits}). "
+                f"Select one first, e.g. ds_dict['{next(iter(self.keys()))}'].{name}()"
+            )
+        raise AttributeError(
+            f"'{type(self).__name__}' object has no attribute '{name}'"
+        )
+
 
 ##
 # Path resolution utilities
