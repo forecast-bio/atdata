@@ -16,6 +16,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Bounds checking in `bytes_to_array()` for truncated/corrupted input buffers
 
 ### Changed
+- Adversarial review: test suite and source code quality (#600)
+- Strengthen weak test assertions across test suite (batch) (#605)
+- Trim over-documented private internals (_ShardListStage, _StreamOpenerStage) (#606)
+- Fix double stat() in _estimate_dataset_bytes (#603)
+- Lazy-import pandas and requests in dataset.py to reduce import time (#602)
+- Add deprecation warnings to shard_list properties in URLSource and S3Source (#604)
+- Remove dead code: msgpack None check, deprecated shard_list without warnings, BasicIndexEntry alias (#601)
+- Refactor Index API: write_samples + insert_dataset with PDS blob defaults (#591)
+- Update tests for new API (#599)
+- Update AbstractIndex protocol (#598)
+- Deprecate add_entry, promote_entry, promote_dataset (#597)
+- Refactor Index.insert_dataset with copy/force flags and credential guard (#596)
+- Rename Index.write to write_samples with atmosphere blob defaults (#595)
+- Refactor _AtmosphereBackend.insert_dataset() to accept data_urls (#594)
+- Add helper functions to index/_index.py (#593)
+- Add PDS constants and update PDSBlobStore defaults (#592)
+- Add version auto-suggest to /release and /publish skills (#588)
+- Create /publish skill for post-merge release tagging and PyPI publish (#587)
+- Fix wheel build: duplicate filename in ZIP archive rejected by PyPI (#586)
+- Update /release skill to run ruff format --check before committing (#585)
 - **`AtmosphereClient` → `Atmosphere`**: Renamed with factory classmethods `Atmosphere.login()` and `Atmosphere.from_env()`; `AtmosphereClient` remains as a deprecated alias
 - **`sampleSchema` → `schema`**: Lexicon record type renamed from `ac.foundation.dataset.sampleSchema` to `ac.foundation.dataset.schema` (clean break, no backward compat)
 - **Module reorganization**: `local/` split into `index/` (Index, entries, schema management) and `stores/` (LocalDiskStore, S3DataStore); `local/` remains as backward-compat re-export shim

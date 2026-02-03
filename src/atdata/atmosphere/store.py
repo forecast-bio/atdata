@@ -25,6 +25,12 @@ from typing import TYPE_CHECKING, Any
 
 import webdataset as wds
 
+#: Maximum size in bytes for a single PDS blob upload (50 MB).
+PDS_BLOB_LIMIT_BYTES: int = 50_000_000
+
+#: Maximum total dataset size in bytes for atmosphere uploads (1 GB).
+PDS_TOTAL_DATASET_LIMIT_BYTES: int = 1_000_000_000
+
 if TYPE_CHECKING:
     from ..dataset import Dataset
     from .._sources import BlobSource
@@ -60,7 +66,7 @@ class PDSBlobStore:
         *,
         prefix: str,
         maxcount: int = 10000,
-        maxsize: float = 3e9,
+        maxsize: float = PDS_BLOB_LIMIT_BYTES,
         **kwargs: Any,
     ) -> list[str]:
         """Write dataset shards as PDS blobs.
@@ -72,7 +78,7 @@ class PDSBlobStore:
             ds: The Dataset to write.
             prefix: Logical path prefix for naming (used in shard names only).
             maxcount: Maximum samples per shard (default: 10000).
-            maxsize: Maximum shard size in bytes (default: 3GB, PDS limit).
+            maxsize: Maximum shard size in bytes (default: 50MB, PDS blob limit).
             **kwargs: Additional args passed to wds.ShardWriter.
 
         Returns:
@@ -200,4 +206,4 @@ class PDSBlobStore:
         return BlobSource(blob_refs=blob_refs)
 
 
-__all__ = ["PDSBlobStore"]
+__all__ = ["PDS_BLOB_LIMIT_BYTES", "PDS_TOTAL_DATASET_LIMIT_BYTES", "PDSBlobStore"]
