@@ -16,6 +16,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Bounds checking in `bytes_to_array()` for truncated/corrupted input buffers
 
 ### Changed
+- Refactor Index API: write_samples + insert_dataset with PDS blob defaults (#591)
+- Update tests for new API (#599)
+- Update AbstractIndex protocol (#598)
+- Deprecate add_entry, promote_entry, promote_dataset (#597)
+- Refactor Index.insert_dataset with copy/force flags and credential guard (#596)
+- Rename Index.write to write_samples with atmosphere blob defaults (#595)
+- Refactor _AtmosphereBackend.insert_dataset() to accept data_urls (#594)
+- Add helper functions to index/_index.py (#593)
+- Add PDS constants and update PDSBlobStore defaults (#592)
 - Add version auto-suggest to /release and /publish skills (#588)
 - Create /publish skill for post-merge release tagging and PyPI publish (#587)
 - Fix wheel build: duplicate filename in ZIP archive rejected by PyPI (#586)
