@@ -6,41 +6,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-## [0.3.1b1] - 2026-02-02
+## [0.3.1b1] - 2026-02-03
 
 ### Added
 - **Lexicon packaging**: ATProto lexicon JSON files bundled in `src/atdata/lexicons/` with `importlib.resources` access via `atdata.lexicons.get_lexicon()` and `list_lexicons()`
-- Bounds checking in `bytes_to_array()` for truncated/corrupted buffers
+- **`DatasetDict` single-split proxy**: When a `DatasetDict` has one split, `.ordered()`, `.shuffled()`, `.list_shards()`, and other `Dataset` methods are proxied directly
+- **`write_samples(manifest=True)`**: Opt-in manifest generation during sample writing for query-based access
+- **Example documentation**: Five executable Quarto example docs covering typed pipelines, lens transforms, manifest queries, index workflows, and multi-split datasets
+- Bounds checking in `bytes_to_array()` for truncated/corrupted input buffers
 
 ### Changed
-- Streamline homepage content and add benchmarks link to hero (#583)
-- Update docs_src examples to use all new streamlined APIs (#582)
-- **Uniform Repository model**: `Index._repos` now includes `"local"` as a regular `Repository`, collapsing 3-way routing (local/named/atmosphere) to 2-way (repo/atmosphere); `provider` and `data_store` properties delegate to `_repos["local"]` (#581)
-- Update example docs to use new APIs: `manifest=True`, schema auto-resolution, DatasetDict proxy
-- Add manifest=True flag to write_samples (#580)
-- Document QUARTO_PYTHON in justfile/CLAUDE.md (#579)
-- DatasetDict single-split proxy (#578)
-- Fix schema round-trip bug in Index.write (#577)
-- Numpy scalar coercion in _make_packable (#576)
-- DX review: friction points discovered building example docs (#574)
-- Add five executable Quarto example docs to docs_src/examples/ (#567)
-- Wire examples into _quarto.yml nav and sidebar (#573)
-- Create example 5: Multi-split datasets with DatasetDict (#572)
-- Create example 4: Index-managed dataset workflow (#571)
-- Create example 3: Manifest-powered queries (#570)
-- Create example 2: Lens transformations and schema views (#569)
-- Create example 1: End-to-end typed dataset pipeline (#568)
 - **`AtmosphereClient` → `Atmosphere`**: Renamed with factory classmethods `Atmosphere.login()` and `Atmosphere.from_env()`; `AtmosphereClient` remains as a deprecated alias
 - **`sampleSchema` → `schema`**: Lexicon record type renamed from `ac.foundation.dataset.sampleSchema` to `ac.foundation.dataset.schema` (clean break, no backward compat)
 - **Module reorganization**: `local/` split into `index/` (Index, entries, schema management) and `stores/` (LocalDiskStore, S3DataStore); `local/` remains as backward-compat re-export shim
 - **CLI rename**: `atdata local` subcommand renamed to `atdata infra`
+- **Uniform Repository model**: `Index` now treats `"local"` as a regular `Repository`, collapsing 3-way routing (local/named/atmosphere) to 2-way (repo/atmosphere)
 - `SampleBatch` aggregation uses `np.stack()` instead of `np.array(list(...))` for efficiency
+- Numpy scalar coercion in `_make_packable` — numpy scalars are now extracted to Python primitives before msgpack serialization
 - Removed dead legacy aliases in `StubManager` (`_stub_filename`, `_stub_path`, `_stub_is_current`, `_write_stub_atomic`)
+- Streamlined homepage and updated docs site to reflect new APIs
 
 ### Fixed
+- Schema round-trip in `Index.write()` — schemas with NDArray fields now survive publish/decode correctly
 - Test isolation: protocol tests now use temporary SQLite databases instead of shared default
-- Duplicate mock patch in `test_diagnose_via_cli` removed
-- Weak assertion in `test_shards_to_wds_url` replaced with exact expected output
 
 ## [0.3.0b2] - 2026-02-02
 

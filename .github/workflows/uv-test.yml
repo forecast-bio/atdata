@@ -17,7 +17,7 @@ concurrency:
 jobs:
   lint:
     name: Lint
-    runs-on: forecast-ci-linux-x64
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
 
@@ -37,7 +37,7 @@ jobs:
 
   test:
     name: Test (py${{ matrix.python-version }}, redis${{ matrix.redis-version }})
-    runs-on: forecast-ci-linux-x64
+    runs-on: ubuntu-latest
     environment:
       name: test
     strategy:
@@ -78,7 +78,7 @@ jobs:
 
   benchmark:
     name: Benchmarks
-    runs-on: forecast-ci-linux-x64
+    runs-on: ubuntu-latest
     needs: [lint]
     permissions:
       contents: write
