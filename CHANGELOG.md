@@ -6,6 +6,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.3.2b2] - 2026-02-03
+
+### Added
+- **Lexicon-mirror type system**: `StorageHttp`, `StorageS3`, `StorageBlobs`, `BlobEntry`, `ShardChecksum` dataclasses that mirror ATProto lexicon definitions, with `storage_from_record()` union deserializer
+- **`ShardUploadResult`**: Typed return from `PDSBlobStore.write_shards()` carrying both AT URIs and blob ref dicts
+- **Lexicon reference docs**: Auto-generated documentation page for the `ac.foundation.dataset.*` namespace
+- **Example docs**: dataset-profiler, lens-graph, and query-cookbook with plots and interactive tabsets
+- **Typed proxy DSL** for manifest queries (`foundation-ac #43`)
+
+### Changed
+- **`DatasetPublisher` refactored**: Extracted `_create_record()` helper, fixing a bug where `publish()` used `dataset.url` instead of `dataset.list_shards()` for multi-shard datasets
+- **`PDSBlobStore.write_shards()`** returns `ShardUploadResult` instead of using a `_last_blob_refs` side-channel
+- **Blob storage uploads**: PDS blob uploads now use `storageBlobs` with embedded blob ref objects instead of string AT URIs in `storageExternal`, preventing PDS garbage collection of uploaded blobs
+- Replaced lexicon symlinks with real files
+- Guarded `redis` imports behind `TYPE_CHECKING` in `index/_entry.py` and `index/_index.py`
+- Standardized benchmark outputs to `.benchmarks/` directory
+
+### Fixed
+- `publish()` multi-shard bug: was passing single URL instead of full shard list
+- Double-write eliminated in `PDSBlobStore`
+- Lens-graph example: removed float rounding in calibrate lens that broke law assertions
+- Unused imports and E402 violations in atmosphere module
+- Unused variable and import in test files
+
+### Testing
+- Strengthened weak mock assertions with argument verification across 4 test files
+- Fixed misleading unicode tests: real emoji (🌍🎉🚀) and CJK characters (日本語テスト, 中文测试, 한국어시험) instead of ASCII placeholders
+- Exact shard count assertions instead of `>= 2` bounds
+- Fixed self-referential assertion in `test_publish_schema`
+- Removed unnecessary `isinstance` builtin patch
+- Added content assertions for empty/corrupted shard recovery tests
+
 ## [0.3.2b1] - 2026-02-03
 
 ### Changed
