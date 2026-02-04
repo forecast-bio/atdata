@@ -125,6 +125,34 @@ def postgres_provider(
     provider.close()
 
 
+# ── Redis fixtures ───────────────────────────────────────────────
+
+
+@pytest.fixture(scope="session")
+def redis_url() -> str:
+    """Return a Redis URL from env or skip."""
+    url = os.environ.get("REDIS_URL", "")
+    if not url:
+        pytest.skip("Redis URL not configured (set REDIS_URL)")
+    return url
+
+
+@pytest.fixture()
+def redis_provider(redis_url: str) -> Generator:
+    """Create a RedisProvider and flush test keys after each test."""
+    from redis import Redis
+
+    from atdata.providers._redis import RedisProvider
+
+    conn = Redis.from_url(redis_url)
+    provider = RedisProvider(redis=conn)
+    yield provider
+
+    # Teardown: flush the entire test database (assumes dedicated db)
+    conn.flushdb()
+    provider.close()
+
+
 # ── Helpers ────────────────────────────────────────────────────────
 
 
