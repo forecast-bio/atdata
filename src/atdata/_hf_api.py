@@ -48,6 +48,7 @@ from ._protocols import DataSource, Packable
 
 if TYPE_CHECKING:
     from ._protocols import AbstractIndex
+    from .atmosphere.client import Atmosphere
 
 ##
 # Type variables
@@ -478,6 +479,118 @@ def _group_shards_by_split(shards: list[str]) -> dict[str, list[str]]:
 # Index-based path resolution
 
 
+def _is_at_uri(path: str) -> bool:
+    """Check if path is an AT Protocol URI (at://...).
+
+    Examples:
+        >>> _is_at_uri("at://did:plc:abc123/ac.foundation.dataset.record/my-ds")
+        True
+        >>> _is_at_uri("@local/my-dataset")
+        False
+    """
+    return path.startswith("at://")
+
+
+def _resolve_at_uri(
+    path: str,
+    sample_type: Type[ST] | None = None,
+    client: "Atmosphere | None" = None,
+) -> tuple[Dataset, Type]:
+    """Resolve an AT URI to a Dataset by fetching the record from ATProto.
+
+    Fetches the dataset record once, determines storage type (blobs, HTTP, S3),
+    resolves shard URLs, and optionally decodes the schema to reconstruct
+    the sample type.
+
+    Args:
+        path: AT URI pointing to a dataset record.
+        sample_type: Optional sample type class. If None, the schema is
+            decoded from the referenced schema record.
+        client: Optional Atmosphere client. If None, an unauthenticated
+            client is created for public record access.
+
+    Returns:
+        Tuple of (Dataset, resolved_type).
+
+    Raises:
+        ValueError: If the record is not a dataset record, has no
+            resolvable storage, or uses an unknown storage type.
+    """
+    from .atmosphere.client import Atmosphere
+    from .atmosphere._types import AtUri, LEXICON_NAMESPACE
+    from ._sources import BlobSource
+
+    if client is None:
+        client = Atmosphere()
+
+    # Single fetch — all routing derived from this dict
+    record = client.get_record(path)
+    expected_type = f"{LEXICON_NAMESPACE}.record"
+    if record.get("$type") != expected_type:
+        raise ValueError(
+            f"Record at {path} is not a dataset record. "
+            f"Expected $type='{expected_type}', got '{record.get('$type')}'"
+        )
+
+    storage = record.get("storage", {})
+    storage_type = storage.get("$type", "")
+
+    if "storageBlobs" in storage_type:
+        parsed = AtUri.parse(path)
+        did = parsed.authority
+        refs = []
+        for entry in storage.get("blobs", []):
+            blob = entry.get("blob", entry)
+            ref = blob.get("ref", {})
+            cid = ref.get("$link") if isinstance(ref, dict) else str(ref)
+            if cid:
+                refs.append({"did": did, "cid": cid})
+        pds_endpoint = client._resolve_pds_endpoint(did)
+        source: DataSource = BlobSource(blob_refs=refs, pds_endpoint=pds_endpoint)
+    elif "storageHttp" in storage_type:
+        urls = [s["url"] for s in storage.get("shards", [])]
+        if not urls:
+            raise ValueError(f"Dataset record at {path} has no storage URLs")
+        source = URLSource(_shards_to_wds_url(urls))
+    elif "storageS3" in storage_type:
+        bucket = storage.get("bucket", "")
+        endpoint = storage.get("endpoint")
+        urls = []
+        for s in storage.get("shards", []):
+            if endpoint:
+                urls.append(f"{endpoint.rstrip('/')}/{bucket}/{s['key']}")
+            else:
+                urls.append(f"s3://{bucket}/{s['key']}")
+        if not urls:
+            raise ValueError(f"Dataset record at {path} has no storage URLs")
+        source = URLSource(_shards_to_wds_url(urls))
+    elif "storageExternal" in storage_type:
+        urls = storage.get("urls", [])
+        if not urls:
+            raise ValueError(f"Dataset record at {path} has no storage URLs")
+        source = URLSource(_shards_to_wds_url(urls))
+    else:
+        raise ValueError(f"Unknown storage type in dataset record: {storage_type}")
+
+    # Resolve sample type from the already-fetched record
+    if sample_type is None:
+        schema_ref = record.get("schemaRef")
+        if schema_ref:
+            from .atmosphere.schema import SchemaLoader
+            from ._schema_codec import schema_to_type
+
+            schema_loader = SchemaLoader(client)
+            schema_record = schema_loader.get(schema_ref)
+            resolved_type = schema_to_type(schema_record)
+        else:
+            resolved_type = DictSample
+    else:
+        resolved_type = sample_type
+
+    ds = Dataset[resolved_type](source)
+    return ds, resolved_type
+
+
 def _is_indexed_path(path: str) -> bool:
     """Check if path uses @handle/dataset notation for index lookup.
 
@@ -680,6 +793,7 @@ def load_dataset(
 
     Args:
         path: Path to dataset. Can be:
+            - AT URI: "at://did:plc:abc/ac.foundation.dataset.record/rkey"
             - Index lookup: "@handle/dataset-name" or "@local/dataset-name"
             - WebDataset brace notation: "path/to/{train,test}-{000..099}.tar"
             - Local directory: "./data/" (scans for .tar files)
@@ -745,6 +859,18 @@ def load_dataset(
         split,
         sample_type.__name__ if sample_type is not None else "None",
     )
+
+    # Handle at:// AT Protocol URI resolution
+    if _is_at_uri(path):
+        log.debug("load_dataset: resolving AT URI %s", path)
+        ds, resolved_type = _resolve_at_uri(path, sample_type)
+
+        if split is not None:
+            return ds
+
+        return DatasetDict(
+            {"train": ds}, sample_type=resolved_type, streaming=streaming
+        )
 
     # Handle @handle/dataset indexed path resolution
     if _is_indexed_path(path):
