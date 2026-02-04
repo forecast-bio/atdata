@@ -72,6 +72,7 @@ LensSignature: TypeAlias = Tuple[DatasetType, DatasetType]
 
 S = TypeVar("S", bound=Packable)
 V = TypeVar("V", bound=Packable)
+W = TypeVar("W", bound=Packable)
 type LensGetter[S, V] = Callable[[S], V]
 type LensPutter[S, V] = Callable[[V, S], S]
 
@@ -198,9 +199,99 @@ class Lens(Generic[S, V]):
         """
         return self(s)
 
+    @staticmethod
+    def identity(sample_type: Type[S]) -> "Lens[S, S]":
+        """Create an identity lens that passes through unchanged.
+
+        Args:
+            sample_type: The sample type for both source and view.
+
+        Returns:
+            A lens where ``get`` and ``put`` are both identity operations.
+
+        Examples:
+            >>> id_lens = Lens.identity(MyType)
+            >>> id_lens.get(sample) == sample
+            True
+        """
+        def _id_get(s: S) -> S:
+            return s
+
+        def _id_put(v: S, s: S) -> S:
+            return v
+
+        result: Lens[S, S] = object.__new__(Lens)
+        result._getter = _id_get
+        result._putter = _id_put
+        result.source_type = sample_type
+        result.view_type = sample_type
+        return result
+
     def __call__(self, s: S) -> V:
         """Apply the lens transformation (same as ``get()``)."""
         return self._getter(s)
+
+    def __or__(self, other: "Lens[V, W]") -> "Lens[S, W]":
+        """Pipeline composition: ``self | other`` means "self then other".
+
+        Given ``self: S → V`` and ``other: V → W``, produces a lens ``S → W``
+        that applies ``self`` first, then ``other``.
+
+        Returns ``NotImplemented`` if *other* is not a ``Lens``, allowing
+        Python to fall back to the right-hand operand's ``__ror__``.
+
+        Args:
+            other: A lens from this lens's view type to a further view type.
+
+        Returns:
+            A composite lens from ``S`` to ``W``.
+
+        Examples:
+            >>> composed = first_lens | second_lens
+            >>> composed.get(source)  # == second_lens.get(first_lens.get(source))
+        """
+        if not isinstance(other, Lens):
+            return NotImplemented
+        get1, put1 = self._getter, self._putter
+        get2, put2 = other._getter, other._putter
+
+        def composite_get(s: S) -> W:
+            return get2(get1(s))
+
+        def composite_put(w: W, s: S) -> S:
+            a = get1(s)
+            a_new = put2(w, a)
+            return put1(a_new, s)
+
+        result: Lens[S, W] = object.__new__(Lens)
+        result._getter = composite_get
+        result._putter = composite_put
+        result.source_type = self.source_type
+        result.view_type = other.view_type
+        return result
+
+    def __matmul__(self, other: "Lens[object, S]") -> "Lens[object, V]":
+        """Categorical composition: ``self @ other`` means "other then self".
+
+        Given ``self: S → V`` and ``other: R → S``, produces a lens ``R → V``
+        that applies ``other`` first, then ``self`` (right-to-left, like
+        mathematical function composition ``f ∘ g``).
+
+        Returns ``NotImplemented`` if *other* is not a ``Lens``.
+
+        Args:
+            other: A lens whose view type matches this lens's source type.
+
+        Returns:
+            A composite lens from ``R`` to ``V``.
+
+        Examples:
+            >>> composed = outer_lens @ inner_lens
+            >>> composed.get(source)  # == outer_lens.get(inner_lens.get(source))
+        """
+        if not isinstance(other, Lens):
+            return NotImplemented
+        return other | self
 
 
 def lens(f: LensGetter[S, V]) -> Lens[S, V]:
@@ -287,8 +378,8 @@ class LensNetwork:
             ValueError: If no lens has been registered for the given type pair.
 
         Note:
-            Currently only supports direct transformations. Compositional
-            transformations (chaining multiple lenses) are not yet implemented.
+            Looks up only directly registered transformations. For compositional
+            chaining, use the ``|`` or ``@`` operators on ``Lens`` objects.
         """
         ret = self._registry.get((source, view), None)
         if ret is None:
