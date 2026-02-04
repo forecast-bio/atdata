@@ -122,6 +122,15 @@ class MockAtmosphere:
             if collection in uri
         ]
 
+    def list_labels(self, repo: str | None = None, limit: int = 100) -> list[dict[str, Any]]:
+        """List label records."""
+        collection = "ac.foundation.dataset.label"
+        return [
+            rec
+            for uri, rec in self._records.items()
+            if collection in uri
+        ][:limit]
+
     def upload_blob(self, data: bytes) -> dict[str, Any]:
         """Simulate uploading a blob. Returns a mock blob ref."""
         ref = f"blob:{uuid.uuid4().hex[:16]}"

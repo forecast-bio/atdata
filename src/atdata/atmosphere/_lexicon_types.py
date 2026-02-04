@@ -575,6 +575,61 @@ class LexLensRecord:
         )
 
 
+# ---------------------------------------------------------------------------
+# Label record
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class LexLabelRecord:
+    """Named label pointing to a dataset record.
+
+    Mirrors ``ac.foundation.dataset.label`` (main record).
+    Multiple labels with the same name but different versions can coexist,
+    enabling versioned references to immutable, CID-addressed dataset records.
+    """
+
+    name: str
+    """User-facing label name, e.g. 'mnist'."""
+
+    dataset_uri: str
+    """AT-URI pointing to the dataset record."""
+
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    """Timestamp when this label was created."""
+
+    version: str | None = None
+    """Semver or free-form version string."""
+
+    description: str | None = None
+    """Optional description of this labeled version."""
+
+    def to_record(self) -> dict[str, Any]:
+        """Serialize to ATProto record dict."""
+        d: dict[str, Any] = {
+            "$type": f"{LEXICON_NAMESPACE}.label",
+            "name": self.name,
+            "datasetUri": self.dataset_uri,
+            "createdAt": self.created_at.isoformat(),
+        }
+        if self.version is not None:
+            d["version"] = self.version
+        if self.description is not None:
+            d["description"] = self.description
+        return d
+
+    @classmethod
+    def from_record(cls, d: dict[str, Any]) -> LexLabelRecord:
+        """Deserialize from ATProto record dict."""
+        return cls(
+            name=d["name"],
+            dataset_uri=d["datasetUri"],
+            created_at=datetime.fromisoformat(d["createdAt"]),
+            version=d.get("version"),
+            description=d.get("description"),
+        )
+
+
 __all__ = [
     "LEXICON_NAMESPACE",
     "ShardChecksum",
@@ -592,4 +647,5 @@ __all__ = [
     "LexSchemaRecord",
     "LexDatasetRecord",
     "LexLensRecord",
+    "LexLabelRecord",
 ]

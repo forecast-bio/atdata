@@ -33,12 +33,14 @@ from .client import Atmosphere
 from .schema import SchemaPublisher, SchemaLoader
 from .records import DatasetPublisher, DatasetLoader
 from .lens import LensPublisher, LensLoader
+from .labels import LabelPublisher, LabelLoader
 from .store import PDSBlobStore
 from ._types import AtUri, LEXICON_NAMESPACE
 from ._lexicon_types import (
     LexSchemaRecord,
     LexDatasetRecord,
     LexLensRecord,
+    LexLabelRecord,
     LexCodeReference,
     JsonSchemaFormat,
     StorageHttp,
@@ -356,6 +358,9 @@ __all__ = [
     # Lens operations
     "LensPublisher",
     "LensLoader",
+    # Label operations
+    "LabelPublisher",
+    "LabelLoader",
     # Core types
     "AtUri",
     "LEXICON_NAMESPACE",
@@ -363,6 +368,7 @@ __all__ = [
     "LexSchemaRecord",
     "LexDatasetRecord",
     "LexLensRecord",
+    "LexLabelRecord",
     "LexCodeReference",
     "JsonSchemaFormat",
     "StorageHttp",

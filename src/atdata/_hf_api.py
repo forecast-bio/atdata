@@ -492,14 +492,18 @@ def _is_indexed_path(path: str) -> bool:
     return path.startswith("@")
 
 
-def _parse_indexed_path(path: str) -> tuple[str, str]:
-    """Parse @handle/dataset path into (handle_or_did, dataset_name).
+def _parse_indexed_path(path: str) -> tuple[str, str, str | None]:
+    """Parse @handle/dataset[@version] path into components.
+
+    Supports optional version suffix:
+    - ``@handle/dataset`` → ``("handle", "dataset", None)``
+    - ``@handle/dataset@1.0.0`` → ``("handle", "dataset", "1.0.0")``
 
     Args:
-        path: Path in format "@handle/dataset" or "@did:plc:xxx/dataset"
+        path: Path in format "@handle/dataset" or "@handle/dataset@version"
 
     Returns:
-        Tuple of (handle_or_did, dataset_name)
+        Tuple of (handle_or_did, dataset_name, version_or_none)
 
     Raises:
         ValueError: If path format is invalid.
@@ -523,17 +527,32 @@ def _parse_indexed_path(path: str) -> tuple[str, str]:
     if len(parts) != 2 or not parts[0] or not parts[1]:
         raise ValueError(f"Invalid indexed path: {path}")
 
-    return parts[0], parts[1]
+    handle_or_did = parts[0]
+    dataset_part = parts[1]
+
+    # Check for version suffix: dataset@version
+    version: str | None = None
+    if "@" in dataset_part:
+        dataset_name, version = dataset_part.rsplit("@", 1)
+        if not dataset_name or not version:
+            raise ValueError(f"Invalid version syntax in path: {path}")
+    else:
+        dataset_name = dataset_part
+
+    return handle_or_did, dataset_name, version
 
 
 def _resolve_indexed_path(
     path: str,
     index: "AbstractIndex",
 ) -> tuple[DataSource, str]:
-    """Resolve @handle/dataset path to DataSource and schema_ref via index lookup.
+    """Resolve @handle/dataset[@version] path to DataSource and schema_ref via index lookup.
+
+    Resolves through labels first (supporting versioned lookups), then
+    falls back to direct name-based lookup for backward compatibility.
 
     Args:
-        path: Path in @handle/dataset format.
+        path: Path in @handle/dataset or @handle/dataset@version format.
         index: Index to use for lookup.
 
     Returns:
@@ -543,11 +562,17 @@ def _resolve_indexed_path(
     Raises:
         KeyError: If dataset not found in index.
     """
-    handle_or_did, dataset_name = _parse_indexed_path(path)
+    handle_or_did, dataset_name, version = _parse_indexed_path(path)
 
-    # For AtmosphereIndex, we need to resolve handle to DID first
-    # For local Index, the handle is ignored and we just look up by name
-    entry = index.get_dataset(dataset_name)
+    # Try label-based resolution first (supports versioning)
+    if hasattr(index, "get_label") and (version is not None or hasattr(index, "get_label")):
+        try:
+            entry = index.get_label(dataset_name, version)
+        except KeyError:
+            # Fall back to direct name lookup
+            entry = index.get_dataset(dataset_name)
+    else:
+        entry = index.get_dataset(dataset_name)
     data_urls = entry.data_urls
 
     # Check if index has a data store
