@@ -188,19 +188,25 @@ class NameOnly:
 
 # Lenses (not registered via @lens to avoid polluting the global network)
 
-_person_to_nameage = atdata.Lens(
-    lambda s: NameAge(name=s.name, age=s.age),
-)
-_person_to_nameage._putter = lambda v, s: Person(name=v.name, age=v.age, city=s.city)
-_person_to_nameage.source_type = Person
-_person_to_nameage.view_type = NameAge
 
-_nameage_to_name = atdata.Lens(
-    lambda s: NameOnly(name=s.name),
-)
-_nameage_to_name._putter = lambda v, s: NameAge(name=v.name, age=s.age)
-_nameage_to_name.source_type = NameAge
-_nameage_to_name.view_type = NameOnly
+def _person_to_nameage_get(s: Person) -> NameAge:
+    return NameAge(name=s.name, age=s.age)
+
+
+def _person_to_nameage_put(v: NameAge, s: Person) -> Person:
+    return Person(name=v.name, age=v.age, city=s.city)
+
+
+def _nameage_to_name_get(s: NameAge) -> NameOnly:
+    return NameOnly(name=s.name)
+
+
+def _nameage_to_name_put(v: NameOnly, s: NameAge) -> NameAge:
+    return NameAge(name=v.name, age=s.age)
+
+
+_person_to_nameage = atdata.Lens(_person_to_nameage_get, put=_person_to_nameage_put)
+_nameage_to_name = atdata.Lens(_nameage_to_name_get, put=_nameage_to_name_put)
 
 
 class TestPipelineComposition:
@@ -299,21 +305,27 @@ class TestAssociativity:
         self.AB = AB
         self.AOnly = AOnly
 
-        self.f = atdata.Lens(lambda s: AB(a=s.a, b=s.b))
-        self.f._putter = lambda v, s: Full(a=v.a, b=v.b, c=s.c)
-        self.f.source_type = Full
-        self.f.view_type = AB
+        def f_get(s: Full) -> AB:
+            return AB(a=s.a, b=s.b)
 
-        self.g = atdata.Lens(lambda s: AOnly(a=s.a))
-        self.g._putter = lambda v, s: AB(a=v.a, b=s.b)
-        self.g.source_type = AB
-        self.g.view_type = AOnly
+        def f_put(v: AB, s: Full) -> Full:
+            return Full(a=v.a, b=v.b, c=s.c)
 
-        # Third lens: AOnly -> AOnly (doubler)
-        self.h = atdata.Lens(lambda s: AOnly(a=s.a * 2))
-        self.h._putter = lambda v, s: AOnly(a=v.a // 2)
-        self.h.source_type = AOnly
-        self.h.view_type = AOnly
+        def g_get(s: AB) -> AOnly:
+            return AOnly(a=s.a)
+
+        def g_put(v: AOnly, s: AB) -> AB:
+            return AB(a=v.a, b=s.b)
+
+        def h_get(s: AOnly) -> AOnly:
+            return AOnly(a=s.a * 2)
+
+        def h_put(v: AOnly, s: AOnly) -> AOnly:
+            return AOnly(a=v.a // 2)
+
+        self.f = atdata.Lens(f_get, put=f_put)
+        self.g = atdata.Lens(g_get, put=g_put)
+        self.h = atdata.Lens(h_get, put=h_put)
 
         self.src = Full(a=5, b="hello", c=3.14)
 
@@ -381,6 +393,26 @@ class TestCompositionCallable:
         composed = _nameage_to_name @ _person_to_nameage
         src = Person(name="Alice", age=30, city="NYC")
         assert composed(src) == NameOnly(name="Alice")
+
+
+class TestCompositionTypeErrors:
+    """Verify composition with non-Lens operands raises TypeError."""
+
+    def test_pipe_non_lens_returns_not_implemented(self):
+        with pytest.raises(TypeError):
+            _person_to_nameage | 42
+
+    def test_matmul_non_lens_returns_not_implemented(self):
+        with pytest.raises(TypeError):
+            _nameage_to_name @ "not a lens"
+
+    def test_pipe_non_lens_string(self):
+        with pytest.raises(TypeError):
+            _person_to_nameage | "hello"
+
+    def test_matmul_non_lens_none(self):
+        with pytest.raises(TypeError):
+            _nameage_to_name @ None
 
 
 ##

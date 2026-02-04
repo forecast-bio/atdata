@@ -237,6 +237,9 @@ class Lens(Generic[S, V]):
         Given ``self: S → V`` and ``other: V → W``, produces a lens ``S → W``
         that applies ``self`` first, then ``other``.
 
+        Returns ``NotImplemented`` if *other* is not a ``Lens``, allowing
+        Python to fall back to the right-hand operand's ``__ror__``.
+
         Args:
             other: A lens from this lens's view type to a further view type.
 
@@ -247,6 +250,8 @@ class Lens(Generic[S, V]):
             >>> composed = first_lens | second_lens
             >>> composed.get(source)  # == second_lens.get(first_lens.get(source))
         """
+        if not isinstance(other, Lens):
+            return NotImplemented
         get1, put1 = self._getter, self._putter
         get2, put2 = other._getter, other._putter
 
@@ -272,6 +277,8 @@ class Lens(Generic[S, V]):
         that applies ``other`` first, then ``self`` (right-to-left, like
         mathematical function composition ``f ∘ g``).
 
+        Returns ``NotImplemented`` if *other* is not a ``Lens``.
+
         Args:
             other: A lens whose view type matches this lens's source type.
 
@@ -282,6 +289,8 @@ class Lens(Generic[S, V]):
             >>> composed = outer_lens @ inner_lens
             >>> composed.get(source)  # == outer_lens.get(inner_lens.get(source))
         """
+        if not isinstance(other, Lens):
+            return NotImplemented
         return other | self
 
 
@@ -369,8 +378,8 @@ class LensNetwork:
             ValueError: If no lens has been registered for the given type pair.
 
         Note:
-            Currently only supports direct transformations. Compositional
-            transformations (chaining multiple lenses) are not yet implemented.
+            Looks up only directly registered transformations. For compositional
+            chaining, use the ``|`` or ``@`` operators on ``Lens`` objects.
         """
         ret = self._registry.get((source, view), None)
         if ret is None:
