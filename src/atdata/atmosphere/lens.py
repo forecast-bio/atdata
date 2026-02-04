@@ -9,18 +9,11 @@ Note:
     implementations.
 """
 
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 from .client import Atmosphere
-from ._types import (
-    AtUri,
-    LensRecord,
-    CodeReference,
-    LEXICON_NAMESPACE,
-)
-
-# Import for type checking only
-from typing import TYPE_CHECKING
+from ._types import AtUri, LEXICON_NAMESPACE
+from ._lexicon_types import LexLensRecord, LexCodeReference
 
 if TYPE_CHECKING:
     from ..lens import Lens
@@ -70,59 +63,58 @@ class LensPublisher:
         name: str,
         source_schema_uri: str,
         target_schema_uri: str,
+        code_repository: str,
+        code_commit: str,
+        getter_path: str,
+        putter_path: str,
         description: Optional[str] = None,
-        code_repository: Optional[str] = None,
-        code_commit: Optional[str] = None,
-        getter_path: Optional[str] = None,
-        putter_path: Optional[str] = None,
+        language: Optional[str] = None,
+        metadata: Optional[dict] = None,
         rkey: Optional[str] = None,
     ) -> AtUri:
         """Publish a lens transformation record to ATProto.
+
+        Code references are required by the ATProto lexicon. Each lens must
+        point to a getter and putter implementation in a git repository.
 
         Args:
             name: Human-readable lens name.
             source_schema_uri: AT URI of the source schema.
             target_schema_uri: AT URI of the target schema.
-            description: What this transformation does.
             code_repository: Git repository URL containing the lens code.
             code_commit: Git commit hash for reproducibility.
             getter_path: Module path to the getter function
                 (e.g., 'mymodule.lenses:my_getter').
             putter_path: Module path to the putter function
                 (e.g., 'mymodule.lenses:my_putter').
+            description: What this transformation does.
+            language: Programming language (e.g., 'python').
+            metadata: Arbitrary metadata dictionary.
             rkey: Optional explicit record key.
 
         Returns:
             The AT URI of the created lens record.
-
-        Raises:
-            ValueError: If code references are incomplete.
         """
-        # Build code references if provided
-        getter_code: Optional[CodeReference] = None
-        putter_code: Optional[CodeReference] = None
+        getter_code = LexCodeReference(
+            repository=code_repository,
+            commit=code_commit,
+            path=getter_path,
+        )
+        putter_code = LexCodeReference(
+            repository=code_repository,
+            commit=code_commit,
+            path=putter_path,
+        )
 
-        if code_repository and code_commit:
-            if getter_path:
-                getter_code = CodeReference(
-                    repository=code_repository,
-                    commit=code_commit,
-                    path=getter_path,
-                )
-            if putter_path:
-                putter_code = CodeReference(
-                    repository=code_repository,
-                    commit=code_commit,
-                    path=putter_path,
-                )
-
-        lens_record = LensRecord(
+        lens_record = LexLensRecord(
             name=name,
             source_schema=source_schema_uri,
             target_schema=target_schema_uri,
-            description=description,
             getter_code=getter_code,
             putter_code=putter_code,
+            description=description,
+            language=language,
+            metadata=metadata,
         )
 
         return self.client.create_record(
@@ -142,6 +134,8 @@ class LensPublisher:
         code_repository: str,
         code_commit: str,
         description: Optional[str] = None,
+        language: Optional[str] = None,
+        metadata: Optional[dict] = None,
         rkey: Optional[str] = None,
     ) -> AtUri:
         """Publish a lens record from an existing Lens object.
@@ -157,16 +151,16 @@ class LensPublisher:
             code_repository: Git repository URL.
             code_commit: Git commit hash.
             description: What this transformation does.
+            language: Programming language (e.g., 'python').
+            metadata: Arbitrary metadata dictionary.
             rkey: Optional explicit record key.
 
         Returns:
             The AT URI of the created lens record.
         """
-        # Extract function names from the lens
         getter_name = lens_obj._getter.__name__
         putter_name = lens_obj._putter.__name__
 
-        # Get module info if available
         getter_module = getattr(lens_obj._getter, "__module__", "")
         putter_module = getattr(lens_obj._putter, "__module__", "")
 
@@ -177,11 +171,13 @@ class LensPublisher:
             name=name,
             source_schema_uri=source_schema_uri,
             target_schema_uri=target_schema_uri,
-            description=description,
             code_repository=code_repository,
             code_commit=code_commit,
             getter_path=getter_path,
             putter_path=putter_path,
+            description=description,
+            language=language,
+            metadata=metadata,
             rkey=rkey,
         )
 
@@ -233,6 +229,18 @@ class LensLoader:
             )
 
         return record
+
+    def get_typed(self, uri: str | AtUri) -> LexLensRecord:
+        """Fetch a lens record and return as a typed object.
+
+        Args:
+            uri: The AT URI of the lens record.
+
+        Returns:
+            LexLensRecord instance.
+        """
+        record = self.get(uri)
+        return LexLensRecord.from_record(record)
 
     def list_all(
         self,

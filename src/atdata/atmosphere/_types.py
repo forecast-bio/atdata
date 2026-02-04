@@ -1,15 +1,22 @@
 """Type definitions for ATProto record structures.
 
-This module defines the data structures used to represent ATProto records
-for schemas, datasets, and lenses. These types map to the Lexicon definitions
-in the ``ac.foundation.dataset.*`` namespace.
+This module provides the ``AtUri`` utility class and the ``LEXICON_NAMESPACE``
+constant. Lexicon-mirror record types (``LexSchemaRecord``, ``LexDatasetRecord``,
+``LexLensRecord``, etc.) have moved to ``atdata.atmosphere._lexicon_types``.
+
+The old type names (``SchemaRecord``, ``DatasetRecord``, ``LensRecord``,
+``StorageLocation``, ``FieldType``, ``FieldDef``, ``CodeReference``) are
+re-exported here as deprecated aliases for backward compatibility.
 """
 
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Optional, Literal, Any
+from __future__ import annotations
 
-# Lexicon namespace for atdata records
+import warnings
+from dataclasses import dataclass
+from typing import Any, Optional
+
+# Canonical constant — also defined in _lexicon_types but kept here as the
+# historically authoritative location so existing imports continue to work.
 LEXICON_NAMESPACE = "ac.foundation.dataset"
 
 
@@ -39,7 +46,7 @@ class AtUri:
     """The record key within the collection."""
 
     @classmethod
-    def parse(cls, uri: str) -> "AtUri":
+    def parse(cls, uri: str) -> AtUri:
         """Parse an AT URI string into components.
 
         Args:
@@ -71,261 +78,87 @@ class AtUri:
         return f"at://{self.authority}/{self.collection}/{self.rkey}"
 
 
-@dataclass
-class FieldType:
-    """Schema field type definition.
+# ---------------------------------------------------------------------------
+# Deprecated re-exports (will be removed in a future version)
+# ---------------------------------------------------------------------------
+# These names existed in this module before the lexicon-mirror types were
+# split into _lexicon_types.py.  They are re-exported here so that existing
+# imports like ``from atdata.atmosphere._types import SchemaRecord`` continue
+# to work during the migration period.
 
-    Represents a type in the schema type system, supporting primitives,
-    ndarrays, and references to other schemas.
-    """
+
+def __getattr__(name: str) -> Any:
+    _DEPRECATED_ALIASES: dict[str, tuple[str, str]] = {
+        # old name → (new module attribute, import path in _lexicon_types)
+        "FieldType": ("FieldType", "atdata.atmosphere._lexicon_types"),
+        "FieldDef": ("FieldDef", "atdata.atmosphere._lexicon_types"),
+        "SchemaRecord": ("LexSchemaRecord", "atdata.atmosphere._lexicon_types"),
+        "DatasetRecord": ("LexDatasetRecord", "atdata.atmosphere._lexicon_types"),
+        "LensRecord": ("LexLensRecord", "atdata.atmosphere._lexicon_types"),
+        "StorageLocation": ("StorageLocation", "atdata.atmosphere._lexicon_types"),
+        "CodeReference": ("LexCodeReference", "atdata.atmosphere._lexicon_types"),
+    }
+    if name in _DEPRECATED_ALIASES:
+        new_name, mod_path = _DEPRECATED_ALIASES[name]
+        warnings.warn(
+            f"{name} has been moved. "
+            f"Import {new_name} from {mod_path} instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        from . import _lexicon_types
+
+        # For StorageLocation, provide a lightweight shim
+        if name == "StorageLocation":
+            return _StorageLocationShim
+        # FieldType / FieldDef don't exist in _lexicon_types; they were
+        # internal-only types used by the old SchemaRecord.  Return them
+        # from the shim definitions below.
+        if name in ("FieldType", "FieldDef"):
+            return _FIELD_SHIMS[name]
+        return getattr(_lexicon_types, new_name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+# Lightweight shims for types that have no direct equivalent in _lexicon_types
+
+from dataclasses import field as dataclass_field
+from datetime import datetime, timezone
+from typing import Literal
+
+
+@dataclass
+class _FieldTypeShim:
+    """Deprecated: schema field type used by the old SchemaRecord."""
 
     kind: Literal["primitive", "ndarray", "ref", "array"]
-    """The category of type."""
-
     primitive: Optional[str] = None
-    """For kind='primitive': one of 'str', 'int', 'float', 'bool', 'bytes'."""
-
     dtype: Optional[str] = None
-    """For kind='ndarray': numpy dtype string (e.g., 'float32')."""
-
     shape: Optional[list[int | None]] = None
-    """For kind='ndarray': shape constraints (None for any dimension)."""
-
     ref: Optional[str] = None
-    """For kind='ref': AT URI of referenced schema."""
-
-    items: Optional["FieldType"] = None
-    """For kind='array': type of array elements."""
+    items: Optional[_FieldTypeShim] = None
 
 
 @dataclass
-class FieldDef:
-    """Schema field definition."""
+class _FieldDefShim:
+    """Deprecated: schema field definition used by the old SchemaRecord."""
 
     name: str
-    """Field name."""
-
-    field_type: FieldType
-    """Type of this field."""
-
+    field_type: _FieldTypeShim
     optional: bool = False
-    """Whether this field can be None."""
-
     description: Optional[str] = None
-    """Human-readable description."""
 
 
 @dataclass
-class SchemaRecord:
-    """ATProto record for a PackableSample schema.
-
-    Maps to the ``ac.foundation.dataset.schema`` Lexicon.
-    """
-
-    name: str
-    """Human-readable schema name."""
-
-    version: str
-    """Semantic version string (e.g., '1.0.0')."""
-
-    fields: list[FieldDef]
-    """List of field definitions."""
-
-    description: Optional[str] = None
-    """Human-readable description."""
-
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    """When this record was created."""
-
-    metadata: Optional[dict] = None
-    """Arbitrary metadata as msgpack-encoded bytes."""
-
-    def to_record(self) -> dict:
-        """Convert to ATProto record dict for publishing."""
-        record = {
-            "$type": f"{LEXICON_NAMESPACE}.schema",
-            "name": self.name,
-            "version": self.version,
-            "fields": [self._field_to_dict(f) for f in self.fields],
-            "createdAt": self.created_at.isoformat(),
-        }
-        if self.description:
-            record["description"] = self.description
-        if self.metadata:
-            record["metadata"] = self.metadata
-        return record
-
-    def _field_to_dict(self, field_def: FieldDef) -> dict:
-        """Convert a field definition to dict."""
-        result = {
-            "name": field_def.name,
-            "fieldType": self._type_to_dict(field_def.field_type),
-            "optional": field_def.optional,
-        }
-        if field_def.description:
-            result["description"] = field_def.description
-        return result
-
-    def _type_to_dict(self, field_type: FieldType) -> dict:
-        """Convert a field type to dict."""
-        result: dict = {"$type": f"{LEXICON_NAMESPACE}.schemaType#{field_type.kind}"}
-
-        if field_type.kind == "primitive":
-            result["primitive"] = field_type.primitive
-        elif field_type.kind == "ndarray":
-            result["dtype"] = field_type.dtype
-            if field_type.shape:
-                result["shape"] = field_type.shape
-        elif field_type.kind == "ref":
-            result["ref"] = field_type.ref
-        elif field_type.kind == "array":
-            if field_type.items:
-                result["items"] = self._type_to_dict(field_type.items)
-
-        return result
-
-
-@dataclass
-class StorageLocation:
-    """Dataset storage location specification."""
+class _StorageLocationShim:
+    """Deprecated: use StorageHttp / StorageS3 / StorageBlobs instead."""
 
     kind: Literal["external", "blobs"]
-    """Storage type: external URLs or ATProto blobs."""
-
     urls: Optional[list[str]] = None
-    """For kind='external': WebDataset URLs with brace notation."""
-
     blob_refs: Optional[list[dict]] = None
-    """For kind='blobs': ATProto blob references."""
 
 
-@dataclass
-class DatasetRecord:
-    """ATProto record for a dataset index.
-
-    Maps to the ``ac.foundation.dataset.record`` Lexicon.
-    """
-
-    name: str
-    """Human-readable dataset name."""
-
-    schema_ref: str
-    """AT URI of the schema record."""
-
-    storage: StorageLocation
-    """Where the dataset data is stored."""
-
-    description: Optional[str] = None
-    """Human-readable description."""
-
-    tags: list[str] = field(default_factory=list)
-    """Searchable tags."""
-
-    license: Optional[str] = None
-    """SPDX license identifier."""
-
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    """When this record was created."""
-
-    metadata: Optional[bytes] = None
-    """Arbitrary metadata as msgpack-encoded bytes."""
-
-    def to_record(self) -> dict:
-        """Convert to ATProto record dict for publishing."""
-        record = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
-            "name": self.name,
-            "schemaRef": self.schema_ref,
-            "storage": self._storage_to_dict(),
-            "createdAt": self.created_at.isoformat(),
-        }
-        if self.description:
-            record["description"] = self.description
-        if self.tags:
-            record["tags"] = self.tags
-        if self.license:
-            record["license"] = self.license
-        if self.metadata:
-            record["metadata"] = self.metadata
-        return record
-
-    def _storage_to_dict(self) -> dict:
-        """Convert storage location to dict."""
-        if self.storage.kind == "external":
-            return {
-                "$type": f"{LEXICON_NAMESPACE}.storageExternal",
-                "urls": self.storage.urls or [],
-            }
-        else:
-            return {
-                "$type": f"{LEXICON_NAMESPACE}.storageBlobs",
-                "blobs": self.storage.blob_refs or [],
-            }
-
-
-@dataclass
-class CodeReference:
-    """Reference to lens code in a git repository."""
-
-    repository: str
-    """Git repository URL."""
-
-    commit: str
-    """Git commit hash."""
-
-    path: str
-    """Path to the code file/function."""
-
-
-@dataclass
-class LensRecord:
-    """ATProto record for a lens transformation.
-
-    Maps to the ``ac.foundation.dataset.lens`` Lexicon.
-    """
-
-    name: str
-    """Human-readable lens name."""
-
-    source_schema: str
-    """AT URI of the source schema."""
-
-    target_schema: str
-    """AT URI of the target schema."""
-
-    description: Optional[str] = None
-    """What this transformation does."""
-
-    getter_code: Optional[CodeReference] = None
-    """Reference to getter function code."""
-
-    putter_code: Optional[CodeReference] = None
-    """Reference to putter function code."""
-
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    """When this record was created."""
-
-    def to_record(self) -> dict:
-        """Convert to ATProto record dict for publishing."""
-        record: dict[str, Any] = {
-            "$type": f"{LEXICON_NAMESPACE}.lens",
-            "name": self.name,
-            "sourceSchema": self.source_schema,
-            "targetSchema": self.target_schema,
-            "createdAt": self.created_at.isoformat(),
-        }
-        if self.description:
-            record["description"] = self.description
-        if self.getter_code:
-            record["getterCode"] = {
-                "repository": self.getter_code.repository,
-                "commit": self.getter_code.commit,
-                "path": self.getter_code.path,
-            }
-        if self.putter_code:
-            record["putterCode"] = {
-                "repository": self.putter_code.repository,
-                "commit": self.putter_code.commit,
-                "path": self.putter_code.path,
-            }
-        return record
+_FIELD_SHIMS: dict[str, type] = {
+    "FieldType": _FieldTypeShim,
+    "FieldDef": _FieldDefShim,
+}

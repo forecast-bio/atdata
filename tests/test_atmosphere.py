@@ -27,17 +27,19 @@ from atdata.atmosphere import (
     LensPublisher,
     LensLoader,
     AtUri,
-    SchemaRecord,
-    DatasetRecord,
-    LensRecord,
+    LexSchemaRecord,
+    LexDatasetRecord,
+    LexLensRecord,
+    LexCodeReference,
+    JsonSchemaFormat,
+    StorageHttp,
+    StorageS3,
+    StorageBlobs,
+    HttpShardEntry,
+    ShardChecksum,
+    BlobEntry,
 )
-from atdata.atmosphere._types import (
-    FieldType,
-    FieldDef,
-    StorageLocation,
-    CodeReference,
-    LEXICON_NAMESPACE,
-)
+from atdata.atmosphere._types import LEXICON_NAMESPACE
 
 
 # =============================================================================
@@ -169,11 +171,14 @@ class TestAtUri:
 # =============================================================================
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 class TestFieldType:
-    """Tests for FieldType dataclass."""
+    """Tests for deprecated FieldType shim dataclass."""
 
     def test_primitive_type(self):
         """Create a primitive field type."""
+        from atdata.atmosphere._types import FieldType
+
         ft = FieldType(kind="primitive", primitive="str")
 
         assert ft.kind == "primitive"
@@ -183,6 +188,8 @@ class TestFieldType:
 
     def test_ndarray_type(self):
         """Create an ndarray field type."""
+        from atdata.atmosphere._types import FieldType
+
         ft = FieldType(kind="ndarray", dtype="float32", shape=[224, 224, 3])
 
         assert ft.kind == "ndarray"
@@ -191,6 +198,8 @@ class TestFieldType:
 
     def test_ref_type(self):
         """Create a reference field type."""
+        from atdata.atmosphere._types import FieldType
+
         ft = FieldType(kind="ref", ref="at://did:plc:abc/collection/key")
 
         assert ft.kind == "ref"
@@ -198,6 +207,8 @@ class TestFieldType:
 
     def test_array_type(self):
         """Create an array field type with items."""
+        from atdata.atmosphere._types import FieldType
+
         items = FieldType(kind="primitive", primitive="str")
         ft = FieldType(kind="array", items=items)
 
@@ -211,11 +222,14 @@ class TestFieldType:
 # =============================================================================
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 class TestFieldDef:
-    """Tests for FieldDef dataclass."""
+    """Tests for deprecated FieldDef shim dataclass."""
 
     def test_required_field(self):
         """Create a required field definition."""
+        from atdata.atmosphere._types import FieldType, FieldDef
+
         fd = FieldDef(
             name="test_field",
             field_type=FieldType(kind="primitive", primitive="str"),
@@ -227,6 +241,8 @@ class TestFieldDef:
 
     def test_optional_field(self):
         """Create an optional field definition."""
+        from atdata.atmosphere._types import FieldType, FieldDef
+
         fd = FieldDef(
             name="optional_field",
             field_type=FieldType(kind="primitive", primitive="int"),
@@ -237,6 +253,8 @@ class TestFieldDef:
 
     def test_field_with_description(self):
         """Create a field with description."""
+        from atdata.atmosphere._types import FieldType, FieldDef
+
         fd = FieldDef(
             name="described_field",
             field_type=FieldType(kind="primitive", primitive="float"),
@@ -252,21 +270,25 @@ class TestFieldDef:
 # =============================================================================
 
 
-class TestSchemaRecord:
-    """Tests for SchemaRecord dataclass and to_record()."""
+class TestLexSchemaRecord:
+    """Tests for LexSchemaRecord dataclass and to_record()."""
 
     def test_to_record_basic(self):
         """Convert a basic schema record to dict."""
-        schema = SchemaRecord(
+        schema = LexSchemaRecord(
             name="TestSchema",
             version="1.0.0",
-            fields=[
-                FieldDef(
-                    name="field1",
-                    field_type=FieldType(kind="primitive", primitive="str"),
-                    optional=False,
-                ),
-            ],
+            schema_type="jsonSchema",
+            schema=JsonSchemaFormat(
+                schema_body={
+                    "$schema": "http://json-schema.org/draft-07/schema#",
+                    "type": "object",
+                    "properties": {
+                        "field1": {"type": "string"},
+                    },
+                    "required": ["field1"],
+                },
+            ),
         )
 
         record = schema.to_record()
@@ -274,16 +296,24 @@ class TestSchemaRecord:
         assert record["$type"] == f"{LEXICON_NAMESPACE}.schema"
         assert record["name"] == "TestSchema"
         assert record["version"] == "1.0.0"
-        assert len(record["fields"]) == 1
+        assert record["schemaType"] == "jsonSchema"
+        assert "field1" in record["schema"]["properties"]
         assert "createdAt" in record
 
     def test_to_record_with_description(self):
         """Convert schema record with description."""
-        schema = SchemaRecord(
+        schema = LexSchemaRecord(
             name="DescribedSchema",
             version="2.0.0",
+            schema_type="jsonSchema",
+            schema=JsonSchemaFormat(
+                schema_body={
+                    "$schema": "http://json-schema.org/draft-07/schema#",
+                    "type": "object",
+                    "properties": {},
+                },
+            ),
             description="A schema with description",
-            fields=[],
         )
 
         record = schema.to_record()
@@ -292,10 +322,17 @@ class TestSchemaRecord:
 
     def test_to_record_with_metadata(self):
         """Convert schema record with metadata."""
-        schema = SchemaRecord(
+        schema = LexSchemaRecord(
             name="MetaSchema",
             version="1.0.0",
-            fields=[],
+            schema_type="jsonSchema",
+            schema=JsonSchemaFormat(
+                schema_body={
+                    "$schema": "http://json-schema.org/draft-07/schema#",
+                    "type": "object",
+                    "properties": {},
+                },
+            ),
             metadata={"author": "test", "tags": ["demo"]},
         )
 
@@ -303,45 +340,43 @@ class TestSchemaRecord:
 
         assert record["metadata"] == {"author": "test", "tags": ["demo"]}
 
-    def test_to_record_field_types(self):
-        """Verify field type serialization in to_record()."""
-        schema = SchemaRecord(
+    def test_to_record_json_schema_properties(self):
+        """Verify JSON Schema property serialization in to_record()."""
+        schema = LexSchemaRecord(
             name="TypesSchema",
             version="1.0.0",
-            fields=[
-                FieldDef(
-                    name="primitive_field",
-                    field_type=FieldType(kind="primitive", primitive="int"),
-                    optional=False,
-                ),
-                FieldDef(
-                    name="array_field",
-                    field_type=FieldType(kind="ndarray", dtype="float32"),
-                    optional=True,
-                ),
-            ],
+            schema_type="jsonSchema",
+            schema=JsonSchemaFormat(
+                schema_body={
+                    "$schema": "http://json-schema.org/draft-07/schema#",
+                    "type": "object",
+                    "properties": {
+                        "primitive_field": {"type": "integer"},
+                        "array_field": {
+                            "$ref": "https://foundation.ac/schemas/atdata-ndarray-bytes/1.0.0#/$defs/ndarray"
+                        },
+                    },
+                    "required": ["primitive_field"],
+                },
+                array_format_versions={"ndarrayBytes": "1.0.0"},
+            ),
         )
 
         record = schema.to_record()
 
-        # Check primitive field
-        prim_field = record["fields"][0]
-        assert prim_field["name"] == "primitive_field"
-        assert (
-            prim_field["fieldType"]["$type"]
-            == f"{LEXICON_NAMESPACE}.schemaType#primitive"
-        )
-        assert prim_field["fieldType"]["primitive"] == "int"
-        assert prim_field["optional"] is False
+        # Check primitive field in JSON Schema properties
+        props = record["schema"]["properties"]
+        assert props["primitive_field"]["type"] == "integer"
 
-        # Check ndarray field
-        arr_field = record["fields"][1]
-        assert arr_field["name"] == "array_field"
-        assert (
-            arr_field["fieldType"]["$type"] == f"{LEXICON_NAMESPACE}.schemaType#ndarray"
-        )
-        assert arr_field["fieldType"]["dtype"] == "float32"
-        assert arr_field["optional"] is True
+        # Check ndarray field uses $ref
+        assert "$ref" in props["array_field"]
+
+        # Check required list (array_field is optional since not in required)
+        assert "primitive_field" in record["schema"]["required"]
+        assert "array_field" not in record["schema"]["required"]
+
+        # Check array format versions
+        assert record["schema"]["arrayFormatVersions"] == {"ndarrayBytes": "1.0.0"}
 
 
 # =============================================================================
@@ -349,11 +384,14 @@ class TestSchemaRecord:
 # =============================================================================
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 class TestStorageLocation:
-    """Tests for StorageLocation dataclass."""
+    """Tests for deprecated StorageLocation shim dataclass."""
 
     def test_external_storage(self):
         """Create external URL storage location."""
+        from atdata.atmosphere._types import StorageLocation
+
         storage = StorageLocation(
             kind="external",
             urls=["s3://bucket/data-{000000..000009}.tar"],
@@ -365,6 +403,8 @@ class TestStorageLocation:
 
     def test_blob_storage(self):
         """Create ATProto blob storage location."""
+        from atdata.atmosphere._types import StorageLocation
+
         storage = StorageLocation(
             kind="blobs",
             blob_refs=[{"cid": "bafyabc", "mimeType": "application/octet-stream"}],
@@ -380,17 +420,21 @@ class TestStorageLocation:
 # =============================================================================
 
 
-class TestDatasetRecord:
-    """Tests for DatasetRecord dataclass and to_record()."""
+class TestLexDatasetRecord:
+    """Tests for LexDatasetRecord dataclass and to_record()."""
 
-    def test_to_record_external_storage(self):
-        """Convert dataset record with external storage."""
-        dataset = DatasetRecord(
+    def test_to_record_http_storage(self):
+        """Convert dataset record with HTTP storage."""
+        dataset = LexDatasetRecord(
             name="TestDataset",
             schema_ref="at://did:plc:abc/ac.foundation.dataset.schema/xyz",
-            storage=StorageLocation(
-                kind="external",
-                urls=["s3://bucket/data.tar"],
+            storage=StorageHttp(
+                shards=[
+                    HttpShardEntry(
+                        url="s3://bucket/data.tar",
+                        checksum=ShardChecksum(algorithm="none", digest=""),
+                    ),
+                ],
             ),
         )
 
@@ -401,31 +445,35 @@ class TestDatasetRecord:
         assert (
             record["schemaRef"] == "at://did:plc:abc/ac.foundation.dataset.schema/xyz"
         )
-        assert record["storage"]["$type"] == f"{LEXICON_NAMESPACE}.storageExternal"
-        assert record["storage"]["urls"] == ["s3://bucket/data.tar"]
+        assert record["storage"]["$type"] == f"{LEXICON_NAMESPACE}.storageHttp"
+        assert record["storage"]["shards"][0]["url"] == "s3://bucket/data.tar"
 
     def test_to_record_blob_storage(self):
         """Convert dataset record with blob storage."""
-        dataset = DatasetRecord(
+        dataset = LexDatasetRecord(
             name="BlobDataset",
             schema_ref="at://did:plc:abc/collection/key",
-            storage=StorageLocation(
-                kind="blobs",
-                blob_refs=[{"cid": "bafytest"}],
+            storage=StorageBlobs(
+                blobs=[
+                    BlobEntry(
+                        blob={"$type": "blob", "ref": {"$link": "bafytest"}, "mimeType": "application/x-tar", "size": 1024},
+                        checksum=ShardChecksum(algorithm="sha256", digest="abc123"),
+                    ),
+                ],
             ),
         )
 
         record = dataset.to_record()
 
         assert record["storage"]["$type"] == f"{LEXICON_NAMESPACE}.storageBlobs"
-        assert record["storage"]["blobs"] == [{"cid": "bafytest"}]
+        assert record["storage"]["blobs"][0]["blob"]["ref"]["$link"] == "bafytest"
 
     def test_to_record_with_tags_and_license(self):
         """Convert dataset record with tags and license."""
-        dataset = DatasetRecord(
+        dataset = LexDatasetRecord(
             name="TaggedDataset",
             schema_ref="at://did:plc:abc/collection/key",
-            storage=StorageLocation(kind="external", urls=[]),
+            storage=StorageHttp(shards=[]),
             tags=["ml", "vision", "demo"],
             license="MIT",
         )
@@ -440,10 +488,10 @@ class TestDatasetRecord:
         import msgpack
 
         metadata_bytes = msgpack.packb({"size": 1000, "split": "train"})
-        dataset = DatasetRecord(
+        dataset = LexDatasetRecord(
             name="MetaDataset",
             schema_ref="at://did:plc:abc/collection/key",
-            storage=StorageLocation(kind="external", urls=[]),
+            storage=StorageHttp(shards=[]),
             metadata=metadata_bytes,
         )
 
@@ -457,15 +505,25 @@ class TestDatasetRecord:
 # =============================================================================
 
 
-class TestLensRecord:
-    """Tests for LensRecord dataclass and to_record()."""
+class TestLexLensRecord:
+    """Tests for LexLensRecord dataclass and to_record()."""
 
     def test_to_record_basic(self):
-        """Convert basic lens record."""
-        lens = LensRecord(
+        """Convert basic lens record with required code references."""
+        lens = LexLensRecord(
             name="TestLens",
             source_schema="at://did:plc:abc/collection/source",
             target_schema="at://did:plc:abc/collection/target",
+            getter_code=LexCodeReference(
+                repository="https://github.com/user/repo",
+                commit="abc123def456",
+                path="module.lenses:getter_func",
+            ),
+            putter_code=LexCodeReference(
+                repository="https://github.com/user/repo",
+                commit="abc123def456",
+                path="module.lenses:putter_func",
+            ),
         )
 
         record = lens.to_record()
@@ -478,10 +536,20 @@ class TestLensRecord:
 
     def test_to_record_with_description(self):
         """Convert lens record with description."""
-        lens = LensRecord(
+        lens = LexLensRecord(
             name="DescribedLens",
             source_schema="at://a",
             target_schema="at://b",
+            getter_code=LexCodeReference(
+                repository="https://github.com/user/repo",
+                commit="abc123",
+                path="mod:getter",
+            ),
+            putter_code=LexCodeReference(
+                repository="https://github.com/user/repo",
+                commit="abc123",
+                path="mod:putter",
+            ),
             description="Transforms A to B",
         )
 
@@ -491,16 +559,16 @@ class TestLensRecord:
 
     def test_to_record_with_code_references(self):
         """Convert lens record with code references."""
-        lens = LensRecord(
+        lens = LexLensRecord(
             name="CodeLens",
             source_schema="at://a",
             target_schema="at://b",
-            getter_code=CodeReference(
+            getter_code=LexCodeReference(
                 repository="https://github.com/user/repo",
                 commit="abc123def456",
                 path="module.lenses:getter_func",
             ),
-            putter_code=CodeReference(
+            putter_code=LexCodeReference(
                 repository="https://github.com/user/repo",
                 commit="abc123def456",
                 path="module.lenses:putter_func",
@@ -823,7 +891,9 @@ class TestSchemaPublisher:
         record = call_args.kwargs["data"]["record"]
         assert record["name"] == "BasicSample"
         assert record["version"] == "1.0.0"
-        assert len(record["fields"]) == 2
+        assert record["schemaType"] == "jsonSchema"
+        assert "name" in record["schema"]["properties"]
+        assert "value" in record["schema"]["properties"]
 
     def test_publish_with_custom_name(self, authenticated_client, mock_atproto_client):
         """Publish with custom name override."""
@@ -850,9 +920,9 @@ class TestSchemaPublisher:
         call_args = mock_atproto_client.com.atproto.repo.create_record.call_args
         record = call_args.kwargs["data"]["record"]
 
-        # Find the data field
-        data_field = next(f for f in record["fields"] if f["name"] == "data")
-        assert "ndarray" in data_field["fieldType"]["$type"]
+        # Check the data property uses $ref for ndarray
+        data_prop = record["schema"]["properties"]["data"]
+        assert "$ref" in data_prop
 
     def test_publish_optional_fields(self, authenticated_client, mock_atproto_client):
         """Publish sample type with optional fields."""
@@ -866,12 +936,11 @@ class TestSchemaPublisher:
         call_args = mock_atproto_client.com.atproto.repo.create_record.call_args
         record = call_args.kwargs["data"]["record"]
 
-        # Check optional field marking
-        required = next(f for f in record["fields"] if f["name"] == "required_field")
-        optional = next(f for f in record["fields"] if f["name"] == "optional_field")
-
-        assert required["optional"] is False
-        assert optional["optional"] is True
+        # Check required list instead of optional flag
+        required_list = record["schema"].get("required", [])
+        assert "required_field" in required_list
+        assert "optional_field" not in required_list
+        assert "optional_array" not in required_list
 
     def test_publish_all_primitive_types(
         self, authenticated_client, mock_atproto_client
@@ -887,13 +956,14 @@ class TestSchemaPublisher:
         call_args = mock_atproto_client.com.atproto.repo.create_record.call_args
         record = call_args.kwargs["data"]["record"]
 
-        # Verify each primitive type
-        type_map = {f["name"]: f["fieldType"]["primitive"] for f in record["fields"]}
-        assert type_map["str_field"] == "str"
-        assert type_map["int_field"] == "int"
-        assert type_map["float_field"] == "float"
-        assert type_map["bool_field"] == "bool"
-        assert type_map["bytes_field"] == "bytes"
+        # Verify each primitive type in JSON Schema format
+        props = record["schema"]["properties"]
+        assert props["str_field"]["type"] == "string"
+        assert props["int_field"]["type"] == "integer"
+        assert props["float_field"]["type"] == "number"
+        assert props["bool_field"]["type"] == "boolean"
+        assert props["bytes_field"]["type"] == "string"
+        assert props["bytes_field"]["format"] == "byte"
 
     def test_publish_not_dataclass_error(self, authenticated_client):
         """Publishing non-dataclass raises error."""
@@ -1333,17 +1403,25 @@ class TestDatasetLoader:
             loader.get_storage_type(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
 
     def test_get_blobs(self, authenticated_client, mock_atproto_client):
-        """Get blobs returns blob references from storage."""
-        blob_refs = [
+        """Get blobs returns blob entry dicts from storage."""
+        blob_entries = [
             {
-                "ref": {"$link": "bafkreitest1"},
-                "mimeType": "application/x-tar",
-                "size": 1024,
+                "blob": {
+                    "$type": "blob",
+                    "ref": {"$link": "bafkreitest1"},
+                    "mimeType": "application/x-tar",
+                    "size": 1024,
+                },
+                "checksum": {"algorithm": "sha256", "digest": "abc123"},
             },
             {
-                "ref": {"$link": "bafkreitest2"},
-                "mimeType": "application/x-tar",
-                "size": 2048,
+                "blob": {
+                    "$type": "blob",
+                    "ref": {"$link": "bafkreitest2"},
+                    "mimeType": "application/x-tar",
+                    "size": 2048,
+                },
+                "checksum": {"algorithm": "sha256", "digest": "def456"},
             },
         ]
         mock_response = Mock()
@@ -1353,7 +1431,7 @@ class TestDatasetLoader:
             "schemaRef": "at://schema",
             "storage": {
                 "$type": f"{LEXICON_NAMESPACE}.storageBlobs",
-                "blobs": blob_refs,
+                "blobs": blob_entries,
             },
         }
         mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
@@ -1362,8 +1440,8 @@ class TestDatasetLoader:
         blobs = loader.get_blobs(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
 
         assert len(blobs) == 2
-        assert blobs[0]["ref"]["$link"] == "bafkreitest1"
-        assert blobs[1]["ref"]["$link"] == "bafkreitest2"
+        assert blobs[0]["blob"]["ref"]["$link"] == "bafkreitest1"
+        assert blobs[1]["blob"]["ref"]["$link"] == "bafkreitest2"
 
     def test_get_blobs_external_storage_error(
         self, authenticated_client, mock_atproto_client
@@ -1383,7 +1461,7 @@ class TestDatasetLoader:
 
         loader = DatasetLoader(authenticated_client)
 
-        with pytest.raises(ValueError, match="external URL storage"):
+        with pytest.raises(ValueError, match="does not use blob storage"):
             loader.get_blobs(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
 
     def test_get_blobs_unknown_storage_error(
@@ -1403,7 +1481,7 @@ class TestDatasetLoader:
 
         loader = DatasetLoader(authenticated_client)
 
-        with pytest.raises(ValueError, match="Unknown storage type"):
+        with pytest.raises(ValueError, match="does not use blob storage"):
             loader.get_blobs(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
 
     def test_get_blob_urls(self, authenticated_client, mock_atproto_client):
@@ -1416,8 +1494,14 @@ class TestDatasetLoader:
             "storage": {
                 "$type": f"{LEXICON_NAMESPACE}.storageBlobs",
                 "blobs": [
-                    {"ref": {"$link": "bafkreitest1"}},
-                    {"ref": {"$link": "bafkreitest2"}},
+                    {
+                        "blob": {"$type": "blob", "ref": {"$link": "bafkreitest1"}, "mimeType": "application/x-tar", "size": 1024},
+                        "checksum": {"algorithm": "sha256", "digest": "abc"},
+                    },
+                    {
+                        "blob": {"$type": "blob", "ref": {"$link": "bafkreitest2"}, "mimeType": "application/x-tar", "size": 2048},
+                        "checksum": {"algorithm": "sha256", "digest": "def"},
+                    },
                 ],
             },
         }
@@ -1503,23 +1587,16 @@ class TestLensPublisher:
         assert record["targetSchema"] == "at://did:plc:abc/schema/target"
         assert record["getterCode"]["repository"] == "https://github.com/user/repo"
 
-    def test_publish_without_code_refs(self, authenticated_client, mock_atproto_client):
-        """Publish lens without code references."""
-        mock_response = Mock()
-        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.lens/abc"
-        mock_atproto_client.com.atproto.repo.create_record.return_value = mock_response
-
+    def test_publish_without_code_refs_raises(self, authenticated_client):
+        """Publish lens without code references raises TypeError."""
         publisher = LensPublisher(authenticated_client)
-        publisher.publish(
-            name="MetadataOnlyLens",
-            source_schema_uri="at://source",
-            target_schema_uri="at://target",
-        )
 
-        call_args = mock_atproto_client.com.atproto.repo.create_record.call_args
-        record = call_args.kwargs["data"]["record"]
-        assert "getterCode" not in record
-        assert "putterCode" not in record
+        with pytest.raises(TypeError):
+            publisher.publish(
+                name="MetadataOnlyLens",
+                source_schema_uri="at://source",
+                target_schema_uri="at://target",
+            )
 
     def test_publish_from_lens_object(self, authenticated_client, mock_atproto_client):
         """Publish lens from an atdata Lens object."""
@@ -1655,82 +1732,109 @@ class TestLensLoader:
 # =============================================================================
 
 
-class TestFieldTypeEdgeCases:
-    """Tests for FieldType and FieldDef edge cases."""
+class TestJsonSchemaEdgeCases:
+    """Tests for JSON Schema format edge cases in LexSchemaRecord."""
 
-    def test_field_with_description(self):
-        """Test FieldDef with description is included in dict output."""
-        field_type = FieldType(kind="primitive", primitive="str")
-        field_def = FieldDef(
-            name="described_field",
-            field_type=field_type,
-            optional=False,
-            description="This is a description",
-        )
-
-        # Create a SchemaRecord to test _field_to_dict
-        schema = SchemaRecord(
+    def test_schema_with_description_in_metadata(self):
+        """Test LexSchemaRecord preserves description in metadata."""
+        schema = LexSchemaRecord(
             name="TestSchema",
             version="1.0.0",
-            fields=[field_def],
+            schema_type="jsonSchema",
+            schema=JsonSchemaFormat(
+                schema_body={
+                    "$schema": "http://json-schema.org/draft-07/schema#",
+                    "type": "object",
+                    "properties": {
+                        "described_field": {"type": "string"},
+                    },
+                    "required": ["described_field"],
+                },
+            ),
+            description="This is a schema description",
         )
         record = schema.to_record()
+        assert record["description"] == "This is a schema description"
 
-        # Check that description is included
-        field = record["fields"][0]
-        assert field["description"] == "This is a description"
-
-    def test_ndarray_type_with_shape(self):
-        """Test FieldType for ndarray with shape."""
-        field_type = FieldType(
-            kind="ndarray",
-            dtype="float32",
-            shape=[224, 224, 3],
-        )
-
-        schema = SchemaRecord(
+    def test_ndarray_ref_property(self):
+        """Test ndarray property uses $ref in JSON Schema."""
+        schema = LexSchemaRecord(
             name="ShapedArraySchema",
             version="1.0.0",
-            fields=[FieldDef(name="image", field_type=field_type, optional=False)],
+            schema_type="jsonSchema",
+            schema=JsonSchemaFormat(
+                schema_body={
+                    "$schema": "http://json-schema.org/draft-07/schema#",
+                    "type": "object",
+                    "properties": {
+                        "image": {
+                            "$ref": "https://foundation.ac/schemas/atdata-ndarray-bytes/1.0.0#/$defs/ndarray"
+                        },
+                    },
+                    "required": ["image"],
+                },
+                array_format_versions={"ndarrayBytes": "1.0.0"},
+            ),
         )
         record = schema.to_record()
 
-        field = record["fields"][0]
-        assert field["fieldType"]["shape"] == [224, 224, 3]
+        prop = record["schema"]["properties"]["image"]
+        assert "$ref" in prop
+        assert "ndarray" in prop["$ref"]
 
-    def test_ref_type(self):
-        """Test FieldType for reference type."""
-        field_type = FieldType(
-            kind="ref",
-            ref="at://did:plc:abc/atdata.schema/xyz",
-        )
-
-        schema = SchemaRecord(
-            name="RefSchema",
-            version="1.0.0",
-            fields=[FieldDef(name="reference", field_type=field_type, optional=False)],
-        )
-        record = schema.to_record()
-
-        field = record["fields"][0]
-        assert "ref" in field["fieldType"]["$type"]
-        assert field["fieldType"]["ref"] == "at://did:plc:abc/atdata.schema/xyz"
-
-    def test_array_type_with_items(self):
-        """Test FieldType for array with typed items."""
-        items_type = FieldType(kind="primitive", primitive="int")
-        field_type = FieldType(kind="array", items=items_type)
-
-        schema = SchemaRecord(
+    def test_array_type_property(self):
+        """Test array type in JSON Schema format."""
+        schema = LexSchemaRecord(
             name="ArraySchema",
             version="1.0.0",
-            fields=[FieldDef(name="numbers", field_type=field_type, optional=False)],
+            schema_type="jsonSchema",
+            schema=JsonSchemaFormat(
+                schema_body={
+                    "$schema": "http://json-schema.org/draft-07/schema#",
+                    "type": "object",
+                    "properties": {
+                        "numbers": {
+                            "type": "array",
+                            "items": {"type": "integer"},
+                        },
+                    },
+                    "required": ["numbers"],
+                },
+            ),
         )
         record = schema.to_record()
 
-        field = record["fields"][0]
-        assert "array" in field["fieldType"]["$type"]
-        assert field["fieldType"]["items"]["primitive"] == "int"
+        prop = record["schema"]["properties"]["numbers"]
+        assert prop["type"] == "array"
+        assert prop["items"]["type"] == "integer"
+
+    def test_roundtrip_from_record(self):
+        """Test LexSchemaRecord round-trips through to_record/from_record."""
+        original = LexSchemaRecord(
+            name="RoundtripSchema",
+            version="2.0.0",
+            schema_type="jsonSchema",
+            schema=JsonSchemaFormat(
+                schema_body={
+                    "$schema": "http://json-schema.org/draft-07/schema#",
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string"},
+                        "value": {"type": "integer"},
+                    },
+                    "required": ["name", "value"],
+                },
+            ),
+            description="A roundtrip test",
+        )
+        record = original.to_record()
+        restored = LexSchemaRecord.from_record(record)
+
+        assert restored.name == "RoundtripSchema"
+        assert restored.version == "2.0.0"
+        assert restored.schema_type == "jsonSchema"
+        assert "name" in restored.schema.schema_body["properties"]
+        assert "value" in restored.schema.schema_body["properties"]
 
 
 class TestSchemaPublisherEdgeCases:
@@ -1755,9 +1859,10 @@ class TestSchemaPublisherEdgeCases:
         call_args = mock_atproto_client.com.atproto.repo.create_record.call_args
         record = call_args.kwargs["data"]["record"]
 
-        # Find the tags field
-        tags_field = next(f for f in record["fields"] if f["name"] == "tags")
-        assert "array" in tags_field["fieldType"]["$type"]
+        # Check the tags property in JSON Schema format
+        tags_prop = record["schema"]["properties"]["tags"]
+        assert tags_prop["type"] == "array"
+        assert tags_prop["items"]["type"] == "string"
 
     def test_publish_nested_dataclass_error(self, authenticated_client):
         """Publishing sample with nested dataclass raises error."""

@@ -1,6 +1,10 @@
 _bench_base := "uv run pytest benchmarks/ --override-ini='python_files=bench_*.py' --benchmark-enable --benchmark-sort=mean --no-cov"
 
+sync-lexicons:
+    cp lexicons/*.json src/atdata/lexicons/
+
 test *args:
+    just sync-lexicons
     uv run pytest {{args}}
 
 lint:
