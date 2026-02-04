@@ -734,7 +734,9 @@ class TestParseIndexedPath:
 
     def test_parse_with_freeform_version(self):
         """Parse @handle/dataset@freeform-version format."""
-        handle, name, version = _parse_indexed_path("@alice.bsky.social/cifar10@v2-beta")
+        handle, name, version = _parse_indexed_path(
+            "@alice.bsky.social/cifar10@v2-beta"
+        )
         assert handle == "alice.bsky.social"
         assert name == "cifar10"
         assert version == "v2-beta"

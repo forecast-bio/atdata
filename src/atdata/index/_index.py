@@ -1148,9 +1148,7 @@ class Index:
             description=description,
         )
 
-    def get_label(
-        self, name: str, version: str | None = None
-    ) -> "IndexEntry":
+    def get_label(self, name: str, version: str | None = None) -> "IndexEntry":
         """Resolve a label to its dataset entry.
 
         Args:
@@ -1174,9 +1172,7 @@ class Index:
         cid, _resolved_version = repo.provider.get_label(resolved_name, version)
         return repo.provider.get_entry_by_cid(cid)
 
-    def list_labels(
-        self, repo: str | None = None
-    ) -> list[tuple[str, str, str | None]]:
+    def list_labels(self, repo: str | None = None) -> list[tuple[str, str, str | None]]:
         """List all labels as ``(name, cid, version)`` tuples.
 
         Args:

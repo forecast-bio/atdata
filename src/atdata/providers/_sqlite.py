@@ -208,7 +208,10 @@ class SqliteProvider(IndexProvider):
                 (name,),
             ).fetchone()
         if row is None:
-            raise KeyError(f"No label with name: {name!r}" + (f" version: {version!r}" if version else ""))
+            raise KeyError(
+                f"No label with name: {name!r}"
+                + (f" version: {version!r}" if version else "")
+            )
         return (row[0], row[1] if row[1] else None)
 
     def iter_labels(self) -> Iterator[tuple[str, str, str | None]]:

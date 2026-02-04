@@ -129,21 +129,17 @@ class MockAtmosphere:
             Tuple of ``(records, cursor)`` matching the real
             ``Atmosphere.list_records`` signature.
         """
-        records = [
-            rec
-            for uri, rec in self._records.items()
-            if collection in uri
-        ][:limit]
+        records = [rec for uri, rec in self._records.items() if collection in uri][
+            :limit
+        ]
         return records, None
 
-    def list_labels(self, repo: str | None = None, limit: int = 100) -> list[dict[str, Any]]:
+    def list_labels(
+        self, repo: str | None = None, limit: int = 100
+    ) -> list[dict[str, Any]]:
         """List label records."""
         collection = "ac.foundation.dataset.label"
-        return [
-            rec
-            for uri, rec in self._records.items()
-            if collection in uri
-        ][:limit]
+        return [rec for uri, rec in self._records.items() if collection in uri][:limit]
 
     def upload_blob(self, data: bytes) -> dict[str, Any]:
         """Simulate uploading a blob. Returns a mock blob ref."""
