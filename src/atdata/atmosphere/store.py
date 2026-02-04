@@ -34,6 +34,25 @@ if TYPE_CHECKING:
     from .client import Atmosphere
 
 
+class ShardUploadResult(list):
+    """Return type for ``PDSBlobStore.write_shards()``.
+
+    Extends ``list[str]`` (AT URIs) so it satisfies the ``AbstractDataStore``
+    protocol, while also carrying the raw blob reference dicts needed to
+    create ``storageBlobs`` records.
+
+    Attributes:
+        blob_refs: Blob reference dicts as returned by
+            ``Atmosphere.upload_blob()``.
+    """
+
+    blob_refs: list[dict]
+
+    def __init__(self, urls: list[str], blob_refs: list[dict]) -> None:
+        super().__init__(urls)
+        self.blob_refs = blob_refs
+
+
 @dataclass
 class PDSBlobStore:
     """PDS blob store implementing AbstractDataStore protocol.
@@ -63,7 +82,7 @@ class PDSBlobStore:
         *,
         prefix: str,
         **kwargs: Any,
-    ) -> list[str]:
+    ) -> "ShardUploadResult":
         """Upload existing dataset shards as PDS blobs.
 
         Reads the tar archives already written to disk by the caller and
@@ -76,8 +95,9 @@ class PDSBlobStore:
             **kwargs: Unused, kept for protocol compatibility.
 
         Returns:
-            List of AT URIs for the uploaded blobs, in format:
-            ``at://{did}/blob/{cid}``
+            A ``ShardUploadResult`` (behaves as ``list[str]`` of AT URIs)
+            with a ``blob_refs`` attribute containing the raw blob reference
+            dicts needed for ``storageBlobs`` records.
 
         Raises:
             ValueError: If not authenticated.
@@ -88,6 +108,7 @@ class PDSBlobStore:
 
         did = self.client.did
         blob_urls: list[str] = []
+        blob_refs: list[dict] = []
 
         shard_paths = ds.list_shards()
         if not shard_paths:
@@ -102,11 +123,12 @@ class PDSBlobStore:
                 mime_type="application/x-tar",
             )
 
+            blob_refs.append(blob_ref)
             cid = blob_ref["ref"]["$link"]
             at_uri = f"at://{did}/blob/{cid}"
             blob_urls.append(at_uri)
 
-        return blob_urls
+        return ShardUploadResult(blob_urls, blob_refs)
 
     def read_url(self, url: str) -> str:
         """Resolve an AT URI blob reference to an HTTP URL.
@@ -176,4 +198,9 @@ class PDSBlobStore:
         return BlobSource(blob_refs=blob_refs)
 
 
-__all__ = ["PDS_BLOB_LIMIT_BYTES", "PDS_TOTAL_DATASET_LIMIT_BYTES", "PDSBlobStore"]
+__all__ = [
+    "PDS_BLOB_LIMIT_BYTES",
+    "PDS_TOTAL_DATASET_LIMIT_BYTES",
+    "PDSBlobStore",
+    "ShardUploadResult",
+]

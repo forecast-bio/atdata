@@ -497,7 +497,7 @@ class TestPDSBlobStore:
         )
 
         store = PDSBlobStore(client=authenticated_client)
-        urls = store.write_shards(ds, prefix="test/v1", maxcount=100)
+        urls = store.write_shards(ds, prefix="test/v1")
 
         # Should have uploaded one shard
         assert len(urls) == 1
@@ -509,6 +509,15 @@ class TestPDSBlobStore:
         assert call_args.kwargs["mime_type"] == "application/x-tar"
         # First arg should be bytes (tar data)
         assert isinstance(call_args.args[0], bytes)
+
+        # Verify blob refs are carried on the ShardUploadResult
+        assert hasattr(urls, "blob_refs")
+        assert len(urls.blob_refs) == 1
+        blob_ref = urls.blob_refs[0]
+        assert blob_ref["$type"] == "blob"
+        assert blob_ref["ref"]["$link"] == "bafyrei123abc"
+        assert blob_ref["mimeType"] == "application/x-tar"
+        assert blob_ref["size"] == 1024
 
     def test_read_url_transforms_at_uri(
         self, authenticated_client, mock_atproto_client

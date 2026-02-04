@@ -665,6 +665,7 @@ class Index:
         copy: bool = False,
         metadata: dict | None = None,
         _data_urls: list[str] | None = None,
+        _blob_refs: list[dict] | None = None,
         **kwargs,
     ) -> "IndexEntry":
         """Insert a dataset into the index.
@@ -740,6 +741,7 @@ class Index:
                     name=resolved_name,
                     schema_ref=schema_ref,
                     data_urls=_data_urls,
+                    blob_refs=_blob_refs,
                     description=description,
                     tags=tags,
                     license=license,
@@ -770,12 +772,17 @@ class Index:
                             f"Pass force=True to bypass."
                         )
 
-                written_urls = effective_store.write_shards(ds, prefix=resolved_name)
+                result = effective_store.write_shards(ds, prefix=resolved_name)
+
+                # ShardUploadResult carries blob_refs; plain list does not
+                blob_refs = getattr(result, "blob_refs", None) or None
+
                 return atmo.insert_dataset(
                     ds,
                     name=resolved_name,
                     schema_ref=schema_ref,
-                    data_urls=written_urls,
+                    data_urls=list(result),
+                    blob_refs=blob_refs,
                     description=description,
                     tags=tags,
                     license=license,
@@ -960,6 +967,12 @@ class Index:
                     written_urls = effective_store.write_shards(
                         ds, prefix=resolved_name
                     )
+
+                    # If write_shards returned blob refs (e.g. ShardUploadResult),
+                    # use storageBlobs so the PDS retains the uploaded blobs.
+                    # Fall back to storageExternal with AT URIs otherwise.
+                    blob_refs = getattr(written_urls, "blob_refs", None) or None
+
                     return self.insert_dataset(
                         ds,
                         name=name,
@@ -971,6 +984,7 @@ class Index:
                         data_store=data_store,
                         force=force,
                         _data_urls=written_urls,
+                        _blob_refs=blob_refs,
                     )
 
                 # Local / named repo path

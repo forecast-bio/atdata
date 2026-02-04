@@ -1059,6 +1059,56 @@ class TestDatasetPublisher:
                 auto_publish_schema=False,
             )
 
+    def test_publish_with_blob_refs(self, authenticated_client, mock_atproto_client):
+        """Publish with pre-uploaded blob refs uses storageBlobs."""
+        # Pre-uploaded blob references (as returned by Atmosphere.upload_blob)
+        blob_refs = [
+            {
+                "$type": "blob",
+                "ref": {"$link": "bafyrei_shard1"},
+                "mimeType": "application/x-tar",
+                "size": 4096,
+            },
+            {
+                "$type": "blob",
+                "ref": {"$link": "bafyrei_shard2"},
+                "mimeType": "application/x-tar",
+                "size": 8192,
+            },
+        ]
+
+        mock_create_response = Mock()
+        mock_create_response.uri = (
+            f"at://did:plc:test/{LEXICON_NAMESPACE}.record/blobrefds"
+        )
+        mock_atproto_client.com.atproto.repo.create_record.return_value = (
+            mock_create_response
+        )
+
+        publisher = DatasetPublisher(authenticated_client)
+        uri = publisher.publish_with_blob_refs(
+            blob_refs=blob_refs,
+            schema_uri="at://did:plc:test/schema/xyz",
+            name="BlobRefDataset",
+            description="Dataset with pre-uploaded blob refs",
+            tags=["blob", "test"],
+        )
+
+        assert isinstance(uri, AtUri)
+        # Should NOT have uploaded any blobs (already uploaded)
+        mock_atproto_client.upload_blob.assert_not_called()
+        # Should have created one record
+        assert mock_atproto_client.com.atproto.repo.create_record.call_count == 1
+
+        # Verify record uses storageBlobs with embedded refs
+        call_args = mock_atproto_client.com.atproto.repo.create_record.call_args
+        record = call_args.kwargs["data"]["record"]
+        assert record["name"] == "BlobRefDataset"
+        assert "storageBlobs" in record["storage"]["$type"]
+        assert len(record["storage"]["blobs"]) == 2
+        assert record["storage"]["blobs"][0]["ref"]["$link"] == "bafyrei_shard1"
+        assert record["storage"]["blobs"][1]["ref"]["$link"] == "bafyrei_shard2"
+
     def test_publish_with_blobs(self, authenticated_client, mock_atproto_client):
         """Publish with blob storage uploads blobs and creates record."""
         # Mock blob upload response
