@@ -92,7 +92,8 @@ class PDSBlobStore:
         Args:
             ds: The Dataset whose shards to upload.
             prefix: Logical path prefix (unused, kept for protocol compat).
-            **kwargs: Unused, kept for protocol compatibility.
+            **kwargs: Optional keyword arguments. Supports ``timeout``
+                (float, seconds) forwarded to ``Atmosphere.upload_blob()``.
 
         Returns:
             A ``ShardUploadResult`` (behaves as ``list[str]`` of AT URIs)
@@ -121,6 +122,7 @@ class PDSBlobStore:
             blob_ref = self.client.upload_blob(
                 shard_data,
                 mime_type="application/x-tar",
+                timeout=kwargs.get("timeout"),
             )
 
             blob_refs.append(blob_ref)

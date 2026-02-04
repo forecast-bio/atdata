@@ -355,12 +355,18 @@ class Atmosphere:
         self,
         data: bytes,
         mime_type: str = "application/octet-stream",
+        *,
+        timeout: float | None = None,
     ) -> dict:
         """Upload binary data as a blob to the PDS.
 
         Args:
             data: Binary data to upload.
             mime_type: MIME type of the data (for reference, not enforced by PDS).
+            timeout: HTTP timeout in seconds. If ``None`` (default), uses a
+                heuristic based on data size: 30 s base + 1 s per MB, with
+                a minimum of 60 s. This overrides the httpx client default
+                (5 s), which is too short for large blob uploads.
 
         Returns:
             A blob reference dict with keys: '$type', 'ref', 'mimeType', 'size'.
@@ -372,7 +378,11 @@ class Atmosphere:
         """
         self._ensure_authenticated()
 
-        response = self._client.upload_blob(data)
+        if timeout is None:
+            # 30 s base + 1 s per MB, minimum 60 s
+            timeout = max(60.0, 30.0 + len(data) / 1_000_000)
+
+        response = self._client.upload_blob(data, timeout=timeout)
         blob_ref = response.blob
 
         # Convert to dict format suitable for embedding in records
