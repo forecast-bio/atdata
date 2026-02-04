@@ -199,6 +199,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="dropdown-text">Atmosphere</span></a>
   </li>  
         <li>
+    <a class="dropdown-item" href="../reference/lexicons.html">
+ <span class="dropdown-text">Lexicon Reference</span></a>
+  </li>  
+        <li>
     <a class="dropdown-item" href="../reference/promotion.html">
  <span class="dropdown-text">Promotion</span></a>
   </li>  
@@ -252,18 +256,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li>
     <a class="dropdown-item" href="../examples/multi-split.html">
  <span class="dropdown-text">Multi-Split Datasets</span></a>
-  </li>  
-        <li>
-    <a class="dropdown-item" href="../examples/dataset-profiler.html">
- <span class="dropdown-text">Dataset Profiler</span></a>
-  </li>  
-        <li>
-    <a class="dropdown-item" href="../examples/lens-graph.html">
- <span class="dropdown-text">Lens Graph Explorer</span></a>
-  </li>  
-        <li>
-    <a class="dropdown-item" href="../examples/query-cookbook.html">
- <span class="dropdown-text">Query Cookbook</span></a>
   </li>  
     </ul>
   </li>
@@ -387,24 +379,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">Multi-Split Datasets</span></a>
   </div>
 </li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../examples/dataset-profiler.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Dataset Profiler</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../examples/lens-graph.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Lens Graph Explorer</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../examples/query-cookbook.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Query Cookbook</span></a>
-  </div>
-</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -450,6 +424,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <div class="sidebar-item-container"> 
   <a href="../reference/atmosphere.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Atmosphere (ATProto Integration)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../reference/lexicons.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lexicon Reference</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -543,7 +523,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="define-the-source-schema" class="level2">
 <h2 class="anchored" data-anchor-id="define-the-source-schema">1 — Define the source schema</h2>
 <p>Imagine a multi-modal dataset that stores images, text captions, and classification metadata together.</p>
-<div id="343e2d04" class="cell" data-execution_count="1">
+<div id="cc54bc28" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
@@ -563,7 +543,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="define-view-schemas" class="level2">
 <h2 class="anchored" data-anchor-id="define-view-schemas">2 — Define view schemas</h2>
 <p>Different consumers need different slices of this data. An image classifier only needs the image and label; a text model only needs the caption.</p>
-<div id="662793b3" class="cell" data-execution_count="2">
+<div id="2e38dba5" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ClassificationView:</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Minimal view for image classification tasks."""</span></span>
@@ -584,7 +564,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="register-lenses" class="level2">
 <h2 class="anchored" data-anchor-id="register-lenses">3 — Register lenses</h2>
 <p>A lens is a getter (source -&gt; view) and an optional putter (view, source -&gt; source). The <code>@atdata.lens</code> decorator registers the transformation globally.</p>
-<div id="ce6b367f" class="cell" data-execution_count="3">
+<div id="4737b8b2" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.lens</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> to_classification(src: RichSample) <span class="op">-&gt;</span> ClassificationView:</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ClassificationView(image<span class="op">=</span>src.image, label<span class="op">=</span>src.label)</span>
@@ -614,7 +594,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="write-a-small-dataset" class="level2">
 <h2 class="anchored" data-anchor-id="write-a-small-dataset">4 — Write a small dataset</h2>
-<div id="f1db7841" class="cell" data-execution_count="4">
+<div id="bef69e57" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tempfile</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -636,8 +616,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> atdata.write_samples(samples, tmpdir <span class="op">/</span> <span class="st">"data.tar"</span>, maxcount<span class="op">=</span><span class="dv">100</span>)</span>
 <span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Wrote </span><span class="sc">{</span><span class="bu">len</span>(samples)<span class="sc">}</span><span class="ss"> samples across </span><span class="sc">{</span><span class="bu">len</span>(ds.list_shards())<span class="sc">}</span><span class="ss"> shards"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_lens_qdg5pnot/data-000000.tar 0 0.0 GB 0
-# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_lens_qdg5pnot/data-000001.tar 100 0.0 GB 100
+<pre><code># writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_lens_kxp0682w/data-000000.tar 0 0.0 GB 0
+# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_lens_kxp0682w/data-000001.tar 100 0.0 GB 100
 Wrote 200 samples across 2 shards</code></pre>
 </div>
 </div>
@@ -645,7 +625,7 @@ Wrote 200 samples across 2 shards</code></pre>
 <section id="view-through-lenses" class="level2">
 <h2 class="anchored" data-anchor-id="view-through-lenses">5 — View through lenses</h2>
 <p><code>Dataset.as_type()</code> looks up the registered lens automatically via the <code>LensNetwork</code> singleton.</p>
-<div id="13e0a1fe" class="cell" data-execution_count="5">
+<div id="25e19e05" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Classification view -- only image + label</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>cls_ds <span class="op">=</span> ds.as_type(ClassificationView)</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -658,7 +638,7 @@ Wrote 200 samples across 2 shards</code></pre>
 labels      : ['cat', 'dog', 'bird', 'fish']...</code></pre>
 </div>
 </div>
-<div id="352ea9a3" class="cell" data-execution_count="6">
+<div id="cdb1d857" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Caption view -- only text fields</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>cap_ds <span class="op">=</span> ds.as_type(CaptionView)</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -676,7 +656,7 @@ confidence  : [0.714, 0.82, 0.896, 0.725]...</code></pre>
 <section id="round-trip-with-putter" class="level2">
 <h2 class="anchored" data-anchor-id="round-trip-with-putter">6 — Round-trip with putter</h2>
 <p>A lens with a putter supports the <strong>put</strong> direction: update the view, then propagate changes back to the source while preserving untouched fields.</p>
-<div id="6de37f23" class="cell" data-execution_count="7">
+<div id="a802c6b1" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>original <span class="op">=</span> samples[<span class="dv">0</span>]</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Original label : </span><span class="sc">{</span>original<span class="sc">.</span>label<span class="sc">}</span><span class="ss">"</span>)</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -702,7 +682,7 @@ Caption kept   : A photo of a cat</code></pre>
 <section id="inspect-the-lensnetwork" class="level2">
 <h2 class="anchored" data-anchor-id="inspect-the-lensnetwork">7 — Inspect the LensNetwork</h2>
 <p>The global registry lets you see all registered transformations at a glance.</p>
-<div id="65e63aeb" class="cell" data-execution_count="8">
+<div id="e89bc37a" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>network <span class="op">=</span> atdata.LensNetwork()</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (src, view), lens_obj <span class="kw">in</span> network._registry.items():</span>
@@ -716,7 +696,7 @@ Caption kept   : A photo of a cat</code></pre>
 </section>
 <section id="clean-up" class="level2">
 <h2 class="anchored" data-anchor-id="clean-up">8 — Clean up</h2>
-<div id="55b56972" class="cell" data-execution_count="9">
+<div id="dd6a3609" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shutil</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>shutil.rmtree(tmpdir, ignore_errors<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>

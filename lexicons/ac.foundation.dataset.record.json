@@ -30,7 +30,8 @@
             "type": "union",
             "description": "Storage location for dataset files (WebDataset tar archives)",
             "refs": [
-              "ac.foundation.dataset.storageExternal",
+              "ac.foundation.dataset.storageHttp",
+              "ac.foundation.dataset.storageS3",
               "ac.foundation.dataset.storageBlobs"
             ]
           },
@@ -68,6 +69,26 @@
             "format": "datetime",
             "description": "Timestamp when this dataset record was created"
           }
+        }
+      }
+    },
+    "shardChecksum": {
+      "type": "object",
+      "description": "Content hash for shard integrity verification. Algorithm is flexible to allow SHA-256, BLAKE3, or other hash functions.",
+      "required": [
+        "algorithm",
+        "digest"
+      ],
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "description": "Hash algorithm identifier (e.g., 'sha256', 'blake3')",
+          "maxLength": 20
+        },
+        "digest": {
+          "type": "string",
+          "description": "Hex-encoded hash digest",
+          "maxLength": 128
         }
       }
     },

@@ -199,6 +199,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="dropdown-text">Atmosphere</span></a>
   </li>  
         <li>
+    <a class="dropdown-item" href="../reference/lexicons.html">
+ <span class="dropdown-text">Lexicon Reference</span></a>
+  </li>  
+        <li>
     <a class="dropdown-item" href="../reference/promotion.html">
  <span class="dropdown-text">Promotion</span></a>
   </li>  
@@ -252,18 +256,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li>
     <a class="dropdown-item" href="../examples/multi-split.html">
  <span class="dropdown-text">Multi-Split Datasets</span></a>
-  </li>  
-        <li>
-    <a class="dropdown-item" href="../examples/dataset-profiler.html">
- <span class="dropdown-text">Dataset Profiler</span></a>
-  </li>  
-        <li>
-    <a class="dropdown-item" href="../examples/lens-graph.html">
- <span class="dropdown-text">Lens Graph Explorer</span></a>
-  </li>  
-        <li>
-    <a class="dropdown-item" href="../examples/query-cookbook.html">
- <span class="dropdown-text">Query Cookbook</span></a>
   </li>  
     </ul>
   </li>
@@ -387,24 +379,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">Multi-Split Datasets</span></a>
   </div>
 </li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../examples/dataset-profiler.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Dataset Profiler</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../examples/lens-graph.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Lens Graph Explorer</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../examples/query-cookbook.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Query Cookbook</span></a>
-  </div>
-</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -450,6 +424,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <div class="sidebar-item-container"> 
   <a href="../reference/atmosphere.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Atmosphere (ATProto Integration)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../reference/lexicons.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lexicon Reference</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -544,7 +524,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>This example generates a toy classification dataset with train/test splits, writes them as separate shard sets, and loads everything back through the unified <code>load_dataset</code> API.</p>
 <section id="define-a-sample-type" class="level2">
 <h2 class="anchored" data-anchor-id="define-a-sample-type">1 — Define a sample type</h2>
-<div id="7ccf602d" class="cell" data-execution_count="1">
+<div id="86885c13" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
@@ -561,7 +541,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="generate-train-and-test-data" class="level2">
 <h2 class="anchored" data-anchor-id="generate-train-and-test-data">2 — Generate train and test data</h2>
-<div id="8802436b" class="cell" data-execution_count="2">
+<div id="00ef758a" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">12</span>)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> make_samples(n: <span class="bu">int</span>, split: <span class="bu">str</span>) <span class="op">-&gt;</span> <span class="bu">list</span>[DigitSample]:</span>
@@ -588,7 +568,7 @@ Test : 200 samples</code></pre>
 <section id="write-each-split-to-its-own-shard-set" class="level2">
 <h2 class="anchored" data-anchor-id="write-each-split-to-its-own-shard-set">3 — Write each split to its own shard set</h2>
 <p>Following the <code>{split}-{shard}</code> naming convention lets <code>load_dataset</code> detect splits automatically.</p>
-<div id="1c881533" class="cell" data-execution_count="3">
+<div id="2cc87d49" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tempfile</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -608,18 +588,18 @@ Test : 200 samples</code></pre>
 <span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Test shards : </span><span class="sc">{</span>test_ds<span class="sc">.</span>list_shards()<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_splits_nelcv7no/train-000000.tar 0 0.0 GB 0
-# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_splits_nelcv7no/train-000001.tar 500 0.0 GB 500
-Train shards: ['/private/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_splits_nelcv7no/train-000000.tar', '/private/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_splits_nelcv7no/train-000001.tar']
-# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_splits_nelcv7no/test-000000.tar 0 0.0 GB 0
-Test shards : ['/private/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_splits_nelcv7no/test-000000.tar']</code></pre>
+<pre><code># writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_splits_j7hbnd7k/train-000000.tar 0 0.0 GB 0
+# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_splits_j7hbnd7k/train-000001.tar 500 0.0 GB 500
+Train shards: ['/private/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_splits_j7hbnd7k/train-000000.tar', '/private/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_splits_j7hbnd7k/train-000001.tar']
+# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_splits_j7hbnd7k/test-000000.tar 0 0.0 GB 0
+Test shards : ['/private/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_splits_j7hbnd7k/test-000000.tar']</code></pre>
 </div>
 </div>
 </section>
 <section id="load-a-single-split" class="level2">
 <h2 class="anchored" data-anchor-id="load-a-single-split">4 — Load a single split</h2>
 <p>Pass a specific shard URL and <code>split</code> to <code>load_dataset</code> to get a single <code>Dataset</code>.</p>
-<div id="9c352cc0" class="cell" data-execution_count="4">
+<div id="47e8352a" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>ds_train <span class="op">=</span> atdata.load_dataset(</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">str</span>(tmpdir <span class="op">/</span> <span class="st">"train-{000000..000001}.tar"</span>),</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    DigitSample,</span>
@@ -639,7 +619,7 @@ Labels            : [2, 2, 3, 4, 7, 9, 7, 1]...</code></pre>
 <section id="build-a-datasetdict-from-multiple-splits" class="level2">
 <h2 class="anchored" data-anchor-id="build-a-datasetdict-from-multiple-splits">5 — Build a DatasetDict from multiple splits</h2>
 <p>Wrap per-split <code>Dataset</code> objects into a <code>DatasetDict</code> for convenient multi-split access.</p>
-<div id="5e57cf80" class="cell" data-execution_count="5">
+<div id="d09131a0" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>ds_dict <span class="op">=</span> atdata.DatasetDict({</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"train"</span>: atdata.Dataset[DigitSample](<span class="bu">str</span>(tmpdir <span class="op">/</span> <span class="st">"train-{000000..000001}.tar"</span>)),</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"test"</span>: atdata.Dataset[DigitSample](<span class="bu">str</span>(tmpdir <span class="op">/</span> <span class="st">"test-000000.tar"</span>)),</span>
@@ -658,7 +638,7 @@ Test type : Dataset</code></pre>
 <section id="single-split-proxy" class="level2">
 <h2 class="anchored" data-anchor-id="single-split-proxy">6 — Single-split proxy</h2>
 <p>When a <code>DatasetDict</code> has exactly one split, you can call <code>Dataset</code> methods directly on it—no need to index by split name first.</p>
-<div id="7be3d1b5" class="cell" data-execution_count="6">
+<div id="3bb9e4ee" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>single <span class="op">=</span> atdata.DatasetDict({</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"train"</span>: atdata.Dataset[DigitSample](<span class="bu">str</span>(tmpdir <span class="op">/</span> <span class="st">"train-{000000..000001}.tar"</span>)),</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>})</span>
@@ -674,7 +654,7 @@ Test type : Dataset</code></pre>
 </section>
 <section id="iterate-over-each-split" class="level2">
 <h2 class="anchored" data-anchor-id="iterate-over-each-split">7 — Iterate over each split</h2>
-<div id="f7dbb5ce" class="cell" data-execution_count="7">
+<div id="a3b3700c" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> split_name, split_ds <span class="kw">in</span> ds_dict.items():</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    count <span class="op">=</span> <span class="dv">0</span></span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> batch <span class="kw">in</span> split_ds.ordered(batch_size<span class="op">=</span><span class="dv">64</span>):</span>
@@ -689,7 +669,7 @@ Test type : Dataset</code></pre>
 <section id="cross-split-statistics" class="level2">
 <h2 class="anchored" data-anchor-id="cross-split-statistics">8 — Cross-split statistics</h2>
 <p>Because both splits share the same <code>DigitSample</code> type, you can compute comparable statistics directly.</p>
-<div id="52f62476" class="cell" data-execution_count="8">
+<div id="4772a100" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> split_name, split_ds <span class="kw">in</span> ds_dict.items():</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    all_labels: <span class="bu">list</span>[<span class="bu">int</span>] <span class="op">=</span> []</span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> batch <span class="kw">in</span> split_ds.ordered(batch_size<span class="op">=</span><span class="dv">256</span>):</span>
@@ -706,7 +686,7 @@ Test type : Dataset</code></pre>
 </section>
 <section id="clean-up" class="level2">
 <h2 class="anchored" data-anchor-id="clean-up">9 — Clean up</h2>
-<div id="a33136aa" class="cell" data-execution_count="9">
+<div id="72c15e2b" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shutil</span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>shutil.rmtree(tmpdir, ignore_errors<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>

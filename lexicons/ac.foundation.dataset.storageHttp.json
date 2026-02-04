@@ -1,0 +1,45 @@
+{
+  "lexicon": 1,
+  "id": "ac.foundation.dataset.storageHttp",
+  "defs": {
+    "main": {
+      "type": "object",
+      "description": "HTTP/HTTPS storage for WebDataset tar archives. Each shard is listed individually with a checksum for integrity verification. Consumers build brace-expansion patterns on the fly when needed.",
+      "required": [
+        "shards"
+      ],
+      "properties": {
+        "shards": {
+          "type": "array",
+          "description": "Array of shard entries with URL and integrity checksum",
+          "items": {
+            "type": "ref",
+            "ref": "#shardEntry"
+          },
+          "minLength": 1
+        }
+      }
+    },
+    "shardEntry": {
+      "type": "object",
+      "description": "A single HTTP-accessible shard with integrity checksum",
+      "required": [
+        "url",
+        "checksum"
+      ],
+      "properties": {
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "HTTP/HTTPS URL for this WebDataset tar shard",
+          "maxLength": 2000
+        },
+        "checksum": {
+          "type": "ref",
+          "ref": "ac.foundation.dataset.record#shardChecksum",
+          "description": "Content hash for integrity verification"
+        }
+      }
+    }
+  }
+}

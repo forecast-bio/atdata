@@ -46,6 +46,9 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/atdata"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"lexicons" = "atdata/lexicons"
+
 [tool.pytest.ini_options]
 addopts = "--cov=atdata --cov-report=html"
 markers = [

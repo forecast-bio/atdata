@@ -1,6 +1,13 @@
 _bench_base := "uv run pytest benchmarks/ --override-ini='python_files=bench_*.py' --benchmark-enable --benchmark-sort=mean --no-cov"
 
+sync-lexicons:
+    cp lexicons/*.json src/atdata/lexicons/
+
+gen-lexicon-docs:
+    uv run python scripts/gen_lexicon_docs.py
+
 test *args:
+    just sync-lexicons
     uv run pytest {{args}}
 
 lint:
@@ -43,6 +50,7 @@ bench-compare a b:
 
 [working-directory: 'docs_src']
 docs:
+    just gen-lexicon-docs
     uv run quartodoc build
     # Use the project venv Python so quarto finds quartodoc and other deps
     # (without this, quarto may pick up a system Python that lacks them).

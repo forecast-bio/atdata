@@ -16,10 +16,14 @@ Lexicons:
         Extensible token for schema format identifiers.
     ac.foundation.dataset.arrayFormat
         Extensible token for array serialization formats.
-    ac.foundation.dataset.storageExternal
-        External URL-based storage (S3, HTTP, IPFS).
+    ac.foundation.dataset.storageHttp
+        HTTP/HTTPS URL-based storage with per-shard checksums.
+    ac.foundation.dataset.storageS3
+        S3/S3-compatible object storage with per-shard checksums.
     ac.foundation.dataset.storageBlobs
         ATProto PDS blob-based storage.
+    ac.foundation.dataset.storageExternal
+        (Deprecated) External URL-based storage.
     ac.foundation.dataset.getLatestSchema
         XRPC query for fetching the latest schema version.
 
@@ -47,8 +51,10 @@ LEXICON_IDS = (
     f"{NAMESPACE}.lens",
     f"{NAMESPACE}.schemaType",
     f"{NAMESPACE}.arrayFormat",
-    f"{NAMESPACE}.storageExternal",
+    f"{NAMESPACE}.storageHttp",
+    f"{NAMESPACE}.storageS3",
     f"{NAMESPACE}.storageBlobs",
+    f"{NAMESPACE}.storageExternal",  # deprecated
     f"{NAMESPACE}.getLatestSchema",
 )
 

@@ -199,6 +199,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="dropdown-text">Atmosphere</span></a>
   </li>  
         <li>
+    <a class="dropdown-item" href="../reference/lexicons.html">
+ <span class="dropdown-text">Lexicon Reference</span></a>
+  </li>  
+        <li>
     <a class="dropdown-item" href="../reference/promotion.html">
  <span class="dropdown-text">Promotion</span></a>
   </li>  
@@ -252,18 +256,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li>
     <a class="dropdown-item" href="../examples/multi-split.html">
  <span class="dropdown-text">Multi-Split Datasets</span></a>
-  </li>  
-        <li>
-    <a class="dropdown-item" href="../examples/dataset-profiler.html">
- <span class="dropdown-text">Dataset Profiler</span></a>
-  </li>  
-        <li>
-    <a class="dropdown-item" href="../examples/lens-graph.html">
- <span class="dropdown-text">Lens Graph Explorer</span></a>
-  </li>  
-        <li>
-    <a class="dropdown-item" href="../examples/query-cookbook.html">
- <span class="dropdown-text">Query Cookbook</span></a>
   </li>  
     </ul>
   </li>
@@ -387,24 +379,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">Multi-Split Datasets</span></a>
   </div>
 </li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../examples/dataset-profiler.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Dataset Profiler</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../examples/lens-graph.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Lens Graph Explorer</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../examples/query-cookbook.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Query Cookbook</span></a>
-  </div>
-</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -450,6 +424,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <div class="sidebar-item-container"> 
   <a href="../reference/atmosphere.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Atmosphere (ATProto Integration)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../reference/lexicons.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lexicon Reference</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -555,7 +535,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="the-packable-decorator" class="level2">
 <h2 class="anchored" data-anchor-id="the-packable-decorator">The <code>@packable</code> Decorator</h2>
 <p>The recommended way to define a sample type is with the <code>@packable</code> decorator:</p>
-<div id="dbbbcc21" class="cell">
+<div id="a67ab643" class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
@@ -577,7 +557,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="supported-field-types">Supported Field Types</h2>
 <section id="primitives" class="level3">
 <h3 class="anchored" data-anchor-id="primitives">Primitives</h3>
-<div id="16088c18" class="cell">
+<div id="6fcfd2c3" class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> PrimitiveSample:</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    name: <span class="bu">str</span></span>
@@ -590,7 +570,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="numpy-arrays" class="level3">
 <h3 class="anchored" data-anchor-id="numpy-arrays">NumPy Arrays</h3>
 <p>Fields annotated as <code>NDArray</code> are automatically converted:</p>
-<div id="79d777df" class="cell">
+<div id="d19bdff0" class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ArraySample:</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    features: NDArray          <span class="co"># Required array</span></span>
@@ -612,7 +592,7 @@ Note
 </section>
 <section id="lists" class="level3">
 <h3 class="anchored" data-anchor-id="lists">Lists</h3>
-<div id="6534114a" class="cell">
+<div id="b8f823ef" class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ListSample:</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    tags: <span class="bu">list</span>[<span class="bu">str</span>]</span>
@@ -624,7 +604,7 @@ Note
 <h2 class="anchored" data-anchor-id="serialization">Serialization</h2>
 <section id="packing-to-bytes" class="level3">
 <h3 class="anchored" data-anchor-id="packing-to-bytes">Packing to Bytes</h3>
-<div id="1c502938" class="cell">
+<div id="817e0efe" class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>sample <span class="op">=</span> ImageSample(</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    image<span class="op">=</span>np.random.rand(<span class="dv">224</span>, <span class="dv">224</span>, <span class="dv">3</span>).astype(np.float32),</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    label<span class="op">=</span><span class="st">"cat"</span>,</span>
@@ -638,7 +618,7 @@ Note
 </section>
 <section id="unpacking-from-bytes" class="level3">
 <h3 class="anchored" data-anchor-id="unpacking-from-bytes">Unpacking from Bytes</h3>
-<div id="94ffbb89" class="cell">
+<div id="c9656e4b" class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Deserialize from bytes</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>restored <span class="op">=</span> ImageSample.from_bytes(packed_bytes)</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -650,12 +630,12 @@ Note
 <section id="webdataset-format" class="level3">
 <h3 class="anchored" data-anchor-id="webdataset-format">WebDataset Format</h3>
 <p>The <code>as_wds</code> property returns a dict ready for WebDataset:</p>
-<div id="004f4123" class="cell">
+<div id="d39af249" class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>wds_dict <span class="op">=</span> sample.as_wds</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co"># {'__key__': '1234...', 'msgpack': b'...'}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Write samples to a tar file:</p>
-<div id="19b05516" class="cell">
+<div id="52bea7f9" class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> webdataset <span class="im">as</span> wds</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> wds.writer.TarWriter(<span class="st">"data-000000.tar"</span>) <span class="im">as</span> sink:</span>
@@ -668,7 +648,7 @@ Note
 <section id="direct-inheritance-alternative" class="level2">
 <h2 class="anchored" data-anchor-id="direct-inheritance-alternative">Direct Inheritance (Alternative)</h2>
 <p>You can also inherit directly from <code>PackableSample</code>:</p>
-<div id="1afc6da9" class="cell">
+<div id="d84dba8b" class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dataclasses <span class="im">import</span> dataclass</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
@@ -706,7 +686,7 @@ Note
 <section id="the-_ensure_good-method" class="level3">
 <h3 class="anchored" data-anchor-id="the-_ensure_good-method">The <code>_ensure_good()</code> Method</h3>
 <p>This method runs automatically after construction and handles NDArray conversion:</p>
-<div id="483fa99b" class="cell">
+<div id="d0b38f26" class="cell">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> _ensure_good(<span class="va">self</span>):</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> field <span class="kw">in</span> dataclasses.fields(<span class="va">self</span>):</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> _is_possibly_ndarray_type(field.<span class="bu">type</span>):</span>
@@ -722,7 +702,7 @@ Note
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true">Do</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false">Don’t</a></li></ul>
 <div class="tab-content">
 <div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
-<div id="ccc715ef" class="cell">
+<div id="89bb6056" class="cell">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> GoodSample:</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    features: NDArray           <span class="co"># Clear type annotation</span></span>
@@ -732,7 +712,7 @@ Note
 </div>
 </div>
 <div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
-<div id="d87c0ffe" class="cell">
+<div id="ed8b8c60" class="cell">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> BadSample:</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># DON'T: Nested dataclasses not supported</span></span>

@@ -1,0 +1,265 @@
+---
+title: "Lexicon Reference"
+description: "ATProto Lexicon definitions for the ac.foundation.dataset namespace"
+---
+
+{{< include _lexicon-styles.qmd >}}
+
+This page documents the [ATProto Lexicon](https://atproto.com/specs/lexicon)
+definitions that make up the `ac.foundation.dataset` namespace. These
+lexicons define the record types, objects, tokens, and queries used by
+atdata for publishing schemas, datasets, and lenses to the AT Protocol
+network.
+
+All lexicons conform to ATProto Lexicon version 1 and are published
+from the canonical source in
+[`lexicons/`](https://github.com/forecast-bio/atdata/tree/main/lexicons).
+
+::: {.callout-note}
+## Reading this reference
+
+Each entry shows the **NSID** (Namespaced Identifier), its **type**
+(Record, Object, Token, Query, or String), and a property table with
+type information and constraints.  Internal cross-references link to
+auxiliary definitions within the same namespace.
+:::
+
+## Namespace overview
+
+| NSID | Type | Description |
+|------|------|-------------|
+| [`ac.foundation.dataset.schema`](#ac-foundation-dataset-schema) | Record | Definition of a PackableSample-compatible sample type. Supports versioning via rkey format: {NSID}@{semver}. Schema f... |
+| [`ac.foundation.dataset.record`](#ac-foundation-dataset-record) | Record | Index record for a WebDataset-backed dataset with references to storage location and sample schema |
+| [`ac.foundation.dataset.lens`](#ac-foundation-dataset-lens) | Record | Bidirectional transformation (Lens) between two sample types, with code stored in external repositories |
+| [`ac.foundation.dataset.storageHttp`](#ac-foundation-dataset-storagehttp) | Object | HTTP/HTTPS storage for WebDataset tar archives. Each shard is listed individually with a checksum for integrity verif... |
+| [`ac.foundation.dataset.storageS3`](#ac-foundation-dataset-storages3) | Object | S3 or S3-compatible storage for WebDataset tar archives. Supports custom endpoints for MinIO, Cloudflare R2, and othe... |
+| [`ac.foundation.dataset.storageBlobs`](#ac-foundation-dataset-storageblobs) | Object | Storage via ATProto PDS blobs for WebDataset tar archives. Used in ac.foundation.dataset.record storage union for max... |
+| [`ac.foundation.dataset.storageExternal`](#ac-foundation-dataset-storageexternal) | Object | (Deprecated: use storageHttp or storageS3 instead.) External storage via URLs for WebDataset tar archives. URLs suppo... |
+| [`ac.foundation.dataset.schemaType`](#ac-foundation-dataset-schematype) | String | Schema type identifier for atdata sample definitions. Known values correspond to token definitions in this Lexicon. N... |
+| [`ac.foundation.dataset.arrayFormat`](#ac-foundation-dataset-arrayformat) | String | Array serialization format identifier for NDArray fields in sample schemas. Known values correspond to token definiti... |
+| [`ac.foundation.dataset.getLatestSchema`](#ac-foundation-dataset-getlatestschema) | Query | Get the latest version of a sample schema by its permanent NSID identifier |
+
+## Definitions
+
+### `ac.foundation.dataset.schema` <span class='lexicon-badge lexicon-badge-record'>Record</span> {#ac-foundation-dataset-schema}
+
+Definition of a PackableSample-compatible sample type. Supports versioning via rkey format: {NSID}@{semver}. Schema format is extensible via union type.
+
+**Record key:** `any`
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `name` | string | **yes** | Human-readable display name for this sample type. Used for documentation and UI. The NSID in the record URI provides unique identification; name collisions across NSIDs are acceptable. *max length: 100* |
+| `version` | string | **yes** | Semantic version (e.g., '1.0.0') *max length: 100* · *pattern: `^(0\|[1-9]\d*)\.(0\|[1-9]\d*)\.(0\|[1-9]\d*)(?:-((?:0\|[1-9]\d*\|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0\|[1-9]\d*\|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$`* |
+| `schemaType` | [`ac.foundation.dataset.schemaType`](#ac-foundation-dataset-schematype) | **yes** | Type of schema definition. This field indicates which union member is present in the schema field. |
+| `schema` | [`ac.foundation.dataset.schema#jsonSchemaFormat`](#ac-foundation-dataset-schema-jsonschemaformat) | **yes** | Schema definition for this sample type. Currently supports JSON Schema Draft 7. Union allows for future schema formats (Avro, Protobuf, etc.) without breaking changes. |
+| `description` | string | no | Human-readable description of what this sample type represents *max length: 5000* |
+| `metadata` | object | no | Optional metadata about this schema. Common fields include license and tags, but any additional fields are permitted. *max properties: 50* |
+| `createdAt` | string (datetime) | **yes** | Timestamp when this schema version was created. Immutable once set (ATProto records are permanent). |
+
+#### `ac.foundation.dataset.schema#jsonSchemaFormat` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-schema-jsonschemaformat}
+
+JSON Schema Draft 7 format for sample type definitions. Used with NDArray shim for array types.
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `$type` | string | **yes** |  *const: `ac.foundation.dataset.schema#jsonSchemaFormat`* |
+| `$schema` | string | **yes** | JSON Schema version identifier *const: `http://json-schema.org/draft-07/schema#`* |
+| `type` | string | **yes** | Sample types must be objects *const: `object`* |
+| `properties` | object | **yes** | Field definitions for the sample type *min properties: 1* |
+| `arrayFormatVersions` | object | no | Mapping from array format identifiers to semantic versions. Keys are ac.foundation.dataset.arrayFormat values (e.g., 'ndarrayBytes'), values are semver strings (e.g., '1.0.0'). Foundation.ac maintains canonical shim schemas at https://foundation.ac/schemas/atdata-{format}-bytes/{version}/. *max properties: 10* |
+
+---
+
+### `ac.foundation.dataset.record` <span class='lexicon-badge lexicon-badge-record'>Record</span> {#ac-foundation-dataset-record}
+
+Index record for a WebDataset-backed dataset with references to storage location and sample schema
+
+**Record key:** `tid`
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `name` | string | **yes** | Human-readable dataset name *max length: 200* |
+| `schemaRef` | string (at-uri) | **yes** | AT-URI reference to the schema record for this dataset's samples *max length: 500* |
+| `storage` | [`ac.foundation.dataset.storageHttp`](#ac-foundation-dataset-storagehttp) \| [`ac.foundation.dataset.storageS3`](#ac-foundation-dataset-storages3) \| [`ac.foundation.dataset.storageBlobs`](#ac-foundation-dataset-storageblobs) | **yes** | Storage location for dataset files (WebDataset tar archives) |
+| `description` | string | no | Human-readable description of the dataset *max length: 5000* |
+| `metadata` | bytes | no | Msgpack-encoded metadata dict for arbitrary extended key-value pairs. Use this for additional metadata beyond the core top-level fields (license, tags, size). Top-level fields are preferred for discoverable/searchable metadata. *max length: 100000* |
+| `tags` | array\<string\> | no | Searchable tags for dataset discovery. Aligns with Schema.org keywords property. *max length: 30* |
+| `size` | [`#datasetSize`](#ac-foundation-dataset-record-datasetsize) | no | Dataset size information (optional) |
+| `license` | string | no | License identifier or URL. SPDX identifiers recommended (e.g., MIT, Apache-2.0, CC-BY-4.0) or full SPDX URLs (e.g., http://spdx.org/licenses/MIT). Aligns with Schema.org license property. *max length: 200* |
+| `createdAt` | string (datetime) | **yes** | Timestamp when this dataset record was created |
+
+#### `ac.foundation.dataset.record#shardChecksum` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-record-shardchecksum}
+
+Content hash for shard integrity verification. Algorithm is flexible to allow SHA-256, BLAKE3, or other hash functions.
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `algorithm` | string | **yes** | Hash algorithm identifier (e.g., 'sha256', 'blake3') *max length: 20* |
+| `digest` | string | **yes** | Hex-encoded hash digest *max length: 128* |
+
+#### `ac.foundation.dataset.record#datasetSize` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-record-datasetsize}
+
+Information about dataset size
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `samples` | integer | no | Total number of samples in the dataset *min: 0* |
+| `bytes` | integer | no | Total size in bytes *min: 0* |
+| `shards` | integer | no | Number of WebDataset shards *min: 1* |
+
+---
+
+### `ac.foundation.dataset.lens` <span class='lexicon-badge lexicon-badge-record'>Record</span> {#ac-foundation-dataset-lens}
+
+Bidirectional transformation (Lens) between two sample types, with code stored in external repositories
+
+**Record key:** `tid`
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `name` | string | **yes** | Human-readable lens name *max length: 100* |
+| `sourceSchema` | string (at-uri) | **yes** | AT-URI reference to source schema *max length: 500* |
+| `targetSchema` | string (at-uri) | **yes** | AT-URI reference to target schema *max length: 500* |
+| `description` | string | no | What this transformation does *max length: 1000* |
+| `getterCode` | [`#codeReference`](#ac-foundation-dataset-lens-codereference) | **yes** | Code reference for getter function (Source -> Target) |
+| `putterCode` | [`#codeReference`](#ac-foundation-dataset-lens-codereference) | **yes** | Code reference for putter function (Target, Source -> Source) |
+| `language` | string | no | Programming language of the lens implementation (e.g., 'python', 'typescript') *max length: 50* |
+| `metadata` | object | no | Arbitrary metadata (author, performance notes, etc.) |
+| `createdAt` | string (datetime) | **yes** | Timestamp when this lens was created |
+
+#### `ac.foundation.dataset.lens#codeReference` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-lens-codereference}
+
+Reference to code in an external repository (GitHub, tangled.org, etc.)
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `repository` | string | **yes** | Repository URL (e.g., 'https://github.com/user/repo' or 'at://did/tangled.repo/...') *max length: 500* |
+| `commit` | string | **yes** | Git commit hash (ensures immutability) *max length: 40* |
+| `path` | string | **yes** | Path to function within repository (e.g., 'lenses/vision.py:rgb_to_grayscale') *max length: 500* |
+| `branch` | string | no | Optional branch name (for reference, commit hash is authoritative) *max length: 100* |
+
+---
+
+### `ac.foundation.dataset.storageHttp` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-storagehttp}
+
+HTTP/HTTPS storage for WebDataset tar archives. Each shard is listed individually with a checksum for integrity verification. Consumers build brace-expansion patterns on the fly when needed.
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `shards` | array\<[`#shardEntry`](#ac-foundation-dataset-storagehttp-shardentry)\> | **yes** | Array of shard entries with URL and integrity checksum *min length: 1* |
+
+#### `ac.foundation.dataset.storageHttp#shardEntry` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-storagehttp-shardentry}
+
+A single HTTP-accessible shard with integrity checksum
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `url` | string (uri) | **yes** | HTTP/HTTPS URL for this WebDataset tar shard *max length: 2000* |
+| `checksum` | [`ac.foundation.dataset.record#shardChecksum`](#ac-foundation-dataset-record-shardchecksum) | **yes** | Content hash for integrity verification |
+
+---
+
+### `ac.foundation.dataset.storageS3` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-storages3}
+
+S3 or S3-compatible storage for WebDataset tar archives. Supports custom endpoints for MinIO, Cloudflare R2, and other S3-compatible services.
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `bucket` | string | **yes** | S3 bucket name *max length: 255* |
+| `region` | string | no | AWS region (e.g., 'us-east-1'). Optional for S3-compatible services. *max length: 50* |
+| `endpoint` | string (uri) | no | Custom S3-compatible endpoint URL (e.g., for MinIO, Cloudflare R2). Omit for standard AWS S3. *max length: 500* |
+| `shards` | array\<[`#shardEntry`](#ac-foundation-dataset-storages3-shardentry)\> | **yes** | Array of shard entries with object key and integrity checksum *min length: 1* |
+
+#### `ac.foundation.dataset.storageS3#shardEntry` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-storages3-shardentry}
+
+A single S3 object shard with integrity checksum
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `key` | string | **yes** | S3 object key for this WebDataset tar shard *max length: 1024* |
+| `checksum` | [`ac.foundation.dataset.record#shardChecksum`](#ac-foundation-dataset-record-shardchecksum) | **yes** | Content hash for integrity verification |
+
+---
+
+### `ac.foundation.dataset.storageBlobs` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-storageblobs}
+
+Storage via ATProto PDS blobs for WebDataset tar archives. Used in ac.foundation.dataset.record storage union for maximum decentralization.
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `blobs` | array\<[`#blobEntry`](#ac-foundation-dataset-storageblobs-blobentry)\> | **yes** | Array of blob entries for WebDataset tar files *min length: 1* |
+
+#### `ac.foundation.dataset.storageBlobs#blobEntry` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-storageblobs-blobentry}
+
+A single PDS blob shard with optional integrity checksum
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `blob` | blob | **yes** | Blob reference to a WebDataset tar archive *accept: `application/x-tar`* · *max size: 50 MB* |
+| `checksum` | [`ac.foundation.dataset.record#shardChecksum`](#ac-foundation-dataset-record-shardchecksum) | no | Content hash for integrity verification (optional since PDS blobs have built-in CID integrity) |
+
+---
+
+### `ac.foundation.dataset.storageExternal` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-storageexternal}
+
+::: {.callout-warning}
+This type is deprecated.
+:::
+
+(Deprecated: use storageHttp or storageS3 instead.) External storage via URLs for WebDataset tar archives. URLs support brace notation for sharding (e.g., 'data-{000000..000099}.tar').
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `urls` | array\<string (uri)\> | **yes** | WebDataset URLs with optional brace notation for sharded tar files *min length: 1* |
+
+---
+
+### `ac.foundation.dataset.schemaType` <span class='lexicon-badge lexicon-badge-string'>String</span> {#ac-foundation-dataset-schematype}
+
+Schema type identifier for atdata sample definitions. Known values correspond to token definitions in this Lexicon. New schema types can be added as tokens without breaking changes.
+
+*max length: 50* · *known values: `jsonSchema`*
+
+#### `ac.foundation.dataset.schemaType#jsonSchema` <span class='lexicon-badge lexicon-badge-token'>Token</span> {#ac-foundation-dataset-schematype-jsonschema}
+
+JSON Schema Draft 7 format for sample type definitions. When schemaType is 'jsonSchema', the schema field must contain an object conforming to ac.foundation.dataset.schema#jsonSchemaFormat.
+
+---
+
+### `ac.foundation.dataset.arrayFormat` <span class='lexicon-badge lexicon-badge-string'>String</span> {#ac-foundation-dataset-arrayformat}
+
+Array serialization format identifier for NDArray fields in sample schemas. Known values correspond to token definitions in this Lexicon. Each format has versioned specifications maintained by foundation.ac at canonical URLs.
+
+*max length: 50* · *known values: `ndarrayBytes`*
+
+#### `ac.foundation.dataset.arrayFormat#ndarrayBytes` <span class='lexicon-badge lexicon-badge-token'>Token</span> {#ac-foundation-dataset-arrayformat-ndarraybytes}
+
+Numpy .npy binary format for NDArray serialization. Stores arrays with dtype and shape in binary header. Versions maintained at https://foundation.ac/schemas/atdata-ndarray-bytes/{version}/
+
+---
+
+### `ac.foundation.dataset.getLatestSchema` <span class='lexicon-badge lexicon-badge-query'>Query</span> {#ac-foundation-dataset-getlatestschema}
+
+Get the latest version of a sample schema by its permanent NSID identifier
+
+#### Parameters
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `schemaId` | string | **yes** | The permanent NSID identifier for the schema (the {NSID} part of the rkey {NSID}@{semver}) *max length: 500* |
+
+#### Output
+
+Encoding: `application/json`
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `uri` | string | **yes** | AT-URI of the latest schema version *max length: 500* |
+| `version` | string | **yes** | Semantic version of the latest schema *max length: 20* |
+| `record` | [`ac.foundation.dataset.schema`](#ac-foundation-dataset-schema) | **yes** | The full schema record |
+| `allVersions` | array\<object\> | no | All available versions (optional, sorted by semver descending) |
+
+#### Errors
+
+- **SchemaNotFound** — No schema found with the given NSID

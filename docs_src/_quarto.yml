@@ -140,6 +140,8 @@ website:
             href: reference/local-storage.qmd
           - text: "Atmosphere"
             href: reference/atmosphere.qmd
+          - text: "Lexicon Reference"
+            href: reference/lexicons.qmd
           - text: "Promotion"
             href: reference/promotion.qmd
           - text: "load_dataset API"
@@ -208,6 +210,7 @@ website:
             - reference/lenses.qmd
             - reference/local-storage.qmd
             - reference/atmosphere.qmd
+            - reference/lexicons.qmd
             - reference/promotion.qmd
             - reference/load-dataset.qmd
             - reference/protocols.qmd

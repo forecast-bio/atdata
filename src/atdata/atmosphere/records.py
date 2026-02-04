@@ -5,16 +5,22 @@ and loading them back. Dataset records are published as
 ``ac.foundation.dataset.record`` records.
 """
 
+import hashlib
 from typing import Type, TypeVar, Optional
 import msgpack
 
 from .client import Atmosphere
 from .schema import SchemaPublisher
-from ._types import (
-    AtUri,
-    DatasetRecord,
-    StorageLocation,
-    LEXICON_NAMESPACE,
+from ._types import AtUri, LEXICON_NAMESPACE
+from ._lexicon_types import (
+    LexDatasetRecord,
+    StorageHttp,
+    StorageS3,
+    StorageBlobs,
+    HttpShardEntry,
+    S3ShardEntry,
+    BlobEntry,
+    ShardChecksum,
 )
 
 # Import for type checking only to avoid circular imports
@@ -27,14 +33,24 @@ if TYPE_CHECKING:
 ST = TypeVar("ST", bound="Packable")
 
 
+def _sha256_checksum_from_url(url: str) -> ShardChecksum:
+    """Create a placeholder checksum for a URL.
+
+    When publishing URLs, we cannot compute the actual checksum without
+    downloading the file. The caller should provide pre-computed checksums
+    when available.
+    """
+    return ShardChecksum(algorithm="none", digest="")
+
+
 class DatasetPublisher:
     """Publishes dataset index records to ATProto.
 
     This class creates dataset records that reference a schema and point to
-    external storage (WebDataset URLs) or ATProto blobs.
+    HTTP storage, S3 storage, or ATProto blobs.
 
     Examples:
-        >>> dataset = atdata.Dataset[MySample]("s3://bucket/data-{000000..000009}.tar")
+        >>> dataset = atdata.Dataset[MySample]("https://example.com/data-000000.tar")
         >>>
         >>> atmo = Atmosphere.login("handle", "password")
         >>>
@@ -90,8 +106,6 @@ class DatasetPublisher:
         Raises:
             ValueError: If schema_uri is not provided and auto_publish_schema is False.
         """
-        from atdata._logging import log_operation
-
         # Ensure we have a schema reference
         if schema_uri is None:
             if not auto_publish_schema:
@@ -105,35 +119,37 @@ class DatasetPublisher:
             )
             schema_uri = str(schema_uri_obj)
 
-        with log_operation("DatasetPublisher.publish", name=name):
-            # Build the storage location
-            storage = StorageLocation(
-                kind="external",
-                urls=[dataset.url],
-            )
+        # Build HTTP storage from the dataset URL
+        shard_urls = [dataset.url]
+        storage = StorageHttp(
+            shards=[
+                HttpShardEntry(url=url, checksum=_sha256_checksum_from_url(url))
+                for url in shard_urls
+            ]
+        )
 
-            # Build dataset record
-            metadata_bytes: Optional[bytes] = None
-            if dataset.metadata is not None:
-                metadata_bytes = msgpack.packb(dataset.metadata)
+        # Build dataset record
+        metadata_bytes: Optional[bytes] = None
+        if dataset.metadata is not None:
+            metadata_bytes = msgpack.packb(dataset.metadata)
 
-            dataset_record = DatasetRecord(
-                name=name,
-                schema_ref=schema_uri,
-                storage=storage,
-                description=description,
-                tags=tags or [],
-                license=license,
-                metadata=metadata_bytes,
-            )
+        dataset_record = LexDatasetRecord(
+            name=name,
+            schema_ref=schema_uri,
+            storage=storage,
+            description=description,
+            tags=tags or [],
+            license=license,
+            metadata=metadata_bytes,
+        )
 
-            # Publish to ATProto
-            return self.client.create_record(
-                collection=f"{LEXICON_NAMESPACE}.record",
-                record=dataset_record.to_record(),
-                rkey=rkey,
-                validate=False,
-            )
+        # Publish to ATProto
+        return self.client.create_record(
+            collection=f"{LEXICON_NAMESPACE}.record",
+            record=dataset_record.to_record(),
+            rkey=rkey,
+            validate=False,
+        )
 
     def publish_with_urls(
         self,
@@ -145,56 +161,141 @@ class DatasetPublisher:
         tags: Optional[list[str]] = None,
         license: Optional[str] = None,
         metadata: Optional[dict] = None,
+        checksums: Optional[list[ShardChecksum]] = None,
         rkey: Optional[str] = None,
     ) -> AtUri:
-        """Publish a dataset record with explicit URLs.
+        """Publish a dataset record with explicit HTTP URLs.
 
         This method allows publishing a dataset record without having a
         Dataset object, useful for registering existing WebDataset files.
+        Each URL should be an individual shard (no brace notation).
 
         Args:
-            urls: List of WebDataset URLs with brace notation.
+            urls: List of individual shard URLs.
             schema_uri: AT URI of the schema record.
             name: Human-readable dataset name.
             description: Human-readable description.
             tags: Searchable tags for discovery.
             license: SPDX license identifier.
             metadata: Arbitrary metadata dictionary.
+            checksums: Per-shard checksums. If not provided, empty checksums
+                are used.
             rkey: Optional explicit record key.
 
         Returns:
             The AT URI of the created dataset record.
         """
-        from atdata._logging import log_operation
-
-        with log_operation(
-            "DatasetPublisher.publish_with_urls", name=name, url_count=len(urls)
-        ):
-            storage = StorageLocation(
-                kind="external",
-                urls=urls,
+        if checksums and len(checksums) != len(urls):
+            raise ValueError(
+                f"checksums length ({len(checksums)}) must match "
+                f"urls length ({len(urls)})"
             )
 
-            metadata_bytes: Optional[bytes] = None
-            if metadata is not None:
-                metadata_bytes = msgpack.packb(metadata)
+        shards = [
+            HttpShardEntry(
+                url=url,
+                checksum=checksums[i] if checksums else ShardChecksum("none", ""),
+            )
+            for i, url in enumerate(urls)
+        ]
+        storage = StorageHttp(shards=shards)
 
-            dataset_record = DatasetRecord(
-                name=name,
-                schema_ref=schema_uri,
-                storage=storage,
-                description=description,
-                tags=tags or [],
-                license=license,
-                metadata=metadata_bytes,
+        metadata_bytes: Optional[bytes] = None
+        if metadata is not None:
+            metadata_bytes = msgpack.packb(metadata)
+
+        dataset_record = LexDatasetRecord(
+            name=name,
+            schema_ref=schema_uri,
+            storage=storage,
+            description=description,
+            tags=tags or [],
+            license=license,
+            metadata=metadata_bytes,
+        )
+
+        return self.client.create_record(
+            collection=f"{LEXICON_NAMESPACE}.record",
+            record=dataset_record.to_record(),
+            rkey=rkey,
+            validate=False,
+        )
+
+    def publish_with_s3(
+        self,
+        bucket: str,
+        keys: list[str],
+        schema_uri: str,
+        *,
+        name: str,
+        region: Optional[str] = None,
+        endpoint: Optional[str] = None,
+        description: Optional[str] = None,
+        tags: Optional[list[str]] = None,
+        license: Optional[str] = None,
+        metadata: Optional[dict] = None,
+        checksums: Optional[list[ShardChecksum]] = None,
+        rkey: Optional[str] = None,
+    ) -> AtUri:
+        """Publish a dataset record with S3 storage.
+
+        Args:
+            bucket: S3 bucket name.
+            keys: List of S3 object keys for shard files.
+            schema_uri: AT URI of the schema record.
+            name: Human-readable dataset name.
+            region: AWS region (e.g., 'us-east-1').
+            endpoint: Custom S3-compatible endpoint URL.
+            description: Human-readable description.
+            tags: Searchable tags for discovery.
+            license: SPDX license identifier.
+            metadata: Arbitrary metadata dictionary.
+            checksums: Per-shard checksums.
+            rkey: Optional explicit record key.
+
+        Returns:
+            The AT URI of the created dataset record.
+        """
+        if checksums and len(checksums) != len(keys):
+            raise ValueError(
+                f"checksums length ({len(checksums)}) must match "
+                f"keys length ({len(keys)})"
             )
 
-            return self.client.create_record(
-                collection=f"{LEXICON_NAMESPACE}.record",
-                record=dataset_record.to_record(),
-                rkey=rkey,
-                validate=False,
+        shards = [
+            S3ShardEntry(
+                key=key,
+                checksum=checksums[i] if checksums else ShardChecksum("none", ""),
             )
+            for i, key in enumerate(keys)
+        ]
+        storage = StorageS3(
+            bucket=bucket,
+            shards=shards,
+            region=region,
+            endpoint=endpoint,
+        )
+
+        metadata_bytes: Optional[bytes] = None
+        if metadata is not None:
+            metadata_bytes = msgpack.packb(metadata)
+
+        dataset_record = LexDatasetRecord(
+            name=name,
+            schema_ref=schema_uri,
+            storage=storage,
+            description=description,
+            tags=tags or [],
+            license=license,
+            metadata=metadata_bytes,
+        )
+
+        return self.client.create_record(
+            collection=f"{LEXICON_NAMESPACE}.record",
+            record=dataset_record.to_record(),
+            rkey=rkey,
+            validate=False,
+        )
 
     def publish_with_blob_refs(
         self,
@@ -230,38 +331,32 @@ class DatasetPublisher:
         Returns:
             The AT URI of the created dataset record.
         """
-        from atdata._logging import log_operation
+        blob_entries = [
+            BlobEntry(blob=ref, checksum=ShardChecksum("none", ""))
+            for ref in blob_refs
+        ]
+        storage = StorageBlobs(blobs=blob_entries)
 
-        with log_operation(
-            "DatasetPublisher.publish_with_blob_refs",
+        metadata_bytes: Optional[bytes] = None
+        if metadata is not None:
+            metadata_bytes = msgpack.packb(metadata)
+
+        dataset_record = LexDatasetRecord(
             name=name,
-            blob_count=len(blob_refs),
-        ):
-            storage = StorageLocation(
-                kind="blobs",
-                blob_refs=blob_refs,
-            )
+            schema_ref=schema_uri,
+            storage=storage,
+            description=description,
+            tags=tags or [],
+            license=license,
+            metadata=metadata_bytes,
+        )
 
-            metadata_bytes: Optional[bytes] = None
-            if metadata is not None:
-                metadata_bytes = msgpack.packb(metadata)
-
-            dataset_record = DatasetRecord(
-                name=name,
-                schema_ref=schema_uri,
-                storage=storage,
-                description=description,
-                tags=tags or [],
-                license=license,
-                metadata=metadata_bytes,
-            )
-
-            return self.client.create_record(
-                collection=f"{LEXICON_NAMESPACE}.record",
-                record=dataset_record.to_record(),
-                rkey=rkey,
-                validate=False,
-            )
+        return self.client.create_record(
+            collection=f"{LEXICON_NAMESPACE}.record",
+            record=dataset_record.to_record(),
+            rkey=rkey,
+            validate=False,
+        )
 
     def publish_with_blobs(
         self,
@@ -300,23 +395,25 @@ class DatasetPublisher:
             Blobs are only retained by the PDS when referenced in a committed
             record. This method handles that automatically.
         """
-        # Upload all blobs
-        blob_refs = []
+        # Upload all blobs and compute checksums
+        blob_entries = []
         for blob_data in blobs:
             blob_ref = self.client.upload_blob(blob_data, mime_type=mime_type)
-            blob_refs.append(blob_ref)
+            digest = hashlib.sha256(blob_data).hexdigest()
+            blob_entries.append(
+                BlobEntry(
+                    blob=blob_ref,
+                    checksum=ShardChecksum(algorithm="sha256", digest=digest),
+                )
+            )
 
-        # Create storage location with blob references
-        storage = StorageLocation(
-            kind="blobs",
-            blob_refs=blob_refs,
-        )
+        storage = StorageBlobs(blobs=blob_entries)
 
         metadata_bytes: Optional[bytes] = None
         if metadata is not None:
             metadata_bytes = msgpack.packb(metadata)
 
-        dataset_record = DatasetRecord(
+        dataset_record = LexDatasetRecord(
             name=name,
             schema_ref=schema_uri,
             storage=storage,
@@ -385,6 +482,18 @@ class DatasetLoader:
 
         return record
 
+    def get_typed(self, uri: str | AtUri) -> LexDatasetRecord:
+        """Fetch a dataset record and return as a typed object.
+
+        Args:
+            uri: The AT URI of the dataset record.
+
+        Returns:
+            LexDatasetRecord instance.
+        """
+        record = self.get(uri)
+        return LexDatasetRecord.from_record(record)
+
     def list_all(
         self,
         repo: Optional[str] = None,
@@ -408,7 +517,7 @@ class DatasetLoader:
             uri: The AT URI of the dataset record.
 
         Returns:
-            Either "external" or "blobs".
+            One of "http", "s3", "blobs", or "external" (legacy).
 
         Raises:
             ValueError: If storage type is unknown.
@@ -417,15 +526,21 @@ class DatasetLoader:
         storage = record.get("storage", {})
         storage_type = storage.get("$type", "")
 
-        if "storageExternal" in storage_type:
-            return "external"
+        if "storageHttp" in storage_type:
+            return "http"
+        elif "storageS3" in storage_type:
+            return "s3"
         elif "storageBlobs" in storage_type:
             return "blobs"
+        elif "storageExternal" in storage_type:
+            return "external"
         else:
             raise ValueError(f"Unknown storage type: {storage_type}")
 
     def get_urls(self, uri: str | AtUri) -> list[str]:
         """Get the WebDataset URLs from a dataset record.
+
+        Supports storageHttp, storageS3, and legacy storageExternal formats.
 
         Args:
             uri: The AT URI of the dataset record.
@@ -434,21 +549,61 @@ class DatasetLoader:
             List of WebDataset URLs.
 
         Raises:
-            ValueError: If the storage type is not external URLs.
+            ValueError: If the storage type is blob-only.
         """
         record = self.get(uri)
         storage = record.get("storage", {})
-
         storage_type = storage.get("$type", "")
-        if "storageExternal" in storage_type:
+
+        if "storageHttp" in storage_type:
+            return [s["url"] for s in storage.get("shards", [])]
+        elif "storageS3" in storage_type:
+            bucket = storage.get("bucket", "")
+            endpoint = storage.get("endpoint")
+            urls = []
+            for s in storage.get("shards", []):
+                if endpoint:
+                    urls.append(f"{endpoint.rstrip('/')}/{bucket}/{s['key']}")
+                else:
+                    urls.append(f"s3://{bucket}/{s['key']}")
+            return urls
+        elif "storageExternal" in storage_type:
             return storage.get("urls", [])
         elif "storageBlobs" in storage_type:
             raise ValueError(
-                "Dataset uses blob storage, not external URLs. "
+                "Dataset uses blob storage, not URLs. "
                 "Use get_blob_urls() instead."
             )
         else:
             raise ValueError(f"Unknown storage type: {storage_type}")
+
+    def get_s3_info(self, uri: str | AtUri) -> dict:
+        """Get S3 storage details from a dataset record.
+
+        Args:
+            uri: The AT URI of the dataset record.
+
+        Returns:
+            Dict with keys: bucket, keys, region (optional), endpoint (optional).
+
+        Raises:
+            ValueError: If the storage type is not S3.
+        """
+        record = self.get(uri)
+        storage = record.get("storage", {})
+        storage_type = storage.get("$type", "")
+
+        if "storageS3" not in storage_type:
+            raise ValueError(
+                f"Dataset does not use S3 storage. Storage type: {storage_type}"
+            )
+
+        return {
+            "bucket": storage.get("bucket", ""),
+            "keys": [s["key"] for s in storage.get("shards", [])],
+            "region": storage.get("region"),
+            "endpoint": storage.get("endpoint"),
+        }
 
     def get_blobs(self, uri: str | AtUri) -> list[dict]:
         """Get the blob references from a dataset record.
@@ -457,7 +612,7 @@ class DatasetLoader:
             uri: The AT URI of the dataset record.
 
         Returns:
-            List of blob reference dicts with keys: $type, ref, mimeType, size.
+            List of blob entry dicts.
 
         Raises:
             ValueError: If the storage type is not blobs.
@@ -468,12 +623,11 @@ class DatasetLoader:
         storage_type = storage.get("$type", "")
         if "storageBlobs" in storage_type:
             return storage.get("blobs", [])
-        elif "storageExternal" in storage_type:
-            raise ValueError(
-                "Dataset uses external URL storage, not blobs. Use get_urls() instead."
-            )
         else:
-            raise ValueError(f"Unknown storage type: {storage_type}")
+            raise ValueError(
+                f"Dataset does not use blob storage. Storage type: {storage_type}. "
+                "Use get_urls() instead."
+            )
 
     def get_blob_urls(self, uri: str | AtUri) -> list[str]:
         """Get fetchable URLs for blob-stored dataset shards.
@@ -495,12 +649,13 @@ class DatasetLoader:
         else:
             parsed_uri = uri
 
-        blobs = self.get_blobs(uri)
+        blob_entries = self.get_blobs(uri)
         did = parsed_uri.authority
 
         urls = []
-        for blob in blobs:
-            # Extract CID from blob reference
+        for entry in blob_entries:
+            # Handle both new blobEntry format and legacy bare blob format
+            blob = entry.get("blob", entry)
             ref = blob.get("ref", {})
             cid = ref.get("$link") if isinstance(ref, dict) else str(ref)
             if cid:
@@ -537,7 +692,7 @@ class DatasetLoader:
         You must provide the sample type class, which should match the
         schema referenced by the record.
 
-        Supports both external URL storage and ATProto blob storage.
+        Supports HTTP, S3, blob, and legacy external storage.
 
         Args:
             uri: The AT URI of the dataset record.
@@ -560,10 +715,10 @@ class DatasetLoader:
 
         storage_type = self.get_storage_type(uri)
 
-        if storage_type == "external":
-            urls = self.get_urls(uri)
-        else:
+        if storage_type == "blobs":
             urls = self.get_blob_urls(uri)
+        else:
+            urls = self.get_urls(uri)
 
         if not urls:
             raise ValueError("Dataset record has no storage URLs")

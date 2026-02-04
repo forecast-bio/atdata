@@ -24,11 +24,13 @@
           },
           "sourceSchema": {
             "type": "string",
+            "format": "at-uri",
             "description": "AT-URI reference to source schema",
             "maxLength": 500
           },
           "targetSchema": {
             "type": "string",
+            "format": "at-uri",
             "description": "AT-URI reference to target schema",
             "maxLength": 500
           },
