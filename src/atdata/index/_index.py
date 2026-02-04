@@ -630,31 +630,23 @@ class Index:
                 data_urls=written_urls,
                 metadata=entry_metadata,
             )
-            provider.store_entry(entry)
-            provider.store_label(
+        else:
+            # No data store - just index the existing URL
+            if schema_ref is None:
+                schema_ref = _schema_ref_from_type(ds.sample_type, version="1.0.0")
+
+            self._ensure_schema_stored(schema_ref, ds.sample_type, provider)
+
+            data_urls = [ds.url]
+            entry_metadata = metadata if metadata is not None else ds._metadata
+
+            entry = LocalDatasetEntry(
                 name=name,
-                cid=entry.cid,
-                version=kwargs.get("version"),
-                description=kwargs.get("description"),
+                schema_ref=schema_ref,
+                data_urls=data_urls,
+                metadata=entry_metadata,
             )
-            log.debug("_insert_dataset_to_provider: entry stored for %s", name)
-            return entry
 
-        # No data store - just index the existing URL
-        if schema_ref is None:
-            schema_ref = _schema_ref_from_type(ds.sample_type, version="1.0.0")
-
-        self._ensure_schema_stored(schema_ref, ds.sample_type, provider)
-
-        data_urls = [ds.url]
-        entry_metadata = metadata if metadata is not None else ds._metadata
-
-        entry = LocalDatasetEntry(
-            name=name,
-            schema_ref=schema_ref,
-            data_urls=data_urls,
-            metadata=entry_metadata,
-        )
         provider.store_entry(entry)
         provider.store_label(
             name=name,

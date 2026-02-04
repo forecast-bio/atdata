@@ -115,13 +115,26 @@ class MockAtmosphere:
             raise KeyError(f"Record not found: {uri}")
         return self._records[uri]
 
-    def list_records(self, collection: str) -> list[dict[str, Any]]:
-        """List records for a collection."""
-        return [
-            {"uri": uri, "value": rec}
+    def list_records(
+        self,
+        collection: str,
+        *,
+        repo: str | None = None,
+        limit: int = 100,
+        cursor: str | None = None,
+    ) -> tuple[list[dict[str, Any]], str | None]:
+        """List records for a collection.
+
+        Returns:
+            Tuple of ``(records, cursor)`` matching the real
+            ``Atmosphere.list_records`` signature.
+        """
+        records = [
+            rec
             for uri, rec in self._records.items()
             if collection in uri
-        ]
+        ][:limit]
+        return records, None
 
     def list_labels(self, repo: str | None = None, limit: int = 100) -> list[dict[str, Any]]:
         """List label records."""

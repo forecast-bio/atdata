@@ -793,6 +793,7 @@ class TestLoadDatasetWithIndex:
         """load_dataset with indexed path uses index lookup."""
         mock_index = Mock()
         mock_index.data_store = None  # No data store, so no URL transformation
+        mock_index.get_label.side_effect = KeyError("no label")
         mock_entry = Mock()
         mock_entry.data_urls = ["s3://bucket/data.tar"]
         mock_entry.schema_ref = "local://schemas/test@1.0.0"
@@ -813,6 +814,7 @@ class TestLoadDatasetWithIndex:
         """load_dataset with sample_type=None uses decode_schema."""
         mock_index = Mock()
         mock_index.data_store = None  # No data store, so no URL transformation
+        mock_index.get_label.side_effect = KeyError("no label")
         mock_entry = Mock()
         mock_entry.data_urls = ["s3://bucket/data.tar"]
         mock_entry.schema_ref = "local://schemas/test@1.0.0"
@@ -833,6 +835,7 @@ class TestLoadDatasetWithIndex:
         """load_dataset with indexed path returns DatasetDict when split=None."""
         mock_index = Mock()
         mock_index.data_store = None  # No data store, so no URL transformation
+        mock_index.get_label.side_effect = KeyError("no label")
         mock_entry = Mock()
         mock_entry.data_urls = ["s3://bucket/data.tar"]
         mock_entry.schema_ref = "local://schemas/test@1.0.0"
@@ -854,6 +857,7 @@ class TestLoadDatasetWithIndex:
 
         mock_index = Mock()
         mock_index.data_store = mock_data_store
+        mock_index.get_label.side_effect = KeyError("no label")
         mock_entry = Mock()
         mock_entry.data_urls = ["s3://bucket/data.tar"]
         mock_entry.schema_ref = "local://schemas/test@1.0.0"
@@ -875,6 +879,7 @@ class TestLoadDatasetWithIndex:
         """load_dataset uses URLs unchanged when index has no data_store."""
         mock_index = Mock()
         mock_index.data_store = None
+        mock_index.get_label.side_effect = KeyError("no label")
         mock_entry = Mock()
         mock_entry.data_urls = ["s3://bucket/data.tar"]
         mock_entry.schema_ref = "local://schemas/test@1.0.0"
@@ -908,6 +913,7 @@ class TestLoadDatasetWithIndex:
 
         mock_index = Mock()
         mock_index.data_store = mock_store
+        mock_index.get_label.side_effect = KeyError("no label")
         mock_entry = Mock()
         mock_entry.data_urls = [
             "s3://my-bucket/train-000.tar",

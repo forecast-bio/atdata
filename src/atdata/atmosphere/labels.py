@@ -8,7 +8,7 @@ Labels separate dataset identity (CID-addressed records) from naming
 (mutable label records), enabling versioning, renaming, and flexible routing.
 """
 
-from typing import Optional
+from __future__ import annotations
 
 from .client import Atmosphere
 from ._types import AtUri, LEXICON_NAMESPACE
@@ -132,7 +132,7 @@ class LabelLoader:
 
     def list_all(
         self,
-        repo: Optional[str] = None,
+        repo: str | None = None,
         limit: int = 100,
     ) -> list[dict]:
         """List label records from a repository.

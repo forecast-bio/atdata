@@ -564,22 +564,11 @@ def _resolve_indexed_path(
     """
     handle_or_did, dataset_name, version = _parse_indexed_path(path)
 
-    # Try label-based resolution first (supports versioning).
-    # Check for concrete get_label method (not Mock auto-attrs).
-    _has_labels = hasattr(index, "get_label") and not isinstance(
-        getattr(type(index), "get_label", None), type(None)
-    )
-    if _has_labels and version is not None:
-        try:
-            entry = index.get_label(dataset_name, version)
-        except (KeyError, TypeError):
-            entry = index.get_dataset(dataset_name)
-    elif _has_labels:
-        try:
-            entry = index.get_label(dataset_name)
-        except (KeyError, TypeError):
-            entry = index.get_dataset(dataset_name)
-    else:
+    # Try label-based resolution first (supports versioning), then fall
+    # back to direct name lookup for indexes without label support.
+    try:
+        entry = index.get_label(dataset_name, version)  # type: ignore[attr-defined]
+    except (KeyError, TypeError, AttributeError):
         entry = index.get_dataset(dataset_name)
     data_urls = entry.data_urls
 

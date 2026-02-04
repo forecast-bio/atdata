@@ -406,3 +406,119 @@ class TestMockAtmosphereLabels:
         labels = mock.list_labels()
         assert len(labels) == 1
         assert labels[0]["name"] == "test"
+
+
+# ---------------------------------------------------------------------------
+# LabelLoader edge cases
+# ---------------------------------------------------------------------------
+
+
+class TestLabelLoaderEdgeCases:
+    """Tests for LabelLoader error paths and resolve()."""
+
+    def test_get_wrong_type_raises(self):
+        """get() raises ValueError when record is not a label."""
+        mock = MockAtmosphere()
+        mock.login("test.user", "password")
+
+        # Create a non-label record
+        uri = mock.create_record(
+            "ac.foundation.dataset.record",
+            {"$type": "ac.foundation.dataset.record", "name": "not-a-label"},
+        )
+
+        loader = LabelLoader(mock)
+        with pytest.raises(ValueError, match="not a label record"):
+            loader.get(uri)
+
+    def test_resolve_by_name(self):
+        """resolve() finds a label by name using DID."""
+        mock = MockAtmosphere()
+        mock.login("test.user", "password")
+
+        publisher = LabelPublisher(mock)
+        publisher.publish(
+            name="mnist",
+            dataset_uri="at://did:plc:mock/ac.foundation.dataset.record/abc",
+        )
+        publisher.publish(
+            name="cifar10",
+            dataset_uri="at://did:plc:mock/ac.foundation.dataset.record/xyz",
+        )
+
+        loader = LabelLoader(mock)
+        uri = loader.resolve("did:plc:mock000000000000", "mnist")
+        assert uri == "at://did:plc:mock/ac.foundation.dataset.record/abc"
+
+    def test_resolve_by_name_and_version(self):
+        """resolve() filters by version when specified."""
+        mock = MockAtmosphere()
+        mock.login("test.user", "password")
+
+        publisher = LabelPublisher(mock)
+        publisher.publish(
+            name="ds",
+            dataset_uri="at://did:plc:mock/ac.foundation.dataset.record/v1",
+            version="1.0.0",
+        )
+        publisher.publish(
+            name="ds",
+            dataset_uri="at://did:plc:mock/ac.foundation.dataset.record/v2",
+            version="2.0.0",
+        )
+
+        loader = LabelLoader(mock)
+        uri = loader.resolve("did:plc:mock000000000000", "ds", version="1.0.0")
+        assert uri == "at://did:plc:mock/ac.foundation.dataset.record/v1"
+
+    def test_resolve_not_found_raises(self):
+        """resolve() raises KeyError when no matching label exists."""
+        mock = MockAtmosphere()
+        mock.login("test.user", "password")
+
+        loader = LabelLoader(mock)
+        with pytest.raises(KeyError, match="No label"):
+            loader.resolve("did:plc:mock000000000000", "nonexistent")
+
+
+# ---------------------------------------------------------------------------
+# _resolve_indexed_path with version
+# ---------------------------------------------------------------------------
+
+
+class TestResolveIndexedPathVersion:
+    """Tests for versioned label resolution in load_dataset path."""
+
+    def test_resolve_with_version(self, tmp_path: Path):
+        """@handle/name@version resolves to the correct versioned entry."""
+        from atdata._hf_api import _resolve_indexed_path
+
+        index = Index(provider="sqlite", path=tmp_path / "index.db")
+
+        samples_v1 = [LabelTestSample(text="v1", value=1)]
+        entry_v1 = index.write_samples(samples_v1, name="versioned-ds")
+        index.label("versioned-ds", entry_v1.cid, version="1.0.0")
+
+        samples_v2 = [LabelTestSample(text="v2", value=2)]
+        entry_v2 = index.write_samples(samples_v2, name="versioned-ds")
+        index.label("versioned-ds", entry_v2.cid, version="2.0.0")
+
+        source, schema_ref = _resolve_indexed_path("@local/versioned-ds@1.0.0", index)
+        # Should resolve to v1's data URLs
+        assert entry_v1.data_urls[0] in source.url
+
+    def test_resolve_without_version_gets_latest(self, tmp_path: Path):
+        """@handle/name without version resolves to the latest label."""
+        from atdata._hf_api import _resolve_indexed_path
+
+        index = Index(provider="sqlite", path=tmp_path / "index.db")
+
+        samples_v1 = [LabelTestSample(text="v1", value=1)]
+        entry_v1 = index.write_samples(samples_v1, name="latest-ds")
+
+        samples_v2 = [LabelTestSample(text="v2", value=2)]
+        entry_v2 = index.write_samples(samples_v2, name="latest-ds")
+
+        source, schema_ref = _resolve_indexed_path("@local/latest-ds", index)
+        # Should resolve to v2 (latest)
+        assert entry_v2.data_urls[0] in source.url
