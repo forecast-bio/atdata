@@ -746,7 +746,7 @@ class TestAtmosphere:
 
             client = Atmosphere()
 
-            mock_class.assert_called_once()
+            mock_class.assert_called_once_with()
             assert not client.is_authenticated
 
     def test_init_with_base_url(self):
@@ -881,7 +881,13 @@ class TestAtmosphere:
         """Delete a record."""
         authenticated_client.delete_record("at://did:plc:test123456789/collection/key")
 
-        mock_atproto_client.com.atproto.repo.delete_record.assert_called_once()
+        mock_atproto_client.com.atproto.repo.delete_record.assert_called_once_with(
+            data={
+                "repo": "did:plc:test123456789",
+                "collection": "collection",
+                "rkey": "key",
+            }
+        )
 
     def test_upload_blob(self, authenticated_client, mock_atproto_client):
         """Upload blob returns proper blob reference dict."""
@@ -2165,6 +2171,9 @@ class TestAtmosphereIndex:
 
         assert uri == str(mock_response.uri)
         mock_atproto_client.com.atproto.repo.create_record.assert_called_once()
+        call_data = mock_atproto_client.com.atproto.repo.create_record.call_args[1]["data"]
+        assert call_data["collection"] == f"{LEXICON_NAMESPACE}.schema"
+        assert call_data["record"]["name"] == "BasicSample"
 
     def test_get_schema(self, authenticated_client, mock_atproto_client):
         """get_schema delegates to SchemaLoader."""

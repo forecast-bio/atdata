@@ -53,7 +53,7 @@ class TestProviderFactory:
         with patch("atdata.providers._postgres.PostgresProvider") as mock_pg:
             mock_pg.return_value = MagicMock()
             create_provider("postgresql", dsn="postgresql://localhost/db")
-            mock_pg.assert_called_once()
+            mock_pg.assert_called_once_with(dsn="postgresql://localhost/db")
 
     def test_unknown_provider_raises(self):
         from atdata.providers._factory import create_provider

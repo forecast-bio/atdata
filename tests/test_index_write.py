@@ -242,6 +242,9 @@ class TestIndexPromoteEntry:
 
         assert uri == "at://did:plc:abc/test/123"
         mock_publisher_instance.publish_with_urls.assert_called_once()
+        call_kwargs = mock_publisher_instance.publish_with_urls.call_args[1]
+        assert call_kwargs["name"] == "promotable"
+        assert call_kwargs["schema_uri"] == "at://schema/1"
 
 
 # ---------------------------------------------------------------------------
