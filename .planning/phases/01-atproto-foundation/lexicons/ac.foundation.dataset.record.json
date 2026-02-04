@@ -40,9 +40,9 @@
             "maxLength": 5000
           },
           "metadata": {
-            "type": "bytes",
-            "description": "Msgpack-encoded metadata dict for arbitrary extended key-value pairs. Use this for additional metadata beyond the core top-level fields (license, tags, size). Top-level fields are preferred for discoverable/searchable metadata.",
-            "maxLength": 100000
+            "type": "ref",
+            "ref": "#datasetMetadata",
+            "description": "Structured metadata for the dataset. Provides well-known fields for common metadata plus a custom object for domain-specific extensions."
           },
           "tags": {
             "type": "array",
@@ -68,6 +68,46 @@
             "format": "datetime",
             "description": "Timestamp when this dataset record was created"
           }
+        }
+      }
+    },
+    "datasetMetadata": {
+      "type": "object",
+      "description": "Structured metadata for a dataset record. Well-known fields are first-class properties visible to ATProto relays and indexers. The custom object provides extensibility for domain-specific metadata.",
+      "properties": {
+        "sourceUri": {
+          "type": "string",
+          "description": "URI or identifier of the upstream data source",
+          "maxLength": 1000
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "Tool, pipeline, or user that created this dataset",
+          "maxLength": 500
+        },
+        "version": {
+          "type": "string",
+          "description": "Dataset version string (e.g., '2.1.0')",
+          "maxLength": 100
+        },
+        "processingSteps": {
+          "type": "array",
+          "description": "Ordered list of processing/transformation steps applied",
+          "items": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "maxLength": 50
+        },
+        "split": {
+          "type": "string",
+          "description": "Dataset split name (e.g., 'train', 'test', 'validation')",
+          "maxLength": 100
+        },
+        "custom": {
+          "type": "object",
+          "description": "Arbitrary domain-specific metadata key-value pairs",
+          "maxProperties": 100
         }
       }
     },

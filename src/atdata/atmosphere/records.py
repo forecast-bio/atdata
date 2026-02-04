@@ -12,6 +12,7 @@ from .client import Atmosphere
 from .schema import SchemaPublisher
 from ._types import AtUri, LEXICON_NAMESPACE
 from ._lexicon_types import (
+    DatasetMetadata,
     LexDatasetRecord,
     StorageHttp,
     StorageS3,
@@ -75,13 +76,15 @@ class DatasetPublisher:
         description: Optional[str] = None,
         tags: Optional[list[str]] = None,
         license: Optional[str] = None,
-        metadata: Optional[dict] = None,
+        metadata: Optional[DatasetMetadata | dict] = None,
         rkey: Optional[str] = None,
     ) -> AtUri:
         """Build a LexDatasetRecord and publish it to ATProto."""
-        metadata_bytes: Optional[bytes] = None
-        if metadata is not None:
-            metadata_bytes = msgpack.packb(metadata)
+        typed_metadata: Optional[DatasetMetadata] = None
+        if isinstance(metadata, DatasetMetadata):
+            typed_metadata = metadata
+        elif isinstance(metadata, dict):
+            typed_metadata = DatasetMetadata.from_dict(metadata)
 
         dataset_record = LexDatasetRecord(
             name=name,
@@ -90,7 +93,7 @@ class DatasetPublisher:
             description=description,
             tags=tags or [],
             license=license,
-            metadata=metadata_bytes,
+            metadata=typed_metadata,
         )
 
         return self.client.create_record(
@@ -627,13 +630,16 @@ class DatasetLoader:
         return urls
 
     def get_metadata(self, uri: str | AtUri) -> Optional[dict]:
-        """Get the metadata from a dataset record.
+        """Get the metadata from a dataset record as a plain dict.
+
+        Handles both the new structured metadata format (JSON object) and the
+        legacy ``$bytes``-encoded msgpack format for backward compatibility.
 
         Args:
             uri: The AT URI of the dataset record.
 
         Returns:
-            The metadata dictionary, or None if no metadata.
+            The metadata as a flat dictionary, or None if no metadata.
         """
         import base64
 
@@ -643,17 +649,42 @@ class DatasetLoader:
         if metadata_raw is None:
             return None
 
-        # Records fetched from ATProto encode bytes as {"$bytes": "<base64>"}.
+        # Legacy: ATProto $bytes-encoded msgpack.
         if isinstance(metadata_raw, dict) and "$bytes" in metadata_raw:
             metadata_bytes = base64.b64decode(metadata_raw["$bytes"])
-        elif isinstance(metadata_raw, bytes):
-            metadata_bytes = metadata_raw
-        else:
-            raise ValueError(
-                f"Unexpected metadata format: {type(metadata_raw).__name__}"
-            )
+            return msgpack.unpackb(metadata_bytes, raw=False)
 
-        return msgpack.unpackb(metadata_bytes, raw=False)
+        # Legacy: raw msgpack bytes (local storage / tests).
+        if isinstance(metadata_raw, bytes):
+            return msgpack.unpackb(metadata_raw, raw=False)
+
+        # New structured format: plain JSON object.
+        if isinstance(metadata_raw, dict):
+            return DatasetMetadata.from_record(metadata_raw).to_dict()
+
+        raise ValueError(
+            f"Unexpected metadata format: {type(metadata_raw).__name__}"
+        )
+
+    def get_metadata_typed(self, uri: str | AtUri) -> Optional[DatasetMetadata]:
+        """Get the metadata from a dataset record as a typed object.
+
+        Handles both the new structured metadata format and the legacy
+        ``$bytes``-encoded msgpack format.
+
+        Args:
+            uri: The AT URI of the dataset record.
+
+        Returns:
+            DatasetMetadata instance, or None if no metadata.
+        """
+        record = self.get(uri)
+        raw = record.get("metadata")
+        if raw is None:
+            return None
+        # Delegate to LexDatasetRecord.from_record which handles all formats.
+        typed_record = LexDatasetRecord.from_record(record)
+        return typed_record.metadata
 
     def to_dataset(
         self,
