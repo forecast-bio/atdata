@@ -47,8 +47,9 @@ class TestMockAtmosphere:
         client = MockAtmosphere()
         client.create_record("app.bsky.feed.post", {"text": "a"})
         client.create_record("app.bsky.feed.post", {"text": "b"})
-        records = client.list_records("app.bsky.feed.post")
+        records, cursor = client.list_records("app.bsky.feed.post")
         assert len(records) == 2
+        assert cursor is None
 
     def test_upload_and_get_blob(self):
         client = MockAtmosphere()

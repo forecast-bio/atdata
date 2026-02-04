@@ -1,0 +1,58 @@
+{
+  "lexicon": 1,
+  "id": "ac.foundation.dataset.resolveLabel",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Resolve a named dataset label to its underlying dataset record. When version is omitted, resolves to the most recently created label with the given name.",
+      "parameters": {
+        "type": "params",
+        "required": [
+          "handle",
+          "name"
+        ],
+        "properties": {
+          "handle": {
+            "type": "string",
+            "description": "DID or handle of the dataset owner"
+          },
+          "name": {
+            "type": "string",
+            "description": "Label name, e.g. 'mnist'"
+          },
+          "version": {
+            "type": "string",
+            "description": "Specific version to resolve. If omitted, resolves to latest."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "uri",
+            "cid",
+            "label"
+          ],
+          "properties": {
+            "uri": {
+              "type": "string",
+              "format": "at-uri",
+              "description": "AT-URI of the resolved dataset record"
+            },
+            "cid": {
+              "type": "string",
+              "description": "CID of the resolved dataset record"
+            },
+            "label": {
+              "type": "ref",
+              "ref": "ac.foundation.dataset.label#main",
+              "description": "The label record that was resolved"
+            }
+          }
+        }
+      }
+    }
+  }
+}

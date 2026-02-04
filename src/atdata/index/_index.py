@@ -630,26 +630,30 @@ class Index:
                 data_urls=written_urls,
                 metadata=entry_metadata,
             )
-            provider.store_entry(entry)
-            log.debug("_insert_dataset_to_provider: entry stored for %s", name)
-            return entry
+        else:
+            # No data store - just index the existing URL
+            if schema_ref is None:
+                schema_ref = _schema_ref_from_type(ds.sample_type, version="1.0.0")
 
-        # No data store - just index the existing URL
-        if schema_ref is None:
-            schema_ref = _schema_ref_from_type(ds.sample_type, version="1.0.0")
+            self._ensure_schema_stored(schema_ref, ds.sample_type, provider)
 
-        self._ensure_schema_stored(schema_ref, ds.sample_type, provider)
+            data_urls = [ds.url]
+            entry_metadata = metadata if metadata is not None else ds._metadata
 
-        data_urls = [ds.url]
-        entry_metadata = metadata if metadata is not None else ds._metadata
+            entry = LocalDatasetEntry(
+                name=name,
+                schema_ref=schema_ref,
+                data_urls=data_urls,
+                metadata=entry_metadata,
+            )
 
-        entry = LocalDatasetEntry(
-            name=name,
-            schema_ref=schema_ref,
-            data_urls=data_urls,
-            metadata=entry_metadata,
-        )
         provider.store_entry(entry)
+        provider.store_label(
+            name=name,
+            cid=entry.cid,
+            version=kwargs.get("version"),
+            description=kwargs.get("description"),
+        )
         log.debug("_insert_dataset_to_provider: entry stored for %s", name)
         return entry
 
@@ -1063,7 +1067,13 @@ class Index:
         repo = self._repos.get(backend_key)
         if repo is None:
             raise KeyError(f"Unknown repository {backend_key!r} in ref {ref!r}")
-        return repo.provider.get_entry_by_name(resolved_ref)
+
+        # Resolve through label first, fall back to direct name lookup
+        try:
+            cid, _version = repo.provider.get_label(resolved_ref)
+            return repo.provider.get_entry_by_cid(cid)
+        except KeyError:
+            return repo.provider.get_entry_by_name(resolved_ref)
 
     @property
     def datasets(self) -> Generator["IndexEntry", None, None]:
@@ -1104,6 +1114,92 @@ class Index:
         if named is None:
             raise KeyError(f"Unknown repository {repo!r}")
         return list(named.provider.iter_entries())
+
+    # Label operations
+
+    def label(
+        self,
+        name: str,
+        cid: str,
+        *,
+        version: str | None = None,
+        description: str | None = None,
+    ) -> None:
+        """Create or update a label mapping a name to a dataset CID.
+
+        Args:
+            name: Human-readable label name, optionally prefixed with a
+                repository name (e.g. ``"lab/mnist"``).
+            cid: Content identifier of the target dataset entry.
+            version: Optional version string (e.g. ``"1.0.0"``).
+            description: Optional description.
+
+        Examples:
+            >>> index.label("mnist", entry.cid, version="2.0.0")
+        """
+        backend_key, resolved_name, _ = self._resolve_prefix(name)
+        repo = self._repos.get(backend_key)
+        if repo is None:
+            raise KeyError(f"Unknown repository {backend_key!r} in name {name!r}")
+        repo.provider.store_label(
+            name=resolved_name,
+            cid=cid,
+            version=version,
+            description=description,
+        )
+
+    def get_label(
+        self, name: str, version: str | None = None
+    ) -> "IndexEntry":
+        """Resolve a label to its dataset entry.
+
+        Args:
+            name: Label name, optionally prefixed with a repository name.
+            version: Specific version to resolve. If ``None``, returns the
+                most recently created label.
+
+        Returns:
+            IndexEntry for the labeled dataset.
+
+        Raises:
+            KeyError: If no label or dataset found.
+
+        Examples:
+            >>> entry = index.get_label("mnist", version="1.0.0")
+        """
+        backend_key, resolved_name, _ = self._resolve_prefix(name)
+        repo = self._repos.get(backend_key)
+        if repo is None:
+            raise KeyError(f"Unknown repository {backend_key!r} in name {name!r}")
+        cid, _resolved_version = repo.provider.get_label(resolved_name, version)
+        return repo.provider.get_entry_by_cid(cid)
+
+    def list_labels(
+        self, repo: str | None = None
+    ) -> list[tuple[str, str, str | None]]:
+        """List all labels as ``(name, cid, version)`` tuples.
+
+        Args:
+            repo: Optional repository filter. If ``None``, aggregates
+                from all local repositories.
+
+        Returns:
+            List of ``(name, cid, version)`` tuples.
+
+        Examples:
+            >>> for name, cid, version in index.list_labels():
+            ...     print(f"{name}@{version} -> {cid}")
+        """
+        if repo is not None:
+            named = self._repos.get(repo)
+            if named is None:
+                raise KeyError(f"Unknown repository {repo!r}")
+            return list(named.provider.iter_labels())
+
+        result: list[tuple[str, str, str | None]] = []
+        for r in self._repos.values():
+            result.extend(r.provider.iter_labels())
+        return result
 
     # Schema operations
 
@@ -1406,6 +1502,18 @@ class Index:
                 license=license,
                 metadata=entry.metadata,
             )
+
+            # Create a label pointing to the dataset record
+            from atdata.atmosphere import LabelPublisher
+
+            label_publisher = LabelPublisher(atmo.client)
+            label_publisher.publish(
+                name=name or entry.name,
+                dataset_uri=str(uri),
+                version=schema_version,
+                description=description,
+            )
+
             return str(uri)
 
     def promote_dataset(
@@ -1482,4 +1590,16 @@ class Index:
                 license=license,
                 metadata=dataset._metadata,
             )
+
+            # Create a label pointing to the dataset record
+            from atdata.atmosphere import LabelPublisher
+
+            label_publisher = LabelPublisher(atmo.client)
+            label_publisher.publish(
+                name=name,
+                dataset_uri=str(uri),
+                version=schema_version,
+                description=description,
+            )
+
             return str(uri)

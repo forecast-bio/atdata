@@ -39,6 +39,18 @@ CREATE TABLE IF NOT EXISTS schemas (
     created_at  TEXT DEFAULT (datetime('now')),
     PRIMARY KEY (name, version)
 );
+
+CREATE TABLE IF NOT EXISTS labels (
+    name        TEXT NOT NULL,
+    cid         TEXT NOT NULL,
+    version     TEXT NOT NULL DEFAULT '',
+    description TEXT,
+    created_at  TEXT DEFAULT (datetime('now')),
+    PRIMARY KEY (name, version)
+);
+
+CREATE INDEX IF NOT EXISTS idx_labels_cid
+    ON labels(cid);
 """
 
 
@@ -161,6 +173,48 @@ class SqliteProvider(IndexProvider):
             except ValueError:
                 continue
         return latest_str
+
+    # ------------------------------------------------------------------
+    # Label operations
+    # ------------------------------------------------------------------
+
+    def store_label(
+        self,
+        name: str,
+        cid: str,
+        version: str | None = None,
+        description: str | None = None,
+    ) -> None:
+        self._conn.execute(
+            """INSERT OR REPLACE INTO labels (name, cid, version, description)
+               VALUES (?, ?, ?, ?)""",
+            (name, cid, version or "", description),
+        )
+        self._conn.commit()
+
+    def get_label(
+        self, name: str, version: str | None = None
+    ) -> tuple[str, str | None]:
+        if version is not None:
+            row = self._conn.execute(
+                "SELECT cid, version FROM labels WHERE name = ? AND version = ?",
+                (name, version),
+            ).fetchone()
+        else:
+            # Latest by created_at (with rowid tiebreaker for same-second inserts)
+            row = self._conn.execute(
+                "SELECT cid, version FROM labels WHERE name = ? "
+                "ORDER BY created_at DESC, rowid DESC LIMIT 1",
+                (name,),
+            ).fetchone()
+        if row is None:
+            raise KeyError(f"No label with name: {name!r}" + (f" version: {version!r}" if version else ""))
+        return (row[0], row[1] if row[1] else None)
+
+    def iter_labels(self) -> Iterator[tuple[str, str, str | None]]:
+        cursor = self._conn.execute("SELECT name, cid, version FROM labels")
+        for name, cid, version in cursor:
+            yield (name, cid, version if version else None)
 
     # ------------------------------------------------------------------
     # Lifecycle
