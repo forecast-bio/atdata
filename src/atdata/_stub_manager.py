@@ -32,6 +32,7 @@ import fcntl
 import importlib.util
 
 from ._schema_codec import generate_module
+from ._lens_codec import generate_lens_stub
 
 
 # Default stub directory location
@@ -479,6 +480,79 @@ class StubManager:
                             continue
 
         return removed
+
+    # ------------------------------------------------------------------
+    # Lens stub management
+    # ------------------------------------------------------------------
+
+    def _lens_module_filename(self, name: str, version: str) -> str:
+        """Generate lens module filename from lens name and version.
+
+        Args:
+            name: Lens name (e.g., "image_to_grayscale")
+            version: Lens version (e.g., "1.0.0")
+
+        Returns:
+            Filename like "lens_image_to_grayscale_1_0_0.py"
+        """
+        safe_version = version.replace(".", "_")
+        return f"lens_{name}_{safe_version}.py"
+
+    def _lens_module_path(
+        self, name: str, version: str, authority: str = DEFAULT_AUTHORITY
+    ) -> Path:
+        """Get full path to lens module file."""
+        return self._stub_dir / authority / self._lens_module_filename(name, version)
+
+    def ensure_lens_stub(self, record: dict) -> Optional[Path]:
+        """Ensure a lens stub file exists for the given lens record.
+
+        Args:
+            record: Lens record dict with 'name', 'version', etc.
+
+        Returns:
+            Path to the lens stub file, or None if record is missing required fields.
+        """
+        name = record.get("name")
+        version = record.get("version", "1.0.0")
+
+        if not name:
+            return None
+
+        authority = DEFAULT_AUTHORITY
+        path = self._lens_module_path(name, version, authority)
+
+        # Skip if file already exists
+        if path.exists():
+            return path
+
+        content = generate_lens_stub(record)
+        self._write_module_atomic(path, content, authority)
+
+        return path
+
+    def list_lens_stubs(self, authority: Optional[str] = None) -> list[Path]:
+        """List all lens stub files in the stub directory.
+
+        Args:
+            authority: If provided, only list lens stubs for this authority.
+
+        Returns:
+            List of paths to lens stub files.
+        """
+        if not self._stub_dir.exists():
+            return []
+
+        pattern = "lens_*.py"
+        if authority:
+            authority_dir = self._stub_dir / authority
+            if not authority_dir.exists():
+                return []
+            return list(authority_dir.glob(pattern))
+
+        return [
+            p for p in self._stub_dir.glob(f"**/{pattern}") if p.name != "__init__.py"
+        ]
 
     def clear_stub(
         self, name: str, version: str, authority: str = DEFAULT_AUTHORITY

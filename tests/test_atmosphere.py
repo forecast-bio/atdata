@@ -39,6 +39,7 @@ from atdata.atmosphere import (
     S3ShardEntry,
     ShardChecksum,
     BlobEntry,
+    DatasetMetadata,
 )
 from atdata.atmosphere._lexicon_types import storage_from_record
 from atdata.atmosphere._types import LEXICON_NAMESPACE
@@ -491,20 +492,199 @@ class TestLexDatasetRecord:
         assert record["license"] == "MIT"
 
     def test_to_record_with_metadata(self):
-        """Convert dataset record with msgpack metadata."""
-        import msgpack
-
-        metadata_bytes = msgpack.packb({"size": 1000, "split": "train"})
+        """Convert dataset record with typed metadata to structured JSON."""
+        meta = DatasetMetadata(split="train", custom={"size": 1000})
         dataset = LexDatasetRecord(
             name="MetaDataset",
             schema_ref="at://did:plc:abc/collection/key",
             storage=StorageHttp(shards=[]),
-            metadata=metadata_bytes,
+            metadata=meta,
         )
 
         record = dataset.to_record()
 
-        assert record["metadata"] == metadata_bytes
+        # metadata is now a plain JSON object, not $bytes
+        assert isinstance(record["metadata"], dict)
+        assert "$bytes" not in record["metadata"]
+        assert record["metadata"]["split"] == "train"
+        assert record["metadata"]["custom"] == {"size": 1000}
+
+    def test_metadata_roundtrip(self):
+        """Metadata survives to_record() -> from_record() roundtrip."""
+        meta = DatasetMetadata(
+            split="train",
+            version="2.0",
+            source_uri="https://example.com/raw",
+            custom={"size": 1000},
+        )
+        dataset = LexDatasetRecord(
+            name="MetaDataset",
+            schema_ref="at://did:plc:abc/collection/key",
+            storage=StorageHttp(shards=[]),
+            metadata=meta,
+        )
+
+        record = dataset.to_record()
+        restored = LexDatasetRecord.from_record(record)
+
+        assert restored.metadata is not None
+        assert restored.metadata.split == "train"
+        assert restored.metadata.version == "2.0"
+        assert restored.metadata.source_uri == "https://example.com/raw"
+        assert restored.metadata.custom == {"size": 1000}
+
+    def test_metadata_legacy_bytes_roundtrip(self):
+        """Legacy msgpack $bytes metadata is decoded into DatasetMetadata."""
+        import base64
+        import msgpack
+
+        legacy_dict = {"size": 1000, "split": "train"}
+        legacy_bytes = msgpack.packb(legacy_dict)
+        record_dict = {
+            "$type": "ac.foundation.dataset.record",
+            "name": "LegacyDataset",
+            "schemaRef": "at://did:plc:abc/collection/key",
+            "storage": {"$type": "ac.foundation.dataset.storageHttp", "shards": []},
+            "createdAt": "2025-01-01T00:00:00+00:00",
+            "metadata": {"$bytes": base64.b64encode(legacy_bytes).decode("ascii")},
+        }
+
+        restored = LexDatasetRecord.from_record(record_dict)
+        assert restored.metadata is not None
+        assert restored.metadata.split == "train"
+        assert restored.metadata.custom == {"size": 1000}
+
+    def test_metadata_legacy_raw_bytes(self):
+        """Legacy raw msgpack bytes metadata is decoded into DatasetMetadata."""
+        import msgpack
+
+        legacy_dict = {"split": "test", "version": "1.0"}
+        legacy_bytes = msgpack.packb(legacy_dict)
+        record_dict = {
+            "$type": "ac.foundation.dataset.record",
+            "name": "LegacyDataset",
+            "schemaRef": "at://did:plc:abc/collection/key",
+            "storage": {"$type": "ac.foundation.dataset.storageHttp", "shards": []},
+            "createdAt": "2025-01-01T00:00:00+00:00",
+            "metadata": legacy_bytes,
+        }
+
+        restored = LexDatasetRecord.from_record(record_dict)
+        assert restored.metadata is not None
+        assert restored.metadata.split == "test"
+        assert restored.metadata.version == "1.0"
+
+
+# =============================================================================
+# Tests for _lexicon_types.py - DatasetMetadata
+# =============================================================================
+
+
+class TestDatasetMetadata:
+    """Tests for DatasetMetadata dataclass."""
+
+    def test_empty_metadata_to_record(self):
+        """All-None DatasetMetadata serializes to empty dict."""
+        meta = DatasetMetadata()
+        assert meta.to_record() == {}
+
+    def test_empty_metadata_roundtrip(self):
+        """Empty DatasetMetadata survives to_record -> from_record."""
+        meta = DatasetMetadata()
+        restored = DatasetMetadata.from_record(meta.to_record())
+        assert restored == meta
+
+    def test_all_fields_roundtrip(self):
+        """DatasetMetadata with every field set survives roundtrip."""
+        meta = DatasetMetadata(
+            source_uri="https://example.com/raw",
+            created_by="pipeline-v3",
+            version="1.2.3",
+            processing_steps=["crop", "normalize"],
+            split="validation",
+            custom={"epochs": 5, "model": "vit"},
+        )
+        record = meta.to_record()
+        restored = DatasetMetadata.from_record(record)
+        assert restored == meta
+
+    def test_to_dict_merges_custom(self):
+        """to_dict flattens custom keys into top-level dict."""
+        meta = DatasetMetadata(split="train", custom={"lr": 0.01})
+        d = meta.to_dict()
+        assert d == {"split": "train", "lr": 0.01}
+
+    def test_to_dict_custom_does_not_overwrite_known(self):
+        """Custom keys with same name as known fields don't clobber them."""
+        meta = DatasetMetadata(split="train", custom={"split": "WRONG"})
+        d = meta.to_dict()
+        assert d["split"] == "train"
+
+    def test_from_dict_unknown_keys_go_to_custom(self):
+        """Keys not matching known fields end up in custom."""
+        meta = DatasetMetadata.from_dict({"split": "test", "lr": 0.001, "seed": 42})
+        assert meta.split == "test"
+        assert meta.custom == {"lr": 0.001, "seed": 42}
+
+    def test_from_dict_empty_string_preserved(self):
+        """Empty string values for known fields are preserved, not treated as None."""
+        meta = DatasetMetadata.from_dict({"sourceUri": "", "version": "1.0"})
+        assert meta.source_uri == ""
+        assert meta.version == "1.0"
+
+    def test_from_dict_empty_list_preserved(self):
+        """Empty list for processingSteps is preserved, not treated as None."""
+        meta = DatasetMetadata.from_dict({"processingSteps": []})
+        assert meta.processing_steps == []
+
+    def test_from_dict_camel_takes_precedence(self):
+        """When both camelCase and snake_case keys exist, camelCase wins."""
+        meta = DatasetMetadata.from_dict(
+            {
+                "sourceUri": "camel",
+                "source_uri": "snake",
+            }
+        )
+        assert meta.source_uri == "camel"
+
+    def test_from_dict_explicit_custom_merged(self):
+        """Explicit 'custom' key is merged with auto-detected custom keys."""
+        meta = DatasetMetadata.from_dict(
+            {
+                "custom": {"a": 1},
+                "unknown_key": 2,
+            }
+        )
+        assert meta.custom == {"a": 1, "unknown_key": 2}
+
+    def test_to_dict_from_dict_roundtrip(self):
+        """to_dict -> from_dict preserves all data."""
+        meta = DatasetMetadata(
+            source_uri="s3://bucket/path",
+            split="train",
+            custom={"extra": True},
+        )
+        d = meta.to_dict()
+        restored = DatasetMetadata.from_dict(d)
+        assert restored.source_uri == meta.source_uri
+        assert restored.split == meta.split
+        assert restored.custom == {"extra": True}
+
+    def test_metadata_none_omitted_from_record(self):
+        """LexDatasetRecord with metadata=None omits metadata key."""
+        rec = LexDatasetRecord(
+            name="NoMeta",
+            schema_ref="at://schema",
+            storage=StorageHttp(shards=[]),
+        )
+        record = rec.to_record()
+        assert "metadata" not in record
+
+    def test_empty_processing_steps_serialized(self):
+        """processing_steps=[] is serialized (not omitted like None)."""
+        meta = DatasetMetadata(processing_steps=[])
+        record = meta.to_record()
+        assert record["processingSteps"] == []
 
 
 # =============================================================================
@@ -1574,6 +1754,11 @@ class TestDatasetPublisher:
         call_args = mock_atproto_client.com.atproto.repo.create_record.call_args
         record = call_args.kwargs["data"]["record"]
         assert "metadata" in record
+        # metadata is now a structured JSON object, not $bytes
+        assert isinstance(record["metadata"], dict)
+        assert "$bytes" not in record["metadata"]
+        assert record["metadata"]["split"] == "train"
+        assert record["metadata"]["custom"] == {"samples": 100}
 
 
 class TestDatasetLoader:
@@ -1657,7 +1842,27 @@ class TestDatasetLoader:
             loader.get_urls(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
 
     def test_get_metadata(self, authenticated_client, mock_atproto_client):
-        """Get metadata from dataset record."""
+        """Get metadata from dataset record (new structured format)."""
+        mock_response = Mock()
+        mock_response.value = {
+            "$type": f"{LEXICON_NAMESPACE}.record",
+            "name": "MetaDataset",
+            "schemaRef": "at://schema",
+            "storage": {"$type": f"{LEXICON_NAMESPACE}.storageExternal", "urls": []},
+            "metadata": {"split": "train", "custom": {"samples": 10000}},
+        }
+        mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
+
+        loader = DatasetLoader(authenticated_client)
+        metadata = loader.get_metadata(
+            f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz"
+        )
+
+        assert metadata["split"] == "train"
+        assert metadata["samples"] == 10000
+
+    def test_get_metadata_legacy_bytes(self, authenticated_client, mock_atproto_client):
+        """Get metadata from dataset record with legacy msgpack bytes."""
         import msgpack
 
         metadata_bytes = msgpack.packb({"split": "train", "samples": 10000})
@@ -1697,6 +1902,69 @@ class TestDatasetLoader:
         )
 
         assert metadata is None
+
+    def test_get_metadata_typed(self, authenticated_client, mock_atproto_client):
+        """get_metadata_typed returns DatasetMetadata instance."""
+        mock_response = Mock()
+        mock_response.value = {
+            "$type": f"{LEXICON_NAMESPACE}.record",
+            "name": "TypedMeta",
+            "schemaRef": "at://schema",
+            "storage": {"$type": f"{LEXICON_NAMESPACE}.storageHttp", "shards": []},
+            "createdAt": "2025-01-01T00:00:00+00:00",
+            "metadata": {"split": "train", "version": "3.0", "custom": {"k": "v"}},
+        }
+        mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
+
+        loader = DatasetLoader(authenticated_client)
+        meta = loader.get_metadata_typed(
+            f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz"
+        )
+
+        assert isinstance(meta, DatasetMetadata)
+        assert meta.split == "train"
+        assert meta.version == "3.0"
+        assert meta.custom == {"k": "v"}
+
+    def test_get_metadata_typed_none(self, authenticated_client, mock_atproto_client):
+        """get_metadata_typed returns None when no metadata."""
+        mock_response = Mock()
+        mock_response.value = {
+            "$type": f"{LEXICON_NAMESPACE}.record",
+            "name": "NoMeta",
+            "schemaRef": "at://schema",
+            "storage": {"$type": f"{LEXICON_NAMESPACE}.storageExternal", "urls": []},
+        }
+        mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
+
+        loader = DatasetLoader(authenticated_client)
+        meta = loader.get_metadata_typed(
+            f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz"
+        )
+        assert meta is None
+
+    def test_publish_with_typed_metadata(
+        self, authenticated_client, mock_atproto_client
+    ):
+        """DatasetPublisher accepts DatasetMetadata directly."""
+        mock_response = Mock()
+        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.record/abc"
+        mock_atproto_client.com.atproto.repo.create_record.return_value = mock_response
+
+        publisher = DatasetPublisher(authenticated_client)
+        meta = DatasetMetadata(split="train", version="2.0")
+        publisher.publish_with_urls(
+            urls=["https://example.com/data.tar"],
+            schema_uri="at://schema",
+            name="TypedMetaDataset",
+            metadata=meta,
+        )
+
+        call_args = mock_atproto_client.com.atproto.repo.create_record.call_args
+        record = call_args.kwargs["data"]["record"]
+        assert record["metadata"]["split"] == "train"
+        assert record["metadata"]["version"] == "2.0"
+        assert "$bytes" not in record["metadata"]
 
     def test_list_all(self, authenticated_client, mock_atproto_client):
         """List all datasets."""

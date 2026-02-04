@@ -40,6 +40,14 @@ CREATE TABLE IF NOT EXISTS schemas (
     PRIMARY KEY (name, version)
 );
 
+CREATE TABLE IF NOT EXISTS lenses (
+    name        TEXT NOT NULL,
+    version     TEXT NOT NULL,
+    lens_json   TEXT NOT NULL,
+    created_at  TIMESTAMPTZ DEFAULT now(),
+    PRIMARY KEY (name, version)
+);
+
 CREATE TABLE IF NOT EXISTS labels (
     name        TEXT NOT NULL,
     cid         TEXT NOT NULL,
@@ -245,6 +253,56 @@ class PostgresProvider(IndexProvider):
             cur.execute("SELECT name, cid, version FROM labels")
             for row in cur:
                 yield (row[0], row[1], row[2] if row[2] else None)
+
+    # ------------------------------------------------------------------
+    # Lens operations
+    # ------------------------------------------------------------------
+
+    def store_lens(self, name: str, version: str, lens_json: str) -> None:
+        with self._conn.cursor() as cur:
+            cur.execute(
+                """INSERT INTO lenses (name, version, lens_json)
+                   VALUES (%s, %s, %s)
+                   ON CONFLICT (name, version) DO UPDATE SET
+                       lens_json = EXCLUDED.lens_json""",
+                (name, version, lens_json),
+            )
+        self._conn.commit()
+
+    def get_lens_json(self, name: str, version: str) -> str | None:
+        with self._conn.cursor() as cur:
+            cur.execute(
+                "SELECT lens_json FROM lenses WHERE name = %s AND version = %s",
+                (name, version),
+            )
+            row = cur.fetchone()
+        if row is None:
+            return None
+        return row[0]
+
+    def iter_lenses(self) -> Iterator[tuple[str, str, str]]:
+        with self._conn.cursor() as cur:
+            cur.execute("SELECT name, version, lens_json FROM lenses")
+            for row in cur:
+                yield row[0], row[1], row[2]
+
+    def find_latest_lens_version(self, name: str) -> str | None:
+        with self._conn.cursor() as cur:
+            cur.execute(
+                "SELECT version FROM lenses WHERE name = %s",
+                (name,),
+            )
+            latest: tuple[int, int, int] | None = None
+            latest_str: str | None = None
+            for (version_str,) in cur:
+                try:
+                    v = parse_semver(version_str)
+                    if latest is None or v > latest:
+                        latest = v
+                        latest_str = version_str
+                except ValueError:
+                    continue
+        return latest_str
 
     # ------------------------------------------------------------------
     # Lifecycle
