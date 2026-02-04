@@ -50,10 +50,11 @@ packages = ["src/atdata"]
 "lexicons" = "atdata/lexicons"
 
 [tool.pytest.ini_options]
-addopts = "--cov=atdata --cov-report=html"
+addopts = "--cov=atdata --cov-report=html -m 'not integration'"
 markers = [
     "network: marks tests as requiring network access (deselect with '-m \"not network\"')",
     "slow: marks tests as slow running",
+    "integration: live integration tests against remote service sandboxes (deselect with '-m \"not integration\"')",
     "benchmark: performance benchmarks",
     "bench_serial: serialization benchmarks (μs scale)",
     "bench_index: index provider benchmarks (μs–ms scale)",

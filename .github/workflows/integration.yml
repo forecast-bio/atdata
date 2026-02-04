@@ -1,0 +1,116 @@
+name: Integration tests
+
+on:
+  push:
+    branches: [main, develop]
+  schedule:
+    # Nightly at 06:00 UTC
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: integration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration:
+    name: Live integration tests
+    runs-on: ubuntu-latest
+    environment: integration
+    # Do not block merges — integration failures are informational
+    continue-on-error: true
+
+    services:
+      minio:
+        image: minio/minio:latest
+        ports:
+          - 9000:9000
+        env:
+          MINIO_ROOT_USER: minioadmin
+          MINIO_ROOT_PASSWORD: minioadmin
+        options: >-
+          --health-cmd "mc ready local || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --entrypoint ""
+        # minio/minio image requires explicit server command
+        # The options above use mc, but the actual entrypoint is overridden.
+        # We use a custom start command via the container args.
+
+      postgres:
+        image: postgres:16
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: atdata
+          POSTGRES_PASSWORD: atdata_test
+          POSTGRES_DB: atdata_integration
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install the project
+        run: uv sync --locked --all-extras --dev
+
+      # MinIO needs the server process started manually when entrypoint
+      # is overridden.  Use a sidecar approach: start minio in the
+      # background and wait for it.
+      - name: Start MinIO server
+        run: |
+          docker run -d --name minio-server \
+            -p 9000:9000 \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin \
+            minio/minio:latest server /data
+          # Wait until the health endpoint responds
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:9000/minio/health/live && break
+            sleep 1
+          done
+
+      - name: Run integration tests
+        env:
+          # ATProto — stored in GitHub environment secrets
+          ATPROTO_TEST_HANDLE: ${{ secrets.ATPROTO_TEST_HANDLE }}
+          ATPROTO_TEST_PASSWORD: ${{ secrets.ATPROTO_TEST_PASSWORD }}
+          # MinIO
+          MINIO_ENDPOINT: http://localhost:9000
+          MINIO_ACCESS_KEY: minioadmin
+          MINIO_SECRET_KEY: minioadmin
+          # PostgreSQL
+          POSTGRES_DSN: postgresql://atdata:atdata_test@localhost:5432/atdata_integration
+        run: >
+          uv run pytest
+          -m integration
+          -v
+          --tb=short
+          --no-header
+          -o addopts=""
+          --junitxml=integration-results.xml
+
+      - name: Upload test results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-results
+          path: integration-results.xml
+          retention-days: 30

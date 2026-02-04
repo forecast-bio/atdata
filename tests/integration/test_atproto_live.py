@@ -1,0 +1,307 @@
+"""Live ATProto integration tests.
+
+Exercises the Atmosphere client against a real PDS (bsky.social or
+self-hosted).  Requires ``ATPROTO_TEST_HANDLE`` and
+``ATPROTO_TEST_PASSWORD`` environment variables.
+
+Every record created is cleaned up in a finalizer so the test account
+stays tidy.
+"""
+
+from __future__ import annotations
+
+import io
+import os
+
+import pytest
+import webdataset as wds
+
+import atdata
+from atdata.atmosphere import (
+    Atmosphere,
+    SchemaPublisher,
+    SchemaLoader,
+    DatasetPublisher,
+    DatasetLoader,
+)
+from atdata.atmosphere._types import LEXICON_NAMESPACE
+from numpy.typing import NDArray
+
+from .conftest import unique_name, RUN_ID
+
+# ── Sample types ──────────────────────────────────────────────────
+
+
+@atdata.packable
+class IntegBasicSample:
+    name: str
+    value: int
+
+
+@atdata.packable
+class IntegArraySample:
+    label: str
+    data: NDArray
+
+
+# ── Helpers ───────────────────────────────────────────────────────
+
+TEST_COLLECTION_SCHEMA = f"{LEXICON_NAMESPACE}.schema"
+TEST_COLLECTION_RECORD = f"{LEXICON_NAMESPACE}.record"
+
+
+def _cleanup_records(client: Atmosphere, collection: str, prefix: str) -> int:
+    """Delete all records in *collection* whose name contains *prefix*."""
+    deleted = 0
+    records, _ = client.list_records(collection)
+    for rec in records:
+        rec_name = rec.get("name", "")
+        if prefix in rec_name:
+            uri = rec.get("uri") or rec.get("$uri")
+            if uri:
+                try:
+                    client.delete_record(uri)
+                    deleted += 1
+                except Exception:
+                    continue  # best-effort: skip failures during cleanup
+    return deleted
+
+
+# ── Authentication ────────────────────────────────────────────────
+
+
+class TestAuthentication:
+    """Login and session management against the live PDS."""
+
+    def test_login_returns_did(self, atproto_client: Atmosphere):
+        assert atproto_client.is_authenticated
+        assert atproto_client.did.startswith("did:")
+
+    def test_session_export_reimport(self, atproto_credentials: tuple[str, str]):
+        handle, password = atproto_credentials
+        client1 = Atmosphere.login(handle, password)
+        session_str = client1.export_session()
+        assert len(session_str) > 0
+
+        client2 = Atmosphere.from_session(session_str)
+        assert client2.is_authenticated
+        assert client2.did == client1.did
+
+    def test_invalid_credentials_raises(self):
+        with pytest.raises(Exception):
+            Atmosphere.login("invalid-handle-does-not-exist.test", "wrong")
+
+
+# ── Blob upload / download ────────────────────────────────────────
+
+
+class TestBlobOperations:
+    """Upload and download blobs via the live PDS."""
+
+    def test_upload_and_download_blob(self, atproto_client: Atmosphere):
+        payload = b"hello from atdata integration test " + RUN_ID.encode()
+        blob_ref = atproto_client.upload_blob(payload, mime_type="application/octet-stream")
+
+        assert blob_ref["$type"] == "blob"
+        assert blob_ref["size"] == len(payload)
+        assert "ref" in blob_ref
+
+        cid = blob_ref["ref"]["$link"]
+        downloaded = atproto_client.get_blob(atproto_client.did, cid)
+        assert downloaded == payload
+
+    def test_upload_large_blob(self, atproto_client: Atmosphere):
+        """Upload a ~1 MB blob to verify timeout heuristics work."""
+        payload = os.urandom(1_000_000)
+        blob_ref = atproto_client.upload_blob(payload)
+        assert blob_ref["size"] == len(payload)
+
+
+# ── Record CRUD ───────────────────────────────────────────────────
+
+
+class TestRecordCRUD:
+    """Create, get, list, and delete records on the live PDS."""
+
+    def test_create_get_delete_record(self, atproto_client: Atmosphere):
+        name = unique_name("crud")
+        record = {
+            "$type": TEST_COLLECTION_SCHEMA,
+            "name": name,
+            "version": "1.0.0",
+            "fields": [],
+        }
+        uri = atproto_client.create_record(TEST_COLLECTION_SCHEMA, record)
+        assert str(uri).startswith("at://")
+
+        fetched = atproto_client.get_record(uri)
+        assert fetched["name"] == name
+
+        atproto_client.delete_record(uri)
+
+        with pytest.raises(Exception):
+            atproto_client.get_record(uri)
+
+    def test_list_records(self, atproto_client: Atmosphere):
+        records, cursor = atproto_client.list_records(TEST_COLLECTION_SCHEMA)
+        assert isinstance(records, list)
+        # cursor may be None if < limit records
+
+
+# ── Schema publish / retrieve ─────────────────────────────────────
+
+
+class TestSchemaPublishing:
+    """Publish and retrieve schemas via SchemaPublisher/Loader."""
+
+    def test_publish_and_get_schema(self, atproto_client: Atmosphere):
+        name = unique_name("schema")
+
+        @atdata.packable
+        class _Sample:
+            text: str
+            score: int
+
+        _Sample.__module__ = f"integ.{name}"
+
+        pub = SchemaPublisher(atproto_client)
+        uri = pub.publish(_Sample, version="1.0.0")
+        assert "at://" in str(uri)
+
+        loader = SchemaLoader(atproto_client)
+        schema = loader.get(str(uri))
+        assert schema["version"] == "1.0.0"
+        field_names = {f["name"] for f in schema["fields"]}
+        assert field_names == {"text", "score"}
+
+        # cleanup
+        atproto_client.delete_record(uri)
+
+    def test_schema_with_ndarray_field(self, atproto_client: Atmosphere):
+        name = unique_name("arr-schema")
+
+        @atdata.packable
+        class _ArraySample:
+            embedding: NDArray
+            label: str
+
+        _ArraySample.__module__ = f"integ.{name}"
+
+        pub = SchemaPublisher(atproto_client)
+        uri = pub.publish(_ArraySample, version="1.0.0")
+
+        loader = SchemaLoader(atproto_client)
+        schema = loader.get(str(uri))
+        emb = next(f for f in schema["fields"] if f["name"] == "embedding")
+        assert "ndarray" in emb["fieldType"]["$type"].lower()
+
+        atproto_client.delete_record(uri)
+
+
+# ── Dataset publish with URLs ─────────────────────────────────────
+
+
+class TestDatasetPublishing:
+    """Publish dataset records pointing at external URLs."""
+
+    def test_publish_dataset_with_urls(self, atproto_client: Atmosphere):
+        name = unique_name("ds-url")
+
+        @atdata.packable
+        class _DSample:
+            value: int
+
+        _DSample.__module__ = f"integ.{name}"
+
+        schema_pub = SchemaPublisher(atproto_client)
+        schema_uri = schema_pub.publish(_DSample, version="1.0.0")
+
+        ds_pub = DatasetPublisher(atproto_client)
+        ds_uri = ds_pub.publish_with_urls(
+            urls=["https://example.com/shard-000000.tar"],
+            schema_uri=str(schema_uri),
+            name=name,
+            description="integration test dataset",
+        )
+        assert "at://" in str(ds_uri)
+
+        loader = DatasetLoader(atproto_client)
+        record = loader.get(str(ds_uri))
+        assert record["name"] == name
+
+        # cleanup
+        atproto_client.delete_record(ds_uri)
+        atproto_client.delete_record(schema_uri)
+
+
+# ── Blob-storage round-trip ───────────────────────────────────────
+
+
+class TestBlobRoundTrip:
+    """Full E2E: write samples → upload as blob → retrieve and iterate."""
+
+    def test_write_upload_iterate(self, atproto_client: Atmosphere):
+        name = unique_name("blob-rt")
+
+        @atdata.packable
+        class _BlobSample:
+            id: int
+            message: str
+
+        _BlobSample.__module__ = f"integ.{name}"
+
+        samples = [
+            _BlobSample(id=0, message="hello"),
+            _BlobSample(id=1, message="world"),
+        ]
+
+        # Build tar in memory
+        buf = io.BytesIO()
+        with wds.writer.TarWriter(buf) as sink:
+            for s in samples:
+                sink.write(s.as_wds)
+        tar_bytes = buf.getvalue()
+
+        # Publish schema + dataset with blob
+        schema_pub = SchemaPublisher(atproto_client)
+        schema_uri = schema_pub.publish(_BlobSample, version="1.0.0")
+
+        ds_pub = DatasetPublisher(atproto_client)
+        ds_uri = ds_pub.publish_with_blobs(
+            blobs=[tar_bytes],
+            schema_uri=str(schema_uri),
+            name=name,
+            description="blob round-trip test",
+        )
+
+        # Retrieve and iterate
+        loader = DatasetLoader(atproto_client)
+        assert loader.get_storage_type(str(ds_uri)) == "blobs"
+
+        blob_urls = loader.get_blob_urls(str(ds_uri))
+        assert len(blob_urls) == 1
+
+        ds = loader.to_dataset(str(ds_uri), _BlobSample)
+        result = list(ds.ordered())
+        assert len(result) == 2
+        assert result[0].message == ["hello"]
+        assert result[1].message == ["world"]
+
+        # cleanup
+        atproto_client.delete_record(ds_uri)
+        atproto_client.delete_record(schema_uri)
+
+
+# ── Sweep cleanup (runs last by naming convention) ────────────────
+
+
+class TestZZZCleanup:
+    """Best-effort cleanup of any leftover test records from this run."""
+
+    def test_cleanup_schemas(self, atproto_client: Atmosphere):
+        deleted = _cleanup_records(atproto_client, TEST_COLLECTION_SCHEMA, RUN_ID)
+        assert deleted >= 0
+
+    def test_cleanup_datasets(self, atproto_client: Atmosphere):
+        deleted = _cleanup_records(atproto_client, TEST_COLLECTION_RECORD, RUN_ID)
+        assert deleted >= 0
