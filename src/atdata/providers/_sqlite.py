@@ -40,6 +40,14 @@ CREATE TABLE IF NOT EXISTS schemas (
     PRIMARY KEY (name, version)
 );
 
+CREATE TABLE IF NOT EXISTS lenses (
+    name        TEXT NOT NULL,
+    version     TEXT NOT NULL,
+    lens_json   TEXT NOT NULL,
+    created_at  TEXT DEFAULT (datetime('now')),
+    PRIMARY KEY (name, version)
+);
+
 CREATE TABLE IF NOT EXISTS labels (
     name        TEXT NOT NULL,
     cid         TEXT NOT NULL,
@@ -218,6 +226,65 @@ class SqliteProvider(IndexProvider):
         cursor = self._conn.execute("SELECT name, cid, version FROM labels")
         for name, cid, version in cursor:
             yield (name, cid, version if version else None)
+
+    # ------------------------------------------------------------------
+    # Lens operations
+    # ------------------------------------------------------------------
+
+    def store_lens(self, name: str, version: str, lens_json: str) -> None:
+        self._conn.execute(
+            """INSERT OR REPLACE INTO lenses (name, version, lens_json)
+               VALUES (?, ?, ?)""",
+            (name, version, lens_json),
+        )
+        self._conn.commit()
+
+    def get_lens_json(self, name: str, version: str) -> str | None:
+        row = self._conn.execute(
+            "SELECT lens_json FROM lenses WHERE name = ? AND version = ?",
+            (name, version),
+        ).fetchone()
+        if row is None:
+            return None
+        return row[0]
+
+    def iter_lenses(self) -> Iterator[tuple[str, str, str]]:
+        cursor = self._conn.execute("SELECT name, version, lens_json FROM lenses")
+        yield from cursor
+
+    def find_latest_lens_version(self, name: str) -> str | None:
+        cursor = self._conn.execute(
+            "SELECT version FROM lenses WHERE name = ?",
+            (name,),
+        )
+        latest: tuple[int, int, int] | None = None
+        latest_str: str | None = None
+        for (version_str,) in cursor:
+            try:
+                v = parse_semver(version_str)
+                if latest is None or v > latest:
+                    latest = v
+                    latest_str = version_str
+            except ValueError:
+                continue
+        return latest_str
+
+    def find_lenses_by_schemas(
+        self,
+        source_schema: str,
+        view_schema: str | None = None,
+    ) -> list[tuple[str, str, str]]:
+        results: list[tuple[str, str, str]] = []
+        import json
+
+        for name, version, lens_json in self.iter_lenses():
+            record = json.loads(lens_json)
+            if record.get("source_schema") != source_schema:
+                continue
+            if view_schema is not None and record.get("view_schema") != view_schema:
+                continue
+            results.append((name, version, lens_json))
+        return results
 
     # ------------------------------------------------------------------
     # Lifecycle

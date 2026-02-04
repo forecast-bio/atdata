@@ -207,6 +207,74 @@ class RedisProvider(IndexProvider):
             yield (name, cid, ver if ver else None)
 
     # ------------------------------------------------------------------
+    # Lens operations
+    # ------------------------------------------------------------------
+
+    def store_lens(self, name: str, version: str, lens_json: str) -> None:
+        redis_key = f"LocalLens:{name}@{version}"
+        self._redis.set(redis_key, lens_json)
+
+    def get_lens_json(self, name: str, version: str) -> str | None:
+        redis_key = f"LocalLens:{name}@{version}"
+        value = self._redis.get(redis_key)
+        if value is None:
+            return None
+        if isinstance(value, bytes):
+            return value.decode("utf-8")
+        return value  # type: ignore[return-value]
+
+    def iter_lenses(self) -> Iterator[tuple[str, str, str]]:
+        prefix = "LocalLens:"
+        for key in self._redis.scan_iter(match=f"{prefix}*"):
+            key_str = key.decode("utf-8") if isinstance(key, bytes) else key
+            lens_id = key_str[len(prefix):]
+
+            if "@" not in lens_id:
+                continue
+
+            name, version = lens_id.rsplit("@", 1)
+
+            value = self._redis.get(key)
+            if value is None:
+                continue
+            lens_json = value.decode("utf-8") if isinstance(value, bytes) else value
+            yield name, version, lens_json  # type: ignore[misc]
+
+    def find_latest_lens_version(self, name: str) -> str | None:
+        latest: tuple[int, int, int] | None = None
+        latest_str: str | None = None
+
+        for lens_name, version, _ in self.iter_lenses():
+            if lens_name != name:
+                continue
+            try:
+                v = parse_semver(version)
+                if latest is None or v > latest:
+                    latest = v
+                    latest_str = version
+            except ValueError:
+                continue
+
+        return latest_str
+
+    def find_lenses_by_schemas(
+        self,
+        source_schema: str,
+        view_schema: str | None = None,
+    ) -> list[tuple[str, str, str]]:
+        import json
+
+        results: list[tuple[str, str, str]] = []
+        for name, version, lens_json in self.iter_lenses():
+            record = json.loads(lens_json)
+            if record.get("source_schema") != source_schema:
+                continue
+            if view_schema is not None and record.get("view_schema") != view_schema:
+                continue
+            results.append((name, version, lens_json))
+        return results
+
+    # ------------------------------------------------------------------
     # Lifecycle
     # ------------------------------------------------------------------
 
