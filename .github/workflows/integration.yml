@@ -3,6 +3,8 @@ name: Integration tests
 on:
   push:
     branches: [main, develop]
+  pull_request:
+    branches: [main]
   schedule:
     # Nightly at 06:00 UTC
     - cron: "0 6 * * *"
