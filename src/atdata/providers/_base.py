@@ -129,6 +129,53 @@ class IndexProvider(ABC):
         """
 
     # ------------------------------------------------------------------
+    # Label operations
+    # ------------------------------------------------------------------
+
+    @abstractmethod
+    def store_label(
+        self,
+        name: str,
+        cid: str,
+        version: str | None = None,
+        description: str | None = None,
+    ) -> None:
+        """Persist a label mapping a name (+ optional version) to a dataset CID.
+
+        Args:
+            name: Human-readable label name (e.g. ``"mnist"``).
+            cid: Content identifier of the target dataset entry.
+            version: Optional version string (e.g. ``"1.0.0"``).
+            description: Optional description of this labeled version.
+        """
+
+    @abstractmethod
+    def get_label(
+        self, name: str, version: str | None = None
+    ) -> tuple[str, str | None]:
+        """Resolve a label to a dataset CID.
+
+        Args:
+            name: Label name.
+            version: Specific version to resolve. If ``None``, returns the
+                most recently created label with *name*.
+
+        Returns:
+            Tuple of ``(cid, version)``.
+
+        Raises:
+            KeyError: If no label exists with *name* (and *version*).
+        """
+
+    @abstractmethod
+    def iter_labels(self) -> Iterator[tuple[str, str, str | None]]:
+        """Iterate over all stored labels.
+
+        Yields:
+            Tuples of ``(name, cid, version)``.
+        """
+
+    # ------------------------------------------------------------------
     # Lifecycle
     # ------------------------------------------------------------------
 

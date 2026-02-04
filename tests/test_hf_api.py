@@ -713,15 +713,33 @@ class TestParseIndexedPath:
 
     def test_parse_handle_dataset(self):
         """Parse @handle/dataset format."""
-        handle, name = _parse_indexed_path("@maxine.science/mnist")
+        handle, name, version = _parse_indexed_path("@maxine.science/mnist")
         assert handle == "maxine.science"
         assert name == "mnist"
+        assert version is None
 
     def test_parse_did_dataset(self):
         """Parse @did:plc:xxx/dataset format."""
-        handle, name = _parse_indexed_path("@did:plc:abc123/my-dataset")
+        handle, name, version = _parse_indexed_path("@did:plc:abc123/my-dataset")
         assert handle == "did:plc:abc123"
         assert name == "my-dataset"
+        assert version is None
+
+    def test_parse_with_version(self):
+        """Parse @handle/dataset@version format."""
+        handle, name, version = _parse_indexed_path("@maxine.science/mnist@1.0.0")
+        assert handle == "maxine.science"
+        assert name == "mnist"
+        assert version == "1.0.0"
+
+    def test_parse_with_freeform_version(self):
+        """Parse @handle/dataset@freeform-version format."""
+        handle, name, version = _parse_indexed_path(
+            "@alice.bsky.social/cifar10@v2-beta"
+        )
+        assert handle == "alice.bsky.social"
+        assert name == "cifar10"
+        assert version == "v2-beta"
 
     def test_parse_invalid_no_slash(self):
         """Invalid path without slash raises ValueError."""
@@ -777,6 +795,7 @@ class TestLoadDatasetWithIndex:
         """load_dataset with indexed path uses index lookup."""
         mock_index = Mock()
         mock_index.data_store = None  # No data store, so no URL transformation
+        mock_index.get_label.side_effect = KeyError("no label")
         mock_entry = Mock()
         mock_entry.data_urls = ["s3://bucket/data.tar"]
         mock_entry.schema_ref = "local://schemas/test@1.0.0"
@@ -797,6 +816,7 @@ class TestLoadDatasetWithIndex:
         """load_dataset with sample_type=None uses decode_schema."""
         mock_index = Mock()
         mock_index.data_store = None  # No data store, so no URL transformation
+        mock_index.get_label.side_effect = KeyError("no label")
         mock_entry = Mock()
         mock_entry.data_urls = ["s3://bucket/data.tar"]
         mock_entry.schema_ref = "local://schemas/test@1.0.0"
@@ -817,6 +837,7 @@ class TestLoadDatasetWithIndex:
         """load_dataset with indexed path returns DatasetDict when split=None."""
         mock_index = Mock()
         mock_index.data_store = None  # No data store, so no URL transformation
+        mock_index.get_label.side_effect = KeyError("no label")
         mock_entry = Mock()
         mock_entry.data_urls = ["s3://bucket/data.tar"]
         mock_entry.schema_ref = "local://schemas/test@1.0.0"
@@ -838,6 +859,7 @@ class TestLoadDatasetWithIndex:
 
         mock_index = Mock()
         mock_index.data_store = mock_data_store
+        mock_index.get_label.side_effect = KeyError("no label")
         mock_entry = Mock()
         mock_entry.data_urls = ["s3://bucket/data.tar"]
         mock_entry.schema_ref = "local://schemas/test@1.0.0"
@@ -859,6 +881,7 @@ class TestLoadDatasetWithIndex:
         """load_dataset uses URLs unchanged when index has no data_store."""
         mock_index = Mock()
         mock_index.data_store = None
+        mock_index.get_label.side_effect = KeyError("no label")
         mock_entry = Mock()
         mock_entry.data_urls = ["s3://bucket/data.tar"]
         mock_entry.schema_ref = "local://schemas/test@1.0.0"
@@ -892,6 +915,7 @@ class TestLoadDatasetWithIndex:
 
         mock_index = Mock()
         mock_index.data_store = mock_store
+        mock_index.get_label.side_effect = KeyError("no label")
         mock_entry = Mock()
         mock_entry.data_urls = [
             "s3://my-bucket/train-000.tar",

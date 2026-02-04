@@ -39,6 +39,18 @@ CREATE TABLE IF NOT EXISTS schemas (
     created_at  TIMESTAMPTZ DEFAULT now(),
     PRIMARY KEY (name, version)
 );
+
+CREATE TABLE IF NOT EXISTS labels (
+    name        TEXT NOT NULL,
+    cid         TEXT NOT NULL,
+    version     TEXT NOT NULL DEFAULT '',
+    description TEXT,
+    created_at  TIMESTAMPTZ DEFAULT now(),
+    PRIMARY KEY (name, version)
+);
+
+CREATE INDEX IF NOT EXISTS idx_labels_cid
+    ON labels(cid);
 """
 
 
@@ -182,6 +194,57 @@ class PostgresProvider(IndexProvider):
                 except ValueError:
                     continue
         return latest_str
+
+    # ------------------------------------------------------------------
+    # Label operations
+    # ------------------------------------------------------------------
+
+    def store_label(
+        self,
+        name: str,
+        cid: str,
+        version: str | None = None,
+        description: str | None = None,
+    ) -> None:
+        with self._conn.cursor() as cur:
+            cur.execute(
+                """INSERT INTO labels (name, cid, version, description)
+                   VALUES (%s, %s, %s, %s)
+                   ON CONFLICT (name, version) DO UPDATE SET
+                       cid = EXCLUDED.cid,
+                       description = EXCLUDED.description""",
+                (name, cid, version or "", description),
+            )
+        self._conn.commit()
+
+    def get_label(
+        self, name: str, version: str | None = None
+    ) -> tuple[str, str | None]:
+        with self._conn.cursor() as cur:
+            if version is not None:
+                cur.execute(
+                    "SELECT cid, version FROM labels WHERE name = %s AND version = %s",
+                    (name, version),
+                )
+            else:
+                cur.execute(
+                    "SELECT cid, version FROM labels WHERE name = %s "
+                    "ORDER BY created_at DESC LIMIT 1",
+                    (name,),
+                )
+            row = cur.fetchone()
+        if row is None:
+            raise KeyError(
+                f"No label with name: {name!r}"
+                + (f" version: {version!r}" if version else "")
+            )
+        return (row[0], row[1] if row[1] else None)
+
+    def iter_labels(self) -> Iterator[tuple[str, str, str | None]]:
+        with self._conn.cursor() as cur:
+            cur.execute("SELECT name, cid, version FROM labels")
+            for row in cur:
+                yield (row[0], row[1], row[2] if row[2] else None)
 
     # ------------------------------------------------------------------
     # Lifecycle

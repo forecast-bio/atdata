@@ -9,6 +9,7 @@ description: Prepare and submit a beta release
 - Recent commits: !`git log --oneline -15`
 - All branches: !`git branch --list 'release/*' | tail -5`
 - Current version: !`grep '^version' pyproject.toml`
+- Repo identity: !`gh repo view --json nameWithOwner --jq .nameWithOwner`
 - Remotes: !`git remote -v`
 
 ## Your task
@@ -28,6 +29,8 @@ Given current version `X.Y.Z` (stable):
 
 Present 3-4 options with the most likely choice first (marked as recommended). Then proceed with the selected version.
 
+Detect the repo owner/name dynamically via `gh repo view --json nameWithOwner --jq .nameWithOwner`.
+
 Perform the full release flow:
 
 ### 1. Validate preconditions
@@ -35,14 +38,13 @@ Perform the full release flow:
 - Confirm lint is clean: `uv run ruff check src/ tests/`
 - Confirm formatting is clean: `uv run ruff format --check src/ tests/` (fix with `uv run ruff format src/ tests/` if needed)
 - Confirm no uncommitted changes (other than `.chainlink/issues.db`)
-- Identify the previous release branch to branch from (e.g. `release/v0.3.0b1`)
-- Identify the feature branch to merge (current branch or ask user)
+- Confirm `develop` branch is up to date with `main` (merge main into develop if needed)
 
-### 2. Create release branch
+### 2. Create release branch from develop
 - Stash any uncommitted changes
-- `git checkout <previous-release-branch>`
+- `git checkout develop`
+- `git pull origin develop`
 - `git checkout -b release/<version>`
-- `git merge <feature-branch> --no-ff --no-edit`
 - `git stash pop` (if anything was stashed)
 
 ### 3. Prepare release
@@ -59,18 +61,28 @@ Perform the full release flow:
 - `git push -u origin release/<version>`
 
 ### 5. Create PR
-- Create PR to `upstream/main` using `gh pr create`:
-  - `--repo forecast-bio/atdata`
+- Create PR to `main` using `gh pr create`:
+  - `--repo <owner>/<repo>`
   - `--base main`
   - `--head release/<version>`
   - Title: `release: <version>`
   - Body: summary of changes from CHANGELOG, test plan with pass counts
 
-### 6. Track in chainlink
+### 6. Post-merge: sync develop
+After the PR is merged to `main`, sync develop:
+```bash
+git checkout develop
+git merge main --no-ff --no-edit
+git push origin develop
+```
+Remind the user to do this after merge, or do it if the PR is already merged.
+
+### 7. Track in chainlink
 - Create a chainlink issue for the release, close when PR is submitted
 
 ## Constraints
 
+- **Branch from `develop`**, not from previous release branches
 - Always use `--no-ff` for merges to preserve branch topology
 - Always run `uv lock` after version bumps — stale lockfiles break CI
 - Always run both `ruff check` and `ruff format --check` before committing — either will fail CI

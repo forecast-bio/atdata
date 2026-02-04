@@ -249,12 +249,28 @@ The codebase uses Python 3.12+ generics heavily:
 
 ## Testing Notes
 
-- 1155+ tests across 38 test files
+- 1300+ tests across 39 test files
 - Tests use parametrization via `@pytest.mark.parametrize` where appropriate
 - Temporary WebDataset tar files created in `tmp_path` fixture
 - Shared sample types defined in `conftest.py` (`SharedBasicSample`, `SharedNumpySample`)
 - Lens tests verify well-behavedness (GetPut/PutGet/PutPut laws)
 - Integration tests cover local, atmosphere, cross-backend, and error handling scenarios
+
+### ATProto SDK Signature Validation
+
+`tests/test_atproto_compat.py` validates that our `Atmosphere` wrapper calls
+the atproto SDK with compatible method signatures. It uses a **real** atproto
+`Client` instance (not a mock) with `ClientRaw._invoke` patched so no network
+I/O occurs. This catches TypeErrors like passing unsupported kwargs that
+unspecced mocks would silently accept.
+
+Key details:
+- The fixture injects a mock session with a far-future JWT expiry so the SDK's
+  session-refresh guard passes through without attempting a token refresh
+- Both `client._session` (SDK) and `atmo._session` (wrapper) must be set
+- The `Client.upload_blob()` wrapper does NOT accept `**kwargs`; use the
+  namespace method `Client.com.atproto.repo.upload_blob()` which forwards
+  kwargs through to httpx
 
 ### Warning Suppression Convention
 
@@ -371,13 +387,45 @@ uv run chainlink list  # Not needed
 
 Project-level Claude Code skills are defined in `.claude/commands/`:
 
-- `/release <version>` — Full release flow: branch, merge, version bump, changelog, PR
+- `/release <version>` — Full release flow: branch from `develop`, version bump, changelog, PR to `main`
+- `/publish` — Post-merge: create GitHub release, monitor PyPI publish, sync `develop`
+- `/feature <description>` — Create a feature branch from `develop` with a slugified name
+- `/featree <description>` — Create a feature branch in a new git worktree (symlinks chainlink db)
 - `/adr` — Adversarial review with docstring-preservation rules for quartodoc
 - `/changelog` — Generate clean CHANGELOG entry from chainlink history
+- `/commit` — Analyze changes and create a well-formatted commit
 
 User-level skills (in `~/.claude/commands/`) take precedence over project-level skills with the same name.
 
 ## Git Workflow
+
+This project follows **git flow** branching:
+
+### Branch Model
+
+| Branch | Purpose | Branches from | Merges to |
+|--------|---------|---------------|-----------|
+| `main` | Production releases, always deployable | — | — |
+| `develop` | Integration branch, all features land here | `main` (initial) | `main` (via release) |
+| `feature/*` | Individual work items | `develop` | `develop` |
+| `release/*` | Release prep (version bump, changelog) | `develop` | `main` (via PR) |
+| `hotfix/*` | Urgent fixes to production | `main` | `main` + `develop` |
+
+### Feature Development
+
+1. Branch from `develop`: `git checkout develop && git checkout -b feature/my-feature`
+2. Do work, commit
+3. Merge back to `develop` with `--no-ff`
+4. Delete the feature branch
+
+### Release Flow
+
+Releases follow this pattern (automated by `/release` skill):
+1. Create `release/v<version>` branch **from `develop`**
+2. Bump version in `pyproject.toml`, run `uv lock`
+3. Write CHANGELOG entry (Keep a Changelog format)
+4. Push and create PR to `main`
+5. After merge, sync develop: `git checkout develop && git merge main --no-ff`
 
 ### Committing Changes
 
@@ -386,14 +434,12 @@ When using the `/commit` command or creating commits:
 - This ensures issue tracking history is preserved across sessions
 - The issues.db file tracks all chainlink issues, comments, and status changes
 
-### Release Flow
+### Worktrees and Chainlink
 
-Releases follow this pattern (automated by `/release` skill):
-1. Create `release/v<version>` branch from previous release
-2. Merge feature branch with `--no-ff` to preserve topology
-3. Bump version in `pyproject.toml`, run `uv lock`
-4. Write CHANGELOG entry (Keep a Changelog format)
-5. Push and create PR to `upstream/main`
+When using git worktrees (via `/featree`), the worktree's `.chainlink/issues.db`
+is replaced with a **symlink** to the base clone's copy. This ensures all
+worktrees share a single authoritative database on the `develop` branch. Do not
+commit the symlink — it is a local convenience only.
 
 ### CLI Module
 
