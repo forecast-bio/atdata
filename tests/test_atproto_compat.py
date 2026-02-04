@@ -70,17 +70,17 @@ class TestUploadBlobSignature:
 
     def test_timeout_kwarg_reaches_sdk(self, atmosphere_real_sdk):
         """The timeout kwarg must pass through the SDK namespace layer."""
-        invoke_mock = _make_invoke_mock({
-            "blob": {
-                "ref": {"$link": "bafkreitest"},
-                "mimeType": "application/x-tar",
-                "size": 100,
+        invoke_mock = _make_invoke_mock(
+            {
+                "blob": {
+                    "ref": {"$link": "bafkreitest"},
+                    "mimeType": "application/x-tar",
+                    "size": 100,
+                }
             }
-        })
+        )
         with patch.object(ClientRaw, "_invoke", invoke_mock):
-            result = atmosphere_real_sdk.upload_blob(
-                b"test data", timeout=120.0
-            )
+            result = atmosphere_real_sdk.upload_blob(b"test data", timeout=120.0)
 
         assert result["$type"] == "blob"
         assert result["ref"]["$link"] == "bafkreitest"
@@ -90,13 +90,15 @@ class TestUploadBlobSignature:
 
     def test_default_timeout_heuristic(self, atmosphere_real_sdk):
         """Default timeout=None computes a heuristic without TypeError."""
-        invoke_mock = _make_invoke_mock({
-            "blob": {
-                "ref": {"$link": "bafkrei123"},
-                "mimeType": "application/octet-stream",
-                "size": 50,
+        invoke_mock = _make_invoke_mock(
+            {
+                "blob": {
+                    "ref": {"$link": "bafkrei123"},
+                    "mimeType": "application/octet-stream",
+                    "size": 50,
+                }
             }
-        })
+        )
         with patch.object(ClientRaw, "_invoke", invoke_mock):
             result = atmosphere_real_sdk.upload_blob(b"x" * 100)
 
@@ -109,10 +111,12 @@ class TestCreateRecordSignature:
     """Verify create_record calls the SDK with a compatible signature."""
 
     def test_basic_create(self, atmosphere_real_sdk):
-        invoke_mock = _make_invoke_mock({
-            "uri": "at://did:plc:compat-test/col/abc",
-            "cid": "bafytest",
-        })
+        invoke_mock = _make_invoke_mock(
+            {
+                "uri": "at://did:plc:compat-test/col/abc",
+                "cid": "bafytest",
+            }
+        )
         with patch.object(ClientRaw, "_invoke", invoke_mock):
             result = atmosphere_real_sdk.create_record(
                 collection="app.bsky.feed.post",
@@ -126,10 +130,12 @@ class TestListRecordsSignature:
     """Verify list_records calls the SDK with a compatible signature."""
 
     def test_basic_list(self, atmosphere_real_sdk):
-        invoke_mock = _make_invoke_mock({
-            "records": [],
-            "cursor": None,
-        })
+        invoke_mock = _make_invoke_mock(
+            {
+                "records": [],
+                "cursor": None,
+            }
+        )
         with patch.object(ClientRaw, "_invoke", invoke_mock):
             records, cursor = atmosphere_real_sdk.list_records(
                 collection="app.bsky.feed.post",
@@ -143,15 +149,15 @@ class TestGetRecordSignature:
     """Verify get_record calls the SDK with a compatible signature."""
 
     def test_basic_get(self, atmosphere_real_sdk):
-        invoke_mock = _make_invoke_mock({
-            "uri": "at://did:plc:compat-test/col/key",
-            "cid": "bafytest",
-            "value": {"field": "value"},
-        })
+        invoke_mock = _make_invoke_mock(
+            {
+                "uri": "at://did:plc:compat-test/col/key",
+                "cid": "bafytest",
+                "value": {"field": "value"},
+            }
+        )
         with patch.object(ClientRaw, "_invoke", invoke_mock):
-            result = atmosphere_real_sdk.get_record(
-                "at://did:plc:compat-test/col/key"
-            )
+            result = atmosphere_real_sdk.get_record("at://did:plc:compat-test/col/key")
 
         assert result["field"] == "value"
 
@@ -162,9 +168,7 @@ class TestDeleteRecordSignature:
     def test_basic_delete(self, atmosphere_real_sdk):
         invoke_mock = _make_invoke_mock({})
         with patch.object(ClientRaw, "_invoke", invoke_mock):
-            atmosphere_real_sdk.delete_record(
-                "at://did:plc:compat-test/col/key"
-            )
+            atmosphere_real_sdk.delete_record("at://did:plc:compat-test/col/key")
 
         invoke_mock.assert_called_once()
 

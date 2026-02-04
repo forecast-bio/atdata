@@ -1349,7 +1349,9 @@ class TestDatasetPublisher:
 
         mock_upload_response = Mock()
         mock_upload_response.blob = mock_blob_ref
-        mock_atproto_client.com.atproto.repo.upload_blob.return_value = mock_upload_response
+        mock_atproto_client.com.atproto.repo.upload_blob.return_value = (
+            mock_upload_response
+        )
 
         # Mock create_record response
         mock_create_response = Mock()
@@ -1392,7 +1394,9 @@ class TestDatasetPublisher:
 
         mock_upload_response = Mock()
         mock_upload_response.blob = mock_blob_ref
-        mock_atproto_client.com.atproto.repo.upload_blob.return_value = mock_upload_response
+        mock_atproto_client.com.atproto.repo.upload_blob.return_value = (
+            mock_upload_response
+        )
 
         mock_create_response = Mock()
         mock_create_response.uri = (

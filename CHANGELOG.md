@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.3.2b3] - 2026-02-04
+
+### Fixed
+- **`Atmosphere.upload_blob()` TypeError**: The timeout heuristic passed `timeout=` to `Client.upload_blob()` which only accepts `(data: bytes)`. Switched to the namespace method `com.atproto.repo.upload_blob()` which forwards kwargs through to httpx
+
+### Testing
+- **ATProto SDK signature compatibility tests**: New `test_atproto_compat.py` with 7 tests that instantiate a real atproto `Client` (with `ClientRaw._invoke` patched) to validate method signatures without network I/O. Covers `upload_blob`, `create_record`, `list_records`, `get_record`, `delete_record`, and `export_session`
+
 ## [0.3.2b2] - 2026-02-03
 
 ### Added
