@@ -93,10 +93,7 @@ class AtmosphereIndexEntry:
             return [s["url"] for s in storage.get("shards", [])]
         if "storageS3" in storage_type:
             bucket = storage.get("bucket", "")
-            return [
-                f"s3://{bucket}/{s['key']}"
-                for s in storage.get("shards", [])
-            ]
+            return [f"s3://{bucket}/{s['key']}" for s in storage.get("shards", [])]
         if "storageExternal" in storage_type:
             return storage.get("urls", [])
         if "storageBlobs" in storage_type:

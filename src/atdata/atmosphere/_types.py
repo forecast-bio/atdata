@@ -101,8 +101,7 @@ def __getattr__(name: str) -> Any:
     if name in _DEPRECATED_ALIASES:
         new_name, mod_path = _DEPRECATED_ALIASES[name]
         warnings.warn(
-            f"{name} has been moved. "
-            f"Import {new_name} from {mod_path} instead.",
+            f"{name} has been moved. Import {new_name} from {mod_path} instead.",
             DeprecationWarning,
             stacklevel=2,
         )

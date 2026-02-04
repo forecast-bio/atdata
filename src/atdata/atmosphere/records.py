@@ -318,8 +318,7 @@ class DatasetPublisher:
             The AT URI of the created dataset record.
         """
         blob_entries = [
-            BlobEntry(blob=ref, checksum=_placeholder_checksum())
-            for ref in blob_refs
+            BlobEntry(blob=ref, checksum=_placeholder_checksum()) for ref in blob_refs
         ]
 
         return self._create_record(
@@ -535,8 +534,7 @@ class DatasetLoader:
             return storage.get("urls", [])
         elif "storageBlobs" in storage_type:
             raise ValueError(
-                "Dataset uses blob storage, not URLs. "
-                "Use get_blob_urls() instead."
+                "Dataset uses blob storage, not URLs. Use get_blob_urls() instead."
             )
         else:
             raise ValueError(f"Unknown storage type: {storage_type}")

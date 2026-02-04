@@ -170,7 +170,9 @@ class SchemaPublisher:
             return {"type": "string", "format": "byte", "contentEncoding": "base64"}
 
         if is_ndarray_type(python_type):
-            return {"$ref": "https://foundation.ac/schemas/atdata-ndarray-bytes/1.0.0#/$defs/ndarray"}
+            return {
+                "$ref": "https://foundation.ac/schemas/atdata-ndarray-bytes/1.0.0#/$defs/ndarray"
+            }
 
         origin = get_origin(python_type)
         if origin is list:

@@ -272,8 +272,7 @@ def storage_from_record(d: dict[str, Any]) -> StorageUnion:
     if "storageExternal" in type_id:
         urls = d.get("urls", [])
         shards = [
-            HttpShardEntry(url=url, checksum=ShardChecksum("none", ""))
-            for url in urls
+            HttpShardEntry(url=url, checksum=ShardChecksum("none", "")) for url in urls
         ]
         return StorageHttp(shards=shards)
     raise ValueError(f"Unknown storage type: {type_id!r}")
@@ -360,9 +359,7 @@ class JsonSchemaFormat:
         """Deserialize from ATProto record dict."""
         afv = d.get("arrayFormatVersions")
         # Extract schema body: everything except $type and arrayFormatVersions
-        body = {
-            k: v for k, v in d.items() if k not in ("$type", "arrayFormatVersions")
-        }
+        body = {k: v for k, v in d.items() if k not in ("$type", "arrayFormatVersions")}
         return cls(schema_body=body, array_format_versions=afv)
 
 

@@ -132,7 +132,9 @@ class TestFindOrPublishSchema:
 
                 assert result == "at://new/schema/uri"
                 mock_publisher.publish.assert_called_once_with(
-                    PromoteTestSample, version="1.0.0", description=None,
+                    PromoteTestSample,
+                    version="1.0.0",
+                    description=None,
                 )
 
 

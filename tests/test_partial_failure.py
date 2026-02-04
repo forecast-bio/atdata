@@ -245,7 +245,5 @@ class TestOnShardError:
     def test_callback_not_invoked_on_success(self, tmp_path):
         ds = _make_multi_shard_dataset(tmp_path, n_shards=2, per_shard=2)
         errors_seen: list[str] = []
-        ds.process_shards(
-            len, on_shard_error=lambda s, e: errors_seen.append(s)
-        )
+        ds.process_shards(len, on_shard_error=lambda s, e: errors_seen.append(s))
         assert len(errors_seen) == 0

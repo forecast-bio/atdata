@@ -458,7 +458,12 @@ class TestLexDatasetRecord:
             storage=StorageBlobs(
                 blobs=[
                     BlobEntry(
-                        blob={"$type": "blob", "ref": {"$link": "bafytest"}, "mimeType": "application/x-tar", "size": 1024},
+                        blob={
+                            "$type": "blob",
+                            "ref": {"$link": "bafytest"},
+                            "mimeType": "application/x-tar",
+                            "size": 1024,
+                        },
                         checksum=ShardChecksum(algorithm="sha256", digest="abc123"),
                     ),
                 ],
@@ -1700,11 +1705,21 @@ class TestDatasetLoader:
                 "$type": f"{LEXICON_NAMESPACE}.storageBlobs",
                 "blobs": [
                     {
-                        "blob": {"$type": "blob", "ref": {"$link": "bafkreitest1"}, "mimeType": "application/x-tar", "size": 1024},
+                        "blob": {
+                            "$type": "blob",
+                            "ref": {"$link": "bafkreitest1"},
+                            "mimeType": "application/x-tar",
+                            "size": 1024,
+                        },
                         "checksum": {"algorithm": "sha256", "digest": "abc"},
                     },
                     {
-                        "blob": {"$type": "blob", "ref": {"$link": "bafkreitest2"}, "mimeType": "application/x-tar", "size": 2048},
+                        "blob": {
+                            "$type": "blob",
+                            "ref": {"$link": "bafkreitest2"},
+                            "mimeType": "application/x-tar",
+                            "size": 2048,
+                        },
                         "checksum": {"algorithm": "sha256", "digest": "def"},
                     },
                 ],
@@ -2171,7 +2186,9 @@ class TestAtmosphereIndex:
 
         assert uri == str(mock_response.uri)
         mock_atproto_client.com.atproto.repo.create_record.assert_called_once()
-        call_data = mock_atproto_client.com.atproto.repo.create_record.call_args[1]["data"]
+        call_data = mock_atproto_client.com.atproto.repo.create_record.call_args[1][
+            "data"
+        ]
         assert call_data["collection"] == f"{LEXICON_NAMESPACE}.schema"
         assert call_data["record"]["name"] == "BasicSample"
 
