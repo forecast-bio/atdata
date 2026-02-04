@@ -89,6 +89,48 @@ def preview(
 
 
 @app.command()
+def verify(
+    name: str = typer.Argument(help="Dataset name or label to verify checksums for."),
+    db: str = typer.Option(None, help="SQLite database path (default: ~/.atdata/index.db)."),
+) -> None:
+    """Verify SHA-256 checksums for all shards in a dataset.
+
+    Compares stored checksums against freshly computed digests and reports
+    pass/fail per shard. Exits with code 1 if any shard fails verification.
+    """
+    from atdata._helpers import verify_checksums
+    from atdata.index import Index
+
+    kwargs: dict = {}
+    if db is not None:
+        kwargs["path"] = db
+    index = Index(**kwargs)
+    entry = index.get_dataset(name)
+
+    if not entry.metadata or "checksums" not in entry.metadata:
+        typer.echo(f"No checksums stored for dataset '{name}'. Nothing to verify.")
+        raise typer.Exit(code=0)
+
+    results = verify_checksums(entry)
+
+    failed = False
+    for url, status in results.items():
+        if status == "ok":
+            icon = "PASS"
+        elif status == "skipped":
+            icon = "SKIP"
+        else:
+            icon = "FAIL"
+            failed = True
+        typer.echo(f"  [{icon}] {url}")
+
+    if failed:
+        typer.echo("\nVerification FAILED.")
+        raise typer.Exit(code=1)
+    typer.echo("\nAll checksums verified.")
+
+
+@app.command()
 def diagnose(
     host: str = typer.Option("localhost", help="Redis host."),
     port: int = typer.Option(6379, help="Redis port."),

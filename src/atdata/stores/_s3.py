@@ -61,6 +61,7 @@ def _create_s3_write_callbacks(
     fs: S3FileSystem | None,
     cache_local: bool,
     add_s3_prefix: bool = False,
+    checksums: dict[str, str] | None = None,
 ) -> tuple:
     """Create opener and post callbacks for ShardWriter with S3 upload.
 
@@ -71,12 +72,16 @@ def _create_s3_write_callbacks(
         fs: S3FileSystem for direct writes (used when cache_local=False).
         cache_local: If True, write locally then copy to S3.
         add_s3_prefix: If True, prepend 's3://' to shard paths.
+        checksums: Optional dict to populate with shard URL → SHA-256 hex
+            digest mappings. Only populated when ``cache_local=True``.
 
     Returns:
         Tuple of (writer_opener, writer_post) callbacks.
     """
     if cache_local:
         import boto3
+
+        from atdata._helpers import sha256_file
 
         s3_client_kwargs = {
             "aws_access_key_id": credentials["AWS_ACCESS_KEY_ID"],
@@ -96,6 +101,11 @@ def _create_s3_write_callbacks(
             path_parts = Path(p).parts
             bucket = path_parts[0]
             key = str(Path(*path_parts[1:]))
+
+            # Compute checksum before upload while file is still on disk
+            if checksums is not None:
+                shard_url = f"s3://{p}" if add_s3_prefix else p
+                checksums[shard_url] = sha256_file(str(local_path))
 
             with open(local_path, "rb") as f_in:
                 s3_client.put_object(Bucket=bucket, Key=key, Body=f_in.read())
@@ -196,7 +206,10 @@ class S3DataStore:
         new_uuid = str(uuid4())
         shard_pattern = f"{self.bucket}/{prefix}/data--{new_uuid}--%06d.tar"
 
+        from atdata._helpers import ShardWriteResult
+
         written_shards: list[str] = []
+        checksums: dict[str, str] = {}
 
         with log_operation(
             "S3DataStore.write_shards",
@@ -235,6 +248,7 @@ class S3DataStore:
                     fs=self._fs,
                     cache_local=cache_local,
                     add_s3_prefix=True,
+                    checksums=checksums if cache_local else None,
                 )
 
                 if manifest:
@@ -335,7 +349,7 @@ class S3DataStore:
 
             log.info("S3DataStore.write_shards: wrote %d shard(s)", len(written_shards))
 
-        return written_shards
+        return ShardWriteResult(written_shards, checksums)
 
     def read_url(self, url: str) -> str:
         """Resolve an S3 URL for reading/streaming.
