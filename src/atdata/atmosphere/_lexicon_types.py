@@ -184,11 +184,16 @@ class DatasetMetadata:
         if isinstance(explicit_custom, dict):
             custom_extra.update(explicit_custom)
 
+        def _pick(camel: str, snake: str) -> Any:
+            """Return the camelCase value if present, else the snake_case value."""
+            v = d.get(camel)
+            return v if v is not None else d.get(snake)
+
         return cls(
-            source_uri=d.get("sourceUri") or d.get("source_uri"),
-            created_by=d.get("createdBy") or d.get("created_by"),
+            source_uri=_pick("sourceUri", "source_uri"),
+            created_by=_pick("createdBy", "created_by"),
             version=d.get("version"),
-            processing_steps=d.get("processingSteps") or d.get("processing_steps"),
+            processing_steps=_pick("processingSteps", "processing_steps"),
             split=d.get("split"),
             custom=custom_extra or None,
         )
