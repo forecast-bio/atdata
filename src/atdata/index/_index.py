@@ -27,10 +27,11 @@ from typing import (
     Generator,
     TYPE_CHECKING,
 )
-from redis import Redis
 import json
 
 if TYPE_CHECKING:
+    from redis import Redis
+
     from atdata.providers._base import IndexProvider
     from atdata.repository import Repository, _AtmosphereBackend
     from atdata._protocols import IndexEntry
@@ -196,9 +197,10 @@ class Index:
 
             local_provider = RedisProvider(redis)
         elif kwargs:
+            from redis import Redis as _Redis
             from atdata.providers._redis import RedisProvider
 
-            local_provider = RedisProvider(Redis(**kwargs))
+            local_provider = RedisProvider(_Redis(**kwargs))
         else:
             from atdata.providers._sqlite import SqliteProvider
 

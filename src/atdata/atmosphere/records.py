@@ -5,7 +5,6 @@ and loading them back. Dataset records are published as
 ``ac.foundation.dataset.record`` records.
 """
 
-import hashlib
 from typing import Type, TypeVar, Optional
 import msgpack
 
@@ -33,13 +32,8 @@ if TYPE_CHECKING:
 ST = TypeVar("ST", bound="Packable")
 
 
-def _sha256_checksum_from_url(url: str) -> ShardChecksum:
-    """Create a placeholder checksum for a URL.
-
-    When publishing URLs, we cannot compute the actual checksum without
-    downloading the file. The caller should provide pre-computed checksums
-    when available.
-    """
+def _placeholder_checksum() -> ShardChecksum:
+    """Return an empty checksum placeholder for shards without pre-computed digests."""
     return ShardChecksum(algorithm="none", digest="")
 
 
@@ -71,6 +65,40 @@ class DatasetPublisher:
         """
         self.client = client
         self._schema_publisher = SchemaPublisher(client)
+
+    def _create_record(
+        self,
+        storage: "StorageHttp | StorageS3 | StorageBlobs",
+        *,
+        name: str,
+        schema_uri: str,
+        description: Optional[str] = None,
+        tags: Optional[list[str]] = None,
+        license: Optional[str] = None,
+        metadata: Optional[dict] = None,
+        rkey: Optional[str] = None,
+    ) -> AtUri:
+        """Build a LexDatasetRecord and publish it to ATProto."""
+        metadata_bytes: Optional[bytes] = None
+        if metadata is not None:
+            metadata_bytes = msgpack.packb(metadata)
+
+        dataset_record = LexDatasetRecord(
+            name=name,
+            schema_ref=schema_uri,
+            storage=storage,
+            description=description,
+            tags=tags or [],
+            license=license,
+            metadata=metadata_bytes,
+        )
+
+        return self.client.create_record(
+            collection=f"{LEXICON_NAMESPACE}.record",
+            record=dataset_record.to_record(),
+            rkey=rkey,
+            validate=False,
+        )
 
     def publish(
         self,
@@ -106,49 +134,34 @@ class DatasetPublisher:
         Raises:
             ValueError: If schema_uri is not provided and auto_publish_schema is False.
         """
-        # Ensure we have a schema reference
         if schema_uri is None:
             if not auto_publish_schema:
                 raise ValueError(
                     "schema_uri is required when auto_publish_schema=False"
                 )
-            # Auto-publish the schema
             schema_uri_obj = self._schema_publisher.publish(
                 dataset.sample_type,
                 version=schema_version,
             )
             schema_uri = str(schema_uri_obj)
 
-        # Build HTTP storage from the dataset URL
-        shard_urls = [dataset.url]
+        shard_urls = dataset.list_shards()
         storage = StorageHttp(
             shards=[
-                HttpShardEntry(url=url, checksum=_sha256_checksum_from_url(url))
+                HttpShardEntry(url=url, checksum=_placeholder_checksum())
                 for url in shard_urls
             ]
         )
 
-        # Build dataset record
-        metadata_bytes: Optional[bytes] = None
-        if dataset.metadata is not None:
-            metadata_bytes = msgpack.packb(dataset.metadata)
-
-        dataset_record = LexDatasetRecord(
+        return self._create_record(
+            storage,
             name=name,
-            schema_ref=schema_uri,
-            storage=storage,
+            schema_uri=schema_uri,
             description=description,
-            tags=tags or [],
+            tags=tags,
             license=license,
-            metadata=metadata_bytes,
-        )
-
-        # Publish to ATProto
-        return self.client.create_record(
-            collection=f"{LEXICON_NAMESPACE}.record",
-            record=dataset_record.to_record(),
+            metadata=dataset.metadata,
             rkey=rkey,
-            validate=False,
         )
 
     def publish_with_urls(
@@ -194,31 +207,20 @@ class DatasetPublisher:
         shards = [
             HttpShardEntry(
                 url=url,
-                checksum=checksums[i] if checksums else ShardChecksum("none", ""),
+                checksum=checksums[i] if checksums else _placeholder_checksum(),
             )
             for i, url in enumerate(urls)
         ]
-        storage = StorageHttp(shards=shards)
 
-        metadata_bytes: Optional[bytes] = None
-        if metadata is not None:
-            metadata_bytes = msgpack.packb(metadata)
-
-        dataset_record = LexDatasetRecord(
+        return self._create_record(
+            StorageHttp(shards=shards),
             name=name,
-            schema_ref=schema_uri,
-            storage=storage,
+            schema_uri=schema_uri,
             description=description,
-            tags=tags or [],
+            tags=tags,
             license=license,
-            metadata=metadata_bytes,
-        )
-
-        return self.client.create_record(
-            collection=f"{LEXICON_NAMESPACE}.record",
-            record=dataset_record.to_record(),
+            metadata=metadata,
             rkey=rkey,
-            validate=False,
         )
 
     def publish_with_s3(
@@ -265,36 +267,20 @@ class DatasetPublisher:
         shards = [
             S3ShardEntry(
                 key=key,
-                checksum=checksums[i] if checksums else ShardChecksum("none", ""),
+                checksum=checksums[i] if checksums else _placeholder_checksum(),
             )
             for i, key in enumerate(keys)
         ]
-        storage = StorageS3(
-            bucket=bucket,
-            shards=shards,
-            region=region,
-            endpoint=endpoint,
-        )
 
-        metadata_bytes: Optional[bytes] = None
-        if metadata is not None:
-            metadata_bytes = msgpack.packb(metadata)
-
-        dataset_record = LexDatasetRecord(
+        return self._create_record(
+            StorageS3(bucket=bucket, shards=shards, region=region, endpoint=endpoint),
             name=name,
-            schema_ref=schema_uri,
-            storage=storage,
+            schema_uri=schema_uri,
             description=description,
-            tags=tags or [],
+            tags=tags,
             license=license,
-            metadata=metadata_bytes,
-        )
-
-        return self.client.create_record(
-            collection=f"{LEXICON_NAMESPACE}.record",
-            record=dataset_record.to_record(),
+            metadata=metadata,
             rkey=rkey,
-            validate=False,
         )
 
     def publish_with_blob_refs(
@@ -332,30 +318,19 @@ class DatasetPublisher:
             The AT URI of the created dataset record.
         """
         blob_entries = [
-            BlobEntry(blob=ref, checksum=ShardChecksum("none", ""))
+            BlobEntry(blob=ref, checksum=_placeholder_checksum())
             for ref in blob_refs
         ]
-        storage = StorageBlobs(blobs=blob_entries)
 
-        metadata_bytes: Optional[bytes] = None
-        if metadata is not None:
-            metadata_bytes = msgpack.packb(metadata)
-
-        dataset_record = LexDatasetRecord(
+        return self._create_record(
+            StorageBlobs(blobs=blob_entries),
             name=name,
-            schema_ref=schema_uri,
-            storage=storage,
+            schema_uri=schema_uri,
             description=description,
-            tags=tags or [],
+            tags=tags,
             license=license,
-            metadata=metadata_bytes,
-        )
-
-        return self.client.create_record(
-            collection=f"{LEXICON_NAMESPACE}.record",
-            record=dataset_record.to_record(),
+            metadata=metadata,
             rkey=rkey,
-            validate=False,
         )
 
     def publish_with_blobs(
@@ -395,10 +370,11 @@ class DatasetPublisher:
             Blobs are only retained by the PDS when referenced in a committed
             record. This method handles that automatically.
         """
-        # Upload all blobs and compute checksums
         blob_entries = []
         for blob_data in blobs:
             blob_ref = self.client.upload_blob(blob_data, mime_type=mime_type)
+            import hashlib
+
             digest = hashlib.sha256(blob_data).hexdigest()
             blob_entries.append(
                 BlobEntry(
@@ -407,27 +383,15 @@ class DatasetPublisher:
                 )
             )
 
-        storage = StorageBlobs(blobs=blob_entries)
-
-        metadata_bytes: Optional[bytes] = None
-        if metadata is not None:
-            metadata_bytes = msgpack.packb(metadata)
-
-        dataset_record = LexDatasetRecord(
+        return self._create_record(
+            StorageBlobs(blobs=blob_entries),
             name=name,
-            schema_ref=schema_uri,
-            storage=storage,
+            schema_uri=schema_uri,
             description=description,
-            tags=tags or [],
+            tags=tags,
             license=license,
-            metadata=metadata_bytes,
-        )
-
-        return self.client.create_record(
-            collection=f"{LEXICON_NAMESPACE}.record",
-            record=dataset_record.to_record(),
+            metadata=metadata,
             rkey=rkey,
-            validate=False,
         )
 
 

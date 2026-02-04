@@ -36,9 +36,11 @@ from atdata.atmosphere import (
     StorageS3,
     StorageBlobs,
     HttpShardEntry,
+    S3ShardEntry,
     ShardChecksum,
     BlobEntry,
 )
+from atdata.atmosphere._lexicon_types import storage_from_record
 from atdata.atmosphere._types import LEXICON_NAMESPACE
 
 
@@ -498,6 +500,151 @@ class TestLexDatasetRecord:
         record = dataset.to_record()
 
         assert record["metadata"] == metadata_bytes
+
+
+# =============================================================================
+# Tests for _lexicon_types.py - storage_from_record roundtrip
+# =============================================================================
+
+
+class TestStorageFromRecord:
+    """Tests for storage_from_record() union deserialization."""
+
+    def test_http_roundtrip(self):
+        """StorageHttp survives to_record → storage_from_record roundtrip."""
+        original = StorageHttp(
+            shards=[
+                HttpShardEntry(
+                    url="https://example.com/shard-000000.tar",
+                    checksum=ShardChecksum("sha256", "abc123"),
+                ),
+                HttpShardEntry(
+                    url="https://example.com/shard-000001.tar",
+                    checksum=ShardChecksum("sha256", "def456"),
+                ),
+            ],
+        )
+        record = original.to_record()
+        restored = storage_from_record(record)
+
+        assert isinstance(restored, StorageHttp)
+        assert len(restored.shards) == 2
+        assert restored.shards[0].url == "https://example.com/shard-000000.tar"
+        assert restored.shards[0].checksum.algorithm == "sha256"
+        assert restored.shards[0].checksum.digest == "abc123"
+        assert restored.shards[1].url == "https://example.com/shard-000001.tar"
+
+    def test_s3_roundtrip(self):
+        """StorageS3 survives to_record → storage_from_record roundtrip."""
+        original = StorageS3(
+            bucket="my-bucket",
+            shards=[
+                S3ShardEntry(
+                    key="data/shard-000000.tar",
+                    checksum=ShardChecksum("sha256", "aaa"),
+                ),
+            ],
+            region="us-east-1",
+            endpoint="https://s3.example.com",
+        )
+        record = original.to_record()
+        restored = storage_from_record(record)
+
+        assert isinstance(restored, StorageS3)
+        assert restored.bucket == "my-bucket"
+        assert restored.region == "us-east-1"
+        assert restored.endpoint == "https://s3.example.com"
+        assert len(restored.shards) == 1
+        assert restored.shards[0].key == "data/shard-000000.tar"
+
+    def test_s3_roundtrip_optional_fields_absent(self):
+        """StorageS3 roundtrip with optional region/endpoint omitted."""
+        original = StorageS3(
+            bucket="minimal-bucket",
+            shards=[
+                S3ShardEntry(
+                    key="shard.tar",
+                    checksum=ShardChecksum("none", ""),
+                ),
+            ],
+        )
+        record = original.to_record()
+        restored = storage_from_record(record)
+
+        assert isinstance(restored, StorageS3)
+        assert restored.region is None
+        assert restored.endpoint is None
+
+    def test_blobs_roundtrip(self):
+        """StorageBlobs survives to_record → storage_from_record roundtrip."""
+        original = StorageBlobs(
+            blobs=[
+                BlobEntry(
+                    blob={
+                        "$type": "blob",
+                        "ref": {"$link": "bafytest123"},
+                        "mimeType": "application/x-tar",
+                        "size": 2048,
+                    },
+                    checksum=ShardChecksum("sha256", "deadbeef"),
+                ),
+            ],
+        )
+        record = original.to_record()
+        restored = storage_from_record(record)
+
+        assert isinstance(restored, StorageBlobs)
+        assert len(restored.blobs) == 1
+        assert restored.blobs[0].blob["ref"]["$link"] == "bafytest123"
+        assert restored.blobs[0].checksum is not None
+        assert restored.blobs[0].checksum.digest == "deadbeef"
+
+    def test_blobs_roundtrip_no_checksum(self):
+        """StorageBlobs roundtrip when BlobEntry has no checksum."""
+        original = StorageBlobs(
+            blobs=[
+                BlobEntry(
+                    blob={
+                        "$type": "blob",
+                        "ref": {"$link": "bafynocsum"},
+                        "mimeType": "application/x-tar",
+                        "size": 512,
+                    },
+                ),
+            ],
+        )
+        record = original.to_record()
+        restored = storage_from_record(record)
+
+        assert isinstance(restored, StorageBlobs)
+        assert restored.blobs[0].checksum is None
+
+    def test_legacy_storage_external(self):
+        """Legacy storageExternal format is converted to StorageHttp."""
+        legacy_record = {
+            "$type": f"{LEXICON_NAMESPACE}.storageExternal",
+            "urls": [
+                "s3://bucket/data-000000.tar",
+                "s3://bucket/data-000001.tar",
+            ],
+        }
+        restored = storage_from_record(legacy_record)
+
+        assert isinstance(restored, StorageHttp)
+        assert len(restored.shards) == 2
+        assert restored.shards[0].url == "s3://bucket/data-000000.tar"
+        assert restored.shards[0].checksum.algorithm == "none"
+        assert restored.shards[1].url == "s3://bucket/data-000001.tar"
+
+    def test_unknown_type_raises(self):
+        """Unknown $type raises ValueError."""
+        with pytest.raises(ValueError, match="Unknown storage type"):
+            storage_from_record({"$type": "com.example.unknownStorage"})
+
+    def test_missing_type_raises(self):
+        """Missing $type raises ValueError."""
+        with pytest.raises(ValueError, match="Unknown storage type"):
+            storage_from_record({"urls": ["http://example.com/data.tar"]})
 
 
 # =============================================================================
@@ -1079,6 +1226,7 @@ class TestDatasetPublisher:
         # Create a mock dataset
         mock_dataset = Mock()
         mock_dataset.url = "s3://bucket/data.tar"
+        mock_dataset.list_shards.return_value = ["s3://bucket/data.tar"]
         mock_dataset.sample_type = BasicSample
         mock_dataset.metadata = None
 
@@ -1102,6 +1250,7 @@ class TestDatasetPublisher:
 
         mock_dataset = Mock()
         mock_dataset.url = "s3://bucket/data.tar"
+        mock_dataset.list_shards.return_value = ["s3://bucket/data.tar"]
         mock_dataset.metadata = None
 
         publisher = DatasetPublisher(authenticated_client)
