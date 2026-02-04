@@ -372,24 +372,24 @@ class TestUnicodeAndSpecialChars:
         tar_path = tmp_path / "emoji-000000.tar"
 
         sample = UnicodeSample(
-            text="Hello World! Have a great day!", label="with-emoji"
+            text="Hello 🌍! Have a great day! 🎉🚀", label="with-emoji"
         )
         create_tar_with_samples(tar_path, [sample])
 
         ds = atdata.Dataset[UnicodeSample](str(tar_path))
         loaded = list(ds.ordered(batch_size=None))[0]
 
-        assert "Hello" in loaded.text
-        assert "great day" in loaded.text
+        assert loaded.text == "Hello 🌍! Have a great day! 🎉🚀"
+        assert loaded.label == "with-emoji"
 
     def test_cjk_characters(self, tmp_path):
         """CJK characters should roundtrip correctly."""
         tar_path = tmp_path / "cjk-000000.tar"
 
         samples = [
-            UnicodeSample(text="Nihongo", label="japanese"),
-            UnicodeSample(text="Zhongwen", label="chinese"),
-            UnicodeSample(text="Hangugeo", label="korean"),
+            UnicodeSample(text="日本語テスト", label="japanese"),
+            UnicodeSample(text="中文测试", label="chinese"),
+            UnicodeSample(text="한국어시험", label="korean"),
         ]
         create_tar_with_samples(tar_path, samples)
 
@@ -397,6 +397,9 @@ class TestUnicodeAndSpecialChars:
         loaded = list(ds.ordered(batch_size=None))
 
         assert len(loaded) == 3
+        assert loaded[0].text == "日本語テスト"
+        assert loaded[1].text == "中文测试"
+        assert loaded[2].text == "한국어시험"
 
     def test_special_chars_in_string_fields(self, tmp_path):
         """Special characters (newlines, tabs, quotes) should roundtrip."""
@@ -411,8 +414,7 @@ class TestUnicodeAndSpecialChars:
         ds = atdata.Dataset[UnicodeSample](str(tar_path))
         loaded = list(ds.ordered(batch_size=None))[0]
 
-        assert "Line1\nLine2" in loaded.text
-        assert "\t" in loaded.text
+        assert loaded.text == 'Line1\nLine2\tTabbed\r\nWindows\0Null"Quotes"'
 
 
 ##

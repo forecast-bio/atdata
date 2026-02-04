@@ -398,7 +398,7 @@ class TestMetadataPreservation:
 
         # Should not raise
         result = promote_to_atmosphere(entry, index, authenticated_client)
-        assert isinstance(result, str)
+        assert result == dataset_response.uri
 
 
 ##

@@ -69,7 +69,7 @@ class TestWriteSamplesSharded:
 
         # Should have created multiple shard files
         tar_files = list(tmp_path.glob("data-*.tar"))
-        assert len(tar_files) >= 2
+        assert len(tar_files) == 4  # ceil(10/3) = 4 shards
 
         # All samples should be readable
         result = list(ds.ordered())
@@ -151,8 +151,8 @@ class TestWriteSamplesManifest:
 
         manifest_jsons = list(tmp_path.glob("*.manifest.json"))
         manifest_parquets = list(tmp_path.glob("*.manifest.parquet"))
-        assert len(manifest_jsons) >= 2
-        assert len(manifest_parquets) >= 2
+        assert len(manifest_jsons) == 3  # ceil(10/4) = 3 shards
+        assert len(manifest_parquets) == 3
 
     def test_manifest_false_no_files(self, tmp_path: Path):
         samples = [SharedBasicSample(name="x", value=0)]

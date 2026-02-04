@@ -300,7 +300,5 @@ class TestIndexEdgeCases:
 
         provider = SqliteProvider(path=tmp_path / "test.db")
         mock_client = MagicMock(spec=Atmosphere)
-        with patch("atdata.repository.isinstance", return_value=True):
-            # _AtmosphereBackend checks isinstance; patch it
-            index = atlocal.Index(provider=provider, atmosphere=mock_client)
+        index = atlocal.Index(provider=provider, atmosphere=mock_client)
         assert index.atmosphere is mock_client

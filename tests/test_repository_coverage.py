@@ -192,15 +192,16 @@ def test_publish_schema(backend) -> None:
     _patch_loaders(backend)
     backend._schema_publisher.publish.return_value = "at://did/schema/v1"
 
+    mock_sample_type = MagicMock()
     uri = backend.publish_schema(
-        MagicMock(),
+        mock_sample_type,
         version="2.0.0",
         description="desc",
         metadata={"k": "v"},
     )
 
     backend._schema_publisher.publish.assert_called_once_with(
-        backend._schema_publisher.publish.call_args[0][0],
+        mock_sample_type,
         version="2.0.0",
         description="desc",
         metadata={"k": "v"},
