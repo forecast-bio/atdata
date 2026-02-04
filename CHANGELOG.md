@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.4.0b2] - 2026-02-04
+
+### Added
+- **Redis live integration tests**: 16 tests covering entry CRUD, schema operations, label operations, lens operations, and concurrent access against a real Redis 7 service container
+- **Redis service in CI**: Integration workflow now includes a Redis 7 service container alongside PostgreSQL and MinIO
+
 ## [0.4.0b1] - 2026-02-04
 
 ### Added
