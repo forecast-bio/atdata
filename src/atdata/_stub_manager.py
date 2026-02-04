@@ -551,9 +551,7 @@ class StubManager:
             return list(authority_dir.glob(pattern))
 
         return [
-            p
-            for p in self._stub_dir.glob(f"**/{pattern}")
-            if p.name != "__init__.py"
+            p for p in self._stub_dir.glob(f"**/{pattern}") if p.name != "__init__.py"
         ]
 
     def clear_stub(

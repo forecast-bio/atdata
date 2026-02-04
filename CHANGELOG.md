@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.4.0b1] - 2026-02-04
+
+### Added
+- **Persistent lens storage**: `Index.store_lens()` / `Index.load_lens()` serialize lens definitions (field-mapping or code-reference) to all provider backends (SQLite, Redis, PostgreSQL) with automatic reconstitution, version auto-increment, `find_lenses_by_schemas()`, and stub generation
+- **Typed dataset metadata**: `DatasetMetadata` dataclass replaces opaque bytes metadata in atmosphere records, with structured fields for description, license, tags, and custom key-value pairs
+
+### Changed
+- **Metadata encoding**: Atmosphere metadata now uses ATProto `$bytes` format to prevent `PydanticSerializationError` on binary payloads
+
+### Fixed
+- **Metadata falsy values**: `DatasetMetadata.from_dict()` now preserves falsy values (empty strings, zero, False) instead of dropping them
+- **CI**: Correct benchmark output path in bench workflow
+- **Lint**: Fix unused imports and undefined forward references in lens persistence code
+
 ## [0.3.4b1] - 2026-02-04
 
 ### Added

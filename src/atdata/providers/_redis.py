@@ -227,7 +227,7 @@ class RedisProvider(IndexProvider):
         prefix = "LocalLens:"
         for key in self._redis.scan_iter(match=f"{prefix}*"):
             key_str = key.decode("utf-8") if isinstance(key, bytes) else key
-            lens_id = key_str[len(prefix):]
+            lens_id = key_str[len(prefix) :]
 
             if "@" not in lens_id:
                 continue

@@ -36,6 +36,7 @@ if TYPE_CHECKING:
     from atdata.providers._base import IndexProvider
     from atdata.repository import Repository, _AtmosphereBackend
     from atdata._protocols import IndexEntry
+    from atdata.lens import Lens
 
 T = TypeVar("T", bound=Packable)
 
@@ -1654,7 +1655,6 @@ class Index:
             >>> ref = index.store_lens(my_lens, name="my_lens")
         """
         from atdata._lens_codec import lens_to_json
-        from atdata.lens import Lens
 
         if version is None:
             latest = self._provider.find_latest_lens_version(name)
@@ -1747,7 +1747,6 @@ class Index:
             ... )
         """
         from atdata._lens_codec import lens_from_record
-        from atdata.lens import Lens
 
         record = self.get_lens(ref)
         return lens_from_record(

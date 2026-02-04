@@ -18,13 +18,8 @@ Covers:
 
 import json
 import pytest
-from dataclasses import dataclass
 
-import numpy as np
-from numpy.typing import NDArray
-
-import atdata
-from atdata import Index, Lens, lens, packable
+from atdata import Index, lens, packable
 from atdata._lens_codec import (
     lens_to_json,
     lens_from_record,
@@ -32,8 +27,6 @@ from atdata._lens_codec import (
     clear_lens_cache,
     _detect_field_mapping,
     _resolve_function_ref,
-    _build_field_mapping_getter,
-    _build_field_mapping_putter,
 )
 from atdata.providers._sqlite import SqliteProvider
 from atdata.index._schema import _parse_lens_ref
@@ -104,6 +97,7 @@ class TestLensSerialization:
 
     def test_serialize_field_mapping_lens(self):
         """Field-mapping lens (all view fields exist in source) is detected."""
+
         @packable
         class Src:
             name: str
@@ -128,9 +122,7 @@ class TestLensSerialization:
 
     def test_serialize_code_reference_lens(self):
         """Module-level lens getter has a resolvable code reference."""
-        result = json.loads(
-            lens_to_json(person_name_lens, name="person_name")
-        )
+        result = json.loads(lens_to_json(person_name_lens, name="person_name"))
         # person_name_lens maps PersonFull -> PersonName where PersonName.name
         # is a subset of PersonFull, so it will be detected as field_mapping.
         # That's correct because it IS a simple field mapping.
@@ -210,7 +202,7 @@ class TestLensReconstitution:
         record_json = lens_to_json(person_name_lens, name="person_name")
         record = json.loads(record_json)
 
-        l = lens_from_record(
+        reconstituted = lens_from_record(
             record,
             source_type=PersonFull,
             view_type=PersonName,
@@ -221,14 +213,16 @@ class TestLensReconstitution:
         v = PersonName(name="Updated")
 
         # GetPut: get(put(v, s)) == v
-        assert l.get(l.put(v, s)) == v
+        assert reconstituted.get(reconstituted.put(v, s)) == v
 
         # PutGet: put(get(s), s) == s
-        assert l.put(l.get(s), s) == s
+        assert reconstituted.put(reconstituted.get(s), s) == s
 
         # PutPut: put(v2, put(v1, s)) == put(v2, s)
         v2 = PersonName(name="Another")
-        assert l.put(v2, l.put(v, s)) == l.put(v2, s)
+        assert reconstituted.put(v2, reconstituted.put(v, s)) == reconstituted.put(
+            v2, s
+        )
 
     def test_reconstitute_requires_types_for_field_mapping(self):
         """Field-mapping reconstitution raises ValueError without types."""
@@ -257,12 +251,18 @@ class TestLensReconstitution:
         record = json.loads(record_json)
 
         l1 = lens_from_record(
-            record, source_type=PersonFull, view_type=PersonName,
-            register=False, use_cache=True,
+            record,
+            source_type=PersonFull,
+            view_type=PersonName,
+            register=False,
+            use_cache=True,
         )
         l2 = lens_from_record(
-            record, source_type=PersonFull, view_type=PersonName,
-            register=False, use_cache=True,
+            record,
+            source_type=PersonFull,
+            view_type=PersonName,
+            register=False,
+            use_cache=True,
         )
         assert l1 is l2
 
@@ -272,12 +272,18 @@ class TestLensReconstitution:
         record = json.loads(record_json)
 
         l1 = lens_from_record(
-            record, source_type=PersonFull, view_type=PersonName,
-            register=False, use_cache=False,
+            record,
+            source_type=PersonFull,
+            view_type=PersonName,
+            register=False,
+            use_cache=False,
         )
         l2 = lens_from_record(
-            record, source_type=PersonFull, view_type=PersonName,
-            register=False, use_cache=False,
+            record,
+            source_type=PersonFull,
+            view_type=PersonName,
+            register=False,
+            use_cache=False,
         )
         assert l1 is not l2
 
@@ -291,15 +297,14 @@ class TestFieldMappingDetection:
     """Tests for _detect_field_mapping."""
 
     def test_detects_subset_fields(self):
-        mappings = _detect_field_mapping(
-            person_name_lens, PersonFull, PersonName
-        )
+        mappings = _detect_field_mapping(person_name_lens, PersonFull, PersonName)
         assert mappings is not None
         assert len(mappings) == 1
         assert mappings[0]["source_field"] == "name"
 
     def test_rejects_non_subset(self):
         """Returns None when view has fields not in source."""
+
         @packable
         class Src:
             name: str
@@ -338,6 +343,7 @@ class TestFunctionRefResolution:
     def test_local_function_returns_none(self):
         def local_func(x):
             return x
+
         assert _resolve_function_ref(local_func) is None
 
 
@@ -464,9 +470,7 @@ class TestIndexLensOperations:
         assert ref == "atdata://local/lens/person_name@1.0.0"
 
     def test_store_lens_with_explicit_version(self, index):
-        ref = index.store_lens(
-            person_name_lens, name="person_name", version="3.0.0"
-        )
+        ref = index.store_lens(person_name_lens, name="person_name", version="3.0.0")
         assert ref == "atdata://local/lens/person_name@3.0.0"
 
     def test_get_lens_record(self, index):
@@ -620,9 +624,7 @@ class TestMultiFieldLensRoundTrip:
             return PersonFull(name=v.name, age=s.age, height=v.height)
 
         ref = index.store_lens(physical_lens, name="physical")
-        recon = index.load_lens(
-            ref, source_type=PersonFull, view_type=PersonPhysical
-        )
+        recon = index.load_lens(ref, source_type=PersonFull, view_type=PersonPhysical)
 
         src = PersonFull(name="Alice", age=25, height=165.0)
 
@@ -692,9 +694,16 @@ class TestEdgeCases:
         """find_lenses_by_schemas gracefully skips records with invalid JSON."""
         provider = SqliteProvider(path=tmp_path / "bad.db")
         # Insert valid lens
-        provider.store_lens("good", "1.0.0", json.dumps({
-            "source_schema": "Src", "view_schema": "View",
-        }))
+        provider.store_lens(
+            "good",
+            "1.0.0",
+            json.dumps(
+                {
+                    "source_schema": "Src",
+                    "view_schema": "View",
+                }
+            ),
+        )
         # Insert malformed JSON directly
         provider._conn.execute(
             "INSERT INTO lenses (name, version, lens_json) VALUES (?, ?, ?)",
@@ -729,7 +738,10 @@ class TestEdgeCases:
         record = {
             "name": "no_view",
             "version": "1.0.0",
-            "getter": {"kind": "field_mapping", "mappings": [{"source_field": "x", "view_field": "x"}]},
+            "getter": {
+                "kind": "field_mapping",
+                "mappings": [{"source_field": "x", "view_field": "x"}],
+            },
             "putter": {"kind": "opaque"},
         }
         with pytest.raises(ValueError, match="view_type is required"):
