@@ -44,13 +44,21 @@ class ShardUploadResult(list):
     Attributes:
         blob_refs: Blob reference dicts as returned by
             ``Atmosphere.upload_blob()``.
+        checksums: Dict mapping each shard AT URI to its SHA-256 hex digest.
     """
 
     blob_refs: list[dict]
+    checksums: dict[str, str]
 
-    def __init__(self, urls: list[str], blob_refs: list[dict]) -> None:
+    def __init__(
+        self,
+        urls: list[str],
+        blob_refs: list[dict],
+        checksums: dict[str, str] | None = None,
+    ) -> None:
         super().__init__(urls)
         self.blob_refs = blob_refs
+        self.checksums = checksums or {}
 
 
 @dataclass
@@ -107,9 +115,12 @@ class PDSBlobStore:
         if not self.client.did:
             raise ValueError("Client must be authenticated to upload blobs")
 
+        from .._helpers import sha256_bytes
+
         did = self.client.did
         blob_urls: list[str] = []
         blob_refs: list[dict] = []
+        checksums: dict[str, str] = {}
 
         shard_paths = ds.list_shards()
         if not shard_paths:
@@ -118,6 +129,8 @@ class PDSBlobStore:
         for shard_url in shard_paths:
             with open(shard_url, "rb") as f:
                 shard_data = f.read()
+
+            digest = sha256_bytes(shard_data)
 
             blob_ref = self.client.upload_blob(
                 shard_data,
@@ -129,8 +142,9 @@ class PDSBlobStore:
             cid = blob_ref["ref"]["$link"]
             at_uri = f"at://{did}/blob/{cid}"
             blob_urls.append(at_uri)
+            checksums[at_uri] = digest
 
-        return ShardUploadResult(blob_urls, blob_refs)
+        return ShardUploadResult(blob_urls, blob_refs, checksums)
 
     def read_url(self, url: str) -> str:
         """Resolve an AT URI blob reference to an HTTP URL.
