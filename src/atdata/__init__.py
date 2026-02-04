@@ -106,6 +106,11 @@ from .stores import (
     LocalDiskStore as LocalDiskStore,
 )
 
+from ._helpers import (
+    verify_checksums as verify_checksums,
+    ShardWriteResult as ShardWriteResult,
+)
+
 from ._cid import (
     generate_cid as generate_cid,
     verify_cid as verify_cid,

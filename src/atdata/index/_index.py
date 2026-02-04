@@ -56,6 +56,19 @@ def _is_credentialed_source(ds: Dataset) -> bool:
     return isinstance(ds.source, S3Source)
 
 
+def _merge_checksums(
+    metadata: dict | None,
+    write_result: list[str],
+) -> dict | None:
+    """Merge shard checksums from a write result into entry metadata."""
+    checksums = getattr(write_result, "checksums", None)
+    if not checksums:
+        return metadata
+    if metadata is None:
+        metadata = {}
+    return {**metadata, "checksums": checksums}
+
+
 def _estimate_dataset_bytes(ds: Dataset) -> int:
     """Best-effort total size estimate from local shard files.
 
@@ -625,6 +638,7 @@ class Index:
             self._ensure_schema_stored(schema_ref, ds.sample_type, provider)
 
             entry_metadata = metadata if metadata is not None else ds._metadata
+            entry_metadata = _merge_checksums(entry_metadata, written_urls)
             entry = LocalDatasetEntry(
                 name=name,
                 schema_ref=schema_ref,
@@ -793,7 +807,7 @@ class Index:
                     description=description,
                     tags=tags,
                     license=license,
-                    metadata=metadata,
+                    metadata=_merge_checksums(metadata, result),
                     **kwargs,
                 )
 
@@ -984,7 +998,7 @@ class Index:
                         ds,
                         name=name,
                         schema_ref=schema_ref,
-                        metadata=metadata,
+                        metadata=_merge_checksums(metadata, written_urls),
                         description=description,
                         tags=tags,
                         license=license,
