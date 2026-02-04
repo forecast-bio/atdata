@@ -163,6 +163,227 @@ def test_conversion(tmp_path):
 
 
 ##
+# Composition tests
+
+
+# Shared types for composition tests
+
+@atdata.packable
+class Person:
+    name: str
+    age: int
+    city: str
+
+
+@atdata.packable
+class NameAge:
+    name: str
+    age: int
+
+
+@atdata.packable
+class NameOnly:
+    name: str
+
+
+# Lenses (not registered via @lens to avoid polluting the global network)
+
+_person_to_nameage = atdata.Lens(
+    lambda s: NameAge(name=s.name, age=s.age),
+)
+_person_to_nameage._putter = lambda v, s: Person(name=v.name, age=v.age, city=s.city)
+_person_to_nameage.source_type = Person
+_person_to_nameage.view_type = NameAge
+
+_nameage_to_name = atdata.Lens(
+    lambda s: NameOnly(name=s.name),
+)
+_nameage_to_name._putter = lambda v, s: NameAge(name=v.name, age=s.age)
+_nameage_to_name.source_type = NameAge
+_nameage_to_name.view_type = NameOnly
+
+
+class TestPipelineComposition:
+    """Tests for the | (pipeline) operator."""
+
+    def test_pipe_get(self):
+        """Pipeline composition applies getters left-to-right."""
+        composed = _person_to_nameage | _nameage_to_name
+        src = Person(name="Alice", age=30, city="NYC")
+        result = composed.get(src)
+        assert result == NameOnly(name="Alice")
+
+    def test_pipe_put(self):
+        """Pipeline composition threads put correctly (nLab formula)."""
+        composed = _person_to_nameage | _nameage_to_name
+        src = Person(name="Alice", age=30, city="NYC")
+        updated = composed.put(NameOnly(name="Bob"), src)
+        assert updated == Person(name="Bob", age=30, city="NYC")
+
+    def test_pipe_source_view_types(self):
+        """Composite lens has correct source_type and view_type."""
+        composed = _person_to_nameage | _nameage_to_name
+        assert composed.source_type is Person
+        assert composed.view_type is NameOnly
+
+    def test_pipe_getput_law(self):
+        """GetPut: put(get(s), s) == s for composite lens."""
+        composed = _person_to_nameage | _nameage_to_name
+        src = Person(name="Alice", age=30, city="NYC")
+        assert composed.put(composed.get(src), src) == src
+
+    def test_pipe_putget_law(self):
+        """PutGet: get(put(v, s)) == v for composite lens."""
+        composed = _person_to_nameage | _nameage_to_name
+        src = Person(name="Alice", age=30, city="NYC")
+        v = NameOnly(name="Zara")
+        assert composed.get(composed.put(v, src)) == v
+
+    def test_pipe_putput_law(self):
+        """PutPut: put(v2, put(v1, s)) == put(v2, s) for composite lens."""
+        composed = _person_to_nameage | _nameage_to_name
+        src = Person(name="Alice", age=30, city="NYC")
+        v1 = NameOnly(name="Bob")
+        v2 = NameOnly(name="Carol")
+        assert composed.put(v2, composed.put(v1, src)) == composed.put(v2, src)
+
+
+class TestCategoricalComposition:
+    """Tests for the @ (matmul) operator."""
+
+    def test_matmul_get(self):
+        """Categorical composition applies getters right-to-left."""
+        composed = _nameage_to_name @ _person_to_nameage
+        src = Person(name="Alice", age=30, city="NYC")
+        assert composed.get(src) == NameOnly(name="Alice")
+
+    def test_matmul_put(self):
+        """Categorical composition threads put correctly."""
+        composed = _nameage_to_name @ _person_to_nameage
+        src = Person(name="Alice", age=30, city="NYC")
+        updated = composed.put(NameOnly(name="Bob"), src)
+        assert updated == Person(name="Bob", age=30, city="NYC")
+
+    def test_pipe_matmul_equivalence(self):
+        """(f | g) produces same results as (g @ f)."""
+        src = Person(name="Alice", age=30, city="NYC")
+        pipe = _person_to_nameage | _nameage_to_name
+        matmul = _nameage_to_name @ _person_to_nameage
+
+        assert pipe.get(src) == matmul.get(src)
+
+        v = NameOnly(name="Zara")
+        assert pipe.put(v, src) == matmul.put(v, src)
+
+
+class TestAssociativity:
+    """Verify (f | g) | h == f | (g | h) on concrete data."""
+
+    def setup_method(self):
+        @atdata.packable
+        class Full:
+            a: int
+            b: str
+            c: float
+
+        @atdata.packable
+        class AB:
+            a: int
+            b: str
+
+        @atdata.packable
+        class AOnly:
+            a: int
+
+        self.Full = Full
+        self.AB = AB
+        self.AOnly = AOnly
+
+        self.f = atdata.Lens(lambda s: AB(a=s.a, b=s.b))
+        self.f._putter = lambda v, s: Full(a=v.a, b=v.b, c=s.c)
+        self.f.source_type = Full
+        self.f.view_type = AB
+
+        self.g = atdata.Lens(lambda s: AOnly(a=s.a))
+        self.g._putter = lambda v, s: AB(a=v.a, b=s.b)
+        self.g.source_type = AB
+        self.g.view_type = AOnly
+
+        # Third lens: AOnly -> AOnly (doubler)
+        self.h = atdata.Lens(lambda s: AOnly(a=s.a * 2))
+        self.h._putter = lambda v, s: AOnly(a=v.a // 2)
+        self.h.source_type = AOnly
+        self.h.view_type = AOnly
+
+        self.src = Full(a=5, b="hello", c=3.14)
+
+    def test_associativity_get(self):
+        left = (self.f | self.g) | self.h
+        right = self.f | (self.g | self.h)
+        assert left.get(self.src) == right.get(self.src)
+
+    def test_associativity_put(self):
+        left = (self.f | self.g) | self.h
+        right = self.f | (self.g | self.h)
+        v = self.AOnly(a=42)
+        assert left.put(v, self.src) == right.put(v, self.src)
+
+
+class TestIdentityLens:
+    """Tests for Lens.identity()."""
+
+    def test_identity_get(self):
+        id_lens = atdata.Lens.identity(Person)
+        src = Person(name="Alice", age=30, city="NYC")
+        assert id_lens.get(src) == src
+
+    def test_identity_put(self):
+        id_lens = atdata.Lens.identity(Person)
+        src = Person(name="Alice", age=30, city="NYC")
+        new = Person(name="Bob", age=25, city="LA")
+        assert id_lens.put(new, src) == new
+
+    def test_identity_types(self):
+        id_lens = atdata.Lens.identity(Person)
+        assert id_lens.source_type is Person
+        assert id_lens.view_type is Person
+
+    def test_compose_with_identity_left(self):
+        """id | f == f."""
+        id_lens = atdata.Lens.identity(Person)
+        composed = id_lens | _person_to_nameage
+        src = Person(name="Alice", age=30, city="NYC")
+        assert composed.get(src) == _person_to_nameage.get(src)
+
+        v = NameAge(name="Bob", age=25)
+        assert composed.put(v, src) == _person_to_nameage.put(v, src)
+
+    def test_compose_with_identity_right(self):
+        """f | id == f."""
+        id_lens = atdata.Lens.identity(NameAge)
+        composed = _person_to_nameage | id_lens
+        src = Person(name="Alice", age=30, city="NYC")
+        assert composed.get(src) == _person_to_nameage.get(src)
+
+        v = NameAge(name="Bob", age=25)
+        assert composed.put(v, src) == _person_to_nameage.put(v, src)
+
+
+class TestCompositionCallable:
+    """Verify __call__ works on composite lenses."""
+
+    def test_pipe_callable(self):
+        composed = _person_to_nameage | _nameage_to_name
+        src = Person(name="Alice", age=30, city="NYC")
+        assert composed(src) == NameOnly(name="Alice")
+
+    def test_matmul_callable(self):
+        composed = _nameage_to_name @ _person_to_nameage
+        src = Person(name="Alice", age=30, city="NYC")
+        assert composed(src) == NameOnly(name="Alice")
+
+
+##
 # Edge case tests for coverage
 
 
