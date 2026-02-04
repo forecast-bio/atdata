@@ -687,3 +687,50 @@ class TestEdgeCases:
         index.store_lens(person_name_lens, name="iter_ref")
         records = list(index.lenses)
         assert records[0]["$ref"] == "atdata://local/lens/iter_ref@1.0.0"
+
+    def test_find_lenses_by_schemas_skips_malformed_json(self, tmp_path):
+        """find_lenses_by_schemas gracefully skips records with invalid JSON."""
+        provider = SqliteProvider(path=tmp_path / "bad.db")
+        # Insert valid lens
+        provider.store_lens("good", "1.0.0", json.dumps({
+            "source_schema": "Src", "view_schema": "View",
+        }))
+        # Insert malformed JSON directly
+        provider._conn.execute(
+            "INSERT INTO lenses (name, version, lens_json) VALUES (?, ?, ?)",
+            ("bad", "1.0.0", "{truncated"),
+        )
+        provider._conn.commit()
+
+        results = provider.find_lenses_by_schemas("Src")
+        assert len(results) == 1
+        assert results[0][0] == "good"
+        provider.close()
+
+    def test_reconstitute_missing_getter_key_raises(self):
+        """lens_from_record raises KeyError when 'getter' is missing."""
+        record = {"name": "bad", "version": "1.0.0", "putter": {"kind": "opaque"}}
+        with pytest.raises(KeyError):
+            lens_from_record(record, use_cache=False, register=False)
+
+    def test_reconstitute_opaque_getter_raises(self):
+        """lens_from_record raises ValueError for opaque getter kind."""
+        record = {
+            "name": "opaque_test",
+            "version": "1.0.0",
+            "getter": {"kind": "opaque"},
+            "putter": {"kind": "opaque"},
+        }
+        with pytest.raises(ValueError, match="Cannot reconstitute"):
+            lens_from_record(record, use_cache=False, register=False)
+
+    def test_reconstitute_field_mapping_without_view_type_raises(self):
+        """field_mapping getter requires view_type to be provided."""
+        record = {
+            "name": "no_view",
+            "version": "1.0.0",
+            "getter": {"kind": "field_mapping", "mappings": [{"source_field": "x", "view_field": "x"}]},
+            "putter": {"kind": "opaque"},
+        }
+        with pytest.raises(ValueError, match="view_type is required"):
+            lens_from_record(record, view_type=None, use_cache=False, register=False)

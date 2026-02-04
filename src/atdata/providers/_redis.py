@@ -257,23 +257,6 @@ class RedisProvider(IndexProvider):
 
         return latest_str
 
-    def find_lenses_by_schemas(
-        self,
-        source_schema: str,
-        view_schema: str | None = None,
-    ) -> list[tuple[str, str, str]]:
-        import json
-
-        results: list[tuple[str, str, str]] = []
-        for name, version, lens_json in self.iter_lenses():
-            record = json.loads(lens_json)
-            if record.get("source_schema") != source_schema:
-                continue
-            if view_schema is not None and record.get("view_schema") != view_schema:
-                continue
-            results.append((name, version, lens_json))
-        return results
-
     # ------------------------------------------------------------------
     # Lifecycle
     # ------------------------------------------------------------------

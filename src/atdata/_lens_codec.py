@@ -21,11 +21,10 @@ Examples:
 
 from __future__ import annotations
 
-import hashlib
 import importlib
 import inspect
 import json
-from dataclasses import dataclass, field, fields as dc_fields, is_dataclass
+from dataclasses import fields as dc_fields, is_dataclass
 from datetime import datetime, timezone
 from typing import Any, Callable, Type
 
@@ -38,11 +37,6 @@ from .lens import Lens, LensNetwork
 
 _lens_cache: dict[str, Lens] = {}
 _LENS_CACHE_MAX_SIZE = 256
-
-
-def _lens_cache_key(name: str, version: str) -> str:
-    """Generate a cache key for a lens record."""
-    return f"{name}@{version}"
 
 
 # ---------------------------------------------------------------------------
@@ -347,7 +341,7 @@ def lens_from_record(
 
     # Check cache
     if use_cache:
-        cache_key = _lens_cache_key(name, version)
+        cache_key = f"{name}@{version}"
         if cache_key in _lens_cache:
             return _lens_cache[cache_key]
 
@@ -399,7 +393,7 @@ def lens_from_record(
 
     # Cache the result
     if use_cache:
-        cache_key = _lens_cache_key(name, version)
+        cache_key = f"{name}@{version}"
         _lens_cache[cache_key] = lens_obj
         while len(_lens_cache) > _LENS_CACHE_MAX_SIZE:
             oldest_key = next(iter(_lens_cache))
