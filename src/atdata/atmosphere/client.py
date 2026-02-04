@@ -382,7 +382,7 @@ class Atmosphere:
             # 30 s base + 1 s per MB, minimum 60 s
             timeout = max(60.0, 30.0 + len(data) / 1_000_000)
 
-        response = self._client.upload_blob(data, timeout=timeout)
+        response = self._client.com.atproto.repo.upload_blob(data, timeout=timeout)
         blob_ref = response.blob
 
         # Convert to dict format suitable for embedding in records
