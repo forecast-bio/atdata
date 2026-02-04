@@ -79,10 +79,15 @@ class LocalDiskStore:
         new_uuid = str(uuid4())[:8]
         shard_pattern = str(shard_dir / f"data--{new_uuid}--%06d.tar")
 
+        from atdata._helpers import ShardWriteResult, sha256_file
+
         written_shards: list[str] = []
+        checksums: dict[str, str] = {}
 
         def _track_shard(path: str) -> None:
-            written_shards.append(str(Path(path).resolve()))
+            resolved = str(Path(path).resolve())
+            written_shards.append(resolved)
+            checksums[resolved] = sha256_file(resolved)
 
         # Filter out kwargs that are specific to other stores (e.g. S3)
         # and not understood by wds.writer.ShardWriter / TarWriter.
@@ -106,7 +111,7 @@ class LocalDiskStore:
                 "LocalDiskStore.write_shards: wrote %d shard(s)", len(written_shards)
             )
 
-        return written_shards
+        return ShardWriteResult(written_shards, checksums)
 
     def read_url(self, url: str) -> str:
         """Resolve a storage URL for reading.

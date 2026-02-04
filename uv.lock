@@ -248,7 +248,7 @@ wheels = [
 
 [[package]]
 name = "atdata"
-version = "0.3.3b2"
+version = "0.3.4b1"
 source = { editable = "." }
 dependencies = [
     { name = "atproto" },

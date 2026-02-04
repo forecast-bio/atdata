@@ -22,9 +22,11 @@ from atdata._hf_api import (
     _resolve_data_files,
     _group_shards_by_split,
     _is_indexed_path,
+    _is_at_uri,
+    _resolve_at_uri,
     _parse_indexed_path,
 )
-from unittest.mock import Mock
+from unittest.mock import Mock, patch, MagicMock
 
 from numpy.typing import NDArray
 
@@ -938,3 +940,465 @@ class TestLoadDatasetWithIndex:
         assert ds.source.endpoint == "https://r2.example.com"
         assert ds.source.access_key == "test-access-key"
         assert ds.source.secret_key == "test-secret-key"
+
+
+##
+# AT URI tests
+
+
+class TestIsAtUri:
+    """Tests for _is_at_uri detection."""
+
+    def test_valid_at_uri(self):
+        assert (
+            _is_at_uri("at://did:plc:abc123/ac.foundation.dataset.record/rkey") is True
+        )
+
+    def test_at_uri_with_handle(self):
+        assert (
+            _is_at_uri("at://alice.bsky.social/ac.foundation.dataset.record/rkey")
+            is True
+        )
+
+    def test_not_at_uri_indexed_path(self):
+        assert _is_at_uri("@local/my-dataset") is False
+
+    def test_not_at_uri_s3(self):
+        assert _is_at_uri("s3://bucket/data.tar") is False
+
+    def test_not_at_uri_local(self):
+        assert _is_at_uri("/path/to/data.tar") is False
+
+    def test_not_at_uri_http(self):
+        assert _is_at_uri("https://example.com/data.tar") is False
+
+
+class TestResolveAtUri:
+    """Tests for _resolve_at_uri with mocked Atmosphere client."""
+
+    def _make_mock_client(
+        self, storage, schema_ref="at://did:plc:abc/ac.foundation.dataset.schema/s1"
+    ):
+        """Build a mock Atmosphere client that returns a dataset record with the given storage."""
+        client = MagicMock()
+        record = {
+            "$type": "ac.foundation.dataset.record",
+            "name": "test-dataset",
+            "schemaRef": schema_ref,
+            "storage": storage,
+            "createdAt": "2026-01-01T00:00:00Z",
+        }
+        client.get_record.return_value = record
+        client._resolve_pds_endpoint.return_value = "https://pds.example.com"
+        return client
+
+    def test_resolve_http_storage_with_explicit_type(self):
+        """AT URI with storageHttp resolves to URLSource Dataset."""
+        storage = {
+            "$type": "ac.foundation.dataset.storageHttp",
+            "shards": [
+                {"url": "https://cdn.example.com/shard-000.tar"},
+                {"url": "https://cdn.example.com/shard-001.tar"},
+            ],
+        }
+        client = self._make_mock_client(storage)
+
+        ds, resolved_type = _resolve_at_uri(
+            "at://did:plc:abc/ac.foundation.dataset.record/my-ds",
+            sample_type=SimpleTestSample,
+            client=client,
+        )
+
+        assert resolved_type is SimpleTestSample
+        assert isinstance(ds.source, atdata._sources.URLSource)
+
+    def test_resolve_http_storage_single_shard(self):
+        """Single HTTP shard produces a valid URL."""
+        storage = {
+            "$type": "ac.foundation.dataset.storageHttp",
+            "shards": [{"url": "https://cdn.example.com/data.tar"}],
+        }
+        client = self._make_mock_client(storage)
+
+        ds, _ = _resolve_at_uri(
+            "at://did:plc:abc/ac.foundation.dataset.record/my-ds",
+            sample_type=SimpleTestSample,
+            client=client,
+        )
+
+        assert ds.url == "https://cdn.example.com/data.tar"
+
+    def test_resolve_s3_storage(self):
+        """AT URI with storageS3 resolves to s3:// URLs."""
+        storage = {
+            "$type": "ac.foundation.dataset.storageS3",
+            "bucket": "my-bucket",
+            "shards": [{"key": "datasets/shard-000.tar"}],
+        }
+        client = self._make_mock_client(storage)
+
+        ds, _ = _resolve_at_uri(
+            "at://did:plc:abc/ac.foundation.dataset.record/my-ds",
+            sample_type=SimpleTestSample,
+            client=client,
+        )
+
+        assert "s3://my-bucket/datasets/shard-000.tar" in ds.url
+
+    def test_resolve_s3_with_endpoint(self):
+        """storageS3 with endpoint uses endpoint-based URLs."""
+        storage = {
+            "$type": "ac.foundation.dataset.storageS3",
+            "bucket": "my-bucket",
+            "endpoint": "https://r2.example.com",
+            "shards": [{"key": "data.tar"}],
+        }
+        client = self._make_mock_client(storage)
+
+        ds, _ = _resolve_at_uri(
+            "at://did:plc:abc/ac.foundation.dataset.record/my-ds",
+            sample_type=SimpleTestSample,
+            client=client,
+        )
+
+        assert ds.url == "https://r2.example.com/my-bucket/data.tar"
+
+    def test_resolve_blob_storage(self):
+        """AT URI with storageBlobs resolves to BlobSource."""
+        from atdata._sources import BlobSource
+
+        storage = {
+            "$type": "ac.foundation.dataset.storageBlobs",
+            "blobs": [
+                {
+                    "blob": {
+                        "$type": "blob",
+                        "ref": {"$link": "bafkreiabc123"},
+                        "mimeType": "application/x-tar",
+                        "size": 1024,
+                    },
+                    "checksum": {"algo": "sha256", "hash": "abc123"},
+                },
+            ],
+        }
+        client = self._make_mock_client(storage)
+
+        ds, _ = _resolve_at_uri(
+            "at://did:plc:abc/ac.foundation.dataset.record/my-ds",
+            sample_type=SimpleTestSample,
+            client=client,
+        )
+
+        assert isinstance(ds.source, BlobSource)
+        assert len(ds.source.blob_refs) == 1
+        assert ds.source.blob_refs[0]["did"] == "did:plc:abc"
+        assert ds.source.blob_refs[0]["cid"] == "bafkreiabc123"
+        assert ds.source.pds_endpoint == "https://pds.example.com"
+
+    def test_resolve_legacy_external_storage(self):
+        """AT URI with legacy storageExternal resolves to URLSource."""
+        storage = {
+            "$type": "ac.foundation.dataset.storageExternal",
+            "urls": ["https://example.com/data.tar"],
+        }
+        client = self._make_mock_client(storage)
+
+        ds, _ = _resolve_at_uri(
+            "at://did:plc:abc/ac.foundation.dataset.record/my-ds",
+            sample_type=SimpleTestSample,
+            client=client,
+        )
+
+        assert ds.url == "https://example.com/data.tar"
+
+    def test_resolve_no_sample_type_decodes_schema(self):
+        """When sample_type=None, schema is decoded from the record's schemaRef."""
+        storage = {
+            "$type": "ac.foundation.dataset.storageHttp",
+            "shards": [{"url": "https://cdn.example.com/data.tar"}],
+        }
+        client = self._make_mock_client(storage)
+
+        # Mock the schema loader to return a schema record
+        schema_record = {
+            "$type": "ac.foundation.dataset.schema",
+            "name": "TestSample",
+            "version": "1.0.0",
+            "fields": [
+                {
+                    "name": "text",
+                    "fieldType": {"$type": "local#primitive", "primitive": "str"},
+                    "optional": False,
+                },
+            ],
+        }
+
+        with patch("atdata.atmosphere.schema.SchemaLoader") as MockSchemaLoader:
+            mock_loader_instance = MockSchemaLoader.return_value
+            mock_loader_instance.get.return_value = schema_record
+
+            ds, resolved_type = _resolve_at_uri(
+                "at://did:plc:abc/ac.foundation.dataset.record/my-ds",
+                sample_type=None,
+                client=client,
+            )
+
+            MockSchemaLoader.assert_called_once_with(client)
+            mock_loader_instance.get.assert_called_once_with(
+                "at://did:plc:abc/ac.foundation.dataset.schema/s1"
+            )
+            assert resolved_type.__name__ == "TestSample"
+
+    def test_resolve_no_sample_type_no_schema_ref_defaults_to_dictsample(self):
+        """When sample_type=None and no schemaRef, falls back to DictSample."""
+        storage = {
+            "$type": "ac.foundation.dataset.storageHttp",
+            "shards": [{"url": "https://cdn.example.com/data.tar"}],
+        }
+        client = self._make_mock_client(storage, schema_ref=None)
+        # Override to return record without schemaRef
+        record = {
+            "$type": "ac.foundation.dataset.record",
+            "name": "test-dataset",
+            "storage": storage,
+            "createdAt": "2026-01-01T00:00:00Z",
+        }
+        client.get_record.return_value = record
+
+        ds, resolved_type = _resolve_at_uri(
+            "at://did:plc:abc/ac.foundation.dataset.record/my-ds",
+            sample_type=None,
+            client=client,
+        )
+
+        from atdata import DictSample
+
+        assert resolved_type is DictSample
+
+    def test_resolve_empty_urls_raises(self):
+        """Empty storage URLs raise ValueError."""
+        storage = {
+            "$type": "ac.foundation.dataset.storageHttp",
+            "shards": [],
+        }
+        client = self._make_mock_client(storage)
+
+        with pytest.raises(ValueError, match="has no storage URLs"):
+            _resolve_at_uri(
+                "at://did:plc:abc/ac.foundation.dataset.record/my-ds",
+                sample_type=SimpleTestSample,
+                client=client,
+            )
+
+    def test_resolve_wrong_record_type_raises(self):
+        """AT URI pointing to a schema record (not dataset) raises ValueError."""
+        client = MagicMock()
+        client.get_record.return_value = {
+            "$type": "ac.foundation.dataset.schema",
+            "name": "SomeSchema",
+            "version": "1.0.0",
+        }
+
+        with pytest.raises(ValueError, match="is not a dataset record"):
+            _resolve_at_uri(
+                "at://did:plc:abc/ac.foundation.dataset.schema/s1",
+                sample_type=SimpleTestSample,
+                client=client,
+            )
+
+    def test_resolve_unknown_storage_type_raises(self):
+        """Unknown storage $type raises ValueError."""
+        client = MagicMock()
+        client.get_record.return_value = {
+            "$type": "ac.foundation.dataset.record",
+            "name": "test",
+            "storage": {"$type": "ac.foundation.dataset.storageFuture"},
+            "createdAt": "2026-01-01T00:00:00Z",
+        }
+
+        with pytest.raises(ValueError, match="Unknown storage type"):
+            _resolve_at_uri(
+                "at://did:plc:abc/ac.foundation.dataset.record/my-ds",
+                sample_type=SimpleTestSample,
+                client=client,
+            )
+
+    def test_resolve_blob_storage_multiple_blobs(self):
+        """Multiple blob entries are all resolved into BlobSource refs."""
+        from atdata._sources import BlobSource
+
+        storage = {
+            "$type": "ac.foundation.dataset.storageBlobs",
+            "blobs": [
+                {
+                    "blob": {
+                        "$type": "blob",
+                        "ref": {"$link": "bafkreiabc"},
+                        "mimeType": "application/x-tar",
+                        "size": 1024,
+                    },
+                },
+                {
+                    "blob": {
+                        "$type": "blob",
+                        "ref": {"$link": "bafkreidef"},
+                        "mimeType": "application/x-tar",
+                        "size": 2048,
+                    },
+                },
+                {
+                    "blob": {
+                        "$type": "blob",
+                        "ref": {"$link": "bafkreighi"},
+                        "mimeType": "application/x-tar",
+                        "size": 512,
+                    },
+                },
+            ],
+        }
+        client = self._make_mock_client(storage)
+
+        ds, _ = _resolve_at_uri(
+            "at://did:plc:abc/ac.foundation.dataset.record/my-ds",
+            sample_type=SimpleTestSample,
+            client=client,
+        )
+
+        assert isinstance(ds.source, BlobSource)
+        assert len(ds.source.blob_refs) == 3
+        cids = [r["cid"] for r in ds.source.blob_refs]
+        assert cids == ["bafkreiabc", "bafkreidef", "bafkreighi"]
+        assert all(r["did"] == "did:plc:abc" for r in ds.source.blob_refs)
+
+    def test_resolve_single_get_record_call(self):
+        """Verify get_record is called exactly once (no redundant fetches)."""
+        storage = {
+            "$type": "ac.foundation.dataset.storageHttp",
+            "shards": [{"url": "https://cdn.example.com/data.tar"}],
+        }
+        client = self._make_mock_client(storage)
+
+        _resolve_at_uri(
+            "at://did:plc:abc/ac.foundation.dataset.record/my-ds",
+            sample_type=SimpleTestSample,
+            client=client,
+        )
+
+        client.get_record.assert_called_once()
+
+    def test_resolve_creates_anonymous_client_when_none(self):
+        """When no client provided, creates unauthenticated Atmosphere."""
+        with patch("atdata.atmosphere.client.Atmosphere") as MockAtmo:
+            mock_client = MagicMock()
+            MockAtmo.return_value = mock_client
+
+            record = {
+                "$type": "ac.foundation.dataset.record",
+                "name": "test",
+                "schemaRef": None,
+                "storage": {
+                    "$type": "ac.foundation.dataset.storageHttp",
+                    "shards": [{"url": "https://cdn.example.com/data.tar"}],
+                },
+                "createdAt": "2026-01-01T00:00:00Z",
+            }
+            mock_client.get_record.return_value = record
+
+            ds, _ = _resolve_at_uri(
+                "at://did:plc:abc/ac.foundation.dataset.record/my-ds",
+                sample_type=SimpleTestSample,
+            )
+
+            MockAtmo.assert_called_once_with()
+
+
+class TestLoadDatasetWithAtUri:
+    """Integration tests for load_dataset() with AT URIs."""
+
+    def _make_mock_client(self, storage):
+        """Build a mock Atmosphere client for AT URI resolution."""
+        client = MagicMock()
+        record = {
+            "$type": "ac.foundation.dataset.record",
+            "name": "test-dataset",
+            "schemaRef": None,
+            "storage": storage,
+            "createdAt": "2026-01-01T00:00:00Z",
+        }
+        client.get_record.return_value = record
+        return client
+
+    @patch("atdata.atmosphere.client.Atmosphere")
+    def test_load_dataset_at_uri_with_split(self, MockAtmo):
+        """load_dataset with at:// and split returns Dataset."""
+        mock_client = MagicMock()
+        MockAtmo.return_value = mock_client
+        mock_client.get_record.return_value = {
+            "$type": "ac.foundation.dataset.record",
+            "name": "test",
+            "schemaRef": None,
+            "storage": {
+                "$type": "ac.foundation.dataset.storageHttp",
+                "shards": [{"url": "https://cdn.example.com/data.tar"}],
+            },
+            "createdAt": "2026-01-01T00:00:00Z",
+        }
+
+        ds = load_dataset(
+            "at://did:plc:abc/ac.foundation.dataset.record/my-ds",
+            SimpleTestSample,
+            split="train",
+        )
+
+        assert isinstance(ds, atdata.Dataset)
+        assert ds.url == "https://cdn.example.com/data.tar"
+
+    @patch("atdata.atmosphere.client.Atmosphere")
+    def test_load_dataset_at_uri_without_split(self, MockAtmo):
+        """load_dataset with at:// and no split returns DatasetDict."""
+        mock_client = MagicMock()
+        MockAtmo.return_value = mock_client
+        mock_client.get_record.return_value = {
+            "$type": "ac.foundation.dataset.record",
+            "name": "test",
+            "schemaRef": None,
+            "storage": {
+                "$type": "ac.foundation.dataset.storageHttp",
+                "shards": [{"url": "https://cdn.example.com/data.tar"}],
+            },
+            "createdAt": "2026-01-01T00:00:00Z",
+        }
+
+        result = load_dataset(
+            "at://did:plc:abc/ac.foundation.dataset.record/my-ds",
+            SimpleTestSample,
+        )
+
+        assert isinstance(result, DatasetDict)
+        assert "train" in result
+
+    @patch("atdata.atmosphere.client.Atmosphere")
+    def test_load_dataset_at_uri_precedes_indexed_path(self, MockAtmo):
+        """at:// URIs are resolved before @handle/dataset paths."""
+        mock_client = MagicMock()
+        MockAtmo.return_value = mock_client
+        mock_client.get_record.return_value = {
+            "$type": "ac.foundation.dataset.record",
+            "name": "test",
+            "schemaRef": None,
+            "storage": {
+                "$type": "ac.foundation.dataset.storageHttp",
+                "shards": [{"url": "https://cdn.example.com/data.tar"}],
+            },
+            "createdAt": "2026-01-01T00:00:00Z",
+        }
+
+        # at:// should be handled before checking _is_indexed_path
+        ds = load_dataset(
+            "at://did:plc:abc/ac.foundation.dataset.record/rkey",
+            SimpleTestSample,
+            split="train",
+        )
+
+        assert isinstance(ds, atdata.Dataset)
+        MockAtmo.assert_called_once()

@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.3.4b1] - 2026-02-04
+
+### Added
+- **Content checksums**: Per-shard SHA-256 digests computed at write time across all storage backends (`LocalDiskStore`, `S3DataStore`, `PDSBlobStore`). Checksums are carried via `ShardWriteResult` and automatically merged into index entry metadata
+- **`verify_checksums()`**: Utility function to verify stored checksums against shard files on disk; remote URLs (`s3://`, `at://`, `http://`) are gracefully skipped
+- **`atdata verify` CLI command**: Verify content integrity of indexed datasets from the command line
+- **AT URI support in `load_dataset()`**: `load_dataset("at://did:plc:abc/.../rkey")` now fetches dataset records from ATProto and resolves storage (blobs, HTTP, S3) into streamable datasets with automatic schema decoding
+- **Lens composition operators**: `@` (compose) and `|` (pipe) operators for chaining lenses, plus `identity_lens()` factory for pass-through transforms
+
 ## [0.3.3b2] - 2026-02-04
 
 ### Testing
