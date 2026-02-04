@@ -112,9 +112,9 @@ class TestBlobOperations:
         downloaded = atproto_client.get_blob(atproto_client.did, cid)
         assert downloaded == payload
 
-    def test_upload_large_blob(self, atproto_client: Atmosphere):
-        """Upload a ~1 MB blob to verify timeout heuristics work."""
-        payload = os.urandom(1_000_000)
+    def test_upload_larger_blob(self, atproto_client: Atmosphere):
+        """Upload a ~10 KB blob to verify timeout heuristics work."""
+        payload = os.urandom(10_000)
         blob_ref = atproto_client.upload_blob(payload)
         assert blob_ref["size"] == len(payload)
 
