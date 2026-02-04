@@ -253,6 +253,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="dropdown-item" href="../examples/multi-split.html">
  <span class="dropdown-text">Multi-Split Datasets</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="../examples/dataset-profiler.html">
+ <span class="dropdown-text">Dataset Profiler</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../examples/lens-graph.html">
+ <span class="dropdown-text">Lens Graph Explorer</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../examples/query-cookbook.html">
+ <span class="dropdown-text">Query Cookbook</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item">
@@ -373,6 +385,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <div class="sidebar-item-container"> 
   <a href="../examples/multi-split.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Multi-Split Datasets</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../examples/dataset-profiler.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Dataset Profiler</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../examples/lens-graph.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lens Graph Explorer</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../examples/query-cookbook.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Query Cookbook</span></a>
   </div>
 </li>
       </ul>
@@ -513,7 +543,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="define-a-sample-type-with-manifest-aware-fields" class="level2">
 <h2 class="anchored" data-anchor-id="define-a-sample-type-with-manifest-aware-fields">1 — Define a sample type with manifest-aware fields</h2>
 <p>Primitive fields (<code>str</code>, <code>int</code>, <code>float</code>, <code>bool</code>, <code>list</code>) are automatically included in manifests with inferred aggregate types. You can also use <code>Annotated[..., ManifestField(...)]</code> for explicit control.</p>
-<div id="e76f4c67" class="cell" data-execution_count="1">
+<div id="7c4903e7" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> Annotated</span>
@@ -539,7 +569,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="see-which-fields-are-manifest-included" class="level2">
 <h2 class="anchored" data-anchor-id="see-which-fields-are-manifest-included">2 — See which fields are manifest-included</h2>
-<div id="7681626a" class="cell" data-execution_count="2">
+<div id="7a9d4b40" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.manifest <span class="im">import</span> resolve_manifest_fields</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>fields <span class="op">=</span> resolve_manifest_fields(LabeledImage)</span>
@@ -555,7 +585,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="generate-data-and-write-shards-with-manifests" class="level2">
 <h2 class="anchored" data-anchor-id="generate-data-and-write-shards-with-manifests">3 — Generate data and write shards with manifests</h2>
 <p>Pass <code>manifest=True</code> to <code>write_samples</code> and atdata builds the sidecar manifest files automatically—no manual <code>ManifestBuilder</code> plumbing needed.</p>
-<div id="a067ed33" class="cell" data-execution_count="3">
+<div id="4e5da391" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tempfile</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -586,9 +616,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Wrote </span><span class="sc">{</span>num_samples<span class="sc">}</span><span class="ss"> samples across </span><span class="sc">{</span><span class="bu">len</span>(ds.list_shards())<span class="sc">}</span><span class="ss"> shards"</span>)</span>
 <span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Manifest files: </span><span class="sc">{</span><span class="bu">sorted</span>(p.name <span class="cf">for</span> p <span class="kw">in</span> tmpdir.glob(<span class="st">'*.manifest.*'</span>))<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_manifest_pux3rmim/images-000000.tar 0 0.0 GB 0
-# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_manifest_pux3rmim/images-000001.tar 100 0.0 GB 100
-# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_manifest_pux3rmim/images-000002.tar 100 0.0 GB 200
+<pre><code># writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_manifest__8f77zcm/images-000000.tar 0 0.0 GB 0
+# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_manifest__8f77zcm/images-000001.tar 100 0.0 GB 100
+# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_manifest__8f77zcm/images-000002.tar 100 0.0 GB 200
 Wrote 300 samples across 3 shards
 Manifest files: ['images-000000.manifest.json', 'images-000000.manifest.parquet', 'images-000001.manifest.json', 'images-000001.manifest.parquet', 'images-000002.manifest.json', 'images-000002.manifest.parquet']</code></pre>
 </div>
@@ -597,7 +627,7 @@ Manifest files: ['images-000000.manifest.json', 'images-000000.manifest.parquet'
 <section id="inspect-a-manifest" class="level2">
 <h2 class="anchored" data-anchor-id="inspect-a-manifest">4 — Inspect a manifest</h2>
 <p>Each shard gets a JSON header (aggregates + metadata) and a Parquet file (per-sample columns).</p>
-<div id="87447733" class="cell" data-execution_count="4">
+<div id="fbbd3fc1" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>manifest_json <span class="op">=</span> <span class="bu">sorted</span>(tmpdir.glob(<span class="st">"*.manifest.json"</span>))[<span class="dv">0</span>]</span>
@@ -624,7 +654,7 @@ Aggregates:
 <section id="query-across-shards" class="level2">
 <h2 class="anchored" data-anchor-id="query-across-shards">5 — Query across shards</h2>
 <p><code>QueryExecutor</code> loads all manifests from a directory and runs a pandas predicate over the per-sample Parquet data.</p>
-<div id="1d9c8d72" class="cell" data-execution_count="5">
+<div id="4ad353a5" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata <span class="im">import</span> QueryExecutor</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>executor <span class="op">=</span> QueryExecutor.from_directory(tmpdir)</span>
@@ -639,18 +669,18 @@ Aggregates:
 <span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  shard=</span><span class="sc">{</span>loc<span class="sc">.</span>shard<span class="sc">}</span><span class="ss">  key=</span><span class="sc">{</span>loc<span class="sc">.</span>key<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Found 6 high-confidence dog samples
-  shard=images  key=5ed03f7c-00d6-11f1-8000-000000000000
-  shard=images-000000  key=5ed2f4e2-00d6-11f1-8000-000000000000
-  shard=images-000000  key=5ed32566-00d6-11f1-8000-000000000000
-  shard=images-000000  key=5ed332fe-00d6-11f1-8000-000000000000
-  shard=images-000000  key=5ed3d6aa-00d6-11f1-8000-000000000000</code></pre>
+  shard=images  key=927b8168-015a-11f1-8000-000000000000
+  shard=images-000000  key=927bfaf8-015a-11f1-8000-000000000000
+  shard=images-000000  key=927c0ad4-015a-11f1-8000-000000000000
+  shard=images-000000  key=927c0f5c-015a-11f1-8000-000000000000
+  shard=images-000000  key=927c544e-015a-11f1-8000-000000000000</code></pre>
 </div>
 </div>
 </section>
 <section id="compound-queries" class="level2">
 <h2 class="anchored" data-anchor-id="compound-queries">6 — Compound queries</h2>
 <p>The predicate receives a full DataFrame, so you can compose arbitrarily complex filters.</p>
-<div id="246002bf" class="cell" data-execution_count="6">
+<div id="4afb1d5f" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Samples tagged "outdoor" with confidence below 0.7</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>results <span class="op">=</span> executor.query(</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    where<span class="op">=</span><span class="kw">lambda</span> df: (df[<span class="st">"confidence"</span>] <span class="op">&lt;</span> <span class="fl">0.7</span>)</span>
@@ -662,7 +692,7 @@ Aggregates:
 <pre><code>Found 22 low-confidence outdoor samples</code></pre>
 </div>
 </div>
-<div id="ebf8c712" class="cell" data-execution_count="7">
+<div id="25f94d63" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Count samples per label across all shards</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -681,7 +711,7 @@ cat      31</code></pre>
 </section>
 <section id="clean-up" class="level2">
 <h2 class="anchored" data-anchor-id="clean-up">7 — Clean up</h2>
-<div id="535f95fb" class="cell" data-execution_count="8">
+<div id="a867be9d" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shutil</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>shutil.rmtree(tmpdir, ignore_errors<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>

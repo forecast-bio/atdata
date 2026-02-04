@@ -87,7 +87,7 @@ CAL_FACTOR = 0.489  # voltage-to-celsius constant
 @atdata.lens
 def calibrate(raw: RawSensor) -> Calibrated:
     return Calibrated(
-        celsius=round(raw.voltage * CAL_FACTOR, 2),
+        celsius=raw.voltage * CAL_FACTOR,
         timestamp=raw.timestamp,
         sensor_id=raw.sensor_id,
         location=raw.location,
@@ -98,7 +98,7 @@ def calibrate(raw: RawSensor) -> Calibrated:
 @calibrate.putter
 def calibrate_put(view: Calibrated, source: RawSensor) -> RawSensor:
     return RawSensor(
-        voltage=round(view.celsius / view.cal_factor, 4),
+        voltage=view.celsius / view.cal_factor,
         timestamp=view.timestamp,
         sensor_id=view.sensor_id,
         location=view.location,
@@ -174,7 +174,7 @@ print(f"  sensor_id  = {raw.sensor_id}")
 print(f"  location   = {raw.location}")
 print()
 print("OUTPUT (Calibrated):")
-print(f"  celsius    = {cal.celsius}")
+print(f"  celsius    = {cal.celsius:.2f}")
 print(f"  timestamp  = {cal.timestamp}")
 print(f"  sensor_id  = {cal.sensor_id}")
 print(f"  location   = {cal.location}")
@@ -187,11 +187,11 @@ print(f"  cal_factor = {cal.cal_factor}")
 feat = featurize.get(cal)
 
 print("INPUT  (Calibrated):")
-print(f"  celsius    = {cal.celsius}")
+print(f"  celsius    = {cal.celsius:.2f}")
 print(f"  timestamp  = {cal.timestamp}")
 print()
 print("OUTPUT (Features):")
-print(f"  celsius    = {feat.celsius}")
+print(f"  celsius    = {feat.celsius:.2f}")
 print(f"  hour       = {feat.hour}")
 print(f"  is_daytime = {feat.is_daytime}")
 print(f"  sensor_id  = {feat.sensor_id}")
@@ -203,7 +203,7 @@ print(f"  sensor_id  = {feat.sensor_id}")
 pred = classify.get(feat)
 
 print("INPUT  (Features):")
-print(f"  celsius    = {feat.celsius}")
+print(f"  celsius    = {feat.celsius:.2f}")
 print(f"  hour       = {feat.hour}")
 print(f"  is_daytime = {feat.is_daytime}")
 print()
@@ -307,7 +307,7 @@ assert result.celsius == modified_feat.celsius
 assert result.sensor_id == modified_feat.sensor_id
 print("PutGet (featurize): PASS")
 
-modified_pred = Prediction(classification="cold", sensor_id="sensor_03")
+modified_pred = Prediction(classification="hot", sensor_id="sensor_03")
 assert classify.get(classify.put(modified_pred, feat)).classification == modified_pred.classification
 print("PutGet (classify):  PASS")
 ```
@@ -319,6 +319,11 @@ print("PutGet (classify):  PASS")
 the source is unchanged.  **PutGet** guarantees that if you write a view and
 read it back, you get the same view.  Together they ensure lenses are
 *information-preserving* round-trips.
+
+Note that `classify` is a **lossy** lens: the putter preserves the source's
+`celsius` value, so PutGet only holds when the classification is consistent
+with the source temperature.  This is a common pattern for summary/derived
+lenses.
 :::
 
 ## 7 --- Inspect the LensNetwork
