@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.3.3b1] - 2026-02-04
+
+### Added
+- **Dataset labels**: Named, versioned pointers to dataset records — separating identity (CID-addressed) from naming (mutable labels). `store_label()`, `get_label()`, `list_labels()`, `delete_label()` across all index providers (SQLite, Redis, PostgreSQL)
+- **Atmosphere label records**: `LabelPublisher` and `LabelLoader` for publishing and resolving `ac.foundation.dataset.label` records on ATProto PDS, with `ac.foundation.dataset.resolveLabel` query lexicon
+- **Label-aware `load_dataset()`**: Path resolution now tries label lookup before falling back to dataset name, enabling `load_dataset("@local/mnist")` to resolve through labels
+
+### Changed
+- **Git flow**: Adopted standard git flow branching model — `develop` as integration branch, `feature/*` from `develop`, `release/*` cut from `develop`. Updated `/release`, `/feature`, `/publish`, and `/featree` skills accordingly
+- **Worktree chainlink sharing**: `/featree` now symlinks `.chainlink/issues.db` to the base clone's copy so all worktrees share a single authoritative issue database
+
 ## [0.3.2b3] - 2026-02-04
 
 ### Fixed

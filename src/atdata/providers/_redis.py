@@ -133,6 +133,80 @@ class RedisProvider(IndexProvider):
         return latest_str
 
     # ------------------------------------------------------------------
+    # Label operations
+    # ------------------------------------------------------------------
+
+    def store_label(
+        self,
+        name: str,
+        cid: str,
+        version: str | None = None,
+        description: str | None = None,
+    ) -> None:
+        ver_key = version or ""
+        redis_key = f"Label:{name}@{ver_key}"
+        data: dict[str, str] = {"cid": cid, "name": name, "version": ver_key}
+        if description is not None:
+            data["description"] = description
+        self._redis.hset(redis_key, mapping=data)  # type: ignore[arg-type]
+
+    def get_label(
+        self, name: str, version: str | None = None
+    ) -> tuple[str, str | None]:
+        if version is not None:
+            redis_key = f"Label:{name}@{version}"
+            raw = self._redis.hgetall(redis_key)
+            if not raw:
+                raise KeyError(f"No label with name: {name!r} version: {version!r}")
+            raw_typed = {
+                (k.decode("utf-8") if isinstance(k, bytes) else k): (
+                    v.decode("utf-8") if isinstance(v, bytes) else v
+                )
+                for k, v in raw.items()
+            }
+            return (raw_typed["cid"], version)
+
+        # No version specified — scan for all labels with this name, pick latest
+        prefix = f"Label:{name}@"
+        best_cid: str | None = None
+        best_ver: str | None = None
+        for key in self._redis.scan_iter(match=f"{prefix}*"):
+            raw = self._redis.hgetall(key)
+            if not raw:
+                continue
+            raw_typed = {
+                (k.decode("utf-8") if isinstance(k, bytes) else k): (
+                    v.decode("utf-8") if isinstance(v, bytes) else v
+                )
+                for k, v in raw.items()
+            }
+            # Pick any match; Redis doesn't have created_at ordering so we
+            # just return the last one found (consistent with scan order).
+            best_cid = raw_typed["cid"]
+            ver = raw_typed.get("version", "")
+            best_ver = ver if ver else None
+
+        if best_cid is None:
+            raise KeyError(f"No label with name: {name!r}")
+        return (best_cid, best_ver)
+
+    def iter_labels(self) -> Iterator[tuple[str, str, str | None]]:
+        for key in self._redis.scan_iter(match="Label:*"):
+            raw = self._redis.hgetall(key)
+            if not raw:
+                continue
+            raw_typed = {
+                (k.decode("utf-8") if isinstance(k, bytes) else k): (
+                    v.decode("utf-8") if isinstance(v, bytes) else v
+                )
+                for k, v in raw.items()
+            }
+            name = raw_typed.get("name", "")
+            cid = raw_typed.get("cid", "")
+            ver = raw_typed.get("version", "")
+            yield (name, cid, ver if ver else None)
+
+    # ------------------------------------------------------------------
     # Lifecycle
     # ------------------------------------------------------------------
 

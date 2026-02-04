@@ -596,3 +596,24 @@ class Atmosphere:
             limit=limit,
         )
         return records
+
+    def list_labels(
+        self,
+        repo: Optional[str] = None,
+        limit: int = 100,
+    ) -> list[dict]:
+        """List label records.
+
+        Args:
+            repo: The DID to query. Defaults to authenticated user.
+            limit: Maximum number to return.
+
+        Returns:
+            List of label records.
+        """
+        records, _ = self.list_records(
+            f"{LEXICON_NAMESPACE}.label",
+            repo=repo,
+            limit=limit,
+        )
+        return records
