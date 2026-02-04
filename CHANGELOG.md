@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.3.3b1] - 2026-02-04
+
+### Changed
+- **Git flow alignment**: Adopted standard git flow branching model with `develop` as integration branch, `feature/*` branching from `develop`, and `release/*` cut from `develop`
+- **`/release` skill**: Now branches from `develop` instead of previous release branches, with post-merge develop sync step
+- **`/feature` skill**: Default base branch changed to `develop`
+- **`/publish` skill**: Added post-publish step to sync `develop` with `main`
+- **`/featree` skill**: Worktrees now symlink `.chainlink/issues.db` to the base clone's copy so all worktrees share a single authoritative issue database
+
+### Documentation
+- Updated CLAUDE.md with git flow branch model, SDK compat testing guidelines, expanded skills list, and worktree practices
+
 ## [0.3.2b3] - 2026-02-04
 
 ### Fixed
