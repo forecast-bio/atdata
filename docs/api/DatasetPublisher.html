@@ -198,6 +198,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="dropdown-text">Atmosphere</span></a>
   </li>  
         <li>
+    <a class="dropdown-item" href="../reference/lexicons.html">
+ <span class="dropdown-text">Lexicon Reference</span></a>
+  </li>  
+        <li>
     <a class="dropdown-item" href="../reference/promotion.html">
  <span class="dropdown-text">Promotion</span></a>
   </li>  
@@ -288,6 +292,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#atdata.atmosphere.DatasetPublisher.publish" id="toc-atdata.atmosphere.DatasetPublisher.publish" class="nav-link" data-scroll-target="#atdata.atmosphere.DatasetPublisher.publish">publish</a></li>
   <li><a href="#atdata.atmosphere.DatasetPublisher.publish_with_blobs" id="toc-atdata.atmosphere.DatasetPublisher.publish_with_blobs" class="nav-link" data-scroll-target="#atdata.atmosphere.DatasetPublisher.publish_with_blobs">publish_with_blobs</a></li>
+  <li><a href="#atdata.atmosphere.DatasetPublisher.publish_with_s3" id="toc-atdata.atmosphere.DatasetPublisher.publish_with_s3" class="nav-link" data-scroll-target="#atdata.atmosphere.DatasetPublisher.publish_with_s3">publish_with_s3</a></li>
   <li><a href="#atdata.atmosphere.DatasetPublisher.publish_with_urls" id="toc-atdata.atmosphere.DatasetPublisher.publish_with_urls" class="nav-link" data-scroll-target="#atdata.atmosphere.DatasetPublisher.publish_with_urls">publish_with_urls</a></li>
   </ul></li>
   </ul></li>
@@ -304,10 +309,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h1>DatasetPublisher</h1>
 <div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>atmosphere.DatasetPublisher(client)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Publishes dataset index records to ATProto.</p>
-<p>This class creates dataset records that reference a schema and point to external storage (WebDataset URLs) or ATProto blobs.</p>
+<p>This class creates dataset records that reference a schema and point to HTTP storage, S3 storage, or ATProto blobs.</p>
 <section id="examples" class="level2 doc-section doc-section-examples">
 <h2 class="doc-section doc-section-examples anchored" data-anchor-id="examples">Examples</h2>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> dataset <span class="op">=</span> atdata.Dataset[MySample](<span class="st">"s3://bucket/data-{000000..000009}.tar"</span>)</span>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> dataset <span class="op">=</span> atdata.Dataset[MySample](<span class="st">"https://example.com/data-000000.tar"</span>)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> atmo <span class="op">=</span> Atmosphere.login(<span class="st">"handle"</span>, <span class="st">"password"</span>)</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span></span>
@@ -338,8 +343,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Publish a dataset with data stored as ATProto blobs.</td>
 </tr>
 <tr class="odd">
+<td><a href="#atdata.atmosphere.DatasetPublisher.publish_with_s3">publish_with_s3</a></td>
+<td>Publish a dataset record with S3 storage.</td>
+</tr>
+<tr class="even">
 <td><a href="#atdata.atmosphere.DatasetPublisher.publish_with_urls">publish_with_urls</a></td>
-<td>Publish a dataset record with explicit URLs.</td>
+<td>Publish a dataset record with explicit HTTP URLs.</td>
 </tr>
 </tbody>
 </table>
@@ -575,21 +584,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Blobs are only retained by the PDS when referenced in a committed record. This method handles that automatically.</p>
 </section>
 </section>
-<section id="atdata.atmosphere.DatasetPublisher.publish_with_urls" class="level3">
-<h3 class="anchored" data-anchor-id="atdata.atmosphere.DatasetPublisher.publish_with_urls">publish_with_urls</h3>
-<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>atmosphere.DatasetPublisher.publish_with_urls(</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    urls,</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    schema_uri,</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    name,</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    description<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    tags<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    license<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    metadata<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    rkey<span class="op">=</span><span class="va">None</span>,</span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Publish a dataset record with explicit URLs.</p>
-<p>This method allows publishing a dataset record without having a Dataset object, useful for registering existing WebDataset files.</p>
+<section id="atdata.atmosphere.DatasetPublisher.publish_with_s3" class="level3">
+<h3 class="anchored" data-anchor-id="atdata.atmosphere.DatasetPublisher.publish_with_s3">publish_with_s3</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>atmosphere.DatasetPublisher.publish_with_s3(</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    bucket,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    keys,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    schema_uri,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    name,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    region<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    endpoint<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    description<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    tags<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    license<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    metadata<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    checksums<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    rkey<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Publish a dataset record with S3 storage.</p>
 <section id="parameters-2" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-2">Parameters</h4>
 <table class="caption-top table">
@@ -603,9 +615,132 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
+<td>bucket</td>
+<td><a href="`str`">str</a></td>
+<td>S3 bucket name.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>keys</td>
+<td><a href="`list`">list</a>[<a href="`str`">str</a>]</td>
+<td>List of S3 object keys for shard files.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="odd">
+<td>schema_uri</td>
+<td><a href="`str`">str</a></td>
+<td>AT URI of the schema record.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="even">
+<td>name</td>
+<td><a href="`str`">str</a></td>
+<td>Human-readable dataset name.</td>
+<td><em>required</em></td>
+</tr>
+<tr class="odd">
+<td>region</td>
+<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
+<td>AWS region (e.g., ‘us-east-1’).</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>endpoint</td>
+<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
+<td>Custom S3-compatible endpoint URL.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>description</td>
+<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
+<td>Human-readable description.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>tags</td>
+<td><a href="`typing.Optional`">Optional</a>[<a href="`list`">list</a>[<a href="`str`">str</a>]]</td>
+<td>Searchable tags for discovery.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>license</td>
+<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
+<td>SPDX license identifier.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>metadata</td>
+<td><a href="`typing.Optional`">Optional</a>[<a href="`dict`">dict</a>]</td>
+<td>Arbitrary metadata dictionary.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
+<td>checksums</td>
+<td><a href="`typing.Optional`">Optional</a>[<a href="`list`">list</a>[<a href="`atdata.atmosphere._lexicon_types.ShardChecksum`">ShardChecksum</a>]]</td>
+<td>Per-shard checksums.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="even">
+<td>rkey</td>
+<td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
+<td>Optional explicit record key.</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-2" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`atdata.atmosphere._types.AtUri`">AtUri</a></td>
+<td>The AT URI of the created dataset record.</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="atdata.atmosphere.DatasetPublisher.publish_with_urls" class="level3">
+<h3 class="anchored" data-anchor-id="atdata.atmosphere.DatasetPublisher.publish_with_urls">publish_with_urls</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>atmosphere.DatasetPublisher.publish_with_urls(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    urls,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    schema_uri,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    name,</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    description<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    tags<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    license<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    metadata<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    checksums<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    rkey<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Publish a dataset record with explicit HTTP URLs.</p>
+<p>This method allows publishing a dataset record without having a Dataset object, useful for registering existing WebDataset files. Each URL should be an individual shard (no brace notation).</p>
+<section id="parameters-3" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-3">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
 <td>urls</td>
 <td><a href="`list`">list</a>[<a href="`str`">str</a>]</td>
-<td>List of WebDataset URLs with brace notation.</td>
+<td>List of individual shard URLs.</td>
 <td><em>required</em></td>
 </tr>
 <tr class="even">
@@ -645,6 +780,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><code>None</code></td>
 </tr>
 <tr class="even">
+<td>checksums</td>
+<td><a href="`typing.Optional`">Optional</a>[<a href="`list`">list</a>[<a href="`atdata.atmosphere._lexicon_types.ShardChecksum`">ShardChecksum</a>]]</td>
+<td>Per-shard checksums. If not provided, empty checksums are used.</td>
+<td><code>None</code></td>
+</tr>
+<tr class="odd">
 <td>rkey</td>
 <td><a href="`typing.Optional`">Optional</a>[<a href="`str`">str</a>]</td>
 <td>Optional explicit record key.</td>
@@ -653,8 +794,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="returns-2" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-2">Returns</h4>
+<section id="returns-3" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-3">Returns</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">

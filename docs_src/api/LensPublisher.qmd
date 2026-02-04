@@ -50,42 +50,43 @@ atmosphere.LensPublisher.publish(
     name,
     source_schema_uri,
     target_schema_uri,
+    code_repository,
+    code_commit,
+    getter_path,
+    putter_path,
     description=None,
-    code_repository=None,
-    code_commit=None,
-    getter_path=None,
-    putter_path=None,
+    language=None,
+    metadata=None,
     rkey=None,
 )
 ```
 
 Publish a lens transformation record to ATProto.
 
+Code references are required by the ATProto lexicon. Each lens must
+point to a getter and putter implementation in a git repository.
+
 #### Parameters {.doc-section .doc-section-parameters}
 
-| Name              | Type                                          | Description                                                             | Default    |
-|-------------------|-----------------------------------------------|-------------------------------------------------------------------------|------------|
-| name              | [str](`str`)                                  | Human-readable lens name.                                               | _required_ |
-| source_schema_uri | [str](`str`)                                  | AT URI of the source schema.                                            | _required_ |
-| target_schema_uri | [str](`str`)                                  | AT URI of the target schema.                                            | _required_ |
-| description       | [Optional](`typing.Optional`)\[[str](`str`)\] | What this transformation does.                                          | `None`     |
-| code_repository   | [Optional](`typing.Optional`)\[[str](`str`)\] | Git repository URL containing the lens code.                            | `None`     |
-| code_commit       | [Optional](`typing.Optional`)\[[str](`str`)\] | Git commit hash for reproducibility.                                    | `None`     |
-| getter_path       | [Optional](`typing.Optional`)\[[str](`str`)\] | Module path to the getter function (e.g., 'mymodule.lenses:my_getter'). | `None`     |
-| putter_path       | [Optional](`typing.Optional`)\[[str](`str`)\] | Module path to the putter function (e.g., 'mymodule.lenses:my_putter'). | `None`     |
-| rkey              | [Optional](`typing.Optional`)\[[str](`str`)\] | Optional explicit record key.                                           | `None`     |
+| Name              | Type                                            | Description                                                             | Default    |
+|-------------------|-------------------------------------------------|-------------------------------------------------------------------------|------------|
+| name              | [str](`str`)                                    | Human-readable lens name.                                               | _required_ |
+| source_schema_uri | [str](`str`)                                    | AT URI of the source schema.                                            | _required_ |
+| target_schema_uri | [str](`str`)                                    | AT URI of the target schema.                                            | _required_ |
+| code_repository   | [str](`str`)                                    | Git repository URL containing the lens code.                            | _required_ |
+| code_commit       | [str](`str`)                                    | Git commit hash for reproducibility.                                    | _required_ |
+| getter_path       | [str](`str`)                                    | Module path to the getter function (e.g., 'mymodule.lenses:my_getter'). | _required_ |
+| putter_path       | [str](`str`)                                    | Module path to the putter function (e.g., 'mymodule.lenses:my_putter'). | _required_ |
+| description       | [Optional](`typing.Optional`)\[[str](`str`)\]   | What this transformation does.                                          | `None`     |
+| language          | [Optional](`typing.Optional`)\[[str](`str`)\]   | Programming language (e.g., 'python').                                  | `None`     |
+| metadata          | [Optional](`typing.Optional`)\[[dict](`dict`)\] | Arbitrary metadata dictionary.                                          | `None`     |
+| rkey              | [Optional](`typing.Optional`)\[[str](`str`)\]   | Optional explicit record key.                                           | `None`     |
 
 #### Returns {.doc-section .doc-section-returns}
 
 | Name   | Type                                      | Description                            |
 |--------|-------------------------------------------|----------------------------------------|
 |        | [AtUri](`atdata.atmosphere._types.AtUri`) | The AT URI of the created lens record. |
-
-#### Raises {.doc-section .doc-section-raises}
-
-| Name   | Type                       | Description                        |
-|--------|----------------------------|------------------------------------|
-|        | [ValueError](`ValueError`) | If code references are incomplete. |
 
 ### publish_from_lens { #atdata.atmosphere.LensPublisher.publish_from_lens }
 
@@ -99,6 +100,8 @@ atmosphere.LensPublisher.publish_from_lens(
     code_repository,
     code_commit,
     description=None,
+    language=None,
+    metadata=None,
     rkey=None,
 )
 ```
@@ -110,16 +113,18 @@ the Lens object and publishes a record referencing them.
 
 #### Parameters {.doc-section .doc-section-parameters}
 
-| Name              | Type                                          | Description                    | Default    |
-|-------------------|-----------------------------------------------|--------------------------------|------------|
-| lens_obj          | [Lens](`atdata.lens.Lens`)                    | The Lens object to publish.    | _required_ |
-| name              | [str](`str`)                                  | Human-readable lens name.      | _required_ |
-| source_schema_uri | [str](`str`)                                  | AT URI of the source schema.   | _required_ |
-| target_schema_uri | [str](`str`)                                  | AT URI of the target schema.   | _required_ |
-| code_repository   | [str](`str`)                                  | Git repository URL.            | _required_ |
-| code_commit       | [str](`str`)                                  | Git commit hash.               | _required_ |
-| description       | [Optional](`typing.Optional`)\[[str](`str`)\] | What this transformation does. | `None`     |
-| rkey              | [Optional](`typing.Optional`)\[[str](`str`)\] | Optional explicit record key.  | `None`     |
+| Name              | Type                                            | Description                            | Default    |
+|-------------------|-------------------------------------------------|----------------------------------------|------------|
+| lens_obj          | [Lens](`atdata.lens.Lens`)                      | The Lens object to publish.            | _required_ |
+| name              | [str](`str`)                                    | Human-readable lens name.              | _required_ |
+| source_schema_uri | [str](`str`)                                    | AT URI of the source schema.           | _required_ |
+| target_schema_uri | [str](`str`)                                    | AT URI of the target schema.           | _required_ |
+| code_repository   | [str](`str`)                                    | Git repository URL.                    | _required_ |
+| code_commit       | [str](`str`)                                    | Git commit hash.                       | _required_ |
+| description       | [Optional](`typing.Optional`)\[[str](`str`)\]   | What this transformation does.         | `None`     |
+| language          | [Optional](`typing.Optional`)\[[str](`str`)\]   | Programming language (e.g., 'python'). | `None`     |
+| metadata          | [Optional](`typing.Optional`)\[[dict](`dict`)\] | Arbitrary metadata dictionary.         | `None`     |
+| rkey              | [Optional](`typing.Optional`)\[[str](`str`)\]   | Optional explicit record key.          | `None`     |
 
 #### Returns {.doc-section .doc-section-returns}
 

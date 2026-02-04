@@ -1,0 +1,20 @@
+```{=html}
+<style>
+.lexicon-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    vertical-align: middle;
+    margin-left: 4px;
+}
+.lexicon-badge-record { background: #dbeafe; color: #1e40af; }
+.lexicon-badge-object { background: #dcfce7; color: #166534; }
+.lexicon-badge-query  { background: #fef3c7; color: #92400e; }
+.lexicon-badge-token  { background: #f3e8ff; color: #6b21a8; }
+.lexicon-badge-string { background: #e0e7ff; color: #3730a3; }
+</style>
+```

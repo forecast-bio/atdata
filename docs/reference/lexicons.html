@@ -6,9 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="description" content="Use Index with LocalDiskStore for managed dataset storage and discovery">
+<meta name="description" content="ATProto Lexicon definitions for the ac.foundation.dataset namespace">
 
-<title>Index-Managed Datasets – atdata</title>
+<title>Lexicon Reference – atdata</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -20,41 +20,6 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
-}
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -282,7 +247,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
         <a class="flex-grow-1 no-decor" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
-          <h1 class="quarto-secondary-nav-title">Index-Managed Datasets</h1>
+          <h1 class="quarto-secondary-nav-title">Lexicon Reference</h1>
         </a>     
     </div>
   </nav>
@@ -369,7 +334,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../examples/index-workflow.html" class="sidebar-item-text sidebar-link active">
+  <a href="../examples/index-workflow.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Index-Managed Datasets</span></a>
   </div>
 </li>
@@ -428,7 +393,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../reference/lexicons.html" class="sidebar-item-text sidebar-link">
+  <a href="../reference/lexicons.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">Lexicon Reference</span></a>
   </div>
 </li>
@@ -480,15 +445,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#define-sample-types" id="toc-define-sample-types" class="nav-link active" data-scroll-target="#define-sample-types">1 — Define sample types</a></li>
-  <li><a href="#create-an-index-with-local-disk-storage" id="toc-create-an-index-with-local-disk-storage" class="nav-link" data-scroll-target="#create-an-index-with-local-disk-storage">2 — Create an Index with local disk storage</a></li>
-  <li><a href="#write-datasets-through-the-index" id="toc-write-datasets-through-the-index" class="nav-link" data-scroll-target="#write-datasets-through-the-index">3 — Write datasets through the index</a></li>
-  <li><a href="#list-and-discover-datasets" id="toc-list-and-discover-datasets" class="nav-link" data-scroll-target="#list-and-discover-datasets">4 — List and discover datasets</a></li>
-  <li><a href="#load-a-dataset-from-the-index" id="toc-load-a-dataset-from-the-index" class="nav-link" data-scroll-target="#load-a-dataset-from-the-index">5 — Load a dataset from the index</a></li>
-  <li><a href="#schema-tracking" id="toc-schema-tracking" class="nav-link" data-scroll-target="#schema-tracking">6 — Schema tracking</a></li>
-  <li><a href="#inspect-the-repository" id="toc-inspect-the-repository" class="nav-link" data-scroll-target="#inspect-the-repository">7 — Inspect the repository</a></li>
-  <li><a href="#clean-up" id="toc-clean-up" class="nav-link" data-scroll-target="#clean-up">8 — Clean up</a></li>
-  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">Key takeaways</a></li>
+  <li><a href="#namespace-overview" id="toc-namespace-overview" class="nav-link active" data-scroll-target="#namespace-overview">Namespace overview</a></li>
+  <li><a href="#definitions" id="toc-definitions" class="nav-link" data-scroll-target="#definitions">Definitions</a>
+  <ul class="collapse">
+  <li><a href="#ac-foundation-dataset-schema" id="toc-ac-foundation-dataset-schema" class="nav-link" data-scroll-target="#ac-foundation-dataset-schema"><code>ac.foundation.dataset.schema</code> <span class="lexicon-badge lexicon-badge-record">Record</span></a></li>
+  <li><a href="#ac-foundation-dataset-record" id="toc-ac-foundation-dataset-record" class="nav-link" data-scroll-target="#ac-foundation-dataset-record"><code>ac.foundation.dataset.record</code> <span class="lexicon-badge lexicon-badge-record">Record</span></a></li>
+  <li><a href="#ac-foundation-dataset-lens" id="toc-ac-foundation-dataset-lens" class="nav-link" data-scroll-target="#ac-foundation-dataset-lens"><code>ac.foundation.dataset.lens</code> <span class="lexicon-badge lexicon-badge-record">Record</span></a></li>
+  <li><a href="#ac-foundation-dataset-storagehttp" id="toc-ac-foundation-dataset-storagehttp" class="nav-link" data-scroll-target="#ac-foundation-dataset-storagehttp"><code>ac.foundation.dataset.storageHttp</code> <span class="lexicon-badge lexicon-badge-object">Object</span></a></li>
+  <li><a href="#ac-foundation-dataset-storages3" id="toc-ac-foundation-dataset-storages3" class="nav-link" data-scroll-target="#ac-foundation-dataset-storages3"><code>ac.foundation.dataset.storageS3</code> <span class="lexicon-badge lexicon-badge-object">Object</span></a></li>
+  <li><a href="#ac-foundation-dataset-storageblobs" id="toc-ac-foundation-dataset-storageblobs" class="nav-link" data-scroll-target="#ac-foundation-dataset-storageblobs"><code>ac.foundation.dataset.storageBlobs</code> <span class="lexicon-badge lexicon-badge-object">Object</span></a></li>
+  <li><a href="#ac-foundation-dataset-storageexternal" id="toc-ac-foundation-dataset-storageexternal" class="nav-link" data-scroll-target="#ac-foundation-dataset-storageexternal"><code>ac.foundation.dataset.storageExternal</code> <span class="lexicon-badge lexicon-badge-object">Object</span></a></li>
+  <li><a href="#ac-foundation-dataset-schematype" id="toc-ac-foundation-dataset-schematype" class="nav-link" data-scroll-target="#ac-foundation-dataset-schematype"><code>ac.foundation.dataset.schemaType</code> <span class="lexicon-badge lexicon-badge-string">String</span></a></li>
+  <li><a href="#ac-foundation-dataset-arrayformat" id="toc-ac-foundation-dataset-arrayformat" class="nav-link" data-scroll-target="#ac-foundation-dataset-arrayformat"><code>ac.foundation.dataset.arrayFormat</code> <span class="lexicon-badge lexicon-badge-string">String</span></a></li>
+  <li><a href="#ac-foundation-dataset-getlatestschema" id="toc-ac-foundation-dataset-getlatestschema" class="nav-link" data-scroll-target="#ac-foundation-dataset-getlatestschema"><code>ac.foundation.dataset.getLatestSchema</code> <span class="lexicon-badge lexicon-badge-query">Query</span></a></li>
+  </ul></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/forecast-bio/atdata/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -497,12 +467,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title d-none d-lg-block">Index-Managed Datasets</h1>
+<h1 class="title d-none d-lg-block">Lexicon Reference</h1>
 </div>
 
 <div>
   <div class="description">
-    Use Index with LocalDiskStore for managed dataset storage and discovery
+    ATProto Lexicon definitions for the ac.foundation.dataset namespace
   </div>
 </div>
 
@@ -519,264 +489,793 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>Writing raw tar files is fine for quick experiments, but as your dataset collection grows you need <strong>discovery, versioning, and metadata</strong>. The <code>Index</code> class provides this layer—backed by SQLite by default—and pairs with <code>LocalDiskStore</code> for persistent file storage.</p>
-<p>This example creates an index, writes two datasets into it, lists and retrieves them, and shows how <code>load_dataset</code> resolves from the index.</p>
-<section id="define-sample-types" class="level2">
-<h2 class="anchored" data-anchor-id="define-sample-types">1 — Define sample types</h2>
-<div id="88fb0a84" class="cell" data-execution_count="1">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> TextSample:</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Simple text document."""</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    text: <span class="bu">str</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    language: <span class="bu">str</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    word_count: <span class="bu">int</span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="at">@atdata.packable</span></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> EmbeddingSample:</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Dense embedding with label."""</span></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    vector: NDArray</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    label: <span class="bu">str</span></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    source: <span class="bu">str</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<style>
+.lexicon-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    vertical-align: middle;
+    margin-left: 4px;
+}
+.lexicon-badge-record { background: #dbeafe; color: #1e40af; }
+.lexicon-badge-object { background: #dcfce7; color: #166534; }
+.lexicon-badge-query  { background: #fef3c7; color: #92400e; }
+.lexicon-badge-token  { background: #f3e8ff; color: #6b21a8; }
+.lexicon-badge-string { background: #e0e7ff; color: #3730a3; }
+</style>
+<p>This page documents the <a href="https://atproto.com/specs/lexicon">ATProto Lexicon</a> definitions that make up the <code>ac.foundation.dataset</code> namespace. These lexicons define the record types, objects, tokens, and queries used by atdata for publishing schemas, datasets, and lenses to the AT Protocol network.</p>
+<p>All lexicons conform to ATProto Lexicon version 1 and are published from the canonical source in <a href="https://github.com/forecast-bio/atdata/tree/main/lexicons"><code>lexicons/</code></a>.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
 </div>
-</section>
-<section id="create-an-index-with-local-disk-storage" class="level2">
-<h2 class="anchored" data-anchor-id="create-an-index-with-local-disk-storage">2 — Create an Index with local disk storage</h2>
-<p>By default <code>Index()</code> uses an in-memory SQLite database. We pass a custom <code>path</code> to persist across the example, and a <code>LocalDiskStore</code> rooted in a temp directory.</p>
-<div id="5f583eac" class="cell" data-execution_count="2">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tempfile</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>tmpdir <span class="op">=</span> Path(tempfile.mkdtemp(prefix<span class="op">=</span><span class="st">"atdata_index_"</span>))</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>index <span class="op">=</span> atdata.Index(</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    path<span class="op">=</span>tmpdir <span class="op">/</span> <span class="st">"index.db"</span>,</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    data_store<span class="op">=</span>atdata.LocalDiskStore(root<span class="op">=</span>tmpdir <span class="op">/</span> <span class="st">"data"</span>),</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Index DB   : </span><span class="sc">{</span>tmpdir <span class="op">/</span> <span class="st">'index.db'</span><span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Data root  : </span><span class="sc">{</span>tmpdir <span class="op">/</span> <span class="st">'data'</span><span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Index DB   : /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_index_fvd0vvxj/index.db
-Data root  : /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_index_fvd0vvxj/data</code></pre>
+<div class="callout-title-container flex-fill">
+Reading this reference
 </div>
 </div>
-</section>
-<section id="write-datasets-through-the-index" class="level2">
-<h2 class="anchored" data-anchor-id="write-datasets-through-the-index">3 — Write datasets through the index</h2>
-<p><code>index.write()</code> serializes samples to sharded tars via the data store and creates a tracked entry with a content-addressed CID.</p>
-<div id="f661b262" class="cell" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">99</span>)</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Dataset 1: text documents ---</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>text_samples <span class="op">=</span> [</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    TextSample(</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        text<span class="op">=</span><span class="ss">f"Document number </span><span class="sc">{</span>i<span class="sc">}</span><span class="ss"> about topic </span><span class="sc">{</span>i <span class="op">%</span> <span class="dv">5</span><span class="sc">}</span><span class="ss">."</span>,</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>        language<span class="op">=</span><span class="st">"en"</span> <span class="cf">if</span> i <span class="op">%</span> <span class="dv">3</span> <span class="op">!=</span> <span class="dv">0</span> <span class="cf">else</span> <span class="st">"es"</span>,</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        word_count<span class="op">=</span><span class="bu">len</span>(<span class="ss">f"Document number </span><span class="sc">{</span>i<span class="sc">}</span><span class="ss"> about topic </span><span class="sc">{</span>i <span class="op">%</span> <span class="dv">5</span><span class="sc">}</span><span class="ss">."</span>.split()),</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">500</span>)</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>text_entry <span class="op">=</span> index.write(</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    text_samples,</span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">"docs-v1"</span>,</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    description<span class="op">=</span><span class="st">"500 synthetic text documents"</span>,</span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    tags<span class="op">=</span>[<span class="st">"text"</span>, <span class="st">"multilingual"</span>],</span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    maxcount<span class="op">=</span><span class="dv">250</span>,</span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Text dataset CID  : </span><span class="sc">{</span>text_entry<span class="sc">.</span>cid[:<span class="dv">16</span>]<span class="sc">}</span><span class="ss">..."</span>)</span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Text dataset shards: </span><span class="sc">{</span><span class="bu">len</span>(text_entry.data_urls)<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code># writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/tmp0rm6ej8c/data-000000.tar 0 0.0 GB 0
-# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/tmp0rm6ej8c/data-000001.tar 250 0.0 GB 250
-# writing /private/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_index_fvd0vvxj/data/docs-v1/data--078fef77--000000.tar 0 0.0 GB 0
-Text dataset CID  : bafyreiexgbzh45k...
-Text dataset shards: 1</code></pre>
+<div class="callout-body-container callout-body">
+<p>Each entry shows the <strong>NSID</strong> (Namespaced Identifier), its <strong>type</strong> (Record, Object, Token, Query, or String), and a property table with type information and constraints. Internal cross-references link to auxiliary definitions within the same namespace.</p>
 </div>
 </div>
-<div id="50b2dbea" class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Dataset 2: embeddings ---</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>embedding_samples <span class="op">=</span> [</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    EmbeddingSample(</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>        vector<span class="op">=</span>rng.standard_normal(<span class="dv">128</span>).astype(np.float32),</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>        label<span class="op">=</span><span class="ss">f"class_</span><span class="sc">{</span>i <span class="op">%</span> <span class="dv">10</span><span class="sc">}</span><span class="ss">"</span>,</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        source<span class="op">=</span><span class="st">"synthetic"</span>,</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">300</span>)</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>emb_entry <span class="op">=</span> index.write(</span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    embedding_samples,</span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">"embeddings-v1"</span>,</span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    description<span class="op">=</span><span class="st">"300 synthetic 128-d embeddings"</span>,</span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    tags<span class="op">=</span>[<span class="st">"embeddings"</span>, <span class="st">"synthetic"</span>],</span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    maxcount<span class="op">=</span><span class="dv">150</span>,</span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Embedding CID     : </span><span class="sc">{</span>emb_entry<span class="sc">.</span>cid[:<span class="dv">16</span>]<span class="sc">}</span><span class="ss">..."</span>)</span>
-<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Embedding shards  : </span><span class="sc">{</span><span class="bu">len</span>(emb_entry.data_urls)<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code># writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/tmp9mw37qd0/data-000000.tar 0 0.0 GB 0
-# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/tmp9mw37qd0/data-000001.tar 150 0.0 GB 150
-# writing /private/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_index_fvd0vvxj/data/embeddings-v1/data--3bd5dbe5--000000.tar 0 0.0 GB 0
-Embedding CID     : bafyreid45dgeyhf...
-Embedding shards  : 1</code></pre>
-</div>
-</div>
-</section>
-<section id="list-and-discover-datasets" class="level2">
-<h2 class="anchored" data-anchor-id="list-and-discover-datasets">4 — List and discover datasets</h2>
-<div id="11df9ad1" class="cell" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Datasets in index:"</span>)</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> entry <span class="kw">in</span> index.list_datasets():</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  </span><span class="sc">{</span>entry<span class="sc">.</span>name<span class="sc">:20s}</span><span class="ss">  shards=</span><span class="sc">{</span><span class="bu">len</span>(entry.data_urls)<span class="sc">}</span><span class="ss">  cid=</span><span class="sc">{</span>entry<span class="sc">.</span>cid[:<span class="dv">12</span>]<span class="sc">}</span><span class="ss">..."</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Datasets in index:
-  test-ly               shards=1  cid=bafyreiawvxv...
-  proto-ly              shards=1  cid=bafyreidtr6v...
-  proto-ly              shards=1  cid=bafyreihelhd...
-  proto-ly              shards=1  cid=bafyreihly5j...
-  docs-v1               shards=1  cid=bafyreicek7z...
-  embeddings-v1         shards=1  cid=bafyreidc3by...
-  docs-v1               shards=1  cid=bafyreia4iqz...
-  embeddings-v1         shards=1  cid=bafyreihsz4n...
-  docs-v1               shards=1  cid=bafyreiejgub...
-  embeddings-v1         shards=1  cid=bafyreifwtav...
-  docs-v1               shards=1  cid=bafyreiaor62...
-  embeddings-v1         shards=1  cid=bafyreidjt2i...
-  docs-v1               shards=1  cid=bafyreidphej...
-  embeddings-v1         shards=1  cid=bafyreid5c7s...
-  docs-v1               shards=1  cid=bafyreia6rt3...
-  embeddings-v1         shards=1  cid=bafyreifwj4u...
-  docs-v1               shards=1  cid=bafyreig5yro...
-  embeddings-v1         shards=1  cid=bafyreiey4ua...
-  docs-v1               shards=1  cid=bafyreihvtxe...
-  embeddings-v1         shards=1  cid=bafyreic2r24...
-  docs-v1               shards=1  cid=bafyreiexgbz...
-  embeddings-v1         shards=1  cid=bafyreid45dg...</code></pre>
-</div>
-</div>
-</section>
-<section id="load-a-dataset-from-the-index" class="level2">
-<h2 class="anchored" data-anchor-id="load-a-dataset-from-the-index">5 — Load a dataset from the index</h2>
-<p><code>load_dataset</code> can resolve dataset names through the default index. Because the index stores the schema for each dataset, you don’t need to pass the sample type explicitly—it’s reconstructed automatically.</p>
-<div id="138b5695" class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>atdata.set_default_index(index)</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co"># No sample_type argument needed -- schema is resolved from the index</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> atdata.load_dataset(<span class="st">"@local/docs-v1"</span>, split<span class="op">=</span><span class="st">"train"</span>)</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> ds.ordered(batch_size<span class="op">=</span><span class="dv">10</span>):</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Texts     : </span><span class="sc">{</span>batch<span class="sc">.</span>text[:<span class="dv">2</span>]<span class="sc">}</span><span class="ss">..."</span>)</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Languages : </span><span class="sc">{</span>batch<span class="sc">.</span>language[:<span class="dv">5</span>]<span class="sc">}</span><span class="ss">..."</span>)</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Counts    : </span><span class="sc">{</span>batch<span class="sc">.</span>word_count[:<span class="dv">5</span>]<span class="sc">}</span><span class="ss">..."</span>)</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">break</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Texts     : ['Document number 0 about topic 0.', 'Document number 1 about topic 1.']...
-Languages : ['es', 'en', 'en', 'es', 'en']...
-Counts    : [6, 6, 6, 6, 6]...</code></pre>
-</div>
-</div>
-<div id="889b5dba" class="cell" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Same for embeddings -- type is auto-resolved</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>emb_ds <span class="op">=</span> atdata.load_dataset(<span class="st">"@local/embeddings-v1"</span>, split<span class="op">=</span><span class="st">"train"</span>)</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> emb_ds.ordered(batch_size<span class="op">=</span><span class="dv">8</span>):</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Vector shape : </span><span class="sc">{</span>batch<span class="sc">.</span>vector<span class="sc">.</span>shape<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Labels       : </span><span class="sc">{</span>batch<span class="sc">.</span>label<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">break</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Vector shape : (8, 128)
-Labels       : ['class_0', 'class_1', 'class_2', 'class_3', 'class_4', 'class_5', 'class_6', 'class_7']</code></pre>
-</div>
-</div>
-</section>
-<section id="schema-tracking" class="level2">
-<h2 class="anchored" data-anchor-id="schema-tracking">6 — Schema tracking</h2>
-<p>The index records the schema for each dataset, enabling type reconstruction at load time. Schemas are persisted automatically by <code>index.write()</code>.</p>
-<div id="15ed6847" class="cell" data-execution_count="8">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> schema <span class="kw">in</span> index.schemas:</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  </span><span class="sc">{</span>schema<span class="sc">.</span>name<span class="sc">:20s}</span><span class="ss">  fields=</span><span class="sc">{</span>[f.name <span class="cf">for</span> f <span class="kw">in</span> schema.fields]<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>  TextSample            fields=['text', 'language', 'word_count']
-  EmbeddingSample       fields=['vector', 'label', 'source']</code></pre>
-</div>
-</div>
-</section>
-<section id="inspect-the-repository" class="level2">
-<h2 class="anchored" data-anchor-id="inspect-the-repository">7 — Inspect the repository</h2>
-<p>The index stores all backends in a uniform <code>repos</code> dict. The <code>"local"</code> repository is always present.</p>
-<div id="90e7e868" class="cell" data-execution_count="9">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> name, repo <span class="kw">in</span> index.repos.items():</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    has_store <span class="op">=</span> <span class="st">"yes"</span> <span class="cf">if</span> repo.data_store <span class="cf">else</span> <span class="st">"no"</span></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  </span><span class="sc">{</span>name<span class="sc">:10s}</span><span class="ss">  provider=</span><span class="sc">{</span><span class="bu">type</span>(repo.provider)<span class="sc">.</span><span class="va">__name__</span><span class="sc">}</span><span class="ss">  data_store=</span><span class="sc">{</span>has_store<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>  local       provider=SqliteProvider  data_store=yes</code></pre>
-</div>
-</div>
-</section>
-<section id="clean-up" class="level2">
-<h2 class="anchored" data-anchor-id="clean-up">8 — Clean up</h2>
-<div id="fddebb1b" class="cell" data-execution_count="10">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shutil</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>atdata.set_default_index(<span class="va">None</span>)</span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>shutil.rmtree(tmpdir, ignore_errors<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="key-takeaways" class="level2">
-<h2 class="anchored" data-anchor-id="key-takeaways">Key takeaways</h2>
+<section id="namespace-overview" class="level2">
+<h2 class="anchored" data-anchor-id="namespace-overview">Namespace overview</h2>
 <table class="caption-top table">
-<colgroup>
-<col style="width: 64%">
-<col style="width: 35%">
-</colgroup>
 <thead>
 <tr class="header">
-<th>Concept</th>
-<th>API</th>
+<th>NSID</th>
+<th>Type</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Create an index</td>
-<td><code>atdata.Index(path=..., data_store=...)</code></td>
+<td><a href="#ac-foundation-dataset-schema"><code>ac.foundation.dataset.schema</code></a></td>
+<td>Record</td>
+<td>Definition of a PackableSample-compatible sample type. Supports versioning via rkey format: {NSID}<span class="citation" data-cites="semver">@semver</span>. Schema f…</td>
 </tr>
 <tr class="even">
-<td>Write with tracking</td>
-<td><code>index.write(samples, name=..., tags=...)</code></td>
+<td><a href="#ac-foundation-dataset-record"><code>ac.foundation.dataset.record</code></a></td>
+<td>Record</td>
+<td>Index record for a WebDataset-backed dataset with references to storage location and sample schema</td>
 </tr>
 <tr class="odd">
-<td>List datasets</td>
-<td><code>index.list_datasets()</code></td>
+<td><a href="#ac-foundation-dataset-lens"><code>ac.foundation.dataset.lens</code></a></td>
+<td>Record</td>
+<td>Bidirectional transformation (Lens) between two sample types, with code stored in external repositories</td>
 </tr>
 <tr class="even">
-<td>Schema discovery</td>
-<td><code>index.list_schemas()</code></td>
+<td><a href="#ac-foundation-dataset-storagehttp"><code>ac.foundation.dataset.storageHttp</code></a></td>
+<td>Object</td>
+<td>HTTP/HTTPS storage for WebDataset tar archives. Each shard is listed individually with a checksum for integrity verif…</td>
 </tr>
 <tr class="odd">
-<td>Inspect repositories</td>
-<td><code>index.repos</code> (dict including <code>"local"</code>)</td>
+<td><a href="#ac-foundation-dataset-storages3"><code>ac.foundation.dataset.storageS3</code></a></td>
+<td>Object</td>
+<td>S3 or S3-compatible storage for WebDataset tar archives. Supports custom endpoints for MinIO, Cloudflare R2, and othe…</td>
 </tr>
 <tr class="even">
-<td>Set global index</td>
-<td><code>atdata.set_default_index(index)</code></td>
+<td><a href="#ac-foundation-dataset-storageblobs"><code>ac.foundation.dataset.storageBlobs</code></a></td>
+<td>Object</td>
+<td>Storage via ATProto PDS blobs for WebDataset tar archives. Used in ac.foundation.dataset.record storage union for max…</td>
 </tr>
 <tr class="odd">
-<td>Load by name (auto-typed)</td>
-<td><code>atdata.load_dataset("@local/name", split=...)</code></td>
+<td><a href="#ac-foundation-dataset-storageexternal"><code>ac.foundation.dataset.storageExternal</code></a></td>
+<td>Object</td>
+<td>(Deprecated: use storageHttp or storageS3 instead.) External storage via URLs for WebDataset tar archives. URLs suppo…</td>
+</tr>
+<tr class="even">
+<td><a href="#ac-foundation-dataset-schematype"><code>ac.foundation.dataset.schemaType</code></a></td>
+<td>String</td>
+<td>Schema type identifier for atdata sample definitions. Known values correspond to token definitions in this Lexicon. N…</td>
+</tr>
+<tr class="odd">
+<td><a href="#ac-foundation-dataset-arrayformat"><code>ac.foundation.dataset.arrayFormat</code></a></td>
+<td>String</td>
+<td>Array serialization format identifier for NDArray fields in sample schemas. Known values correspond to token definiti…</td>
+</tr>
+<tr class="even">
+<td><a href="#ac-foundation-dataset-getlatestschema"><code>ac.foundation.dataset.getLatestSchema</code></a></td>
+<td>Query</td>
+<td>Get the latest version of a sample schema by its permanent NSID identifier</td>
 </tr>
 </tbody>
 </table>
+</section>
+<section id="definitions" class="level2">
+<h2 class="anchored" data-anchor-id="definitions">Definitions</h2>
+<section id="ac-foundation-dataset-schema" class="level3">
+<h3 class="anchored" data-anchor-id="ac-foundation-dataset-schema"><code>ac.foundation.dataset.schema</code> <span class="lexicon-badge lexicon-badge-record">Record</span></h3>
+<p>Definition of a PackableSample-compatible sample type. Supports versioning via rkey format: {NSID}<span class="citation" data-cites="semver">@semver</span>. Schema format is extensible via union type.</p>
+<p><strong>Record key:</strong> <code>any</code></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Property</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>name</code></td>
+<td>string</td>
+<td><strong>yes</strong></td>
+<td>Human-readable display name for this sample type. Used for documentation and UI. The NSID in the record URI provides unique identification; name collisions across NSIDs are acceptable. <em>max length: 100</em></td>
+</tr>
+<tr class="even">
+<td><code>version</code></td>
+<td>string</td>
+<td><strong>yes</strong></td>
+<td>Semantic version (e.g., ‘1.0.0’) <em>max length: 100</em> · <em>pattern: <code>^(0\|[1-9]\d*)\.(0\|[1-9]\d*)\.(0\|[1-9]\d*)(?:-((?:0\|[1-9]\d*\|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0\|[1-9]\d*\|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$</code></em></td>
+</tr>
+<tr class="odd">
+<td><code>schemaType</code></td>
+<td><a href="#ac-foundation-dataset-schematype"><code>ac.foundation.dataset.schemaType</code></a></td>
+<td><strong>yes</strong></td>
+<td>Type of schema definition. This field indicates which union member is present in the schema field.</td>
+</tr>
+<tr class="even">
+<td><code>schema</code></td>
+<td><a href="#ac-foundation-dataset-schema-jsonschemaformat"><code>ac.foundation.dataset.schema#jsonSchemaFormat</code></a></td>
+<td><strong>yes</strong></td>
+<td>Schema definition for this sample type. Currently supports JSON Schema Draft 7. Union allows for future schema formats (Avro, Protobuf, etc.) without breaking changes.</td>
+</tr>
+<tr class="odd">
+<td><code>description</code></td>
+<td>string</td>
+<td>no</td>
+<td>Human-readable description of what this sample type represents <em>max length: 5000</em></td>
+</tr>
+<tr class="even">
+<td><code>metadata</code></td>
+<td>object</td>
+<td>no</td>
+<td>Optional metadata about this schema. Common fields include license and tags, but any additional fields are permitted. <em>max properties: 50</em></td>
+</tr>
+<tr class="odd">
+<td><code>createdAt</code></td>
+<td>string (datetime)</td>
+<td><strong>yes</strong></td>
+<td>Timestamp when this schema version was created. Immutable once set (ATProto records are permanent).</td>
+</tr>
+</tbody>
+</table>
+<section id="ac-foundation-dataset-schema-jsonschemaformat" class="level4">
+<h4 class="anchored" data-anchor-id="ac-foundation-dataset-schema-jsonschemaformat"><code>ac.foundation.dataset.schema#jsonSchemaFormat</code> <span class="lexicon-badge lexicon-badge-object">Object</span></h4>
+<p>JSON Schema Draft 7 format for sample type definitions. Used with NDArray shim for array types.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 15%">
+<col style="width: 25%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Property</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>$type</code></td>
+<td>string</td>
+<td><strong>yes</strong></td>
+<td><em>const: <code>ac.foundation.dataset.schema#jsonSchemaFormat</code></em></td>
+</tr>
+<tr class="even">
+<td><code>$schema</code></td>
+<td>string</td>
+<td><strong>yes</strong></td>
+<td>JSON Schema version identifier <em>const: <code>http://json-schema.org/draft-07/schema#</code></em></td>
+</tr>
+<tr class="odd">
+<td><code>type</code></td>
+<td>string</td>
+<td><strong>yes</strong></td>
+<td>Sample types must be objects <em>const: <code>object</code></em></td>
+</tr>
+<tr class="even">
+<td><code>properties</code></td>
+<td>object</td>
+<td><strong>yes</strong></td>
+<td>Field definitions for the sample type <em>min properties: 1</em></td>
+</tr>
+<tr class="odd">
+<td><code>arrayFormatVersions</code></td>
+<td>object</td>
+<td>no</td>
+<td>Mapping from array format identifiers to semantic versions. Keys are ac.foundation.dataset.arrayFormat values (e.g., ‘ndarrayBytes’), values are semver strings (e.g., ‘1.0.0’). Foundation.ac maintains canonical shim schemas at https://foundation.ac/schemas/atdata-{format}-bytes/{version}/. <em>max properties: 10</em></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="ac-foundation-dataset-record" class="level3">
+<h3 class="anchored" data-anchor-id="ac-foundation-dataset-record"><code>ac.foundation.dataset.record</code> <span class="lexicon-badge lexicon-badge-record">Record</span></h3>
+<p>Index record for a WebDataset-backed dataset with references to storage location and sample schema</p>
+<p><strong>Record key:</strong> <code>tid</code></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Property</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>name</code></td>
+<td>string</td>
+<td><strong>yes</strong></td>
+<td>Human-readable dataset name <em>max length: 200</em></td>
+</tr>
+<tr class="even">
+<td><code>schemaRef</code></td>
+<td>string (at-uri)</td>
+<td><strong>yes</strong></td>
+<td>AT-URI reference to the schema record for this dataset’s samples <em>max length: 500</em></td>
+</tr>
+<tr class="odd">
+<td><code>storage</code></td>
+<td><a href="#ac-foundation-dataset-storagehttp"><code>ac.foundation.dataset.storageHttp</code></a> | <a href="#ac-foundation-dataset-storages3"><code>ac.foundation.dataset.storageS3</code></a> | <a href="#ac-foundation-dataset-storageblobs"><code>ac.foundation.dataset.storageBlobs</code></a></td>
+<td><strong>yes</strong></td>
+<td>Storage location for dataset files (WebDataset tar archives)</td>
+</tr>
+<tr class="even">
+<td><code>description</code></td>
+<td>string</td>
+<td>no</td>
+<td>Human-readable description of the dataset <em>max length: 5000</em></td>
+</tr>
+<tr class="odd">
+<td><code>metadata</code></td>
+<td>bytes</td>
+<td>no</td>
+<td>Msgpack-encoded metadata dict for arbitrary extended key-value pairs. Use this for additional metadata beyond the core top-level fields (license, tags, size). Top-level fields are preferred for discoverable/searchable metadata. <em>max length: 100000</em></td>
+</tr>
+<tr class="even">
+<td><code>tags</code></td>
+<td>array&lt;string&gt;</td>
+<td>no</td>
+<td>Searchable tags for dataset discovery. Aligns with Schema.org keywords property. <em>max length: 30</em></td>
+</tr>
+<tr class="odd">
+<td><code>size</code></td>
+<td><a href="#ac-foundation-dataset-record-datasetsize"><code>#datasetSize</code></a></td>
+<td>no</td>
+<td>Dataset size information (optional)</td>
+</tr>
+<tr class="even">
+<td><code>license</code></td>
+<td>string</td>
+<td>no</td>
+<td>License identifier or URL. SPDX identifiers recommended (e.g., MIT, Apache-2.0, CC-BY-4.0) or full SPDX URLs (e.g., http://spdx.org/licenses/MIT). Aligns with Schema.org license property. <em>max length: 200</em></td>
+</tr>
+<tr class="odd">
+<td><code>createdAt</code></td>
+<td>string (datetime)</td>
+<td><strong>yes</strong></td>
+<td>Timestamp when this dataset record was created</td>
+</tr>
+</tbody>
+</table>
+<section id="ac-foundation-dataset-record-shardchecksum" class="level4">
+<h4 class="anchored" data-anchor-id="ac-foundation-dataset-record-shardchecksum"><code>ac.foundation.dataset.record#shardChecksum</code> <span class="lexicon-badge lexicon-badge-object">Object</span></h4>
+<p>Content hash for shard integrity verification. Algorithm is flexible to allow SHA-256, BLAKE3, or other hash functions.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 15%">
+<col style="width: 25%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Property</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>algorithm</code></td>
+<td>string</td>
+<td><strong>yes</strong></td>
+<td>Hash algorithm identifier (e.g., ‘sha256’, ‘blake3’) <em>max length: 20</em></td>
+</tr>
+<tr class="even">
+<td><code>digest</code></td>
+<td>string</td>
+<td><strong>yes</strong></td>
+<td>Hex-encoded hash digest <em>max length: 128</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="ac-foundation-dataset-record-datasetsize" class="level4">
+<h4 class="anchored" data-anchor-id="ac-foundation-dataset-record-datasetsize"><code>ac.foundation.dataset.record#datasetSize</code> <span class="lexicon-badge lexicon-badge-object">Object</span></h4>
+<p>Information about dataset size</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 15%">
+<col style="width: 25%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Property</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>samples</code></td>
+<td>integer</td>
+<td>no</td>
+<td>Total number of samples in the dataset <em>min: 0</em></td>
+</tr>
+<tr class="even">
+<td><code>bytes</code></td>
+<td>integer</td>
+<td>no</td>
+<td>Total size in bytes <em>min: 0</em></td>
+</tr>
+<tr class="odd">
+<td><code>shards</code></td>
+<td>integer</td>
+<td>no</td>
+<td>Number of WebDataset shards <em>min: 1</em></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="ac-foundation-dataset-lens" class="level3">
+<h3 class="anchored" data-anchor-id="ac-foundation-dataset-lens"><code>ac.foundation.dataset.lens</code> <span class="lexicon-badge lexicon-badge-record">Record</span></h3>
+<p>Bidirectional transformation (Lens) between two sample types, with code stored in external repositories</p>
+<p><strong>Record key:</strong> <code>tid</code></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Property</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>name</code></td>
+<td>string</td>
+<td><strong>yes</strong></td>
+<td>Human-readable lens name <em>max length: 100</em></td>
+</tr>
+<tr class="even">
+<td><code>sourceSchema</code></td>
+<td>string (at-uri)</td>
+<td><strong>yes</strong></td>
+<td>AT-URI reference to source schema <em>max length: 500</em></td>
+</tr>
+<tr class="odd">
+<td><code>targetSchema</code></td>
+<td>string (at-uri)</td>
+<td><strong>yes</strong></td>
+<td>AT-URI reference to target schema <em>max length: 500</em></td>
+</tr>
+<tr class="even">
+<td><code>description</code></td>
+<td>string</td>
+<td>no</td>
+<td>What this transformation does <em>max length: 1000</em></td>
+</tr>
+<tr class="odd">
+<td><code>getterCode</code></td>
+<td><a href="#ac-foundation-dataset-lens-codereference"><code>#codeReference</code></a></td>
+<td><strong>yes</strong></td>
+<td>Code reference for getter function (Source -&gt; Target)</td>
+</tr>
+<tr class="even">
+<td><code>putterCode</code></td>
+<td><a href="#ac-foundation-dataset-lens-codereference"><code>#codeReference</code></a></td>
+<td><strong>yes</strong></td>
+<td>Code reference for putter function (Target, Source -&gt; Source)</td>
+</tr>
+<tr class="odd">
+<td><code>language</code></td>
+<td>string</td>
+<td>no</td>
+<td>Programming language of the lens implementation (e.g., ‘python’, ‘typescript’) <em>max length: 50</em></td>
+</tr>
+<tr class="even">
+<td><code>metadata</code></td>
+<td>object</td>
+<td>no</td>
+<td>Arbitrary metadata (author, performance notes, etc.)</td>
+</tr>
+<tr class="odd">
+<td><code>createdAt</code></td>
+<td>string (datetime)</td>
+<td><strong>yes</strong></td>
+<td>Timestamp when this lens was created</td>
+</tr>
+</tbody>
+</table>
+<section id="ac-foundation-dataset-lens-codereference" class="level4">
+<h4 class="anchored" data-anchor-id="ac-foundation-dataset-lens-codereference"><code>ac.foundation.dataset.lens#codeReference</code> <span class="lexicon-badge lexicon-badge-object">Object</span></h4>
+<p>Reference to code in an external repository (GitHub, tangled.org, etc.)</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 15%">
+<col style="width: 25%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Property</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>repository</code></td>
+<td>string</td>
+<td><strong>yes</strong></td>
+<td>Repository URL (e.g., ‘https://github.com/user/repo’ or ‘at://did/tangled.repo/…’) <em>max length: 500</em></td>
+</tr>
+<tr class="even">
+<td><code>commit</code></td>
+<td>string</td>
+<td><strong>yes</strong></td>
+<td>Git commit hash (ensures immutability) <em>max length: 40</em></td>
+</tr>
+<tr class="odd">
+<td><code>path</code></td>
+<td>string</td>
+<td><strong>yes</strong></td>
+<td>Path to function within repository (e.g., ‘lenses/vision.py:rgb_to_grayscale’) <em>max length: 500</em></td>
+</tr>
+<tr class="even">
+<td><code>branch</code></td>
+<td>string</td>
+<td>no</td>
+<td>Optional branch name (for reference, commit hash is authoritative) <em>max length: 100</em></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="ac-foundation-dataset-storagehttp" class="level3">
+<h3 class="anchored" data-anchor-id="ac-foundation-dataset-storagehttp"><code>ac.foundation.dataset.storageHttp</code> <span class="lexicon-badge lexicon-badge-object">Object</span></h3>
+<p>HTTP/HTTPS storage for WebDataset tar archives. Each shard is listed individually with a checksum for integrity verification. Consumers build brace-expansion patterns on the fly when needed.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Property</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>shards</code></td>
+<td>array&lt;<a href="#ac-foundation-dataset-storagehttp-shardentry"><code>#shardEntry</code></a>&gt;</td>
+<td><strong>yes</strong></td>
+<td>Array of shard entries with URL and integrity checksum <em>min length: 1</em></td>
+</tr>
+</tbody>
+</table>
+<section id="ac-foundation-dataset-storagehttp-shardentry" class="level4">
+<h4 class="anchored" data-anchor-id="ac-foundation-dataset-storagehttp-shardentry"><code>ac.foundation.dataset.storageHttp#shardEntry</code> <span class="lexicon-badge lexicon-badge-object">Object</span></h4>
+<p>A single HTTP-accessible shard with integrity checksum</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Property</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>url</code></td>
+<td>string (uri)</td>
+<td><strong>yes</strong></td>
+<td>HTTP/HTTPS URL for this WebDataset tar shard <em>max length: 2000</em></td>
+</tr>
+<tr class="even">
+<td><code>checksum</code></td>
+<td><a href="#ac-foundation-dataset-record-shardchecksum"><code>ac.foundation.dataset.record#shardChecksum</code></a></td>
+<td><strong>yes</strong></td>
+<td>Content hash for integrity verification</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="ac-foundation-dataset-storages3" class="level3">
+<h3 class="anchored" data-anchor-id="ac-foundation-dataset-storages3"><code>ac.foundation.dataset.storageS3</code> <span class="lexicon-badge lexicon-badge-object">Object</span></h3>
+<p>S3 or S3-compatible storage for WebDataset tar archives. Supports custom endpoints for MinIO, Cloudflare R2, and other S3-compatible services.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Property</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>bucket</code></td>
+<td>string</td>
+<td><strong>yes</strong></td>
+<td>S3 bucket name <em>max length: 255</em></td>
+</tr>
+<tr class="even">
+<td><code>region</code></td>
+<td>string</td>
+<td>no</td>
+<td>AWS region (e.g., ‘us-east-1’). Optional for S3-compatible services. <em>max length: 50</em></td>
+</tr>
+<tr class="odd">
+<td><code>endpoint</code></td>
+<td>string (uri)</td>
+<td>no</td>
+<td>Custom S3-compatible endpoint URL (e.g., for MinIO, Cloudflare R2). Omit for standard AWS S3. <em>max length: 500</em></td>
+</tr>
+<tr class="even">
+<td><code>shards</code></td>
+<td>array&lt;<a href="#ac-foundation-dataset-storages3-shardentry"><code>#shardEntry</code></a>&gt;</td>
+<td><strong>yes</strong></td>
+<td>Array of shard entries with object key and integrity checksum <em>min length: 1</em></td>
+</tr>
+</tbody>
+</table>
+<section id="ac-foundation-dataset-storages3-shardentry" class="level4">
+<h4 class="anchored" data-anchor-id="ac-foundation-dataset-storages3-shardentry"><code>ac.foundation.dataset.storageS3#shardEntry</code> <span class="lexicon-badge lexicon-badge-object">Object</span></h4>
+<p>A single S3 object shard with integrity checksum</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Property</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>key</code></td>
+<td>string</td>
+<td><strong>yes</strong></td>
+<td>S3 object key for this WebDataset tar shard <em>max length: 1024</em></td>
+</tr>
+<tr class="even">
+<td><code>checksum</code></td>
+<td><a href="#ac-foundation-dataset-record-shardchecksum"><code>ac.foundation.dataset.record#shardChecksum</code></a></td>
+<td><strong>yes</strong></td>
+<td>Content hash for integrity verification</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="ac-foundation-dataset-storageblobs" class="level3">
+<h3 class="anchored" data-anchor-id="ac-foundation-dataset-storageblobs"><code>ac.foundation.dataset.storageBlobs</code> <span class="lexicon-badge lexicon-badge-object">Object</span></h3>
+<p>Storage via ATProto PDS blobs for WebDataset tar archives. Used in ac.foundation.dataset.record storage union for maximum decentralization.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Property</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>blobs</code></td>
+<td>array&lt;<a href="#ac-foundation-dataset-storageblobs-blobentry"><code>#blobEntry</code></a>&gt;</td>
+<td><strong>yes</strong></td>
+<td>Array of blob entries for WebDataset tar files <em>min length: 1</em></td>
+</tr>
+</tbody>
+</table>
+<section id="ac-foundation-dataset-storageblobs-blobentry" class="level4">
+<h4 class="anchored" data-anchor-id="ac-foundation-dataset-storageblobs-blobentry"><code>ac.foundation.dataset.storageBlobs#blobEntry</code> <span class="lexicon-badge lexicon-badge-object">Object</span></h4>
+<p>A single PDS blob shard with optional integrity checksum</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Property</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>blob</code></td>
+<td>blob</td>
+<td><strong>yes</strong></td>
+<td>Blob reference to a WebDataset tar archive <em>accept: <code>application/x-tar</code></em> · <em>max size: 50 MB</em></td>
+</tr>
+<tr class="even">
+<td><code>checksum</code></td>
+<td><a href="#ac-foundation-dataset-record-shardchecksum"><code>ac.foundation.dataset.record#shardChecksum</code></a></td>
+<td>no</td>
+<td>Content hash for integrity verification (optional since PDS blobs have built-in CID integrity)</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="ac-foundation-dataset-storageexternal" class="level3">
+<h3 class="anchored" data-anchor-id="ac-foundation-dataset-storageexternal"><code>ac.foundation.dataset.storageExternal</code> <span class="lexicon-badge lexicon-badge-object">Object</span></h3>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This type is deprecated.</p>
+</div>
+</div>
+<p>(Deprecated: use storageHttp or storageS3 instead.) External storage via URLs for WebDataset tar archives. URLs support brace notation for sharding (e.g., ‘data-{000000..000099}.tar’).</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 15%">
+<col style="width: 25%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Property</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>urls</code></td>
+<td>array&lt;string (uri)&gt;</td>
+<td><strong>yes</strong></td>
+<td>WebDataset URLs with optional brace notation for sharded tar files <em>min length: 1</em></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="ac-foundation-dataset-schematype" class="level3">
+<h3 class="anchored" data-anchor-id="ac-foundation-dataset-schematype"><code>ac.foundation.dataset.schemaType</code> <span class="lexicon-badge lexicon-badge-string">String</span></h3>
+<p>Schema type identifier for atdata sample definitions. Known values correspond to token definitions in this Lexicon. New schema types can be added as tokens without breaking changes.</p>
+<p><em>max length: 50</em> · <em>known values: <code>jsonSchema</code></em></p>
+<section id="ac-foundation-dataset-schematype-jsonschema" class="level4">
+<h4 class="anchored" data-anchor-id="ac-foundation-dataset-schematype-jsonschema"><code>ac.foundation.dataset.schemaType#jsonSchema</code> <span class="lexicon-badge lexicon-badge-token">Token</span></h4>
+<p>JSON Schema Draft 7 format for sample type definitions. When schemaType is ‘jsonSchema’, the schema field must contain an object conforming to ac.foundation.dataset.schema#jsonSchemaFormat.</p>
+<hr>
+</section>
+</section>
+<section id="ac-foundation-dataset-arrayformat" class="level3">
+<h3 class="anchored" data-anchor-id="ac-foundation-dataset-arrayformat"><code>ac.foundation.dataset.arrayFormat</code> <span class="lexicon-badge lexicon-badge-string">String</span></h3>
+<p>Array serialization format identifier for NDArray fields in sample schemas. Known values correspond to token definitions in this Lexicon. Each format has versioned specifications maintained by foundation.ac at canonical URLs.</p>
+<p><em>max length: 50</em> · <em>known values: <code>ndarrayBytes</code></em></p>
+<section id="ac-foundation-dataset-arrayformat-ndarraybytes" class="level4">
+<h4 class="anchored" data-anchor-id="ac-foundation-dataset-arrayformat-ndarraybytes"><code>ac.foundation.dataset.arrayFormat#ndarrayBytes</code> <span class="lexicon-badge lexicon-badge-token">Token</span></h4>
+<p>Numpy .npy binary format for NDArray serialization. Stores arrays with dtype and shape in binary header. Versions maintained at https://foundation.ac/schemas/atdata-ndarray-bytes/{version}/</p>
+<hr>
+</section>
+</section>
+<section id="ac-foundation-dataset-getlatestschema" class="level3">
+<h3 class="anchored" data-anchor-id="ac-foundation-dataset-getlatestschema"><code>ac.foundation.dataset.getLatestSchema</code> <span class="lexicon-badge lexicon-badge-query">Query</span></h3>
+<p>Get the latest version of a sample schema by its permanent NSID identifier</p>
+<section id="parameters" class="level4">
+<h4 class="anchored" data-anchor-id="parameters">Parameters</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 15%">
+<col style="width: 25%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Property</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>schemaId</code></td>
+<td>string</td>
+<td><strong>yes</strong></td>
+<td>The permanent NSID identifier for the schema (the {NSID} part of the rkey {NSID}<span class="citation" data-cites="semver">@semver</span>) <em>max length: 500</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="output" class="level4">
+<h4 class="anchored" data-anchor-id="output">Output</h4>
+<p>Encoding: <code>application/json</code></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Property</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>uri</code></td>
+<td>string</td>
+<td><strong>yes</strong></td>
+<td>AT-URI of the latest schema version <em>max length: 500</em></td>
+</tr>
+<tr class="even">
+<td><code>version</code></td>
+<td>string</td>
+<td><strong>yes</strong></td>
+<td>Semantic version of the latest schema <em>max length: 20</em></td>
+</tr>
+<tr class="odd">
+<td><code>record</code></td>
+<td><a href="#ac-foundation-dataset-schema"><code>ac.foundation.dataset.schema</code></a></td>
+<td><strong>yes</strong></td>
+<td>The full schema record</td>
+</tr>
+<tr class="even">
+<td><code>allVersions</code></td>
+<td>array&lt;object&gt;</td>
+<td>no</td>
+<td>All available versions (optional, sorted by semver descending)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="errors" class="level4">
+<h4 class="anchored" data-anchor-id="errors">Errors</h4>
+<ul>
+<li><strong>SchemaNotFound</strong> — No schema found with the given NSID</li>
+</ul>
 
 
+</section>
+</section>
 </section>
 
 </main> <!-- /main -->

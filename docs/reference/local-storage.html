@@ -199,6 +199,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="dropdown-text">Atmosphere</span></a>
   </li>  
         <li>
+    <a class="dropdown-item" href="../reference/lexicons.html">
+ <span class="dropdown-text">Lexicon Reference</span></a>
+  </li>  
+        <li>
     <a class="dropdown-item" href="../reference/promotion.html">
  <span class="dropdown-text">Promotion</span></a>
   </li>  
@@ -424,6 +428,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../reference/lexicons.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lexicon Reference</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../reference/promotion.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Promotion Workflow</span></a>
   </div>
@@ -530,7 +540,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="localindex" class="level2">
 <h2 class="anchored" data-anchor-id="localindex">LocalIndex</h2>
 <p>The index tracks datasets in Redis:</p>
-<div id="fb5daaba" class="cell">
+<div id="940bfff9" class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> LocalIndex</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Default connection (localhost:6379)</span></span>
@@ -546,7 +556,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <section id="adding-entries" class="level3">
 <h3 class="anchored" data-anchor-id="adding-entries">Adding Entries</h3>
-<div id="1bdc552a" class="cell">
+<div id="78592b4d" class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -571,7 +581,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="listing-and-retrieving" class="level3">
 <h3 class="anchored" data-anchor-id="listing-and-retrieving">Listing and Retrieving</h3>
-<div id="d2e45691" class="cell">
+<div id="39d4b053" class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Iterate all entries</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> entry <span class="kw">in</span> index.entries:</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>entry<span class="sc">.</span>name<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>entry<span class="sc">.</span>cid<span class="sc">}</span><span class="ss">"</span>)</span>
@@ -603,7 +613,7 @@ Warning
 </div>
 </div>
 <p>The Repo class combines S3 storage with Redis indexing:</p>
-<div id="63cebc99" class="cell">
+<div id="7391d5c1" class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> Repo</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># From credentials file</span></span>
@@ -623,7 +633,7 @@ Warning
 <span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p><strong>Preferred approach</strong> - Use <code>LocalIndex</code> with <code>S3DataStore</code>:</p>
-<div id="996e573b" class="cell">
+<div id="5773033d" class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> LocalIndex, S3DataStore</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>store <span class="op">=</span> S3DataStore(</span>
@@ -661,7 +671,7 @@ Note
 </section>
 <section id="inserting-datasets" class="level3">
 <h3 class="anchored" data-anchor-id="inserting-datasets">Inserting Datasets</h3>
-<div id="962ff420" class="cell">
+<div id="25f2b081" class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> webdataset <span class="im">as</span> wds</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -691,7 +701,7 @@ Note
 </section>
 <section id="insert-options" class="level3">
 <h3 class="anchored" data-anchor-id="insert-options">Insert Options</h3>
-<div id="a04960cd" class="cell">
+<div id="90c900bb" class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>entry, ds <span class="op">=</span> repo.insert(</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    dataset,</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">"my-dataset"</span>,</span>
@@ -705,7 +715,7 @@ Note
 <section id="localdatasetentry" class="level2">
 <h2 class="anchored" data-anchor-id="localdatasetentry">LocalDatasetEntry</h2>
 <p>Index entries provide content-addressable identification:</p>
-<div id="1cc60302" class="cell">
+<div id="276b5fda" class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>entry <span class="op">=</span> index.get_entry_by_name(<span class="st">"my-dataset"</span>)</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Core properties (IndexEntry protocol)</span></span>
@@ -738,7 +748,7 @@ Tip
 <section id="schema-storage" class="level2">
 <h2 class="anchored" data-anchor-id="schema-storage">Schema Storage</h2>
 <p>Schemas can be stored and retrieved from the index:</p>
-<div id="d74a20c7" class="cell">
+<div id="ea3ba118" class="cell">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Publish a schema</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>schema_ref <span class="op">=</span> index.publish_schema(</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    ImageSample,</span>
@@ -769,7 +779,7 @@ Tip
 <section id="s3datastore" class="level2">
 <h2 class="anchored" data-anchor-id="s3datastore">S3DataStore</h2>
 <p>For direct S3 operations without Redis indexing:</p>
-<div id="986a3521" class="cell">
+<div id="4f773205" class="cell">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.local <span class="im">import</span> S3DataStore</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>store <span class="op">=</span> S3DataStore(</span>
@@ -791,7 +801,7 @@ Tip
 </section>
 <section id="complete-workflow-example" class="level2">
 <h2 class="anchored" data-anchor-id="complete-workflow-example">Complete Workflow Example</h2>
-<div id="33a2207a" class="cell">
+<div id="ec3c0f17" class="cell">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>

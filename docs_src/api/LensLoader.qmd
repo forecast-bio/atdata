@@ -28,6 +28,7 @@ it manually.
 | --- | --- |
 | [find_by_schemas](#atdata.atmosphere.LensLoader.find_by_schemas) | Find lenses that transform between specific schemas. |
 | [get](#atdata.atmosphere.LensLoader.get) | Fetch a lens record by AT URI. |
+| [get_typed](#atdata.atmosphere.LensLoader.get_typed) | Fetch a lens record and return as a typed object. |
 | [list_all](#atdata.atmosphere.LensLoader.list_all) | List lens records from a repository. |
 
 ### find_by_schemas { #atdata.atmosphere.LensLoader.find_by_schemas }
@@ -81,6 +82,26 @@ Fetch a lens record by AT URI.
 | Name   | Type                       | Description                         |
 |--------|----------------------------|-------------------------------------|
 |        | [ValueError](`ValueError`) | If the record is not a lens record. |
+
+### get_typed { #atdata.atmosphere.LensLoader.get_typed }
+
+```python
+atmosphere.LensLoader.get_typed(uri)
+```
+
+Fetch a lens record and return as a typed object.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                      | Description                    | Default    |
+|--------|-----------------------------------------------------------|--------------------------------|------------|
+| uri    | [str](`str`) \| [AtUri](`atdata.atmosphere._types.AtUri`) | The AT URI of the lens record. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                              | Description             |
+|--------|-------------------------------------------------------------------|-------------------------|
+|        | [LexLensRecord](`atdata.atmosphere._lexicon_types.LexLensRecord`) | LexLensRecord instance. |
 
 ### list_all { #atdata.atmosphere.LensLoader.list_all }
 

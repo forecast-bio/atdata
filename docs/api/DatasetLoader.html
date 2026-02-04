@@ -198,6 +198,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="dropdown-text">Atmosphere</span></a>
   </li>  
         <li>
+    <a class="dropdown-item" href="../reference/lexicons.html">
+ <span class="dropdown-text">Lexicon Reference</span></a>
+  </li>  
+        <li>
     <a class="dropdown-item" href="../reference/promotion.html">
  <span class="dropdown-text">Promotion</span></a>
   </li>  
@@ -290,7 +294,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#atdata.atmosphere.DatasetLoader.get_blob_urls" id="toc-atdata.atmosphere.DatasetLoader.get_blob_urls" class="nav-link" data-scroll-target="#atdata.atmosphere.DatasetLoader.get_blob_urls">get_blob_urls</a></li>
   <li><a href="#atdata.atmosphere.DatasetLoader.get_blobs" id="toc-atdata.atmosphere.DatasetLoader.get_blobs" class="nav-link" data-scroll-target="#atdata.atmosphere.DatasetLoader.get_blobs">get_blobs</a></li>
   <li><a href="#atdata.atmosphere.DatasetLoader.get_metadata" id="toc-atdata.atmosphere.DatasetLoader.get_metadata" class="nav-link" data-scroll-target="#atdata.atmosphere.DatasetLoader.get_metadata">get_metadata</a></li>
+  <li><a href="#atdata.atmosphere.DatasetLoader.get_s3_info" id="toc-atdata.atmosphere.DatasetLoader.get_s3_info" class="nav-link" data-scroll-target="#atdata.atmosphere.DatasetLoader.get_s3_info">get_s3_info</a></li>
   <li><a href="#atdata.atmosphere.DatasetLoader.get_storage_type" id="toc-atdata.atmosphere.DatasetLoader.get_storage_type" class="nav-link" data-scroll-target="#atdata.atmosphere.DatasetLoader.get_storage_type">get_storage_type</a></li>
+  <li><a href="#atdata.atmosphere.DatasetLoader.get_typed" id="toc-atdata.atmosphere.DatasetLoader.get_typed" class="nav-link" data-scroll-target="#atdata.atmosphere.DatasetLoader.get_typed">get_typed</a></li>
   <li><a href="#atdata.atmosphere.DatasetLoader.get_urls" id="toc-atdata.atmosphere.DatasetLoader.get_urls" class="nav-link" data-scroll-target="#atdata.atmosphere.DatasetLoader.get_urls">get_urls</a></li>
   <li><a href="#atdata.atmosphere.DatasetLoader.list_all" id="toc-atdata.atmosphere.DatasetLoader.list_all" class="nav-link" data-scroll-target="#atdata.atmosphere.DatasetLoader.list_all">list_all</a></li>
   <li><a href="#atdata.atmosphere.DatasetLoader.to_dataset" id="toc-atdata.atmosphere.DatasetLoader.to_dataset" class="nav-link" data-scroll-target="#atdata.atmosphere.DatasetLoader.to_dataset">to_dataset</a></li>
@@ -350,8 +356,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Get the metadata from a dataset record.</td>
 </tr>
 <tr class="odd">
+<td><a href="#atdata.atmosphere.DatasetLoader.get_s3_info">get_s3_info</a></td>
+<td>Get S3 storage details from a dataset record.</td>
+</tr>
+<tr class="even">
 <td><a href="#atdata.atmosphere.DatasetLoader.get_storage_type">get_storage_type</a></td>
 <td>Get the storage type of a dataset record.</td>
+</tr>
+<tr class="odd">
+<td><a href="#atdata.atmosphere.DatasetLoader.get_typed">get_typed</a></td>
+<td>Fetch a dataset record and return as a typed object.</td>
 </tr>
 <tr class="even">
 <td><a href="#atdata.atmosphere.DatasetLoader.get_urls">get_urls</a></td>
@@ -535,7 +549,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><a href="`list`">list</a>[<a href="`dict`">dict</a>]</td>
-<td>List of blob reference dicts with keys: $type, ref, mimeType, size.</td>
+<td>List of blob entry dicts.</td>
 </tr>
 </tbody>
 </table>
@@ -605,10 +619,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 </section>
 </section>
-<section id="atdata.atmosphere.DatasetLoader.get_storage_type" class="level3">
-<h3 class="anchored" data-anchor-id="atdata.atmosphere.DatasetLoader.get_storage_type">get_storage_type</h3>
-<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>atmosphere.DatasetLoader.get_storage_type(uri)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Get the storage type of a dataset record.</p>
+<section id="atdata.atmosphere.DatasetLoader.get_s3_info" class="level3">
+<h3 class="anchored" data-anchor-id="atdata.atmosphere.DatasetLoader.get_s3_info">get_s3_info</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>atmosphere.DatasetLoader.get_s3_info(uri)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Get S3 storage details from a dataset record.</p>
 <section id="parameters-4" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-4">Parameters</h4>
 <table class="caption-top table">
@@ -643,8 +657,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`str`">str</a></td>
-<td>Either “external” or “blobs”.</td>
+<td><a href="`dict`">dict</a></td>
+<td>Dict with keys: bucket, keys, region (optional), endpoint (optional).</td>
 </tr>
 </tbody>
 </table>
@@ -663,16 +677,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><a href="`ValueError`">ValueError</a></td>
-<td>If storage type is unknown.</td>
+<td>If the storage type is not S3.</td>
 </tr>
 </tbody>
 </table>
 </section>
 </section>
-<section id="atdata.atmosphere.DatasetLoader.get_urls" class="level3">
-<h3 class="anchored" data-anchor-id="atdata.atmosphere.DatasetLoader.get_urls">get_urls</h3>
-<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>atmosphere.DatasetLoader.get_urls(uri)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Get the WebDataset URLs from a dataset record.</p>
+<section id="atdata.atmosphere.DatasetLoader.get_storage_type" class="level3">
+<h3 class="anchored" data-anchor-id="atdata.atmosphere.DatasetLoader.get_storage_type">get_storage_type</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>atmosphere.DatasetLoader.get_storage_type(uri)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Get the storage type of a dataset record.</p>
 <section id="parameters-5" class="level4 doc-section doc-section-parameters">
 <h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-5">Parameters</h4>
 <table class="caption-top table">
@@ -707,8 +721,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><a href="`list`">list</a>[<a href="`str`">str</a>]</td>
-<td>List of WebDataset URLs.</td>
+<td><a href="`str`">str</a></td>
+<td>One of “http”, “s3”, “blobs”, or “external” (legacy).</td>
 </tr>
 </tbody>
 </table>
@@ -727,7 +741,117 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td></td>
 <td><a href="`ValueError`">ValueError</a></td>
-<td>If the storage type is not external URLs.</td>
+<td>If storage type is unknown.</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="atdata.atmosphere.DatasetLoader.get_typed" class="level3">
+<h3 class="anchored" data-anchor-id="atdata.atmosphere.DatasetLoader.get_typed">get_typed</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>atmosphere.DatasetLoader.get_typed(uri)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Fetch a dataset record and return as a typed object.</p>
+<section id="parameters-6" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-6">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>uri</td>
+<td><a href="`str`">str</a> | <a href="`atdata.atmosphere._types.AtUri`">AtUri</a></td>
+<td>The AT URI of the dataset record.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-6" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-6">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`atdata.atmosphere._lexicon_types.LexDatasetRecord`">LexDatasetRecord</a></td>
+<td>LexDatasetRecord instance.</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="atdata.atmosphere.DatasetLoader.get_urls" class="level3">
+<h3 class="anchored" data-anchor-id="atdata.atmosphere.DatasetLoader.get_urls">get_urls</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>atmosphere.DatasetLoader.get_urls(uri)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Get the WebDataset URLs from a dataset record.</p>
+<p>Supports storageHttp, storageS3, and legacy storageExternal formats.</p>
+<section id="parameters-7" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-7">Parameters</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>uri</td>
+<td><a href="`str`">str</a> | <a href="`atdata.atmosphere._types.AtUri`">AtUri</a></td>
+<td>The AT URI of the dataset record.</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="returns-7" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-7">Returns</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`list`">list</a>[<a href="`str`">str</a>]</td>
+<td>List of WebDataset URLs.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="raises-5" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-5">Raises</h4>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><a href="`ValueError`">ValueError</a></td>
+<td>If the storage type is blob-only.</td>
 </tr>
 </tbody>
 </table>
@@ -735,10 +859,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="atdata.atmosphere.DatasetLoader.list_all" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.atmosphere.DatasetLoader.list_all">list_all</h3>
-<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>atmosphere.DatasetLoader.list_all(repo<span class="op">=</span><span class="va">None</span>, limit<span class="op">=</span><span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>atmosphere.DatasetLoader.list_all(repo<span class="op">=</span><span class="va">None</span>, limit<span class="op">=</span><span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>List dataset records from a repository.</p>
-<section id="parameters-6" class="level4 doc-section doc-section-parameters">
-<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-6">Parameters</h4>
+<section id="parameters-8" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-8">Parameters</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -764,8 +888,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="returns-6" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-6">Returns</h4>
+<section id="returns-8" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-8">Returns</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -786,12 +910,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="atdata.atmosphere.DatasetLoader.to_dataset" class="level3">
 <h3 class="anchored" data-anchor-id="atdata.atmosphere.DatasetLoader.to_dataset">to_dataset</h3>
-<div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>atmosphere.DatasetLoader.to_dataset(uri, sample_type)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>atmosphere.DatasetLoader.to_dataset(uri, sample_type)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Create a Dataset object from an ATProto record.</p>
 <p>This method creates a Dataset instance from a published record. You must provide the sample type class, which should match the schema referenced by the record.</p>
-<p>Supports both external URL storage and ATProto blob storage.</p>
-<section id="parameters-7" class="level4 doc-section doc-section-parameters">
-<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-7">Parameters</h4>
+<p>Supports HTTP, S3, blob, and legacy external storage.</p>
+<section id="parameters-9" class="level4 doc-section doc-section-parameters">
+<h4 class="doc-section doc-section-parameters anchored" data-anchor-id="parameters-9">Parameters</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -817,8 +941,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="returns-7" class="level4 doc-section doc-section-returns">
-<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-7">Returns</h4>
+<section id="returns-9" class="level4 doc-section doc-section-returns">
+<h4 class="doc-section doc-section-returns anchored" data-anchor-id="returns-9">Returns</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -836,8 +960,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="raises-5" class="level4 doc-section doc-section-raises">
-<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-5">Raises</h4>
+<section id="raises-6" class="level4 doc-section doc-section-raises">
+<h4 class="doc-section doc-section-raises anchored" data-anchor-id="raises-6">Raises</h4>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -857,10 +981,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="examples-1" class="level4 doc-section doc-section-examples">
 <h4 class="doc-section doc-section-examples anchored" data-anchor-id="examples-1">Examples</h4>
-<div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> loader <span class="op">=</span> DatasetLoader(client)</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> dataset <span class="op">=</span> loader.to_dataset(uri, MySampleType)</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="cf">for</span> batch <span class="kw">in</span> dataset.shuffled(batch_size<span class="op">=</span><span class="dv">32</span>):</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>...     process(batch)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> loader <span class="op">=</span> DatasetLoader(client)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> dataset <span class="op">=</span> loader.to_dataset(uri, MySampleType)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;&gt;&gt;</span> <span class="cf">for</span> batch <span class="kw">in</span> dataset.shuffled(batch_size<span class="op">=</span><span class="dv">32</span>):</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>...     process(batch)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 
 </section>

@@ -7,12 +7,12 @@ atmosphere.DatasetPublisher(client)
 Publishes dataset index records to ATProto.
 
 This class creates dataset records that reference a schema and point to
-external storage (WebDataset URLs) or ATProto blobs.
+HTTP storage, S3 storage, or ATProto blobs.
 
 ## Examples {.doc-section .doc-section-examples}
 
 ```python
->>> dataset = atdata.Dataset[MySample]("s3://bucket/data-{000000..000009}.tar")
+>>> dataset = atdata.Dataset[MySample]("https://example.com/data-000000.tar")
 >>>
 >>> atmo = Atmosphere.login("handle", "password")
 >>>
@@ -31,7 +31,8 @@ external storage (WebDataset URLs) or ATProto blobs.
 | --- | --- |
 | [publish](#atdata.atmosphere.DatasetPublisher.publish) | Publish a dataset index record to ATProto. |
 | [publish_with_blobs](#atdata.atmosphere.DatasetPublisher.publish_with_blobs) | Publish a dataset with data stored as ATProto blobs. |
-| [publish_with_urls](#atdata.atmosphere.DatasetPublisher.publish_with_urls) | Publish a dataset record with explicit URLs. |
+| [publish_with_s3](#atdata.atmosphere.DatasetPublisher.publish_with_s3) | Publish a dataset record with S3 storage. |
+| [publish_with_urls](#atdata.atmosphere.DatasetPublisher.publish_with_urls) | Publish a dataset record with explicit HTTP URLs. |
 
 ### publish { #atdata.atmosphere.DatasetPublisher.publish }
 
@@ -126,6 +127,51 @@ fit within blob size limits (typically 50MB per blob, configurable).
 Blobs are only retained by the PDS when referenced in a committed
 record. This method handles that automatically.
 
+### publish_with_s3 { #atdata.atmosphere.DatasetPublisher.publish_with_s3 }
+
+```python
+atmosphere.DatasetPublisher.publish_with_s3(
+    bucket,
+    keys,
+    schema_uri,
+    *,
+    name,
+    region=None,
+    endpoint=None,
+    description=None,
+    tags=None,
+    license=None,
+    metadata=None,
+    checksums=None,
+    rkey=None,
+)
+```
+
+Publish a dataset record with S3 storage.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name        | Type                                                                                                                 | Description                             | Default    |
+|-------------|----------------------------------------------------------------------------------------------------------------------|-----------------------------------------|------------|
+| bucket      | [str](`str`)                                                                                                         | S3 bucket name.                         | _required_ |
+| keys        | [list](`list`)\[[str](`str`)\]                                                                                       | List of S3 object keys for shard files. | _required_ |
+| schema_uri  | [str](`str`)                                                                                                         | AT URI of the schema record.            | _required_ |
+| name        | [str](`str`)                                                                                                         | Human-readable dataset name.            | _required_ |
+| region      | [Optional](`typing.Optional`)\[[str](`str`)\]                                                                        | AWS region (e.g., 'us-east-1').         | `None`     |
+| endpoint    | [Optional](`typing.Optional`)\[[str](`str`)\]                                                                        | Custom S3-compatible endpoint URL.      | `None`     |
+| description | [Optional](`typing.Optional`)\[[str](`str`)\]                                                                        | Human-readable description.             | `None`     |
+| tags        | [Optional](`typing.Optional`)\[[list](`list`)\[[str](`str`)\]\]                                                      | Searchable tags for discovery.          | `None`     |
+| license     | [Optional](`typing.Optional`)\[[str](`str`)\]                                                                        | SPDX license identifier.                | `None`     |
+| metadata    | [Optional](`typing.Optional`)\[[dict](`dict`)\]                                                                      | Arbitrary metadata dictionary.          | `None`     |
+| checksums   | [Optional](`typing.Optional`)\[[list](`list`)\[[ShardChecksum](`atdata.atmosphere._lexicon_types.ShardChecksum`)\]\] | Per-shard checksums.                    | `None`     |
+| rkey        | [Optional](`typing.Optional`)\[[str](`str`)\]                                                                        | Optional explicit record key.           | `None`     |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                      | Description                               |
+|--------|-------------------------------------------|-------------------------------------------|
+|        | [AtUri](`atdata.atmosphere._types.AtUri`) | The AT URI of the created dataset record. |
+
 ### publish_with_urls { #atdata.atmosphere.DatasetPublisher.publish_with_urls }
 
 ```python
@@ -138,27 +184,30 @@ atmosphere.DatasetPublisher.publish_with_urls(
     tags=None,
     license=None,
     metadata=None,
+    checksums=None,
     rkey=None,
 )
 ```
 
-Publish a dataset record with explicit URLs.
+Publish a dataset record with explicit HTTP URLs.
 
 This method allows publishing a dataset record without having a
 Dataset object, useful for registering existing WebDataset files.
+Each URL should be an individual shard (no brace notation).
 
 #### Parameters {.doc-section .doc-section-parameters}
 
-| Name        | Type                                                            | Description                                  | Default    |
-|-------------|-----------------------------------------------------------------|----------------------------------------------|------------|
-| urls        | [list](`list`)\[[str](`str`)\]                                  | List of WebDataset URLs with brace notation. | _required_ |
-| schema_uri  | [str](`str`)                                                    | AT URI of the schema record.                 | _required_ |
-| name        | [str](`str`)                                                    | Human-readable dataset name.                 | _required_ |
-| description | [Optional](`typing.Optional`)\[[str](`str`)\]                   | Human-readable description.                  | `None`     |
-| tags        | [Optional](`typing.Optional`)\[[list](`list`)\[[str](`str`)\]\] | Searchable tags for discovery.               | `None`     |
-| license     | [Optional](`typing.Optional`)\[[str](`str`)\]                   | SPDX license identifier.                     | `None`     |
-| metadata    | [Optional](`typing.Optional`)\[[dict](`dict`)\]                 | Arbitrary metadata dictionary.               | `None`     |
-| rkey        | [Optional](`typing.Optional`)\[[str](`str`)\]                   | Optional explicit record key.                | `None`     |
+| Name        | Type                                                                                                                 | Description                                                     | Default    |
+|-------------|----------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------|------------|
+| urls        | [list](`list`)\[[str](`str`)\]                                                                                       | List of individual shard URLs.                                  | _required_ |
+| schema_uri  | [str](`str`)                                                                                                         | AT URI of the schema record.                                    | _required_ |
+| name        | [str](`str`)                                                                                                         | Human-readable dataset name.                                    | _required_ |
+| description | [Optional](`typing.Optional`)\[[str](`str`)\]                                                                        | Human-readable description.                                     | `None`     |
+| tags        | [Optional](`typing.Optional`)\[[list](`list`)\[[str](`str`)\]\]                                                      | Searchable tags for discovery.                                  | `None`     |
+| license     | [Optional](`typing.Optional`)\[[str](`str`)\]                                                                        | SPDX license identifier.                                        | `None`     |
+| metadata    | [Optional](`typing.Optional`)\[[dict](`dict`)\]                                                                      | Arbitrary metadata dictionary.                                  | `None`     |
+| checksums   | [Optional](`typing.Optional`)\[[list](`list`)\[[ShardChecksum](`atdata.atmosphere._lexicon_types.ShardChecksum`)\]\] | Per-shard checksums. If not provided, empty checksums are used. | `None`     |
+| rkey        | [Optional](`typing.Optional`)\[[str](`str`)\]                                                                        | Optional explicit record key.                                   | `None`     |
 
 #### Returns {.doc-section .doc-section-returns}
 
