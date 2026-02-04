@@ -57,10 +57,15 @@ Write this prompt to a temp file so it can be passed to claude cleanly.
 tmux new-session -d -s <session-name> -c <worktree-path>
 ```
 
-Then send the claude command into the session. The child agent gets explicit tool permissions — broad enough to work autonomously, scoped enough to prevent destructive actions:
+Then send the claude command into the session. The child agent gets explicit tool permissions — broad enough to work autonomously, scoped enough to prevent destructive actions.
+
+**Critical quoting rules for tmux send-keys:**
+- `--allowedTools` is variadic (consumes all subsequent space-separated args). You MUST pass tools as a **single comma-separated string** so the prompt isn't consumed as a tool name.
+- Use `--` before the positional prompt argument to terminate option parsing.
+- The prompt file content must be passed as a single shell argument. Use `"$(cat <prompt-file>)"` with proper quoting.
 
 ```bash
-tmux send-keys -t <session-name> "claude --model opus --allowedTools 'Read' 'Write' 'Edit' 'Glob' 'Grep' 'Skill' 'Task' 'WebSearch' 'WebFetch' 'Bash(git *)' 'Bash(uv *)' 'Bash(chainlink *)' 'Bash(just *)' 'Bash(ls *)' 'Bash(mkdir *)' 'Bash(test *)' 'Bash(which *)' 'Bash(touch *)' 'Bash(cat *)' 'Bash(head *)' 'Bash(tail *)' 'Bash(wc *)' 'Bash(diff *)' 'Bash(echo *)' \"$(cat <prompt-file>)\"" Enter
+tmux send-keys -t <session-name> "claude --model opus --allowedTools 'Read,Write,Edit,Glob,Grep,Skill,Task,WebSearch,WebFetch,Bash(git *),Bash(uv *),Bash(chainlink *),Bash(just *),Bash(ls *),Bash(mkdir *),Bash(test *),Bash(which *),Bash(touch *),Bash(cat *),Bash(head *),Bash(tail *),Bash(wc *),Bash(diff *),Bash(echo *)' -- \"\$(cat <prompt-file>)\"" Enter
 ```
 
 **Permission rationale:**
