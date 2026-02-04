@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Metadata falsy values**: `DatasetMetadata.from_dict()` now preserves falsy values (empty strings, zero, False) instead of dropping them
 - **CI**: Correct benchmark output path in bench workflow
 - **Lint**: Fix unused imports and undefined forward references in lens persistence code
+- **Live integration tests**: New `tests/integration/` suite with ATProto, S3, and PostgreSQL live tests against remote sandboxes, plus dedicated CI workflow (`.github/workflows/integration.yml`)
 
 ## [0.3.4b1] - 2026-02-04
 
