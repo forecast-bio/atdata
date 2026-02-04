@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import warnings
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 # Canonical constant — also defined in _lexicon_types but kept here as the
 # historically authoritative location so existing imports continue to work.
@@ -121,10 +121,6 @@ def __getattr__(name: str) -> Any:
 
 
 # Lightweight shims for types that have no direct equivalent in _lexicon_types
-
-from dataclasses import field as dataclass_field
-from datetime import datetime, timezone
-from typing import Literal
 
 
 @dataclass

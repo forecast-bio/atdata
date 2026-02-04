@@ -14,7 +14,6 @@ from ._lexicon_types import LexSchemaRecord, JsonSchemaFormat
 from .._type_utils import (
     unwrap_optional,
     is_ndarray_type,
-    extract_ndarray_dtype,
 )
 
 # Import for type checking only to avoid circular imports
