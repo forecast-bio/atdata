@@ -546,7 +546,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="build-the-example-dataset" class="level2">
 <h2 class="anchored" data-anchor-id="build-the-example-dataset">1 — Build the example dataset</h2>
 <p>We model a wildlife observation log with species, weight, maturity, and habitat tags. Weight distributions vary by species to make queries interesting.</p>
-<div id="aff07ee2" class="cell" data-execution_count="1">
+<div id="cb9e3015" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> Annotated</span>
@@ -564,7 +564,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    is_adult: Annotated[<span class="bu">bool</span>, ManifestField(<span class="st">"categorical"</span>)]</span>
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    habitats: Annotated[<span class="bu">list</span>[<span class="bu">str</span>], ManifestField(<span class="st">"set"</span>)]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="ba98ba62" class="cell" data-execution_count="2">
+<div id="51d3ce87" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tempfile</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -596,17 +596,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> atdata.write_samples(samples, tmpdir <span class="op">/</span> <span class="st">"wildlife.tar"</span>, maxcount<span class="op">=</span><span class="dv">200</span>, manifest<span class="op">=</span><span class="va">True</span>)</span>
 <span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Wrote </span><span class="sc">{</span><span class="bu">len</span>(samples)<span class="sc">}</span><span class="ss"> observations across </span><span class="sc">{</span><span class="bu">len</span>(ds.list_shards())<span class="sc">}</span><span class="ss"> shards"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_cookbook_jz7u684d/wildlife-000000.tar 0 0.0 GB 0
-# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_cookbook_jz7u684d/wildlife-000001.tar 200 0.0 GB 200
-# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_cookbook_jz7u684d/wildlife-000002.tar 200 0.0 GB 400
-# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_cookbook_jz7u684d/wildlife-000003.tar 200 0.0 GB 600
+<pre><code># writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_cookbook_yfgbs7x7/wildlife-000000.tar 0 0.0 GB 0
+# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_cookbook_yfgbs7x7/wildlife-000001.tar 200 0.0 GB 200
+# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_cookbook_yfgbs7x7/wildlife-000002.tar 200 0.0 GB 400
+# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_cookbook_yfgbs7x7/wildlife-000003.tar 200 0.0 GB 600
 Wrote 800 observations across 4 shards</code></pre>
 </div>
 </div>
 </section>
 <section id="load-manifests-and-preview" class="level2">
 <h2 class="anchored" data-anchor-id="load-manifests-and-preview">2 — Load manifests and preview</h2>
-<div id="3a136f00" class="cell" data-execution_count="3">
+<div id="3751434f" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata <span class="im">import</span> QueryExecutor</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata.manifest <span class="im">import</span> F</span>
@@ -642,7 +642,7 @@ Species: ['bear', 'eagle', 'elephant', 'mouse', 'salmon', 'wolf']</code></pre>
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" aria-current="page">Lambda</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false">Typed DSL</a></li></ul>
 <div class="tab-content">
 <div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
-<div id="ff7865d7" class="cell" data-execution_count="4">
+<div id="688705d0" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>results_lambda <span class="op">=</span> executor.query(</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    where<span class="op">=</span><span class="kw">lambda</span> df: df[<span class="st">"weight_kg"</span>] <span class="op">&gt;</span> <span class="dv">500</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>)</span>
@@ -653,7 +653,7 @@ Species: ['bear', 'eagle', 'elephant', 'mouse', 'salmon', 'wolf']</code></pre>
 </div>
 </div>
 <div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
-<div id="343c7126" class="cell" data-execution_count="5">
+<div id="b9853d7a" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>results_dsl <span class="op">=</span> executor.query(where<span class="op">=</span>F.weight_kg <span class="op">&gt;</span> <span class="dv">500</span>)</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Matches (DSL):    </span><span class="sc">{</span><span class="bu">len</span>(results_dsl)<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -663,7 +663,7 @@ Species: ['bear', 'eagle', 'elephant', 'mouse', 'salmon', 'wolf']</code></pre>
 </div>
 </div>
 </div>
-<div id="944ac201" class="cell" data-execution_count="6">
+<div id="9135d0d7" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>heavy_keys <span class="op">=</span> {loc.key <span class="cf">for</span> loc <span class="kw">in</span> results_dsl}</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>heavy_df <span class="op">=</span> combined[combined[<span class="st">"__key__"</span>].isin(heavy_keys)]</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Species breakdown of heavy animals (&gt;500 kg):"</span>)</span>
@@ -682,7 +682,7 @@ elephant    95</code></pre>
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true">Single value</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false">Multiple values (.isin)</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-3" role="tab" aria-controls="tabset-2-3" aria-selected="false">Exclusion (~)</a></li></ul>
 <div class="tab-content">
 <div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
-<div id="1749b6a3" class="cell" data-execution_count="7">
+<div id="5e917e27" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>bears <span class="op">=</span> executor.query(where<span class="op">=</span>F.species <span class="op">==</span> <span class="st">"bear"</span>)</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Bears: </span><span class="sc">{</span><span class="bu">len</span>(bears)<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -691,7 +691,7 @@ elephant    95</code></pre>
 </div>
 </div>
 <div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
-<div id="83f98d8e" class="cell" data-execution_count="8">
+<div id="0d697cd9" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>large_animals <span class="op">=</span> executor.query(where<span class="op">=</span>F.species.isin([<span class="st">"elephant"</span>, <span class="st">"bear"</span>]))</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Elephants + bears: </span><span class="sc">{</span><span class="bu">len</span>(large_animals)<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -700,7 +700,7 @@ elephant    95</code></pre>
 </div>
 </div>
 <div id="tabset-2-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-3-tab">
-<div id="b11ecb8e" class="cell" data-execution_count="9">
+<div id="6801bd44" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>not_small <span class="op">=</span> executor.query(where<span class="op">=~</span>F.species.isin([<span class="st">"mouse"</span>, <span class="st">"salmon"</span>]))</span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Excluding mouse &amp; salmon: </span><span class="sc">{</span><span class="bu">len</span>(not_small)<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -718,7 +718,7 @@ elephant    95</code></pre>
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true">Lambda</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false">Typed DSL</a></li></ul>
 <div class="tab-content">
 <div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
-<div id="30d9a0e4" class="cell" data-execution_count="10">
+<div id="11903c34" class="cell" data-execution_count="10">
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>mid_range <span class="op">=</span> executor.query(</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    where<span class="op">=</span><span class="kw">lambda</span> df: df[<span class="st">"weight_kg"</span>].between(<span class="dv">10</span>, <span class="dv">100</span>)</span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>)</span>
@@ -729,7 +729,7 @@ elephant    95</code></pre>
 </div>
 </div>
 <div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
-<div id="14d44a55" class="cell" data-execution_count="11">
+<div id="70a63678" class="cell" data-execution_count="11">
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>mid_range_dsl <span class="op">=</span> executor.query(where<span class="op">=</span>F.weight_kg.between(<span class="dv">10</span>, <span class="dv">100</span>))</span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Weight 10-100 kg (DSL):    </span><span class="sc">{</span><span class="bu">len</span>(mid_range_dsl)<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -743,7 +743,7 @@ elephant    95</code></pre>
 <section id="recipe-tagset-membership" class="level2">
 <h2 class="anchored" data-anchor-id="recipe-tagset-membership">6 — Recipe: tag/set membership</h2>
 <p>Tags are stored as lists. With the lambda syntax you can use <code>.apply()</code> for arbitrary list predicates.</p>
-<div id="f0445e46" class="cell" data-execution_count="12">
+<div id="81e3755f" class="cell" data-execution_count="12">
 <div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Observations in mountain habitats</span></span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>mountain <span class="op">=</span> executor.query(</span>
 <span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    where<span class="op">=</span><span class="kw">lambda</span> df: df[<span class="st">"habitats"</span>].<span class="bu">apply</span>(</span>
@@ -755,7 +755,7 @@ elephant    95</code></pre>
 <pre><code>Mountain habitat: 204 observations</code></pre>
 </div>
 </div>
-<div id="3f6e6d35" class="cell" data-execution_count="13">
+<div id="6d207fec" class="cell" data-execution_count="13">
 <div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Observations in BOTH forest AND mountain</span></span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>dual_habitat <span class="op">=</span> executor.query(</span>
 <span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    where<span class="op">=</span><span class="kw">lambda</span> df: df[<span class="st">"habitats"</span>].<span class="bu">apply</span>(</span>
@@ -775,7 +775,7 @@ elephant    95</code></pre>
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true">AND</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false">OR</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-3" role="tab" aria-controls="tabset-4-3" aria-selected="false">NOT</a></li></ul>
 <div class="tab-content">
 <div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
-<div id="6255934d" class="cell" data-execution_count="14">
+<div id="f4594934" class="cell" data-execution_count="14">
 <div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>adult_bears <span class="op">=</span> executor.query(</span>
 <span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    where<span class="op">=</span>(F.species <span class="op">==</span> <span class="st">"bear"</span>) <span class="op">&amp;</span> (F.is_adult <span class="op">==</span> <span class="va">True</span>)</span>
 <span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>)</span>
@@ -786,7 +786,7 @@ elephant    95</code></pre>
 </div>
 </div>
 <div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
-<div id="6379971f" class="cell" data-execution_count="15">
+<div id="578c1985" class="cell" data-execution_count="15">
 <div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>extreme <span class="op">=</span> executor.query(</span>
 <span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    where<span class="op">=</span>(F.species <span class="op">==</span> <span class="st">"elephant"</span>) <span class="op">|</span> (F.weight_kg <span class="op">&lt;</span> <span class="fl">0.1</span>)</span>
 <span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>)</span>
@@ -797,7 +797,7 @@ elephant    95</code></pre>
 </div>
 </div>
 <div id="tabset-4-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-3-tab">
-<div id="404e2a72" class="cell" data-execution_count="16">
+<div id="9e1c68e2" class="cell" data-execution_count="16">
 <div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>juveniles <span class="op">=</span> executor.query(where<span class="op">=~</span>(F.is_adult <span class="op">==</span> <span class="va">True</span>))</span>
 <span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Juveniles: </span><span class="sc">{</span><span class="bu">len</span>(juveniles)<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -810,7 +810,7 @@ elephant    95</code></pre>
 </section>
 <section id="scatter-plot-query-results-highlighted" class="level2">
 <h2 class="anchored" data-anchor-id="scatter-plot-query-results-highlighted">8 — Scatter plot: query results highlighted</h2>
-<div id="92fc7a7f" class="cell" data-execution_count="17">
+<div id="4ea3a78b" class="cell" data-execution_count="17">
 <div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib</span>
 <span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>matplotlib.use(<span class="st">"Agg"</span>)</span>
 <span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
@@ -852,7 +852,7 @@ elephant    95</code></pre>
 <span id="cb32-39"><a href="#cb32-39" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
 <span id="cb32-40"><a href="#cb32-40" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/ipykernel_17237/4089515773.py:40: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+<pre><code>/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/ipykernel_23348/4089515773.py:40: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
   plt.show()</code></pre>
 </div>
 </div>
@@ -860,7 +860,7 @@ elephant    95</code></pre>
 <section id="query-hit-rate-per-shard" class="level2">
 <h2 class="anchored" data-anchor-id="query-hit-rate-per-shard">9 — Query hit rate per shard</h2>
 <p>This chart shows how matches distribute across shards. When aggregate pruning is active, shards with zero hits can be skipped entirely.</p>
-<div id="54958197" class="cell" data-execution_count="18">
+<div id="77adee39" class="cell" data-execution_count="18">
 <div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> collections <span class="im">import</span> Counter</span>
 <span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>shard_hits <span class="op">=</span> Counter(loc.shard <span class="cf">for</span> loc <span class="kw">in</span> match_locs)</span>
@@ -883,7 +883,7 @@ elephant    95</code></pre>
 <span id="cb34-20"><a href="#cb34-20" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
 <span id="cb34-21"><a href="#cb34-21" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/ipykernel_17237/1217293230.py:21: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+<pre><code>/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/ipykernel_23348/1217293230.py:21: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
   plt.show()</code></pre>
 </div>
 </div>
@@ -904,7 +904,7 @@ Shard pruning
 <section id="building-a-filtered-subset" class="level2">
 <h2 class="anchored" data-anchor-id="building-a-filtered-subset">10 — Building a filtered subset</h2>
 <p>Query results are <code>SampleLocation</code> objects with shard path, key, and byte offset. Group them by shard for downstream processing.</p>
-<div id="9a1c664a" class="cell" data-execution_count="19">
+<div id="de5777bd" class="cell" data-execution_count="19">
 <div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> itertools <span class="im">import</span> groupby</span>
 <span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> operator <span class="im">import</span> attrgetter</span>
 <span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -913,15 +913,15 @@ Shard pruning
 <span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>    keys <span class="op">=</span> [loc.key <span class="cf">for</span> loc <span class="kw">in</span> group]</span>
 <span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  </span><span class="sc">{</span>Path(shard)<span class="sc">.</span>stem<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span><span class="bu">len</span>(keys)<span class="sc">}</span><span class="ss"> matches (first 3: </span><span class="sc">{</span>keys[:<span class="dv">3</span>]<span class="sc">}</span><span class="ss">)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>  wildlife: 49 matches (first 3: ['94789e4c-015a-11f1-8000-000000000000', '9478ab30-015a-11f1-8000-000000000000', '9478b15c-015a-11f1-8000-000000000000'])
-  wildlife-000000: 39 matches (first 3: ['947a31c6-015a-11f1-8000-000000000000', '947a3338-015a-11f1-8000-000000000000', '947a34aa-015a-11f1-8000-000000000000'])
-  wildlife-000001: 52 matches (first 3: ['947b598e-015a-11f1-8000-000000000000', '947b683e-015a-11f1-8000-000000000000', '947b7194-015a-11f1-8000-000000000000'])</code></pre>
+<pre><code>  wildlife: 49 matches (first 3: ['fa3119bc-0173-11f1-8000-000000000000', 'fa312560-0173-11f1-8000-000000000000', 'fa312af6-0173-11f1-8000-000000000000'])
+  wildlife-000000: 39 matches (first 3: ['fa328b4e-0173-11f1-8000-000000000000', 'fa328ca2-0173-11f1-8000-000000000000', 'fa328df6-0173-11f1-8000-000000000000'])
+  wildlife-000001: 52 matches (first 3: ['fa33c22a-0173-11f1-8000-000000000000', 'fa33cfc2-0173-11f1-8000-000000000000', 'fa33d814-0173-11f1-8000-000000000000'])</code></pre>
 </div>
 </div>
 </section>
 <section id="clean-up" class="level2">
 <h2 class="anchored" data-anchor-id="clean-up">11 — Clean up</h2>
-<div id="0d465205" class="cell" data-execution_count="20">
+<div id="801e17d3" class="cell" data-execution_count="20">
 <div class="sourceCode cell-code" id="cb38"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shutil</span>
 <span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>shutil.rmtree(tmpdir, ignore_errors<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>

@@ -546,7 +546,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>This example generates a synthetic NLP sentiment corpus, writes it with manifests, then builds a visual profile using only the sidecar files.</p>
 <section id="define-a-sentiment-sample-type" class="level2">
 <h2 class="anchored" data-anchor-id="define-a-sentiment-sample-type">1 — Define a sentiment sample type</h2>
-<div id="140ad332" class="cell" data-execution_count="1">
+<div id="53707a96" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> Annotated</span>
@@ -569,7 +569,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="generate-1000-synthetic-samples" class="level2">
 <h2 class="anchored" data-anchor-id="generate-1000-synthetic-samples">2 — Generate 1,000 synthetic samples</h2>
 <p>We use weighted distributions to make the profile interesting: sentiment is skewed positive, confidence follows a beta distribution, and language has realistic frequency skew.</p>
-<div id="841de01c" class="cell" data-execution_count="2">
+<div id="6e91795c" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">2024</span>)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>sentiments <span class="op">=</span> rng.choice(</span>
@@ -612,7 +612,7 @@ Example: sentiment='negative', confidence=0.7578</code></pre>
 </section>
 <section id="write-shards-with-manifests" class="level2">
 <h2 class="anchored" data-anchor-id="write-shards-with-manifests">3 — Write shards with manifests</h2>
-<div id="5556fa1e" class="cell" data-execution_count="3">
+<div id="9aaab46c" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tempfile</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -631,10 +631,10 @@ Example: sentiment='negative', confidence=0.7578</code></pre>
 <span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> m <span class="kw">in</span> manifests:</span>
 <span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  </span><span class="sc">{</span>m<span class="sc">.</span>name<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_profiler_fqe18cf9/sentiment-000000.tar 0 0.0 GB 0
-# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_profiler_fqe18cf9/sentiment-000001.tar 250 0.0 GB 250
-# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_profiler_fqe18cf9/sentiment-000002.tar 250 0.0 GB 500
-# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_profiler_fqe18cf9/sentiment-000003.tar 250 0.0 GB 750
+<pre><code># writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_profiler_qx6hkqfm/sentiment-000000.tar 0 0.0 GB 0
+# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_profiler_qx6hkqfm/sentiment-000001.tar 250 0.0 GB 250
+# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_profiler_qx6hkqfm/sentiment-000002.tar 250 0.0 GB 500
+# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_profiler_qx6hkqfm/sentiment-000003.tar 250 0.0 GB 750
 Wrote 4 shards with 8 manifest files
   sentiment-000000.manifest.json
   sentiment-000000.manifest.parquet
@@ -662,7 +662,7 @@ Note
 <p>Everything from here on uses <strong>only the manifest sidecar files</strong> — the <code>.manifest.json</code> headers and <code>.manifest.parquet</code> per-sample tables. The raw tar data is never read.</p>
 </div>
 </div>
-<div id="dbf92d79" class="cell" data-execution_count="4">
+<div id="29f12a2d" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> atdata <span class="im">import</span> QueryExecutor</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -694,7 +694,7 @@ sentiment  confidence language
 </section>
 <section id="class-distribution-bar-chart" class="level2">
 <h2 class="anchored" data-anchor-id="class-distribution-bar-chart">5 — Class distribution (bar chart)</h2>
-<div id="92a9b6fc" class="cell" data-execution_count="5">
+<div id="d77e8f7e" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>matplotlib.use(<span class="st">"Agg"</span>)</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
@@ -720,7 +720,7 @@ sentiment  confidence language
 <span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
 <span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/ipykernel_17199/3396340794.py:24: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+<pre><code>/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/ipykernel_23293/3396340794.py:24: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
   plt.show()</code></pre>
 </div>
 </div>
@@ -728,7 +728,7 @@ sentiment  confidence language
 <section id="confidence-score-distribution-histogram" class="level2">
 <h2 class="anchored" data-anchor-id="confidence-score-distribution-histogram">6 — Confidence score distribution (histogram)</h2>
 <p>The numeric aggregate in the manifest JSON header gives us min, max, and mean without touching parquet. Here we overlay those on the full histogram.</p>
-<div id="31ce8b20" class="cell" data-execution_count="6">
+<div id="b235c87a" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>manifest_json <span class="op">=</span> <span class="bu">sorted</span>(tmpdir.glob(<span class="st">"*.manifest.json"</span>))[<span class="dv">0</span>]</span>
@@ -741,7 +741,7 @@ sentiment  confidence language
 <pre><code>Aggregate from shard 0: {'type': 'numeric', 'min': 0.201, 'max': 0.9863, 'mean': 0.7155908000000004, 'count': 250}</code></pre>
 </div>
 </div>
-<div id="c928f19f" class="cell" data-execution_count="7">
+<div id="cefe0cd1" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">6</span>, <span class="fl">3.5</span>))</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>ax.hist(combined[<span class="st">"confidence"</span>], bins<span class="op">=</span><span class="dv">30</span>, color<span class="op">=</span><span class="st">"#42A5F5"</span>, edgecolor<span class="op">=</span><span class="st">"white"</span>,</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>        linewidth<span class="op">=</span><span class="fl">0.5</span>, alpha<span class="op">=</span><span class="fl">0.85</span>)</span>
@@ -765,14 +765,14 @@ sentiment  confidence language
 <span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
 <span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/ipykernel_17199/4059321866.py:22: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+<pre><code>/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/ipykernel_23293/4059321866.py:22: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
   plt.show()</code></pre>
 </div>
 </div>
 </section>
 <section id="language-breakdown-horizontal-bar" class="level2">
 <h2 class="anchored" data-anchor-id="language-breakdown-horizontal-bar">7 — Language breakdown (horizontal bar)</h2>
-<div id="ca4cf0d3" class="cell" data-execution_count="8">
+<div id="e4d98cfc" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>lang_counts <span class="op">=</span> combined[<span class="st">"language"</span>].value_counts().sort_values()</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>total <span class="op">=</span> lang_counts.<span class="bu">sum</span>()</span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -791,7 +791,7 @@ sentiment  confidence language
 <span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
 <span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/ipykernel_17199/3086307890.py:17: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+<pre><code>/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/ipykernel_23293/3086307890.py:17: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
   plt.show()</code></pre>
 </div>
 </div>
@@ -799,7 +799,7 @@ sentiment  confidence language
 <section id="tag-frequency-lollipop-chart" class="level2">
 <h2 class="anchored" data-anchor-id="tag-frequency-lollipop-chart">8 — Tag frequency (lollipop chart)</h2>
 <p>Tags are stored as lists per sample. Exploding and counting gives us a frequency profile.</p>
-<div id="9c06ebfd" class="cell" data-execution_count="9">
+<div id="8f331627" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>tag_series <span class="op">=</span> combined[<span class="st">"tags"</span>].explode()</span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>tag_counts <span class="op">=</span> tag_series.value_counts().sort_values()</span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -814,7 +814,7 @@ sentiment  confidence language
 <span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
 <span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/ipykernel_17199/3143888597.py:13: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+<pre><code>/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/ipykernel_23293/3143888597.py:13: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
   plt.show()</code></pre>
 </div>
 </div>
@@ -822,7 +822,7 @@ sentiment  confidence language
 <section id="cross-tabulation-sentiment-x-language" class="level2">
 <h2 class="anchored" data-anchor-id="cross-tabulation-sentiment-x-language">9 — Cross-tabulation: sentiment x language</h2>
 <p>A styled heatmap reveals how sentiment distributes across languages.</p>
-<div id="8ff702b3" class="cell" data-execution_count="10">
+<div id="eb79e529" class="cell" data-execution_count="10">
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>ct <span class="op">=</span> pd.crosstab(combined[<span class="st">"sentiment"</span>], combined[<span class="st">"language"</span>])</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(ct.to_string())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -833,7 +833,7 @@ neutral    16  111  42  32  22
 positive   38  208  66  35  24</code></pre>
 </div>
 </div>
-<div id="181b8f6e" class="cell" data-execution_count="11">
+<div id="907b3759" class="cell" data-execution_count="11">
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">6</span>, <span class="fl">3.5</span>))</span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>im <span class="op">=</span> ax.imshow(ct.values, cmap<span class="op">=</span><span class="st">"YlOrRd"</span>, aspect<span class="op">=</span><span class="st">"auto"</span>)</span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -853,7 +853,7 @@ positive   38  208  66  35  24</code></pre>
 <span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
 <span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/ipykernel_17199/2093014448.py:18: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+<pre><code>/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/ipykernel_23293/2093014448.py:18: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
   plt.show()</code></pre>
 </div>
 </div>
@@ -861,7 +861,7 @@ positive   38  208  66  35  24</code></pre>
 <section id="query-driven-profiling" class="level2">
 <h2 class="anchored" data-anchor-id="query-driven-profiling">10 — Query-driven profiling</h2>
 <p>Let’s profile just the <strong>low-confidence</strong> samples to see if certain sentiments or languages are harder to classify.</p>
-<div id="935c3bfd" class="cell" data-execution_count="12">
+<div id="ec1af4d7" class="cell" data-execution_count="12">
 <div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>low_conf <span class="op">=</span> executor.query(where<span class="op">=</span><span class="kw">lambda</span> df: df[<span class="st">"confidence"</span>] <span class="op">&lt;</span> <span class="fl">0.5</span>)</span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Low-confidence samples (&lt;0.5): </span><span class="sc">{</span><span class="bu">len</span>(low_conf)<span class="sc">}</span><span class="ss">"</span>)</span>
 <span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -894,7 +894,7 @@ ja    11</code></pre>
 </section>
 <section id="clean-up" class="level2">
 <h2 class="anchored" data-anchor-id="clean-up">11 — Clean up</h2>
-<div id="5cb25b63" class="cell" data-execution_count="13">
+<div id="7e7462a6" class="cell" data-execution_count="13">
 <div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shutil</span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>shutil.rmtree(tmpdir, ignore_errors<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>

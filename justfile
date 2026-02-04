@@ -8,7 +8,7 @@ lint:
     uv run ruff format --check src/ tests/
 
 bench:
-    mkdir -p .bench
+    mkdir -p .benchmarks
     just bench-serial
     just bench-index
     just bench-io
@@ -17,23 +17,23 @@ bench:
     just bench-report
 
 bench-serial *args:
-    {{ _bench_base }} -m bench_serial --benchmark-json=.bench/serial.json {{args}}
+    {{ _bench_base }} -m bench_serial --benchmark-json=.benchmarks/serial.json {{args}}
 
 bench-index *args:
-    {{ _bench_base }} -m bench_index --benchmark-json=.bench/index.json {{args}}
+    {{ _bench_base }} -m bench_index --benchmark-json=.benchmarks/index.json {{args}}
 
 bench-io *args:
-    {{ _bench_base }} -m bench_io --benchmark-json=.bench/io.json {{args}}
+    {{ _bench_base }} -m bench_io --benchmark-json=.benchmarks/io.json {{args}}
 
 bench-query *args:
-    {{ _bench_base }} -m bench_query --benchmark-json=.bench/query.json {{args}}
+    {{ _bench_base }} -m bench_query --benchmark-json=.benchmarks/query.json {{args}}
 
 bench-s3 *args:
-    {{ _bench_base }} -m bench_s3 --benchmark-json=.bench/s3.json {{args}}
+    {{ _bench_base }} -m bench_s3 --benchmark-json=.benchmarks/s3.json {{args}}
 
 bench-report:
-    uv run python -m benchmarks.render_report .bench/*.json -o .bench/report.html
-    @echo "Report: .bench/report.html"
+    uv run python -m benchmarks.render_report .benchmarks/*.json -o .benchmarks/report.html
+    @echo "Report: .benchmarks/report.html"
 
 bench-save name:
     {{ _bench_base }} --benchmark-save={{name}}
@@ -48,4 +48,4 @@ docs:
     # (without this, quarto may pick up a system Python that lacks them).
     QUARTO_PYTHON={{justfile_directory()}}/.venv/bin/python quarto render
     mkdir -p ../docs/benchmarks
-    cp ../.bench/report.html ../docs/benchmarks/index.html || echo "No benchmark report found — run 'just bench' first"
+    cp ../.benchmarks/report.html ../docs/benchmarks/index.html || echo "No benchmark report found — run 'just bench' first"
