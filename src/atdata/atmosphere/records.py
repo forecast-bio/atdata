@@ -662,9 +662,7 @@ class DatasetLoader:
         if isinstance(metadata_raw, dict):
             return DatasetMetadata.from_record(metadata_raw).to_dict()
 
-        raise ValueError(
-            f"Unexpected metadata format: {type(metadata_raw).__name__}"
-        )
+        raise ValueError(f"Unexpected metadata format: {type(metadata_raw).__name__}")
 
     def get_metadata_typed(self, uri: str | AtUri) -> Optional[DatasetMetadata]:
         """Get the metadata from a dataset record as a typed object.

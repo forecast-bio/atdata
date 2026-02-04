@@ -639,18 +639,22 @@ class TestDatasetMetadata:
 
     def test_from_dict_camel_takes_precedence(self):
         """When both camelCase and snake_case keys exist, camelCase wins."""
-        meta = DatasetMetadata.from_dict({
-            "sourceUri": "camel",
-            "source_uri": "snake",
-        })
+        meta = DatasetMetadata.from_dict(
+            {
+                "sourceUri": "camel",
+                "source_uri": "snake",
+            }
+        )
         assert meta.source_uri == "camel"
 
     def test_from_dict_explicit_custom_merged(self):
         """Explicit 'custom' key is merged with auto-detected custom keys."""
-        meta = DatasetMetadata.from_dict({
-            "custom": {"a": 1},
-            "unknown_key": 2,
-        })
+        meta = DatasetMetadata.from_dict(
+            {
+                "custom": {"a": 1},
+                "unknown_key": 2,
+            }
+        )
         assert meta.custom == {"a": 1, "unknown_key": 2}
 
     def test_to_dict_from_dict_roundtrip(self):

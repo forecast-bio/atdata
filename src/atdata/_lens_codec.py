@@ -88,11 +88,13 @@ def _detect_field_mapping(
 
     mappings = []
     for f in dc_fields(view_type):
-        mappings.append({
-            "source_field": f.name,
-            "view_field": f.name,
-            "transform": None,
-        })
+        mappings.append(
+            {
+                "source_field": f.name,
+                "view_field": f.name,
+                "transform": None,
+            }
+        )
 
     return mappings
 
@@ -167,11 +169,13 @@ def lens_to_json(
         # Build reverse mapping for putter
         putter_mappings = []
         for m in field_mappings:
-            putter_mappings.append({
-                "source_field": m["view_field"],
-                "view_field": m["source_field"],
-                "transform": None,
-            })
+            putter_mappings.append(
+                {
+                    "source_field": m["view_field"],
+                    "view_field": m["source_field"],
+                    "transform": None,
+                }
+            )
         putter_desc: dict[str, Any] = {
             "kind": "field_mapping",
             "mappings": putter_mappings,
@@ -364,8 +368,16 @@ def lens_from_record(
         getter = _build_field_mapping_getter(getter_desc["mappings"], view_type)
         # Add type annotations so Lens.__init__ can extract source/view types
         if source_type is not None:
-            params = [inspect.Parameter("source", inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=source_type)]
-            getter.__signature__ = inspect.Signature(params, return_annotation=view_type)  # type: ignore[attr-defined]
+            params = [
+                inspect.Parameter(
+                    "source",
+                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                    annotation=source_type,
+                )
+            ]
+            getter.__signature__ = inspect.Signature(
+                params, return_annotation=view_type
+            )  # type: ignore[attr-defined]
     else:
         raise ValueError(
             f"Cannot reconstitute lens {name!r}: getter kind is {getter_kind!r}. "

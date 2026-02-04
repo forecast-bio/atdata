@@ -298,7 +298,7 @@ def _parse_lens_ref(ref: str) -> tuple[str, str]:
     Supports format: 'atdata://local/lens/{name}@{version}'
     """
     if ref.startswith(_ATDATA_LENS_URI_PREFIX):
-        path = ref[len(_ATDATA_LENS_URI_PREFIX):]
+        path = ref[len(_ATDATA_LENS_URI_PREFIX) :]
     else:
         raise ValueError(f"Invalid lens reference: {ref}")
 

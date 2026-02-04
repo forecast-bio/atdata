@@ -168,10 +168,13 @@ class DatasetMetadata:
             {'model': 'bert'}
         """
         known_keys = {
-            "source_uri", "sourceUri",
-            "created_by", "createdBy",
+            "source_uri",
+            "sourceUri",
+            "created_by",
+            "createdBy",
             "version",
-            "processing_steps", "processingSteps",
+            "processing_steps",
+            "processingSteps",
             "split",
             "custom",
         }
