@@ -24,10 +24,11 @@ The user will provide a human-readable description of the feature (e.g. "add bat
 ### 2. Validate preconditions
 
 - Confirm there are no uncommitted changes (other than `.chainlink/issues.db`). If there are, warn the user and ask whether to stash or abort.
-- Identify the base branch. Default to the current branch. If the user provides a `--from <ref>` argument, use that instead.
+- Identify the base branch. Default is `develop`. If the user provides a `--from <ref>` argument, use that instead.
 
 ### 3. Create the branch
 
+- If not already on the base branch, `git checkout <base>` first.
 - `git checkout -b feature/<slug>` (from the resolved base)
 - Print the created branch name so the user can confirm.
 

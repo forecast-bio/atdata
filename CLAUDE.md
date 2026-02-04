@@ -379,21 +379,40 @@ User-level skills (in `~/.claude/commands/`) take precedence over project-level 
 
 ## Git Workflow
 
+This project follows **git flow** branching:
+
+### Branch Model
+
+| Branch | Purpose | Branches from | Merges to |
+|--------|---------|---------------|-----------|
+| `main` | Production releases, always deployable | — | — |
+| `develop` | Integration branch, all features land here | `main` (initial) | `main` (via release) |
+| `feature/*` | Individual work items | `develop` | `develop` |
+| `release/*` | Release prep (version bump, changelog) | `develop` | `main` (via PR) |
+| `hotfix/*` | Urgent fixes to production | `main` | `main` + `develop` |
+
+### Feature Development
+
+1. Branch from `develop`: `git checkout develop && git checkout -b feature/my-feature`
+2. Do work, commit
+3. Merge back to `develop` with `--no-ff`
+4. Delete the feature branch
+
+### Release Flow
+
+Releases follow this pattern (automated by `/release` skill):
+1. Create `release/v<version>` branch **from `develop`**
+2. Bump version in `pyproject.toml`, run `uv lock`
+3. Write CHANGELOG entry (Keep a Changelog format)
+4. Push and create PR to `main`
+5. After merge, sync develop: `git checkout develop && git merge main --no-ff`
+
 ### Committing Changes
 
 When using the `/commit` command or creating commits:
 - **Always include `.chainlink/issues.db`** in commits alongside code changes
 - This ensures issue tracking history is preserved across sessions
 - The issues.db file tracks all chainlink issues, comments, and status changes
-
-### Release Flow
-
-Releases follow this pattern (automated by `/release` skill):
-1. Create `release/v<version>` branch from previous release
-2. Merge feature branch with `--no-ff` to preserve topology
-3. Bump version in `pyproject.toml`, run `uv lock`
-4. Write CHANGELOG entry (Keep a Changelog format)
-5. Push and create PR to `upstream/main`
 
 ### CLI Module
 

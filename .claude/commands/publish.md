@@ -65,7 +65,12 @@ Perform the post-merge publish flow:
 
 ### 5. Post-publish
 - Fetch the new tag locally: `git fetch --tags`
-- Update the dev branch if needed: merge `main` into dev branch with `--no-ff`
+- Sync `develop` with `main`:
+  ```bash
+  git checkout develop
+  git merge main --no-ff --no-edit
+  git push origin develop
+  ```
 - Close any chainlink release tracking issues
 
 ## Constraints
