@@ -214,6 +214,7 @@ class Lens(Generic[S, V]):
             >>> id_lens.get(sample) == sample
             True
         """
+
         def _id_get(s: S) -> S:
             return s
 

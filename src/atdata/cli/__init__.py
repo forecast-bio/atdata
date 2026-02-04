@@ -91,7 +91,9 @@ def preview(
 @app.command()
 def verify(
     name: str = typer.Argument(help="Dataset name or label to verify checksums for."),
-    db: str = typer.Option(None, help="SQLite database path (default: ~/.atdata/index.db)."),
+    db: str = typer.Option(
+        None, help="SQLite database path (default: ~/.atdata/index.db)."
+    ),
 ) -> None:
     """Verify SHA-256 checksums for all shards in a dataset.
 

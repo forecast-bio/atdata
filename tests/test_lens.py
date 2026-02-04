@@ -168,6 +168,7 @@ def test_conversion(tmp_path):
 
 # Shared types for composition tests
 
+
 @atdata.packable
 class Person:
     name: str
