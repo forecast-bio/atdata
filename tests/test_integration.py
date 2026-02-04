@@ -224,6 +224,7 @@ class TestLoadDatasetWithIndex:
         # Mock index
         mock_index = Mock()
         mock_index.data_store = None  # No data store, so no URL transformation
+        mock_index.get_label.side_effect = AttributeError("no labels")
         mock_index.get_dataset.return_value = local_entry
         mock_index.decode_schema.return_value = IntegrationTestSample
 
@@ -258,6 +259,7 @@ class TestLoadDatasetWithIndex:
 
         mock_index = Mock()
         mock_index.data_store = None  # No data store, so no URL transformation
+        mock_index.get_label.side_effect = AttributeError("no labels")
         mock_index.get_dataset.return_value = local_entry
 
         # Load with explicit type (should not call decode_schema)

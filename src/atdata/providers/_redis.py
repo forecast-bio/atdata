@@ -168,11 +168,9 @@ class RedisProvider(IndexProvider):
 
         # No version specified — scan for all labels with this name, pick latest
         prefix = f"Label:{name}@"
-        best_key: str | None = None
         best_cid: str | None = None
         best_ver: str | None = None
         for key in self._redis.scan_iter(match=f"{prefix}*"):
-            key_str = key.decode("utf-8") if isinstance(key, bytes) else key
             raw = self._redis.hgetall(key)
             if not raw:
                 continue
@@ -187,7 +185,6 @@ class RedisProvider(IndexProvider):
             best_cid = raw_typed["cid"]
             ver = raw_typed.get("version", "")
             best_ver = ver if ver else None
-            best_key = key_str
 
         if best_cid is None:
             raise KeyError(f"No label with name: {name!r}")
@@ -195,7 +192,6 @@ class RedisProvider(IndexProvider):
 
     def iter_labels(self) -> Iterator[tuple[str, str, str | None]]:
         for key in self._redis.scan_iter(match="Label:*"):
-            key_str = key.decode("utf-8") if isinstance(key, bytes) else key
             raw = self._redis.hgetall(key)
             if not raw:
                 continue

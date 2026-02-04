@@ -147,7 +147,7 @@ class TestSqliteProviderLabels:
 
         labels = list(provider.iter_labels())
         assert len(labels) == 2
-        names = {l[0] for l in labels}
+        names = {lab[0] for lab in labels}
         assert names == {"a", "b"}
 
         provider.close()
@@ -167,7 +167,9 @@ class TestSqliteProviderLabels:
         """Labels can have descriptions."""
         provider = SqliteProvider(path=tmp_path / "test.db")
         provider.store_label(
-            name="ds", cid="cid-1", version="1.0.0",
+            name="ds",
+            cid="cid-1",
+            version="1.0.0",
             description="First version",
         )
 
@@ -275,14 +277,14 @@ class TestIndexLabels:
         """list_labels returns all labels."""
         index = Index(provider="sqlite", path=tmp_path / "index.db")
         samples = [LabelTestSample(text="test", value=1)]
-        entry = index.write_samples(samples, name="ds-a")
+        index.write_samples(samples, name="ds-a")
 
         samples2 = [LabelTestSample(text="test2", value=2)]
-        entry2 = index.write_samples(samples2, name="ds-b")
+        index.write_samples(samples2, name="ds-b")
 
         labels = index.list_labels()
         assert len(labels) == 2
-        names = {l[0] for l in labels}
+        names = {lab[0] for lab in labels}
         assert names == {"ds-a", "ds-b"}
 
 
@@ -313,7 +315,9 @@ class TestLabelPublisher:
         record = mock.get_record(uri)
         assert record["$type"] == "ac.foundation.dataset.label"
         assert record["name"] == "mnist"
-        assert record["datasetUri"] == "at://did:plc:mock/ac.foundation.dataset.record/abc"
+        assert (
+            record["datasetUri"] == "at://did:plc:mock/ac.foundation.dataset.record/abc"
+        )
         assert record["version"] == "1.0.0"
         assert record["description"] == "Test label"
 
@@ -377,8 +381,12 @@ class TestLabelLoader:
         mock.login("test.user", "password")
 
         publisher = LabelPublisher(mock)
-        publisher.publish(name="a", dataset_uri="at://did:plc:mock/ac.foundation.dataset.record/1")
-        publisher.publish(name="b", dataset_uri="at://did:plc:mock/ac.foundation.dataset.record/2")
+        publisher.publish(
+            name="a", dataset_uri="at://did:plc:mock/ac.foundation.dataset.record/1"
+        )
+        publisher.publish(
+            name="b", dataset_uri="at://did:plc:mock/ac.foundation.dataset.record/2"
+        )
 
         loader = LabelLoader(mock)
         labels = loader.list_all()
@@ -514,7 +522,7 @@ class TestResolveIndexedPathVersion:
         index = Index(provider="sqlite", path=tmp_path / "index.db")
 
         samples_v1 = [LabelTestSample(text="v1", value=1)]
-        entry_v1 = index.write_samples(samples_v1, name="latest-ds")
+        index.write_samples(samples_v1, name="latest-ds")
 
         samples_v2 = [LabelTestSample(text="v2", value=2)]
         entry_v2 = index.write_samples(samples_v2, name="latest-ds")
