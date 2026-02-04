@@ -1059,9 +1059,9 @@ class TestAtmosphereClientEdgeCases:
         uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.record/abc"
         authenticated_client.delete_record(uri, swap_commit="bafyswap456")
 
-        call_data = (
-            mock_atproto_client.com.atproto.repo.delete_record.call_args.kwargs["data"]
-        )
+        call_data = mock_atproto_client.com.atproto.repo.delete_record.call_args.kwargs[
+            "data"
+        ]
         assert call_data["swapCommit"] == "bafyswap456"
 
     def test_get_record_model_dump_fallback(
@@ -1079,9 +1079,7 @@ class TestAtmosphereClientEdgeCases:
         )
         assert result == {"name": "from_model_dump"}
 
-    def test_get_record_dict_fallback(
-        self, authenticated_client, mock_atproto_client
-    ):
+    def test_get_record_dict_fallback(self, authenticated_client, mock_atproto_client):
         """get_record uses __dict__ when no to_dict() or model_dump()."""
 
         class SimpleObj:
@@ -1950,9 +1948,7 @@ class TestDatasetLoader:
 
         loader = DatasetLoader(authenticated_client)
         assert (
-            loader.get_storage_type(
-                f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz"
-            )
+            loader.get_storage_type(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
             == "http"
         )
 
@@ -1973,9 +1969,7 @@ class TestDatasetLoader:
 
         loader = DatasetLoader(authenticated_client)
         assert (
-            loader.get_storage_type(
-                f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz"
-            )
+            loader.get_storage_type(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
             == "s3"
         )
 
@@ -2074,9 +2068,7 @@ class TestDatasetLoader:
         assert info["region"] == "us-east-1"
         assert info["endpoint"] == "https://s3.example.com"
 
-    def test_get_s3_info_non_s3_raises(
-        self, authenticated_client, mock_atproto_client
-    ):
+    def test_get_s3_info_non_s3_raises(self, authenticated_client, mock_atproto_client):
         """get_s3_info raises ValueError for non-S3 storage."""
         mock_response = Mock()
         mock_response.value = {
@@ -2133,9 +2125,7 @@ class TestDatasetLoader:
             mock_get.return_value = mock_did_response
 
             loader = DatasetLoader(authenticated_client)
-            uri_obj = AtUri.parse(
-                f"at://did:plc:abc123/{LEXICON_NAMESPACE}.record/xyz"
-            )
+            uri_obj = AtUri.parse(f"at://did:plc:abc123/{LEXICON_NAMESPACE}.record/xyz")
             urls = loader.get_blob_urls(uri_obj)
 
             assert len(urls) == 1
@@ -2157,9 +2147,7 @@ class TestDatasetLoader:
         mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
 
         loader = DatasetLoader(authenticated_client)
-        record = loader.get_typed(
-            f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz"
-        )
+        record = loader.get_typed(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
 
         assert record.name == "TestDataset"
 

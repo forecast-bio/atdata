@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.3.3b2] - 2026-02-04
+
+### Testing
+- **Coverage improvements** (92% → 94%): 61 new tests across atmosphere client (swap_commit, model conversion fallbacks), DatasetLoader (HTTP/S3 storage paths, `get_typed`, `to_dataset`, checksum validation), DatasetPublisher (`publish_with_s3`), Redis/Postgres provider label CRUD, Redis schema edge cases (bytes decoding, legacy format), and lexicon loading/validation
+
+### Fixed
+- **CI**: Use `cp -f` in bench workflow to avoid interactive prompt on file overwrite
+
 ## [0.3.3b1] - 2026-02-04
 
 ### Added
