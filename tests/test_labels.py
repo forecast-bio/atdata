@@ -850,9 +850,7 @@ class TestPostgresProviderLabels:
         """iter_labels yields rows from SELECT."""
         provider, mock_conn = self._make_provider()
         cur = mock_conn.cursor.return_value.__enter__.return_value
-        cur.__iter__ = lambda self: iter(
-            [("a", "cid-a", "1.0"), ("b", "cid-b", "")]
-        )
+        cur.__iter__ = lambda self: iter([("a", "cid-a", "1.0"), ("b", "cid-b", "")])
 
         labels = list(provider.iter_labels())
         assert len(labels) == 2
