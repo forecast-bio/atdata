@@ -6,6 +6,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.3.2b1] - 2026-02-03
+
+### Changed
+- **`Index.write()` → `Index.write_samples()`**: Renamed with atmosphere-aware defaults — automatic PDS blob upload, 50 MB per-shard limit, 1 GB total dataset guard
+  - New `force` flag bypasses PDS size limits for large datasets
+  - New `copy` flag forces data transfer from private/remote sources to destination store
+  - New `data_store` kwarg to override the default storage backend
+- **`Index.insert_dataset()` overhaul**: Smart source routing for atmosphere targets
+  - Local files auto-upload via `PDSBlobStore`
+  - Remote HTTP/HTTPS URLs referenced as external storage (zero-copy)
+  - Credentialed `S3Source` errors by default to prevent leaking private endpoints; pass `copy=True` to copy data to the destination store
+- **PDS constants**: `PDS_BLOB_LIMIT_BYTES` (50 MB) and `PDS_TOTAL_DATASET_LIMIT_BYTES` (1 GB) in `atmosphere/store.py`; `PDSBlobStore.write_shards()` defaults to 50 MB shard size
+- **CI overhaul**: Sequential Lint → Pilot → Matrix flow; codecov uploads once per run instead of per-matrix-cell; benchmarks split to separate workflow
+- Lazy-import `pandas` and `requests` in `dataset.py` to reduce import time
+
+### Fixed
+- **Atmosphere blob uploads**: `Index.write_samples()` targeting atmosphere now uploads data as PDS blobs instead of publishing local temp file paths in the ATProto record
+
+### Deprecated
+- `Index.add_entry()` — use `Index.insert_dataset()` instead
+- `Index.promote_entry()` and `Index.promote_dataset()` — use `Index.insert_dataset()` with an atmosphere-backed Index instead
+- `URLSource.shard_list` and `S3Source.shard_list` properties — use `list_shards()` method instead
+
 ## [0.3.1b1] - 2026-02-03
 
 ### Added
@@ -16,6 +39,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Bounds checking in `bytes_to_array()` for truncated/corrupted input buffers
 
 ### Changed
+- Production hardening: observability and checkpoint/resume (GH#39 5.1/5.2) (#590)
+- Expand logging coverage across write/read/index/atmosphere paths (#593)
+- Add checkpoint/resume and on_shard_error to process_shards (#592)
+- Add log_operation context manager to _logging.py (#591)
+- Add reference documentation for atdata's atproto lexicons (#589)
 - Add version auto-suggest to /release and /publish skills (#588)
 - Create /publish skill for post-merge release tagging and PyPI publish (#587)
 - Fix wheel build: duplicate filename in ZIP archive rejected by PyPI (#586)

@@ -1,5 +1,8 @@
 ## Custom
 
+# Lexicon JSON copies (authoritative source is lexicons/ at project root)
+src/atdata/lexicons/*.json
+
 # mac garbage
 **/.DS_Store
 # Don't commit any .env files
@@ -53,7 +56,7 @@ pip-log.txt
 pip-delete-this-directory.txt
 
 # Benchmark results
-.bench/
+.benchmarks/
 
 # Unit test / coverage reports
 htmlcov/

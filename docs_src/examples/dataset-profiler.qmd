@@ -1,0 +1,306 @@
+---
+title: "Dataset Profiler"
+description: "Profile a dataset visually using manifest aggregates and matplotlib---without reading raw tar data"
+execute:
+  enabled: true
+---
+
+Manifests record per-shard statistics and per-sample metadata at write time.
+That means you can **profile an entire dataset** --- class distributions,
+numeric ranges, tag frequencies --- without ever cracking open a tar file.
+
+This example generates a synthetic NLP sentiment corpus, writes it with
+manifests, then builds a visual profile using only the sidecar files.
+
+## 1 --- Define a sentiment sample type
+
+```{python}
+import numpy as np
+from numpy.typing import NDArray
+from typing import Annotated
+import atdata
+from atdata import ManifestField
+
+
+@atdata.packable
+class SentimentSample:
+    """A text-embedding sample with rich metadata for profiling."""
+
+    embedding: NDArray
+    sentiment: Annotated[str, ManifestField("categorical")]
+    confidence: Annotated[float, ManifestField("numeric")]
+    language: Annotated[str, ManifestField("categorical")]
+    tags: Annotated[list[str], ManifestField("set")]
+```
+
+The `embedding` field (NDArray) is automatically excluded from the manifest.
+The other four fields each get an appropriate aggregate collector.
+
+## 2 --- Generate 1,000 synthetic samples
+
+We use weighted distributions to make the profile interesting: sentiment is
+skewed positive, confidence follows a beta distribution, and language has
+realistic frequency skew.
+
+```{python}
+rng = np.random.default_rng(2024)
+
+sentiments = rng.choice(
+    ["positive", "negative", "neutral"],
+    size=1_000,
+    p=[0.50, 0.20, 0.30],
+)
+
+confidences = rng.beta(5, 2, size=1_000)  # right-skewed toward 1.0
+
+languages = rng.choice(
+    ["en", "es", "fr", "de", "ja"],
+    size=1_000,
+    p=[0.55, 0.15, 0.12, 0.10, 0.08],
+)
+
+tag_pool = ["formal", "informal", "slang", "technical", "conversational",
+            "academic", "casual", "literary"]
+
+samples = [
+    SentimentSample(
+        embedding=rng.standard_normal(64).astype(np.float32),
+        sentiment=str(sentiments[i]),
+        confidence=round(float(confidences[i]), 4),
+        language=str(languages[i]),
+        tags=list(rng.choice(tag_pool, size=rng.integers(1, 4), replace=False)),
+    )
+    for i in range(1_000)
+]
+
+print(f"Generated {len(samples)} samples")
+print(f"Embedding shape: {samples[0].embedding.shape}")
+print(f"Example: sentiment={samples[0].sentiment!r}, confidence={samples[0].confidence}")
+```
+
+## 3 --- Write shards with manifests
+
+```{python}
+import tempfile
+from pathlib import Path
+
+tmpdir = Path(tempfile.mkdtemp(prefix="atdata_profiler_"))
+
+ds = atdata.write_samples(
+    samples,
+    tmpdir / "sentiment.tar",
+    maxcount=250,
+    manifest=True,
+)
+
+shards = ds.list_shards()
+manifests = sorted(tmpdir.glob("*.manifest.*"))
+print(f"Wrote {len(shards)} shards with {len(manifests)} manifest files")
+for m in manifests:
+    print(f"  {m.name}")
+```
+
+## 4 --- Load manifests and preview
+
+::: {.callout-note}
+Everything from here on uses **only the manifest sidecar files** --- the
+`.manifest.json` headers and `.manifest.parquet` per-sample tables.  The raw
+tar data is never read.
+:::
+
+```{python}
+import pandas as pd
+from atdata import QueryExecutor
+
+executor = QueryExecutor.from_directory(tmpdir)
+combined = pd.concat(
+    [m.samples for m in executor._manifests if not m.samples.empty],
+    ignore_index=True,
+)
+
+print(f"Total samples in manifests: {len(combined)}")
+print(f"Columns: {list(combined.columns)}")
+print()
+print(combined[["sentiment", "confidence", "language"]].head(8).to_string(index=False))
+```
+
+## 5 --- Class distribution (bar chart)
+
+```{python}
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
+sentiment_counts = combined["sentiment"].value_counts()
+colors = {"positive": "#4CAF50", "neutral": "#9E9E9E", "negative": "#F44336"}
+
+fig, ax = plt.subplots(figsize=(6, 3.5))
+bars = ax.bar(
+    sentiment_counts.index,
+    sentiment_counts.values,
+    color=[colors.get(s, "#2196F3") for s in sentiment_counts.index],
+    edgecolor="white",
+    linewidth=0.8,
+)
+for bar, count in zip(bars, sentiment_counts.values):
+    ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 8,
+            str(count), ha="center", va="bottom", fontweight="bold", fontsize=11)
+
+ax.set_ylabel("Count")
+ax.set_title("Sentiment Distribution", fontweight="bold")
+ax.spines[["top", "right"]].set_visible(False)
+plt.tight_layout()
+plt.show()
+```
+
+## 6 --- Confidence score distribution (histogram)
+
+The numeric aggregate in the manifest JSON header gives us min, max, and mean
+without touching parquet.  Here we overlay those on the full histogram.
+
+```{python}
+import json
+
+manifest_json = sorted(tmpdir.glob("*.manifest.json"))[0]
+with open(manifest_json) as f:
+    header = json.load(f)
+
+conf_agg = header["aggregates"]["confidence"]
+print(f"Aggregate from shard 0: {conf_agg}")
+```
+
+```{python}
+fig, ax = plt.subplots(figsize=(6, 3.5))
+ax.hist(combined["confidence"], bins=30, color="#42A5F5", edgecolor="white",
+        linewidth=0.5, alpha=0.85)
+
+overall_mean = combined["confidence"].mean()
+overall_min = combined["confidence"].min()
+overall_max = combined["confidence"].max()
+
+ax.axvline(overall_mean, color="#E65100", linewidth=2, linestyle="--",
+           label=f"mean = {overall_mean:.3f}")
+ax.axvline(overall_min, color="#78909C", linewidth=1, linestyle=":",
+           label=f"min = {overall_min:.3f}")
+ax.axvline(overall_max, color="#78909C", linewidth=1, linestyle=":",
+           label=f"max = {overall_max:.3f}")
+
+ax.set_xlabel("Confidence")
+ax.set_ylabel("Count")
+ax.set_title("Confidence Score Distribution", fontweight="bold")
+ax.legend(fontsize=9)
+ax.spines[["top", "right"]].set_visible(False)
+plt.tight_layout()
+plt.show()
+```
+
+## 7 --- Language breakdown (horizontal bar)
+
+```{python}
+lang_counts = combined["language"].value_counts().sort_values()
+total = lang_counts.sum()
+
+fig, ax = plt.subplots(figsize=(6, 3))
+bars = ax.barh(lang_counts.index, lang_counts.values, color="#7E57C2",
+               edgecolor="white", linewidth=0.5)
+
+for bar, count in zip(bars, lang_counts.values):
+    pct = count / total * 100
+    ax.text(bar.get_width() + 5, bar.get_y() + bar.get_height() / 2,
+            f"{count}  ({pct:.0f}%)", va="center", fontsize=9)
+
+ax.set_xlabel("Count")
+ax.set_title("Language Breakdown", fontweight="bold")
+ax.spines[["top", "right"]].set_visible(False)
+plt.tight_layout()
+plt.show()
+```
+
+## 8 --- Tag frequency (lollipop chart)
+
+Tags are stored as lists per sample.  Exploding and counting gives us a
+frequency profile.
+
+```{python}
+tag_series = combined["tags"].explode()
+tag_counts = tag_series.value_counts().sort_values()
+
+fig, ax = plt.subplots(figsize=(6, 3.5))
+ax.hlines(y=tag_counts.index, xmin=0, xmax=tag_counts.values,
+          color="#26A69A", linewidth=2)
+ax.plot(tag_counts.values, tag_counts.index, "o", color="#00796B", markersize=7)
+
+ax.set_xlabel("Occurrences")
+ax.set_title("Tag Frequency", fontweight="bold")
+ax.spines[["top", "right"]].set_visible(False)
+plt.tight_layout()
+plt.show()
+```
+
+## 9 --- Cross-tabulation: sentiment x language
+
+A styled heatmap reveals how sentiment distributes across languages.
+
+```{python}
+ct = pd.crosstab(combined["sentiment"], combined["language"])
+print(ct.to_string())
+```
+
+```{python}
+fig, ax = plt.subplots(figsize=(6, 3.5))
+im = ax.imshow(ct.values, cmap="YlOrRd", aspect="auto")
+
+ax.set_xticks(range(len(ct.columns)))
+ax.set_xticklabels(ct.columns)
+ax.set_yticks(range(len(ct.index)))
+ax.set_yticklabels(ct.index)
+
+for i in range(len(ct.index)):
+    for j in range(len(ct.columns)):
+        ax.text(j, i, str(ct.values[i, j]), ha="center", va="center",
+                fontweight="bold", fontsize=10,
+                color="white" if ct.values[i, j] > ct.values.max() * 0.6 else "black")
+
+ax.set_title("Sentiment x Language", fontweight="bold")
+fig.colorbar(im, ax=ax, shrink=0.8)
+plt.tight_layout()
+plt.show()
+```
+
+## 10 --- Query-driven profiling
+
+Let's profile just the **low-confidence** samples to see if certain
+sentiments or languages are harder to classify.
+
+```{python}
+low_conf = executor.query(where=lambda df: df["confidence"] < 0.5)
+print(f"Low-confidence samples (<0.5): {len(low_conf)}")
+
+low_keys = {loc.key for loc in low_conf}
+low_df = combined[combined["__key__"].isin(low_keys)]
+
+print("\nSentiment breakdown of low-confidence samples:")
+print(low_df["sentiment"].value_counts().to_string())
+
+print("\nLanguage breakdown of low-confidence samples:")
+print(low_df["language"].value_counts().to_string())
+```
+
+## 11 --- Clean up
+
+```{python}
+import shutil
+
+shutil.rmtree(tmpdir, ignore_errors=True)
+```
+
+## Key takeaways
+
+| Concept | API |
+|---------|-----|
+| Annotate manifest fields | `Annotated[T, ManifestField("categorical")]` |
+| Write with manifests | `write_samples(samples, path, manifest=True)` |
+| Load sidecar manifests | `QueryExecutor.from_directory(path)` |
+| Combine per-sample metadata | `pd.concat([m.samples for m in executor._manifests])` |
+| Profile without tar access | Aggregates + parquet give full statistical profile |
+| Query-driven subsets | `executor.query(where=...)` returns `SampleLocation` list |

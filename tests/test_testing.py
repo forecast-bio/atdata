@@ -202,7 +202,7 @@ class TestMockIndex:
 
     def test_no_path_uses_tempdir(self):
         index = mock_index()
-        assert index is not None
+        assert index.list_datasets() == []
 
 
 # ---------------------------------------------------------------------------
@@ -244,3 +244,4 @@ class TestMakeSamplesAdditionalFields:
         # dict isn't handled explicitly; should get a string fallback
         samples = make_samples(WithWeird, n=1, seed=0)
         assert len(samples) == 1
+        assert samples[0].name == "name_0"

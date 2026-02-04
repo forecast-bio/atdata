@@ -9,17 +9,11 @@ from dataclasses import fields, is_dataclass
 from typing import Type, TypeVar, Optional, get_type_hints, get_origin, get_args
 
 from .client import Atmosphere
-from ._types import (
-    AtUri,
-    SchemaRecord,
-    FieldDef,
-    FieldType,
-    LEXICON_NAMESPACE,
-)
+from ._types import AtUri, LEXICON_NAMESPACE
+from ._lexicon_types import LexSchemaRecord, JsonSchemaFormat
 from .._type_utils import (
     unwrap_optional,
     is_ndarray_type,
-    extract_ndarray_dtype,
 )
 
 # Import for type checking only to avoid circular imports
@@ -86,27 +80,32 @@ class SchemaPublisher:
             ValueError: If sample_type is not a dataclass or client is not authenticated.
             TypeError: If a field type is not supported.
         """
+        from atdata._logging import log_operation
+
         if not is_dataclass(sample_type):
             raise ValueError(
                 f"{sample_type.__name__} must be a dataclass (use @packable)"
             )
 
-        # Build the schema record
-        schema_record = self._build_schema_record(
-            sample_type,
-            name=name,
-            version=version,
-            description=description,
-            metadata=metadata,
-        )
+        with log_operation(
+            "SchemaPublisher.publish", schema=sample_type.__name__, version=version
+        ):
+            # Build the schema record
+            schema_record = self._build_schema_record(
+                sample_type,
+                name=name,
+                version=version,
+                description=description,
+                metadata=metadata,
+            )
 
-        # Publish to ATProto
-        return self.client.create_record(
-            collection=f"{LEXICON_NAMESPACE}.schema",
-            record=schema_record.to_record(),
-            rkey=rkey,
-            validate=False,  # PDS doesn't know our lexicon
-        )
+            # Publish to ATProto
+            return self.client.create_record(
+                collection=f"{LEXICON_NAMESPACE}.schema",
+                record=schema_record.to_record(),
+                rkey=rkey,
+                validate=False,  # PDS doesn't know our lexicon
+            )
 
     def _build_schema_record(
         self,
@@ -116,57 +115,74 @@ class SchemaPublisher:
         version: str,
         description: Optional[str],
         metadata: Optional[dict],
-    ) -> SchemaRecord:
-        """Build a SchemaRecord from a PackableSample class."""
-        field_defs = []
+    ) -> LexSchemaRecord:
+        """Build a LexSchemaRecord from a PackableSample class."""
         type_hints = get_type_hints(sample_type)
+        properties: dict[str, dict] = {}
+        required_fields: list[str] = []
+        has_ndarray = False
 
         for f in fields(sample_type):
             field_type = type_hints.get(f.name, f.type)
-            field_def = self._field_to_def(f.name, field_type)
-            field_defs.append(field_def)
+            field_type, is_optional = unwrap_optional(field_type)
+            prop = self._python_type_to_json_schema(field_type)
+            properties[f.name] = prop
+            if not is_optional:
+                required_fields.append(f.name)
+            if is_ndarray_type(field_type):
+                has_ndarray = True
 
-        return SchemaRecord(
+        schema_body = {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "properties": properties,
+        }
+        if required_fields:
+            schema_body["required"] = required_fields
+
+        array_format_versions = None
+        if has_ndarray:
+            array_format_versions = {"ndarrayBytes": "1.0.0"}
+
+        return LexSchemaRecord(
             name=name or sample_type.__name__,
             version=version,
+            schema_type="jsonSchema",
+            schema=JsonSchemaFormat(
+                schema_body=schema_body,
+                array_format_versions=array_format_versions,
+            ),
             description=description,
-            fields=field_defs,
             metadata=metadata,
         )
 
-    def _field_to_def(self, name: str, python_type) -> FieldDef:
-        """Convert a Python field to a FieldDef."""
-        python_type, is_optional = unwrap_optional(python_type)
-        field_type = self._python_type_to_field_type(python_type)
-        return FieldDef(name=name, field_type=field_type, optional=is_optional)
-
-    def _python_type_to_field_type(self, python_type) -> FieldType:
-        """Map a Python type to a FieldType."""
+    def _python_type_to_json_schema(self, python_type) -> dict:
+        """Map a Python type to a JSON Schema property definition."""
         if python_type is str:
-            return FieldType(kind="primitive", primitive="str")
+            return {"type": "string"}
         if python_type is int:
-            return FieldType(kind="primitive", primitive="int")
+            return {"type": "integer"}
         if python_type is float:
-            return FieldType(kind="primitive", primitive="float")
+            return {"type": "number"}
         if python_type is bool:
-            return FieldType(kind="primitive", primitive="bool")
+            return {"type": "boolean"}
         if python_type is bytes:
-            return FieldType(kind="primitive", primitive="bytes")
+            return {"type": "string", "format": "byte", "contentEncoding": "base64"}
 
         if is_ndarray_type(python_type):
-            return FieldType(
-                kind="ndarray", dtype=extract_ndarray_dtype(python_type), shape=None
-            )
+            return {
+                "$ref": "https://foundation.ac/schemas/atdata-ndarray-bytes/1.0.0#/$defs/ndarray"
+            }
 
         origin = get_origin(python_type)
         if origin is list:
             args = get_args(python_type)
             items = (
-                self._python_type_to_field_type(args[0])
+                self._python_type_to_json_schema(args[0])
                 if args
-                else FieldType(kind="primitive", primitive="str")
+                else {"type": "string"}
             )
-            return FieldType(kind="array", items=items)
+            return {"type": "array", "items": items}
 
         if is_dataclass(python_type):
             raise TypeError(
@@ -223,6 +239,18 @@ class SchemaLoader:
             )
 
         return record
+
+    def get_typed(self, uri: str | AtUri) -> LexSchemaRecord:
+        """Fetch a schema record and return as a typed object.
+
+        Args:
+            uri: The AT URI of the schema record.
+
+        Returns:
+            LexSchemaRecord instance.
+        """
+        record = self.get(uri)
+        return LexSchemaRecord.from_record(record)
 
     def list_all(
         self,

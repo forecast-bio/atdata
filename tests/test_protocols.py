@@ -72,27 +72,16 @@ class TestAbstractIndexProtocol:
     """Tests for AbstractIndex protocol compliance."""
 
     def test_local_index_has_required_methods(self, tmp_path):
-        """Index should have all AbstractIndex methods."""
-        # Can't use isinstance with non-runtime_checkable Protocol
-        # So we verify methods exist
+        """Index should have all AbstractIndex methods and they work on empty index."""
         index = Index(provider=SqliteProvider(path=tmp_path / "test.db"))
 
-        assert hasattr(index, "insert_dataset")
-        assert hasattr(index, "get_dataset")
-        assert hasattr(index, "list_datasets")
-        assert hasattr(index, "publish_schema")
-        assert hasattr(index, "get_schema")
-        assert hasattr(index, "list_schemas")
-        assert hasattr(index, "decode_schema")
+        # Exercise read methods on empty index — verifies methods exist and work
+        assert index.list_datasets() == []
+        assert index.list_schemas() == []
 
-        # Verify methods are callable
-        assert callable(index.insert_dataset)
-        assert callable(index.get_dataset)
-        assert callable(index.list_datasets)
-        assert callable(index.publish_schema)
-        assert callable(index.get_schema)
-        assert callable(index.list_schemas)
-        assert callable(index.decode_schema)
+        # get_dataset raises KeyError for missing entries
+        with pytest.raises(KeyError):
+            index.get_dataset("nonexistent")
 
     @pytest.mark.filterwarnings("ignore::DeprecationWarning")
     def test_atmosphere_index_has_required_methods(self):
@@ -101,21 +90,19 @@ class TestAbstractIndexProtocol:
         mock_client.did = "did:plc:test"
         index = AtmosphereIndex(mock_client)
 
-        assert hasattr(index, "insert_dataset")
-        assert hasattr(index, "get_dataset")
-        assert hasattr(index, "list_datasets")
-        assert hasattr(index, "publish_schema")
-        assert hasattr(index, "get_schema")
-        assert hasattr(index, "list_schemas")
-        assert hasattr(index, "decode_schema")
-
-        assert callable(index.insert_dataset)
-        assert callable(index.get_dataset)
-        assert callable(index.list_datasets)
-        assert callable(index.publish_schema)
-        assert callable(index.get_schema)
-        assert callable(index.list_schemas)
-        assert callable(index.decode_schema)
+        # Verify all required methods exist and are callable
+        for method_name in (
+            "insert_dataset",
+            "get_dataset",
+            "list_datasets",
+            "publish_schema",
+            "get_schema",
+            "list_schemas",
+            "decode_schema",
+        ):
+            assert callable(getattr(index, method_name)), (
+                f"Missing method: {method_name}"
+            )
 
 
 class TestAbstractDataStoreProtocol:
@@ -123,7 +110,6 @@ class TestAbstractDataStoreProtocol:
 
     def test_s3_datastore_has_required_methods(self):
         """S3DataStore should have all AbstractDataStore methods."""
-        # Create with mock credentials
         mock_creds = {
             "AWS_ENDPOINT": "http://localhost:9000",
             "AWS_ACCESS_KEY_ID": "test",
@@ -132,13 +118,10 @@ class TestAbstractDataStoreProtocol:
 
         store = S3DataStore(mock_creds, bucket="test-bucket")
 
-        assert hasattr(store, "write_shards")
-        assert hasattr(store, "read_url")
-        assert hasattr(store, "supports_streaming")
-
-        assert callable(store.write_shards)
-        assert callable(store.read_url)
-        assert callable(store.supports_streaming)
+        for method_name in ("write_shards", "read_url", "supports_streaming"):
+            assert callable(getattr(store, method_name)), (
+                f"Missing method: {method_name}"
+            )
 
     def test_s3_datastore_supports_streaming(self):
         """S3DataStore should report streaming support."""
@@ -233,19 +216,16 @@ class TestProtocolInteroperability:
             },
         )
 
-        # Both should return str for name
-        assert isinstance(local_entry.name, str)
-        assert isinstance(atmo_entry.name, str)
+        # Both return matching values for same input
+        assert local_entry.name == "test"
+        assert atmo_entry.name == "test"
 
-        # Both should return str for schema_ref
-        assert isinstance(local_entry.schema_ref, str)
-        assert isinstance(atmo_entry.schema_ref, str)
+        assert local_entry.schema_ref == "local://schemas/test@1.0.0"
+        assert atmo_entry.schema_ref == "at://schema"
 
-        # Both should return list[str] for data_urls
-        assert isinstance(local_entry.data_urls, list)
-        assert isinstance(atmo_entry.data_urls, list)
-        assert all(isinstance(u, str) for u in local_entry.data_urls)
-        assert all(isinstance(u, str) for u in atmo_entry.data_urls)
+        # Both return list[str] data_urls with correct content
+        assert local_entry.data_urls == ["url1", "url2"]
+        assert atmo_entry.data_urls == ["url1", "url2"]
 
 
 class TestPolymorphicBehavior:

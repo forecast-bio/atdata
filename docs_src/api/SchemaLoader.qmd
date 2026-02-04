@@ -25,6 +25,7 @@ schemas from a repository.
 | Name | Description |
 | --- | --- |
 | [get](#atdata.atmosphere.SchemaLoader.get) | Fetch a schema record by AT URI. |
+| [get_typed](#atdata.atmosphere.SchemaLoader.get_typed) | Fetch a schema record and return as a typed object. |
 | [list_all](#atdata.atmosphere.SchemaLoader.list_all) | List schema records from a repository. |
 
 ### get { #atdata.atmosphere.SchemaLoader.get }
@@ -53,6 +54,26 @@ Fetch a schema record by AT URI.
 |--------|-----------------------------------------------------------------------------------------------------------------|---------------------------------------|
 |        | [ValueError](`ValueError`)                                                                                      | If the record is not a schema record. |
 |        | [atproto](`atproto`).[exceptions](`atproto.exceptions`).[AtProtocolError](`atproto.exceptions.AtProtocolError`) | If record not found.                  |
+
+### get_typed { #atdata.atmosphere.SchemaLoader.get_typed }
+
+```python
+atmosphere.SchemaLoader.get_typed(uri)
+```
+
+Fetch a schema record and return as a typed object.
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                                      | Description                      | Default    |
+|--------|-----------------------------------------------------------|----------------------------------|------------|
+| uri    | [str](`str`) \| [AtUri](`atdata.atmosphere._types.AtUri`) | The AT URI of the schema record. | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                                                                  | Description               |
+|--------|-----------------------------------------------------------------------|---------------------------|
+|        | [LexSchemaRecord](`atdata.atmosphere._lexicon_types.LexSchemaRecord`) | LexSchemaRecord instance. |
 
 ### list_all { #atdata.atmosphere.SchemaLoader.list_all }
 

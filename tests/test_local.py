@@ -405,9 +405,9 @@ def test_index_add_entry(clean_redis):
     assert entry.data_urls == ["s3://bucket/dataset.tar"]
     assert "SimpleTestSample" in entry.schema_ref
 
-    # Verify it was persisted to Redis
+    # Verify it was persisted to Redis with expected fields
     stored_data = clean_redis.hgetall(f"LocalDatasetEntry:{entry.cid}")
-    assert len(stored_data) > 0
+    assert b"name" in stored_data
 
 
 def test_index_add_entry_with_schema_ref(clean_redis):
@@ -467,8 +467,7 @@ def test_index_all_entries_empty(clean_redis):
     index = atlocal.Index(redis=clean_redis)
 
     entries = index.all_entries
-    assert isinstance(entries, list)
-    assert len(entries) == 0
+    assert entries == []
 
 
 def test_index_all_entries_multiple(clean_redis):
@@ -482,8 +481,9 @@ def test_index_all_entries_multiple(clean_redis):
     index.add_entry(ds2, name="dataset2")
 
     entries = index.all_entries
-    assert isinstance(entries, list)
     assert len(entries) == 2
+    names = {e.name for e in entries}
+    assert names == {"dataset1", "dataset2"}
 
 
 def test_index_entries_filtering(clean_redis):
@@ -716,7 +716,8 @@ def test_repo_insert_single_shard(mock_s3, clean_redis, sample_dataset):
     assert entry.cid is not None
     assert entry.cid.startswith("bafy")
     assert entry.name == "single-shard-dataset"
-    assert len(entry.data_urls) > 0
+    assert len(entry.data_urls) == 1
+    assert entry.data_urls[0].endswith(".tar")
     assert "SimpleTestSample" in entry.schema_ref
     assert len(repo.index.all_entries) == 1
     assert ".tar" in new_ds.url
@@ -738,7 +739,9 @@ def test_repo_insert_multiple_shards(mock_s3, clean_redis, tmp_path):
     entry, new_ds = repo.insert(ds, name="multi-shard-dataset", maxcount=10)
 
     assert entry.cid is not None
-    assert len(entry.data_urls) > 0
+    assert len(entry.data_urls) == 1
+    assert "{" in entry.data_urls[0]  # brace pattern for multiple shards
+    assert entry.data_urls[0].endswith(".tar")
     assert "{" in new_ds.url and "}" in new_ds.url
 
 
@@ -797,7 +800,8 @@ def test_repo_insert_cache_local_false(mock_s3, clean_redis, sample_dataset):
     )
 
     assert entry.cid is not None
-    assert len(entry.data_urls) > 0
+    assert len(entry.data_urls) >= 1
+    assert all(url.endswith(".tar") for url in entry.data_urls)
 
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
@@ -816,7 +820,8 @@ def test_repo_insert_cache_local_true(mock_s3, clean_redis, sample_dataset):
     )
 
     assert entry.cid is not None
-    assert len(entry.data_urls) > 0
+    assert len(entry.data_urls) >= 1
+    assert all(url.endswith(".tar") for url in entry.data_urls)
 
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")

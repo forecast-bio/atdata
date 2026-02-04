@@ -320,8 +320,11 @@ class TestExternalStorageUrls:
         call_args = mock_atproto_client.com.atproto.repo.create_record.call_args
         record = call_args.kwargs["data"]["record"]
 
-        assert record["storage"]["$type"] == f"{LEXICON_NAMESPACE}.storageExternal"
-        assert len(record["storage"]["urls"]) == 2
+        assert record["storage"]["$type"] == f"{LEXICON_NAMESPACE}.storageHttp"
+        assert len(record["storage"]["shards"]) == 2
+        for shard in record["storage"]["shards"]:
+            assert "url" in shard
+            assert "checksum" in shard
 
     def test_entry_extracts_external_urls(self):
         """Entry should extract URLs from external storage."""
@@ -365,9 +368,12 @@ class TestSchemaPublishing:
         assert record["name"] == "AtmoSample"
         assert record["version"] == "1.0.0"
 
-        field_names = {f["name"] for f in record["fields"]}
-        assert "name" in field_names
-        assert "value" in field_names
+        # Schema now uses JSON Schema format
+        assert record["schemaType"] == "jsonSchema"
+        schema = record["schema"]
+        assert "properties" in schema
+        assert "name" in schema["properties"]
+        assert "value" in schema["properties"]
 
     def test_publish_ndarray_schema(self, authenticated_client, mock_atproto_client):
         """Schema with NDArray field should publish correctly."""
@@ -381,9 +387,12 @@ class TestSchemaPublishing:
         call_args = mock_atproto_client.com.atproto.repo.create_record.call_args
         record = call_args.kwargs["data"]["record"]
 
-        # Find the data field
-        data_field = next(f for f in record["fields"] if f["name"] == "data")
-        assert "ndarray" in data_field["fieldType"]["$type"]
+        # Schema now uses JSON Schema format with $ref for NDArray
+        schema = record["schema"]
+        assert "data" in schema["properties"]
+        data_prop = schema["properties"]["data"]
+        assert "$ref" in data_prop
+        assert "ndarray" in data_prop["$ref"]
 
 
 class TestErrorHandling:
@@ -497,7 +506,7 @@ class TestPDSBlobStore:
         )
 
         store = PDSBlobStore(client=authenticated_client)
-        urls = store.write_shards(ds, prefix="test/v1", maxcount=100)
+        urls = store.write_shards(ds, prefix="test/v1")
 
         # Should have uploaded one shard
         assert len(urls) == 1
@@ -509,6 +518,15 @@ class TestPDSBlobStore:
         assert call_args.kwargs["mime_type"] == "application/x-tar"
         # First arg should be bytes (tar data)
         assert isinstance(call_args.args[0], bytes)
+
+        # Verify blob refs are carried on the ShardUploadResult
+        assert hasattr(urls, "blob_refs")
+        assert len(urls.blob_refs) == 1
+        blob_ref = urls.blob_refs[0]
+        assert blob_ref["$type"] == "blob"
+        assert blob_ref["ref"]["$link"] == "bafyrei123abc"
+        assert blob_ref["mimeType"] == "application/x-tar"
+        assert blob_ref["size"] == 1024
 
     def test_read_url_transforms_at_uri(
         self, authenticated_client, mock_atproto_client

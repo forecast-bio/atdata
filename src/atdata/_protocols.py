@@ -151,12 +151,14 @@ class AbstractIndex(Protocol):
 
     # Dataset operations
 
-    def write(
+    def write_samples(
         self,
         samples: Iterable,
         *,
         name: str,
         schema_ref: Optional[str] = None,
+        data_store: Optional["AbstractDataStore"] = None,
+        force: bool = False,
         **kwargs,
     ) -> IndexEntry:
         """Write samples and create an index entry in one step.
@@ -164,10 +166,15 @@ class AbstractIndex(Protocol):
         Serializes samples to WebDataset tar files, stores them via the
         appropriate backend, and creates an index entry.
 
+        For atmosphere targets, data is uploaded as PDS blobs by default
+        with size guards (50 MB per shard, 1 GB total).
+
         Args:
             samples: Iterable of Packable samples. Must be non-empty.
             name: Dataset name, optionally prefixed with target backend.
             schema_ref: Optional schema reference.
+            data_store: Explicit data store for shard storage.
+            force: Bypass PDS size limits.
             **kwargs: Backend-specific options (maxcount, description, etc.).
 
         Returns:
@@ -181,14 +188,24 @@ class AbstractIndex(Protocol):
         *,
         name: str,
         schema_ref: Optional[str] = None,
+        data_store: Optional["AbstractDataStore"] = None,
+        force: bool = False,
+        copy: bool = False,
         **kwargs,
     ) -> IndexEntry:
         """Register an existing dataset in the index.
+
+        For atmosphere targets, local sources are uploaded via
+        *data_store* (defaults to PDS blobs). Credentialed sources
+        require ``copy=True``.
 
         Args:
             ds: The Dataset to register.
             name: Human-readable name.
             schema_ref: Explicit schema ref; auto-published if ``None``.
+            data_store: Explicit data store for shard storage.
+            force: Bypass PDS size limits.
+            copy: Copy data to destination store even for remote sources.
             **kwargs: Backend-specific options.
         """
         ...

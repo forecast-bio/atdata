@@ -53,7 +53,7 @@ class TestProviderFactory:
         with patch("atdata.providers._postgres.PostgresProvider") as mock_pg:
             mock_pg.return_value = MagicMock()
             create_provider("postgresql", dsn="postgresql://localhost/db")
-            mock_pg.assert_called_once()
+            mock_pg.assert_called_once_with(dsn="postgresql://localhost/db")
 
     def test_unknown_provider_raises(self):
         from atdata.providers._factory import create_provider
@@ -300,7 +300,5 @@ class TestIndexEdgeCases:
 
         provider = SqliteProvider(path=tmp_path / "test.db")
         mock_client = MagicMock(spec=Atmosphere)
-        with patch("atdata.repository.isinstance", return_value=True):
-            # _AtmosphereBackend checks isinstance; patch it
-            index = atlocal.Index(provider=provider, atmosphere=mock_client)
+        index = atlocal.Index(provider=provider, atmosphere=mock_client)
         assert index.atmosphere is mock_client

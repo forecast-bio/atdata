@@ -199,6 +199,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="dropdown-text">Atmosphere</span></a>
   </li>  
         <li>
+    <a class="dropdown-item" href="../reference/lexicons.html">
+ <span class="dropdown-text">Lexicon Reference</span></a>
+  </li>  
+        <li>
     <a class="dropdown-item" href="../reference/promotion.html">
  <span class="dropdown-text">Promotion</span></a>
   </li>  
@@ -424,6 +428,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../reference/lexicons.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Lexicon Reference</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../reference/promotion.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Promotion Workflow</span></a>
   </div>
@@ -513,7 +523,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>This example creates an index, writes two datasets into it, lists and retrieves them, and shows how <code>load_dataset</code> resolves from the index.</p>
 <section id="define-sample-types" class="level2">
 <h2 class="anchored" data-anchor-id="define-sample-types">1 — Define sample types</h2>
-<div id="ff9a3021" class="cell" data-execution_count="1">
+<div id="88fb0a84" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy.typing <span class="im">import</span> NDArray</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> atdata</span>
@@ -540,7 +550,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="create-an-index-with-local-disk-storage" class="level2">
 <h2 class="anchored" data-anchor-id="create-an-index-with-local-disk-storage">2 — Create an Index with local disk storage</h2>
 <p>By default <code>Index()</code> uses an in-memory SQLite database. We pass a custom <code>path</code> to persist across the example, and a <code>LocalDiskStore</code> rooted in a temp directory.</p>
-<div id="b51f6b87" class="cell" data-execution_count="2">
+<div id="5f583eac" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tempfile</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -554,15 +564,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Index DB   : </span><span class="sc">{</span>tmpdir <span class="op">/</span> <span class="st">'index.db'</span><span class="sc">}</span><span class="ss">"</span>)</span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Data root  : </span><span class="sc">{</span>tmpdir <span class="op">/</span> <span class="st">'data'</span><span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Index DB   : /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_index_vf3qkcc5/index.db
-Data root  : /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_index_vf3qkcc5/data</code></pre>
+<pre><code>Index DB   : /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_index_fvd0vvxj/index.db
+Data root  : /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_index_fvd0vvxj/data</code></pre>
 </div>
 </div>
 </section>
 <section id="write-datasets-through-the-index" class="level2">
 <h2 class="anchored" data-anchor-id="write-datasets-through-the-index">3 — Write datasets through the index</h2>
 <p><code>index.write()</code> serializes samples to sharded tars via the data store and creates a tracked entry with a content-addressed CID.</p>
-<div id="e3936a94" class="cell" data-execution_count="3">
+<div id="f661b262" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">99</span>)</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Dataset 1: text documents ---</span></span>
@@ -586,14 +596,14 @@ Data root  : /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_index_vf3qk
 <span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Text dataset CID  : </span><span class="sc">{</span>text_entry<span class="sc">.</span>cid[:<span class="dv">16</span>]<span class="sc">}</span><span class="ss">..."</span>)</span>
 <span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Text dataset shards: </span><span class="sc">{</span><span class="bu">len</span>(text_entry.data_urls)<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/tmpr5rd7ujy/data-000000.tar 0 0.0 GB 0
-# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/tmpr5rd7ujy/data-000001.tar 250 0.0 GB 250
-# writing /private/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_index_vf3qkcc5/data/docs-v1/data--9c0049e5--000000.tar 0 0.0 GB 0
-Text dataset CID  : bafyreig5yrowbl5...
+<pre><code># writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/tmp0rm6ej8c/data-000000.tar 0 0.0 GB 0
+# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/tmp0rm6ej8c/data-000001.tar 250 0.0 GB 250
+# writing /private/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_index_fvd0vvxj/data/docs-v1/data--078fef77--000000.tar 0 0.0 GB 0
+Text dataset CID  : bafyreiexgbzh45k...
 Text dataset shards: 1</code></pre>
 </div>
 </div>
-<div id="1a6c6818" class="cell" data-execution_count="4">
+<div id="50b2dbea" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Dataset 2: embeddings ---</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>embedding_samples <span class="op">=</span> [</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    EmbeddingSample(</span>
@@ -615,17 +625,17 @@ Text dataset shards: 1</code></pre>
 <span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Embedding CID     : </span><span class="sc">{</span>emb_entry<span class="sc">.</span>cid[:<span class="dv">16</span>]<span class="sc">}</span><span class="ss">..."</span>)</span>
 <span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Embedding shards  : </span><span class="sc">{</span><span class="bu">len</span>(emb_entry.data_urls)<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/tmpdniyr7ep/data-000000.tar 0 0.0 GB 0
-# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/tmpdniyr7ep/data-000001.tar 150 0.0 GB 150
-# writing /private/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_index_vf3qkcc5/data/embeddings-v1/data--b33656bc--000000.tar 0 0.0 GB 0
-Embedding CID     : bafyreiey4uaprqp...
+<pre><code># writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/tmp9mw37qd0/data-000000.tar 0 0.0 GB 0
+# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/tmp9mw37qd0/data-000001.tar 150 0.0 GB 150
+# writing /private/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_index_fvd0vvxj/data/embeddings-v1/data--3bd5dbe5--000000.tar 0 0.0 GB 0
+Embedding CID     : bafyreid45dgeyhf...
 Embedding shards  : 1</code></pre>
 </div>
 </div>
 </section>
 <section id="list-and-discover-datasets" class="level2">
 <h2 class="anchored" data-anchor-id="list-and-discover-datasets">4 — List and discover datasets</h2>
-<div id="46ab15c3" class="cell" data-execution_count="5">
+<div id="11df9ad1" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Datasets in index:"</span>)</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> entry <span class="kw">in</span> index.list_datasets():</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  </span><span class="sc">{</span>entry<span class="sc">.</span>name<span class="sc">:20s}</span><span class="ss">  shards=</span><span class="sc">{</span><span class="bu">len</span>(entry.data_urls)<span class="sc">}</span><span class="ss">  cid=</span><span class="sc">{</span>entry<span class="sc">.</span>cid[:<span class="dv">12</span>]<span class="sc">}</span><span class="ss">..."</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -648,14 +658,18 @@ Embedding shards  : 1</code></pre>
   docs-v1               shards=1  cid=bafyreia6rt3...
   embeddings-v1         shards=1  cid=bafyreifwj4u...
   docs-v1               shards=1  cid=bafyreig5yro...
-  embeddings-v1         shards=1  cid=bafyreiey4ua...</code></pre>
+  embeddings-v1         shards=1  cid=bafyreiey4ua...
+  docs-v1               shards=1  cid=bafyreihvtxe...
+  embeddings-v1         shards=1  cid=bafyreic2r24...
+  docs-v1               shards=1  cid=bafyreiexgbz...
+  embeddings-v1         shards=1  cid=bafyreid45dg...</code></pre>
 </div>
 </div>
 </section>
 <section id="load-a-dataset-from-the-index" class="level2">
 <h2 class="anchored" data-anchor-id="load-a-dataset-from-the-index">5 — Load a dataset from the index</h2>
 <p><code>load_dataset</code> can resolve dataset names through the default index. Because the index stores the schema for each dataset, you don’t need to pass the sample type explicitly—it’s reconstructed automatically.</p>
-<div id="6c86a17b" class="cell" data-execution_count="6">
+<div id="138b5695" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>atdata.set_default_index(index)</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co"># No sample_type argument needed -- schema is resolved from the index</span></span>
@@ -671,7 +685,7 @@ Languages : ['es', 'en', 'en', 'es', 'en']...
 Counts    : [6, 6, 6, 6, 6]...</code></pre>
 </div>
 </div>
-<div id="44563fac" class="cell" data-execution_count="7">
+<div id="889b5dba" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Same for embeddings -- type is auto-resolved</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>emb_ds <span class="op">=</span> atdata.load_dataset(<span class="st">"@local/embeddings-v1"</span>, split<span class="op">=</span><span class="st">"train"</span>)</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch <span class="kw">in</span> emb_ds.ordered(batch_size<span class="op">=</span><span class="dv">8</span>):</span>
@@ -687,7 +701,7 @@ Labels       : ['class_0', 'class_1', 'class_2', 'class_3', 'class_4', 'class_5'
 <section id="schema-tracking" class="level2">
 <h2 class="anchored" data-anchor-id="schema-tracking">6 — Schema tracking</h2>
 <p>The index records the schema for each dataset, enabling type reconstruction at load time. Schemas are persisted automatically by <code>index.write()</code>.</p>
-<div id="ce1063e6" class="cell" data-execution_count="8">
+<div id="15ed6847" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> schema <span class="kw">in</span> index.schemas:</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  </span><span class="sc">{</span>schema<span class="sc">.</span>name<span class="sc">:20s}</span><span class="ss">  fields=</span><span class="sc">{</span>[f.name <span class="cf">for</span> f <span class="kw">in</span> schema.fields]<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -699,7 +713,7 @@ Labels       : ['class_0', 'class_1', 'class_2', 'class_3', 'class_4', 'class_5'
 <section id="inspect-the-repository" class="level2">
 <h2 class="anchored" data-anchor-id="inspect-the-repository">7 — Inspect the repository</h2>
 <p>The index stores all backends in a uniform <code>repos</code> dict. The <code>"local"</code> repository is always present.</p>
-<div id="97bf18cc" class="cell" data-execution_count="9">
+<div id="90e7e868" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> name, repo <span class="kw">in</span> index.repos.items():</span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    has_store <span class="op">=</span> <span class="st">"yes"</span> <span class="cf">if</span> repo.data_store <span class="cf">else</span> <span class="st">"no"</span></span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  </span><span class="sc">{</span>name<span class="sc">:10s}</span><span class="ss">  provider=</span><span class="sc">{</span><span class="bu">type</span>(repo.provider)<span class="sc">.</span><span class="va">__name__</span><span class="sc">}</span><span class="ss">  data_store=</span><span class="sc">{</span>has_store<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -710,7 +724,7 @@ Labels       : ['class_0', 'class_1', 'class_2', 'class_3', 'class_4', 'class_5'
 </section>
 <section id="clean-up" class="level2">
 <h2 class="anchored" data-anchor-id="clean-up">8 — Clean up</h2>
-<div id="1a9edf5f" class="cell" data-execution_count="10">
+<div id="fddebb1b" class="cell" data-execution_count="10">
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shutil</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>atdata.set_default_index(<span class="va">None</span>)</span>

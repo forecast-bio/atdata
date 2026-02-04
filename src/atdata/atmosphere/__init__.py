@@ -34,11 +34,23 @@ from .schema import SchemaPublisher, SchemaLoader
 from .records import DatasetPublisher, DatasetLoader
 from .lens import LensPublisher, LensLoader
 from .store import PDSBlobStore
-from ._types import (
-    AtUri,
-    SchemaRecord,
-    DatasetRecord,
-    LensRecord,
+from ._types import AtUri, LEXICON_NAMESPACE
+from ._lexicon_types import (
+    LexSchemaRecord,
+    LexDatasetRecord,
+    LexLensRecord,
+    LexCodeReference,
+    JsonSchemaFormat,
+    StorageHttp,
+    StorageS3,
+    StorageBlobs,
+    ShardChecksum,
+    HttpShardEntry,
+    S3ShardEntry,
+    BlobEntry,
+    DatasetSize,
+    StorageUnion,
+    storage_from_record,
 )
 
 if TYPE_CHECKING:
@@ -70,11 +82,23 @@ class AtmosphereIndexEntry:
 
     @property
     def data_urls(self) -> list[str]:
-        """WebDataset URLs from external storage."""
+        """WebDataset URLs from storage.
+
+        Handles storageHttp (shard URLs), storageS3 (s3:// URLs),
+        storageExternal (legacy), and storageBlobs (PDS blob URLs).
+        """
         storage = self._record.get("storage", {})
         storage_type = storage.get("$type", "")
+        if "storageHttp" in storage_type:
+            return [s["url"] for s in storage.get("shards", [])]
+        if "storageS3" in storage_type:
+            bucket = storage.get("bucket", "")
+            return [f"s3://{bucket}/{s['key']}" for s in storage.get("shards", [])]
         if "storageExternal" in storage_type:
             return storage.get("urls", [])
+        if "storageBlobs" in storage_type:
+            # Blob URLs must be resolved via PDS; return empty for now
+            return []
         return []
 
     @property
@@ -332,9 +356,23 @@ __all__ = [
     # Lens operations
     "LensPublisher",
     "LensLoader",
-    # Types
+    # Core types
     "AtUri",
-    "SchemaRecord",
-    "DatasetRecord",
-    "LensRecord",
+    "LEXICON_NAMESPACE",
+    # Lexicon-mirror types (Tier 1)
+    "LexSchemaRecord",
+    "LexDatasetRecord",
+    "LexLensRecord",
+    "LexCodeReference",
+    "JsonSchemaFormat",
+    "StorageHttp",
+    "StorageS3",
+    "StorageBlobs",
+    "StorageUnion",
+    "storage_from_record",
+    "ShardChecksum",
+    "HttpShardEntry",
+    "S3ShardEntry",
+    "BlobEntry",
+    "DatasetSize",
 ]

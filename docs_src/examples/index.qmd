@@ -14,6 +14,9 @@ paths end-to-end.
 | [Manifest-Powered Queries](manifest-queries.qmd) | Build per-shard manifests and query samples by metadata |
 | [Index-Managed Datasets](index-workflow.qmd) | Use `Index` with `LocalDiskStore` for managed dataset storage |
 | [Multi-Split Datasets](multi-split.qmd) | Work with train/test splits via `DatasetDict` and `load_dataset` |
+| [Dataset Profiler](dataset-profiler.qmd) | Profile datasets visually using manifest aggregates and matplotlib |
+| [Lens Graph Explorer](lens-graph.qmd) | Visualize lens transformation networks with Mermaid diagrams |
+| [Query Cookbook](query-cookbook.qmd) | Practical query recipes with the typed proxy DSL and scatter plots |
 
 ::: {.callout-tip}
 ## New to atdata?

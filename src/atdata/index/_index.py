@@ -27,15 +27,46 @@ from typing import (
     Generator,
     TYPE_CHECKING,
 )
-from redis import Redis
 import json
 
 if TYPE_CHECKING:
+    from redis import Redis
+
     from atdata.providers._base import IndexProvider
     from atdata.repository import Repository, _AtmosphereBackend
     from atdata._protocols import IndexEntry
 
 T = TypeVar("T", bound=Packable)
+
+
+def _is_local_path(url: str) -> bool:
+    """Check if a URL points to the local filesystem."""
+    return (
+        url.startswith("/")
+        or url.startswith("file://")
+        or (len(url) > 1 and url[1] == ":")
+    )
+
+
+def _is_credentialed_source(ds: Dataset) -> bool:
+    """Check if a Dataset uses a credentialed source (e.g. S3Source with keys)."""
+    from atdata._sources import S3Source
+
+    return isinstance(ds.source, S3Source)
+
+
+def _estimate_dataset_bytes(ds: Dataset) -> int:
+    """Best-effort total size estimate from local shard files.
+
+    Returns 0 when size cannot be determined (e.g. remote URLs).
+    """
+    total = 0
+    for shard_url in ds.list_shards():
+        if _is_local_path(shard_url):
+            p = Path(shard_url.removeprefix("file://"))
+            if p.exists():
+                total += p.stat().st_size
+    return total
 
 
 class Index:
@@ -166,9 +197,10 @@ class Index:
 
             local_provider = RedisProvider(redis)
         elif kwargs:
+            from redis import Redis as _Redis
             from atdata.providers._redis import RedisProvider
 
-            local_provider = RedisProvider(Redis(**kwargs))
+            local_provider = RedisProvider(_Redis(**kwargs))
         else:
             from atdata.providers._sqlite import SqliteProvider
 
@@ -471,6 +503,9 @@ class Index:
     ) -> LocalDatasetEntry:
         """Add a dataset to the local repository index.
 
+        .. deprecated::
+            Use :meth:`insert_dataset` instead.
+
         Args:
             ds: The dataset to add to the index.
             name: Human-readable name for the dataset.
@@ -480,6 +515,13 @@ class Index:
         Returns:
             The created LocalDatasetEntry object.
         """
+        import warnings
+
+        warnings.warn(
+            "Index.add_entry() is deprecated, use Index.insert_dataset()",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self._insert_dataset_to_provider(
             ds,
             name=name,
@@ -551,16 +593,29 @@ class Index:
         This is the internal implementation shared by all local and named
         repository inserts.
         """
+        from atdata._logging import get_logger
+
+        log = get_logger()
         metadata = kwargs.get("metadata")
 
         if store is not None:
             prefix = kwargs.get("prefix", name)
             cache_local = kwargs.get("cache_local", False)
+            log.debug(
+                "_insert_dataset_to_provider: name=%s, store=%s",
+                name,
+                type(store).__name__,
+            )
 
             written_urls = store.write_shards(
                 ds,
                 prefix=prefix,
                 cache_local=cache_local,
+            )
+            log.info(
+                "_insert_dataset_to_provider: %d shard(s) written for %s",
+                len(written_urls),
+                name,
             )
 
             if schema_ref is None:
@@ -576,6 +631,7 @@ class Index:
                 metadata=entry_metadata,
             )
             provider.store_entry(entry)
+            log.debug("_insert_dataset_to_provider: entry stored for %s", name)
             return entry
 
         # No data store - just index the existing URL
@@ -594,6 +650,7 @@ class Index:
             metadata=entry_metadata,
         )
         provider.store_entry(entry)
+        log.debug("_insert_dataset_to_provider: entry stored for %s", name)
         return entry
 
     def insert_dataset(
@@ -602,56 +659,170 @@ class Index:
         *,
         name: str,
         schema_ref: str | None = None,
+        description: str | None = None,
+        tags: list[str] | None = None,
+        license: str | None = None,
+        data_store: AbstractDataStore | None = None,
+        force: bool = False,
+        copy: bool = False,
+        metadata: dict | None = None,
+        _data_urls: list[str] | None = None,
+        _blob_refs: list[dict] | None = None,
         **kwargs,
     ) -> "IndexEntry":
-        """Insert a dataset into the index (AbstractIndex protocol).
+        """Insert a dataset into the index.
 
         The target repository is determined by a prefix in the ``name``
         argument (e.g. ``"lab/mnist"``). If no prefix is given, or the
         prefix is ``"local"``, the built-in local repository is used.
 
-        If the target repository has a data_store, shards are written to
-        storage first, then indexed. Otherwise, the dataset's existing URL
-        is indexed directly.
+        For atmosphere targets:
+
+        - **Local sources** are uploaded via *data_store* (defaults to
+          ``PDSBlobStore``).
+        - **Public remote sources** (http/https) are referenced as
+          external URLs unless *copy* is ``True``.
+        - **Credentialed sources** (e.g. ``S3Source``) raise an error
+          unless *copy* is ``True`` or *data_store* is provided, to
+          prevent leaking private endpoints.
 
         Args:
             ds: The Dataset to register.
             name: Human-readable name for the dataset, optionally prefixed
                 with a repository name (e.g. ``"lab/mnist"``).
             schema_ref: Optional schema reference.
-            **kwargs: Additional options:
-                - metadata: Optional metadata dict
-                - prefix: Storage prefix (default: dataset name)
-                - cache_local: If True, cache writes locally first
+            description: Optional dataset description (atmosphere only).
+            tags: Optional tags for discovery (atmosphere only).
+            license: Optional license identifier (atmosphere only).
+            data_store: Explicit data store for shard storage. When
+                provided, data is always copied through this store.
+            force: If True, bypass PDS size limits (50 MB per shard,
+                1 GB total). Default: ``False``.
+            copy: If True, copy data to the destination store even for
+                remote sources. Required for credentialed sources
+                targeting the atmosphere. Default: ``False``.
+            metadata: Optional metadata dict.
 
         Returns:
             IndexEntry for the inserted dataset.
-        """
-        backend_key, resolved_name, handle_or_did = self._resolve_prefix(name)
 
-        if backend_key == "_atmosphere":
+        Raises:
+            ValueError: If atmosphere limits are exceeded (when
+                *force* is ``False``), or if a credentialed source
+                targets the atmosphere without *copy*.
+        """
+        from atdata.atmosphere.store import PDS_TOTAL_DATASET_LIMIT_BYTES
+
+        backend_key, resolved_name, handle_or_did = self._resolve_prefix(name)
+        is_atmosphere = backend_key == "_atmosphere"
+
+        if is_atmosphere:
             atmo = self._get_atmosphere()
             if atmo is None:
                 raise ValueError(
                     f"Atmosphere backend required for name {name!r} but not available."
                 )
+
+            # Providing an explicit data_store implies copy behaviour
+            needs_copy = copy or data_store is not None
+
+            # Credentialed source guard
+            if _is_credentialed_source(ds) and not needs_copy:
+                raise ValueError(
+                    "Dataset uses a credentialed source. Referencing "
+                    "these URLs in a public atmosphere record would "
+                    "leak private endpoints. Pass copy=True to copy "
+                    "data to the destination store (default: PDS blobs)."
+                )
+
+            # If we already have pre-written URLs (from write_samples),
+            # go straight to publish.
+            if _data_urls is not None:
+                return atmo.insert_dataset(
+                    ds,
+                    name=resolved_name,
+                    schema_ref=schema_ref,
+                    data_urls=_data_urls,
+                    blob_refs=_blob_refs,
+                    description=description,
+                    tags=tags,
+                    license=license,
+                    metadata=metadata,
+                    **kwargs,
+                )
+
+            # Determine whether data must be copied
+            source_is_local = _is_local_path(ds.url)
+
+            if source_is_local or needs_copy:
+                # Resolve effective store
+                if data_store is not None:
+                    effective_store = data_store
+                else:
+                    from atdata.atmosphere.store import PDSBlobStore
+
+                    effective_store = PDSBlobStore(atmo.client)
+
+                # Size guard
+                if not force:
+                    total_bytes = _estimate_dataset_bytes(ds)
+                    if total_bytes > PDS_TOTAL_DATASET_LIMIT_BYTES:
+                        raise ValueError(
+                            f"Total dataset size ({total_bytes} bytes) "
+                            f"exceeds atmosphere limit "
+                            f"({PDS_TOTAL_DATASET_LIMIT_BYTES} bytes). "
+                            f"Pass force=True to bypass."
+                        )
+
+                result = effective_store.write_shards(ds, prefix=resolved_name)
+
+                # ShardUploadResult carries blob_refs; plain list does not
+                blob_refs = getattr(result, "blob_refs", None) or None
+
+                return atmo.insert_dataset(
+                    ds,
+                    name=resolved_name,
+                    schema_ref=schema_ref,
+                    data_urls=list(result),
+                    blob_refs=blob_refs,
+                    description=description,
+                    tags=tags,
+                    license=license,
+                    metadata=metadata,
+                    **kwargs,
+                )
+
+            # Public remote source — reference existing URLs
+            data_urls = ds.list_shards()
             return atmo.insert_dataset(
-                ds, name=resolved_name, schema_ref=schema_ref, **kwargs
+                ds,
+                name=resolved_name,
+                schema_ref=schema_ref,
+                data_urls=data_urls,
+                description=description,
+                tags=tags,
+                license=license,
+                metadata=metadata,
+                **kwargs,
             )
 
+        # --- Local / named repo path ---
         repo = self._repos.get(backend_key)
         if repo is None:
             raise KeyError(f"Unknown repository {backend_key!r} in name {name!r}")
+
+        effective_store = data_store or repo.data_store
         return self._insert_dataset_to_provider(
             ds,
             name=resolved_name,
             schema_ref=schema_ref,
             provider=repo.provider,
-            store=repo.data_store,
+            store=effective_store,
+            metadata=metadata,
             **kwargs,
         )
 
-    def write(
+    def write_samples(
         self,
         samples: Iterable,
         *,
@@ -664,6 +835,8 @@ class Index:
         maxsize: int | None = None,
         metadata: dict | None = None,
         manifest: bool = False,
+        data_store: AbstractDataStore | None = None,
+        force: bool = False,
     ) -> "IndexEntry":
         """Write samples and create an index entry in one step.
 
@@ -677,16 +850,13 @@ class Index:
         - ``"@handle/name"``: writes and publishes to the atmosphere.
         - ``"repo/name"``: writes to a named repository.
 
+        For atmosphere targets, data is uploaded as PDS blobs by default.
+        Shard size is capped at 50 MB and total dataset size at 1 GB
+        unless *force* is ``True``.
+
         When the local backend has no ``data_store`` configured, a
         ``LocalDiskStore`` is created automatically at
         ``~/.atdata/data/`` so that samples have persistent storage.
-
-        .. note::
-
-            This method is synchronous. Samples are written to a temporary
-            location first, then copied to permanent storage by the backend.
-            Avoid passing lazily-evaluated iterators that depend on external
-            state that may change during the call.
 
         Args:
             samples: Iterable of ``Packable`` samples. Must be non-empty.
@@ -696,71 +866,171 @@ class Index:
             tags: Optional tags for discovery (atmosphere only).
             license: Optional license identifier (atmosphere only).
             maxcount: Max samples per shard. Default: 10,000.
-            maxsize: Max bytes per shard. Default: ``None``.
+            maxsize: Max bytes per shard. For atmosphere targets defaults
+                to 50 MB (PDS blob limit). For local targets defaults to
+                ``None`` (unlimited).
             metadata: Optional metadata dict stored with the entry.
             manifest: If True, write per-shard manifest sidecar files
                 alongside each tar. Default: ``False``.
+            data_store: Explicit data store for shard storage. Overrides
+                the repository's default store. For atmosphere targets
+                defaults to ``PDSBlobStore``.
+            force: If True, bypass PDS size limits (50 MB per shard,
+                1 GB total dataset). Default: ``False``.
 
         Returns:
             IndexEntry for the created dataset.
 
         Raises:
-            ValueError: If *samples* is empty.
+            ValueError: If *samples* is empty, or if atmosphere size
+                limits are exceeded (when *force* is ``False``).
 
         Examples:
             >>> index = Index()
             >>> samples = [MySample(key="0", text="hello")]
-            >>> entry = index.write(samples, name="my-dataset")
+            >>> entry = index.write_samples(samples, name="my-dataset")
         """
         import tempfile
 
-        from atdata.dataset import write_samples
+        from atdata.dataset import write_samples as _write_samples
+        from atdata.atmosphere.store import (
+            PDS_BLOB_LIMIT_BYTES,
+            PDS_TOTAL_DATASET_LIMIT_BYTES,
+        )
+        from atdata._logging import log_operation
 
         backend_key, resolved_name, _ = self._resolve_prefix(name)
+        is_atmosphere = backend_key == "_atmosphere"
 
-        # Resolve the target repo's data store; auto-create LocalDiskStore
-        # for repos that have no store so write() always persists data.
-        repo = self._repos.get(backend_key)
-        effective_store = repo.data_store if repo is not None else None
-        needs_auto_store = repo is not None and effective_store is None
+        with log_operation("Index.write_samples", name=name):
+            # --- Atmosphere size guards ---
+            if is_atmosphere and not force:
+                if maxsize is not None and maxsize > PDS_BLOB_LIMIT_BYTES:
+                    raise ValueError(
+                        f"maxsize={maxsize} exceeds PDS blob limit "
+                        f"({PDS_BLOB_LIMIT_BYTES} bytes). "
+                        f"Pass force=True to bypass."
+                    )
 
-        if needs_auto_store and backend_key != "_atmosphere":
-            from atdata.stores._disk import LocalDiskStore
+            # Default maxsize for atmosphere targets
+            effective_maxsize = maxsize
+            if is_atmosphere and effective_maxsize is None:
+                effective_maxsize = PDS_BLOB_LIMIT_BYTES
 
-            effective_store = LocalDiskStore()
+            # Resolve the effective data store
+            if is_atmosphere:
+                atmo = self._get_atmosphere()
+                if atmo is None:
+                    raise ValueError(
+                        f"Atmosphere backend required for name {name!r} but not available."
+                    )
+                if data_store is None:
+                    from atdata.atmosphere.store import PDSBlobStore
 
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            tmp_path = Path(tmp_dir) / "data.tar"
-            ds = write_samples(
-                samples,
-                tmp_path,
-                maxcount=maxcount,
-                maxsize=maxsize,
-                manifest=manifest,
-            )
+                    effective_store: AbstractDataStore | None = PDSBlobStore(
+                        atmo.client
+                    )
+                else:
+                    effective_store = data_store
+            else:
+                repo = self._repos.get(backend_key)
+                effective_store = data_store or (
+                    repo.data_store if repo is not None else None
+                )
+                needs_auto_store = repo is not None and effective_store is None
+                if needs_auto_store:
+                    from atdata.stores._disk import LocalDiskStore
 
-            # When we auto-created a store, write directly through it
-            # rather than via insert_dataset (which would just index
-            # the temp path).
-            if needs_auto_store and repo is not None:
-                return self._insert_dataset_to_provider(
-                    ds,
-                    name=resolved_name,
-                    schema_ref=schema_ref,
-                    provider=repo.provider,
-                    store=effective_store,
-                    metadata=metadata,
+                    effective_store = LocalDiskStore()
+
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                tmp_path = Path(tmp_dir) / "data.tar"
+                ds = _write_samples(
+                    samples,
+                    tmp_path,
+                    maxcount=maxcount,
+                    maxsize=effective_maxsize,
+                    manifest=manifest,
                 )
 
-            return self.insert_dataset(
-                ds,
-                name=name,
-                schema_ref=schema_ref,
-                metadata=metadata,
-                description=description,
-                tags=tags,
-                license=license,
-            )
+                # Atmosphere total-size guard (after writing so we can measure)
+                if is_atmosphere and not force:
+                    total_bytes = _estimate_dataset_bytes(ds)
+                    if total_bytes > PDS_TOTAL_DATASET_LIMIT_BYTES:
+                        raise ValueError(
+                            f"Total dataset size ({total_bytes} bytes) exceeds "
+                            f"atmosphere limit ({PDS_TOTAL_DATASET_LIMIT_BYTES} "
+                            f"bytes). Pass force=True to bypass."
+                        )
+
+                if is_atmosphere:
+                    # Write shards through the store, then publish record
+                    # with the resulting URLs (not the temp paths).
+                    written_urls = effective_store.write_shards(
+                        ds, prefix=resolved_name
+                    )
+
+                    # If write_shards returned blob refs (e.g. ShardUploadResult),
+                    # use storageBlobs so the PDS retains the uploaded blobs.
+                    # Fall back to storageExternal with AT URIs otherwise.
+                    blob_refs = getattr(written_urls, "blob_refs", None) or None
+
+                    return self.insert_dataset(
+                        ds,
+                        name=name,
+                        schema_ref=schema_ref,
+                        metadata=metadata,
+                        description=description,
+                        tags=tags,
+                        license=license,
+                        data_store=data_store,
+                        force=force,
+                        _data_urls=written_urls,
+                        _blob_refs=blob_refs,
+                    )
+
+                # Local / named repo path
+                repo = self._repos.get(backend_key)
+                if repo is not None and effective_store is not None:
+                    return self._insert_dataset_to_provider(
+                        ds,
+                        name=resolved_name,
+                        schema_ref=schema_ref,
+                        provider=repo.provider,
+                        store=effective_store,
+                        metadata=metadata,
+                    )
+
+                return self.insert_dataset(
+                    ds,
+                    name=name,
+                    schema_ref=schema_ref,
+                    metadata=metadata,
+                    description=description,
+                    tags=tags,
+                    license=license,
+                )
+
+    def write(
+        self,
+        samples: Iterable,
+        *,
+        name: str,
+        **kwargs: Any,
+    ) -> "IndexEntry":
+        """Write samples and create an index entry.
+
+        .. deprecated::
+            Use :meth:`write_samples` instead.
+        """
+        import warnings
+
+        warnings.warn(
+            "Index.write() is deprecated, use Index.write_samples()",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.write_samples(samples, name=name, **kwargs)
 
     def get_dataset(self, ref: str) -> "IndexEntry":
         """Get a dataset entry by name or prefixed reference.
@@ -1071,9 +1341,8 @@ class Index:
     ) -> str:
         """Promote a locally-indexed dataset to the atmosphere.
 
-        Looks up the entry by name in the local index, resolves its
-        schema, and publishes both schema and dataset record to ATProto
-        via the index's atmosphere backend.
+        .. deprecated::
+            Use :meth:`insert_dataset` instead.
 
         Args:
             entry_name: Name of the local dataset entry to promote.
@@ -1095,40 +1364,49 @@ class Index:
             >>> index = Index(atmosphere=client)
             >>> uri = index.promote_entry("mnist-train")
         """
+        import warnings
+
+        warnings.warn(
+            "Index.promote_entry() is deprecated, use Index.insert_dataset()",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         from atdata.promote import _find_or_publish_schema
         from atdata.atmosphere import DatasetPublisher
         from atdata._schema_codec import schema_to_type
+        from atdata._logging import log_operation
 
         atmo = self._get_atmosphere()
         if atmo is None:
             raise ValueError("Atmosphere backend required but not available.")
 
-        entry = self.get_entry_by_name(entry_name)
-        if not entry.data_urls:
-            raise ValueError(f"Local entry {entry_name!r} has no data URLs")
+        with log_operation("Index.promote_entry", entry_name=entry_name):
+            entry = self.get_entry_by_name(entry_name)
+            if not entry.data_urls:
+                raise ValueError(f"Local entry {entry_name!r} has no data URLs")
 
-        schema_record = self.get_schema(entry.schema_ref)
-        sample_type = schema_to_type(schema_record)
-        schema_version = schema_record.get("version", "1.0.0")
+            schema_record = self.get_schema(entry.schema_ref)
+            sample_type = schema_to_type(schema_record)
+            schema_version = schema_record.get("version", "1.0.0")
 
-        atmosphere_schema_uri = _find_or_publish_schema(
-            sample_type,
-            schema_version,
-            atmo.client,
-            description=schema_record.get("description"),
-        )
+            atmosphere_schema_uri = _find_or_publish_schema(
+                sample_type,
+                schema_version,
+                atmo.client,
+                description=schema_record.get("description"),
+            )
 
-        publisher = DatasetPublisher(atmo.client)
-        uri = publisher.publish_with_urls(
-            urls=entry.data_urls,
-            schema_uri=atmosphere_schema_uri,
-            name=name or entry.name,
-            description=description,
-            tags=tags,
-            license=license,
-            metadata=entry.metadata,
-        )
-        return str(uri)
+            publisher = DatasetPublisher(atmo.client)
+            uri = publisher.publish_with_urls(
+                urls=entry.data_urls,
+                schema_uri=atmosphere_schema_uri,
+                name=name or entry.name,
+                description=description,
+                tags=tags,
+                license=license,
+                metadata=entry.metadata,
+            )
+            return str(uri)
 
     def promote_dataset(
         self,
@@ -1143,8 +1421,8 @@ class Index:
     ) -> str:
         """Publish a Dataset directly to the atmosphere.
 
-        Publishes the schema (with deduplication) and creates a dataset
-        record on ATProto. Uses the index's atmosphere backend.
+        .. deprecated::
+            Use :meth:`insert_dataset` instead.
 
         Args:
             dataset: The Dataset to publish.
@@ -1167,32 +1445,41 @@ class Index:
             >>> ds = atdata.load_dataset("./data.tar", MySample, split="train")
             >>> uri = index.promote_dataset(ds, name="my-dataset")
         """
+        import warnings
+
+        warnings.warn(
+            "Index.promote_dataset() is deprecated, use Index.insert_dataset()",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         from atdata.promote import _find_or_publish_schema
         from atdata.atmosphere import DatasetPublisher
+        from atdata._logging import log_operation
 
         atmo = self._get_atmosphere()
         if atmo is None:
             raise ValueError("Atmosphere backend required but not available.")
 
-        st = sample_type or dataset.sample_type
+        with log_operation("Index.promote_dataset", name=name):
+            st = sample_type or dataset.sample_type
 
-        atmosphere_schema_uri = _find_or_publish_schema(
-            st,
-            schema_version,
-            atmo.client,
-            description=description,
-        )
+            atmosphere_schema_uri = _find_or_publish_schema(
+                st,
+                schema_version,
+                atmo.client,
+                description=description,
+            )
 
-        data_urls = dataset.list_shards()
+            data_urls = dataset.list_shards()
 
-        publisher = DatasetPublisher(atmo.client)
-        uri = publisher.publish_with_urls(
-            urls=data_urls,
-            schema_uri=atmosphere_schema_uri,
-            name=name,
-            description=description,
-            tags=tags,
-            license=license,
-            metadata=dataset._metadata,
-        )
-        return str(uri)
+            publisher = DatasetPublisher(atmo.client)
+            uri = publisher.publish_with_urls(
+                urls=data_urls,
+                schema_uri=atmosphere_schema_uri,
+                name=name,
+                description=description,
+                tags=tags,
+                license=license,
+                metadata=dataset._metadata,
+            )
+            return str(uri)

@@ -714,12 +714,23 @@ def load_dataset(
         >>> index = Index()
         >>> ds = load_dataset("@local/my-dataset", index=index, split="train")
     """
+    from ._logging import get_logger
+
+    log = get_logger()
+    log.info(
+        "load_dataset: path=%s, split=%s, sample_type=%s",
+        path,
+        split,
+        sample_type.__name__ if sample_type is not None else "None",
+    )
+
     # Handle @handle/dataset indexed path resolution
     if _is_indexed_path(path):
         if index is None:
             index = get_default_index()
 
         source, schema_ref = _resolve_indexed_path(path, index)
+        log.debug("load_dataset: resolved indexed path, schema_ref=%s", schema_ref)
 
         # Resolve sample_type from schema if not provided
         resolved_type: Type = (
@@ -745,6 +756,8 @@ def load_dataset(
 
     if not splits_shards:
         raise FileNotFoundError(f"No data files found at path: {path}")
+
+    log.debug("load_dataset: resolved %d split(s) from path", len(splits_shards))
 
     # Build Dataset for each split
     datasets: dict[str, Dataset] = {}

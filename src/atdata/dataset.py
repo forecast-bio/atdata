@@ -47,8 +47,6 @@ from ._protocols import DataSource, Packable
 from ._exceptions import SampleKeyError, PartialFailureError
 
 import numpy as np
-import pandas as pd
-import requests
 
 import typing
 from typing import (
@@ -70,6 +68,9 @@ from typing import (
 )
 
 if TYPE_CHECKING:
+    import pandas
+    import pandas as pd
+    from .manifest._proxy import Predicate
     from .manifest._query import SampleLocation
 from numpy.typing import NDArray
 
@@ -282,16 +283,9 @@ class PackableSample(ABC):
 
     @property
     def packed(self) -> bytes:
-        """Serialize to msgpack bytes. NDArray fields are auto-converted.
-
-        Raises:
-            RuntimeError: If msgpack serialization fails.
-        """
+        """Serialize to msgpack bytes. NDArray fields are auto-converted."""
         o = {k: _make_packable(v) for k, v in vars(self).items()}
-        ret = msgpack.packb(o)
-        if ret is None:
-            raise RuntimeError(f"Failed to pack sample to bytes: {o}")
-        return ret
+        return msgpack.packb(o)
 
     @property
     def as_wds(self) -> WDSRawSample:
@@ -542,6 +536,8 @@ class Dataset(Generic[ST]):
             return None
 
         if self._metadata is None:
+            import requests
+
             with requests.get(self.metadata_url, stream=True) as response:
                 response.raise_for_status()
                 self._metadata = msgpack.unpackb(response.content, raw=False)
@@ -710,6 +706,8 @@ class Dataset(Generic[ST]):
         fn: Callable[[list[ST]], Any],
         *,
         shards: list[str] | None = None,
+        checkpoint: Path | str | None = None,
+        on_shard_error: Callable[[str, Exception], None] | None = None,
     ) -> dict[str, Any]:
         """Process each shard independently, collecting per-shard results.
 
@@ -725,6 +723,14 @@ class Dataset(Generic[ST]):
             shards: Optional list of shard identifiers to process. If ``None``,
                 processes all shards in the dataset. Useful for retrying only
                 the failed shards from a previous ``PartialFailureError``.
+            checkpoint: Optional path to a checkpoint file. If provided,
+                already-succeeded shard IDs are loaded from this file and
+                skipped. Each newly succeeded shard is appended. On full
+                success the file is deleted. On partial failure it remains
+                for resume.
+            on_shard_error: Optional callback invoked as
+                ``on_shard_error(shard_id, exception)`` for each failed shard,
+                enabling dead-letter logging or alerting.
 
         Returns:
             Dict mapping shard identifier to *fn*'s return value for each shard.
@@ -741,45 +747,67 @@ class Dataset(Generic[ST]):
             ...     results = ds.process_shards(expensive_fn)
             ... except PartialFailureError as e:
             ...     retry = ds.process_shards(expensive_fn, shards=e.failed_shards)
+
+            >>> # With checkpoint for crash recovery:
+            >>> results = ds.process_shards(expensive_fn, checkpoint="progress.txt")
         """
-        from ._logging import get_logger
+        from ._logging import get_logger, log_operation
 
         log = get_logger()
         shard_ids = shards or self.list_shards()
-        log.info("process_shards: starting %d shards", len(shard_ids))
+
+        # Load checkpoint: skip already-succeeded shards
+        checkpoint_path: Path | None = None
+        if checkpoint is not None:
+            checkpoint_path = Path(checkpoint)
+            if checkpoint_path.exists():
+                already_done = set(checkpoint_path.read_text().splitlines())
+                log.info(
+                    "process_shards: loaded checkpoint, %d shards already done",
+                    len(already_done),
+                )
+                shard_ids = [s for s in shard_ids if s not in already_done]
+                if not shard_ids:
+                    log.info("process_shards: all shards already checkpointed")
+                    return {}
 
         succeeded: list[str] = []
         failed: list[str] = []
         errors: dict[str, Exception] = {}
         results: dict[str, Any] = {}
 
-        for shard_id in shard_ids:
-            try:
-                shard_ds = Dataset[self.sample_type](shard_id)
-                shard_ds._sample_type_cache = self._sample_type_cache
-                samples = list(shard_ds.ordered())
-                results[shard_id] = fn(samples)
-                succeeded.append(shard_id)
-                log.debug("process_shards: shard ok %s", shard_id)
-            except Exception as exc:
-                failed.append(shard_id)
-                errors[shard_id] = exc
-                log.warning("process_shards: shard failed %s: %s", shard_id, exc)
+        with log_operation("process_shards", total_shards=len(shard_ids)):
+            for shard_id in shard_ids:
+                try:
+                    shard_ds = Dataset[self.sample_type](shard_id)
+                    shard_ds._sample_type_cache = self._sample_type_cache
+                    samples = list(shard_ds.ordered())
+                    results[shard_id] = fn(samples)
+                    succeeded.append(shard_id)
+                    log.debug("process_shards: shard ok %s", shard_id)
+                    if checkpoint_path is not None:
+                        with open(checkpoint_path, "a") as f:
+                            f.write(shard_id + "\n")
+                except Exception as exc:
+                    failed.append(shard_id)
+                    errors[shard_id] = exc
+                    log.warning("process_shards: shard failed %s: %s", shard_id, exc)
+                    if on_shard_error is not None:
+                        on_shard_error(shard_id, exc)
 
-        if failed:
-            log.error(
-                "process_shards: %d/%d shards failed",
-                len(failed),
-                len(shard_ids),
-            )
-            raise PartialFailureError(
-                succeeded_shards=succeeded,
-                failed_shards=failed,
-                errors=errors,
-                results=results,
-            )
+            if failed:
+                raise PartialFailureError(
+                    succeeded_shards=succeeded,
+                    failed_shards=failed,
+                    errors=errors,
+                    results=results,
+                )
 
-        log.info("process_shards: all %d shards succeeded", len(shard_ids))
+        # All shards succeeded; clean up checkpoint file
+        if checkpoint_path is not None and checkpoint_path.exists():
+            checkpoint_path.unlink()
+            log.debug("process_shards: checkpoint file removed (all shards done)")
+
         return results
 
     def select(self, indices: Sequence[int]) -> list[ST]:
@@ -811,9 +839,25 @@ class Dataset(Generic[ST]):
                 break
         return [result[i] for i in indices if i in result]
 
+    @property
+    def fields(self) -> "Any":
+        """Typed field proxy for manifest queries on this dataset.
+
+        Returns an object whose attributes are ``FieldProxy`` instances,
+        one per manifest-eligible field of this dataset's sample type.
+
+        Examples:
+            >>> ds = atdata.Dataset[MySample](url)
+            >>> Q = ds.fields
+            >>> results = ds.query(where=(Q.confidence > 0.9))
+        """
+        from .manifest._proxy import query_fields
+
+        return query_fields(self.sample_type)
+
     def query(
         self,
-        where: "Callable[[pd.DataFrame], pd.Series]",
+        where: "Callable[[pd.DataFrame], pd.Series] | Predicate",
     ) -> "list[SampleLocation]":
         """Query this dataset using per-shard manifest metadata.
 
@@ -822,10 +866,12 @@ class Dataset(Generic[ST]):
         and executes a two-phase query (shard-level aggregate pruning,
         then sample-level parquet filtering).
 
+        The *where* argument accepts either a lambda/function that operates
+        on a pandas DataFrame, or a ``Predicate`` built from the proxy DSL.
+
         Args:
-            where: Predicate function that receives a pandas DataFrame
-                of manifest fields and returns a boolean Series selecting
-                matching rows.
+            where: Predicate function or ``Predicate`` object that selects
+                matching rows from the per-sample manifest DataFrame.
 
         Returns:
             List of ``SampleLocation`` for matching samples.
@@ -837,6 +883,9 @@ class Dataset(Generic[ST]):
             >>> locs = ds.query(where=lambda df: df["confidence"] > 0.9)
             >>> len(locs)
             42
+
+            >>> Q = ds.fields
+            >>> locs = ds.query(where=(Q.confidence > 0.9))
         """
         from .manifest import QueryExecutor
 
@@ -844,7 +893,7 @@ class Dataset(Generic[ST]):
         executor = QueryExecutor.from_shard_urls(shard_urls)
         return executor.query(where=where)
 
-    def to_pandas(self, limit: int | None = None) -> "pd.DataFrame":
+    def to_pandas(self, limit: int | None = None) -> "pandas.DataFrame":
         """Materialize the dataset (or first *limit* samples) as a DataFrame.
 
         Args:
@@ -867,6 +916,8 @@ class Dataset(Generic[ST]):
         rows = [
             asdict(s) if dataclasses.is_dataclass(s) else s.to_dict() for s in samples
         ]
+        import pandas as pd
+
         return pd.DataFrame(rows)
 
     def to_dict(self, limit: int | None = None) -> dict[str, list[Any]]:
@@ -1061,6 +1112,8 @@ class Dataset(Generic[ST]):
         Examples:
             >>> ds.to_parquet("output.parquet", maxcount=50000)
         """
+        import pandas as pd
+
         path = Path(path)
         if sample_map is None:
             sample_map = asdict
@@ -1129,7 +1182,7 @@ _T = TypeVar("_T")
 
 
 @dataclass_transform()
-def packable(cls: type[_T]) -> type[Packable]:
+def packable(cls: type[_T]) -> type[_T]:
     """Convert a class into a ``PackableSample`` dataclass with msgpack serialization.
 
     The resulting class gains ``packed``, ``as_wds``, ``from_bytes``, and
@@ -1233,11 +1286,13 @@ def write_samples(
         [MySample(key='0', text='hello')]
     """
     from ._hf_api import _shards_to_wds_url
+    from ._logging import get_logger, log_operation
 
     if manifest:
         from .manifest._builder import ManifestBuilder
         from .manifest._writer import ManifestWriter
 
+    log = get_logger()
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -1245,97 +1300,108 @@ def write_samples(
     sample_type: type | None = None
     written_paths: list[str] = []
 
-    # Manifest tracking state
-    _current_builder: list = []  # single-element list for nonlocal mutation
-    _builders: list[tuple[str, "ManifestBuilder"]] = []
-    _running_offset: list[int] = [0]
+    with log_operation(
+        "write_samples", path=str(path), sharded=use_shard_writer, manifest=manifest
+    ):
+        # Manifest tracking state
+        _current_builder: list = []  # single-element list for nonlocal mutation
+        _builders: list[tuple[str, "ManifestBuilder"]] = []
+        _running_offset: list[int] = [0]
 
-    def _finalize_builder() -> None:
-        """Finalize the current manifest builder and stash it."""
-        if _current_builder:
-            shard_path = written_paths[-1] if written_paths else ""
-            _builders.append((shard_path, _current_builder[0]))
-            _current_builder.clear()
+        def _finalize_builder() -> None:
+            """Finalize the current manifest builder and stash it."""
+            if _current_builder:
+                shard_path = written_paths[-1] if written_paths else ""
+                _builders.append((shard_path, _current_builder[0]))
+                _current_builder.clear()
 
-    def _start_builder(shard_path: str) -> None:
-        """Start a new manifest builder for a shard."""
-        _finalize_builder()
-        shard_id = Path(shard_path).stem
-        _current_builder.append(
-            ManifestBuilder(sample_type=sample_type, shard_id=shard_id)
-        )
-        _running_offset[0] = 0
+        def _start_builder(shard_path: str) -> None:
+            """Start a new manifest builder for a shard."""
+            _finalize_builder()
+            shard_id = Path(shard_path).stem
+            _current_builder.append(
+                ManifestBuilder(sample_type=sample_type, shard_id=shard_id)
+            )
+            _running_offset[0] = 0
 
-    def _record_sample(sample: "PackableSample", wds_dict: dict) -> None:
-        """Record a sample in the active manifest builder."""
-        if not _current_builder:
-            return
-        packed_bytes = wds_dict["msgpack"]
-        size = len(packed_bytes)
-        _current_builder[0].add_sample(
-            key=wds_dict["__key__"],
-            offset=_running_offset[0],
-            size=size,
-            sample=sample,
-        )
-        _running_offset[0] += size
+        def _record_sample(sample: "PackableSample", wds_dict: dict) -> None:
+            """Record a sample in the active manifest builder."""
+            if not _current_builder:
+                return
+            packed_bytes = wds_dict["msgpack"]
+            size = len(packed_bytes)
+            _current_builder[0].add_sample(
+                key=wds_dict["__key__"],
+                offset=_running_offset[0],
+                size=size,
+                sample=sample,
+            )
+            _running_offset[0] += size
 
-    if use_shard_writer:
-        # Build shard pattern from path
-        if "%" not in str(path):
-            pattern = str(path.parent / f"{path.stem}-%06d{path.suffix}")
+        if use_shard_writer:
+            # Build shard pattern from path
+            if "%" not in str(path):
+                pattern = str(path.parent / f"{path.stem}-%06d{path.suffix}")
+            else:
+                pattern = str(path)
+
+            writer_kwargs: dict[str, Any] = {}
+            if maxcount is not None:
+                writer_kwargs["maxcount"] = maxcount
+            if maxsize is not None:
+                writer_kwargs["maxsize"] = maxsize
+
+            def _track(p: str) -> None:
+                written_paths.append(str(Path(p).resolve()))
+                if manifest and sample_type is not None:
+                    _start_builder(p)
+
+            with wds.writer.ShardWriter(pattern, post=_track, **writer_kwargs) as sink:
+                for sample in samples:
+                    if sample_type is None:
+                        sample_type = type(sample)
+                    wds_dict = sample.as_wds
+                    sink.write(wds_dict)
+                    if manifest:
+                        # The first sample triggers _track before we get here when
+                        # ShardWriter opens the first shard, but just in case:
+                        if not _current_builder and sample_type is not None:
+                            _start_builder(str(path))
+                        _record_sample(sample, wds_dict)
         else:
-            pattern = str(path)
+            with wds.writer.TarWriter(str(path)) as sink:
+                for sample in samples:
+                    if sample_type is None:
+                        sample_type = type(sample)
+                    wds_dict = sample.as_wds
+                    sink.write(wds_dict)
+                    if manifest:
+                        if not _current_builder and sample_type is not None:
+                            _current_builder.append(
+                                ManifestBuilder(
+                                    sample_type=sample_type, shard_id=path.stem
+                                )
+                            )
+                        _record_sample(sample, wds_dict)
+            written_paths.append(str(path.resolve()))
 
-        writer_kwargs: dict[str, Any] = {}
-        if maxcount is not None:
-            writer_kwargs["maxcount"] = maxcount
-        if maxsize is not None:
-            writer_kwargs["maxsize"] = maxsize
+        if sample_type is None:
+            raise ValueError("samples must be non-empty")
 
-        def _track(p: str) -> None:
-            written_paths.append(str(Path(p).resolve()))
-            if manifest and sample_type is not None:
-                _start_builder(p)
+        # Finalize and write manifests
+        if manifest:
+            _finalize_builder()
+            for shard_path, builder in _builders:
+                m = builder.build()
+                base = str(Path(shard_path).with_suffix(""))
+                writer = ManifestWriter(base)
+                writer.write(m)
 
-        with wds.writer.ShardWriter(pattern, post=_track, **writer_kwargs) as sink:
-            for sample in samples:
-                if sample_type is None:
-                    sample_type = type(sample)
-                wds_dict = sample.as_wds
-                sink.write(wds_dict)
-                if manifest:
-                    # The first sample triggers _track before we get here when
-                    # ShardWriter opens the first shard, but just in case:
-                    if not _current_builder and sample_type is not None:
-                        _start_builder(str(path))
-                    _record_sample(sample, wds_dict)
-    else:
-        with wds.writer.TarWriter(str(path)) as sink:
-            for sample in samples:
-                if sample_type is None:
-                    sample_type = type(sample)
-                wds_dict = sample.as_wds
-                sink.write(wds_dict)
-                if manifest:
-                    if not _current_builder and sample_type is not None:
-                        _current_builder.append(
-                            ManifestBuilder(sample_type=sample_type, shard_id=path.stem)
-                        )
-                    _record_sample(sample, wds_dict)
-        written_paths.append(str(path.resolve()))
-
-    if sample_type is None:
-        raise ValueError("samples must be non-empty")
-
-    # Finalize and write manifests
-    if manifest:
-        _finalize_builder()
-        for shard_path, builder in _builders:
-            m = builder.build()
-            base = str(Path(shard_path).with_suffix(""))
-            writer = ManifestWriter(base)
-            writer.write(m)
+        log.info(
+            "write_samples: wrote %d shard(s), sample_type=%s",
+            len(written_paths),
+            sample_type.__name__,
+        )
 
     url = _shards_to_wds_url(written_paths)
     ds: Dataset = Dataset(url)
