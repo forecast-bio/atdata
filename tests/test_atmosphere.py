@@ -1025,6 +1025,165 @@ class TestAtmosphere:
 
 
 # =============================================================================
+# Tests for Atmosphere client coverage gaps
+# =============================================================================
+
+
+class TestAtmosphereClientEdgeCases:
+    """Tests for uncovered client.py paths: model conversion, swap_commit, etc."""
+
+    def test_put_record_with_swap_commit(
+        self, authenticated_client, mock_atproto_client
+    ):
+        """put_record passes swapCommit when provided."""
+        mock_response = Mock()
+        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.record/abc"
+        mock_atproto_client.com.atproto.repo.put_record.return_value = mock_response
+
+        authenticated_client.put_record(
+            collection=f"{LEXICON_NAMESPACE}.record",
+            rkey="abc",
+            record={"name": "test"},
+            swap_commit="bafyswap123",
+        )
+
+        call_data = mock_atproto_client.com.atproto.repo.put_record.call_args.kwargs[
+            "data"
+        ]
+        assert call_data["swapCommit"] == "bafyswap123"
+
+    def test_delete_record_with_swap_commit(
+        self, authenticated_client, mock_atproto_client
+    ):
+        """delete_record passes swapCommit when provided."""
+        uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.record/abc"
+        authenticated_client.delete_record(uri, swap_commit="bafyswap456")
+
+        call_data = (
+            mock_atproto_client.com.atproto.repo.delete_record.call_args.kwargs["data"]
+        )
+        assert call_data["swapCommit"] == "bafyswap456"
+
+    def test_get_record_model_dump_fallback(
+        self, authenticated_client, mock_atproto_client
+    ):
+        """get_record uses model_dump() when to_dict() is unavailable."""
+        mock_value = Mock(spec=[])  # no to_dict, not a dict
+        mock_value.model_dump = Mock(return_value={"name": "from_model_dump"})
+        mock_response = Mock()
+        mock_response.value = mock_value
+        mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
+
+        result = authenticated_client.get_record(
+            f"at://did:plc:test/{LEXICON_NAMESPACE}.record/abc"
+        )
+        assert result == {"name": "from_model_dump"}
+
+    def test_get_record_dict_fallback(
+        self, authenticated_client, mock_atproto_client
+    ):
+        """get_record uses __dict__ when no to_dict() or model_dump()."""
+
+        class SimpleObj:
+            def __init__(self):
+                self.name = "from_dict"
+
+        mock_response = Mock()
+        mock_response.value = SimpleObj()
+        mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
+
+        result = authenticated_client.get_record(
+            f"at://did:plc:test/{LEXICON_NAMESPACE}.record/abc"
+        )
+        assert result["name"] == "from_dict"
+
+    def test_list_records_model_dump_fallback(
+        self, authenticated_client, mock_atproto_client
+    ):
+        """list_records uses model_dump() for record values."""
+        mock_value = Mock(spec=[])
+        mock_value.model_dump = Mock(return_value={"name": "from_model_dump"})
+        mock_record = Mock()
+        mock_record.value = mock_value
+
+        mock_response = Mock()
+        mock_response.records = [mock_record]
+        mock_response.cursor = None
+        mock_atproto_client.com.atproto.repo.list_records.return_value = mock_response
+
+        records, cursor = authenticated_client.list_records(
+            f"{LEXICON_NAMESPACE}.schema"
+        )
+        assert records == [{"name": "from_model_dump"}]
+
+    def test_list_records_dict_fallback(
+        self, authenticated_client, mock_atproto_client
+    ):
+        """list_records uses __dict__ when no to_dict() or model_dump()."""
+
+        class SimpleObj:
+            def __init__(self):
+                self.data = "test"
+
+        mock_record = Mock()
+        mock_record.value = SimpleObj()
+
+        mock_response = Mock()
+        mock_response.records = [mock_record]
+        mock_response.cursor = None
+        mock_atproto_client.com.atproto.repo.list_records.return_value = mock_response
+
+        records, _ = authenticated_client.list_records(f"{LEXICON_NAMESPACE}.schema")
+        assert records[0]["data"] == "test"
+
+    def test_list_records_raw_value_fallback(
+        self, authenticated_client, mock_atproto_client
+    ):
+        """list_records passes through raw value when no conversion available."""
+        mock_record = Mock()
+        mock_record.value = "raw-string-value"
+
+        mock_response = Mock()
+        mock_response.records = [mock_record]
+        mock_response.cursor = None
+        mock_atproto_client.com.atproto.repo.list_records.return_value = mock_response
+
+        records, _ = authenticated_client.list_records(f"{LEXICON_NAMESPACE}.schema")
+        assert records == ["raw-string-value"]
+
+    def test_list_labels(self, authenticated_client, mock_atproto_client):
+        """list_labels delegates to list_records with label collection."""
+        mock_record = Mock()
+        mock_record.value = Mock()
+        mock_record.value.to_dict = Mock(
+            return_value={"$type": f"{LEXICON_NAMESPACE}.label", "name": "mnist"}
+        )
+
+        mock_response = Mock()
+        mock_response.records = [mock_record]
+        mock_response.cursor = None
+        mock_atproto_client.com.atproto.repo.list_records.return_value = mock_response
+
+        labels = authenticated_client.list_labels()
+        assert len(labels) == 1
+        assert labels[0]["name"] == "mnist"
+
+    def test_login_classmethod(self, mock_atproto_client):
+        """login() classmethod creates and authenticates instance."""
+        with patch.object(Atmosphere, "_login") as mock_login:
+            atmo = Atmosphere.login("alice.bsky.social", "password123")
+            mock_login.assert_called_once_with("alice.bsky.social", "password123")
+            assert isinstance(atmo, Atmosphere)
+
+    def test_from_session_classmethod(self, mock_atproto_client):
+        """from_session() classmethod creates instance from session string."""
+        with patch.object(Atmosphere, "_login_with_session") as mock_session:
+            atmo = Atmosphere.from_session("session-string-abc")
+            mock_session.assert_called_once_with("session-string-abc")
+            assert isinstance(atmo, Atmosphere)
+
+
+# =============================================================================
 # Tests for schema.py - SchemaPublisher
 # =============================================================================
 
@@ -1774,6 +1933,335 @@ class TestDatasetLoader:
 
         with pytest.raises(ValueError, match="Unknown storage type"):
             loader.get_urls(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+
+    def test_get_storage_type_http(self, authenticated_client, mock_atproto_client):
+        """get_storage_type returns 'http' for HTTP storage."""
+        mock_response = Mock()
+        mock_response.value = {
+            "$type": f"{LEXICON_NAMESPACE}.record",
+            "name": "HttpDataset",
+            "schemaRef": "at://schema",
+            "storage": {
+                "$type": f"{LEXICON_NAMESPACE}.storageHttp",
+                "shards": [{"url": "https://cdn.example.com/data.tar"}],
+            },
+        }
+        mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
+
+        loader = DatasetLoader(authenticated_client)
+        assert (
+            loader.get_storage_type(
+                f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz"
+            )
+            == "http"
+        )
+
+    def test_get_storage_type_s3(self, authenticated_client, mock_atproto_client):
+        """get_storage_type returns 's3' for S3 storage."""
+        mock_response = Mock()
+        mock_response.value = {
+            "$type": f"{LEXICON_NAMESPACE}.record",
+            "name": "S3Dataset",
+            "schemaRef": "at://schema",
+            "storage": {
+                "$type": f"{LEXICON_NAMESPACE}.storageS3",
+                "bucket": "my-bucket",
+                "shards": [{"key": "data.tar"}],
+            },
+        }
+        mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
+
+        loader = DatasetLoader(authenticated_client)
+        assert (
+            loader.get_storage_type(
+                f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz"
+            )
+            == "s3"
+        )
+
+    def test_get_urls_http_storage(self, authenticated_client, mock_atproto_client):
+        """get_urls extracts URLs from HTTP storage shards."""
+        mock_response = Mock()
+        mock_response.value = {
+            "$type": f"{LEXICON_NAMESPACE}.record",
+            "name": "HttpDataset",
+            "schemaRef": "at://schema",
+            "storage": {
+                "$type": f"{LEXICON_NAMESPACE}.storageHttp",
+                "shards": [
+                    {"url": "https://cdn.example.com/shard-000.tar"},
+                    {"url": "https://cdn.example.com/shard-001.tar"},
+                ],
+            },
+        }
+        mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
+
+        loader = DatasetLoader(authenticated_client)
+        urls = loader.get_urls(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+
+        assert urls == [
+            "https://cdn.example.com/shard-000.tar",
+            "https://cdn.example.com/shard-001.tar",
+        ]
+
+    def test_get_urls_s3_storage_no_endpoint(
+        self, authenticated_client, mock_atproto_client
+    ):
+        """get_urls builds s3:// URLs when no endpoint specified."""
+        mock_response = Mock()
+        mock_response.value = {
+            "$type": f"{LEXICON_NAMESPACE}.record",
+            "name": "S3Dataset",
+            "schemaRef": "at://schema",
+            "storage": {
+                "$type": f"{LEXICON_NAMESPACE}.storageS3",
+                "bucket": "my-bucket",
+                "shards": [{"key": "train/shard-000.tar"}],
+            },
+        }
+        mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
+
+        loader = DatasetLoader(authenticated_client)
+        urls = loader.get_urls(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+
+        assert urls == ["s3://my-bucket/train/shard-000.tar"]
+
+    def test_get_urls_s3_storage_with_endpoint(
+        self, authenticated_client, mock_atproto_client
+    ):
+        """get_urls builds full URLs with custom S3 endpoint."""
+        mock_response = Mock()
+        mock_response.value = {
+            "$type": f"{LEXICON_NAMESPACE}.record",
+            "name": "S3Dataset",
+            "schemaRef": "at://schema",
+            "storage": {
+                "$type": f"{LEXICON_NAMESPACE}.storageS3",
+                "bucket": "my-bucket",
+                "endpoint": "https://s3.us-west-2.amazonaws.com/",
+                "shards": [{"key": "shard.tar"}],
+            },
+        }
+        mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
+
+        loader = DatasetLoader(authenticated_client)
+        urls = loader.get_urls(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+
+        assert urls == ["https://s3.us-west-2.amazonaws.com/my-bucket/shard.tar"]
+
+    def test_get_s3_info(self, authenticated_client, mock_atproto_client):
+        """get_s3_info extracts bucket, keys, region, endpoint."""
+        mock_response = Mock()
+        mock_response.value = {
+            "$type": f"{LEXICON_NAMESPACE}.record",
+            "name": "S3Dataset",
+            "schemaRef": "at://schema",
+            "storage": {
+                "$type": f"{LEXICON_NAMESPACE}.storageS3",
+                "bucket": "my-bucket",
+                "region": "us-east-1",
+                "endpoint": "https://s3.example.com",
+                "shards": [{"key": "a.tar"}, {"key": "b.tar"}],
+            },
+        }
+        mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
+
+        loader = DatasetLoader(authenticated_client)
+        info = loader.get_s3_info(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+
+        assert info["bucket"] == "my-bucket"
+        assert info["keys"] == ["a.tar", "b.tar"]
+        assert info["region"] == "us-east-1"
+        assert info["endpoint"] == "https://s3.example.com"
+
+    def test_get_s3_info_non_s3_raises(
+        self, authenticated_client, mock_atproto_client
+    ):
+        """get_s3_info raises ValueError for non-S3 storage."""
+        mock_response = Mock()
+        mock_response.value = {
+            "$type": f"{LEXICON_NAMESPACE}.record",
+            "name": "HttpDataset",
+            "schemaRef": "at://schema",
+            "storage": {
+                "$type": f"{LEXICON_NAMESPACE}.storageHttp",
+                "shards": [{"url": "https://example.com/data.tar"}],
+            },
+        }
+        mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
+
+        loader = DatasetLoader(authenticated_client)
+        with pytest.raises(ValueError, match="does not use S3 storage"):
+            loader.get_s3_info(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+
+    def test_get_blob_urls_with_aturi_object(
+        self, authenticated_client, mock_atproto_client
+    ):
+        """get_blob_urls accepts AtUri object (not just string)."""
+        mock_response = Mock()
+        mock_response.value = {
+            "$type": f"{LEXICON_NAMESPACE}.record",
+            "name": "BlobDataset",
+            "schemaRef": "at://schema",
+            "storage": {
+                "$type": f"{LEXICON_NAMESPACE}.storageBlobs",
+                "blobs": [
+                    {
+                        "blob": {
+                            "$type": "blob",
+                            "ref": {"$link": "bafkreitest1"},
+                            "mimeType": "application/x-tar",
+                            "size": 1024,
+                        },
+                    },
+                ],
+            },
+        }
+        mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
+
+        with patch("requests.get") as mock_get:
+            mock_did_response = Mock()
+            mock_did_response.json.return_value = {
+                "service": [
+                    {
+                        "type": "AtprotoPersonalDataServer",
+                        "serviceEndpoint": "https://pds.example.com",
+                    }
+                ]
+            }
+            mock_did_response.raise_for_status = Mock()
+            mock_get.return_value = mock_did_response
+
+            loader = DatasetLoader(authenticated_client)
+            uri_obj = AtUri.parse(
+                f"at://did:plc:abc123/{LEXICON_NAMESPACE}.record/xyz"
+            )
+            urls = loader.get_blob_urls(uri_obj)
+
+            assert len(urls) == 1
+            assert "bafkreitest1" in urls[0]
+
+    def test_get_typed(self, authenticated_client, mock_atproto_client):
+        """get_typed returns LexDatasetRecord."""
+        mock_response = Mock()
+        mock_response.value = {
+            "$type": f"{LEXICON_NAMESPACE}.record",
+            "name": "TestDataset",
+            "schemaRef": "at://did:plc:abc/schema/xyz",
+            "createdAt": "2026-01-01T00:00:00Z",
+            "storage": {
+                "$type": f"{LEXICON_NAMESPACE}.storageExternal",
+                "urls": ["s3://bucket/data.tar"],
+            },
+        }
+        mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
+
+        loader = DatasetLoader(authenticated_client)
+        record = loader.get_typed(
+            f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz"
+        )
+
+        assert record.name == "TestDataset"
+
+    def test_to_dataset_http(self, authenticated_client, mock_atproto_client):
+        """to_dataset creates Dataset from HTTP storage record."""
+        mock_response = Mock()
+        mock_response.value = {
+            "$type": f"{LEXICON_NAMESPACE}.record",
+            "name": "TestDataset",
+            "schemaRef": "at://schema",
+            "storage": {
+                "$type": f"{LEXICON_NAMESPACE}.storageHttp",
+                "shards": [{"url": "https://cdn.example.com/data.tar"}],
+            },
+        }
+        mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
+
+        loader = DatasetLoader(authenticated_client)
+        ds = loader.to_dataset(
+            f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz",
+            BasicSample,
+        )
+
+        from atdata import Dataset
+
+        assert isinstance(ds, Dataset)
+
+    def test_to_dataset_empty_urls_raises(
+        self, authenticated_client, mock_atproto_client
+    ):
+        """to_dataset raises ValueError when record has no URLs."""
+        mock_response = Mock()
+        mock_response.value = {
+            "$type": f"{LEXICON_NAMESPACE}.record",
+            "name": "EmptyDataset",
+            "schemaRef": "at://schema",
+            "storage": {
+                "$type": f"{LEXICON_NAMESPACE}.storageHttp",
+                "shards": [],
+            },
+        }
+        mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
+
+        loader = DatasetLoader(authenticated_client)
+        with pytest.raises(ValueError, match="no storage URLs"):
+            loader.to_dataset(
+                f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz",
+                BasicSample,
+            )
+
+
+class TestDatasetPublisherValidation:
+    """Tests for DatasetPublisher checksum validation."""
+
+    def test_publish_with_urls_checksum_mismatch(
+        self, authenticated_client, mock_atproto_client
+    ):
+        """publish_with_urls raises when checksums length mismatches URLs."""
+        publisher = DatasetPublisher(authenticated_client)
+        with pytest.raises(ValueError, match="checksums length"):
+            publisher.publish_with_urls(
+                urls=["https://example.com/a.tar", "https://example.com/b.tar"],
+                schema_uri="at://did:plc:abc/schema/xyz",
+                name="TestDataset",
+                checksums=[{"algorithm": "sha256", "digest": "abc"}],  # only 1
+            )
+
+    def test_publish_with_s3(self, authenticated_client, mock_atproto_client):
+        """publish_with_s3 creates record with S3 storage."""
+        mock_response = Mock()
+        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.record/abc"
+        mock_atproto_client.com.atproto.repo.create_record.return_value = mock_response
+
+        publisher = DatasetPublisher(authenticated_client)
+        uri = publisher.publish_with_s3(
+            bucket="my-bucket",
+            keys=["train/shard-000.tar", "train/shard-001.tar"],
+            schema_uri="at://did:plc:abc/schema/xyz",
+            name="S3Dataset",
+            region="us-east-1",
+            endpoint="https://s3.us-east-1.amazonaws.com",
+        )
+
+        assert isinstance(uri, AtUri)
+        call_args = mock_atproto_client.com.atproto.repo.create_record.call_args
+        record = call_args.kwargs["data"]["record"]
+        assert "storageS3" in record["storage"]["$type"]
+        assert record["storage"]["bucket"] == "my-bucket"
+
+    def test_publish_with_s3_checksum_mismatch(
+        self, authenticated_client, mock_atproto_client
+    ):
+        """publish_with_s3 raises when checksums length mismatches keys."""
+        publisher = DatasetPublisher(authenticated_client)
+        with pytest.raises(ValueError, match="checksums length"):
+            publisher.publish_with_s3(
+                bucket="my-bucket",
+                keys=["a.tar", "b.tar"],
+                schema_uri="at://did:plc:abc/schema/xyz",
+                name="TestDataset",
+                checksums=[{"algorithm": "sha256", "digest": "abc"}],  # only 1
+            )
 
 
 # =============================================================================

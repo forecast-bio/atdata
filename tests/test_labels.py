@@ -530,3 +530,331 @@ class TestResolveIndexedPathVersion:
         source, schema_ref = _resolve_indexed_path("@local/latest-ds", index)
         # Should resolve to v2 (latest)
         assert entry_v2.data_urls[0] in source.url
+
+
+# ---------------------------------------------------------------------------
+# Redis provider label operations (mocked)
+# ---------------------------------------------------------------------------
+
+
+class TestRedisProviderLabels:
+    """Tests for RedisProvider label CRUD using a mock Redis client."""
+
+    def _make_provider(self):
+        from unittest.mock import MagicMock
+
+        from atdata.providers._redis import RedisProvider
+
+        mock_redis = MagicMock()
+        provider = RedisProvider.__new__(RedisProvider)
+        provider._redis = mock_redis
+        return provider, mock_redis
+
+    def test_store_label_basic(self):
+        """store_label writes a hash with name, cid, version."""
+        provider, mock_redis = self._make_provider()
+        provider.store_label(name="mnist", cid="cid-abc")
+
+        mock_redis.hset.assert_called_once()
+        call_args = mock_redis.hset.call_args
+        assert call_args.kwargs["mapping"]["name"] == "mnist"
+        assert call_args.kwargs["mapping"]["cid"] == "cid-abc"
+
+    def test_store_label_with_description(self):
+        """store_label includes description when provided."""
+        provider, mock_redis = self._make_provider()
+        provider.store_label(name="ds", cid="cid-1", description="A dataset")
+
+        mapping = mock_redis.hset.call_args.kwargs["mapping"]
+        assert mapping["description"] == "A dataset"
+
+    def test_store_label_without_description(self):
+        """store_label omits description key when not provided."""
+        provider, mock_redis = self._make_provider()
+        provider.store_label(name="ds", cid="cid-1")
+
+        mapping = mock_redis.hset.call_args.kwargs["mapping"]
+        assert "description" not in mapping
+
+    def test_get_label_with_version(self):
+        """get_label with version does direct key lookup."""
+        provider, mock_redis = self._make_provider()
+        mock_redis.hgetall.return_value = {
+            b"cid": b"cid-abc",
+            b"name": b"mnist",
+            b"version": b"1.0.0",
+        }
+
+        cid, version = provider.get_label("mnist", version="1.0.0")
+        assert cid == "cid-abc"
+        assert version == "1.0.0"
+
+    def test_get_label_with_version_not_found(self):
+        """get_label raises KeyError when version not found."""
+        provider, mock_redis = self._make_provider()
+        mock_redis.hgetall.return_value = {}
+
+        with pytest.raises(KeyError, match="No label with name"):
+            provider.get_label("missing", version="1.0.0")
+
+    def test_get_label_without_version_scans(self):
+        """get_label without version scans for all matching labels."""
+        provider, mock_redis = self._make_provider()
+        mock_redis.scan_iter.return_value = [b"Label:mnist@1.0.0"]
+        mock_redis.hgetall.return_value = {
+            b"cid": b"cid-latest",
+            b"name": b"mnist",
+            b"version": b"1.0.0",
+        }
+
+        cid, version = provider.get_label("mnist")
+        assert cid == "cid-latest"
+        assert version == "1.0.0"
+
+    def test_get_label_without_version_empty_version(self):
+        """get_label returns None version when stored version is empty."""
+        provider, mock_redis = self._make_provider()
+        mock_redis.scan_iter.return_value = [b"Label:ds@"]
+        mock_redis.hgetall.return_value = {
+            b"cid": b"cid-1",
+            b"name": b"ds",
+            b"version": b"",
+        }
+
+        cid, version = provider.get_label("ds")
+        assert cid == "cid-1"
+        assert version is None
+
+    def test_get_label_without_version_not_found(self):
+        """get_label raises KeyError when no labels match."""
+        provider, mock_redis = self._make_provider()
+        mock_redis.scan_iter.return_value = []
+
+        with pytest.raises(KeyError, match="No label with name"):
+            provider.get_label("missing")
+
+    def test_get_label_skips_empty_hashes(self):
+        """get_label skips keys whose hgetall returns empty."""
+        provider, mock_redis = self._make_provider()
+        mock_redis.scan_iter.return_value = [b"Label:ds@1", b"Label:ds@2"]
+        mock_redis.hgetall.side_effect = [
+            {},  # empty — skip
+            {b"cid": b"cid-2", b"name": b"ds", b"version": b"2"},
+        ]
+
+        cid, version = provider.get_label("ds")
+        assert cid == "cid-2"
+
+    def test_iter_labels(self):
+        """iter_labels yields (name, cid, version) tuples."""
+        provider, mock_redis = self._make_provider()
+        mock_redis.scan_iter.return_value = [b"Label:a@1.0", b"Label:b@"]
+        mock_redis.hgetall.side_effect = [
+            {b"name": b"a", b"cid": b"cid-a", b"version": b"1.0"},
+            {b"name": b"b", b"cid": b"cid-b", b"version": b""},
+        ]
+
+        labels = list(provider.iter_labels())
+        assert len(labels) == 2
+        assert labels[0] == ("a", "cid-a", "1.0")
+        assert labels[1] == ("b", "cid-b", None)
+
+    def test_iter_labels_skips_empty(self):
+        """iter_labels skips keys with empty hashes."""
+        provider, mock_redis = self._make_provider()
+        mock_redis.scan_iter.return_value = [b"Label:gone@1"]
+        mock_redis.hgetall.return_value = {}
+
+        assert list(provider.iter_labels()) == []
+
+    def test_close(self):
+        """close() delegates to Redis client."""
+        provider, mock_redis = self._make_provider()
+        provider.close()
+        mock_redis.close.assert_called_once()
+
+
+# ---------------------------------------------------------------------------
+# Redis provider schema edge cases (mocked)
+# ---------------------------------------------------------------------------
+
+
+class TestRedisProviderSchemaEdgeCases:
+    """Tests for RedisProvider schema methods — bytes decoding, legacy format."""
+
+    def _make_provider(self):
+        from unittest.mock import MagicMock
+
+        from atdata.providers._redis import RedisProvider
+
+        mock_redis = MagicMock()
+        provider = RedisProvider.__new__(RedisProvider)
+        provider._redis = mock_redis
+        return provider, mock_redis
+
+    def test_get_schema_json_bytes(self):
+        """get_schema_json decodes bytes from Redis."""
+        provider, mock_redis = self._make_provider()
+        mock_redis.get.return_value = b'{"fields": []}'
+
+        result = provider.get_schema_json("Sample", "1.0.0")
+        assert result == '{"fields": []}'
+
+    def test_iter_schemas_legacy_dotted_name(self):
+        """iter_schemas strips module prefix from legacy 'module.Class' names."""
+        provider, mock_redis = self._make_provider()
+        mock_redis.scan_iter.return_value = [b"LocalSchema:mymodule.MyClass@1.0.0"]
+        mock_redis.get.return_value = b'{"fields": []}'
+
+        schemas = list(provider.iter_schemas())
+        assert len(schemas) == 1
+        name, version, json_str = schemas[0]
+        assert name == "MyClass"
+        assert version == "1.0.0"
+
+    def test_iter_schemas_skips_no_at_separator(self):
+        """iter_schemas skips malformed keys without '@' separator."""
+        provider, mock_redis = self._make_provider()
+        mock_redis.scan_iter.return_value = [b"LocalSchema:badkey"]
+        mock_redis.get.return_value = b'{"fields": []}'
+
+        assert list(provider.iter_schemas()) == []
+
+    def test_iter_schemas_skips_none_value(self):
+        """iter_schemas skips keys where get() returns None."""
+        provider, mock_redis = self._make_provider()
+        mock_redis.scan_iter.return_value = [b"LocalSchema:Sample@1.0.0"]
+        mock_redis.get.return_value = None
+
+        assert list(provider.iter_schemas()) == []
+
+    def test_find_latest_version_skips_bad_semver(self):
+        """find_latest_version skips versions that don't parse as semver."""
+        provider, mock_redis = self._make_provider()
+        mock_redis.scan_iter.return_value = [
+            b"LocalSchema:Sample@not-a-version",
+            b"LocalSchema:Sample@1.0.0",
+        ]
+        mock_redis.get.side_effect = [b'{"a": 1}', b'{"a": 1}']
+
+        result = provider.find_latest_version("Sample")
+        assert result == "1.0.0"
+
+    def test_store_entry_with_legacy_uuid(self):
+        """store_entry includes legacy_uuid when present."""
+        from unittest.mock import MagicMock
+
+        provider, mock_redis = self._make_provider()
+        entry = MagicMock()
+        entry.cid = "cid-123"
+        entry.name = "test"
+        entry.schema_ref = "ref"
+        entry.data_urls = ["url1"]
+        entry.metadata = None
+        entry._legacy_uuid = "uuid-abc"
+
+        provider.store_entry(entry)
+
+        mapping = mock_redis.hset.call_args.kwargs["mapping"]
+        assert mapping["legacy_uuid"] == "uuid-abc"
+
+
+# ---------------------------------------------------------------------------
+# PostgreSQL provider label operations (mocked)
+# ---------------------------------------------------------------------------
+
+
+class TestPostgresProviderLabels:
+    """Tests for PostgresProvider label CRUD using a mock connection."""
+
+    def _make_provider(self):
+        from unittest.mock import MagicMock
+
+        from atdata.providers._postgres import PostgresProvider
+
+        mock_conn = MagicMock()
+        provider = PostgresProvider.__new__(PostgresProvider)
+        provider._conn = mock_conn
+        return provider, mock_conn
+
+    def test_store_label(self):
+        """store_label executes INSERT with UPSERT."""
+        provider, mock_conn = self._make_provider()
+        provider.store_label(name="mnist", cid="cid-abc", version="1.0.0")
+
+        cur = mock_conn.cursor.return_value.__enter__.return_value
+        cur.execute.assert_called_once()
+        sql = cur.execute.call_args[0][0]
+        assert "INSERT INTO labels" in sql
+        assert "ON CONFLICT" in sql
+        params = cur.execute.call_args[0][1]
+        assert params == ("mnist", "cid-abc", "1.0.0", None)
+
+    def test_store_label_with_description(self):
+        """store_label passes description parameter."""
+        provider, mock_conn = self._make_provider()
+        provider.store_label(
+            name="ds", cid="cid-1", version="2.0", description="Test desc"
+        )
+
+        cur = mock_conn.cursor.return_value.__enter__.return_value
+        params = cur.execute.call_args[0][1]
+        assert params == ("ds", "cid-1", "2.0", "Test desc")
+
+    def test_get_label_with_version(self):
+        """get_label with version uses version-specific query."""
+        provider, mock_conn = self._make_provider()
+        cur = mock_conn.cursor.return_value.__enter__.return_value
+        cur.fetchone.return_value = ("cid-abc", "1.0.0")
+
+        cid, version = provider.get_label("mnist", version="1.0.0")
+        assert cid == "cid-abc"
+        assert version == "1.0.0"
+
+        sql = cur.execute.call_args[0][0]
+        assert "version = %s" in sql
+
+    def test_get_label_without_version(self):
+        """get_label without version picks latest by created_at."""
+        provider, mock_conn = self._make_provider()
+        cur = mock_conn.cursor.return_value.__enter__.return_value
+        cur.fetchone.return_value = ("cid-latest", "2.0.0")
+
+        cid, version = provider.get_label("mnist")
+        assert cid == "cid-latest"
+        assert version == "2.0.0"
+
+        sql = cur.execute.call_args[0][0]
+        assert "ORDER BY created_at DESC" in sql
+
+    def test_get_label_not_found(self):
+        """get_label raises KeyError when no rows match."""
+        provider, mock_conn = self._make_provider()
+        cur = mock_conn.cursor.return_value.__enter__.return_value
+        cur.fetchone.return_value = None
+
+        with pytest.raises(KeyError, match="No label with name"):
+            provider.get_label("missing")
+
+    def test_get_label_empty_version_returns_none(self):
+        """get_label returns None version when stored version is empty string."""
+        provider, mock_conn = self._make_provider()
+        cur = mock_conn.cursor.return_value.__enter__.return_value
+        cur.fetchone.return_value = ("cid-1", "")
+
+        cid, version = provider.get_label("ds")
+        assert cid == "cid-1"
+        assert version is None
+
+    def test_iter_labels(self):
+        """iter_labels yields rows from SELECT."""
+        provider, mock_conn = self._make_provider()
+        cur = mock_conn.cursor.return_value.__enter__.return_value
+        cur.__iter__ = lambda self: iter(
+            [("a", "cid-a", "1.0"), ("b", "cid-b", "")]
+        )
+
+        labels = list(provider.iter_labels())
+        assert len(labels) == 2
+        assert labels[0] == ("a", "cid-a", "1.0")
+        assert labels[1] == ("b", "cid-b", None)
