@@ -11,6 +11,7 @@ Internal/local types (used outside the atmosphere context) live in
 
 from __future__ import annotations
 
+import base64
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any
@@ -472,7 +473,11 @@ class LexDatasetRecord:
         if self.description is not None:
             d["description"] = self.description
         if self.metadata is not None:
-            d["metadata"] = self.metadata
+            # ATProto encodes raw bytes as {"$bytes": "<base64>"} in JSON records.
+            # Without this, pydantic cannot serialize the record to JSON.
+            d["metadata"] = {
+                "$bytes": base64.b64encode(self.metadata).decode("ascii")
+            }
         if self.tags:
             d["tags"] = self.tags
         if self.size is not None:
@@ -487,13 +492,23 @@ class LexDatasetRecord:
         size = None
         if "size" in d:
             size = DatasetSize.from_record(d["size"])
+
+        # Decode ATProto bytes encoding {"$bytes": "<base64>"} back to raw bytes.
+        raw_metadata = d.get("metadata")
+        metadata_bytes: bytes | None = None
+        if isinstance(raw_metadata, dict) and "$bytes" in raw_metadata:
+            metadata_bytes = base64.b64decode(raw_metadata["$bytes"])
+        elif isinstance(raw_metadata, bytes):
+            # Already decoded (e.g. from local storage or tests)
+            metadata_bytes = raw_metadata
+
         return cls(
             name=d["name"],
             schema_ref=d["schemaRef"],
             storage=storage_from_record(d["storage"]),
             created_at=datetime.fromisoformat(d["createdAt"]),
             description=d.get("description"),
-            metadata=d.get("metadata"),
+            metadata=metadata_bytes,
             tags=d.get("tags"),
             size=size,
             license=d.get("license"),

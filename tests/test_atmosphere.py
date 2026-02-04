@@ -491,7 +491,8 @@ class TestLexDatasetRecord:
         assert record["license"] == "MIT"
 
     def test_to_record_with_metadata(self):
-        """Convert dataset record with msgpack metadata."""
+        """Convert dataset record with msgpack metadata to ATProto $bytes format."""
+        import base64
         import msgpack
 
         metadata_bytes = msgpack.packb({"size": 1000, "split": "train"})
@@ -504,7 +505,28 @@ class TestLexDatasetRecord:
 
         record = dataset.to_record()
 
-        assert record["metadata"] == metadata_bytes
+        # metadata must be encoded as ATProto bytes {"$bytes": "<base64>"}
+        assert isinstance(record["metadata"], dict)
+        assert "$bytes" in record["metadata"]
+        assert base64.b64decode(record["metadata"]["$bytes"]) == metadata_bytes
+
+    def test_metadata_roundtrip(self):
+        """Metadata survives to_record() -> from_record() roundtrip."""
+        import msgpack
+
+        metadata_bytes = msgpack.packb({"size": 1000, "split": "train"})
+        dataset = LexDatasetRecord(
+            name="MetaDataset",
+            schema_ref="at://did:plc:abc/collection/key",
+            storage=StorageHttp(shards=[]),
+            metadata=metadata_bytes,
+        )
+
+        record = dataset.to_record()
+        restored = LexDatasetRecord.from_record(record)
+
+        assert restored.metadata == metadata_bytes
+        assert msgpack.unpackb(restored.metadata, raw=False) == {"size": 1000, "split": "train"}
 
 
 # =============================================================================

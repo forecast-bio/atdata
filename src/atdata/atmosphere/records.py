@@ -635,11 +635,23 @@ class DatasetLoader:
         Returns:
             The metadata dictionary, or None if no metadata.
         """
-        record = self.get(uri)
-        metadata_bytes = record.get("metadata")
+        import base64
 
-        if metadata_bytes is None:
+        record = self.get(uri)
+        metadata_raw = record.get("metadata")
+
+        if metadata_raw is None:
             return None
+
+        # Records fetched from ATProto encode bytes as {"$bytes": "<base64>"}.
+        if isinstance(metadata_raw, dict) and "$bytes" in metadata_raw:
+            metadata_bytes = base64.b64decode(metadata_raw["$bytes"])
+        elif isinstance(metadata_raw, bytes):
+            metadata_bytes = metadata_raw
+        else:
+            raise ValueError(
+                f"Unexpected metadata format: {type(metadata_raw).__name__}"
+            )
 
         return msgpack.unpackb(metadata_bytes, raw=False)
 
