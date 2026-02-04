@@ -1,12 +1,16 @@
 """Dataset entry model and Redis key constants."""
 
+from __future__ import annotations
+
 from atdata._cid import generate_cid
 
 from dataclasses import dataclass, field
-from typing import Any, cast
+from typing import Any, TYPE_CHECKING, cast
 
 import msgpack
-from redis import Redis
+
+if TYPE_CHECKING:
+    from redis import Redis
 
 
 # Redis key prefixes for index entries and schemas

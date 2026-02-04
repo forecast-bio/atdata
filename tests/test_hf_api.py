@@ -169,8 +169,7 @@ class TestShardsToWdsUrl:
     def test_multiple_shards_different_lengths(self):
         shards = ["data-0.tar", "data-1.tar", "data-10.tar"]
         result = _shards_to_wds_url(shards)
-        # Should still produce brace notation
-        assert "{" in result and "}" in result
+        assert result == "data-{0,1,10}.tar"
 
     def test_empty_list_raises(self):
         with pytest.raises(ValueError, match="empty shard list"):
@@ -179,8 +178,7 @@ class TestShardsToWdsUrl:
     def test_no_common_pattern(self):
         shards = ["train.tar", "test.tar", "val.tar"]
         result = _shards_to_wds_url(shards)
-        # Falls back to space-separated or brace notation
-        assert "train" in result
+        assert result == "{train,test,val}.tar"
 
 
 class TestExpandLocalGlob:

@@ -7,7 +7,8 @@
 import pytest
 
 # System
-from dataclasses import dataclass
+import inspect
+from dataclasses import dataclass, fields
 
 # External
 import numpy as np
@@ -968,6 +969,90 @@ def test_numpy_scalar_coercion_round_trip():
     assert type(restored.f) is float
     assert type(restored.i) is int
     assert type(restored.b) is bool
+
+
+##
+# @packable decorator type preservation
+
+
+@atdata.packable
+class _TypeTestSample:
+    """A sample with mixed field types for type-preservation tests."""
+
+    name: str
+    count: int
+    image: NDArray
+
+
+class TestPackableTypePreservation:
+    """Verify @packable preserves init signature and instance attributes.
+
+    These tests act as regression guards for the decorator's return type
+    annotation (type[_T]) so that IDEs and type checkers see the original
+    class fields alongside the Packable mixin members.
+    """
+
+    # -- Init signature ------------------------------------------------
+
+    def test_init_has_original_parameters(self):
+        """__init__ parameters match the declared fields."""
+        sig = inspect.signature(_TypeTestSample)
+        param_names = list(sig.parameters.keys())
+        assert param_names == ["name", "count", "image"]
+
+    def test_init_parameter_annotations(self):
+        """__init__ parameter annotations reflect the original field types."""
+        sig = inspect.signature(_TypeTestSample)
+        assert sig.parameters["name"].annotation is str
+        assert sig.parameters["count"].annotation is int
+        assert sig.parameters["image"].annotation is NDArray
+
+    def test_dataclass_fields_preserved(self):
+        """dataclasses.fields() returns entries matching the original class."""
+        fs = {f.name: f.type for f in fields(_TypeTestSample)}
+        assert fs == {"name": str, "count": int, "image": NDArray}
+
+    # -- Instance has Packable members ---------------------------------
+
+    def test_instance_has_packed(self):
+        """Instances expose the `packed` property from PackableSample."""
+        sample = _TypeTestSample(name="a", count=1, image=np.zeros(3))
+        assert isinstance(sample.packed, bytes)
+
+    def test_instance_has_as_wds(self):
+        """Instances expose the `as_wds` property from PackableSample."""
+        sample = _TypeTestSample(name="a", count=1, image=np.zeros(3))
+        wds_dict = sample.as_wds
+        assert isinstance(wds_dict, dict)
+        assert "__key__" in wds_dict
+
+    def test_instance_has_from_bytes(self):
+        """The class exposes the `from_bytes` classmethod."""
+        sample = _TypeTestSample(name="a", count=1, image=np.zeros(3))
+        restored = _TypeTestSample.from_bytes(sample.packed)
+        assert restored.name == "a"
+        assert restored.count == 1
+
+    def test_instance_has_from_data(self):
+        """The class exposes the `from_data` classmethod."""
+        data = {"name": "b", "count": 2, "image": np.ones(4)}
+        restored = _TypeTestSample.from_data(data)
+        assert restored.name == "b"
+        assert restored.count == 2
+
+    # -- Satisfies Packable protocol -----------------------------------
+
+    def test_isinstance_packable(self):
+        """Decorated instances satisfy the runtime-checkable Packable protocol."""
+        from atdata._protocols import Packable
+
+        sample = _TypeTestSample(name="a", count=1, image=np.zeros(3))
+        assert isinstance(sample, Packable)
+
+    def test_class_identity_preserved(self):
+        """__name__ and __qualname__ reflect the original class, not internals."""
+        assert _TypeTestSample.__name__ == "_TypeTestSample"
+        assert "packable.<locals>" not in _TypeTestSample.__qualname__
 
 
 ##

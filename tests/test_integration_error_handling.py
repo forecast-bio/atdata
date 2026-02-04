@@ -531,8 +531,10 @@ class TestPartialFailures:
         url = str(tmp_path / "data-{000000..000001}.tar")
         ds = atdata.Dataset[ErrorTestSample](url)
 
-        # Should handle empty shard gracefully (iteration completes without crash)
-        list(ds.ordered(batch_size=None))
+        # Should handle empty shard gracefully and return the valid sample
+        results = list(ds.ordered(batch_size=None))
+        assert len(results) == 1
+        assert results[0].name == "sample"
 
     def test_good_shards_before_bad_are_processed(self, tmp_path):
         """Samples from good shards before bad one should be accessible."""
@@ -559,10 +561,10 @@ class TestPartialFailures:
         except Exception:
             pass  # Expected to fail on second shard
 
-        # Should have gotten samples from first shard before failure
-        # Note: actual behavior depends on WebDataset's buffering
-        # This test documents the behavior rather than enforcing it
-        assert isinstance(collected, list)
+        # Good shard was processed before the bad one triggered an error
+        assert len(collected) == 3
+        for i, s in enumerate(collected):
+            assert s.name == f"good_{i}"
 
 
 ##

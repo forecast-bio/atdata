@@ -242,6 +242,9 @@ class TestIndexPromoteEntry:
 
         assert uri == "at://did:plc:abc/test/123"
         mock_publisher_instance.publish_with_urls.assert_called_once()
+        call_kwargs = mock_publisher_instance.publish_with_urls.call_args[1]
+        assert call_kwargs["name"] == "promotable"
+        assert call_kwargs["schema_uri"] == "at://schema/1"
 
 
 # ---------------------------------------------------------------------------
@@ -441,7 +444,7 @@ class TestInsertDatasetAtmosphere:
     """Tests for insert_dataset with atmosphere targets."""
 
     def test_local_source_defaults_to_pds_blob_store(self, sqlite_provider, tmp_path):
-        """Local filesystem source should auto-upload via PDSBlobStore."""
+        """Local filesystem source should auto-upload via PDSBlobStore and use storageBlobs."""
         mock_atmo = MagicMock()
         mock_atmo.client = MagicMock()
         mock_atmo.client.did = "did:plc:test"
@@ -454,6 +457,20 @@ class TestInsertDatasetAtmosphere:
         samples = [SharedBasicSample(name="x", value=1)]
         ds = atdata.write_samples(samples, tmp_path / "data.tar")
 
+        mock_blob_ref = {
+            "$type": "blob",
+            "ref": {"$link": "bafyreiabc"},
+            "mimeType": "application/x-tar",
+            "size": 1024,
+        }
+
+        def fake_write_shards(self_store, ds, *, prefix, **kwargs):
+            from atdata.atmosphere.store import ShardUploadResult
+
+            return ShardUploadResult(
+                ["at://did:plc:test/blob/bafyreiabc"], [mock_blob_ref]
+            )
+
         with (
             patch.object(
                 atlocal.Index,
@@ -463,16 +480,18 @@ class TestInsertDatasetAtmosphere:
             patch.object(atlocal.Index, "_get_atmosphere", return_value=mock_atmo),
             patch(
                 "atdata.atmosphere.store.PDSBlobStore.write_shards",
-                return_value=["at://did:plc:test/blob/abc"],
+                autospec=True,
+                side_effect=fake_write_shards,
             ) as mock_ws,
         ):
             entry = idx.insert_dataset(ds, name="@handle/test")
 
         assert entry == mock_entry
         mock_ws.assert_called_once()
-        # Verify data_urls were passed to atmosphere backend
+        # Verify blob_refs were passed to atmosphere backend for storageBlobs
         call_kwargs = mock_atmo.insert_dataset.call_args[1]
-        assert call_kwargs["data_urls"] == ["at://did:plc:test/blob/abc"]
+        assert call_kwargs["blob_refs"] == [mock_blob_ref]
+        assert call_kwargs["data_urls"] == ["at://did:plc:test/blob/bafyreiabc"]
 
     def test_remote_source_references_urls(self, sqlite_provider):
         """Public http source should reference existing URLs, not copy."""

@@ -70,6 +70,9 @@ class LocalDiskStore:
         Raises:
             RuntimeError: If no shards were written.
         """
+        from atdata._logging import get_logger, log_operation
+
+        log = get_logger()
         shard_dir = self._root / prefix
         shard_dir.mkdir(parents=True, exist_ok=True)
 
@@ -85,17 +88,22 @@ class LocalDiskStore:
         # and not understood by wds.writer.ShardWriter / TarWriter.
         writer_kwargs = {k: v for k, v in kwargs.items() if k not in ("cache_local",)}
 
-        with wds.writer.ShardWriter(
-            shard_pattern,
-            post=_track_shard,
-            **writer_kwargs,
-        ) as sink:
-            for sample in ds.ordered(batch_size=None):
-                sink.write(sample.as_wds)
+        with log_operation("LocalDiskStore.write_shards", prefix=prefix):
+            with wds.writer.ShardWriter(
+                shard_pattern,
+                post=_track_shard,
+                **writer_kwargs,
+            ) as sink:
+                for sample in ds.ordered(batch_size=None):
+                    sink.write(sample.as_wds)
 
-        if not written_shards:
-            raise RuntimeError(
-                f"No shards written for prefix {prefix!r} in {self._root}"
+            if not written_shards:
+                raise RuntimeError(
+                    f"No shards written for prefix {prefix!r} in {self._root}"
+                )
+
+            log.info(
+                "LocalDiskStore.write_shards: wrote %d shard(s)", len(written_shards)
             )
 
         return written_shards

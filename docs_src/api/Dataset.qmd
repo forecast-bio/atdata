@@ -311,11 +311,14 @@ Discovers manifest files alongside the tar shards, loads them,
 and executes a two-phase query (shard-level aggregate pruning,
 then sample-level parquet filtering).
 
+The *where* argument accepts either a lambda/function that operates
+on a pandas DataFrame, or a ``Predicate`` built from the proxy DSL.
+
 #### Parameters {.doc-section .doc-section-parameters}
 
-| Name   | Type                                                                                                                          | Description                                                                                                                  | Default    |
-|--------|-------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|------------|
-| where  | [Callable](`typing.Callable`)\[\[[pd](`pandas`).[DataFrame](`pandas.DataFrame`)\], [pd](`pandas`).[Series](`pandas.Series`)\] | Predicate function that receives a pandas DataFrame of manifest fields and returns a boolean Series selecting matching rows. | _required_ |
+| Name   | Type                                                                                                                                                      | Description                                                                                                   | Default    |
+|--------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|------------|
+| where  | [Callable](`typing.Callable`)\[\[[pd](`pandas`).[DataFrame](`pandas.DataFrame`)\], [pd](`pandas`).[Series](`pandas.Series`)\] \| [Predicate](`Predicate`) | Predicate function or ``Predicate`` object that selects matching rows from the per-sample manifest DataFrame. | _required_ |
 
 #### Returns {.doc-section .doc-section-returns}
 
@@ -335,6 +338,11 @@ then sample-level parquet filtering).
 >>> locs = ds.query(where=lambda df: df["confidence"] > 0.9)
 >>> len(locs)
 42
+```
+
+```python
+>>> Q = ds.fields
+>>> locs = ds.query(where=(Q.confidence > 0.9))
 ```
 
 ### select { #atdata.Dataset.select }

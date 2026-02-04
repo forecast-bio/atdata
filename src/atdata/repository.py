@@ -211,13 +211,16 @@ class _AtmosphereBackend:
         name: str,
         schema_ref: str | None = None,
         data_urls: list[str] | None = None,
+        blob_refs: list[dict] | None = None,
         **kwargs: Any,
     ) -> Any:
         """Insert a dataset into ATProto.
 
-        When *data_urls* is provided the record references those URLs
-        (via ``publish_with_urls``) instead of using the Dataset's own
-        URL, which may be a local temp path.
+        When *blob_refs* is provided the record uses ``storageBlobs`` with
+        embedded blob reference objects so the PDS retains the uploaded blobs.
+
+        When *data_urls* is provided (without *blob_refs*) the record uses
+        ``storageExternal`` with those URLs.
 
         Args:
             ds: The Dataset to publish.
@@ -225,6 +228,8 @@ class _AtmosphereBackend:
             schema_ref: Optional schema AT URI. If None, auto-publishes schema.
             data_urls: Explicit shard URLs to store in the record.  When
                 provided, these replace whatever ``ds.url`` contains.
+            blob_refs: Pre-uploaded blob reference dicts from
+                ``PDSBlobStore``.  Takes precedence over *data_urls*.
             **kwargs: Additional options (description, tags, license).
 
         Returns:
@@ -233,7 +238,7 @@ class _AtmosphereBackend:
         self._ensure_loaders()
         from .atmosphere import AtmosphereIndexEntry
 
-        if data_urls is not None:
+        if blob_refs is not None or data_urls is not None:
             # Ensure schema is published first
             if schema_ref is None:
                 from .atmosphere import SchemaPublisher
@@ -249,15 +254,26 @@ class _AtmosphereBackend:
             if metadata is None and hasattr(ds, "_metadata"):
                 metadata = ds._metadata
 
-            uri = self._dataset_publisher.publish_with_urls(
-                urls=data_urls,
-                schema_uri=schema_ref,
-                name=name,
-                description=kwargs.get("description"),
-                tags=kwargs.get("tags"),
-                license=kwargs.get("license"),
-                metadata=metadata,
-            )
+            if blob_refs is not None:
+                uri = self._dataset_publisher.publish_with_blob_refs(
+                    blob_refs=blob_refs,
+                    schema_uri=schema_ref,
+                    name=name,
+                    description=kwargs.get("description"),
+                    tags=kwargs.get("tags"),
+                    license=kwargs.get("license"),
+                    metadata=metadata,
+                )
+            else:
+                uri = self._dataset_publisher.publish_with_urls(
+                    urls=data_urls,
+                    schema_uri=schema_ref,
+                    name=name,
+                    description=kwargs.get("description"),
+                    tags=kwargs.get("tags"),
+                    license=kwargs.get("license"),
+                    metadata=metadata,
+                )
         else:
             uri = self._dataset_publisher.publish(
                 ds,

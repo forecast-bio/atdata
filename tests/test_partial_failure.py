@@ -150,3 +150,100 @@ class TestProcessShards:
         results = ds.process_shards(lambda samples: sum(s.v for s in samples))
         assert len(results) == 1
         assert list(results.values())[0] == 0 + 1 + 2 + 3
+
+
+# ---------------------------------------------------------------------------
+# Checkpoint / Resume
+# ---------------------------------------------------------------------------
+
+
+class TestCheckpointResume:
+    def test_checkpoint_persists_on_partial_failure(self, tmp_path):
+        ds = _make_multi_shard_dataset(tmp_path, n_shards=3, per_shard=2)
+        ckpt = tmp_path / "checkpoint.txt"
+        call_count = 0
+
+        def failing_fn(samples):
+            nonlocal call_count
+            call_count += 1
+            if call_count == 3:
+                raise RuntimeError("fail")
+            return len(samples)
+
+        with pytest.raises(PartialFailureError):
+            ds.process_shards(failing_fn, checkpoint=ckpt)
+
+        assert ckpt.exists()
+        lines = ckpt.read_text().splitlines()
+        assert len(lines) == 2  # 2 succeeded, 1 failed
+
+    def test_resume_skips_checkpointed_shards(self, tmp_path):
+        ds = _make_multi_shard_dataset(tmp_path, n_shards=3, per_shard=2)
+        ckpt = tmp_path / "checkpoint.txt"
+        all_shards = ds.list_shards()
+        # Pre-populate checkpoint with first two shards
+        ckpt.write_text(all_shards[0] + "\n" + all_shards[1] + "\n")
+
+        processed_shards: list[str] = []
+
+        def track_fn(samples):
+            processed_shards.append(samples[0].name.split("_")[0])
+            return len(samples)
+
+        ds.process_shards(track_fn, checkpoint=ckpt)
+        # Only the third shard should have been processed
+        assert len(processed_shards) == 1
+
+    def test_checkpoint_deleted_on_full_success(self, tmp_path):
+        ds = _make_multi_shard_dataset(tmp_path, n_shards=2, per_shard=2)
+        ckpt = tmp_path / "checkpoint.txt"
+        ds.process_shards(len, checkpoint=ckpt)
+        assert not ckpt.exists()
+
+    def test_checkpoint_none_is_default_behavior(self, tmp_path):
+        ds = _make_multi_shard_dataset(tmp_path, n_shards=2, per_shard=2)
+        results = ds.process_shards(len)
+        assert len(results) == 2
+
+    def test_all_checkpointed_returns_empty(self, tmp_path):
+        ds = _make_multi_shard_dataset(tmp_path, n_shards=2, per_shard=2)
+        ckpt = tmp_path / "checkpoint.txt"
+        all_shards = ds.list_shards()
+        ckpt.write_text("\n".join(all_shards) + "\n")
+        results = ds.process_shards(len, checkpoint=ckpt)
+        assert results == {}
+
+
+# ---------------------------------------------------------------------------
+# on_shard_error callback
+# ---------------------------------------------------------------------------
+
+
+class TestOnShardError:
+    def test_callback_invoked_on_failure(self, tmp_path):
+        ds = _make_multi_shard_dataset(tmp_path, n_shards=3, per_shard=2)
+        errors_seen: list[tuple[str, str]] = []
+
+        def error_cb(shard_id: str, exc: Exception) -> None:
+            errors_seen.append((shard_id, str(exc)))
+
+        call_count = 0
+
+        def failing_fn(samples):
+            nonlocal call_count
+            call_count += 1
+            if call_count == 2:
+                raise RuntimeError("shard 2 failed")
+            return len(samples)
+
+        with pytest.raises(PartialFailureError):
+            ds.process_shards(failing_fn, on_shard_error=error_cb)
+
+        assert len(errors_seen) == 1
+        assert "shard 2 failed" in errors_seen[0][1]
+
+    def test_callback_not_invoked_on_success(self, tmp_path):
+        ds = _make_multi_shard_dataset(tmp_path, n_shards=2, per_shard=2)
+        errors_seen: list[str] = []
+        ds.process_shards(len, on_shard_error=lambda s, e: errors_seen.append(s))
+        assert len(errors_seen) == 0

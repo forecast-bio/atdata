@@ -140,6 +140,8 @@ website:
             href: reference/local-storage.qmd
           - text: "Atmosphere"
             href: reference/atmosphere.qmd
+          - text: "Lexicon Reference"
+            href: reference/lexicons.qmd
           - text: "Promotion"
             href: reference/promotion.qmd
           - text: "load_dataset API"
@@ -166,6 +168,12 @@ website:
             href: examples/index-workflow.qmd
           - text: "Multi-Split Datasets"
             href: examples/multi-split.qmd
+          - text: "Dataset Profiler"
+            href: examples/dataset-profiler.qmd
+          - text: "Lens Graph Explorer"
+            href: examples/lens-graph.qmd
+          - text: "Query Cookbook"
+            href: examples/query-cookbook.qmd
       - text: "API"
         href: api/index.qmd
     right:
@@ -191,6 +199,9 @@ website:
             - examples/manifest-queries.qmd
             - examples/index-workflow.qmd
             - examples/multi-split.qmd
+            - examples/dataset-profiler.qmd
+            - examples/lens-graph.qmd
+            - examples/query-cookbook.qmd
         - section: "Reference"
           contents:
             - reference/architecture.qmd
@@ -199,6 +210,7 @@ website:
             - reference/lenses.qmd
             - reference/local-storage.qmd
             - reference/atmosphere.qmd
+            - reference/lexicons.qmd
             - reference/promotion.qmd
             - reference/load-dataset.qmd
             - reference/protocols.qmd

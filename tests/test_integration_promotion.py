@@ -209,7 +209,8 @@ class TestFullPromotionWorkflow:
         dataset_call = calls[-1]
         record = dataset_call.kwargs["data"]["record"]
         assert "storage" in record
-        assert local_entry.data_urls[0] in str(record["storage"]["urls"])
+        shard_urls = [s["url"] for s in record["storage"]["shards"]]
+        assert local_entry.data_urls[0] in shard_urls
 
 
 ##
@@ -397,7 +398,7 @@ class TestMetadataPreservation:
 
         # Should not raise
         result = promote_to_atmosphere(entry, index, authenticated_client)
-        assert isinstance(result, str)
+        assert result == dataset_response.uri
 
 
 ##
@@ -513,7 +514,7 @@ class TestLargeDatasetPromotion:
         calls = mock_atproto_client.com.atproto.repo.create_record.call_args_list
         dataset_call = calls[-1]
         record = dataset_call.kwargs["data"]["record"]
-        storage_urls = record["storage"]["urls"]
+        storage_urls = [s["url"] for s in record["storage"]["shards"]]
 
         assert len(storage_urls) == 100
         assert storage_urls[0] == "s3://bucket/shard-000000.tar"

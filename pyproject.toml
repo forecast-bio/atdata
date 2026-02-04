@@ -46,6 +46,9 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/atdata"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"lexicons" = "atdata/lexicons"
+
 [tool.pytest.ini_options]
 addopts = "--cov=atdata --cov-report=html"
 markers = [
@@ -62,6 +65,7 @@ markers = [
 [dependency-groups]
 dev = [
     "jupyter>=1.1.1",
+    "matplotlib>=3.10",
     "moto[s3]>=5.0.29",
     "pytest>=8.4.2",
     "pytest-cov>=7.0.0",
