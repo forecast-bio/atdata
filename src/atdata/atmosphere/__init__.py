@@ -37,6 +37,7 @@ from .labels import LabelPublisher, LabelLoader
 from .store import PDSBlobStore
 from ._types import AtUri, LEXICON_NAMESPACE
 from ._lexicon_types import (
+    DatasetMetadata,
     LexSchemaRecord,
     LexDatasetRecord,
     LexLensRecord,
@@ -105,13 +106,34 @@ class AtmosphereIndexEntry:
 
     @property
     def metadata(self) -> Optional[dict]:
-        """Metadata from the record, if any."""
-        import msgpack
+        """Metadata from the record, if any.
 
-        metadata_bytes = self._record.get("metadata")
-        if metadata_bytes is None:
+        Returns a flat dict for backward compatibility. Handles both the new
+        structured JSON metadata and legacy msgpack-encoded bytes.
+        """
+        raw = self._record.get("metadata")
+        if raw is None:
             return None
-        return msgpack.unpackb(metadata_bytes, raw=False)
+
+        # Legacy: raw msgpack bytes (from local tests or pre-decoded records).
+        if isinstance(raw, bytes):
+            import msgpack
+
+            return msgpack.unpackb(raw, raw=False)
+
+        # Legacy: ATProto $bytes envelope.
+        if isinstance(raw, dict) and "$bytes" in raw:
+            import base64
+            import msgpack
+
+            legacy_bytes = base64.b64decode(raw["$bytes"])
+            return msgpack.unpackb(legacy_bytes, raw=False)
+
+        # New structured format: plain JSON object.
+        if isinstance(raw, dict):
+            return DatasetMetadata.from_record(raw).to_dict()
+
+        return None
 
     @property
     def uri(self) -> str:

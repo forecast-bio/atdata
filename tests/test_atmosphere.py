@@ -39,6 +39,7 @@ from atdata.atmosphere import (
     S3ShardEntry,
     ShardChecksum,
     BlobEntry,
+    DatasetMetadata,
 )
 from atdata.atmosphere._lexicon_types import storage_from_record
 from atdata.atmosphere._types import LEXICON_NAMESPACE
@@ -491,42 +492,87 @@ class TestLexDatasetRecord:
         assert record["license"] == "MIT"
 
     def test_to_record_with_metadata(self):
-        """Convert dataset record with msgpack metadata to ATProto $bytes format."""
-        import base64
-        import msgpack
-
-        metadata_bytes = msgpack.packb({"size": 1000, "split": "train"})
+        """Convert dataset record with typed metadata to structured JSON."""
+        meta = DatasetMetadata(split="train", custom={"size": 1000})
         dataset = LexDatasetRecord(
             name="MetaDataset",
             schema_ref="at://did:plc:abc/collection/key",
             storage=StorageHttp(shards=[]),
-            metadata=metadata_bytes,
+            metadata=meta,
         )
 
         record = dataset.to_record()
 
-        # metadata must be encoded as ATProto bytes {"$bytes": "<base64>"}
+        # metadata is now a plain JSON object, not $bytes
         assert isinstance(record["metadata"], dict)
-        assert "$bytes" in record["metadata"]
-        assert base64.b64decode(record["metadata"]["$bytes"]) == metadata_bytes
+        assert "$bytes" not in record["metadata"]
+        assert record["metadata"]["split"] == "train"
+        assert record["metadata"]["custom"] == {"size": 1000}
 
     def test_metadata_roundtrip(self):
         """Metadata survives to_record() -> from_record() roundtrip."""
-        import msgpack
-
-        metadata_bytes = msgpack.packb({"size": 1000, "split": "train"})
+        meta = DatasetMetadata(
+            split="train",
+            version="2.0",
+            source_uri="https://example.com/raw",
+            custom={"size": 1000},
+        )
         dataset = LexDatasetRecord(
             name="MetaDataset",
             schema_ref="at://did:plc:abc/collection/key",
             storage=StorageHttp(shards=[]),
-            metadata=metadata_bytes,
+            metadata=meta,
         )
 
         record = dataset.to_record()
         restored = LexDatasetRecord.from_record(record)
 
-        assert restored.metadata == metadata_bytes
-        assert msgpack.unpackb(restored.metadata, raw=False) == {"size": 1000, "split": "train"}
+        assert restored.metadata is not None
+        assert restored.metadata.split == "train"
+        assert restored.metadata.version == "2.0"
+        assert restored.metadata.source_uri == "https://example.com/raw"
+        assert restored.metadata.custom == {"size": 1000}
+
+    def test_metadata_legacy_bytes_roundtrip(self):
+        """Legacy msgpack $bytes metadata is decoded into DatasetMetadata."""
+        import base64
+        import msgpack
+
+        legacy_dict = {"size": 1000, "split": "train"}
+        legacy_bytes = msgpack.packb(legacy_dict)
+        record_dict = {
+            "$type": "ac.foundation.dataset.record",
+            "name": "LegacyDataset",
+            "schemaRef": "at://did:plc:abc/collection/key",
+            "storage": {"$type": "ac.foundation.dataset.storageHttp", "shards": []},
+            "createdAt": "2025-01-01T00:00:00+00:00",
+            "metadata": {"$bytes": base64.b64encode(legacy_bytes).decode("ascii")},
+        }
+
+        restored = LexDatasetRecord.from_record(record_dict)
+        assert restored.metadata is not None
+        assert restored.metadata.split == "train"
+        assert restored.metadata.custom == {"size": 1000}
+
+    def test_metadata_legacy_raw_bytes(self):
+        """Legacy raw msgpack bytes metadata is decoded into DatasetMetadata."""
+        import msgpack
+
+        legacy_dict = {"split": "test", "version": "1.0"}
+        legacy_bytes = msgpack.packb(legacy_dict)
+        record_dict = {
+            "$type": "ac.foundation.dataset.record",
+            "name": "LegacyDataset",
+            "schemaRef": "at://did:plc:abc/collection/key",
+            "storage": {"$type": "ac.foundation.dataset.storageHttp", "shards": []},
+            "createdAt": "2025-01-01T00:00:00+00:00",
+            "metadata": legacy_bytes,
+        }
+
+        restored = LexDatasetRecord.from_record(record_dict)
+        assert restored.metadata is not None
+        assert restored.metadata.split == "test"
+        assert restored.metadata.version == "1.0"
 
 
 # =============================================================================
@@ -1596,6 +1642,11 @@ class TestDatasetPublisher:
         call_args = mock_atproto_client.com.atproto.repo.create_record.call_args
         record = call_args.kwargs["data"]["record"]
         assert "metadata" in record
+        # metadata is now a structured JSON object, not $bytes
+        assert isinstance(record["metadata"], dict)
+        assert "$bytes" not in record["metadata"]
+        assert record["metadata"]["split"] == "train"
+        assert record["metadata"]["custom"] == {"samples": 100}
 
 
 class TestDatasetLoader:
@@ -1679,7 +1730,27 @@ class TestDatasetLoader:
             loader.get_urls(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
 
     def test_get_metadata(self, authenticated_client, mock_atproto_client):
-        """Get metadata from dataset record."""
+        """Get metadata from dataset record (new structured format)."""
+        mock_response = Mock()
+        mock_response.value = {
+            "$type": f"{LEXICON_NAMESPACE}.record",
+            "name": "MetaDataset",
+            "schemaRef": "at://schema",
+            "storage": {"$type": f"{LEXICON_NAMESPACE}.storageExternal", "urls": []},
+            "metadata": {"split": "train", "custom": {"samples": 10000}},
+        }
+        mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
+
+        loader = DatasetLoader(authenticated_client)
+        metadata = loader.get_metadata(
+            f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz"
+        )
+
+        assert metadata["split"] == "train"
+        assert metadata["samples"] == 10000
+
+    def test_get_metadata_legacy_bytes(self, authenticated_client, mock_atproto_client):
+        """Get metadata from dataset record with legacy msgpack bytes."""
         import msgpack
 
         metadata_bytes = msgpack.packb({"split": "train", "samples": 10000})

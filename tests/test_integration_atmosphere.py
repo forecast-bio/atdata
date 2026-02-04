@@ -264,7 +264,7 @@ class TestAtmosphereIndex:
         assert entry.uri == "at://test/dataset/key"
 
     def test_entry_metadata_unpacking(self):
-        """Entry should unpack msgpack metadata."""
+        """Entry should unpack legacy msgpack metadata."""
         original_meta = {"version": "1.0", "count": 100}
         packed_meta = msgpack.packb(original_meta)
 
@@ -282,6 +282,29 @@ class TestAtmosphereIndex:
 
         assert entry.metadata == original_meta
         assert entry.metadata["version"] == "1.0"
+
+    def test_entry_structured_metadata(self):
+        """Entry should handle new structured JSON metadata."""
+        record = {
+            "name": "structured-meta-dataset",
+            "schemaRef": "at://schema",
+            "storage": {
+                "$type": f"{LEXICON_NAMESPACE}.storageExternal",
+                "urls": ["s3://data.tar"],
+            },
+            "metadata": {
+                "split": "train",
+                "version": "2.0",
+                "custom": {"count": 100},
+            },
+        }
+
+        entry = AtmosphereIndexEntry("at://test/dataset/key", record)
+
+        assert entry.metadata is not None
+        assert entry.metadata["split"] == "train"
+        assert entry.metadata["version"] == "2.0"
+        assert entry.metadata["count"] == 100
 
     def test_entry_no_metadata_returns_none(self):
         """Entry without metadata should return None."""

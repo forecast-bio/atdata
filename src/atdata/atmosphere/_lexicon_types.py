@@ -79,6 +79,153 @@ class DatasetSize:
         )
 
 
+@dataclass
+class DatasetMetadata:
+    """Typed metadata for dataset records.
+
+    Mirrors ``ac.foundation.dataset.record#datasetMetadata``. Provides
+    well-known fields for common dataset metadata, plus a ``custom`` dict
+    for domain-specific extensions.
+
+    All fields are optional — only set what applies to your dataset.
+
+    Examples:
+        >>> meta = DatasetMetadata(
+        ...     source_uri="https://example.com/raw-data",
+        ...     created_by="training-pipeline v2",
+        ...     processing_steps=["normalize", "augment"],
+        ...     custom={"model": "resnet50", "epoch": 10},
+        ... )
+        >>> record = meta.to_record()
+        >>> restored = DatasetMetadata.from_record(record)
+    """
+
+    source_uri: str | None = None
+    """URI or identifier of the upstream data source."""
+
+    created_by: str | None = None
+    """Tool, pipeline, or user that created this dataset."""
+
+    version: str | None = None
+    """Dataset version string (e.g., '2.1.0')."""
+
+    processing_steps: list[str] | None = None
+    """Ordered list of processing/transformation steps applied."""
+
+    split: str | None = None
+    """Dataset split name (e.g., 'train', 'test', 'validation')."""
+
+    custom: dict[str, Any] | None = None
+    """Arbitrary domain-specific metadata. Keys should be short strings."""
+
+    def to_record(self) -> dict[str, Any]:
+        """Serialize to ATProto record dict."""
+        d: dict[str, Any] = {}
+        if self.source_uri is not None:
+            d["sourceUri"] = self.source_uri
+        if self.created_by is not None:
+            d["createdBy"] = self.created_by
+        if self.version is not None:
+            d["version"] = self.version
+        if self.processing_steps is not None:
+            d["processingSteps"] = self.processing_steps
+        if self.split is not None:
+            d["split"] = self.split
+        if self.custom is not None:
+            d["custom"] = self.custom
+        return d
+
+    @classmethod
+    def from_record(cls, d: dict[str, Any]) -> DatasetMetadata:
+        """Deserialize from ATProto record dict."""
+        return cls(
+            source_uri=d.get("sourceUri"),
+            created_by=d.get("createdBy"),
+            version=d.get("version"),
+            processing_steps=d.get("processingSteps"),
+            split=d.get("split"),
+            custom=d.get("custom"),
+        )
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> DatasetMetadata:
+        """Create from a plain dict, mapping known keys to typed fields.
+
+        Unknown keys are placed in ``custom``. This provides a migration path
+        from the old untyped metadata dicts.
+
+        Args:
+            d: Plain metadata dictionary.
+
+        Returns:
+            DatasetMetadata with known fields extracted and the rest in custom.
+
+        Examples:
+            >>> meta = DatasetMetadata.from_dict({"split": "train", "model": "bert"})
+            >>> meta.split
+            'train'
+            >>> meta.custom
+            {'model': 'bert'}
+        """
+        known_keys = {
+            "source_uri", "sourceUri",
+            "created_by", "createdBy",
+            "version",
+            "processing_steps", "processingSteps",
+            "split",
+            "custom",
+        }
+        custom_extra: dict[str, Any] = {}
+        for k, v in d.items():
+            if k not in known_keys:
+                custom_extra[k] = v
+
+        explicit_custom = d.get("custom")
+        if isinstance(explicit_custom, dict):
+            custom_extra.update(explicit_custom)
+
+        return cls(
+            source_uri=d.get("sourceUri") or d.get("source_uri"),
+            created_by=d.get("createdBy") or d.get("created_by"),
+            version=d.get("version"),
+            processing_steps=d.get("processingSteps") or d.get("processing_steps"),
+            split=d.get("split"),
+            custom=custom_extra or None,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        """Flatten to a plain dict for backward-compatible consumption.
+
+        Well-known fields are placed at the top level with their Python
+        attribute names. Custom keys are merged in (custom keys do not
+        overwrite well-known keys).
+
+        Returns:
+            A flat dict suitable for the old ``dict | None`` metadata API.
+
+        Examples:
+            >>> meta = DatasetMetadata(split="train", custom={"model": "bert"})
+            >>> meta.to_dict()
+            {'split': 'train', 'model': 'bert'}
+        """
+        d: dict[str, Any] = {}
+        if self.source_uri is not None:
+            d["source_uri"] = self.source_uri
+        if self.created_by is not None:
+            d["created_by"] = self.created_by
+        if self.version is not None:
+            d["version"] = self.version
+        if self.processing_steps is not None:
+            d["processing_steps"] = self.processing_steps
+        if self.split is not None:
+            d["split"] = self.split
+        if self.custom:
+            for k, v in self.custom.items():
+                if k not in d:
+                    d[k] = v
+        return d
+
+
 # ---------------------------------------------------------------------------
 # Storage types
 # ---------------------------------------------------------------------------
@@ -449,8 +596,8 @@ class LexDatasetRecord:
     description: str | None = None
     """Human-readable description."""
 
-    metadata: bytes | None = None
-    """Msgpack-encoded metadata dict."""
+    metadata: DatasetMetadata | None = None
+    """Structured dataset metadata."""
 
     tags: list[str] | None = None
     """Searchable tags for discovery."""
@@ -473,11 +620,7 @@ class LexDatasetRecord:
         if self.description is not None:
             d["description"] = self.description
         if self.metadata is not None:
-            # ATProto encodes raw bytes as {"$bytes": "<base64>"} in JSON records.
-            # Without this, pydantic cannot serialize the record to JSON.
-            d["metadata"] = {
-                "$bytes": base64.b64encode(self.metadata).decode("ascii")
-            }
+            d["metadata"] = self.metadata.to_record()
         if self.tags:
             d["tags"] = self.tags
         if self.size is not None:
@@ -493,14 +636,24 @@ class LexDatasetRecord:
         if "size" in d:
             size = DatasetSize.from_record(d["size"])
 
-        # Decode ATProto bytes encoding {"$bytes": "<base64>"} back to raw bytes.
         raw_metadata = d.get("metadata")
-        metadata_bytes: bytes | None = None
+        metadata: DatasetMetadata | None = None
         if isinstance(raw_metadata, dict) and "$bytes" in raw_metadata:
-            metadata_bytes = base64.b64decode(raw_metadata["$bytes"])
+            # Legacy format: msgpack-encoded bytes in ATProto $bytes envelope.
+            import msgpack
+
+            legacy_bytes = base64.b64decode(raw_metadata["$bytes"])
+            legacy_dict = msgpack.unpackb(legacy_bytes, raw=False)
+            metadata = DatasetMetadata.from_dict(legacy_dict)
         elif isinstance(raw_metadata, bytes):
-            # Already decoded (e.g. from local storage or tests)
-            metadata_bytes = raw_metadata
+            # Legacy format: raw msgpack bytes (local storage / tests).
+            import msgpack
+
+            legacy_dict = msgpack.unpackb(raw_metadata, raw=False)
+            metadata = DatasetMetadata.from_dict(legacy_dict)
+        elif isinstance(raw_metadata, dict):
+            # New structured format: plain JSON object.
+            metadata = DatasetMetadata.from_record(raw_metadata)
 
         return cls(
             name=d["name"],
@@ -508,7 +661,7 @@ class LexDatasetRecord:
             storage=storage_from_record(d["storage"]),
             created_at=datetime.fromisoformat(d["createdAt"]),
             description=d.get("description"),
-            metadata=metadata_bytes,
+            metadata=metadata,
             tags=d.get("tags"),
             size=size,
             license=d.get("license"),
@@ -649,6 +802,7 @@ __all__ = [
     "LEXICON_NAMESPACE",
     "ShardChecksum",
     "DatasetSize",
+    "DatasetMetadata",
     "HttpShardEntry",
     "StorageHttp",
     "S3ShardEntry",
