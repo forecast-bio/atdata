@@ -1035,7 +1035,6 @@ class TestPackableTypePreservation:
 
     def test_instance_has_from_data(self):
         """The class exposes the `from_data` classmethod."""
-        sample = _TypeTestSample(name="b", count=2, image=np.ones(4))
         data = {"name": "b", "count": 2, "image": np.ones(4)}
         restored = _TypeTestSample.from_data(data)
         assert restored.name == "b"

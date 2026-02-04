@@ -9,7 +9,6 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Annotated
 
-import numpy as np
 import pandas as pd
 import pytest
 from numpy.typing import NDArray
