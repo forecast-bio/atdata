@@ -1418,7 +1418,7 @@
     "href": "examples/index-workflow.html#create-an-index-with-local-disk-storage",
     "title": "Index-Managed Datasets",
     "section": "2 — Create an Index with local disk storage",
-    "text": "2 — Create an Index with local disk storage\nBy default Index() uses an in-memory SQLite database. We pass a custom path to persist across the example, and a LocalDiskStore rooted in a temp directory.\n\nimport tempfile\nfrom pathlib import Path\n\ntmpdir = Path(tempfile.mkdtemp(prefix=\"atdata_index_\"))\n\nindex = atdata.Index(\n    path=tmpdir / \"index.db\",\n    data_store=atdata.LocalDiskStore(root=tmpdir / \"data\"),\n)\n\nprint(f\"Index DB   : {tmpdir / 'index.db'}\")\nprint(f\"Data root  : {tmpdir / 'data'}\")\n\nIndex DB   : /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_index_vf3qkcc5/index.db\nData root  : /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_index_vf3qkcc5/data",
+    "text": "2 — Create an Index with local disk storage\nBy default Index() uses an in-memory SQLite database. We pass a custom path to persist across the example, and a LocalDiskStore rooted in a temp directory.\n\nimport tempfile\nfrom pathlib import Path\n\ntmpdir = Path(tempfile.mkdtemp(prefix=\"atdata_index_\"))\n\nindex = atdata.Index(\n    path=tmpdir / \"index.db\",\n    data_store=atdata.LocalDiskStore(root=tmpdir / \"data\"),\n)\n\nprint(f\"Index DB   : {tmpdir / 'index.db'}\")\nprint(f\"Data root  : {tmpdir / 'data'}\")\n\nIndex DB   : /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_index_mgzuaw0j/index.db\nData root  : /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_index_mgzuaw0j/data",
     "crumbs": [
       "Examples",
       "Index-Managed Datasets"
@@ -1429,7 +1429,7 @@
     "href": "examples/index-workflow.html#write-datasets-through-the-index",
     "title": "Index-Managed Datasets",
     "section": "3 — Write datasets through the index",
-    "text": "3 — Write datasets through the index\nindex.write() serializes samples to sharded tars via the data store and creates a tracked entry with a content-addressed CID.\n\nrng = np.random.default_rng(99)\n\n# --- Dataset 1: text documents ---\ntext_samples = [\n    TextSample(\n        text=f\"Document number {i} about topic {i % 5}.\",\n        language=\"en\" if i % 3 != 0 else \"es\",\n        word_count=len(f\"Document number {i} about topic {i % 5}.\".split()),\n    )\n    for i in range(500)\n]\n\ntext_entry = index.write(\n    text_samples,\n    name=\"docs-v1\",\n    description=\"500 synthetic text documents\",\n    tags=[\"text\", \"multilingual\"],\n    maxcount=250,\n)\n\nprint(f\"Text dataset CID  : {text_entry.cid[:16]}...\")\nprint(f\"Text dataset shards: {len(text_entry.data_urls)}\")\n\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/tmpr5rd7ujy/data-000000.tar 0 0.0 GB 0\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/tmpr5rd7ujy/data-000001.tar 250 0.0 GB 250\n# writing /private/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_index_vf3qkcc5/data/docs-v1/data--9c0049e5--000000.tar 0 0.0 GB 0\nText dataset CID  : bafyreig5yrowbl5...\nText dataset shards: 1\n\n\n\n# --- Dataset 2: embeddings ---\nembedding_samples = [\n    EmbeddingSample(\n        vector=rng.standard_normal(128).astype(np.float32),\n        label=f\"class_{i % 10}\",\n        source=\"synthetic\",\n    )\n    for i in range(300)\n]\n\nemb_entry = index.write(\n    embedding_samples,\n    name=\"embeddings-v1\",\n    description=\"300 synthetic 128-d embeddings\",\n    tags=[\"embeddings\", \"synthetic\"],\n    maxcount=150,\n)\n\nprint(f\"Embedding CID     : {emb_entry.cid[:16]}...\")\nprint(f\"Embedding shards  : {len(emb_entry.data_urls)}\")\n\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/tmpdniyr7ep/data-000000.tar 0 0.0 GB 0\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/tmpdniyr7ep/data-000001.tar 150 0.0 GB 150\n# writing /private/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_index_vf3qkcc5/data/embeddings-v1/data--b33656bc--000000.tar 0 0.0 GB 0\nEmbedding CID     : bafyreiey4uaprqp...\nEmbedding shards  : 1",
+    "text": "3 — Write datasets through the index\nindex.write() serializes samples to sharded tars via the data store and creates a tracked entry with a content-addressed CID.\n\nrng = np.random.default_rng(99)\n\n# --- Dataset 1: text documents ---\ntext_samples = [\n    TextSample(\n        text=f\"Document number {i} about topic {i % 5}.\",\n        language=\"en\" if i % 3 != 0 else \"es\",\n        word_count=len(f\"Document number {i} about topic {i % 5}.\".split()),\n    )\n    for i in range(500)\n]\n\ntext_entry = index.write(\n    text_samples,\n    name=\"docs-v1\",\n    description=\"500 synthetic text documents\",\n    tags=[\"text\", \"multilingual\"],\n    maxcount=250,\n)\n\nprint(f\"Text dataset CID  : {text_entry.cid[:16]}...\")\nprint(f\"Text dataset shards: {len(text_entry.data_urls)}\")\n\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/tmp7jfd4umc/data-000000.tar 0 0.0 GB 0\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/tmp7jfd4umc/data-000001.tar 250 0.0 GB 250\n# writing /private/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_index_mgzuaw0j/data/docs-v1/data--a33cae87--000000.tar 0 0.0 GB 0\nText dataset CID  : bafyreihvtxet3k6...\nText dataset shards: 1\n\n\n\n# --- Dataset 2: embeddings ---\nembedding_samples = [\n    EmbeddingSample(\n        vector=rng.standard_normal(128).astype(np.float32),\n        label=f\"class_{i % 10}\",\n        source=\"synthetic\",\n    )\n    for i in range(300)\n]\n\nemb_entry = index.write(\n    embedding_samples,\n    name=\"embeddings-v1\",\n    description=\"300 synthetic 128-d embeddings\",\n    tags=[\"embeddings\", \"synthetic\"],\n    maxcount=150,\n)\n\nprint(f\"Embedding CID     : {emb_entry.cid[:16]}...\")\nprint(f\"Embedding shards  : {len(emb_entry.data_urls)}\")\n\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/tmpz3he7ve8/data-000000.tar 0 0.0 GB 0\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/tmpz3he7ve8/data-000001.tar 150 0.0 GB 150\n# writing /private/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_index_mgzuaw0j/data/embeddings-v1/data--04a64610--000000.tar 0 0.0 GB 0\nEmbedding CID     : bafyreic2r24xfjd...\nEmbedding shards  : 1",
     "crumbs": [
       "Examples",
       "Index-Managed Datasets"
@@ -1440,7 +1440,7 @@
     "href": "examples/index-workflow.html#list-and-discover-datasets",
     "title": "Index-Managed Datasets",
     "section": "4 — List and discover datasets",
-    "text": "4 — List and discover datasets\n\nprint(\"Datasets in index:\")\nfor entry in index.list_datasets():\n    print(f\"  {entry.name:20s}  shards={len(entry.data_urls)}  cid={entry.cid[:12]}...\")\n\nDatasets in index:\n  test-ly               shards=1  cid=bafyreiawvxv...\n  proto-ly              shards=1  cid=bafyreidtr6v...\n  proto-ly              shards=1  cid=bafyreihelhd...\n  proto-ly              shards=1  cid=bafyreihly5j...\n  docs-v1               shards=1  cid=bafyreicek7z...\n  embeddings-v1         shards=1  cid=bafyreidc3by...\n  docs-v1               shards=1  cid=bafyreia4iqz...\n  embeddings-v1         shards=1  cid=bafyreihsz4n...\n  docs-v1               shards=1  cid=bafyreiejgub...\n  embeddings-v1         shards=1  cid=bafyreifwtav...\n  docs-v1               shards=1  cid=bafyreiaor62...\n  embeddings-v1         shards=1  cid=bafyreidjt2i...\n  docs-v1               shards=1  cid=bafyreidphej...\n  embeddings-v1         shards=1  cid=bafyreid5c7s...\n  docs-v1               shards=1  cid=bafyreia6rt3...\n  embeddings-v1         shards=1  cid=bafyreifwj4u...\n  docs-v1               shards=1  cid=bafyreig5yro...\n  embeddings-v1         shards=1  cid=bafyreiey4ua...",
+    "text": "4 — List and discover datasets\n\nprint(\"Datasets in index:\")\nfor entry in index.list_datasets():\n    print(f\"  {entry.name:20s}  shards={len(entry.data_urls)}  cid={entry.cid[:12]}...\")\n\nDatasets in index:\n  test-ly               shards=1  cid=bafyreiawvxv...\n  proto-ly              shards=1  cid=bafyreidtr6v...\n  proto-ly              shards=1  cid=bafyreihelhd...\n  proto-ly              shards=1  cid=bafyreihly5j...\n  docs-v1               shards=1  cid=bafyreicek7z...\n  embeddings-v1         shards=1  cid=bafyreidc3by...\n  docs-v1               shards=1  cid=bafyreia4iqz...\n  embeddings-v1         shards=1  cid=bafyreihsz4n...\n  docs-v1               shards=1  cid=bafyreiejgub...\n  embeddings-v1         shards=1  cid=bafyreifwtav...\n  docs-v1               shards=1  cid=bafyreiaor62...\n  embeddings-v1         shards=1  cid=bafyreidjt2i...\n  docs-v1               shards=1  cid=bafyreidphej...\n  embeddings-v1         shards=1  cid=bafyreid5c7s...\n  docs-v1               shards=1  cid=bafyreia6rt3...\n  embeddings-v1         shards=1  cid=bafyreifwj4u...\n  docs-v1               shards=1  cid=bafyreig5yro...\n  embeddings-v1         shards=1  cid=bafyreiey4ua...\n  docs-v1               shards=1  cid=bafyreihvtxe...\n  embeddings-v1         shards=1  cid=bafyreic2r24...",
     "crumbs": [
       "Examples",
       "Index-Managed Datasets"
@@ -1502,6 +1502,105 @@
     ]
   },
   {
+    "objectID": "examples/typed-pipeline.html",
+    "href": "examples/typed-pipeline.html",
+    "title": "Typed Dataset Pipeline",
+    "section": "",
+    "text": "This example walks through the full lifecycle of a typed dataset. You will define a sample type with the @packable decorator, generate synthetic data, write it across multiple shards, and iterate over it with automatic batch aggregation.",
+    "crumbs": [
+      "Examples",
+      "Typed Dataset Pipeline"
+    ]
+  },
+  {
+    "objectID": "examples/typed-pipeline.html#define-a-sample-type",
+    "href": "examples/typed-pipeline.html#define-a-sample-type",
+    "title": "Typed Dataset Pipeline",
+    "section": "1 — Define a sample type",
+    "text": "1 — Define a sample type\nThe @packable decorator turns a plain class into a serializable dataclass with automatic msgpack encoding and transparent NDArray conversion.\n\nimport numpy as np\nfrom numpy.typing import NDArray\nimport atdata\n\n\n@atdata.packable\nclass SensorReading:\n    \"\"\"A single sensor observation with metadata.\"\"\"\n\n    waveform: NDArray  # 1-D time-series array\n    sensor_id: str\n    temperature: float\n    anomaly: bool\n\nEvery field is strongly typed. NDArray fields are automatically compressed to bytes during serialization and restored on read—no manual conversion needed.",
+    "crumbs": [
+      "Examples",
+      "Typed Dataset Pipeline"
+    ]
+  },
+  {
+    "objectID": "examples/typed-pipeline.html#generate-synthetic-samples",
+    "href": "examples/typed-pipeline.html#generate-synthetic-samples",
+    "title": "Typed Dataset Pipeline",
+    "section": "2 — Generate synthetic samples",
+    "text": "2 — Generate synthetic samples\n\nrng = np.random.default_rng(42)\n\nsamples = [\n    SensorReading(\n        waveform=rng.standard_normal(512).astype(np.float32),\n        sensor_id=f\"sensor_{i % 8:02d}\",\n        temperature=20.0 + rng.normal(0, 3),\n        anomaly=rng.random() &lt; 0.05,\n    )\n    for i in range(2_000)\n]\n\nprint(f\"Created {len(samples)} samples\")\nprint(f\"Waveform shape: {samples[0].waveform.shape}\")\n\nCreated 2000 samples\nWaveform shape: (512,)",
+    "crumbs": [
+      "Examples",
+      "Typed Dataset Pipeline"
+    ]
+  },
+  {
+    "objectID": "examples/typed-pipeline.html#verify-round-trip-serialization",
+    "href": "examples/typed-pipeline.html#verify-round-trip-serialization",
+    "title": "Typed Dataset Pipeline",
+    "section": "3 — Verify round-trip serialization",
+    "text": "3 — Verify round-trip serialization\nBefore writing to disk, confirm that packing and unpacking preserves data.\n\noriginal = samples[0]\npacked = original.packed                         # -&gt; bytes (msgpack)\nrestored = SensorReading.from_bytes(packed)      # -&gt; SensorReading\n\nassert original.sensor_id == restored.sensor_id\nassert original.temperature == restored.temperature\nassert original.anomaly == restored.anomaly\nassert np.allclose(original.waveform, restored.waveform)\n\nprint(f\"Packed size: {len(packed):,} bytes\")\nprint(\"Round-trip: OK\")\n\nPacked size: 2,124 bytes\nRound-trip: OK\n\n\nNumpy scalars (like np.float64 from rng.normal()) are automatically coerced to Python natives during serialization, so temperature comes back as a plain float:\n\nprint(f\"Temperature type (original)  : {type(original.temperature).__name__}\")\nprint(f\"Temperature type (restored)  : {type(restored.temperature).__name__}\")\nassert isinstance(restored.temperature, float)\n\nTemperature type (original)  : float\nTemperature type (restored)  : float",
+    "crumbs": [
+      "Examples",
+      "Typed Dataset Pipeline"
+    ]
+  },
+  {
+    "objectID": "examples/typed-pipeline.html#write-sharded-tar-files",
+    "href": "examples/typed-pipeline.html#write-sharded-tar-files",
+    "title": "Typed Dataset Pipeline",
+    "section": "4 — Write sharded tar files",
+    "text": "4 — Write sharded tar files\nwrite_samples serializes samples to WebDataset tar archives. Setting maxcount splits the output across multiple shards—essential for parallel I/O at scale.\n\nimport tempfile\nfrom pathlib import Path\n\ntmpdir = Path(tempfile.mkdtemp(prefix=\"atdata_example_\"))\nds = atdata.write_samples(\n    samples,\n    tmpdir / \"readings.tar\",\n    maxcount=500,       # 4 shards of 500 samples each\n    manifest=True,      # generate per-shard metadata manifests\n)\n\nprint(f\"Dataset URL : {ds.url}\")\nprint(f\"Sample type : {ds.sample_type.__name__}\")\nprint(f\"Shard count : {len(ds.list_shards())}\")\n\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_example_ao1wuq0r/readings-000000.tar 0 0.0 GB 0\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_example_ao1wuq0r/readings-000001.tar 500 0.0 GB 500\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_example_ao1wuq0r/readings-000002.tar 500 0.0 GB 1000\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_example_ao1wuq0r/readings-000003.tar 500 0.0 GB 1500\nDataset URL : /private/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_example_ao1wuq0r/readings-00000{0,1,2,3}.tar\nSample type : SensorReading\nShard count : 4\n\n\nThe returned Dataset[SensorReading] is immediately usable—no separate loading step required.",
+    "crumbs": [
+      "Examples",
+      "Typed Dataset Pipeline"
+    ]
+  },
+  {
+    "objectID": "examples/typed-pipeline.html#iterate-with-automatic-batching",
+    "href": "examples/typed-pipeline.html#iterate-with-automatic-batching",
+    "title": "Typed Dataset Pipeline",
+    "section": "5 — Iterate with automatic batching",
+    "text": "5 — Iterate with automatic batching\nDataset.ordered() streams samples in shard order. When you pass a batch_size, atdata wraps consecutive samples in a SampleBatch that aggregates fields automatically:\n\nNDArray fields are stacked into a single array with a leading batch dimension.\nScalar/string fields become Python lists.\n\n\nfor batch in ds.ordered(batch_size=64):\n    # NDArray field -&gt; (64, 512) float32 array\n    print(f\"waveform    : {batch.waveform.shape}, {batch.waveform.dtype}\")\n\n    # Scalar fields -&gt; plain lists\n    print(f\"sensor_id   : {batch.sensor_id[:3]}...\")\n    print(f\"temperature : {[round(t, 1) for t in batch.temperature[:3]]}...\")\n    print(f\"anomaly     : {batch.anomaly[:3]}...\")\n    break\n\nwaveform    : (64, 512), float32\nsensor_id   : ['sensor_00', 'sensor_01', 'sensor_02']...\ntemperature : [20.3, 13.5, 19.2]...\nanomaly     : [True, False, False]...",
+    "crumbs": [
+      "Examples",
+      "Typed Dataset Pipeline"
+    ]
+  },
+  {
+    "objectID": "examples/typed-pipeline.html#shuffled-iteration-for-training",
+    "href": "examples/typed-pipeline.html#shuffled-iteration-for-training",
+    "title": "Typed Dataset Pipeline",
+    "section": "6 — Shuffled iteration for training",
+    "text": "6 — Shuffled iteration for training\nFor model training you want randomized order. shuffled() applies two-level shuffling (shard order + in-buffer sample shuffling) to give well-mixed batches while staying streaming-friendly.\n\nsensor_ids_seen: set[str] = set()\n\nfor batch in ds.shuffled(batch_size=128):\n    sensor_ids_seen.update(batch.sensor_id)\n    if len(sensor_ids_seen) == 8:\n        break\n\nprint(f\"Unique sensors in early batches: {sorted(sensor_ids_seen)}\")\n\nUnique sensors in early batches: ['sensor_00', 'sensor_01', 'sensor_02', 'sensor_03', 'sensor_04', 'sensor_05', 'sensor_06', 'sensor_07']",
+    "crumbs": [
+      "Examples",
+      "Typed Dataset Pipeline"
+    ]
+  },
+  {
+    "objectID": "examples/typed-pipeline.html#clean-up",
+    "href": "examples/typed-pipeline.html#clean-up",
+    "title": "Typed Dataset Pipeline",
+    "section": "7 — Clean up",
+    "text": "7 — Clean up\n\nimport shutil\n\nshutil.rmtree(tmpdir, ignore_errors=True)",
+    "crumbs": [
+      "Examples",
+      "Typed Dataset Pipeline"
+    ]
+  },
+  {
+    "objectID": "examples/typed-pipeline.html#key-takeaways",
+    "href": "examples/typed-pipeline.html#key-takeaways",
+    "title": "Typed Dataset Pipeline",
+    "section": "Key takeaways",
+    "text": "Key takeaways\n\n\n\n\n\n\n\nConcept\nAPI\n\n\n\n\nType-safe samples\n@atdata.packable\n\n\nAutomatic serialization\n.packed / .from_bytes()\n\n\nSharded writes with manifests\natdata.write_samples(..., maxcount=N, manifest=True)\n\n\nNumpy scalar coercion\nnp.float64 → float automatically\n\n\nOrdered iteration\nds.ordered(batch_size=N)\n\n\nShuffled iteration\nds.shuffled(batch_size=N)\n\n\nBatch aggregation\nbatch.field (NDArray stacking or list)",
+    "crumbs": [
+      "Examples",
+      "Typed Dataset Pipeline"
+    ]
+  },
+  {
     "objectID": "examples/manifest-queries.html",
     "href": "examples/manifest-queries.html",
     "title": "Manifest-Powered Queries",
@@ -1539,7 +1638,7 @@
     "href": "examples/manifest-queries.html#generate-data-and-write-shards-with-manifests",
     "title": "Manifest-Powered Queries",
     "section": "3 — Generate data and write shards with manifests",
-    "text": "3 — Generate data and write shards with manifests\nPass manifest=True to write_samples and atdata builds the sidecar manifest files automatically—no manual ManifestBuilder plumbing needed.\n\nimport tempfile\nfrom pathlib import Path\n\ntmpdir = Path(tempfile.mkdtemp(prefix=\"atdata_manifest_\"))\nrng = np.random.default_rng(7)\n\ncategories = [\"cat\", \"dog\", \"bird\", \"fish\", \"horse\"]\nall_tags = [\"outdoor\", \"indoor\", \"closeup\", \"wide\", \"blurry\", \"sharp\"]\nnum_samples = 300\n\nsamples = [\n    LabeledImage(\n        pixels=rng.integers(0, 255, (32, 32, 3), dtype=np.uint8),\n        label=categories[rng.integers(0, len(categories))],\n        confidence=round(float(rng.uniform(0.5, 1.0)), 3),\n        tags=list(rng.choice(all_tags, size=rng.integers(1, 4), replace=False)),\n    )\n    for _ in range(num_samples)\n]\n\nds = atdata.write_samples(\n    samples,\n    tmpdir / \"images.tar\",\n    maxcount=100,       # 3 shards of 100 samples each\n    manifest=True,      # auto-build JSON + Parquet sidecar manifests\n)\n\nprint(f\"Wrote {num_samples} samples across {len(ds.list_shards())} shards\")\nprint(f\"Manifest files: {sorted(p.name for p in tmpdir.glob('*.manifest.*'))}\")\n\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_manifest_pux3rmim/images-000000.tar 0 0.0 GB 0\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_manifest_pux3rmim/images-000001.tar 100 0.0 GB 100\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_manifest_pux3rmim/images-000002.tar 100 0.0 GB 200\nWrote 300 samples across 3 shards\nManifest files: ['images-000000.manifest.json', 'images-000000.manifest.parquet', 'images-000001.manifest.json', 'images-000001.manifest.parquet', 'images-000002.manifest.json', 'images-000002.manifest.parquet']",
+    "text": "3 — Generate data and write shards with manifests\nPass manifest=True to write_samples and atdata builds the sidecar manifest files automatically—no manual ManifestBuilder plumbing needed.\n\nimport tempfile\nfrom pathlib import Path\n\ntmpdir = Path(tempfile.mkdtemp(prefix=\"atdata_manifest_\"))\nrng = np.random.default_rng(7)\n\ncategories = [\"cat\", \"dog\", \"bird\", \"fish\", \"horse\"]\nall_tags = [\"outdoor\", \"indoor\", \"closeup\", \"wide\", \"blurry\", \"sharp\"]\nnum_samples = 300\n\nsamples = [\n    LabeledImage(\n        pixels=rng.integers(0, 255, (32, 32, 3), dtype=np.uint8),\n        label=categories[rng.integers(0, len(categories))],\n        confidence=round(float(rng.uniform(0.5, 1.0)), 3),\n        tags=list(rng.choice(all_tags, size=rng.integers(1, 4), replace=False)),\n    )\n    for _ in range(num_samples)\n]\n\nds = atdata.write_samples(\n    samples,\n    tmpdir / \"images.tar\",\n    maxcount=100,       # 3 shards of 100 samples each\n    manifest=True,      # auto-build JSON + Parquet sidecar manifests\n)\n\nprint(f\"Wrote {num_samples} samples across {len(ds.list_shards())} shards\")\nprint(f\"Manifest files: {sorted(p.name for p in tmpdir.glob('*.manifest.*'))}\")\n\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_manifest_vbxke_zq/images-000000.tar 0 0.0 GB 0\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_manifest_vbxke_zq/images-000001.tar 100 0.0 GB 100\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_manifest_vbxke_zq/images-000002.tar 100 0.0 GB 200\nWrote 300 samples across 3 shards\nManifest files: ['images-000000.manifest.json', 'images-000000.manifest.parquet', 'images-000001.manifest.json', 'images-000001.manifest.parquet', 'images-000002.manifest.json', 'images-000002.manifest.parquet']",
     "crumbs": [
       "Examples",
       "Manifest-Powered Queries"
@@ -1561,7 +1660,7 @@
     "href": "examples/manifest-queries.html#query-across-shards",
     "title": "Manifest-Powered Queries",
     "section": "5 — Query across shards",
-    "text": "5 — Query across shards\nQueryExecutor loads all manifests from a directory and runs a pandas predicate over the per-sample Parquet data.\n\nfrom atdata import QueryExecutor\n\nexecutor = QueryExecutor.from_directory(tmpdir)\n\n# Find high-confidence dog samples\nresults = executor.query(\n    where=lambda df: (df[\"confidence\"] &gt; 0.9) & (df[\"label\"] == \"dog\")\n)\n\nprint(f\"Found {len(results)} high-confidence dog samples\")\nfor loc in results[:5]:\n    print(f\"  shard={loc.shard}  key={loc.key}\")\n\nFound 6 high-confidence dog samples\n  shard=images  key=5ed03f7c-00d6-11f1-8000-000000000000\n  shard=images-000000  key=5ed2f4e2-00d6-11f1-8000-000000000000\n  shard=images-000000  key=5ed32566-00d6-11f1-8000-000000000000\n  shard=images-000000  key=5ed332fe-00d6-11f1-8000-000000000000\n  shard=images-000000  key=5ed3d6aa-00d6-11f1-8000-000000000000",
+    "text": "5 — Query across shards\nQueryExecutor loads all manifests from a directory and runs a pandas predicate over the per-sample Parquet data.\n\nfrom atdata import QueryExecutor\n\nexecutor = QueryExecutor.from_directory(tmpdir)\n\n# Find high-confidence dog samples\nresults = executor.query(\n    where=lambda df: (df[\"confidence\"] &gt; 0.9) & (df[\"label\"] == \"dog\")\n)\n\nprint(f\"Found {len(results)} high-confidence dog samples\")\nfor loc in results[:5]:\n    print(f\"  shard={loc.shard}  key={loc.key}\")\n\nFound 6 high-confidence dog samples\n  shard=images  key=f8548f8e-0173-11f1-8000-000000000000\n  shard=images-000000  key=f8550748-0173-11f1-8000-000000000000\n  shard=images-000000  key=f8551698-0173-11f1-8000-000000000000\n  shard=images-000000  key=f8551af8-0173-11f1-8000-000000000000\n  shard=images-000000  key=f85551f8-0173-11f1-8000-000000000000",
     "crumbs": [
       "Examples",
       "Manifest-Powered Queries"
@@ -1638,7 +1737,7 @@
     "href": "examples/multi-split.html#write-each-split-to-its-own-shard-set",
     "title": "Multi-Split Datasets",
     "section": "3 — Write each split to its own shard set",
-    "text": "3 — Write each split to its own shard set\nFollowing the {split}-{shard} naming convention lets load_dataset detect splits automatically.\n\nimport tempfile\nfrom pathlib import Path\n\ntmpdir = Path(tempfile.mkdtemp(prefix=\"atdata_splits_\"))\n\ntrain_ds = atdata.write_samples(\n    train_samples,\n    tmpdir / \"train.tar\",\n    maxcount=500,\n)\nprint(f\"Train shards: {train_ds.list_shards()}\")\n\ntest_ds = atdata.write_samples(\n    test_samples,\n    tmpdir / \"test.tar\",\n    maxcount=200,\n)\nprint(f\"Test shards : {test_ds.list_shards()}\")\n\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_splits_l9qoqjnt/train-000000.tar 0 0.0 GB 0\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_splits_l9qoqjnt/train-000001.tar 500 0.0 GB 500\nTrain shards: ['/private/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_splits_l9qoqjnt/train-000000.tar', '/private/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_splits_l9qoqjnt/train-000001.tar']\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_splits_l9qoqjnt/test-000000.tar 0 0.0 GB 0\nTest shards : ['/private/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_splits_l9qoqjnt/test-000000.tar']",
+    "text": "3 — Write each split to its own shard set\nFollowing the {split}-{shard} naming convention lets load_dataset detect splits automatically.\n\nimport tempfile\nfrom pathlib import Path\n\ntmpdir = Path(tempfile.mkdtemp(prefix=\"atdata_splits_\"))\n\ntrain_ds = atdata.write_samples(\n    train_samples,\n    tmpdir / \"train.tar\",\n    maxcount=500,\n)\nprint(f\"Train shards: {train_ds.list_shards()}\")\n\ntest_ds = atdata.write_samples(\n    test_samples,\n    tmpdir / \"test.tar\",\n    maxcount=200,\n)\nprint(f\"Test shards : {test_ds.list_shards()}\")\n\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_splits_nelcv7no/train-000000.tar 0 0.0 GB 0\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_splits_nelcv7no/train-000001.tar 500 0.0 GB 500\nTrain shards: ['/private/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_splits_nelcv7no/train-000000.tar', '/private/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_splits_nelcv7no/train-000001.tar']\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_splits_nelcv7no/test-000000.tar 0 0.0 GB 0\nTest shards : ['/private/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_splits_nelcv7no/test-000000.tar']",
     "crumbs": [
       "Examples",
       "Multi-Split Datasets"
@@ -1722,6 +1821,116 @@
     ]
   },
   {
+    "objectID": "examples/lens-transforms.html",
+    "href": "examples/lens-transforms.html",
+    "title": "Lens Transformations",
+    "section": "",
+    "text": "Lenses let you reinterpret existing data under a different type schema—without duplicating storage. This example defines a rich sample type, creates two alternative views, and shows how the global LensNetwork routes as_type() calls automatically.",
+    "crumbs": [
+      "Examples",
+      "Lens Transformations"
+    ]
+  },
+  {
+    "objectID": "examples/lens-transforms.html#define-the-source-schema",
+    "href": "examples/lens-transforms.html#define-the-source-schema",
+    "title": "Lens Transformations",
+    "section": "1 — Define the source schema",
+    "text": "1 — Define the source schema\nImagine a multi-modal dataset that stores images, text captions, and classification metadata together.\n\nimport numpy as np\nfrom numpy.typing import NDArray\nimport atdata\n\n\n@atdata.packable\nclass RichSample:\n    \"\"\"Multi-modal sample with image, caption, and classification.\"\"\"\n\n    image: NDArray\n    caption: str\n    label: str\n    split: str\n    confidence: float",
+    "crumbs": [
+      "Examples",
+      "Lens Transformations"
+    ]
+  },
+  {
+    "objectID": "examples/lens-transforms.html#define-view-schemas",
+    "href": "examples/lens-transforms.html#define-view-schemas",
+    "title": "Lens Transformations",
+    "section": "2 — Define view schemas",
+    "text": "2 — Define view schemas\nDifferent consumers need different slices of this data. An image classifier only needs the image and label; a text model only needs the caption.\n\n@atdata.packable\nclass ClassificationView:\n    \"\"\"Minimal view for image classification tasks.\"\"\"\n\n    image: NDArray\n    label: str\n\n\n@atdata.packable\nclass CaptionView:\n    \"\"\"Text-only view for captioning or NLP tasks.\"\"\"\n\n    caption: str\n    label: str\n    confidence: float",
+    "crumbs": [
+      "Examples",
+      "Lens Transformations"
+    ]
+  },
+  {
+    "objectID": "examples/lens-transforms.html#register-lenses",
+    "href": "examples/lens-transforms.html#register-lenses",
+    "title": "Lens Transformations",
+    "section": "3 — Register lenses",
+    "text": "3 — Register lenses\nA lens is a getter (source -&gt; view) and an optional putter (view, source -&gt; source). The @atdata.lens decorator registers the transformation globally.\n\n@atdata.lens\ndef to_classification(src: RichSample) -&gt; ClassificationView:\n    return ClassificationView(image=src.image, label=src.label)\n\n\n@to_classification.putter\ndef to_classification_put(\n    view: ClassificationView, src: RichSample\n) -&gt; RichSample:\n    return RichSample(\n        image=view.image,\n        caption=src.caption,\n        label=view.label,\n        split=src.split,\n        confidence=src.confidence,\n    )\n\n\n@atdata.lens\ndef to_caption(src: RichSample) -&gt; CaptionView:\n    return CaptionView(\n        caption=src.caption,\n        label=src.label,\n        confidence=src.confidence,\n    )",
+    "crumbs": [
+      "Examples",
+      "Lens Transformations"
+    ]
+  },
+  {
+    "objectID": "examples/lens-transforms.html#write-a-small-dataset",
+    "href": "examples/lens-transforms.html#write-a-small-dataset",
+    "title": "Lens Transformations",
+    "section": "4 — Write a small dataset",
+    "text": "4 — Write a small dataset\n\nimport tempfile\nfrom pathlib import Path\n\nrng = np.random.default_rng(0)\nlabels = [\"cat\", \"dog\", \"bird\", \"fish\"]\n\nsamples = [\n    RichSample(\n        image=rng.integers(0, 255, (64, 64, 3), dtype=np.uint8),\n        caption=f\"A photo of a {labels[i % 4]}\",\n        label=labels[i % 4],\n        split=\"train\",\n        confidence=round(float(rng.uniform(0.7, 1.0)), 3),\n    )\n    for i in range(200)\n]\n\ntmpdir = Path(tempfile.mkdtemp(prefix=\"atdata_lens_\"))\nds = atdata.write_samples(samples, tmpdir / \"data.tar\", maxcount=100)\nprint(f\"Wrote {len(samples)} samples across {len(ds.list_shards())} shards\")\n\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_lens_qdg5pnot/data-000000.tar 0 0.0 GB 0\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_lens_qdg5pnot/data-000001.tar 100 0.0 GB 100\nWrote 200 samples across 2 shards",
+    "crumbs": [
+      "Examples",
+      "Lens Transformations"
+    ]
+  },
+  {
+    "objectID": "examples/lens-transforms.html#view-through-lenses",
+    "href": "examples/lens-transforms.html#view-through-lenses",
+    "title": "Lens Transformations",
+    "section": "5 — View through lenses",
+    "text": "5 — View through lenses\nDataset.as_type() looks up the registered lens automatically via the LensNetwork singleton.\n\n# Classification view -- only image + label\ncls_ds = ds.as_type(ClassificationView)\n\nfor batch in cls_ds.ordered(batch_size=16):\n    print(f\"image shape : {batch.image.shape}\")   # (16, 64, 64, 3)\n    print(f\"labels      : {batch.label[:4]}...\")\n    break\n\nimage shape : (16, 64, 64, 3)\nlabels      : ['cat', 'dog', 'bird', 'fish']...\n\n\n\n# Caption view -- only text fields\ncap_ds = ds.as_type(CaptionView)\n\nfor batch in cap_ds.ordered(batch_size=16):\n    print(f\"captions    : {batch.caption[:2]}...\")\n    print(f\"confidence  : {batch.confidence[:4]}...\")\n    break\n\ncaptions    : ['A photo of a cat', 'A photo of a dog']...\nconfidence  : [0.714, 0.82, 0.896, 0.725]...\n\n\nThe underlying tar files are read once; the lens getter runs per-sample during iteration. No extra storage, no ETL step.",
+    "crumbs": [
+      "Examples",
+      "Lens Transformations"
+    ]
+  },
+  {
+    "objectID": "examples/lens-transforms.html#round-trip-with-putter",
+    "href": "examples/lens-transforms.html#round-trip-with-putter",
+    "title": "Lens Transformations",
+    "section": "6 — Round-trip with putter",
+    "text": "6 — Round-trip with putter\nA lens with a putter supports the put direction: update the view, then propagate changes back to the source while preserving untouched fields.\n\noriginal = samples[0]\nprint(f\"Original label : {original.label}\")\n\n# Get the classification view\nview = to_classification.get(original)\nprint(f\"View label     : {view.label}\")\n\n# Modify the view\ncorrected = ClassificationView(image=view.image, label=\"kitten\")\n\n# Put it back -- caption, split, confidence are preserved\nupdated = to_classification.put(corrected, original)\nprint(f\"Updated label  : {updated.label}\")\nprint(f\"Caption kept   : {updated.caption}\")\n\nOriginal label : cat\nView label     : cat\nUpdated label  : kitten\nCaption kept   : A photo of a cat",
+    "crumbs": [
+      "Examples",
+      "Lens Transformations"
+    ]
+  },
+  {
+    "objectID": "examples/lens-transforms.html#inspect-the-lensnetwork",
+    "href": "examples/lens-transforms.html#inspect-the-lensnetwork",
+    "title": "Lens Transformations",
+    "section": "7 — Inspect the LensNetwork",
+    "text": "7 — Inspect the LensNetwork\nThe global registry lets you see all registered transformations at a glance.\n\nnetwork = atdata.LensNetwork()\n\nfor (src, view), lens_obj in network._registry.items():\n    if src is RichSample:\n        print(f\"  {src.__name__} -&gt; {view.__name__}  via {lens_obj.__name__}\")\n\n  RichSample -&gt; ClassificationView  via to_classification\n  RichSample -&gt; CaptionView  via to_caption",
+    "crumbs": [
+      "Examples",
+      "Lens Transformations"
+    ]
+  },
+  {
+    "objectID": "examples/lens-transforms.html#clean-up",
+    "href": "examples/lens-transforms.html#clean-up",
+    "title": "Lens Transformations",
+    "section": "8 — Clean up",
+    "text": "8 — Clean up\n\nimport shutil\n\nshutil.rmtree(tmpdir, ignore_errors=True)",
+    "crumbs": [
+      "Examples",
+      "Lens Transformations"
+    ]
+  },
+  {
+    "objectID": "examples/lens-transforms.html#key-takeaways",
+    "href": "examples/lens-transforms.html#key-takeaways",
+    "title": "Lens Transformations",
+    "section": "Key takeaways",
+    "text": "Key takeaways\n\n\n\nConcept\nAPI\n\n\n\n\nDefine a lens\n@atdata.lens decorator\n\n\nAdd a putter\n@my_lens.putter decorator\n\n\nView a dataset\nds.as_type(ViewType)\n\n\nForward transform\nlens.get(source)\n\n\nReverse transform\nlens.put(view, source)\n\n\nInspect registry\natdata.LensNetwork()._registry\n\n\n\nLenses compose naturally with batching and shuffling—as_type() returns a full Dataset that supports every iteration mode.",
+    "crumbs": [
+      "Examples",
+      "Lens Transformations"
+    ]
+  },
+  {
     "objectID": "index.html",
     "href": "index.html",
     "title": "atdata",
@@ -1792,113 +2001,146 @@
     ]
   },
   {
-    "objectID": "examples/lens-transforms.html",
-    "href": "examples/lens-transforms.html",
-    "title": "Lens Transformations",
+    "objectID": "examples/dataset-profiler.html",
+    "href": "examples/dataset-profiler.html",
+    "title": "Dataset Profiler",
     "section": "",
-    "text": "Lenses let you reinterpret existing data under a different type schema—without duplicating storage. This example defines a rich sample type, creates two alternative views, and shows how the global LensNetwork routes as_type() calls automatically.",
+    "text": "Manifests record per-shard statistics and per-sample metadata at write time. That means you can profile an entire dataset — class distributions, numeric ranges, tag frequencies — without ever cracking open a tar file.\nThis example generates a synthetic NLP sentiment corpus, writes it with manifests, then builds a visual profile using only the sidecar files.",
     "crumbs": [
       "Examples",
-      "Lens Transformations"
+      "Dataset Profiler"
     ]
   },
   {
-    "objectID": "examples/lens-transforms.html#define-the-source-schema",
-    "href": "examples/lens-transforms.html#define-the-source-schema",
-    "title": "Lens Transformations",
-    "section": "1 — Define the source schema",
-    "text": "1 — Define the source schema\nImagine a multi-modal dataset that stores images, text captions, and classification metadata together.\n\nimport numpy as np\nfrom numpy.typing import NDArray\nimport atdata\n\n\n@atdata.packable\nclass RichSample:\n    \"\"\"Multi-modal sample with image, caption, and classification.\"\"\"\n\n    image: NDArray\n    caption: str\n    label: str\n    split: str\n    confidence: float",
+    "objectID": "examples/dataset-profiler.html#define-a-sentiment-sample-type",
+    "href": "examples/dataset-profiler.html#define-a-sentiment-sample-type",
+    "title": "Dataset Profiler",
+    "section": "1 — Define a sentiment sample type",
+    "text": "1 — Define a sentiment sample type\n\nimport numpy as np\nfrom numpy.typing import NDArray\nfrom typing import Annotated\nimport atdata\nfrom atdata import ManifestField\n\n\n@atdata.packable\nclass SentimentSample:\n    \"\"\"A text-embedding sample with rich metadata for profiling.\"\"\"\n\n    embedding: NDArray\n    sentiment: Annotated[str, ManifestField(\"categorical\")]\n    confidence: Annotated[float, ManifestField(\"numeric\")]\n    language: Annotated[str, ManifestField(\"categorical\")]\n    tags: Annotated[list[str], ManifestField(\"set\")]\n\nThe embedding field (NDArray) is automatically excluded from the manifest. The other four fields each get an appropriate aggregate collector.",
     "crumbs": [
       "Examples",
-      "Lens Transformations"
+      "Dataset Profiler"
     ]
   },
   {
-    "objectID": "examples/lens-transforms.html#define-view-schemas",
-    "href": "examples/lens-transforms.html#define-view-schemas",
-    "title": "Lens Transformations",
-    "section": "2 — Define view schemas",
-    "text": "2 — Define view schemas\nDifferent consumers need different slices of this data. An image classifier only needs the image and label; a text model only needs the caption.\n\n@atdata.packable\nclass ClassificationView:\n    \"\"\"Minimal view for image classification tasks.\"\"\"\n\n    image: NDArray\n    label: str\n\n\n@atdata.packable\nclass CaptionView:\n    \"\"\"Text-only view for captioning or NLP tasks.\"\"\"\n\n    caption: str\n    label: str\n    confidence: float",
+    "objectID": "examples/dataset-profiler.html#generate-1000-synthetic-samples",
+    "href": "examples/dataset-profiler.html#generate-1000-synthetic-samples",
+    "title": "Dataset Profiler",
+    "section": "2 — Generate 1,000 synthetic samples",
+    "text": "2 — Generate 1,000 synthetic samples\nWe use weighted distributions to make the profile interesting: sentiment is skewed positive, confidence follows a beta distribution, and language has realistic frequency skew.\n\nrng = np.random.default_rng(2024)\n\nsentiments = rng.choice(\n    [\"positive\", \"negative\", \"neutral\"],\n    size=1_000,\n    p=[0.50, 0.20, 0.30],\n)\n\nconfidences = rng.beta(5, 2, size=1_000)  # right-skewed toward 1.0\n\nlanguages = rng.choice(\n    [\"en\", \"es\", \"fr\", \"de\", \"ja\"],\n    size=1_000,\n    p=[0.55, 0.15, 0.12, 0.10, 0.08],\n)\n\ntag_pool = [\"formal\", \"informal\", \"slang\", \"technical\", \"conversational\",\n            \"academic\", \"casual\", \"literary\"]\n\nsamples = [\n    SentimentSample(\n        embedding=rng.standard_normal(64).astype(np.float32),\n        sentiment=str(sentiments[i]),\n        confidence=round(float(confidences[i]), 4),\n        language=str(languages[i]),\n        tags=list(rng.choice(tag_pool, size=rng.integers(1, 4), replace=False)),\n    )\n    for i in range(1_000)\n]\n\nprint(f\"Generated {len(samples)} samples\")\nprint(f\"Embedding shape: {samples[0].embedding.shape}\")\nprint(f\"Example: sentiment={samples[0].sentiment!r}, confidence={samples[0].confidence}\")\n\nGenerated 1000 samples\nEmbedding shape: (64,)\nExample: sentiment='negative', confidence=0.7578",
     "crumbs": [
       "Examples",
-      "Lens Transformations"
+      "Dataset Profiler"
     ]
   },
   {
-    "objectID": "examples/lens-transforms.html#register-lenses",
-    "href": "examples/lens-transforms.html#register-lenses",
-    "title": "Lens Transformations",
-    "section": "3 — Register lenses",
-    "text": "3 — Register lenses\nA lens is a getter (source -&gt; view) and an optional putter (view, source -&gt; source). The @atdata.lens decorator registers the transformation globally.\n\n@atdata.lens\ndef to_classification(src: RichSample) -&gt; ClassificationView:\n    return ClassificationView(image=src.image, label=src.label)\n\n\n@to_classification.putter\ndef to_classification_put(\n    view: ClassificationView, src: RichSample\n) -&gt; RichSample:\n    return RichSample(\n        image=view.image,\n        caption=src.caption,\n        label=view.label,\n        split=src.split,\n        confidence=src.confidence,\n    )\n\n\n@atdata.lens\ndef to_caption(src: RichSample) -&gt; CaptionView:\n    return CaptionView(\n        caption=src.caption,\n        label=src.label,\n        confidence=src.confidence,\n    )",
+    "objectID": "examples/dataset-profiler.html#write-shards-with-manifests",
+    "href": "examples/dataset-profiler.html#write-shards-with-manifests",
+    "title": "Dataset Profiler",
+    "section": "3 — Write shards with manifests",
+    "text": "3 — Write shards with manifests\n\nimport tempfile\nfrom pathlib import Path\n\ntmpdir = Path(tempfile.mkdtemp(prefix=\"atdata_profiler_\"))\n\nds = atdata.write_samples(\n    samples,\n    tmpdir / \"sentiment.tar\",\n    maxcount=250,\n    manifest=True,\n)\n\nshards = ds.list_shards()\nmanifests = sorted(tmpdir.glob(\"*.manifest.*\"))\nprint(f\"Wrote {len(shards)} shards with {len(manifests)} manifest files\")\nfor m in manifests:\n    print(f\"  {m.name}\")\n\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_profiler_qx6hkqfm/sentiment-000000.tar 0 0.0 GB 0\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_profiler_qx6hkqfm/sentiment-000001.tar 250 0.0 GB 250\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_profiler_qx6hkqfm/sentiment-000002.tar 250 0.0 GB 500\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_profiler_qx6hkqfm/sentiment-000003.tar 250 0.0 GB 750\nWrote 4 shards with 8 manifest files\n  sentiment-000000.manifest.json\n  sentiment-000000.manifest.parquet\n  sentiment-000001.manifest.json\n  sentiment-000001.manifest.parquet\n  sentiment-000002.manifest.json\n  sentiment-000002.manifest.parquet\n  sentiment-000003.manifest.json\n  sentiment-000003.manifest.parquet",
     "crumbs": [
       "Examples",
-      "Lens Transformations"
+      "Dataset Profiler"
     ]
   },
   {
-    "objectID": "examples/lens-transforms.html#write-a-small-dataset",
-    "href": "examples/lens-transforms.html#write-a-small-dataset",
-    "title": "Lens Transformations",
-    "section": "4 — Write a small dataset",
-    "text": "4 — Write a small dataset\n\nimport tempfile\nfrom pathlib import Path\n\nrng = np.random.default_rng(0)\nlabels = [\"cat\", \"dog\", \"bird\", \"fish\"]\n\nsamples = [\n    RichSample(\n        image=rng.integers(0, 255, (64, 64, 3), dtype=np.uint8),\n        caption=f\"A photo of a {labels[i % 4]}\",\n        label=labels[i % 4],\n        split=\"train\",\n        confidence=round(float(rng.uniform(0.7, 1.0)), 3),\n    )\n    for i in range(200)\n]\n\ntmpdir = Path(tempfile.mkdtemp(prefix=\"atdata_lens_\"))\nds = atdata.write_samples(samples, tmpdir / \"data.tar\", maxcount=100)\nprint(f\"Wrote {len(samples)} samples across {len(ds.list_shards())} shards\")\n\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_lens_bcnjn687/data-000000.tar 0 0.0 GB 0\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_lens_bcnjn687/data-000001.tar 100 0.0 GB 100\nWrote 200 samples across 2 shards",
+    "objectID": "examples/dataset-profiler.html#load-manifests-and-preview",
+    "href": "examples/dataset-profiler.html#load-manifests-and-preview",
+    "title": "Dataset Profiler",
+    "section": "4 — Load manifests and preview",
+    "text": "4 — Load manifests and preview\n\n\n\n\n\n\nNote\n\n\n\nEverything from here on uses only the manifest sidecar files — the .manifest.json headers and .manifest.parquet per-sample tables. The raw tar data is never read.\n\n\n\nimport pandas as pd\nfrom atdata import QueryExecutor\n\nexecutor = QueryExecutor.from_directory(tmpdir)\ncombined = pd.concat(\n    [m.samples for m in executor._manifests if not m.samples.empty],\n    ignore_index=True,\n)\n\nprint(f\"Total samples in manifests: {len(combined)}\")\nprint(f\"Columns: {list(combined.columns)}\")\nprint()\nprint(combined[[\"sentiment\", \"confidence\", \"language\"]].head(8).to_string(index=False))\n\nTotal samples in manifests: 750\nColumns: ['__key__', '__offset__', '__size__', 'sentiment', 'confidence', 'language', 'tags']\n\nsentiment  confidence language\n negative      0.7578       en\n positive      0.8524       en\n positive      0.7038       en\n  neutral      0.9045       de\n  neutral      0.8305       es\n positive      0.5754       en\n positive      0.8700       en\n positive      0.7343       de",
     "crumbs": [
       "Examples",
-      "Lens Transformations"
+      "Dataset Profiler"
     ]
   },
   {
-    "objectID": "examples/lens-transforms.html#view-through-lenses",
-    "href": "examples/lens-transforms.html#view-through-lenses",
-    "title": "Lens Transformations",
-    "section": "5 — View through lenses",
-    "text": "5 — View through lenses\nDataset.as_type() looks up the registered lens automatically via the LensNetwork singleton.\n\n# Classification view -- only image + label\ncls_ds = ds.as_type(ClassificationView)\n\nfor batch in cls_ds.ordered(batch_size=16):\n    print(f\"image shape : {batch.image.shape}\")   # (16, 64, 64, 3)\n    print(f\"labels      : {batch.label[:4]}...\")\n    break\n\nimage shape : (16, 64, 64, 3)\nlabels      : ['cat', 'dog', 'bird', 'fish']...\n\n\n\n# Caption view -- only text fields\ncap_ds = ds.as_type(CaptionView)\n\nfor batch in cap_ds.ordered(batch_size=16):\n    print(f\"captions    : {batch.caption[:2]}...\")\n    print(f\"confidence  : {batch.confidence[:4]}...\")\n    break\n\ncaptions    : ['A photo of a cat', 'A photo of a dog']...\nconfidence  : [0.714, 0.82, 0.896, 0.725]...\n\n\nThe underlying tar files are read once; the lens getter runs per-sample during iteration. No extra storage, no ETL step.",
+    "objectID": "examples/dataset-profiler.html#class-distribution-bar-chart",
+    "href": "examples/dataset-profiler.html#class-distribution-bar-chart",
+    "title": "Dataset Profiler",
+    "section": "5 — Class distribution (bar chart)",
+    "text": "5 — Class distribution (bar chart)\n\nimport matplotlib\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\n\nsentiment_counts = combined[\"sentiment\"].value_counts()\ncolors = {\"positive\": \"#4CAF50\", \"neutral\": \"#9E9E9E\", \"negative\": \"#F44336\"}\n\nfig, ax = plt.subplots(figsize=(6, 3.5))\nbars = ax.bar(\n    sentiment_counts.index,\n    sentiment_counts.values,\n    color=[colors.get(s, \"#2196F3\") for s in sentiment_counts.index],\n    edgecolor=\"white\",\n    linewidth=0.8,\n)\nfor bar, count in zip(bars, sentiment_counts.values):\n    ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 8,\n            str(count), ha=\"center\", va=\"bottom\", fontweight=\"bold\", fontsize=11)\n\nax.set_ylabel(\"Count\")\nax.set_title(\"Sentiment Distribution\", fontweight=\"bold\")\nax.spines[[\"top\", \"right\"]].set_visible(False)\nplt.tight_layout()\nplt.show()\n\n/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/ipykernel_23293/3396340794.py:24: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown\n  plt.show()",
     "crumbs": [
       "Examples",
-      "Lens Transformations"
+      "Dataset Profiler"
     ]
   },
   {
-    "objectID": "examples/lens-transforms.html#round-trip-with-putter",
-    "href": "examples/lens-transforms.html#round-trip-with-putter",
-    "title": "Lens Transformations",
-    "section": "6 — Round-trip with putter",
-    "text": "6 — Round-trip with putter\nA lens with a putter supports the put direction: update the view, then propagate changes back to the source while preserving untouched fields.\n\noriginal = samples[0]\nprint(f\"Original label : {original.label}\")\n\n# Get the classification view\nview = to_classification.get(original)\nprint(f\"View label     : {view.label}\")\n\n# Modify the view\ncorrected = ClassificationView(image=view.image, label=\"kitten\")\n\n# Put it back -- caption, split, confidence are preserved\nupdated = to_classification.put(corrected, original)\nprint(f\"Updated label  : {updated.label}\")\nprint(f\"Caption kept   : {updated.caption}\")\n\nOriginal label : cat\nView label     : cat\nUpdated label  : kitten\nCaption kept   : A photo of a cat",
+    "objectID": "examples/dataset-profiler.html#confidence-score-distribution-histogram",
+    "href": "examples/dataset-profiler.html#confidence-score-distribution-histogram",
+    "title": "Dataset Profiler",
+    "section": "6 — Confidence score distribution (histogram)",
+    "text": "6 — Confidence score distribution (histogram)\nThe numeric aggregate in the manifest JSON header gives us min, max, and mean without touching parquet. Here we overlay those on the full histogram.\n\nimport json\n\nmanifest_json = sorted(tmpdir.glob(\"*.manifest.json\"))[0]\nwith open(manifest_json) as f:\n    header = json.load(f)\n\nconf_agg = header[\"aggregates\"][\"confidence\"]\nprint(f\"Aggregate from shard 0: {conf_agg}\")\n\nAggregate from shard 0: {'type': 'numeric', 'min': 0.201, 'max': 0.9863, 'mean': 0.7155908000000004, 'count': 250}\n\n\n\nfig, ax = plt.subplots(figsize=(6, 3.5))\nax.hist(combined[\"confidence\"], bins=30, color=\"#42A5F5\", edgecolor=\"white\",\n        linewidth=0.5, alpha=0.85)\n\noverall_mean = combined[\"confidence\"].mean()\noverall_min = combined[\"confidence\"].min()\noverall_max = combined[\"confidence\"].max()\n\nax.axvline(overall_mean, color=\"#E65100\", linewidth=2, linestyle=\"--\",\n           label=f\"mean = {overall_mean:.3f}\")\nax.axvline(overall_min, color=\"#78909C\", linewidth=1, linestyle=\":\",\n           label=f\"min = {overall_min:.3f}\")\nax.axvline(overall_max, color=\"#78909C\", linewidth=1, linestyle=\":\",\n           label=f\"max = {overall_max:.3f}\")\n\nax.set_xlabel(\"Confidence\")\nax.set_ylabel(\"Count\")\nax.set_title(\"Confidence Score Distribution\", fontweight=\"bold\")\nax.legend(fontsize=9)\nax.spines[[\"top\", \"right\"]].set_visible(False)\nplt.tight_layout()\nplt.show()\n\n/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/ipykernel_23293/4059321866.py:22: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown\n  plt.show()",
     "crumbs": [
       "Examples",
-      "Lens Transformations"
+      "Dataset Profiler"
     ]
   },
   {
-    "objectID": "examples/lens-transforms.html#inspect-the-lensnetwork",
-    "href": "examples/lens-transforms.html#inspect-the-lensnetwork",
-    "title": "Lens Transformations",
-    "section": "7 — Inspect the LensNetwork",
-    "text": "7 — Inspect the LensNetwork\nThe global registry lets you see all registered transformations at a glance.\n\nnetwork = atdata.LensNetwork()\n\nfor (src, view), lens_obj in network._registry.items():\n    if src is RichSample:\n        print(f\"  {src.__name__} -&gt; {view.__name__}  via {lens_obj.__name__}\")\n\n  RichSample -&gt; ClassificationView  via to_classification\n  RichSample -&gt; CaptionView  via to_caption",
+    "objectID": "examples/dataset-profiler.html#language-breakdown-horizontal-bar",
+    "href": "examples/dataset-profiler.html#language-breakdown-horizontal-bar",
+    "title": "Dataset Profiler",
+    "section": "7 — Language breakdown (horizontal bar)",
+    "text": "7 — Language breakdown (horizontal bar)\n\nlang_counts = combined[\"language\"].value_counts().sort_values()\ntotal = lang_counts.sum()\n\nfig, ax = plt.subplots(figsize=(6, 3))\nbars = ax.barh(lang_counts.index, lang_counts.values, color=\"#7E57C2\",\n               edgecolor=\"white\", linewidth=0.5)\n\nfor bar, count in zip(bars, lang_counts.values):\n    pct = count / total * 100\n    ax.text(bar.get_width() + 5, bar.get_y() + bar.get_height() / 2,\n            f\"{count}  ({pct:.0f}%)\", va=\"center\", fontsize=9)\n\nax.set_xlabel(\"Count\")\nax.set_title(\"Language Breakdown\", fontweight=\"bold\")\nax.spines[[\"top\", \"right\"]].set_visible(False)\nplt.tight_layout()\nplt.show()\n\n/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/ipykernel_23293/3086307890.py:17: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown\n  plt.show()",
     "crumbs": [
       "Examples",
-      "Lens Transformations"
+      "Dataset Profiler"
     ]
   },
   {
-    "objectID": "examples/lens-transforms.html#clean-up",
-    "href": "examples/lens-transforms.html#clean-up",
-    "title": "Lens Transformations",
-    "section": "8 — Clean up",
-    "text": "8 — Clean up\n\nimport shutil\n\nshutil.rmtree(tmpdir, ignore_errors=True)",
+    "objectID": "examples/dataset-profiler.html#tag-frequency-lollipop-chart",
+    "href": "examples/dataset-profiler.html#tag-frequency-lollipop-chart",
+    "title": "Dataset Profiler",
+    "section": "8 — Tag frequency (lollipop chart)",
+    "text": "8 — Tag frequency (lollipop chart)\nTags are stored as lists per sample. Exploding and counting gives us a frequency profile.\n\ntag_series = combined[\"tags\"].explode()\ntag_counts = tag_series.value_counts().sort_values()\n\nfig, ax = plt.subplots(figsize=(6, 3.5))\nax.hlines(y=tag_counts.index, xmin=0, xmax=tag_counts.values,\n          color=\"#26A69A\", linewidth=2)\nax.plot(tag_counts.values, tag_counts.index, \"o\", color=\"#00796B\", markersize=7)\n\nax.set_xlabel(\"Occurrences\")\nax.set_title(\"Tag Frequency\", fontweight=\"bold\")\nax.spines[[\"top\", \"right\"]].set_visible(False)\nplt.tight_layout()\nplt.show()\n\n/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/ipykernel_23293/3143888597.py:13: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown\n  plt.show()",
     "crumbs": [
       "Examples",
-      "Lens Transformations"
+      "Dataset Profiler"
     ]
   },
   {
-    "objectID": "examples/lens-transforms.html#key-takeaways",
-    "href": "examples/lens-transforms.html#key-takeaways",
-    "title": "Lens Transformations",
+    "objectID": "examples/dataset-profiler.html#cross-tabulation-sentiment-x-language",
+    "href": "examples/dataset-profiler.html#cross-tabulation-sentiment-x-language",
+    "title": "Dataset Profiler",
+    "section": "9 — Cross-tabulation: sentiment x language",
+    "text": "9 — Cross-tabulation: sentiment x language\nA styled heatmap reveals how sentiment distributes across languages.\n\nct = pd.crosstab(combined[\"sentiment\"], combined[\"language\"])\nprint(ct.to_string())\n\nlanguage   de   en  es  fr  ja\nsentiment                     \nnegative   19   87  22  16  12\nneutral    16  111  42  32  22\npositive   38  208  66  35  24\n\n\n\nfig, ax = plt.subplots(figsize=(6, 3.5))\nim = ax.imshow(ct.values, cmap=\"YlOrRd\", aspect=\"auto\")\n\nax.set_xticks(range(len(ct.columns)))\nax.set_xticklabels(ct.columns)\nax.set_yticks(range(len(ct.index)))\nax.set_yticklabels(ct.index)\n\nfor i in range(len(ct.index)):\n    for j in range(len(ct.columns)):\n        ax.text(j, i, str(ct.values[i, j]), ha=\"center\", va=\"center\",\n                fontweight=\"bold\", fontsize=10,\n                color=\"white\" if ct.values[i, j] &gt; ct.values.max() * 0.6 else \"black\")\n\nax.set_title(\"Sentiment x Language\", fontweight=\"bold\")\nfig.colorbar(im, ax=ax, shrink=0.8)\nplt.tight_layout()\nplt.show()\n\n/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/ipykernel_23293/2093014448.py:18: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown\n  plt.show()",
+    "crumbs": [
+      "Examples",
+      "Dataset Profiler"
+    ]
+  },
+  {
+    "objectID": "examples/dataset-profiler.html#query-driven-profiling",
+    "href": "examples/dataset-profiler.html#query-driven-profiling",
+    "title": "Dataset Profiler",
+    "section": "10 — Query-driven profiling",
+    "text": "10 — Query-driven profiling\nLet’s profile just the low-confidence samples to see if certain sentiments or languages are harder to classify.\n\nlow_conf = executor.query(where=lambda df: df[\"confidence\"] &lt; 0.5)\nprint(f\"Low-confidence samples (&lt;0.5): {len(low_conf)}\")\n\nlow_keys = {loc.key for loc in low_conf}\nlow_df = combined[combined[\"__key__\"].isin(low_keys)]\n\nprint(\"\\nSentiment breakdown of low-confidence samples:\")\nprint(low_df[\"sentiment\"].value_counts().to_string())\n\nprint(\"\\nLanguage breakdown of low-confidence samples:\")\nprint(low_df[\"language\"].value_counts().to_string())\n\nLow-confidence samples (&lt;0.5): 94\n\nSentiment breakdown of low-confidence samples:\nsentiment\npositive    50\nneutral     23\nnegative    21\n\nLanguage breakdown of low-confidence samples:\nlanguage\nen    39\nes    17\nde    16\nfr    11\nja    11",
+    "crumbs": [
+      "Examples",
+      "Dataset Profiler"
+    ]
+  },
+  {
+    "objectID": "examples/dataset-profiler.html#clean-up",
+    "href": "examples/dataset-profiler.html#clean-up",
+    "title": "Dataset Profiler",
+    "section": "11 — Clean up",
+    "text": "11 — Clean up\n\nimport shutil\n\nshutil.rmtree(tmpdir, ignore_errors=True)",
+    "crumbs": [
+      "Examples",
+      "Dataset Profiler"
+    ]
+  },
+  {
+    "objectID": "examples/dataset-profiler.html#key-takeaways",
+    "href": "examples/dataset-profiler.html#key-takeaways",
+    "title": "Dataset Profiler",
     "section": "Key takeaways",
-    "text": "Key takeaways\n\n\n\nConcept\nAPI\n\n\n\n\nDefine a lens\n@atdata.lens decorator\n\n\nAdd a putter\n@my_lens.putter decorator\n\n\nView a dataset\nds.as_type(ViewType)\n\n\nForward transform\nlens.get(source)\n\n\nReverse transform\nlens.put(view, source)\n\n\nInspect registry\natdata.LensNetwork()._registry\n\n\n\nLenses compose naturally with batching and shuffling—as_type() returns a full Dataset that supports every iteration mode.",
+    "text": "Key takeaways\n\n\n\n\n\n\n\nConcept\nAPI\n\n\n\n\nAnnotate manifest fields\nAnnotated[T, ManifestField(\"categorical\")]\n\n\nWrite with manifests\nwrite_samples(samples, path, manifest=True)\n\n\nLoad sidecar manifests\nQueryExecutor.from_directory(path)\n\n\nCombine per-sample metadata\npd.concat([m.samples for m in executor._manifests])\n\n\nProfile without tar access\nAggregates + parquet give full statistical profile\n\n\nQuery-driven subsets\nexecutor.query(where=...) returns SampleLocation list",
     "crumbs": [
       "Examples",
-      "Lens Transformations"
+      "Dataset Profiler"
     ]
   },
   {
@@ -1906,109 +2148,263 @@
     "href": "examples/index.html",
     "title": "Examples",
     "section": "",
-    "text": "These examples are self-contained demonstrations of atdata’s key features. Each one builds a working pipeline from scratch so you can see real code paths end-to-end.\n\n\n\nExample\nWhat It Shows\n\n\n\n\nTyped Dataset Pipeline\nDefine a sample type, write shards, iterate with batching\n\n\nLens Transformations\nView datasets through different schemas without copying data\n\n\nManifest-Powered Queries\nBuild per-shard manifests and query samples by metadata\n\n\nIndex-Managed Datasets\nUse Index with LocalDiskStore for managed dataset storage\n\n\nMulti-Split Datasets\nWork with train/test splits via DatasetDict and load_dataset\n\n\n\n\n\n\n\n\n\nNew to atdata?\n\n\n\nStart with the Quick Start tutorial for foundational concepts, then come back here for deeper worked examples.",
+    "text": "These examples are self-contained demonstrations of atdata’s key features. Each one builds a working pipeline from scratch so you can see real code paths end-to-end.\n\n\n\nExample\nWhat It Shows\n\n\n\n\nTyped Dataset Pipeline\nDefine a sample type, write shards, iterate with batching\n\n\nLens Transformations\nView datasets through different schemas without copying data\n\n\nManifest-Powered Queries\nBuild per-shard manifests and query samples by metadata\n\n\nIndex-Managed Datasets\nUse Index with LocalDiskStore for managed dataset storage\n\n\nMulti-Split Datasets\nWork with train/test splits via DatasetDict and load_dataset\n\n\nDataset Profiler\nProfile datasets visually using manifest aggregates and matplotlib\n\n\nLens Graph Explorer\nVisualize lens transformation networks with Mermaid diagrams\n\n\nQuery Cookbook\nPractical query recipes with the typed proxy DSL and scatter plots\n\n\n\n\n\n\n\n\n\nNew to atdata?\n\n\n\nStart with the Quick Start tutorial for foundational concepts, then come back here for deeper worked examples.",
     "crumbs": [
       "Examples",
       "Examples"
     ]
   },
   {
-    "objectID": "examples/typed-pipeline.html",
-    "href": "examples/typed-pipeline.html",
-    "title": "Typed Dataset Pipeline",
+    "objectID": "examples/query-cookbook.html",
+    "href": "examples/query-cookbook.html",
+    "title": "Query Cookbook",
     "section": "",
-    "text": "This example walks through the full lifecycle of a typed dataset. You will define a sample type with the @packable decorator, generate synthetic data, write it across multiple shards, and iterate over it with automatic batch aggregation.",
+    "text": "This cookbook collects practical query patterns for manifest-powered datasets. Each recipe shows both the lambda syntax (pandas-native) and the typed proxy DSL (F expressions) side by side, so you can pick whichever reads best for your use case.",
     "crumbs": [
       "Examples",
-      "Typed Dataset Pipeline"
+      "Query Cookbook"
     ]
   },
   {
-    "objectID": "examples/typed-pipeline.html#define-a-sample-type",
-    "href": "examples/typed-pipeline.html#define-a-sample-type",
-    "title": "Typed Dataset Pipeline",
-    "section": "1 — Define a sample type",
-    "text": "1 — Define a sample type\nThe @packable decorator turns a plain class into a serializable dataclass with automatic msgpack encoding and transparent NDArray conversion.\n\nimport numpy as np\nfrom numpy.typing import NDArray\nimport atdata\n\n\n@atdata.packable\nclass SensorReading:\n    \"\"\"A single sensor observation with metadata.\"\"\"\n\n    waveform: NDArray  # 1-D time-series array\n    sensor_id: str\n    temperature: float\n    anomaly: bool\n\nEvery field is strongly typed. NDArray fields are automatically compressed to bytes during serialization and restored on read—no manual conversion needed.",
+    "objectID": "examples/query-cookbook.html#build-the-example-dataset",
+    "href": "examples/query-cookbook.html#build-the-example-dataset",
+    "title": "Query Cookbook",
+    "section": "1 — Build the example dataset",
+    "text": "1 — Build the example dataset\nWe model a wildlife observation log with species, weight, maturity, and habitat tags. Weight distributions vary by species to make queries interesting.\n\nimport numpy as np\nfrom numpy.typing import NDArray\nfrom typing import Annotated\nimport atdata\nfrom atdata import ManifestField\n\n\n@atdata.packable\nclass Observation:\n    \"\"\"A wildlife observation with queryable metadata.\"\"\"\n\n    embedding: NDArray\n    species: Annotated[str, ManifestField(\"categorical\")]\n    weight_kg: Annotated[float, ManifestField(\"numeric\")]\n    is_adult: Annotated[bool, ManifestField(\"categorical\")]\n    habitats: Annotated[list[str], ManifestField(\"set\")]\n\n\nimport tempfile\nfrom pathlib import Path\n\ntmpdir = Path(tempfile.mkdtemp(prefix=\"atdata_cookbook_\"))\nrng = np.random.default_rng(2024)\n\nspecies_weights = {\n    \"elephant\": (3500, 800),\n    \"bear\": (250, 80),\n    \"wolf\": (40, 12),\n    \"eagle\": (5, 1.5),\n    \"salmon\": (8, 3),\n    \"mouse\": (0.03, 0.01),\n}\nhabitat_pool = [\"forest\", \"desert\", \"ocean\", \"mountain\", \"tundra\", \"grassland\"]\n\nsamples = []\nfor _ in range(800):\n    sp = rng.choice(list(species_weights.keys()))\n    mean, std = species_weights[sp]\n    samples.append(Observation(\n        embedding=rng.standard_normal(32).astype(np.float32),\n        species=sp,\n        weight_kg=round(max(0.01, float(rng.normal(mean, std))), 2),\n        is_adult=bool(rng.random() &gt; 0.3),\n        habitats=list(rng.choice(habitat_pool, size=rng.integers(1, 4), replace=False)),\n    ))\n\nds = atdata.write_samples(samples, tmpdir / \"wildlife.tar\", maxcount=200, manifest=True)\nprint(f\"Wrote {len(samples)} observations across {len(ds.list_shards())} shards\")\n\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_cookbook_yfgbs7x7/wildlife-000000.tar 0 0.0 GB 0\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_cookbook_yfgbs7x7/wildlife-000001.tar 200 0.0 GB 200\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_cookbook_yfgbs7x7/wildlife-000002.tar 200 0.0 GB 400\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_cookbook_yfgbs7x7/wildlife-000003.tar 200 0.0 GB 600\nWrote 800 observations across 4 shards",
     "crumbs": [
       "Examples",
-      "Typed Dataset Pipeline"
+      "Query Cookbook"
     ]
   },
   {
-    "objectID": "examples/typed-pipeline.html#generate-synthetic-samples",
-    "href": "examples/typed-pipeline.html#generate-synthetic-samples",
-    "title": "Typed Dataset Pipeline",
-    "section": "2 — Generate synthetic samples",
-    "text": "2 — Generate synthetic samples\n\nrng = np.random.default_rng(42)\n\nsamples = [\n    SensorReading(\n        waveform=rng.standard_normal(512).astype(np.float32),\n        sensor_id=f\"sensor_{i % 8:02d}\",\n        temperature=20.0 + rng.normal(0, 3),\n        anomaly=rng.random() &lt; 0.05,\n    )\n    for i in range(2_000)\n]\n\nprint(f\"Created {len(samples)} samples\")\nprint(f\"Waveform shape: {samples[0].waveform.shape}\")\n\nCreated 2000 samples\nWaveform shape: (512,)",
+    "objectID": "examples/query-cookbook.html#load-manifests-and-preview",
+    "href": "examples/query-cookbook.html#load-manifests-and-preview",
+    "title": "Query Cookbook",
+    "section": "2 — Load manifests and preview",
+    "text": "2 — Load manifests and preview\n\nimport pandas as pd\nfrom atdata import QueryExecutor\nfrom atdata.manifest import F\n\nexecutor = QueryExecutor.from_directory(tmpdir)\ncombined = pd.concat(\n    [m.samples for m in executor._manifests if not m.samples.empty],\n    ignore_index=True,\n)\n\nprint(combined[[\"species\", \"weight_kg\", \"is_adult\"]].describe().to_string())\nprint()\nprint(f\"Species: {sorted(combined['species'].unique())}\")\n\n         weight_kg\ncount   600.000000\nmean    616.406983\nstd    1322.182118\nmin       0.010000\n25%       4.195000\n50%      11.790000\n75%     257.692500\nmax    5921.580000\n\nSpecies: ['bear', 'eagle', 'elephant', 'mouse', 'salmon', 'wolf']",
     "crumbs": [
       "Examples",
-      "Typed Dataset Pipeline"
+      "Query Cookbook"
     ]
   },
   {
-    "objectID": "examples/typed-pipeline.html#verify-round-trip-serialization",
-    "href": "examples/typed-pipeline.html#verify-round-trip-serialization",
-    "title": "Typed Dataset Pipeline",
-    "section": "3 — Verify round-trip serialization",
-    "text": "3 — Verify round-trip serialization\nBefore writing to disk, confirm that packing and unpacking preserves data.\n\noriginal = samples[0]\npacked = original.packed                         # -&gt; bytes (msgpack)\nrestored = SensorReading.from_bytes(packed)      # -&gt; SensorReading\n\nassert original.sensor_id == restored.sensor_id\nassert original.temperature == restored.temperature\nassert original.anomaly == restored.anomaly\nassert np.allclose(original.waveform, restored.waveform)\n\nprint(f\"Packed size: {len(packed):,} bytes\")\nprint(\"Round-trip: OK\")\n\nPacked size: 2,124 bytes\nRound-trip: OK\n\n\nNumpy scalars (like np.float64 from rng.normal()) are automatically coerced to Python natives during serialization, so temperature comes back as a plain float:\n\nprint(f\"Temperature type (original)  : {type(original.temperature).__name__}\")\nprint(f\"Temperature type (restored)  : {type(restored.temperature).__name__}\")\nassert isinstance(restored.temperature, float)\n\nTemperature type (original)  : float\nTemperature type (restored)  : float",
+    "objectID": "examples/query-cookbook.html#recipe-threshold-filter",
+    "href": "examples/query-cookbook.html#recipe-threshold-filter",
+    "title": "Query Cookbook",
+    "section": "3 — Recipe: threshold filter",
+    "text": "3 — Recipe: threshold filter\nFind heavy animals above a weight threshold.\n\nLambdaTyped DSL\n\n\n\nresults_lambda = executor.query(\n    where=lambda df: df[\"weight_kg\"] &gt; 500\n)\nprint(f\"Matches (lambda): {len(results_lambda)}\")\n\nMatches (lambda): 95\n\n\n\n\n\nresults_dsl = executor.query(where=F.weight_kg &gt; 500)\nprint(f\"Matches (DSL):    {len(results_dsl)}\")\n\nMatches (DSL):    95\n\n\n\n\n\n\nheavy_keys = {loc.key for loc in results_dsl}\nheavy_df = combined[combined[\"__key__\"].isin(heavy_keys)]\nprint(\"\\nSpecies breakdown of heavy animals (&gt;500 kg):\")\nprint(heavy_df[\"species\"].value_counts().to_string())\n\n\nSpecies breakdown of heavy animals (&gt;500 kg):\nspecies\nelephant    95",
     "crumbs": [
       "Examples",
-      "Typed Dataset Pipeline"
+      "Query Cookbook"
     ]
   },
   {
-    "objectID": "examples/typed-pipeline.html#write-sharded-tar-files",
-    "href": "examples/typed-pipeline.html#write-sharded-tar-files",
-    "title": "Typed Dataset Pipeline",
-    "section": "4 — Write sharded tar files",
-    "text": "4 — Write sharded tar files\nwrite_samples serializes samples to WebDataset tar archives. Setting maxcount splits the output across multiple shards—essential for parallel I/O at scale.\n\nimport tempfile\nfrom pathlib import Path\n\ntmpdir = Path(tempfile.mkdtemp(prefix=\"atdata_example_\"))\nds = atdata.write_samples(\n    samples,\n    tmpdir / \"readings.tar\",\n    maxcount=500,       # 4 shards of 500 samples each\n    manifest=True,      # generate per-shard metadata manifests\n)\n\nprint(f\"Dataset URL : {ds.url}\")\nprint(f\"Sample type : {ds.sample_type.__name__}\")\nprint(f\"Shard count : {len(ds.list_shards())}\")\n\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_example_zdx0dqqm/readings-000000.tar 0 0.0 GB 0\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_example_zdx0dqqm/readings-000001.tar 500 0.0 GB 500\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_example_zdx0dqqm/readings-000002.tar 500 0.0 GB 1000\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_example_zdx0dqqm/readings-000003.tar 500 0.0 GB 1500\nDataset URL : /private/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_example_zdx0dqqm/readings-00000{0,1,2,3}.tar\nSample type : SensorReading\nShard count : 4\n\n\nThe returned Dataset[SensorReading] is immediately usable—no separate loading step required.",
+    "objectID": "examples/query-cookbook.html#recipe-categorical-selection",
+    "href": "examples/query-cookbook.html#recipe-categorical-selection",
+    "title": "Query Cookbook",
+    "section": "4 — Recipe: categorical selection",
+    "text": "4 — Recipe: categorical selection\n\nSingle valueMultiple values (.isin)Exclusion (~)\n\n\n\nbears = executor.query(where=F.species == \"bear\")\nprint(f\"Bears: {len(bears)}\")\n\nBears: 112\n\n\n\n\n\nlarge_animals = executor.query(where=F.species.isin([\"elephant\", \"bear\"]))\nprint(f\"Elephants + bears: {len(large_animals)}\")\n\nElephants + bears: 207\n\n\n\n\n\nnot_small = executor.query(where=~F.species.isin([\"mouse\", \"salmon\"]))\nprint(f\"Excluding mouse & salmon: {len(not_small)}\")\n\nExcluding mouse & salmon: 398",
     "crumbs": [
       "Examples",
-      "Typed Dataset Pipeline"
+      "Query Cookbook"
     ]
   },
   {
-    "objectID": "examples/typed-pipeline.html#iterate-with-automatic-batching",
-    "href": "examples/typed-pipeline.html#iterate-with-automatic-batching",
-    "title": "Typed Dataset Pipeline",
-    "section": "5 — Iterate with automatic batching",
-    "text": "5 — Iterate with automatic batching\nDataset.ordered() streams samples in shard order. When you pass a batch_size, atdata wraps consecutive samples in a SampleBatch that aggregates fields automatically:\n\nNDArray fields are stacked into a single array with a leading batch dimension.\nScalar/string fields become Python lists.\n\n\nfor batch in ds.ordered(batch_size=64):\n    # NDArray field -&gt; (64, 512) float32 array\n    print(f\"waveform    : {batch.waveform.shape}, {batch.waveform.dtype}\")\n\n    # Scalar fields -&gt; plain lists\n    print(f\"sensor_id   : {batch.sensor_id[:3]}...\")\n    print(f\"temperature : {[round(t, 1) for t in batch.temperature[:3]]}...\")\n    print(f\"anomaly     : {batch.anomaly[:3]}...\")\n    break\n\nwaveform    : (64, 512), float32\nsensor_id   : ['sensor_00', 'sensor_01', 'sensor_02']...\ntemperature : [20.3, 13.5, 19.2]...\nanomaly     : [True, False, False]...",
+    "objectID": "examples/query-cookbook.html#recipe-range-filter",
+    "href": "examples/query-cookbook.html#recipe-range-filter",
+    "title": "Query Cookbook",
+    "section": "5 — Recipe: range filter",
+    "text": "5 — Recipe: range filter\nThe .between() method creates a closed-interval filter.\n\nLambdaTyped DSL\n\n\n\nmid_range = executor.query(\n    where=lambda df: df[\"weight_kg\"].between(10, 100)\n)\nprint(f\"Weight 10-100 kg (lambda): {len(mid_range)}\")\n\nWeight 10-100 kg (lambda): 112\n\n\n\n\n\nmid_range_dsl = executor.query(where=F.weight_kg.between(10, 100))\nprint(f\"Weight 10-100 kg (DSL):    {len(mid_range_dsl)}\")\n\nWeight 10-100 kg (DSL):    112",
     "crumbs": [
       "Examples",
-      "Typed Dataset Pipeline"
+      "Query Cookbook"
     ]
   },
   {
-    "objectID": "examples/typed-pipeline.html#shuffled-iteration-for-training",
-    "href": "examples/typed-pipeline.html#shuffled-iteration-for-training",
-    "title": "Typed Dataset Pipeline",
-    "section": "6 — Shuffled iteration for training",
-    "text": "6 — Shuffled iteration for training\nFor model training you want randomized order. shuffled() applies two-level shuffling (shard order + in-buffer sample shuffling) to give well-mixed batches while staying streaming-friendly.\n\nsensor_ids_seen: set[str] = set()\n\nfor batch in ds.shuffled(batch_size=128):\n    sensor_ids_seen.update(batch.sensor_id)\n    if len(sensor_ids_seen) == 8:\n        break\n\nprint(f\"Unique sensors in early batches: {sorted(sensor_ids_seen)}\")\n\nUnique sensors in early batches: ['sensor_00', 'sensor_01', 'sensor_02', 'sensor_03', 'sensor_04', 'sensor_05', 'sensor_06', 'sensor_07']",
+    "objectID": "examples/query-cookbook.html#recipe-tagset-membership",
+    "href": "examples/query-cookbook.html#recipe-tagset-membership",
+    "title": "Query Cookbook",
+    "section": "6 — Recipe: tag/set membership",
+    "text": "6 — Recipe: tag/set membership\nTags are stored as lists. With the lambda syntax you can use .apply() for arbitrary list predicates.\n\n# Observations in mountain habitats\nmountain = executor.query(\n    where=lambda df: df[\"habitats\"].apply(\n        lambda h: \"mountain\" in h if isinstance(h, list) else False\n    )\n)\nprint(f\"Mountain habitat: {len(mountain)} observations\")\n\nMountain habitat: 204 observations\n\n\n\n# Observations in BOTH forest AND mountain\ndual_habitat = executor.query(\n    where=lambda df: df[\"habitats\"].apply(\n        lambda h: {\"forest\", \"mountain\"}.issubset(h) if isinstance(h, list) else False\n    )\n)\nprint(f\"Forest + mountain: {len(dual_habitat)} observations\")\n\nForest + mountain: 56 observations",
     "crumbs": [
       "Examples",
-      "Typed Dataset Pipeline"
+      "Query Cookbook"
     ]
   },
   {
-    "objectID": "examples/typed-pipeline.html#clean-up",
-    "href": "examples/typed-pipeline.html#clean-up",
-    "title": "Typed Dataset Pipeline",
-    "section": "7 — Clean up",
-    "text": "7 — Clean up\n\nimport shutil\n\nshutil.rmtree(tmpdir, ignore_errors=True)",
+    "objectID": "examples/query-cookbook.html#recipe-compound-queries",
+    "href": "examples/query-cookbook.html#recipe-compound-queries",
+    "title": "Query Cookbook",
+    "section": "7 — Recipe: compound queries",
+    "text": "7 — Recipe: compound queries\nCombine predicates with & (AND), | (OR), and ~ (NOT).\n\nANDORNOT\n\n\n\nadult_bears = executor.query(\n    where=(F.species == \"bear\") & (F.is_adult == True)\n)\nprint(f\"Adult bears: {len(adult_bears)}\")\n\nAdult bears: 73\n\n\n\n\n\nextreme = executor.query(\n    where=(F.species == \"elephant\") | (F.weight_kg &lt; 0.1)\n)\nprint(f\"Elephants or very light (&lt;0.1 kg): {len(extreme)}\")\n\nElephants or very light (&lt;0.1 kg): 202\n\n\n\n\n\njuveniles = executor.query(where=~(F.is_adult == True))\nprint(f\"Juveniles: {len(juveniles)}\")\n\nJuveniles: 181",
     "crumbs": [
       "Examples",
-      "Typed Dataset Pipeline"
+      "Query Cookbook"
     ]
   },
   {
-    "objectID": "examples/typed-pipeline.html#key-takeaways",
-    "href": "examples/typed-pipeline.html#key-takeaways",
-    "title": "Typed Dataset Pipeline",
+    "objectID": "examples/query-cookbook.html#scatter-plot-query-results-highlighted",
+    "href": "examples/query-cookbook.html#scatter-plot-query-results-highlighted",
+    "title": "Query Cookbook",
+    "section": "8 — Scatter plot: query results highlighted",
+    "text": "8 — Scatter plot: query results highlighted\n\nimport matplotlib\nmatplotlib.use(\"Agg\")\nimport matplotlib.pyplot as plt\n\nquery_pred = (F.species.isin([\"elephant\", \"bear\"])) & (F.is_adult == True)\nmatch_locs = executor.query(where=query_pred)\nmatch_keys = {loc.key for loc in match_locs}\n\nspecies_list = sorted(combined[\"species\"].unique())\ncmap = plt.cm.Set2\nspecies_colors = {sp: cmap(i / len(species_list)) for i, sp in enumerate(species_list)}\n\nfig, ax = plt.subplots(figsize=(8, 4))\n\nfor sp in species_list:\n    mask = combined[\"species\"] == sp\n    subset = combined[mask]\n    ax.scatter(\n        subset.index, subset[\"weight_kg\"],\n        c=[species_colors[sp]], label=sp,\n        s=15, alpha=0.6, linewidths=0,\n    )\n\n# Highlight matches\nmatch_mask = combined[\"__key__\"].isin(match_keys)\nax.scatter(\n    combined[match_mask].index,\n    combined[match_mask][\"weight_kg\"],\n    facecolors=\"none\", edgecolors=\"#D32F2F\", s=50, linewidths=1.5,\n    label=\"query match\", zorder=5,\n)\n\nax.set_xlabel(\"Sample index\")\nax.set_ylabel(\"Weight (kg)\")\nax.set_yscale(\"log\")\nax.set_title(\"Adult elephants & bears highlighted\", fontweight=\"bold\")\nax.legend(fontsize=8, ncol=4, loc=\"upper center\", bbox_to_anchor=(0.5, -0.15))\nax.spines[[\"top\", \"right\"]].set_visible(False)\nplt.tight_layout()\nplt.show()\n\n/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/ipykernel_23348/4089515773.py:40: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown\n  plt.show()",
+    "crumbs": [
+      "Examples",
+      "Query Cookbook"
+    ]
+  },
+  {
+    "objectID": "examples/query-cookbook.html#query-hit-rate-per-shard",
+    "href": "examples/query-cookbook.html#query-hit-rate-per-shard",
+    "title": "Query Cookbook",
+    "section": "9 — Query hit rate per shard",
+    "text": "9 — Query hit rate per shard\nThis chart shows how matches distribute across shards. When aggregate pruning is active, shards with zero hits can be skipped entirely.\n\nfrom collections import Counter\n\nshard_hits = Counter(loc.shard for loc in match_locs)\n\nshards_all = sorted({m.shard_id for m in executor._manifests})\nhit_counts = [shard_hits.get(s, 0) for s in shards_all]\nshard_labels = [Path(s).stem for s in shards_all]\n\nfig, ax = plt.subplots(figsize=(6, 3))\ncolors = [\"#43A047\" if c &gt; 0 else \"#BDBDBD\" for c in hit_counts]\nax.bar(shard_labels, hit_counts, color=colors, edgecolor=\"white\")\n\nfor i, count in enumerate(hit_counts):\n    if count &gt; 0:\n        ax.text(i, count + 0.5, str(count), ha=\"center\", fontweight=\"bold\", fontsize=10)\n\nax.set_ylabel(\"Matching samples\")\nax.set_title(\"Query Hits per Shard\", fontweight=\"bold\")\nax.spines[[\"top\", \"right\"]].set_visible(False)\nplt.tight_layout()\nplt.show()\n\n/var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/ipykernel_23348/1217293230.py:21: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown\n  plt.show()\n\n\n\n\n\n\n\n\nShard pruning\n\n\n\nIn production, QueryExecutor checks each shard’s aggregate statistics before loading its parquet file. If the aggregates prove no samples can match (e.g., a shard’s max weight is below your threshold), the parquet is never read—saving I/O on large datasets.",
+    "crumbs": [
+      "Examples",
+      "Query Cookbook"
+    ]
+  },
+  {
+    "objectID": "examples/query-cookbook.html#building-a-filtered-subset",
+    "href": "examples/query-cookbook.html#building-a-filtered-subset",
+    "title": "Query Cookbook",
+    "section": "10 — Building a filtered subset",
+    "text": "10 — Building a filtered subset\nQuery results are SampleLocation objects with shard path, key, and byte offset. Group them by shard for downstream processing.\n\nfrom itertools import groupby\nfrom operator import attrgetter\n\nsorted_locs = sorted(match_locs, key=attrgetter(\"shard\"))\nfor shard, group in groupby(sorted_locs, key=attrgetter(\"shard\")):\n    keys = [loc.key for loc in group]\n    print(f\"  {Path(shard).stem}: {len(keys)} matches (first 3: {keys[:3]})\")\n\n  wildlife: 49 matches (first 3: ['fa3119bc-0173-11f1-8000-000000000000', 'fa312560-0173-11f1-8000-000000000000', 'fa312af6-0173-11f1-8000-000000000000'])\n  wildlife-000000: 39 matches (first 3: ['fa328b4e-0173-11f1-8000-000000000000', 'fa328ca2-0173-11f1-8000-000000000000', 'fa328df6-0173-11f1-8000-000000000000'])\n  wildlife-000001: 52 matches (first 3: ['fa33c22a-0173-11f1-8000-000000000000', 'fa33cfc2-0173-11f1-8000-000000000000', 'fa33d814-0173-11f1-8000-000000000000'])",
+    "crumbs": [
+      "Examples",
+      "Query Cookbook"
+    ]
+  },
+  {
+    "objectID": "examples/query-cookbook.html#clean-up",
+    "href": "examples/query-cookbook.html#clean-up",
+    "title": "Query Cookbook",
+    "section": "11 — Clean up",
+    "text": "11 — Clean up\n\nimport shutil\n\nshutil.rmtree(tmpdir, ignore_errors=True)",
+    "crumbs": [
+      "Examples",
+      "Query Cookbook"
+    ]
+  },
+  {
+    "objectID": "examples/query-cookbook.html#key-takeaways",
+    "href": "examples/query-cookbook.html#key-takeaways",
+    "title": "Query Cookbook",
     "section": "Key takeaways",
-    "text": "Key takeaways\n\n\n\n\n\n\n\nConcept\nAPI\n\n\n\n\nType-safe samples\n@atdata.packable\n\n\nAutomatic serialization\n.packed / .from_bytes()\n\n\nSharded writes with manifests\natdata.write_samples(..., maxcount=N, manifest=True)\n\n\nNumpy scalar coercion\nnp.float64 → float automatically\n\n\nOrdered iteration\nds.ordered(batch_size=N)\n\n\nShuffled iteration\nds.shuffled(batch_size=N)\n\n\nBatch aggregation\nbatch.field (NDArray stacking or list)",
+    "text": "Key takeaways\n\n\n\n\n\n\n\n\nPattern\nLambda\nTyped DSL\n\n\n\n\nThreshold\ndf[\"weight\"] &gt; 50\nF.weight &gt; 50\n\n\nEquality\ndf[\"species\"] == \"bear\"\nF.species == \"bear\"\n\n\nSet membership\ndf[\"species\"].isin([...])\nF.species.isin([...])\n\n\nRange\ndf[\"x\"].between(a, b)\nF.x.between(a, b)\n\n\nAND\n(cond1) & (cond2)\n(cond1) & (cond2)\n\n\nOR\n(cond1) \\| (cond2)\n(cond1) \\| (cond2)\n\n\nNOT\n~(condition)\n~(condition)\n\n\nTag contains\ndf[\"tags\"].apply(...)\n(use lambda)",
     "crumbs": [
       "Examples",
-      "Typed Dataset Pipeline"
+      "Query Cookbook"
+    ]
+  },
+  {
+    "objectID": "examples/lens-graph.html",
+    "href": "examples/lens-graph.html",
+    "title": "Lens Graph Explorer",
+    "section": "",
+    "text": "A lens maps one sample type to another while preserving a round-trip guarantee. When you chain several lenses together, you get a lens graph — a network of interconvertible types.\nThis example models a sensor data pipeline with four types and three lenses, then visualizes the transformation network and traces data through it.",
+    "crumbs": [
+      "Examples",
+      "Lens Graph Explorer"
+    ]
+  },
+  {
+    "objectID": "examples/lens-graph.html#the-type-hierarchy",
+    "href": "examples/lens-graph.html#the-type-hierarchy",
+    "title": "Lens Graph Explorer",
+    "section": "1 — The type hierarchy",
+    "text": "1 — The type hierarchy\n\n\n\n\n\nflowchart LR\n    A[\"&lt;b&gt;RawSensor&lt;/b&gt;&lt;br/&gt;&lt;small&gt;voltage &middot; timestamp&lt;br/&gt;sensor_id &middot; location&lt;/small&gt;\"]\n    B[\"&lt;b&gt;Calibrated&lt;/b&gt;&lt;br/&gt;&lt;small&gt;celsius &middot; timestamp&lt;br/&gt;sensor_id &middot; location&lt;br/&gt;cal_factor&lt;/small&gt;\"]\n    C[\"&lt;b&gt;Features&lt;/b&gt;&lt;br/&gt;&lt;small&gt;celsius &middot; hour&lt;br/&gt;is_daytime &middot; sensor_id&lt;/small&gt;\"]\n    D[\"&lt;b&gt;Prediction&lt;/b&gt;&lt;br/&gt;&lt;small&gt;classification&lt;br/&gt;sensor_id&lt;/small&gt;\"]\n    A --&gt;|calibrate| B\n    B --&gt;|featurize| C\n    C --&gt;|classify| D\n    style A fill:#e1f5fe,stroke:#0288d1\n    style B fill:#fff9c4,stroke:#f9a825\n    style C fill:#f3e5f5,stroke:#7b1fa2\n    style D fill:#c8e6c9,stroke:#388e3c\n\n\n\n\n\n\nRaw voltage readings get calibrated into Celsius, then distilled into time-of-day features, and finally classified. Each arrow is a lens with a well-behaved round-trip.",
+    "crumbs": [
+      "Examples",
+      "Lens Graph Explorer"
+    ]
+  },
+  {
+    "objectID": "examples/lens-graph.html#define-the-four-sample-types",
+    "href": "examples/lens-graph.html#define-the-four-sample-types",
+    "title": "Lens Graph Explorer",
+    "section": "2 — Define the four sample types",
+    "text": "2 — Define the four sample types\n\nimport numpy as np\nimport atdata\n\n\n@atdata.packable\nclass RawSensor:\n    \"\"\"Raw sensor observation.\"\"\"\n    voltage: float\n    timestamp: str\n    sensor_id: str\n    location: str\n\n\n@atdata.packable\nclass Calibrated:\n    \"\"\"Sensor reading after calibration to Celsius.\"\"\"\n    celsius: float\n    timestamp: str\n    sensor_id: str\n    location: str\n    cal_factor: float\n\n\n@atdata.packable\nclass Features:\n    \"\"\"Derived features for ML.\"\"\"\n    celsius: float\n    hour: int\n    is_daytime: bool\n    sensor_id: str\n\n\n@atdata.packable\nclass Prediction:\n    \"\"\"Classification output.\"\"\"\n    classification: str\n    sensor_id: str",
+    "crumbs": [
+      "Examples",
+      "Lens Graph Explorer"
+    ]
+  },
+  {
+    "objectID": "examples/lens-graph.html#register-the-lens-chain",
+    "href": "examples/lens-graph.html#register-the-lens-chain",
+    "title": "Lens Graph Explorer",
+    "section": "3 — Register the lens chain",
+    "text": "3 — Register the lens chain\nEach lens defines a getter (forward transform) and a putter (reverse transform that preserves untouched fields).\n\nCAL_FACTOR = 0.489  # voltage-to-celsius constant\n\n\n@atdata.lens\ndef calibrate(raw: RawSensor) -&gt; Calibrated:\n    return Calibrated(\n        celsius=raw.voltage * CAL_FACTOR,\n        timestamp=raw.timestamp,\n        sensor_id=raw.sensor_id,\n        location=raw.location,\n        cal_factor=CAL_FACTOR,\n    )\n\n\n@calibrate.putter\ndef calibrate_put(view: Calibrated, source: RawSensor) -&gt; RawSensor:\n    return RawSensor(\n        voltage=view.celsius / view.cal_factor,\n        timestamp=view.timestamp,\n        sensor_id=view.sensor_id,\n        location=view.location,\n    )\n\n\n@atdata.lens\ndef featurize(cal: Calibrated) -&gt; Features:\n    hour = int(cal.timestamp.split(\"T\")[1].split(\":\")[0])\n    return Features(\n        celsius=cal.celsius,\n        hour=hour,\n        is_daytime=(6 &lt;= hour &lt; 20),\n        sensor_id=cal.sensor_id,\n    )\n\n\n@featurize.putter\ndef featurize_put(view: Features, source: Calibrated) -&gt; Calibrated:\n    return Calibrated(\n        celsius=view.celsius,\n        timestamp=source.timestamp,\n        sensor_id=view.sensor_id,\n        location=source.location,\n        cal_factor=source.cal_factor,\n    )\n\n\n@atdata.lens\ndef classify(feat: Features) -&gt; Prediction:\n    if feat.celsius &gt;= 35:\n        label = \"hot\"\n    elif feat.celsius &gt;= 15:\n        label = \"warm\"\n    else:\n        label = \"cold\"\n    return Prediction(classification=label, sensor_id=feat.sensor_id)\n\n\n@classify.putter\ndef classify_put(view: Prediction, source: Features) -&gt; Features:\n    return Features(\n        celsius=source.celsius,\n        hour=source.hour,\n        is_daytime=source.is_daytime,\n        sensor_id=view.sensor_id,\n    )\n\n\nprint(\"Registered 3 lenses: calibrate, featurize, classify\")\n\nRegistered 3 lenses: calibrate, featurize, classify",
+    "crumbs": [
+      "Examples",
+      "Lens Graph Explorer"
+    ]
+  },
+  {
+    "objectID": "examples/lens-graph.html#trace-a-single-sample-through-the-chain",
+    "href": "examples/lens-graph.html#trace-a-single-sample-through-the-chain",
+    "title": "Lens Graph Explorer",
+    "section": "4 — Trace a single sample through the chain",
+    "text": "4 — Trace a single sample through the chain\n\nRaw -&gt; CalibratedCalibrated -&gt; FeaturesFeatures -&gt; Prediction\n\n\n\nraw = RawSensor(\n    voltage=72.5,\n    timestamp=\"2024-07-15T14:30:00Z\",\n    sensor_id=\"sensor_03\",\n    location=\"rooftop-north\",\n)\n\ncal = calibrate.get(raw)\n\nprint(\"INPUT  (RawSensor):\")\nprint(f\"  voltage    = {raw.voltage}\")\nprint(f\"  timestamp  = {raw.timestamp}\")\nprint(f\"  sensor_id  = {raw.sensor_id}\")\nprint(f\"  location   = {raw.location}\")\nprint()\nprint(\"OUTPUT (Calibrated):\")\nprint(f\"  celsius    = {cal.celsius:.2f}\")\nprint(f\"  timestamp  = {cal.timestamp}\")\nprint(f\"  sensor_id  = {cal.sensor_id}\")\nprint(f\"  location   = {cal.location}\")\nprint(f\"  cal_factor = {cal.cal_factor}\")\n\nINPUT  (RawSensor):\n  voltage    = 72.5\n  timestamp  = 2024-07-15T14:30:00Z\n  sensor_id  = sensor_03\n  location   = rooftop-north\n\nOUTPUT (Calibrated):\n  celsius    = 35.45\n  timestamp  = 2024-07-15T14:30:00Z\n  sensor_id  = sensor_03\n  location   = rooftop-north\n  cal_factor = 0.489\n\n\n\n\n\nfeat = featurize.get(cal)\n\nprint(\"INPUT  (Calibrated):\")\nprint(f\"  celsius    = {cal.celsius:.2f}\")\nprint(f\"  timestamp  = {cal.timestamp}\")\nprint()\nprint(\"OUTPUT (Features):\")\nprint(f\"  celsius    = {feat.celsius:.2f}\")\nprint(f\"  hour       = {feat.hour}\")\nprint(f\"  is_daytime = {feat.is_daytime}\")\nprint(f\"  sensor_id  = {feat.sensor_id}\")\n\nINPUT  (Calibrated):\n  celsius    = 35.45\n  timestamp  = 2024-07-15T14:30:00Z\n\nOUTPUT (Features):\n  celsius    = 35.45\n  hour       = 14\n  is_daytime = True\n  sensor_id  = sensor_03\n\n\n\n\n\npred = classify.get(feat)\n\nprint(\"INPUT  (Features):\")\nprint(f\"  celsius    = {feat.celsius:.2f}\")\nprint(f\"  hour       = {feat.hour}\")\nprint(f\"  is_daytime = {feat.is_daytime}\")\nprint()\nprint(\"OUTPUT (Prediction):\")\nprint(f\"  classification = {pred.classification}\")\nprint(f\"  sensor_id      = {pred.sensor_id}\")\n\nINPUT  (Features):\n  celsius    = 35.45\n  hour       = 14\n  is_daytime = True\n\nOUTPUT (Prediction):\n  classification = hot\n  sensor_id      = sensor_03",
+    "crumbs": [
+      "Examples",
+      "Lens Graph Explorer"
+    ]
+  },
+  {
+    "objectID": "examples/lens-graph.html#batch-transformation-on-a-dataset",
+    "href": "examples/lens-graph.html#batch-transformation-on-a-dataset",
+    "title": "Lens Graph Explorer",
+    "section": "5 — Batch transformation on a dataset",
+    "text": "5 — Batch transformation on a dataset\nWrite a dataset of RawSensor readings and iterate as Calibrated using ds.as_type().\n\nimport tempfile\nfrom pathlib import Path\n\ntmpdir = Path(tempfile.mkdtemp(prefix=\"atdata_lens_graph_\"))\nrng = np.random.default_rng(42)\n\nraw_samples = [\n    RawSensor(\n        voltage=round(float(rng.uniform(20, 90)), 2),\n        timestamp=f\"2024-08-{10 + i % 20:02d}T{rng.integers(0, 24):02d}:{rng.integers(0, 60):02d}:00Z\",\n        sensor_id=f\"sensor_{i % 5:02d}\",\n        location=rng.choice([\"rooftop\", \"basement\", \"outdoor\", \"lab\"]),\n    )\n    for i in range(500)\n]\n\nds = atdata.write_samples(raw_samples, tmpdir / \"sensors.tar\", maxcount=250)\nprint(f\"Wrote {len(raw_samples)} RawSensor samples across {len(ds.list_shards())} shards\")\n\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_lens_graph__bva6ddu/sensors-000000.tar 0 0.0 GB 0\n# writing /var/folders/hx/9l078dds5z945qcv8j1hsnr00000gn/T/atdata_lens_graph__bva6ddu/sensors-000001.tar 250 0.0 GB 250\nWrote 500 RawSensor samples across 2 shards\n\n\n\nds_cal = ds.as_type(Calibrated)\n\nbatch = next(iter(ds_cal.ordered(batch_size=8)))\nprint(f\"Batch sample type: Calibrated\")\nprint(f\"  celsius values:    {[round(c, 2) for c in batch.celsius[:4]]} ...\")\nprint(f\"  cal_factor values: {batch.cal_factor[:4]} ...\")\nprint(f\"  sensor_ids:        {batch.sensor_id[:4]} ...\")\n\nBatch sample type: Calibrated\n  celsius values:    [36.27, 33.65, 43.17, 14.17] ...\n  cal_factor values: [0.489, 0.489, 0.489, 0.489] ...\n  sensor_ids:        ['sensor_00', 'sensor_01', 'sensor_02', 'sensor_03'] ...",
+    "crumbs": [
+      "Examples",
+      "Lens Graph Explorer"
+    ]
+  },
+  {
+    "objectID": "examples/lens-graph.html#verify-lens-laws",
+    "href": "examples/lens-graph.html#verify-lens-laws",
+    "title": "Lens Graph Explorer",
+    "section": "6 — Verify lens laws",
+    "text": "6 — Verify lens laws\nWell-behaved lenses satisfy two laws:\n\n\n\n\n\nflowchart TB\n    subgraph gp [\"GetPut: put(get(s), s) == s\"]\n        direction LR\n        S1[\"source\"] --&gt;|get| V1[\"view\"]\n        V1 --&gt;|\"put(view, source)\"| S2[\"source'\"]\n    end\n    subgraph pg [\"PutGet: get(put(v, s)) == v\"]\n        direction LR\n        V2[\"view\"] --&gt;|\"put(view, source)\"| S3[\"source'\"]\n        S3 --&gt;|get| V3[\"view'\"]\n    end\n    style gp fill:#e8f5e9,stroke:#388e3c\n    style pg fill:#e3f2fd,stroke:#1565c0\n\n\n\n\n\n\n\n# GetPut: put(get(source), source) == source\nraw_roundtrip = calibrate.put(calibrate.get(raw), raw)\nassert raw_roundtrip.voltage == raw.voltage\nassert raw_roundtrip.timestamp == raw.timestamp\nassert raw_roundtrip.sensor_id == raw.sensor_id\nassert raw_roundtrip.location == raw.location\nprint(\"GetPut (calibrate): PASS\")\n\ncal_roundtrip = featurize.put(featurize.get(cal), cal)\nassert cal_roundtrip.celsius == cal.celsius\nassert cal_roundtrip.sensor_id == cal.sensor_id\nassert cal_roundtrip.location == cal.location\nprint(\"GetPut (featurize): PASS\")\n\nfeat_roundtrip = classify.put(classify.get(feat), feat)\nassert feat_roundtrip.celsius == feat.celsius\nassert feat_roundtrip.hour == feat.hour\nassert feat_roundtrip.is_daytime == feat.is_daytime\nprint(\"GetPut (classify):  PASS\")\n\nGetPut (calibrate): PASS\nGetPut (featurize): PASS\nGetPut (classify):  PASS\n\n\n\n# PutGet: get(put(view, source)) == view\nmodified_cal = Calibrated(\n    celsius=25.0, timestamp=raw.timestamp,\n    sensor_id=raw.sensor_id, location=raw.location, cal_factor=CAL_FACTOR,\n)\nassert calibrate.get(calibrate.put(modified_cal, raw)).celsius == modified_cal.celsius\nprint(\"PutGet (calibrate): PASS\")\n\nmodified_feat = Features(celsius=25.0, hour=14, is_daytime=True, sensor_id=\"sensor_03\")\nresult = featurize.get(featurize.put(modified_feat, cal))\nassert result.celsius == modified_feat.celsius\nassert result.sensor_id == modified_feat.sensor_id\nprint(\"PutGet (featurize): PASS\")\n\nmodified_pred = Prediction(classification=\"hot\", sensor_id=\"sensor_03\")\nassert classify.get(classify.put(modified_pred, feat)).classification == modified_pred.classification\nprint(\"PutGet (classify):  PASS\")\n\nPutGet (calibrate): PASS\nPutGet (featurize): PASS\nPutGet (classify):  PASS\n\n\n\n\n\n\n\n\nWhat are lens laws?\n\n\n\nGetPut guarantees that if you read a view and write it back unchanged, the source is unchanged. PutGet guarantees that if you write a view and read it back, you get the same view. Together they ensure lenses are information-preserving round-trips.\nNote that classify is a lossy lens: the putter preserves the source’s celsius value, so PutGet only holds when the classification is consistent with the source temperature. This is a common pattern for summary/derived lenses.",
+    "crumbs": [
+      "Examples",
+      "Lens Graph Explorer"
+    ]
+  },
+  {
+    "objectID": "examples/lens-graph.html#inspect-the-lensnetwork",
+    "href": "examples/lens-graph.html#inspect-the-lensnetwork",
+    "title": "Lens Graph Explorer",
+    "section": "7 — Inspect the LensNetwork",
+    "text": "7 — Inspect the LensNetwork\nAll lenses registered with @atdata.lens are tracked in a global registry.\n\nnetwork = atdata.LensNetwork()\n\nprint(\"Registered lenses:\")\nfor (src, tgt), lens_obj in network._registry.items():\n    print(f\"  {src.__name__:15s} -&gt; {tgt.__name__}\")\n\nRegistered lenses:\n  DictSample      -&gt; RawSensor\n  DictSample      -&gt; Calibrated\n  DictSample      -&gt; Features\n  DictSample      -&gt; Prediction\n  RawSensor       -&gt; Calibrated\n  Calibrated      -&gt; Features\n  Features        -&gt; Prediction",
+    "crumbs": [
+      "Examples",
+      "Lens Graph Explorer"
+    ]
+  },
+  {
+    "objectID": "examples/lens-graph.html#clean-up",
+    "href": "examples/lens-graph.html#clean-up",
+    "title": "Lens Graph Explorer",
+    "section": "8 — Clean up",
+    "text": "8 — Clean up\n\nimport shutil\n\nshutil.rmtree(tmpdir, ignore_errors=True)",
+    "crumbs": [
+      "Examples",
+      "Lens Graph Explorer"
+    ]
+  },
+  {
+    "objectID": "examples/lens-graph.html#key-takeaways",
+    "href": "examples/lens-graph.html#key-takeaways",
+    "title": "Lens Graph Explorer",
+    "section": "Key takeaways",
+    "text": "Key takeaways\n\n\n\n\n\n\n\nConcept\nAPI\n\n\n\n\nDefine a forward transform\n@atdata.lens decorator on getter function\n\n\nDefine a reverse transform\n@my_lens.putter decorator\n\n\nApply lens to a single sample\nmy_lens.get(source) / my_lens.put(view, source)\n\n\nTransform an entire dataset\nds.as_type(TargetType)\n\n\nInspect registered lenses\nLensNetwork()._registry\n\n\nVerify round-trip correctness\nAssert GetPut and PutGet laws",
+    "crumbs": [
+      "Examples",
+      "Lens Graph Explorer"
     ]
   },
   {
@@ -2114,7 +2510,7 @@
     "href": "api/Dataset.html",
     "title": "Dataset",
     "section": "",
-    "text": "Dataset(source=None, metadata_url=None, *, url=None)\nA typed dataset built on WebDataset with lens transformations.\nThis class wraps WebDataset tar archives and provides type-safe iteration over samples of a specific PackableSample type. Samples are stored as msgpack-serialized data within WebDataset shards.\nThe dataset supports: - Ordered and shuffled iteration - Automatic batching with SampleBatch - Type transformations via the lens system (as_type()) - Export to parquet format\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nST\n\nThe sample type for this dataset, must derive from PackableSample.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\nurl\n\nWebDataset brace-notation URL for the tar file(s).\n\n\n\n\n\n\n&gt;&gt;&gt; ds = Dataset[MyData](\"path/to/data-{000000..000009}.tar\")\n&gt;&gt;&gt; for sample in ds.ordered(batch_size=32):\n...     # sample is SampleBatch[MyData] with batch_size samples\n...     embeddings = sample.embeddings  # shape: (32, ...)\n...\n&gt;&gt;&gt; # Transform to a different view\n&gt;&gt;&gt; ds_view = ds.as_type(MyDataView)\n\n\n\nThis class uses Python’s __orig_class__ mechanism to extract the type parameter at runtime. Instances must be created using the subscripted syntax Dataset[MyType](url) rather than calling the constructor directly with an unsubscripted class.\n\n\n\n\n\n\nName\nDescription\n\n\n\n\nas_type\nView this dataset through a different sample type via a registered lens.\n\n\ndescribe\nSummary statistics: sample_type, fields, num_shards, shards, url, metadata.\n\n\nfilter\nReturn a new dataset that yields only samples matching predicate.\n\n\nget\nRetrieve a single sample by its __key__.\n\n\nhead\nReturn the first n samples from the dataset.\n\n\nlist_shards\nReturn all shard paths/URLs as a list.\n\n\nmap\nReturn a new dataset that applies fn to each sample during iteration.\n\n\nordered\nIterate over the dataset in order.\n\n\nprocess_shards\nProcess each shard independently, collecting per-shard results.\n\n\nquery\nQuery this dataset using per-shard manifest metadata.\n\n\nselect\nReturn samples at the given integer indices.\n\n\nshuffled\nIterate over the dataset in random order.\n\n\nto_dict\nMaterialize the dataset as a column-oriented dictionary.\n\n\nto_pandas\nMaterialize the dataset (or first limit samples) as a DataFrame.\n\n\nto_parquet\nExport dataset to parquet file(s).\n\n\nwrap\nDeserialize a raw WDS sample dict into type ST.\n\n\nwrap_batch\nDeserialize a raw WDS batch dict into SampleBatch[ST].\n\n\n\n\n\nDataset.as_type(other)\nView this dataset through a different sample type via a registered lens.\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nValueError\nIf no lens exists between the current and target types.\n\n\n\n\n\n\n\nDataset.describe()\nSummary statistics: sample_type, fields, num_shards, shards, url, metadata.\n\n\n\nDataset.filter(predicate)\nReturn a new dataset that yields only samples matching predicate.\nThe filter is applied lazily during iteration — no data is copied.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npredicate\nCallable[[ST], bool]\nA function that takes a sample and returns True to keep it or False to discard it.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nDataset[ST]\nA new Dataset whose iterators apply the filter.\n\n\n\n\n\n\n&gt;&gt;&gt; long_names = ds.filter(lambda s: len(s.name) &gt; 10)\n&gt;&gt;&gt; for sample in long_names:\n...     assert len(sample.name) &gt; 10\n\n\n\n\nDataset.get(key)\nRetrieve a single sample by its __key__.\nScans shards sequentially until a sample with a matching key is found. This is O(n) for streaming datasets.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nkey\nstr\nThe WebDataset __key__ string to search for.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nST\nThe matching sample.\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nSampleKeyError\nIf no sample with the given key exists.\n\n\n\n\n\n\n&gt;&gt;&gt; sample = ds.get(\"00000001-0001-1000-8000-010000000000\")\n\n\n\n\nDataset.head(n=5)\nReturn the first n samples from the dataset.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nn\nint\nNumber of samples to return. Default: 5.\n5\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[ST]\nList of up to n samples in shard order.\n\n\n\n\n\n\n&gt;&gt;&gt; samples = ds.head(3)\n&gt;&gt;&gt; len(samples)\n3\n\n\n\n\nDataset.list_shards()\nReturn all shard paths/URLs as a list.\n\n\n\nDataset.map(fn)\nReturn a new dataset that applies fn to each sample during iteration.\nThe mapping is applied lazily during iteration — no data is copied.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nfn\nCallable[[ST], Any]\nA function that takes a sample of type ST and returns a transformed value.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nDataset\nA new Dataset whose iterators apply the mapping.\n\n\n\n\n\n\n&gt;&gt;&gt; names = ds.map(lambda s: s.name)\n&gt;&gt;&gt; for name in names:\n...     print(name)\n\n\n\n\nDataset.ordered(batch_size=None)\nIterate over the dataset in order.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nbatch_size\nint | None\nThe size of iterated batches. Default: None (unbatched). If None, iterates over one sample at a time with no batch dimension.\nNone\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\nA data pipeline that iterates over the dataset in its original\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\nsample order. When batch_size is None, yields individual\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\nsamples of type ST. When batch_size is an integer, yields\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\nSampleBatch[ST] instances containing that many samples.\n\n\n\n\n\n\n&gt;&gt;&gt; for sample in ds.ordered():\n...     process(sample)  # sample is ST\n&gt;&gt;&gt; for batch in ds.ordered(batch_size=32):\n...     process(batch)  # batch is SampleBatch[ST]\n\n\n\n\nDataset.process_shards(fn, *, shards=None)\nProcess each shard independently, collecting per-shard results.\nUnlike :meth:map (which is lazy and per-sample), this method eagerly processes each shard in turn, calling fn with the full list of samples from that shard. If some shards fail, raises :class:~atdata._exceptions.PartialFailureError containing both the successful results and the per-shard errors.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nfn\nCallable[[list[ST]], Any]\nFunction receiving a list of samples from one shard and returning an arbitrary result.\nrequired\n\n\nshards\nlist[str] | None\nOptional list of shard identifiers to process. If None, processes all shards in the dataset. Useful for retrying only the failed shards from a previous PartialFailureError.\nNone\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ndict[str, Any]\nDict mapping shard identifier to fn’s return value for each shard.\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nPartialFailureError\nIf at least one shard fails. The exception carries .succeeded_shards, .failed_shards, .errors, and .results for inspection and retry.\n\n\n\n\n\n\n&gt;&gt;&gt; results = ds.process_shards(lambda samples: len(samples))\n&gt;&gt;&gt; # On partial failure, retry just the failed shards:\n&gt;&gt;&gt; try:\n...     results = ds.process_shards(expensive_fn)\n... except PartialFailureError as e:\n...     retry = ds.process_shards(expensive_fn, shards=e.failed_shards)\n\n\n\n\nDataset.query(where)\nQuery this dataset using per-shard manifest metadata.\nRequires manifests to have been generated during shard writing. Discovers manifest files alongside the tar shards, loads them, and executes a two-phase query (shard-level aggregate pruning, then sample-level parquet filtering).\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nwhere\nCallable[[pd.DataFrame], pd.Series]\nPredicate function that receives a pandas DataFrame of manifest fields and returns a boolean Series selecting matching rows.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[SampleLocation]\nList of SampleLocation for matching samples.\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nFileNotFoundError\nIf no manifest files are found alongside shards.\n\n\n\n\n\n\n&gt;&gt;&gt; locs = ds.query(where=lambda df: df[\"confidence\"] &gt; 0.9)\n&gt;&gt;&gt; len(locs)\n42\n\n\n\n\nDataset.select(indices)\nReturn samples at the given integer indices.\nIterates through the dataset in order and collects samples whose positional index matches. This is O(n) for streaming datasets.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nindices\nSequence[int]\nSequence of zero-based indices to select.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[ST]\nList of samples at the requested positions, in index order.\n\n\n\n\n\n\n&gt;&gt;&gt; samples = ds.select([0, 5, 10])\n&gt;&gt;&gt; len(samples)\n3\n\n\n\n\nDataset.shuffled(buffer_shards=100, buffer_samples=10000, batch_size=None)\nIterate over the dataset in random order.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nbuffer_shards\nint\nNumber of shards to buffer for shuffling at the shard level. Larger values increase randomness but use more memory. Default: 100.\n100\n\n\nbuffer_samples\nint\nNumber of samples to buffer for shuffling within shards. Larger values increase randomness but use more memory. Default: 10,000.\n10000\n\n\nbatch_size\nint | None\nThe size of iterated batches. Default: None (unbatched). If None, iterates over one sample at a time with no batch dimension.\nNone\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\nA data pipeline that iterates over the dataset in randomized order.\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\nWhen batch_size is None, yields individual samples of type\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\nST. When batch_size is an integer, yields SampleBatch[ST]\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\ninstances containing that many samples.\n\n\n\n\n\n\n&gt;&gt;&gt; for sample in ds.shuffled():\n...     process(sample)  # sample is ST\n&gt;&gt;&gt; for batch in ds.shuffled(batch_size=32):\n...     process(batch)  # batch is SampleBatch[ST]\n\n\n\n\nDataset.to_dict(limit=None)\nMaterialize the dataset as a column-oriented dictionary.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nlimit\nint | None\nMaximum number of samples to include. None means all.\nNone\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ndict[str, list[Any]]\nDictionary mapping field names to lists of values (one entry\n\n\n\ndict[str, list[Any]]\nper sample).\n\n\n\n\n\n\nWith limit=None this loads the entire dataset into memory.\n\n\n\n&gt;&gt;&gt; d = ds.to_dict(limit=10)\n&gt;&gt;&gt; d.keys()\ndict_keys(['name', 'embedding'])\n&gt;&gt;&gt; len(d['name'])\n10\n\n\n\n\nDataset.to_pandas(limit=None)\nMaterialize the dataset (or first limit samples) as a DataFrame.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nlimit\nint | None\nMaximum number of samples to include. None means all samples (may use significant memory for large datasets).\nNone\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\npd.DataFrame\nA pandas DataFrame with one row per sample and columns matching\n\n\n\npd.DataFrame\nthe sample fields.\n\n\n\n\n\n\nWith limit=None this loads the entire dataset into memory.\n\n\n\n&gt;&gt;&gt; df = ds.to_pandas(limit=100)\n&gt;&gt;&gt; df.columns.tolist()\n['name', 'embedding']\n\n\n\n\nDataset.to_parquet(path, sample_map=None, maxcount=None, **kwargs)\nExport dataset to parquet file(s).\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npath\nPathlike\nOutput path. With maxcount, files are named {stem}-{segment:06d}.parquet.\nrequired\n\n\nsample_map\nOptional[SampleExportMap]\nConvert sample to dict. Defaults to dataclasses.asdict.\nNone\n\n\nmaxcount\nOptional[int]\nSplit into files of at most this many samples. Without it, the entire dataset is loaded into memory.\nNone\n\n\n**kwargs\n\nPassed to pandas.DataFrame.to_parquet().\n{}\n\n\n\n\n\n\n&gt;&gt;&gt; ds.to_parquet(\"output.parquet\", maxcount=50000)\n\n\n\n\nDataset.wrap(sample)\nDeserialize a raw WDS sample dict into type ST.\n\n\n\nDataset.wrap_batch(batch)\nDeserialize a raw WDS batch dict into SampleBatch[ST]."
+    "text": "Dataset(source=None, metadata_url=None, *, url=None)\nA typed dataset built on WebDataset with lens transformations.\nThis class wraps WebDataset tar archives and provides type-safe iteration over samples of a specific PackableSample type. Samples are stored as msgpack-serialized data within WebDataset shards.\nThe dataset supports: - Ordered and shuffled iteration - Automatic batching with SampleBatch - Type transformations via the lens system (as_type()) - Export to parquet format\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nST\n\nThe sample type for this dataset, must derive from PackableSample.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\nurl\n\nWebDataset brace-notation URL for the tar file(s).\n\n\n\n\n\n\n&gt;&gt;&gt; ds = Dataset[MyData](\"path/to/data-{000000..000009}.tar\")\n&gt;&gt;&gt; for sample in ds.ordered(batch_size=32):\n...     # sample is SampleBatch[MyData] with batch_size samples\n...     embeddings = sample.embeddings  # shape: (32, ...)\n...\n&gt;&gt;&gt; # Transform to a different view\n&gt;&gt;&gt; ds_view = ds.as_type(MyDataView)\n\n\n\nThis class uses Python’s __orig_class__ mechanism to extract the type parameter at runtime. Instances must be created using the subscripted syntax Dataset[MyType](url) rather than calling the constructor directly with an unsubscripted class.\n\n\n\n\n\n\nName\nDescription\n\n\n\n\nas_type\nView this dataset through a different sample type via a registered lens.\n\n\ndescribe\nSummary statistics: sample_type, fields, num_shards, shards, url, metadata.\n\n\nfilter\nReturn a new dataset that yields only samples matching predicate.\n\n\nget\nRetrieve a single sample by its __key__.\n\n\nhead\nReturn the first n samples from the dataset.\n\n\nlist_shards\nReturn all shard paths/URLs as a list.\n\n\nmap\nReturn a new dataset that applies fn to each sample during iteration.\n\n\nordered\nIterate over the dataset in order.\n\n\nprocess_shards\nProcess each shard independently, collecting per-shard results.\n\n\nquery\nQuery this dataset using per-shard manifest metadata.\n\n\nselect\nReturn samples at the given integer indices.\n\n\nshuffled\nIterate over the dataset in random order.\n\n\nto_dict\nMaterialize the dataset as a column-oriented dictionary.\n\n\nto_pandas\nMaterialize the dataset (or first limit samples) as a DataFrame.\n\n\nto_parquet\nExport dataset to parquet file(s).\n\n\nwrap\nDeserialize a raw WDS sample dict into type ST.\n\n\nwrap_batch\nDeserialize a raw WDS batch dict into SampleBatch[ST].\n\n\n\n\n\nDataset.as_type(other)\nView this dataset through a different sample type via a registered lens.\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nValueError\nIf no lens exists between the current and target types.\n\n\n\n\n\n\n\nDataset.describe()\nSummary statistics: sample_type, fields, num_shards, shards, url, metadata.\n\n\n\nDataset.filter(predicate)\nReturn a new dataset that yields only samples matching predicate.\nThe filter is applied lazily during iteration — no data is copied.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npredicate\nCallable[[ST], bool]\nA function that takes a sample and returns True to keep it or False to discard it.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nDataset[ST]\nA new Dataset whose iterators apply the filter.\n\n\n\n\n\n\n&gt;&gt;&gt; long_names = ds.filter(lambda s: len(s.name) &gt; 10)\n&gt;&gt;&gt; for sample in long_names:\n...     assert len(sample.name) &gt; 10\n\n\n\n\nDataset.get(key)\nRetrieve a single sample by its __key__.\nScans shards sequentially until a sample with a matching key is found. This is O(n) for streaming datasets.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nkey\nstr\nThe WebDataset __key__ string to search for.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nST\nThe matching sample.\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nSampleKeyError\nIf no sample with the given key exists.\n\n\n\n\n\n\n&gt;&gt;&gt; sample = ds.get(\"00000001-0001-1000-8000-010000000000\")\n\n\n\n\nDataset.head(n=5)\nReturn the first n samples from the dataset.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nn\nint\nNumber of samples to return. Default: 5.\n5\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[ST]\nList of up to n samples in shard order.\n\n\n\n\n\n\n&gt;&gt;&gt; samples = ds.head(3)\n&gt;&gt;&gt; len(samples)\n3\n\n\n\n\nDataset.list_shards()\nReturn all shard paths/URLs as a list.\n\n\n\nDataset.map(fn)\nReturn a new dataset that applies fn to each sample during iteration.\nThe mapping is applied lazily during iteration — no data is copied.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nfn\nCallable[[ST], Any]\nA function that takes a sample of type ST and returns a transformed value.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nDataset\nA new Dataset whose iterators apply the mapping.\n\n\n\n\n\n\n&gt;&gt;&gt; names = ds.map(lambda s: s.name)\n&gt;&gt;&gt; for name in names:\n...     print(name)\n\n\n\n\nDataset.ordered(batch_size=None)\nIterate over the dataset in order.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nbatch_size\nint | None\nThe size of iterated batches. Default: None (unbatched). If None, iterates over one sample at a time with no batch dimension.\nNone\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\nA data pipeline that iterates over the dataset in its original\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\nsample order. When batch_size is None, yields individual\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\nsamples of type ST. When batch_size is an integer, yields\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\nSampleBatch[ST] instances containing that many samples.\n\n\n\n\n\n\n&gt;&gt;&gt; for sample in ds.ordered():\n...     process(sample)  # sample is ST\n&gt;&gt;&gt; for batch in ds.ordered(batch_size=32):\n...     process(batch)  # batch is SampleBatch[ST]\n\n\n\n\nDataset.process_shards(fn, *, shards=None)\nProcess each shard independently, collecting per-shard results.\nUnlike :meth:map (which is lazy and per-sample), this method eagerly processes each shard in turn, calling fn with the full list of samples from that shard. If some shards fail, raises :class:~atdata._exceptions.PartialFailureError containing both the successful results and the per-shard errors.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nfn\nCallable[[list[ST]], Any]\nFunction receiving a list of samples from one shard and returning an arbitrary result.\nrequired\n\n\nshards\nlist[str] | None\nOptional list of shard identifiers to process. If None, processes all shards in the dataset. Useful for retrying only the failed shards from a previous PartialFailureError.\nNone\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ndict[str, Any]\nDict mapping shard identifier to fn’s return value for each shard.\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nPartialFailureError\nIf at least one shard fails. The exception carries .succeeded_shards, .failed_shards, .errors, and .results for inspection and retry.\n\n\n\n\n\n\n&gt;&gt;&gt; results = ds.process_shards(lambda samples: len(samples))\n&gt;&gt;&gt; # On partial failure, retry just the failed shards:\n&gt;&gt;&gt; try:\n...     results = ds.process_shards(expensive_fn)\n... except PartialFailureError as e:\n...     retry = ds.process_shards(expensive_fn, shards=e.failed_shards)\n\n\n\n\nDataset.query(where)\nQuery this dataset using per-shard manifest metadata.\nRequires manifests to have been generated during shard writing. Discovers manifest files alongside the tar shards, loads them, and executes a two-phase query (shard-level aggregate pruning, then sample-level parquet filtering).\nThe where argument accepts either a lambda/function that operates on a pandas DataFrame, or a Predicate built from the proxy DSL.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nwhere\nCallable[[pd.DataFrame], pd.Series] | Predicate\nPredicate function or Predicate object that selects matching rows from the per-sample manifest DataFrame.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[SampleLocation]\nList of SampleLocation for matching samples.\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nFileNotFoundError\nIf no manifest files are found alongside shards.\n\n\n\n\n\n\n&gt;&gt;&gt; locs = ds.query(where=lambda df: df[\"confidence\"] &gt; 0.9)\n&gt;&gt;&gt; len(locs)\n42\n&gt;&gt;&gt; Q = ds.fields\n&gt;&gt;&gt; locs = ds.query(where=(Q.confidence &gt; 0.9))\n\n\n\n\nDataset.select(indices)\nReturn samples at the given integer indices.\nIterates through the dataset in order and collects samples whose positional index matches. This is O(n) for streaming datasets.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nindices\nSequence[int]\nSequence of zero-based indices to select.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[ST]\nList of samples at the requested positions, in index order.\n\n\n\n\n\n\n&gt;&gt;&gt; samples = ds.select([0, 5, 10])\n&gt;&gt;&gt; len(samples)\n3\n\n\n\n\nDataset.shuffled(buffer_shards=100, buffer_samples=10000, batch_size=None)\nIterate over the dataset in random order.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nbuffer_shards\nint\nNumber of shards to buffer for shuffling at the shard level. Larger values increase randomness but use more memory. Default: 100.\n100\n\n\nbuffer_samples\nint\nNumber of samples to buffer for shuffling within shards. Larger values increase randomness but use more memory. Default: 10,000.\n10000\n\n\nbatch_size\nint | None\nThe size of iterated batches. Default: None (unbatched). If None, iterates over one sample at a time with no batch dimension.\nNone\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\nA data pipeline that iterates over the dataset in randomized order.\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\nWhen batch_size is None, yields individual samples of type\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\nST. When batch_size is an integer, yields SampleBatch[ST]\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\ninstances containing that many samples.\n\n\n\n\n\n\n&gt;&gt;&gt; for sample in ds.shuffled():\n...     process(sample)  # sample is ST\n&gt;&gt;&gt; for batch in ds.shuffled(batch_size=32):\n...     process(batch)  # batch is SampleBatch[ST]\n\n\n\n\nDataset.to_dict(limit=None)\nMaterialize the dataset as a column-oriented dictionary.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nlimit\nint | None\nMaximum number of samples to include. None means all.\nNone\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ndict[str, list[Any]]\nDictionary mapping field names to lists of values (one entry\n\n\n\ndict[str, list[Any]]\nper sample).\n\n\n\n\n\n\nWith limit=None this loads the entire dataset into memory.\n\n\n\n&gt;&gt;&gt; d = ds.to_dict(limit=10)\n&gt;&gt;&gt; d.keys()\ndict_keys(['name', 'embedding'])\n&gt;&gt;&gt; len(d['name'])\n10\n\n\n\n\nDataset.to_pandas(limit=None)\nMaterialize the dataset (or first limit samples) as a DataFrame.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nlimit\nint | None\nMaximum number of samples to include. None means all samples (may use significant memory for large datasets).\nNone\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\npd.DataFrame\nA pandas DataFrame with one row per sample and columns matching\n\n\n\npd.DataFrame\nthe sample fields.\n\n\n\n\n\n\nWith limit=None this loads the entire dataset into memory.\n\n\n\n&gt;&gt;&gt; df = ds.to_pandas(limit=100)\n&gt;&gt;&gt; df.columns.tolist()\n['name', 'embedding']\n\n\n\n\nDataset.to_parquet(path, sample_map=None, maxcount=None, **kwargs)\nExport dataset to parquet file(s).\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npath\nPathlike\nOutput path. With maxcount, files are named {stem}-{segment:06d}.parquet.\nrequired\n\n\nsample_map\nOptional[SampleExportMap]\nConvert sample to dict. Defaults to dataclasses.asdict.\nNone\n\n\nmaxcount\nOptional[int]\nSplit into files of at most this many samples. Without it, the entire dataset is loaded into memory.\nNone\n\n\n**kwargs\n\nPassed to pandas.DataFrame.to_parquet().\n{}\n\n\n\n\n\n\n&gt;&gt;&gt; ds.to_parquet(\"output.parquet\", maxcount=50000)\n\n\n\n\nDataset.wrap(sample)\nDeserialize a raw WDS sample dict into type ST.\n\n\n\nDataset.wrap_batch(batch)\nDeserialize a raw WDS batch dict into SampleBatch[ST]."
   },
   {
     "objectID": "api/Dataset.html#parameters",
@@ -2149,7 +2545,7 @@
     "href": "api/Dataset.html#methods",
     "title": "Dataset",
     "section": "",
-    "text": "Name\nDescription\n\n\n\n\nas_type\nView this dataset through a different sample type via a registered lens.\n\n\ndescribe\nSummary statistics: sample_type, fields, num_shards, shards, url, metadata.\n\n\nfilter\nReturn a new dataset that yields only samples matching predicate.\n\n\nget\nRetrieve a single sample by its __key__.\n\n\nhead\nReturn the first n samples from the dataset.\n\n\nlist_shards\nReturn all shard paths/URLs as a list.\n\n\nmap\nReturn a new dataset that applies fn to each sample during iteration.\n\n\nordered\nIterate over the dataset in order.\n\n\nprocess_shards\nProcess each shard independently, collecting per-shard results.\n\n\nquery\nQuery this dataset using per-shard manifest metadata.\n\n\nselect\nReturn samples at the given integer indices.\n\n\nshuffled\nIterate over the dataset in random order.\n\n\nto_dict\nMaterialize the dataset as a column-oriented dictionary.\n\n\nto_pandas\nMaterialize the dataset (or first limit samples) as a DataFrame.\n\n\nto_parquet\nExport dataset to parquet file(s).\n\n\nwrap\nDeserialize a raw WDS sample dict into type ST.\n\n\nwrap_batch\nDeserialize a raw WDS batch dict into SampleBatch[ST].\n\n\n\n\n\nDataset.as_type(other)\nView this dataset through a different sample type via a registered lens.\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nValueError\nIf no lens exists between the current and target types.\n\n\n\n\n\n\n\nDataset.describe()\nSummary statistics: sample_type, fields, num_shards, shards, url, metadata.\n\n\n\nDataset.filter(predicate)\nReturn a new dataset that yields only samples matching predicate.\nThe filter is applied lazily during iteration — no data is copied.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npredicate\nCallable[[ST], bool]\nA function that takes a sample and returns True to keep it or False to discard it.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nDataset[ST]\nA new Dataset whose iterators apply the filter.\n\n\n\n\n\n\n&gt;&gt;&gt; long_names = ds.filter(lambda s: len(s.name) &gt; 10)\n&gt;&gt;&gt; for sample in long_names:\n...     assert len(sample.name) &gt; 10\n\n\n\n\nDataset.get(key)\nRetrieve a single sample by its __key__.\nScans shards sequentially until a sample with a matching key is found. This is O(n) for streaming datasets.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nkey\nstr\nThe WebDataset __key__ string to search for.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nST\nThe matching sample.\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nSampleKeyError\nIf no sample with the given key exists.\n\n\n\n\n\n\n&gt;&gt;&gt; sample = ds.get(\"00000001-0001-1000-8000-010000000000\")\n\n\n\n\nDataset.head(n=5)\nReturn the first n samples from the dataset.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nn\nint\nNumber of samples to return. Default: 5.\n5\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[ST]\nList of up to n samples in shard order.\n\n\n\n\n\n\n&gt;&gt;&gt; samples = ds.head(3)\n&gt;&gt;&gt; len(samples)\n3\n\n\n\n\nDataset.list_shards()\nReturn all shard paths/URLs as a list.\n\n\n\nDataset.map(fn)\nReturn a new dataset that applies fn to each sample during iteration.\nThe mapping is applied lazily during iteration — no data is copied.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nfn\nCallable[[ST], Any]\nA function that takes a sample of type ST and returns a transformed value.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nDataset\nA new Dataset whose iterators apply the mapping.\n\n\n\n\n\n\n&gt;&gt;&gt; names = ds.map(lambda s: s.name)\n&gt;&gt;&gt; for name in names:\n...     print(name)\n\n\n\n\nDataset.ordered(batch_size=None)\nIterate over the dataset in order.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nbatch_size\nint | None\nThe size of iterated batches. Default: None (unbatched). If None, iterates over one sample at a time with no batch dimension.\nNone\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\nA data pipeline that iterates over the dataset in its original\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\nsample order. When batch_size is None, yields individual\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\nsamples of type ST. When batch_size is an integer, yields\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\nSampleBatch[ST] instances containing that many samples.\n\n\n\n\n\n\n&gt;&gt;&gt; for sample in ds.ordered():\n...     process(sample)  # sample is ST\n&gt;&gt;&gt; for batch in ds.ordered(batch_size=32):\n...     process(batch)  # batch is SampleBatch[ST]\n\n\n\n\nDataset.process_shards(fn, *, shards=None)\nProcess each shard independently, collecting per-shard results.\nUnlike :meth:map (which is lazy and per-sample), this method eagerly processes each shard in turn, calling fn with the full list of samples from that shard. If some shards fail, raises :class:~atdata._exceptions.PartialFailureError containing both the successful results and the per-shard errors.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nfn\nCallable[[list[ST]], Any]\nFunction receiving a list of samples from one shard and returning an arbitrary result.\nrequired\n\n\nshards\nlist[str] | None\nOptional list of shard identifiers to process. If None, processes all shards in the dataset. Useful for retrying only the failed shards from a previous PartialFailureError.\nNone\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ndict[str, Any]\nDict mapping shard identifier to fn’s return value for each shard.\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nPartialFailureError\nIf at least one shard fails. The exception carries .succeeded_shards, .failed_shards, .errors, and .results for inspection and retry.\n\n\n\n\n\n\n&gt;&gt;&gt; results = ds.process_shards(lambda samples: len(samples))\n&gt;&gt;&gt; # On partial failure, retry just the failed shards:\n&gt;&gt;&gt; try:\n...     results = ds.process_shards(expensive_fn)\n... except PartialFailureError as e:\n...     retry = ds.process_shards(expensive_fn, shards=e.failed_shards)\n\n\n\n\nDataset.query(where)\nQuery this dataset using per-shard manifest metadata.\nRequires manifests to have been generated during shard writing. Discovers manifest files alongside the tar shards, loads them, and executes a two-phase query (shard-level aggregate pruning, then sample-level parquet filtering).\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nwhere\nCallable[[pd.DataFrame], pd.Series]\nPredicate function that receives a pandas DataFrame of manifest fields and returns a boolean Series selecting matching rows.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[SampleLocation]\nList of SampleLocation for matching samples.\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nFileNotFoundError\nIf no manifest files are found alongside shards.\n\n\n\n\n\n\n&gt;&gt;&gt; locs = ds.query(where=lambda df: df[\"confidence\"] &gt; 0.9)\n&gt;&gt;&gt; len(locs)\n42\n\n\n\n\nDataset.select(indices)\nReturn samples at the given integer indices.\nIterates through the dataset in order and collects samples whose positional index matches. This is O(n) for streaming datasets.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nindices\nSequence[int]\nSequence of zero-based indices to select.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[ST]\nList of samples at the requested positions, in index order.\n\n\n\n\n\n\n&gt;&gt;&gt; samples = ds.select([0, 5, 10])\n&gt;&gt;&gt; len(samples)\n3\n\n\n\n\nDataset.shuffled(buffer_shards=100, buffer_samples=10000, batch_size=None)\nIterate over the dataset in random order.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nbuffer_shards\nint\nNumber of shards to buffer for shuffling at the shard level. Larger values increase randomness but use more memory. Default: 100.\n100\n\n\nbuffer_samples\nint\nNumber of samples to buffer for shuffling within shards. Larger values increase randomness but use more memory. Default: 10,000.\n10000\n\n\nbatch_size\nint | None\nThe size of iterated batches. Default: None (unbatched). If None, iterates over one sample at a time with no batch dimension.\nNone\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\nA data pipeline that iterates over the dataset in randomized order.\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\nWhen batch_size is None, yields individual samples of type\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\nST. When batch_size is an integer, yields SampleBatch[ST]\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\ninstances containing that many samples.\n\n\n\n\n\n\n&gt;&gt;&gt; for sample in ds.shuffled():\n...     process(sample)  # sample is ST\n&gt;&gt;&gt; for batch in ds.shuffled(batch_size=32):\n...     process(batch)  # batch is SampleBatch[ST]\n\n\n\n\nDataset.to_dict(limit=None)\nMaterialize the dataset as a column-oriented dictionary.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nlimit\nint | None\nMaximum number of samples to include. None means all.\nNone\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ndict[str, list[Any]]\nDictionary mapping field names to lists of values (one entry\n\n\n\ndict[str, list[Any]]\nper sample).\n\n\n\n\n\n\nWith limit=None this loads the entire dataset into memory.\n\n\n\n&gt;&gt;&gt; d = ds.to_dict(limit=10)\n&gt;&gt;&gt; d.keys()\ndict_keys(['name', 'embedding'])\n&gt;&gt;&gt; len(d['name'])\n10\n\n\n\n\nDataset.to_pandas(limit=None)\nMaterialize the dataset (or first limit samples) as a DataFrame.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nlimit\nint | None\nMaximum number of samples to include. None means all samples (may use significant memory for large datasets).\nNone\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\npd.DataFrame\nA pandas DataFrame with one row per sample and columns matching\n\n\n\npd.DataFrame\nthe sample fields.\n\n\n\n\n\n\nWith limit=None this loads the entire dataset into memory.\n\n\n\n&gt;&gt;&gt; df = ds.to_pandas(limit=100)\n&gt;&gt;&gt; df.columns.tolist()\n['name', 'embedding']\n\n\n\n\nDataset.to_parquet(path, sample_map=None, maxcount=None, **kwargs)\nExport dataset to parquet file(s).\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npath\nPathlike\nOutput path. With maxcount, files are named {stem}-{segment:06d}.parquet.\nrequired\n\n\nsample_map\nOptional[SampleExportMap]\nConvert sample to dict. Defaults to dataclasses.asdict.\nNone\n\n\nmaxcount\nOptional[int]\nSplit into files of at most this many samples. Without it, the entire dataset is loaded into memory.\nNone\n\n\n**kwargs\n\nPassed to pandas.DataFrame.to_parquet().\n{}\n\n\n\n\n\n\n&gt;&gt;&gt; ds.to_parquet(\"output.parquet\", maxcount=50000)\n\n\n\n\nDataset.wrap(sample)\nDeserialize a raw WDS sample dict into type ST.\n\n\n\nDataset.wrap_batch(batch)\nDeserialize a raw WDS batch dict into SampleBatch[ST]."
+    "text": "Name\nDescription\n\n\n\n\nas_type\nView this dataset through a different sample type via a registered lens.\n\n\ndescribe\nSummary statistics: sample_type, fields, num_shards, shards, url, metadata.\n\n\nfilter\nReturn a new dataset that yields only samples matching predicate.\n\n\nget\nRetrieve a single sample by its __key__.\n\n\nhead\nReturn the first n samples from the dataset.\n\n\nlist_shards\nReturn all shard paths/URLs as a list.\n\n\nmap\nReturn a new dataset that applies fn to each sample during iteration.\n\n\nordered\nIterate over the dataset in order.\n\n\nprocess_shards\nProcess each shard independently, collecting per-shard results.\n\n\nquery\nQuery this dataset using per-shard manifest metadata.\n\n\nselect\nReturn samples at the given integer indices.\n\n\nshuffled\nIterate over the dataset in random order.\n\n\nto_dict\nMaterialize the dataset as a column-oriented dictionary.\n\n\nto_pandas\nMaterialize the dataset (or first limit samples) as a DataFrame.\n\n\nto_parquet\nExport dataset to parquet file(s).\n\n\nwrap\nDeserialize a raw WDS sample dict into type ST.\n\n\nwrap_batch\nDeserialize a raw WDS batch dict into SampleBatch[ST].\n\n\n\n\n\nDataset.as_type(other)\nView this dataset through a different sample type via a registered lens.\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nValueError\nIf no lens exists between the current and target types.\n\n\n\n\n\n\n\nDataset.describe()\nSummary statistics: sample_type, fields, num_shards, shards, url, metadata.\n\n\n\nDataset.filter(predicate)\nReturn a new dataset that yields only samples matching predicate.\nThe filter is applied lazily during iteration — no data is copied.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npredicate\nCallable[[ST], bool]\nA function that takes a sample and returns True to keep it or False to discard it.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nDataset[ST]\nA new Dataset whose iterators apply the filter.\n\n\n\n\n\n\n&gt;&gt;&gt; long_names = ds.filter(lambda s: len(s.name) &gt; 10)\n&gt;&gt;&gt; for sample in long_names:\n...     assert len(sample.name) &gt; 10\n\n\n\n\nDataset.get(key)\nRetrieve a single sample by its __key__.\nScans shards sequentially until a sample with a matching key is found. This is O(n) for streaming datasets.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nkey\nstr\nThe WebDataset __key__ string to search for.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nST\nThe matching sample.\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nSampleKeyError\nIf no sample with the given key exists.\n\n\n\n\n\n\n&gt;&gt;&gt; sample = ds.get(\"00000001-0001-1000-8000-010000000000\")\n\n\n\n\nDataset.head(n=5)\nReturn the first n samples from the dataset.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nn\nint\nNumber of samples to return. Default: 5.\n5\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[ST]\nList of up to n samples in shard order.\n\n\n\n\n\n\n&gt;&gt;&gt; samples = ds.head(3)\n&gt;&gt;&gt; len(samples)\n3\n\n\n\n\nDataset.list_shards()\nReturn all shard paths/URLs as a list.\n\n\n\nDataset.map(fn)\nReturn a new dataset that applies fn to each sample during iteration.\nThe mapping is applied lazily during iteration — no data is copied.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nfn\nCallable[[ST], Any]\nA function that takes a sample of type ST and returns a transformed value.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nDataset\nA new Dataset whose iterators apply the mapping.\n\n\n\n\n\n\n&gt;&gt;&gt; names = ds.map(lambda s: s.name)\n&gt;&gt;&gt; for name in names:\n...     print(name)\n\n\n\n\nDataset.ordered(batch_size=None)\nIterate over the dataset in order.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nbatch_size\nint | None\nThe size of iterated batches. Default: None (unbatched). If None, iterates over one sample at a time with no batch dimension.\nNone\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\nA data pipeline that iterates over the dataset in its original\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\nsample order. When batch_size is None, yields individual\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\nsamples of type ST. When batch_size is an integer, yields\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\nSampleBatch[ST] instances containing that many samples.\n\n\n\n\n\n\n&gt;&gt;&gt; for sample in ds.ordered():\n...     process(sample)  # sample is ST\n&gt;&gt;&gt; for batch in ds.ordered(batch_size=32):\n...     process(batch)  # batch is SampleBatch[ST]\n\n\n\n\nDataset.process_shards(fn, *, shards=None)\nProcess each shard independently, collecting per-shard results.\nUnlike :meth:map (which is lazy and per-sample), this method eagerly processes each shard in turn, calling fn with the full list of samples from that shard. If some shards fail, raises :class:~atdata._exceptions.PartialFailureError containing both the successful results and the per-shard errors.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nfn\nCallable[[list[ST]], Any]\nFunction receiving a list of samples from one shard and returning an arbitrary result.\nrequired\n\n\nshards\nlist[str] | None\nOptional list of shard identifiers to process. If None, processes all shards in the dataset. Useful for retrying only the failed shards from a previous PartialFailureError.\nNone\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ndict[str, Any]\nDict mapping shard identifier to fn’s return value for each shard.\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nPartialFailureError\nIf at least one shard fails. The exception carries .succeeded_shards, .failed_shards, .errors, and .results for inspection and retry.\n\n\n\n\n\n\n&gt;&gt;&gt; results = ds.process_shards(lambda samples: len(samples))\n&gt;&gt;&gt; # On partial failure, retry just the failed shards:\n&gt;&gt;&gt; try:\n...     results = ds.process_shards(expensive_fn)\n... except PartialFailureError as e:\n...     retry = ds.process_shards(expensive_fn, shards=e.failed_shards)\n\n\n\n\nDataset.query(where)\nQuery this dataset using per-shard manifest metadata.\nRequires manifests to have been generated during shard writing. Discovers manifest files alongside the tar shards, loads them, and executes a two-phase query (shard-level aggregate pruning, then sample-level parquet filtering).\nThe where argument accepts either a lambda/function that operates on a pandas DataFrame, or a Predicate built from the proxy DSL.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nwhere\nCallable[[pd.DataFrame], pd.Series] | Predicate\nPredicate function or Predicate object that selects matching rows from the per-sample manifest DataFrame.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[SampleLocation]\nList of SampleLocation for matching samples.\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nFileNotFoundError\nIf no manifest files are found alongside shards.\n\n\n\n\n\n\n&gt;&gt;&gt; locs = ds.query(where=lambda df: df[\"confidence\"] &gt; 0.9)\n&gt;&gt;&gt; len(locs)\n42\n&gt;&gt;&gt; Q = ds.fields\n&gt;&gt;&gt; locs = ds.query(where=(Q.confidence &gt; 0.9))\n\n\n\n\nDataset.select(indices)\nReturn samples at the given integer indices.\nIterates through the dataset in order and collects samples whose positional index matches. This is O(n) for streaming datasets.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nindices\nSequence[int]\nSequence of zero-based indices to select.\nrequired\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nlist[ST]\nList of samples at the requested positions, in index order.\n\n\n\n\n\n\n&gt;&gt;&gt; samples = ds.select([0, 5, 10])\n&gt;&gt;&gt; len(samples)\n3\n\n\n\n\nDataset.shuffled(buffer_shards=100, buffer_samples=10000, batch_size=None)\nIterate over the dataset in random order.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nbuffer_shards\nint\nNumber of shards to buffer for shuffling at the shard level. Larger values increase randomness but use more memory. Default: 100.\n100\n\n\nbuffer_samples\nint\nNumber of samples to buffer for shuffling within shards. Larger values increase randomness but use more memory. Default: 10,000.\n10000\n\n\nbatch_size\nint | None\nThe size of iterated batches. Default: None (unbatched). If None, iterates over one sample at a time with no batch dimension.\nNone\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\nA data pipeline that iterates over the dataset in randomized order.\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\nWhen batch_size is None, yields individual samples of type\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\nST. When batch_size is an integer, yields SampleBatch[ST]\n\n\n\nIterable[ST] | Iterable[SampleBatch[ST]]\ninstances containing that many samples.\n\n\n\n\n\n\n&gt;&gt;&gt; for sample in ds.shuffled():\n...     process(sample)  # sample is ST\n&gt;&gt;&gt; for batch in ds.shuffled(batch_size=32):\n...     process(batch)  # batch is SampleBatch[ST]\n\n\n\n\nDataset.to_dict(limit=None)\nMaterialize the dataset as a column-oriented dictionary.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nlimit\nint | None\nMaximum number of samples to include. None means all.\nNone\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ndict[str, list[Any]]\nDictionary mapping field names to lists of values (one entry\n\n\n\ndict[str, list[Any]]\nper sample).\n\n\n\n\n\n\nWith limit=None this loads the entire dataset into memory.\n\n\n\n&gt;&gt;&gt; d = ds.to_dict(limit=10)\n&gt;&gt;&gt; d.keys()\ndict_keys(['name', 'embedding'])\n&gt;&gt;&gt; len(d['name'])\n10\n\n\n\n\nDataset.to_pandas(limit=None)\nMaterialize the dataset (or first limit samples) as a DataFrame.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nlimit\nint | None\nMaximum number of samples to include. None means all samples (may use significant memory for large datasets).\nNone\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\npd.DataFrame\nA pandas DataFrame with one row per sample and columns matching\n\n\n\npd.DataFrame\nthe sample fields.\n\n\n\n\n\n\nWith limit=None this loads the entire dataset into memory.\n\n\n\n&gt;&gt;&gt; df = ds.to_pandas(limit=100)\n&gt;&gt;&gt; df.columns.tolist()\n['name', 'embedding']\n\n\n\n\nDataset.to_parquet(path, sample_map=None, maxcount=None, **kwargs)\nExport dataset to parquet file(s).\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npath\nPathlike\nOutput path. With maxcount, files are named {stem}-{segment:06d}.parquet.\nrequired\n\n\nsample_map\nOptional[SampleExportMap]\nConvert sample to dict. Defaults to dataclasses.asdict.\nNone\n\n\nmaxcount\nOptional[int]\nSplit into files of at most this many samples. Without it, the entire dataset is loaded into memory.\nNone\n\n\n**kwargs\n\nPassed to pandas.DataFrame.to_parquet().\n{}\n\n\n\n\n\n\n&gt;&gt;&gt; ds.to_parquet(\"output.parquet\", maxcount=50000)\n\n\n\n\nDataset.wrap(sample)\nDeserialize a raw WDS sample dict into type ST.\n\n\n\nDataset.wrap_batch(batch)\nDeserialize a raw WDS batch dict into SampleBatch[ST]."
   },
   {
     "objectID": "api/local.Index.html",

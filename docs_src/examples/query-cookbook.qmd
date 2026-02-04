@@ -1,0 +1,346 @@
+---
+title: "Query Cookbook"
+description: "Practical query recipes for manifest-powered datasets: filtering, combining, and visualizing results"
+execute:
+  enabled: true
+---
+
+This cookbook collects practical query patterns for manifest-powered datasets.
+Each recipe shows both the **lambda** syntax (pandas-native) and the **typed
+proxy DSL** (`F` expressions) side by side, so you can pick whichever reads
+best for your use case.
+
+## 1 --- Build the example dataset
+
+We model a wildlife observation log with species, weight, maturity, and
+habitat tags.  Weight distributions vary by species to make queries
+interesting.
+
+```{python}
+import numpy as np
+from numpy.typing import NDArray
+from typing import Annotated
+import atdata
+from atdata import ManifestField
+
+
+@atdata.packable
+class Observation:
+    """A wildlife observation with queryable metadata."""
+
+    embedding: NDArray
+    species: Annotated[str, ManifestField("categorical")]
+    weight_kg: Annotated[float, ManifestField("numeric")]
+    is_adult: Annotated[bool, ManifestField("categorical")]
+    habitats: Annotated[list[str], ManifestField("set")]
+```
+
+```{python}
+import tempfile
+from pathlib import Path
+
+tmpdir = Path(tempfile.mkdtemp(prefix="atdata_cookbook_"))
+rng = np.random.default_rng(2024)
+
+species_weights = {
+    "elephant": (3500, 800),
+    "bear": (250, 80),
+    "wolf": (40, 12),
+    "eagle": (5, 1.5),
+    "salmon": (8, 3),
+    "mouse": (0.03, 0.01),
+}
+habitat_pool = ["forest", "desert", "ocean", "mountain", "tundra", "grassland"]
+
+samples = []
+for _ in range(800):
+    sp = rng.choice(list(species_weights.keys()))
+    mean, std = species_weights[sp]
+    samples.append(Observation(
+        embedding=rng.standard_normal(32).astype(np.float32),
+        species=sp,
+        weight_kg=round(max(0.01, float(rng.normal(mean, std))), 2),
+        is_adult=bool(rng.random() > 0.3),
+        habitats=list(rng.choice(habitat_pool, size=rng.integers(1, 4), replace=False)),
+    ))
+
+ds = atdata.write_samples(samples, tmpdir / "wildlife.tar", maxcount=200, manifest=True)
+print(f"Wrote {len(samples)} observations across {len(ds.list_shards())} shards")
+```
+
+## 2 --- Load manifests and preview
+
+```{python}
+import pandas as pd
+from atdata import QueryExecutor
+from atdata.manifest import F
+
+executor = QueryExecutor.from_directory(tmpdir)
+combined = pd.concat(
+    [m.samples for m in executor._manifests if not m.samples.empty],
+    ignore_index=True,
+)
+
+print(combined[["species", "weight_kg", "is_adult"]].describe().to_string())
+print()
+print(f"Species: {sorted(combined['species'].unique())}")
+```
+
+## 3 --- Recipe: threshold filter
+
+Find heavy animals above a weight threshold.
+
+::: {.panel-tabset}
+
+### Lambda
+
+```{python}
+results_lambda = executor.query(
+    where=lambda df: df["weight_kg"] > 500
+)
+print(f"Matches (lambda): {len(results_lambda)}")
+```
+
+### Typed DSL
+
+```{python}
+results_dsl = executor.query(where=F.weight_kg > 500)
+print(f"Matches (DSL):    {len(results_dsl)}")
+```
+
+:::
+
+```{python}
+heavy_keys = {loc.key for loc in results_dsl}
+heavy_df = combined[combined["__key__"].isin(heavy_keys)]
+print("\nSpecies breakdown of heavy animals (>500 kg):")
+print(heavy_df["species"].value_counts().to_string())
+```
+
+## 4 --- Recipe: categorical selection
+
+::: {.panel-tabset}
+
+### Single value
+
+```{python}
+bears = executor.query(where=F.species == "bear")
+print(f"Bears: {len(bears)}")
+```
+
+### Multiple values (.isin)
+
+```{python}
+large_animals = executor.query(where=F.species.isin(["elephant", "bear"]))
+print(f"Elephants + bears: {len(large_animals)}")
+```
+
+### Exclusion (~)
+
+```{python}
+not_small = executor.query(where=~F.species.isin(["mouse", "salmon"]))
+print(f"Excluding mouse & salmon: {len(not_small)}")
+```
+
+:::
+
+## 5 --- Recipe: range filter
+
+The `.between()` method creates a closed-interval filter.
+
+::: {.panel-tabset}
+
+### Lambda
+
+```{python}
+mid_range = executor.query(
+    where=lambda df: df["weight_kg"].between(10, 100)
+)
+print(f"Weight 10-100 kg (lambda): {len(mid_range)}")
+```
+
+### Typed DSL
+
+```{python}
+mid_range_dsl = executor.query(where=F.weight_kg.between(10, 100))
+print(f"Weight 10-100 kg (DSL):    {len(mid_range_dsl)}")
+```
+
+:::
+
+## 6 --- Recipe: tag/set membership
+
+Tags are stored as lists.  With the lambda syntax you can use `.apply()` for
+arbitrary list predicates.
+
+```{python}
+# Observations in mountain habitats
+mountain = executor.query(
+    where=lambda df: df["habitats"].apply(
+        lambda h: "mountain" in h if isinstance(h, list) else False
+    )
+)
+print(f"Mountain habitat: {len(mountain)} observations")
+```
+
+```{python}
+# Observations in BOTH forest AND mountain
+dual_habitat = executor.query(
+    where=lambda df: df["habitats"].apply(
+        lambda h: {"forest", "mountain"}.issubset(h) if isinstance(h, list) else False
+    )
+)
+print(f"Forest + mountain: {len(dual_habitat)} observations")
+```
+
+## 7 --- Recipe: compound queries
+
+Combine predicates with `&` (AND), `|` (OR), and `~` (NOT).
+
+::: {.panel-tabset}
+
+### AND
+
+```{python}
+adult_bears = executor.query(
+    where=(F.species == "bear") & (F.is_adult == True)
+)
+print(f"Adult bears: {len(adult_bears)}")
+```
+
+### OR
+
+```{python}
+extreme = executor.query(
+    where=(F.species == "elephant") | (F.weight_kg < 0.1)
+)
+print(f"Elephants or very light (<0.1 kg): {len(extreme)}")
+```
+
+### NOT
+
+```{python}
+juveniles = executor.query(where=~(F.is_adult == True))
+print(f"Juveniles: {len(juveniles)}")
+```
+
+:::
+
+## 8 --- Scatter plot: query results highlighted
+
+```{python}
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
+query_pred = (F.species.isin(["elephant", "bear"])) & (F.is_adult == True)
+match_locs = executor.query(where=query_pred)
+match_keys = {loc.key for loc in match_locs}
+
+species_list = sorted(combined["species"].unique())
+cmap = plt.cm.Set2
+species_colors = {sp: cmap(i / len(species_list)) for i, sp in enumerate(species_list)}
+
+fig, ax = plt.subplots(figsize=(8, 4))
+
+for sp in species_list:
+    mask = combined["species"] == sp
+    subset = combined[mask]
+    ax.scatter(
+        subset.index, subset["weight_kg"],
+        c=[species_colors[sp]], label=sp,
+        s=15, alpha=0.6, linewidths=0,
+    )
+
+# Highlight matches
+match_mask = combined["__key__"].isin(match_keys)
+ax.scatter(
+    combined[match_mask].index,
+    combined[match_mask]["weight_kg"],
+    facecolors="none", edgecolors="#D32F2F", s=50, linewidths=1.5,
+    label="query match", zorder=5,
+)
+
+ax.set_xlabel("Sample index")
+ax.set_ylabel("Weight (kg)")
+ax.set_yscale("log")
+ax.set_title("Adult elephants & bears highlighted", fontweight="bold")
+ax.legend(fontsize=8, ncol=4, loc="upper center", bbox_to_anchor=(0.5, -0.15))
+ax.spines[["top", "right"]].set_visible(False)
+plt.tight_layout()
+plt.show()
+```
+
+## 9 --- Query hit rate per shard
+
+This chart shows how matches distribute across shards.  When aggregate
+pruning is active, shards with zero hits can be skipped entirely.
+
+```{python}
+from collections import Counter
+
+shard_hits = Counter(loc.shard for loc in match_locs)
+
+shards_all = sorted({m.shard_id for m in executor._manifests})
+hit_counts = [shard_hits.get(s, 0) for s in shards_all]
+shard_labels = [Path(s).stem for s in shards_all]
+
+fig, ax = plt.subplots(figsize=(6, 3))
+colors = ["#43A047" if c > 0 else "#BDBDBD" for c in hit_counts]
+ax.bar(shard_labels, hit_counts, color=colors, edgecolor="white")
+
+for i, count in enumerate(hit_counts):
+    if count > 0:
+        ax.text(i, count + 0.5, str(count), ha="center", fontweight="bold", fontsize=10)
+
+ax.set_ylabel("Matching samples")
+ax.set_title("Query Hits per Shard", fontweight="bold")
+ax.spines[["top", "right"]].set_visible(False)
+plt.tight_layout()
+plt.show()
+```
+
+::: {.callout-tip}
+## Shard pruning
+
+In production, `QueryExecutor` checks each shard's **aggregate statistics**
+before loading its parquet file.  If the aggregates prove no samples can
+match (e.g., a shard's max weight is below your threshold), the parquet is
+never read---saving I/O on large datasets.
+:::
+
+## 10 --- Building a filtered subset
+
+Query results are `SampleLocation` objects with shard path, key, and byte
+offset.  Group them by shard for downstream processing.
+
+```{python}
+from itertools import groupby
+from operator import attrgetter
+
+sorted_locs = sorted(match_locs, key=attrgetter("shard"))
+for shard, group in groupby(sorted_locs, key=attrgetter("shard")):
+    keys = [loc.key for loc in group]
+    print(f"  {Path(shard).stem}: {len(keys)} matches (first 3: {keys[:3]})")
+```
+
+## 11 --- Clean up
+
+```{python}
+import shutil
+
+shutil.rmtree(tmpdir, ignore_errors=True)
+```
+
+## Key takeaways
+
+| Pattern | Lambda | Typed DSL |
+|---------|--------|-----------|
+| Threshold | `df["weight"] > 50` | `F.weight > 50` |
+| Equality | `df["species"] == "bear"` | `F.species == "bear"` |
+| Set membership | `df["species"].isin([...])` | `F.species.isin([...])` |
+| Range | `df["x"].between(a, b)` | `F.x.between(a, b)` |
+| AND | `(cond1) & (cond2)` | `(cond1) & (cond2)` |
+| OR | `(cond1) \| (cond2)` | `(cond1) \| (cond2)` |
+| NOT | `~(condition)` | `~(condition)` |
+| Tag contains | `df["tags"].apply(...)` | *(use lambda)* |
