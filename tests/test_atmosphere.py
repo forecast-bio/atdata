@@ -903,7 +903,7 @@ class TestAtmosphere:
 
         mock_response = Mock()
         mock_response.blob = mock_blob_ref
-        mock_atproto_client.upload_blob.return_value = mock_response
+        mock_atproto_client.com.atproto.repo.upload_blob.return_value = mock_response
 
         result = authenticated_client.upload_blob(
             b"test data", mime_type="application/x-tar"
@@ -1349,7 +1349,7 @@ class TestDatasetPublisher:
 
         mock_upload_response = Mock()
         mock_upload_response.blob = mock_blob_ref
-        mock_atproto_client.upload_blob.return_value = mock_upload_response
+        mock_atproto_client.com.atproto.repo.upload_blob.return_value = mock_upload_response
 
         # Mock create_record response
         mock_create_response = Mock()
@@ -1371,7 +1371,7 @@ class TestDatasetPublisher:
 
         assert isinstance(uri, AtUri)
         # Should have uploaded 2 blobs
-        assert mock_atproto_client.upload_blob.call_count == 2
+        assert mock_atproto_client.com.atproto.repo.upload_blob.call_count == 2
         # Should have created one record
         assert mock_atproto_client.com.atproto.repo.create_record.call_count == 1
 
@@ -1392,7 +1392,7 @@ class TestDatasetPublisher:
 
         mock_upload_response = Mock()
         mock_upload_response.blob = mock_blob_ref
-        mock_atproto_client.upload_blob.return_value = mock_upload_response
+        mock_atproto_client.com.atproto.repo.upload_blob.return_value = mock_upload_response
 
         mock_create_response = Mock()
         mock_create_response.uri = (
