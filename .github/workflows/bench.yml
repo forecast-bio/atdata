@@ -54,7 +54,7 @@ jobs:
       - name: Copy report to docs
         run: |
           mkdir -p docs/benchmarks
-          cp -f .bench/report.html docs/benchmarks/index.html
+          cp -f .benchmarks/report.html docs/benchmarks/index.html
 
       - name: Commit updated benchmark docs
         run: |
@@ -69,7 +69,7 @@ jobs:
         with:
           name: benchmark-report
           path: |
-            .bench/report.html
-            .bench/*.json
+            .benchmarks/report.html
+            .benchmarks/*.json
 
 #
