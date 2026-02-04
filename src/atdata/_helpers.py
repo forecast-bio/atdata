@@ -198,6 +198,10 @@ def verify_checksums(entry: "IndexEntry") -> dict[str, str]:
         if url not in stored:
             results[url] = "skipped"
             continue
+        # Only local file paths can be verified; skip remote URLs
+        if url.startswith(("s3://", "at://", "http://", "https://")):
+            results[url] = "skipped"
+            continue
         try:
             actual = sha256_file(url)
             results[url] = "ok" if actual == stored[url] else "mismatch"

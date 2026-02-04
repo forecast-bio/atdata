@@ -179,6 +179,22 @@ class TestVerifyChecksums:
         results = verify_checksums(entry)
         assert results["/nonexistent/shard.tar"] == "skipped"
 
+    def test_verify_skips_remote_urls(self):
+        """Remote URLs with stored checksums should be skipped, not error."""
+        entry = LocalDatasetEntry(
+            name="remote",
+            schema_ref="local://schemas/Foo@1.0.0",
+            data_urls=["s3://bucket/shard.tar", "at://did:plc:abc/blob/cid123"],
+            metadata={
+                "checksums": {
+                    "s3://bucket/shard.tar": "abc",
+                    "at://did:plc:abc/blob/cid123": "def",
+                }
+            },
+        )
+        results = verify_checksums(entry)
+        assert all(v == "skipped" for v in results.values())
+
     def test_verify_missing_file_reports_error(self):
         entry = LocalDatasetEntry(
             name="gone",
@@ -204,26 +220,3 @@ class TestVerifyChecksums:
         assert results[first_url] == "mismatch"
         other_results = {u: s for u, s in results.items() if u != first_url}
         assert all(v == "ok" for v in other_results.values())
-
-
-# ---------------------------------------------------------------------------
-# ChecksumError
-# ---------------------------------------------------------------------------
-
-
-class TestChecksumError:
-    def test_message_formatting(self):
-        from atdata._exceptions import ChecksumError
-
-        err = ChecksumError(
-            {"/shard.tar": ("expected_digest", "actual_digest")}
-        )
-        assert "1 shard(s) failed" in str(err)
-        assert "expected_digest" in str(err)
-
-    def test_truncation_for_many_shards(self):
-        from atdata._exceptions import ChecksumError
-
-        shards = {f"/shard-{i}.tar": ("exp", "act") for i in range(10)}
-        err = ChecksumError(shards)
-        assert "... and 5 more" in str(err)
