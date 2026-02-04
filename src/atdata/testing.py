@@ -98,6 +98,7 @@ class MockAtmosphere:
         collection: str,
         record: dict[str, Any],
         rkey: str | None = None,
+        validate: bool = False,
     ) -> str:
         """Simulate creating a record. Returns a mock AT URI."""
         key = rkey or uuid.uuid4().hex[:12]

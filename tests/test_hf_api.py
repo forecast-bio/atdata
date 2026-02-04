@@ -713,15 +713,31 @@ class TestParseIndexedPath:
 
     def test_parse_handle_dataset(self):
         """Parse @handle/dataset format."""
-        handle, name = _parse_indexed_path("@maxine.science/mnist")
+        handle, name, version = _parse_indexed_path("@maxine.science/mnist")
         assert handle == "maxine.science"
         assert name == "mnist"
+        assert version is None
 
     def test_parse_did_dataset(self):
         """Parse @did:plc:xxx/dataset format."""
-        handle, name = _parse_indexed_path("@did:plc:abc123/my-dataset")
+        handle, name, version = _parse_indexed_path("@did:plc:abc123/my-dataset")
         assert handle == "did:plc:abc123"
         assert name == "my-dataset"
+        assert version is None
+
+    def test_parse_with_version(self):
+        """Parse @handle/dataset@version format."""
+        handle, name, version = _parse_indexed_path("@maxine.science/mnist@1.0.0")
+        assert handle == "maxine.science"
+        assert name == "mnist"
+        assert version == "1.0.0"
+
+    def test_parse_with_freeform_version(self):
+        """Parse @handle/dataset@freeform-version format."""
+        handle, name, version = _parse_indexed_path("@alice.bsky.social/cifar10@v2-beta")
+        assert handle == "alice.bsky.social"
+        assert name == "cifar10"
+        assert version == "v2-beta"
 
     def test_parse_invalid_no_slash(self):
         """Invalid path without slash raises ValueError."""

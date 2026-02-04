@@ -201,10 +201,10 @@ class SqliteProvider(IndexProvider):
                 (name, version),
             ).fetchone()
         else:
-            # Latest by created_at, preferring versioned over unversioned
+            # Latest by created_at (with rowid tiebreaker for same-second inserts)
             row = self._conn.execute(
                 "SELECT cid, version FROM labels WHERE name = ? "
-                "ORDER BY created_at DESC LIMIT 1",
+                "ORDER BY created_at DESC, rowid DESC LIMIT 1",
                 (name,),
             ).fetchone()
         if row is None:
