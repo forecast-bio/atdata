@@ -28,6 +28,7 @@ T = TypeVar("T", bound=Packable)
 # URI scheme prefixes
 _ATDATA_URI_PREFIX = "atdata://local/schema/"
 _LEGACY_URI_PREFIX = "local://schemas/"
+_ATDATA_LENS_URI_PREFIX = "atdata://local/lens/"
 
 
 class SchemaNamespace:
@@ -288,6 +289,23 @@ def _parse_schema_ref(ref: str) -> tuple[str, str]:
     # For legacy format, extract just the class name from module.Class
     if "." in name:
         name = name.rsplit(".", 1)[1]
+    return name, version
+
+
+def _parse_lens_ref(ref: str) -> tuple[str, str]:
+    """Parse lens reference into (name, version).
+
+    Supports format: 'atdata://local/lens/{name}@{version}'
+    """
+    if ref.startswith(_ATDATA_LENS_URI_PREFIX):
+        path = ref[len(_ATDATA_LENS_URI_PREFIX):]
+    else:
+        raise ValueError(f"Invalid lens reference: {ref}")
+
+    if "@" not in path:
+        raise ValueError(f"Lens reference must include version (@version): {ref}")
+
+    name, version = path.rsplit("@", 1)
     return name, version
 
 

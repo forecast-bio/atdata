@@ -14,6 +14,7 @@ from atdata.index._schema import (
     _schema_ref_from_type,
     _make_schema_ref,
     _parse_schema_ref,
+    _parse_lens_ref,
     _increment_patch,
     _build_schema_record,
 )
@@ -1599,3 +1600,194 @@ class Index:
             )
 
             return str(uri)
+
+    # ------------------------------------------------------------------
+    # Lens operations
+    # ------------------------------------------------------------------
+
+    def store_lens(
+        self,
+        lens_obj: "Lens",
+        *,
+        name: str,
+        version: str | None = None,
+        description: str | None = None,
+        source_schema: str | None = None,
+        view_schema: str | None = None,
+    ) -> str:
+        """Persist a lens transformation in the local provider.
+
+        Serializes the lens to JSON and stores it. If the lens uses simple
+        field mappings, those are captured declaratively for later
+        reconstitution. Otherwise, code references are stored.
+
+        Args:
+            lens_obj: The Lens to store.
+            name: Human-readable lens name.
+            version: Semantic version string. If ``None``, auto-increments
+                from the latest version or starts at ``"1.0.0"``.
+            description: Optional description.
+            source_schema: Source schema name. Auto-detected if ``None``.
+            view_schema: View schema name. Auto-detected if ``None``.
+
+        Returns:
+            Lens reference string: ``"atdata://local/lens/{name}@{version}"``.
+
+        Examples:
+            >>> @lens
+            ... def my_lens(s: Source) -> View:
+            ...     return View(name=s.name)
+            >>> ref = index.store_lens(my_lens, name="my_lens")
+        """
+        from atdata._lens_codec import lens_to_json
+        from atdata.lens import Lens
+
+        if version is None:
+            latest = self._provider.find_latest_lens_version(name)
+            if latest is None:
+                version = "1.0.0"
+            else:
+                version = _increment_patch(latest)
+
+        lens_json = lens_to_json(
+            lens_obj,
+            name=name,
+            version=version,
+            description=description,
+            source_schema=source_schema,
+            view_schema=view_schema,
+        )
+
+        self._provider.store_lens(name, version, lens_json)
+
+        # Auto-generate lens stub if enabled
+        if self._stub_manager is not None:
+            record = json.loads(lens_json)
+            self._stub_manager.ensure_lens_stub(record)
+
+        return f"atdata://local/lens/{name}@{version}"
+
+    def get_lens(self, ref: str) -> dict:
+        """Get a lens record by reference.
+
+        Args:
+            ref: Lens reference string
+                (``"atdata://local/lens/{name}@{version}"``).
+
+        Returns:
+            Lens record as a dictionary.
+
+        Raises:
+            KeyError: If lens not found.
+            ValueError: If reference format is invalid.
+
+        Examples:
+            >>> record = index.get_lens("atdata://local/lens/my_lens@1.0.0")
+        """
+        name, version = _parse_lens_ref(ref)
+
+        lens_json = self._provider.get_lens_json(name, version)
+        if lens_json is None:
+            raise KeyError(f"Lens not found: {ref}")
+
+        record = json.loads(lens_json)
+        record["$ref"] = f"atdata://local/lens/{name}@{version}"
+        return record
+
+    def load_lens(
+        self,
+        ref: str,
+        *,
+        source_type: "Type[Packable] | None" = None,
+        view_type: "Type[Packable] | None" = None,
+    ) -> "Lens":
+        """Reconstitute a Lens object from a stored record.
+
+        Loads the lens definition from the provider and creates a working
+        ``Lens`` object. For field-mapping lenses, ``source_type`` and
+        ``view_type`` must be provided. For code-reference lenses, the
+        types are inferred from the imported functions.
+
+        The reconstituted lens is automatically registered in the global
+        ``LensNetwork``.
+
+        Args:
+            ref: Lens reference string.
+            source_type: The source Packable type. Required for
+                field-mapping lens reconstitution.
+            view_type: The view Packable type. Required for
+                field-mapping lens reconstitution.
+
+        Returns:
+            A reconstituted Lens object.
+
+        Raises:
+            KeyError: If lens not found.
+            ValueError: If lens cannot be reconstituted.
+
+        Examples:
+            >>> lens_obj = index.load_lens(
+            ...     "atdata://local/lens/my_lens@1.0.0",
+            ...     source_type=Source,
+            ...     view_type=View,
+            ... )
+        """
+        from atdata._lens_codec import lens_from_record
+        from atdata.lens import Lens
+
+        record = self.get_lens(ref)
+        return lens_from_record(
+            record,
+            source_type=source_type,
+            view_type=view_type,
+        )
+
+    @property
+    def lenses(self) -> Generator[dict, None, None]:
+        """Lazily iterate over all lens records in this index.
+
+        Yields:
+            Lens record dicts.
+        """
+        for name, version, lens_json in self._provider.iter_lenses():
+            record = json.loads(lens_json)
+            record["$ref"] = f"atdata://local/lens/{name}@{version}"
+            yield record
+
+    def list_lenses(self) -> list[dict]:
+        """Get all lens records as a materialized list.
+
+        Returns:
+            List of lens record dicts.
+
+        Examples:
+            >>> for lens_rec in index.list_lenses():
+            ...     print(lens_rec["name"], lens_rec["version"])
+        """
+        return list(self.lenses)
+
+    def find_lenses(
+        self,
+        source_schema: str,
+        view_schema: str | None = None,
+    ) -> list[dict]:
+        """Find lenses matching source and/or view schema names.
+
+        Args:
+            source_schema: Source schema name to match.
+            view_schema: Optional view schema name. If ``None``, returns
+                all lenses with the given source schema.
+
+        Returns:
+            List of matching lens record dicts.
+
+        Examples:
+            >>> lenses = index.find_lenses("ImageSample", "GrayscaleSample")
+        """
+        results = self._provider.find_lenses_by_schemas(source_schema, view_schema)
+        records = []
+        for name, version, lens_json in results:
+            record = json.loads(lens_json)
+            record["$ref"] = f"atdata://local/lens/{name}@{version}"
+            records.append(record)
+        return records

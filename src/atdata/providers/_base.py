@@ -10,6 +10,7 @@ Concrete implementations live in sibling modules:
 
 from __future__ import annotations
 
+import json
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Iterator
 
@@ -174,6 +175,83 @@ class IndexProvider(ABC):
         Yields:
             Tuples of ``(name, cid, version)``.
         """
+
+    # ------------------------------------------------------------------
+    # Lens operations
+    # ------------------------------------------------------------------
+
+    @abstractmethod
+    def store_lens(self, name: str, version: str, lens_json: str) -> None:
+        """Persist a lens record (upsert by name + version).
+
+        Args:
+            name: Lens name (e.g. ``"image_to_grayscale"``).
+            version: Semantic version string (e.g. ``"1.0.0"``).
+            lens_json: JSON-serialized lens record.
+        """
+
+    @abstractmethod
+    def get_lens_json(self, name: str, version: str) -> str | None:
+        """Load a lens's JSON by name and version.
+
+        Args:
+            name: Lens name.
+            version: Semantic version string.
+
+        Returns:
+            The JSON string, or ``None`` if not found.
+        """
+
+    @abstractmethod
+    def iter_lenses(self) -> Iterator[tuple[str, str, str]]:
+        """Iterate over all stored lenses.
+
+        Yields:
+            Tuples of ``(name, version, lens_json)``.
+        """
+
+    @abstractmethod
+    def find_latest_lens_version(self, name: str) -> str | None:
+        """Find the latest semantic version for a lens name.
+
+        Args:
+            name: Lens name to search for.
+
+        Returns:
+            The latest version string (e.g. ``"1.2.3"``), or ``None``
+            if no lens with *name* exists.
+        """
+
+    def find_lenses_by_schemas(
+        self,
+        source_schema: str,
+        view_schema: str | None = None,
+    ) -> list[tuple[str, str, str]]:
+        """Find lenses matching source and/or view schema names.
+
+        The default implementation iterates all lenses and filters in
+        Python.  Subclasses may override with indexed queries.
+
+        Args:
+            source_schema: Source schema name to match.
+            view_schema: Optional view schema name to match. If ``None``,
+                returns all lenses with the given source schema.
+
+        Returns:
+            List of ``(name, version, lens_json)`` tuples for matching lenses.
+        """
+        results: list[tuple[str, str, str]] = []
+        for name, version, lens_json in self.iter_lenses():
+            try:
+                record = json.loads(lens_json)
+            except json.JSONDecodeError:
+                continue
+            if record.get("source_schema") != source_schema:
+                continue
+            if view_schema is not None and record.get("view_schema") != view_schema:
+                continue
+            results.append((name, version, lens_json))
+        return results
 
     # ------------------------------------------------------------------
     # Lifecycle
