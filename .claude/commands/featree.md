@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(git *), Bash(chainlink *), Bash(uuidgen), Bash(ls *), Skill
+allowed-tools: Bash(git *), Bash(chainlink *), Bash(uuidgen), Bash(ls *), Bash(ln *), Bash(rm *), Skill
 description: Create a feature branch and move it to a new git worktree
 ---
 
@@ -31,7 +31,16 @@ The user provides a human-readable feature description (e.g. "add batch retry lo
 - Switch back to the previous branch (the one we were on before `/feature` created the new branch): `git checkout -`
 - Create the worktree pointing at the feature branch: `git worktree add <worktree-path> feature/<slug>`
 
-### 4. Report to user
+### 4. Symlink chainlink issues database
+
+Replace the worktree's issues database with a symlink to the base clone's copy so all worktrees share a single authoritative chainlink database (the one on `develop`):
+
+```bash
+rm <worktree-path>/.chainlink/issues.db
+ln -s <repo-root>/.chainlink/issues.db <worktree-path>/.chainlink/issues.db
+```
+
+### 5. Report to user
 
 Print a summary:
 ```
