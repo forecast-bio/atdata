@@ -67,7 +67,9 @@ class TestWriteShards:
         store = S3DataStore(credentials=minio_credentials, bucket=minio_bucket)
 
         samples = [
-            S3ArraySample(label=f"arr-{i}", data=np.random.randn(8, 8).astype(np.float32))
+            S3ArraySample(
+                label=f"arr-{i}", data=np.random.randn(8, 8).astype(np.float32)
+            )
             for i in range(5)
         ]
         tar_path = tmp_path / "arrays.tar"
@@ -130,10 +132,8 @@ class TestURLResolution:
         store = S3DataStore(credentials=minio_credentials, bucket=minio_bucket)
         resolved = store.read_url(f"s3://{minio_bucket}/some/path.tar")
 
-        endpoint = minio_credentials["AWS_ENDPOINT"]
-        assert resolved.startswith(endpoint.replace("http://", "http://"))
-        assert minio_bucket in resolved
-        assert resolved.endswith("/some/path.tar")
+        endpoint = minio_credentials["AWS_ENDPOINT"].rstrip("/")
+        assert resolved == f"{endpoint}/{minio_bucket}/some/path.tar"
 
     def test_supports_streaming(
         self,

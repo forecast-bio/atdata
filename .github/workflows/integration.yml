@@ -24,23 +24,6 @@ jobs:
     continue-on-error: true
 
     services:
-      minio:
-        image: minio/minio:latest
-        ports:
-          - 9000:9000
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin
-        options: >-
-          --health-cmd "mc ready local || exit 1"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-          --entrypoint ""
-        # minio/minio image requires explicit server command
-        # The options above use mc, but the actual entrypoint is overridden.
-        # We use a custom start command via the container args.
-
       postgres:
         image: postgres:16
         ports:
@@ -71,17 +54,15 @@ jobs:
       - name: Install the project
         run: uv sync --locked --all-extras --dev
 
-      # MinIO needs the server process started manually when entrypoint
-      # is overridden.  Use a sidecar approach: start minio in the
-      # background and wait for it.
-      - name: Start MinIO server
+      # MinIO doesn't support GitHub Actions service containers well
+      # (needs explicit `server /data` command).  Run it directly.
+      - name: Start MinIO
         run: |
-          docker run -d --name minio-server \
+          docker run -d --name minio \
             -p 9000:9000 \
             -e MINIO_ROOT_USER=minioadmin \
             -e MINIO_ROOT_PASSWORD=minioadmin \
             minio/minio:latest server /data
-          # Wait until the health endpoint responds
           for i in $(seq 1 30); do
             curl -sf http://localhost:9000/minio/health/live && break
             sleep 1
@@ -98,12 +79,15 @@ jobs:
           MINIO_SECRET_KEY: minioadmin
           # PostgreSQL
           POSTGRES_DSN: postgresql://atdata:atdata_test@localhost:5432/atdata_integration
+        # Override addopts to drop the default '-m not integration' filter
+        # and disable coverage (integration tests don't contribute to it).
         run: >
           uv run pytest
           -m integration
           -v
           --tb=short
           --no-header
+          -p no:cacheprovider
           -o addopts=""
           --junitxml=integration-results.xml
 

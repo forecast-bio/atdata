@@ -100,7 +100,9 @@ class TestBlobOperations:
 
     def test_upload_and_download_blob(self, atproto_client: Atmosphere):
         payload = b"hello from atdata integration test " + RUN_ID.encode()
-        blob_ref = atproto_client.upload_blob(payload, mime_type="application/octet-stream")
+        blob_ref = atproto_client.upload_blob(
+            payload, mime_type="application/octet-stream"
+        )
 
         assert blob_ref["$type"] == "blob"
         assert blob_ref["size"] == len(payload)
@@ -286,6 +288,70 @@ class TestBlobRoundTrip:
         assert len(result) == 2
         assert result[0].message == ["hello"]
         assert result[1].message == ["world"]
+
+        # cleanup
+        atproto_client.delete_record(ds_uri)
+        atproto_client.delete_record(schema_uri)
+
+
+# ── Error handling ────────────────────────────────────────────────
+
+
+class TestErrorHandling:
+    """Verify error paths against the live PDS."""
+
+    def test_publish_without_auth_raises(self):
+        client = Atmosphere()
+        pub = SchemaPublisher(client)
+        with pytest.raises(ValueError, match="authenticated"):
+            pub.publish(IntegBasicSample, version="1.0.0")
+
+    def test_get_nonexistent_record(self, atproto_client: Atmosphere):
+        fake_uri = (
+            f"at://{atproto_client.did}/{LEXICON_NAMESPACE}.schema/nonexistent99999"
+        )
+        loader = SchemaLoader(atproto_client)
+        with pytest.raises(Exception):
+            loader.get(fake_uri)
+
+    def test_full_e2e_with_local_fixture(self, atproto_client: Atmosphere):
+        """Publish schema + dataset with local fixture tar, retrieve and iterate."""
+        from pathlib import Path
+
+        @atdata.packable
+        class _FixtureSample:
+            id: int
+            name: str
+            value: int
+
+        name = unique_name("e2e-fixture")
+        _FixtureSample.__module__ = f"integ.{name}"
+
+        fixture_path = Path(__file__).parent.parent / "fixtures" / "test_samples.tar"
+        if not fixture_path.exists():
+            pytest.skip("Test fixture not found")
+        fixture_url = f"file://{fixture_path.absolute()}"
+
+        schema_pub = SchemaPublisher(atproto_client)
+        schema_uri = schema_pub.publish(_FixtureSample, version="1.0.0")
+
+        ds_pub = DatasetPublisher(atproto_client)
+        ds_uri = ds_pub.publish_with_urls(
+            urls=[fixture_url],
+            schema_uri=str(schema_uri),
+            name=name,
+            description="E2E fixture test",
+        )
+
+        loader = DatasetLoader(atproto_client)
+        record = loader.get(str(ds_uri))
+        assert record["name"] == name
+
+        ds = loader.to_dataset(str(ds_uri), _FixtureSample)
+        samples = list(ds.ordered())
+        assert len(samples) == 3
+        assert samples[0].id == [0]
+        assert samples[0].name == ["test_sample_0"]
 
         # cleanup
         atproto_client.delete_record(ds_uri)

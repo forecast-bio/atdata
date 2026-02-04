@@ -97,7 +97,9 @@ class TestSchemaOperations:
 
     def test_store_and_get_schema(self, postgres_provider):
         name = unique_name("schema")
-        schema_json = json.dumps({"name": name, "fields": [{"name": "x", "type": "int"}]})
+        schema_json = json.dumps(
+            {"name": name, "fields": [{"name": "x", "type": "int"}]}
+        )
         postgres_provider.store_schema(name, "1.0.0", schema_json)
 
         result = postgres_provider.get_schema_json(name, "1.0.0")
@@ -145,7 +147,9 @@ class TestLabelOperations:
 
     def test_store_and_get_label(self, postgres_provider):
         name = unique_name("label")
-        postgres_provider.store_label(name, "cid-abc", version="1.0.0", description="test label")
+        postgres_provider.store_label(
+            name, "cid-abc", version="1.0.0", description="test label"
+        )
 
         cid, version = postgres_provider.get_label(name, version="1.0.0")
         assert cid == "cid-abc"
@@ -191,7 +195,9 @@ class TestConcurrentAccess:
         def _write_schema(schema_name: str) -> None:
             try:
                 provider = PostgresProvider(dsn=postgres_dsn)
-                provider.store_schema(schema_name, "1.0.0", json.dumps({"name": schema_name}))
+                provider.store_schema(
+                    schema_name, "1.0.0", json.dumps({"name": schema_name})
+                )
                 result = provider.get_schema_json(schema_name, "1.0.0")
                 assert result is not None
                 provider.close()
