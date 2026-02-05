@@ -688,6 +688,7 @@ class Index:
         metadata: dict | None = None,
         _data_urls: list[str] | None = None,
         _blob_refs: list[dict] | None = None,
+        _checksums: list | None = None,
         **kwargs,
     ) -> "IndexEntry":
         """Insert a dataset into the index.
@@ -764,6 +765,7 @@ class Index:
                     schema_ref=schema_ref,
                     data_urls=_data_urls,
                     blob_refs=_blob_refs,
+                    checksums=_checksums,
                     description=description,
                     tags=tags,
                     license=license,
@@ -799,16 +801,39 @@ class Index:
                 # ShardUploadResult carries blob_refs; plain list does not
                 blob_refs = getattr(result, "blob_refs", None) or None
 
+                # Extract per-shard checksums for structured storage entries.
+                # When blob_refs are present, checksums go into each BlobEntry
+                # rather than into metadata.
+                from atdata.atmosphere._lexicon_types import ShardChecksum
+
+                raw_checksums = getattr(result, "checksums", None)
+                shard_checksums: list[ShardChecksum] | None = None
+                if raw_checksums and blob_refs is not None:
+                    shard_checksums = [
+                        ShardChecksum(algorithm="sha256", digest=raw_checksums[url])
+                        for url in result
+                        if url in raw_checksums
+                    ]
+                    if len(shard_checksums) != len(blob_refs):
+                        shard_checksums = None
+
+                effective_metadata = (
+                    metadata
+                    if blob_refs is not None
+                    else _merge_checksums(metadata, result)
+                )
+
                 return atmo.insert_dataset(
                     ds,
                     name=resolved_name,
                     schema_ref=schema_ref,
                     data_urls=list(result),
                     blob_refs=blob_refs,
+                    checksums=shard_checksums,
                     description=description,
                     tags=tags,
                     license=license,
-                    metadata=_merge_checksums(metadata, result),
+                    metadata=effective_metadata,
                     **kwargs,
                 )
 
@@ -995,11 +1020,36 @@ class Index:
                     # Fall back to storageExternal with AT URIs otherwise.
                     blob_refs = getattr(written_urls, "blob_refs", None) or None
 
+                    # Extract per-shard checksums for structured storage
+                    # entries. When blob_refs are present, checksums belong
+                    # in each BlobEntry, not in metadata.
+                    from atdata.atmosphere._lexicon_types import ShardChecksum
+
+                    raw_checksums = getattr(written_urls, "checksums", None)
+                    shard_checksums: list[ShardChecksum] | None = None
+                    if raw_checksums and blob_refs is not None:
+                        shard_checksums = [
+                            ShardChecksum(
+                                algorithm="sha256",
+                                digest=raw_checksums[url],
+                            )
+                            for url in written_urls
+                            if url in raw_checksums
+                        ]
+                        if len(shard_checksums) != len(blob_refs):
+                            shard_checksums = None
+
+                    effective_metadata = (
+                        metadata
+                        if blob_refs is not None
+                        else _merge_checksums(metadata, written_urls)
+                    )
+
                     return self.insert_dataset(
                         ds,
                         name=name,
                         schema_ref=schema_ref,
-                        metadata=_merge_checksums(metadata, written_urls),
+                        metadata=effective_metadata,
                         description=description,
                         tags=tags,
                         license=license,
@@ -1007,6 +1057,7 @@ class Index:
                         force=force,
                         _data_urls=written_urls,
                         _blob_refs=blob_refs,
+                        _checksums=shard_checksums,
                     )
 
                 # Local / named repo path
