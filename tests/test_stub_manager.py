@@ -413,7 +413,7 @@ class TestClearStubs:
         mgr = StubManager(stub_dir=tmp_path)
         schema = _make_schema()
         mgr.ensure_module(schema)
-        assert len(mgr._class_cache) > 0
+        assert len(mgr._class_cache) == 1
 
         mgr.clear_stubs()
         assert len(mgr._class_cache) == 0

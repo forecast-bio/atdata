@@ -371,7 +371,8 @@ def _make_structural_lens(
     Returns ``None`` if the types are not compatible.
     """
     if not dataclasses.is_dataclass(source_type) or not dataclasses.is_dataclass(target_type):
-        # DictSample -> typed is handled by the packable-registered lens
+        # DictSample -> typed: @packable auto-registers a lens for this, so
+        # this branch is a safety net for target types that weren't decorated.
         if source_type is DictSample and dataclasses.is_dataclass(target_type):
             def _dict_convert(src: DictSample):
                 return target_type.from_data(src._data)
@@ -597,7 +598,7 @@ class Dataset(Generic[ST]):
         if self._metadata is None:
             import requests
 
-            with requests.get(self.metadata_url, stream=True) as response:
+            with requests.get(self.metadata_url, stream=True, timeout=30) as response:
                 response.raise_for_status()
                 self._metadata = msgpack.unpackb(response.content, raw=False)
 

@@ -185,7 +185,7 @@ class TestDatasetEdgeCases:
         ds = atdata.Dataset[DictSample](url=str(tar_path))
         d = ds.to_dict(limit=3)
         assert isinstance(d, dict)
-        assert len(d) > 0
+        assert len(d) == 2  # name + value columns
 
 
 class TestWriteSamplesMaxsize:

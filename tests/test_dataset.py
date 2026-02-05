@@ -504,7 +504,7 @@ def test_dataset_metadata_property(tmp_path):
         metadata = dataset.metadata
         assert metadata == mock_metadata
         mock_get.assert_called_once_with(
-            "http://example.com/metadata.msgpack", stream=True
+            "http://example.com/metadata.msgpack", stream=True, timeout=30
         )
 
         # Second call should use cache

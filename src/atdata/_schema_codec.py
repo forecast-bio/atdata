@@ -540,6 +540,4 @@ __all__ = [
     "generate_module",
     "clear_type_cache",
     "get_cached_types",
-    "_convert_atmosphere_schema",
-    "_is_atmosphere_schema",
 ]
