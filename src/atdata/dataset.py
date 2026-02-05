@@ -44,7 +44,7 @@ from abc import ABC
 
 from ._sources import URLSource
 from ._protocols import DataSource, Packable
-from ._exceptions import SampleKeyError, PartialFailureError
+from ._exceptions import SampleKeyError, PartialFailureError, LensNotFoundError
 
 import numpy as np
 
@@ -356,6 +356,55 @@ ST = TypeVar("ST", bound=Packable)
 RT = TypeVar("RT", bound=Packable)
 
 
+def _make_structural_lens(
+    source_type: Type,
+    target_type: Type,
+) -> "Lens | None":
+    """Create a field-mapping lens if source and target types are structurally compatible.
+
+    Two types are structurally compatible when the target's required fields
+    are a subset of the source's fields (by name). This enables ``as_type()``
+    to work between a dynamically-generated schema type and a user-defined
+    type with the same field layout, without requiring an explicit lens
+    registration.
+
+    Returns ``None`` if the types are not compatible.
+    """
+    if not dataclasses.is_dataclass(source_type) or not dataclasses.is_dataclass(target_type):
+        # DictSample -> typed is handled by the packable-registered lens
+        if source_type is DictSample and dataclasses.is_dataclass(target_type):
+            def _dict_convert(src: DictSample):
+                return target_type.from_data(src._data)
+
+            result: Lens = object.__new__(Lens)
+            result._getter = _dict_convert
+            result._putter = lambda v, s: s
+            result.source_type = source_type
+            result.view_type = target_type
+            return result
+        return None
+
+    source_fields = {f.name for f in dataclasses.fields(source_type)}
+    target_fields = {f.name for f in dataclasses.fields(target_type)}
+
+    # Target fields must be a subset of source fields
+    if not target_fields.issubset(source_fields):
+        return None
+
+    field_names = [f.name for f in dataclasses.fields(target_type)]
+
+    def _structural_get(src):
+        kwargs = {name: getattr(src, name) for name in field_names}
+        return target_type(**kwargs)
+
+    result = object.__new__(Lens)
+    result._getter = _structural_get
+    result._putter = lambda v, s: s
+    result.source_type = source_type
+    result.view_type = target_type
+    return result
+
+
 class _ShardListStage(wds.utils.PipelineStage):
     """Pipeline stage that yields {url: shard_id} dicts from a DataSource.
 
@@ -495,12 +544,22 @@ class Dataset(Generic[ST]):
     def as_type(self, other: Type[RT]) -> "Dataset[RT]":
         """View this dataset through a different sample type via a registered lens.
 
+        Falls back to structural field mapping when no lens is registered but the
+        source and target types have compatible field names.
+
         Raises:
-            ValueError: If no lens exists between the current and target types.
+            LensNotFoundError: If no lens exists and types are not structurally
+                compatible.
         """
         ret = Dataset[other](self._source)
         lenses = LensNetwork()
-        ret._output_lens = lenses.transform(self.sample_type, ret.sample_type)
+        try:
+            ret._output_lens = lenses.transform(self.sample_type, ret.sample_type)
+        except LensNotFoundError:
+            structural = _make_structural_lens(self.sample_type, ret.sample_type)
+            if structural is None:
+                raise
+            ret._output_lens = structural
         return ret
 
     @property

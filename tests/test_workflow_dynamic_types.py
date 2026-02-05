@@ -968,3 +968,191 @@ class TestGenerateStub:
 
         # Ref types can't be resolved statically, so use Any
         assert "nested: Any" in stub
+
+
+##
+# Atmosphere Schema Conversion Tests
+
+
+class TestAtmosphereSchemaConversion:
+    """Tests for converting atmosphere JSON Schema format to local format."""
+
+    def test_schema_to_type_with_atmosphere_format(self):
+        """schema_to_type handles atmosphere JSON Schema format."""
+        schema = {
+            "name": "MNISTSample",
+            "version": "1.0.0",
+            "schemaType": "jsonSchema",
+            "schema": {
+                "schemaBody": {
+                    "properties": {
+                        "image": {
+                            "$ref": "https://foundation.ac/schemas/atdata-ndarray-bytes/1.0.0#/$defs/ndarray"
+                        },
+                        "label": {"type": "integer"},
+                    },
+                    "required": ["image", "label"],
+                },
+            },
+        }
+
+        SampleType = schema_to_type(schema)
+
+        assert SampleType.__name__ == "MNISTSample"
+        import dataclasses
+
+        field_names = [f.name for f in dataclasses.fields(SampleType)]
+        assert "image" in field_names
+        assert "label" in field_names
+
+    def test_atmosphere_string_field(self):
+        """Atmosphere string type maps to str."""
+        schema = {
+            "name": "TextSample",
+            "version": "1.0.0",
+            "schemaType": "jsonSchema",
+            "schema": {
+                "schemaBody": {
+                    "properties": {"text": {"type": "string"}},
+                    "required": ["text"],
+                },
+            },
+        }
+
+        SampleType = schema_to_type(schema)
+        sample = SampleType(text="hello")
+        assert sample.text == "hello"
+
+    def test_atmosphere_optional_field(self):
+        """Fields not in required list become optional."""
+        schema = {
+            "name": "OptSample",
+            "version": "1.0.0",
+            "schemaType": "jsonSchema",
+            "schema": {
+                "schemaBody": {
+                    "properties": {
+                        "name": {"type": "string"},
+                        "extra": {"type": "string"},
+                    },
+                    "required": ["name"],
+                },
+            },
+        }
+
+        SampleType = schema_to_type(schema)
+        sample = SampleType(name="test")
+        assert sample.name == "test"
+        assert sample.extra is None
+
+    def test_atmosphere_number_and_boolean(self):
+        """Number and boolean JSON Schema types are converted correctly."""
+        schema = {
+            "name": "MixedSample",
+            "version": "1.0.0",
+            "schemaType": "jsonSchema",
+            "schema": {
+                "schemaBody": {
+                    "properties": {
+                        "score": {"type": "number"},
+                        "flag": {"type": "boolean"},
+                    },
+                    "required": ["score", "flag"],
+                },
+            },
+        }
+
+        SampleType = schema_to_type(schema)
+        sample = SampleType(score=0.95, flag=True)
+        assert sample.score == 0.95
+        assert sample.flag is True
+
+    def test_atmosphere_array_field(self):
+        """Array JSON Schema type maps to list."""
+        schema = {
+            "name": "TagSample",
+            "version": "1.0.0",
+            "schemaType": "jsonSchema",
+            "schema": {
+                "schemaBody": {
+                    "properties": {
+                        "tags": {"type": "array", "items": {"type": "string"}},
+                    },
+                    "required": ["tags"],
+                },
+            },
+        }
+
+        SampleType = schema_to_type(schema)
+        sample = SampleType(tags=["a", "b"])
+        assert sample.tags == ["a", "b"]
+
+    def test_atmosphere_bytes_field(self):
+        """Base64-encoded byte fields are converted correctly."""
+        schema = {
+            "name": "BinarySample",
+            "version": "1.0.0",
+            "schemaType": "jsonSchema",
+            "schema": {
+                "schemaBody": {
+                    "properties": {
+                        "data": {
+                            "type": "string",
+                            "format": "byte",
+                            "contentEncoding": "base64",
+                        },
+                    },
+                    "required": ["data"],
+                },
+            },
+        }
+
+        SampleType = schema_to_type(schema)
+        sample = SampleType(data=b"hello")
+        assert sample.data == b"hello"
+
+    def test_atmosphere_ndarray_round_trip(self, tmp_path):
+        """Dynamic type from atmosphere schema handles NDArray serialization."""
+        schema = {
+            "name": "NdarraySample",
+            "version": "1.0.0",
+            "schemaType": "jsonSchema",
+            "schema": {
+                "schemaBody": {
+                    "properties": {
+                        "embedding": {
+                            "$ref": "https://foundation.ac/schemas/atdata-ndarray-bytes/1.0.0#/$defs/ndarray"
+                        },
+                        "label": {"type": "string"},
+                    },
+                    "required": ["embedding", "label"],
+                },
+            },
+        }
+
+        SampleType = schema_to_type(schema)
+        arr = np.array([1.0, 2.0, 3.0], dtype=np.float32)
+        sample = SampleType(embedding=arr, label="test")
+
+        # Verify round-trip through msgpack
+        restored = SampleType.from_bytes(sample.packed)
+        np.testing.assert_array_equal(restored.embedding, arr)
+        assert restored.label == "test"
+
+    def test_local_schema_format_still_works(self):
+        """Local schema format with fields array still works."""
+        schema = {
+            "name": "LocalSample",
+            "version": "1.0.0",
+            "fields": [
+                {
+                    "name": "name",
+                    "fieldType": {"$type": "local#primitive", "primitive": "str"},
+                    "optional": False,
+                },
+            ],
+        }
+
+        SampleType = schema_to_type(schema)
+        sample = SampleType(name="hello")
+        assert sample.name == "hello"

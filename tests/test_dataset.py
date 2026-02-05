@@ -890,6 +890,73 @@ def test_dictsample_to_typed_via_as_type(tmp_path):
         assert sample.label == i
 
 
+def test_structural_lens_fallback_in_as_type(tmp_path):
+    """as_type() falls back to structural field mapping when no lens is registered."""
+    from dataclasses import dataclass, fields as dc_fields
+
+    # Simulate a dynamically-generated schema type (like from schema_to_type)
+    @dataclass
+    class DynamicSchema(atdata.PackableSample):
+        text: str
+        label: int
+
+    # A user-defined type with the same fields but no registered lens
+    @dataclass
+    class UserType(atdata.PackableSample):
+        text: str
+        label: int
+
+    # Ensure no explicit lens exists between them
+    network = atdata.LensNetwork()
+    from atdata._exceptions import LensNotFoundError
+
+    with pytest.raises(LensNotFoundError):
+        network.transform(DynamicSchema, UserType)
+
+    # Write data using the dynamic type
+    wds_filename = (tmp_path / "structural_lens.tar").as_posix()
+    with wds.writer.TarWriter(wds_filename) as sink:
+        for i in range(5):
+            sample = DynamicSchema(text=f"item_{i}", label=i)
+            sink.write(sample.as_wds)
+
+    # Load as DynamicSchema then convert to UserType via structural fallback
+    ds = atdata.Dataset[DynamicSchema](wds_filename)
+    ds_typed = ds.as_type(UserType)
+
+    samples = list(ds_typed.ordered())
+    assert len(samples) == 5
+    for i, sample in enumerate(samples):
+        assert isinstance(sample, UserType)
+        assert sample.text == f"item_{i}"
+        assert sample.label == i
+
+
+def test_structural_lens_incompatible_raises(tmp_path):
+    """as_type() raises LensNotFoundError when types are not structurally compatible."""
+    from dataclasses import dataclass
+
+    @dataclass
+    class SourceType(atdata.PackableSample):
+        name: str
+
+    @dataclass
+    class IncompatibleType(atdata.PackableSample):
+        name: str
+        extra_required_field: int  # not in SourceType
+
+    from atdata._exceptions import LensNotFoundError
+
+    wds_filename = (tmp_path / "incompat.tar").as_posix()
+    with wds.writer.TarWriter(wds_filename) as sink:
+        sample = SourceType(name="test")
+        sink.write(sample.as_wds)
+
+    ds = atdata.Dataset[SourceType](wds_filename)
+    with pytest.raises(LensNotFoundError):
+        ds.as_type(IncompatibleType)
+
+
 def test_packable_auto_registers_dictsample_lens():
     """Test @packable decorator auto-registers lens from DictSample."""
 
