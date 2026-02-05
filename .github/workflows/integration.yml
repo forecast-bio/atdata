@@ -22,8 +22,8 @@ jobs:
     name: Live integration tests
     runs-on: ubuntu-latest
     environment: integration
-    # Do not block merges — integration failures are informational
-    continue-on-error: true
+    # Integration failures show as red but don't block merges (the check
+    # is not listed as required in branch protection rules).
 
     services:
       postgres:

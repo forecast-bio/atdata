@@ -48,9 +48,8 @@ TEST_COLLECTION_SCHEMA = f"{LEXICON_NAMESPACE}.schema"
 TEST_COLLECTION_RECORD = f"{LEXICON_NAMESPACE}.record"
 
 
-def _cleanup_records(client: Atmosphere, collection: str, prefix: str) -> int:
+def _cleanup_records(client: Atmosphere, collection: str, prefix: str) -> None:
     """Delete all records in *collection* whose name contains *prefix*."""
-    deleted = 0
     records, _ = client.list_records(collection)
     for rec in records:
         rec_name = rec.get("name", "")
@@ -59,10 +58,8 @@ def _cleanup_records(client: Atmosphere, collection: str, prefix: str) -> int:
             if uri:
                 try:
                     client.delete_record(uri)
-                    deleted += 1
                 except Exception:
                     continue  # best-effort: skip failures during cleanup
-    return deleted
 
 
 # ── Authentication ────────────────────────────────────────────────
@@ -380,9 +377,7 @@ class TestZZZCleanup:
     """Best-effort cleanup of any leftover test records from this run."""
 
     def test_cleanup_schemas(self, atproto_client: Atmosphere):
-        deleted = _cleanup_records(atproto_client, TEST_COLLECTION_SCHEMA, RUN_ID)
-        assert deleted >= 0
+        _cleanup_records(atproto_client, TEST_COLLECTION_SCHEMA, RUN_ID)
 
     def test_cleanup_datasets(self, atproto_client: Atmosphere):
-        deleted = _cleanup_records(atproto_client, TEST_COLLECTION_RECORD, RUN_ID)
-        assert deleted >= 0
+        _cleanup_records(atproto_client, TEST_COLLECTION_RECORD, RUN_ID)
