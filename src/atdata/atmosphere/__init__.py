@@ -61,6 +61,42 @@ if TYPE_CHECKING:
     from .._protocols import Packable
 
 
+_pds_endpoint_cache: dict[str, str] = {}
+
+
+def _resolve_pds_endpoint(did: str) -> str:
+    """Resolve the PDS endpoint for a DID via plc.directory.
+
+    Results are cached in a module-level dict to avoid repeated lookups.
+
+    Args:
+        did: The DID to resolve (e.g. ``did:plc:abc123``).
+
+    Returns:
+        PDS service endpoint URL.
+
+    Raises:
+        ValueError: If PDS endpoint cannot be resolved.
+    """
+    if did in _pds_endpoint_cache:
+        return _pds_endpoint_cache[did]
+
+    import requests
+
+    if did.startswith("did:plc:"):
+        response = requests.get(f"https://plc.directory/{did}", timeout=10)
+        response.raise_for_status()
+        doc = response.json()
+
+        for service in doc.get("service", []):
+            if service.get("type") == "AtprotoPersonalDataServer":
+                endpoint = service.get("serviceEndpoint", "")
+                _pds_endpoint_cache[did] = endpoint
+                return endpoint
+
+    raise ValueError(f"Could not resolve PDS endpoint for {did}")
+
+
 class AtmosphereIndexEntry:
     """Entry wrapper for ATProto dataset records implementing IndexEntry protocol.
 
@@ -100,8 +136,20 @@ class AtmosphereIndexEntry:
         if "storageExternal" in storage_type:
             return storage.get("urls", [])
         if "storageBlobs" in storage_type:
-            # Blob URLs must be resolved via PDS; return empty for now
-            return []
+            parsed = AtUri.parse(self._uri)
+            did = parsed.authority
+            pds_endpoint = _resolve_pds_endpoint(did)
+            urls = []
+            for entry in storage.get("blobs", []):
+                blob = entry.get("blob", entry)
+                ref = blob.get("ref", {})
+                cid = ref.get("$link") if isinstance(ref, dict) else str(ref)
+                if cid:
+                    urls.append(
+                        f"{pds_endpoint}/xrpc/com.atproto.sync.getBlob"
+                        f"?did={did}&cid={cid}"
+                    )
+            return urls
         return []
 
     @property

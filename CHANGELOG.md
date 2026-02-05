@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.4.1b1] - 2026-02-05
+
+### Fixed
+- **Atmosphere schema routing**: `get_schema()` / `get_schema_record()` now handle `at://` URI refs by delegating to the atmosphere backend instead of raising `ValueError`
+- **Blob URL resolution**: `AtmosphereIndexEntry.data_urls` resolves `storageBlobs` CIDs to PDS HTTP URLs via `plc.directory` (with caching), replacing the empty-list placeholder
+- **Indexed path routing**: `load_dataset('@handle/dataset')` now passes the full `@handle/name` path through to `Index._resolve_prefix()` so atmosphere routing works correctly
+- **Atmosphere schema codec**: `schema_to_type()` handles atmosphere JSON Schema format by converting to local field format before type reconstruction
+- **Structural lens fallback**: `Dataset.as_type()` falls back to structural field mapping when no registered lens exists between structurally compatible types (e.g. dynamic vs user-defined classes)
+- **Blob shard checksums**: SHA-256 digests from `PDSBlobStore` are now attached per-blob in `BlobEntry.checksum` instead of being buried in `metadata.custom`
+
+### Changed
+- **Checksum extraction**: Deduplicated checksum extraction logic into `_extract_blob_checksums()` helper with warning on count mismatch
+- **Test nomenclature**: Renamed `test_integration_*.py` → `test_workflow_*.py` across the test suite
+- **CI workflow triggers**: Updated workflow file references to match renamed test files
+
 ## [0.4.0b2] - 2026-02-04
 
 ### Added

@@ -400,7 +400,7 @@ class TestIndexEntryCreation:
         )
 
         assert entry.cid is not None
-        assert len(entry.cid) > 0
+        assert isinstance(entry.cid, str) and len(entry.cid) >= 8
 
     def test_atmosphere_entry_has_uri(self):
         """AtmosphereIndexEntry should have a URI."""

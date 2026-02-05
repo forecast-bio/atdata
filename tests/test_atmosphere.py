@@ -1676,6 +1676,115 @@ class TestDatasetPublisher:
         assert record["storage"]["blobs"][0]["blob"]["ref"]["$link"] == "bafyrei_shard1"
         assert record["storage"]["blobs"][1]["blob"]["ref"]["$link"] == "bafyrei_shard2"
 
+    def test_publish_with_blob_refs_with_checksums(
+        self, authenticated_client, mock_atproto_client
+    ):
+        """Publish with blob refs attaches per-shard checksums to BlobEntry objects."""
+        blob_refs = [
+            {
+                "$type": "blob",
+                "ref": {"$link": "bafyrei_shard1"},
+                "mimeType": "application/x-tar",
+                "size": 4096,
+            },
+            {
+                "$type": "blob",
+                "ref": {"$link": "bafyrei_shard2"},
+                "mimeType": "application/x-tar",
+                "size": 8192,
+            },
+        ]
+        checksums = [
+            ShardChecksum(algorithm="sha256", digest="aabbcc"),
+            ShardChecksum(algorithm="sha256", digest="ddeeff"),
+        ]
+
+        mock_create_response = Mock()
+        mock_create_response.uri = (
+            f"at://did:plc:test/{LEXICON_NAMESPACE}.record/blobchk"
+        )
+        mock_atproto_client.com.atproto.repo.create_record.return_value = (
+            mock_create_response
+        )
+
+        publisher = DatasetPublisher(authenticated_client)
+        uri = publisher.publish_with_blob_refs(
+            blob_refs=blob_refs,
+            schema_uri="at://did:plc:test/schema/xyz",
+            name="BlobChecksumDataset",
+            checksums=checksums,
+        )
+
+        assert isinstance(uri, AtUri)
+        call_args = mock_atproto_client.com.atproto.repo.create_record.call_args
+        record = call_args.kwargs["data"]["record"]
+        blobs = record["storage"]["blobs"]
+        assert len(blobs) == 2
+        assert blobs[0]["checksum"]["algorithm"] == "sha256"
+        assert blobs[0]["checksum"]["digest"] == "aabbcc"
+        assert blobs[1]["checksum"]["algorithm"] == "sha256"
+        assert blobs[1]["checksum"]["digest"] == "ddeeff"
+
+    def test_publish_with_blob_refs_no_checksums_uses_placeholder(
+        self, authenticated_client, mock_atproto_client
+    ):
+        """Publish with blob refs without checksums uses placeholder."""
+        blob_refs = [
+            {
+                "$type": "blob",
+                "ref": {"$link": "bafyrei_shard1"},
+                "mimeType": "application/x-tar",
+                "size": 4096,
+            },
+        ]
+
+        mock_create_response = Mock()
+        mock_create_response.uri = (
+            f"at://did:plc:test/{LEXICON_NAMESPACE}.record/blobnocheck"
+        )
+        mock_atproto_client.com.atproto.repo.create_record.return_value = (
+            mock_create_response
+        )
+
+        publisher = DatasetPublisher(authenticated_client)
+        publisher.publish_with_blob_refs(
+            blob_refs=blob_refs,
+            schema_uri="at://did:plc:test/schema/xyz",
+            name="NoCksumDataset",
+        )
+
+        call_args = mock_atproto_client.com.atproto.repo.create_record.call_args
+        record = call_args.kwargs["data"]["record"]
+        blobs = record["storage"]["blobs"]
+        assert blobs[0]["checksum"]["algorithm"] == "none"
+        assert blobs[0]["checksum"]["digest"] == ""
+
+    def test_publish_with_blob_refs_checksums_length_mismatch(
+        self, authenticated_client
+    ):
+        """Publish with blob refs raises when checksums length mismatches."""
+        blob_refs = [
+            {
+                "$type": "blob",
+                "ref": {"$link": "bafyrei_shard1"},
+                "mimeType": "application/x-tar",
+                "size": 4096,
+            },
+        ]
+        checksums = [
+            ShardChecksum(algorithm="sha256", digest="aabbcc"),
+            ShardChecksum(algorithm="sha256", digest="ddeeff"),
+        ]
+
+        publisher = DatasetPublisher(authenticated_client)
+        with pytest.raises(ValueError, match="checksums length.*must match"):
+            publisher.publish_with_blob_refs(
+                blob_refs=blob_refs,
+                schema_uri="at://did:plc:test/schema/xyz",
+                name="MismatchDataset",
+                checksums=checksums,
+            )
+
     def test_publish_with_blobs(self, authenticated_client, mock_atproto_client):
         """Publish with blob storage uploads blobs and creates record."""
         # Mock blob upload response
@@ -2895,6 +3004,48 @@ class TestAtmosphereIndexEntry:
         entry = AtmosphereIndexEntry("at://uri", record)
 
         assert entry.data_urls == []
+
+    @patch("atdata.atmosphere._resolve_pds_endpoint")
+    def test_data_urls_resolves_storage_blobs(self, mock_resolve):
+        """storageBlobs entries are resolved to PDS HTTP URLs."""
+        mock_resolve.return_value = "https://pds.example.com"
+        record = {
+            "name": "blob-dataset",
+            "storage": {
+                "$type": f"{LEXICON_NAMESPACE}.storageBlobs",
+                "blobs": [
+                    {
+                        "blob": {
+                            "ref": {"$link": "bafyabc"},
+                            "mimeType": "application/octet-stream",
+                        }
+                    },
+                    {
+                        "blob": {
+                            "ref": {"$link": "bafydef"},
+                            "mimeType": "application/octet-stream",
+                        }
+                    },
+                ],
+            },
+        }
+
+        entry = AtmosphereIndexEntry(
+            "at://did:plc:testdid/ac.foundation.dataset.record/rkey123",
+            record,
+        )
+        urls = entry.data_urls
+
+        assert len(urls) == 2
+        assert urls[0] == (
+            "https://pds.example.com/xrpc/com.atproto.sync.getBlob"
+            "?did=did:plc:testdid&cid=bafyabc"
+        )
+        assert urls[1] == (
+            "https://pds.example.com/xrpc/com.atproto.sync.getBlob"
+            "?did=did:plc:testdid&cid=bafydef"
+        )
+        mock_resolve.assert_called_once_with("did:plc:testdid")
 
 
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
