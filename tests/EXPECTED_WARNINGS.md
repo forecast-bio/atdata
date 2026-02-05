@@ -62,7 +62,7 @@ def test_something():
 ## Files with Warning Suppressions
 
 - `tests/test_local.py` - s3fs/moto async warnings, Repo deprecation
-- `tests/test_integration_local.py` - s3fs/moto async warnings, Repo deprecation
+- `tests/test_workflow_local.py` - s3fs/moto async warnings, Repo deprecation
 
 ## Verifying Warnings Are Still Expected
 

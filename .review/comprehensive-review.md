@@ -165,13 +165,13 @@ src/atdata/
 | test_atmosphere.py | 205 | ATProto/Atmosphere protocol, schema/dataset publishers |
 | test_hf_api.py | 174 | HuggingFace integration, dataset resolution, glob patterns |
 | test_local.py | 133 | Local storage, Redis-backed indexes, S3 datastores |
-| test_integration_dynamic_types.py | 68 | Schema-to-type reconstruction, caching |
-| test_integration_local.py | 56 | End-to-end Repo workflows |
-| test_integration_edge_cases.py | 54 | Boundary conditions, unicode, empty datasets |
+| test_workflow_dynamic_types.py | 68 | Schema-to-type reconstruction, caching |
+| test_workflow_local.py | 56 | End-to-end Repo workflows |
+| test_workflow_edge_cases.py | 54 | Boundary conditions, unicode, empty datasets |
 | test_sources.py | 52 | URLSource, S3Source implementations |
-| test_integration_cross_backend.py | 50 | Local ↔ Atmosphere interoperability |
-| test_integration_e2e.py | 46 | Full end-to-end workflows |
-| test_integration_error_handling.py | 44 | Error conditions, malformed data |
+| test_workflow_cross_backend.py | 50 | Local ↔ Atmosphere interoperability |
+| test_workflow_e2e.py | 46 | Full end-to-end workflows |
+| test_workflow_error_handling.py | 44 | Error conditions, malformed data |
 | test_dataset.py | 19 | Core Dataset, SampleBatch, serialization |
 | test_lens.py | 5 | Lens laws (GetPut/PutGet/PutPut) |
 | Others | ~60+ | Protocols, CID, helpers, promotion |
