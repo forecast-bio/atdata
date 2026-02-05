@@ -1,7 +1,8 @@
 """Shared fixtures for live integration tests.
 
 Every test in this package is automatically marked with
-``@pytest.mark.integration`` via the ``pytestmark`` below.
+``@pytest.mark.integration`` via the ``pytest_collection_modifyitems``
+hook below.
 
 Fixtures read credentials from environment variables and skip
 tests when the required services are unavailable.  A per-run
@@ -12,12 +13,23 @@ from __future__ import annotations
 
 import os
 import uuid
+from pathlib import Path
 from typing import Generator
 
 import pytest
 
 # ── Auto-mark every test in this package ────────────────────────────
-pytestmark = pytest.mark.integration
+
+_INTEGRATION_DIR = Path(__file__).parent
+
+
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+    """Add the ``integration`` marker to every test under tests/integration/."""
+    marker = pytest.mark.integration
+    for item in items:
+        if Path(item.fspath).is_relative_to(_INTEGRATION_DIR):
+            item.add_marker(marker)
+
 
 # ── Per-run isolation prefix ────────────────────────────────────────
 RUN_ID: str = uuid.uuid4().hex[:12]

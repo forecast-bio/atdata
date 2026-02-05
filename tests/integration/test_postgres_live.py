@@ -17,13 +17,19 @@ from .conftest import unique_name
 
 
 def _make_entry(**overrides):
-    """Create a LocalDatasetEntry with sensible defaults."""
+    """Create a LocalDatasetEntry with sensible defaults.
+
+    Each entry gets a unique name AND unique data_urls so that the
+    content-derived CID is distinct (CID is based on schema_ref +
+    data_urls, not name).
+    """
     from atdata.index._entry import LocalDatasetEntry
 
+    entry_name = overrides.pop("name", unique_name("entry"))
     defaults = dict(
-        name=unique_name("entry"),
+        name=entry_name,
         schema_ref="local://schemas/TestSample@1.0.0",
-        data_urls=["/data/shard-000000.tar"],
+        data_urls=[f"/data/{entry_name}/shard-000000.tar"],
         metadata={"split": "train"},
     )
     defaults.update(overrides)
@@ -177,6 +183,53 @@ class TestLabelOperations:
         stored_names = {lbl[0] for lbl in all_labels}
         for n in names:
             assert n in stored_names
+
+
+# ── Lens operations ──────────────────────────────────────────────
+
+
+class TestLensOperations:
+    """Store and retrieve lens records."""
+
+    def test_store_and_get_lens(self, postgres_provider):
+        name = unique_name("lens")
+        lens_json = json.dumps(
+            {
+                "name": name,
+                "version": "1.0.0",
+                "getter": {"kind": "field_mapping", "mappings": []},
+                "putter": {"kind": "opaque"},
+            }
+        )
+        postgres_provider.store_lens(name, "1.0.0", lens_json)
+
+        result = postgres_provider.get_lens_json(name, "1.0.0")
+        assert result is not None
+        parsed = json.loads(result)
+        assert parsed["name"] == name
+
+    def test_get_missing_lens_returns_none(self, postgres_provider):
+        result = postgres_provider.get_lens_json("nonexistent-lens", "0.0.0")
+        assert result is None
+
+    def test_iter_lenses(self, postgres_provider):
+        names = [unique_name("iter-lens") for _ in range(3)]
+        for n in names:
+            postgres_provider.store_lens(n, "1.0.0", json.dumps({"name": n}))
+
+        all_lenses = list(postgres_provider.iter_lenses())
+        stored_names = {le[0] for le in all_lenses}
+        for n in names:
+            assert n in stored_names
+
+    def test_find_latest_lens_version(self, postgres_provider):
+        name = unique_name("versioned-lens")
+        postgres_provider.store_lens(name, "1.0.0", "{}")
+        postgres_provider.store_lens(name, "1.1.0", "{}")
+        postgres_provider.store_lens(name, "3.0.0", "{}")
+
+        latest = postgres_provider.find_latest_lens_version(name)
+        assert latest == "3.0.0"
 
 
 # ── Concurrent access ────────────────────────────────────────────
