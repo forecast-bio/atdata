@@ -70,6 +70,40 @@ def _merge_checksums(
     return {**metadata, "checksums": checksums}
 
 
+def _extract_blob_checksums(
+    write_result: list[str],
+    blob_refs: list[dict] | None,
+) -> list | None:
+    """Convert raw checksum dict from a write result to per-blob ShardChecksum list.
+
+    Returns None when blob_refs is absent, no checksums exist, or counts
+    don't align (with a warning log).
+    """
+    if blob_refs is None:
+        return None
+    raw = getattr(write_result, "checksums", None)
+    if not raw:
+        return None
+
+    from atdata.atmosphere._lexicon_types import ShardChecksum
+    from atdata._logging import get_logger
+
+    out = [
+        ShardChecksum(algorithm="sha256", digest=raw[url])
+        for url in write_result
+        if url in raw
+    ]
+    if len(out) != len(blob_refs):
+        get_logger().warning(
+            "_extract_blob_checksums: count mismatch (%d checksums, %d blobs); "
+            "falling back to placeholder checksums",
+            len(out),
+            len(blob_refs),
+        )
+        return None
+    return out
+
+
 def _estimate_dataset_bytes(ds: Dataset) -> int:
     """Best-effort total size estimate from local shard files.
 
@@ -801,22 +835,7 @@ class Index:
                 # ShardUploadResult carries blob_refs; plain list does not
                 blob_refs = getattr(result, "blob_refs", None) or None
 
-                # Extract per-shard checksums for structured storage entries.
-                # When blob_refs are present, checksums go into each BlobEntry
-                # rather than into metadata.
-                from atdata.atmosphere._lexicon_types import ShardChecksum
-
-                raw_checksums = getattr(result, "checksums", None)
-                shard_checksums: list[ShardChecksum] | None = None
-                if raw_checksums and blob_refs is not None:
-                    shard_checksums = [
-                        ShardChecksum(algorithm="sha256", digest=raw_checksums[url])
-                        for url in result
-                        if url in raw_checksums
-                    ]
-                    if len(shard_checksums) != len(blob_refs):
-                        shard_checksums = None
-
+                shard_checksums = _extract_blob_checksums(result, blob_refs)
                 effective_metadata = (
                     metadata
                     if blob_refs is not None
@@ -1020,25 +1039,9 @@ class Index:
                     # Fall back to storageExternal with AT URIs otherwise.
                     blob_refs = getattr(written_urls, "blob_refs", None) or None
 
-                    # Extract per-shard checksums for structured storage
-                    # entries. When blob_refs are present, checksums belong
-                    # in each BlobEntry, not in metadata.
-                    from atdata.atmosphere._lexicon_types import ShardChecksum
-
-                    raw_checksums = getattr(written_urls, "checksums", None)
-                    shard_checksums: list[ShardChecksum] | None = None
-                    if raw_checksums and blob_refs is not None:
-                        shard_checksums = [
-                            ShardChecksum(
-                                algorithm="sha256",
-                                digest=raw_checksums[url],
-                            )
-                            for url in written_urls
-                            if url in raw_checksums
-                        ]
-                        if len(shard_checksums) != len(blob_refs):
-                            shard_checksums = None
-
+                    shard_checksums = _extract_blob_checksums(
+                        written_urls, blob_refs
+                    )
                     effective_metadata = (
                         metadata
                         if blob_refs is not None

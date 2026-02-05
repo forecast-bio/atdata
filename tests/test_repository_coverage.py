@@ -182,6 +182,50 @@ def test_insert_dataset_auto_schema(backend) -> None:
     assert call_kwargs["auto_publish_schema"] is True
 
 
+def test_insert_dataset_forwards_checksums_to_publisher(backend) -> None:
+    """insert_dataset passes checksums kwarg through to publish_with_blob_refs."""
+    _patch_loaders(backend)
+    backend._dataset_publisher.publish_with_blob_refs.return_value = "at://did/col/chk"
+    backend._dataset_loader.get.return_value = {"name": "chk-ds"}
+
+    from atdata.atmosphere._lexicon_types import ShardChecksum
+
+    blob_refs = [{"$type": "blob", "ref": {"$link": "abc"}, "mimeType": "application/x-tar", "size": 100}]
+    checksums = [ShardChecksum(algorithm="sha256", digest="deadbeef")]
+
+    backend.insert_dataset(
+        MagicMock(),
+        name="chk-ds",
+        schema_ref="at://did/schema/1",
+        blob_refs=blob_refs,
+        checksums=checksums,
+    )
+
+    call_kwargs = backend._dataset_publisher.publish_with_blob_refs.call_args[1]
+    assert call_kwargs["checksums"] == checksums
+    assert call_kwargs["checksums"][0].algorithm == "sha256"
+    assert call_kwargs["checksums"][0].digest == "deadbeef"
+
+
+def test_insert_dataset_blob_refs_without_checksums(backend) -> None:
+    """insert_dataset passes checksums=None when no checksums provided."""
+    _patch_loaders(backend)
+    backend._dataset_publisher.publish_with_blob_refs.return_value = "at://did/col/nochk"
+    backend._dataset_loader.get.return_value = {"name": "nochk-ds"}
+
+    blob_refs = [{"$type": "blob", "ref": {"$link": "abc"}, "mimeType": "application/x-tar", "size": 100}]
+
+    backend.insert_dataset(
+        MagicMock(),
+        name="nochk-ds",
+        schema_ref="at://did/schema/1",
+        blob_refs=blob_refs,
+    )
+
+    call_kwargs = backend._dataset_publisher.publish_with_blob_refs.call_args[1]
+    assert call_kwargs["checksums"] is None
+
+
 # ---------------------------------------------------------------------------
 # Schema operations
 # ---------------------------------------------------------------------------
