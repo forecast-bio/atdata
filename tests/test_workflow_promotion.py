@@ -291,7 +291,7 @@ class TestSchemaDeduplication:
         existing_schema = Mock()
         existing_schema.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.schema/v1"
         existing_schema.value = {
-            "name": "test_integration_promotion.PromotionSample",
+            "name": "test_workflow_promotion.PromotionSample",
             "version": "2.0.0",  # Different version!
         }
 
