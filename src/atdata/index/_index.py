@@ -70,6 +70,40 @@ def _merge_checksums(
     return {**metadata, "checksums": checksums}
 
 
+def _extract_blob_checksums(
+    write_result: list[str],
+    blob_refs: list[dict] | None,
+) -> list | None:
+    """Convert raw checksum dict from a write result to per-blob ShardChecksum list.
+
+    Returns None when blob_refs is absent, no checksums exist, or counts
+    don't align (with a warning log).
+    """
+    if blob_refs is None:
+        return None
+    raw = getattr(write_result, "checksums", None)
+    if not raw:
+        return None
+
+    from atdata.atmosphere._lexicon_types import ShardChecksum
+    from atdata._logging import get_logger
+
+    out = [
+        ShardChecksum(algorithm="sha256", digest=raw[url])
+        for url in write_result
+        if url in raw
+    ]
+    if len(out) != len(blob_refs):
+        get_logger().warning(
+            "_extract_blob_checksums: count mismatch (%d checksums, %d blobs); "
+            "falling back to placeholder checksums",
+            len(out),
+            len(blob_refs),
+        )
+        return None
+    return out
+
+
 def _estimate_dataset_bytes(ds: Dataset) -> int:
     """Best-effort total size estimate from local shard files.
 
@@ -688,6 +722,7 @@ class Index:
         metadata: dict | None = None,
         _data_urls: list[str] | None = None,
         _blob_refs: list[dict] | None = None,
+        _checksums: list | None = None,
         **kwargs,
     ) -> "IndexEntry":
         """Insert a dataset into the index.
@@ -764,6 +799,7 @@ class Index:
                     schema_ref=schema_ref,
                     data_urls=_data_urls,
                     blob_refs=_blob_refs,
+                    checksums=_checksums,
                     description=description,
                     tags=tags,
                     license=license,
@@ -799,16 +835,24 @@ class Index:
                 # ShardUploadResult carries blob_refs; plain list does not
                 blob_refs = getattr(result, "blob_refs", None) or None
 
+                shard_checksums = _extract_blob_checksums(result, blob_refs)
+                effective_metadata = (
+                    metadata
+                    if blob_refs is not None
+                    else _merge_checksums(metadata, result)
+                )
+
                 return atmo.insert_dataset(
                     ds,
                     name=resolved_name,
                     schema_ref=schema_ref,
                     data_urls=list(result),
                     blob_refs=blob_refs,
+                    checksums=shard_checksums,
                     description=description,
                     tags=tags,
                     license=license,
-                    metadata=_merge_checksums(metadata, result),
+                    metadata=effective_metadata,
                     **kwargs,
                 )
 
@@ -995,11 +1039,18 @@ class Index:
                     # Fall back to storageExternal with AT URIs otherwise.
                     blob_refs = getattr(written_urls, "blob_refs", None) or None
 
+                    shard_checksums = _extract_blob_checksums(written_urls, blob_refs)
+                    effective_metadata = (
+                        metadata
+                        if blob_refs is not None
+                        else _merge_checksums(metadata, written_urls)
+                    )
+
                     return self.insert_dataset(
                         ds,
                         name=name,
                         schema_ref=schema_ref,
-                        metadata=_merge_checksums(metadata, written_urls),
+                        metadata=effective_metadata,
                         description=description,
                         tags=tags,
                         license=license,
@@ -1007,6 +1058,7 @@ class Index:
                         force=force,
                         _data_urls=written_urls,
                         _blob_refs=blob_refs,
+                        _checksums=shard_checksums,
                     )
 
                 # Local / named repo path

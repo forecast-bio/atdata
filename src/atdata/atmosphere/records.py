@@ -296,6 +296,7 @@ class DatasetPublisher:
         tags: Optional[list[str]] = None,
         license: Optional[str] = None,
         metadata: Optional[dict] = None,
+        checksums: Optional[list[ShardChecksum]] = None,
         rkey: Optional[str] = None,
     ) -> AtUri:
         """Publish a dataset record with pre-uploaded blob references.
@@ -315,13 +316,25 @@ class DatasetPublisher:
             tags: Searchable tags for discovery.
             license: SPDX license identifier.
             metadata: Arbitrary metadata dictionary.
+            checksums: Per-shard checksums. If not provided, empty checksums
+                are used.
             rkey: Optional explicit record key.
 
         Returns:
             The AT URI of the created dataset record.
         """
+        if checksums and len(checksums) != len(blob_refs):
+            raise ValueError(
+                f"checksums length ({len(checksums)}) must match "
+                f"blob_refs length ({len(blob_refs)})"
+            )
+
         blob_entries = [
-            BlobEntry(blob=ref, checksum=_placeholder_checksum()) for ref in blob_refs
+            BlobEntry(
+                blob=ref,
+                checksum=checksums[i] if checksums else _placeholder_checksum(),
+            )
+            for i, ref in enumerate(blob_refs)
         ]
 
         return self._create_record(

@@ -212,6 +212,7 @@ class _AtmosphereBackend:
         schema_ref: str | None = None,
         data_urls: list[str] | None = None,
         blob_refs: list[dict] | None = None,
+        checksums: list | None = None,
         **kwargs: Any,
     ) -> Any:
         """Insert a dataset into ATProto.
@@ -230,6 +231,8 @@ class _AtmosphereBackend:
                 provided, these replace whatever ``ds.url`` contains.
             blob_refs: Pre-uploaded blob reference dicts from
                 ``PDSBlobStore``.  Takes precedence over *data_urls*.
+            checksums: Per-shard ``ShardChecksum`` objects. Forwarded to the
+                publisher so each storage entry gets the correct digest.
             **kwargs: Additional options (description, tags, license).
 
         Returns:
@@ -263,6 +266,7 @@ class _AtmosphereBackend:
                     tags=kwargs.get("tags"),
                     license=kwargs.get("license"),
                     metadata=metadata,
+                    checksums=checksums,
                 )
             else:
                 uri = self._dataset_publisher.publish_with_urls(
