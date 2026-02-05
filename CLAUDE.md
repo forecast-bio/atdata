@@ -249,7 +249,7 @@ The codebase uses Python 3.12+ generics heavily:
 
 ## Testing Notes
 
-- 1300+ tests across 39 test files
+- 1550+ tests across 40+ test files
 - Tests use parametrization via `@pytest.mark.parametrize` where appropriate
 - Temporary WebDataset tar files created in `tmp_path` fixture
 - Shared sample types defined in `conftest.py` (`SharedBasicSample`, `SharedNumpySample`)
@@ -387,15 +387,31 @@ uv run chainlink list  # Not needed
 
 Project-level Claude Code skills are defined in `.claude/commands/`:
 
-- `/release <version>` — Full release flow: branch from `develop`, version bump, changelog, PR to `main`
+- `/release <version>` — Full release flow: branch from previous release, merge develop, version bump, changelog, PR to `main`
 - `/publish` — Post-merge: create GitHub release, monitor PyPI publish, sync `develop`
-- `/feature <description>` — Create a feature branch from `develop` with a slugified name
+- `/feature <description>` — Create a feature branch from `develop` with a slugified name and chainlink issue
 - `/featree <description>` — Create a feature branch in a new git worktree (symlinks chainlink db)
+- `/kickoff <description>` — Create a worktree via `/featree`, write a self-contained prompt, and launch an autonomous agent in a tmux session
+- `/check [session]` — Check status of background feature agents (reads tmux panes and `.kickoff-status` sentinel files)
 - `/adr` — Adversarial review with docstring-preservation rules for quartodoc
 - `/changelog` — Generate clean CHANGELOG entry from chainlink history
 - `/commit` — Analyze changes and create a well-formatted commit
 
 User-level skills (in `~/.claude/commands/`) take precedence over project-level skills with the same name.
+
+### Background Agent Workflow (`/kickoff` → `/check`)
+
+The `/kickoff` command automates feature implementation by launching an autonomous Claude agent in an isolated worktree:
+
+1. **`/kickoff <description>`** creates a worktree (via `/featree`), writes a detailed prompt file, and launches `claude --model opus` in a tmux session named `feat-<slug>`.
+2. The background agent works autonomously: reads `CLAUDE.md`, implements the feature, runs tests, uses `/commit`, runs `/adr`, fixes issues, and writes `DONE` to `.kickoff-status` when finished.
+3. **`/check`** monitors progress by reading the tmux pane output and checking the sentinel file. It reports status (Working/Waiting/Done/Error) and suggests next actions.
+
+**Common issues with background agents:**
+- Agents get stuck on Claude Code's trust/permission prompts — approve with `tmux send-keys -t <session> Enter`
+- Context compaction happens around 5% remaining — agents with large changes may compact mid-work
+- Monitor directly: `tmux capture-pane -t <session> -p | tail -40`
+- Attach interactively: `tmux attach -t <session>`
 
 ## Git Workflow
 
@@ -421,11 +437,12 @@ This project follows **git flow** branching:
 ### Release Flow
 
 Releases follow this pattern (automated by `/release` skill):
-1. Create `release/v<version>` branch **from `develop`**
-2. Bump version in `pyproject.toml`, run `uv lock`
-3. Write CHANGELOG entry (Keep a Changelog format)
-4. Push and create PR to `main`
-5. After merge, sync develop: `git checkout develop && git merge main --no-ff`
+1. Create `release/v<version>` branch **from the previous release branch** (e.g., `release/v0.4.0b2`)
+2. Merge `develop` into the release branch with `--no-ff`
+3. Bump version in `pyproject.toml`, run `uv lock`
+4. Write CHANGELOG entry (Keep a Changelog format)
+5. Push and create PR to `main`
+6. After merge, use `/publish` to create GitHub release, then sync develop: `git checkout develop && git merge main --no-ff`
 
 ### Committing Changes
 
@@ -438,8 +455,14 @@ When using the `/commit` command or creating commits:
 
 When using git worktrees (via `/featree`), the worktree's `.chainlink/issues.db`
 is replaced with a **symlink** to the base clone's copy. This ensures all
-worktrees share a single authoritative database on the `develop` branch. Do not
-commit the symlink — it is a local convenience only.
+worktrees share a single authoritative database on the `develop` branch.
+
+**Important rules:**
+- Do not commit the symlink — it is a local convenience only.
+- The symlink target is an absolute path: `<repo-root>/.chainlink/issues.db`
+- Worktree branches that get merged via GitHub PRs will carry the symlink (51 bytes) into the merge commit, which **overwrites the real database on `develop`**.
+- **After merging worktree PRs into `develop`**: check that `issues.db` is still a real SQLite file, not a broken symlink. If it was overwritten, restore from the pre-merge commit: `git show <pre-merge-sha>:.chainlink/issues.db > .chainlink/issues.db`
+- To prevent this: add `.chainlink/issues.db` to the worktree's `.git/info/exclude` before committing, or ensure the worktree agent doesn't stage the symlink.
 
 ### CLI Module
 
