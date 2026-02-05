@@ -2905,8 +2905,18 @@ class TestAtmosphereIndexEntry:
             "storage": {
                 "$type": f"{LEXICON_NAMESPACE}.storageBlobs",
                 "blobs": [
-                    {"blob": {"ref": {"$link": "bafyabc"}, "mimeType": "application/octet-stream"}},
-                    {"blob": {"ref": {"$link": "bafydef"}, "mimeType": "application/octet-stream"}},
+                    {
+                        "blob": {
+                            "ref": {"$link": "bafyabc"},
+                            "mimeType": "application/octet-stream",
+                        }
+                    },
+                    {
+                        "blob": {
+                            "ref": {"$link": "bafydef"},
+                            "mimeType": "application/octet-stream",
+                        }
+                    },
                 ],
             },
         }

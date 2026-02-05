@@ -161,11 +161,13 @@ def _convert_atmosphere_schema(record: dict) -> dict:
     fields_list = []
     for field_name, prop in properties.items():
         field_type_dict = _json_schema_prop_to_field_type(prop)
-        fields_list.append({
-            "name": field_name,
-            "fieldType": field_type_dict,
-            "optional": field_name not in required,
-        })
+        fields_list.append(
+            {
+                "name": field_name,
+                "fieldType": field_type_dict,
+                "optional": field_name not in required,
+            }
+        )
 
     return {
         "name": record.get("name", "Unknown"),
@@ -208,8 +210,14 @@ def _json_schema_prop_to_field_type(prop: dict) -> dict:
     if json_type == "array":
         items = prop.get("items")
         if items:
-            return {"$type": "local#array", "items": _json_schema_prop_to_field_type(items)}
-        return {"$type": "local#array", "items": {"$type": "local#primitive", "primitive": "str"}}
+            return {
+                "$type": "local#array",
+                "items": _json_schema_prop_to_field_type(items),
+            }
+        return {
+            "$type": "local#array",
+            "items": {"$type": "local#primitive", "primitive": "str"},
+        }
 
     # Fallback: treat as string
     return {"$type": "local#primitive", "primitive": "str"}

@@ -962,12 +962,8 @@ class TestIndexedPathAtmosphereRouting:
             split="train",
         )
 
-        mock_index.get_label.assert_called_once_with(
-            "@maxine.science/test-mnist", None
-        )
-        mock_index.get_dataset.assert_called_once_with(
-            "@maxine.science/test-mnist"
-        )
+        mock_index.get_label.assert_called_once_with("@maxine.science/test-mnist", None)
+        mock_index.get_dataset.assert_called_once_with("@maxine.science/test-mnist")
         assert ds.url == "https://cdn.example.com/data.tar"
 
 
