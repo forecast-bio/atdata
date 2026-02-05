@@ -539,6 +539,7 @@ class Dataset(Generic[ST]):
         self.metadata_url: str | None = metadata_url
         self._output_lens: Lens | None = None
         self._sample_type_cache: Type | None = None
+        self._content_metadata: "Packable | dict[str, Any] | None" = None
 
     @property
     def source(self) -> DataSource:
@@ -607,6 +608,27 @@ class Dataset(Generic[ST]):
 
         # Use our cached values
         return self._metadata
+
+    @property
+    def content_metadata(self) -> "Packable | dict[str, Any] | None":
+        """Dataset-level content metadata (e.g., instrument settings).
+
+        Returns a ``Packable`` instance if typed metadata was set via
+        ``write_samples(..., content_metadata=MyMetadata(...))``, a plain
+        ``dict`` if untyped metadata was provided, or ``None`` if absent.
+
+        Examples:
+            >>> ds = write_samples(samples, "out.tar", content_metadata=meta)
+            >>> ds.content_metadata
+            MyMetadata(instrument='Zeiss LSM 880', ...)
+        """
+        return self._content_metadata
+
+    @content_metadata.setter
+    def content_metadata(
+        self, value: "Packable | dict[str, Any] | None"
+    ) -> None:
+        self._content_metadata = value
 
     ##
     # Convenience methods (GH#38 developer experience)
@@ -1320,6 +1342,7 @@ def write_samples(
     maxcount: int | None = None,
     maxsize: int | None = None,
     manifest: bool = False,
+    content_metadata: "Packable | dict[str, Any] | None" = None,
 ) -> "Dataset[ST]":
     """Write an iterable of samples to WebDataset tar file(s).
 
@@ -1334,19 +1357,29 @@ def write_samples(
             (``.manifest.json`` + ``.manifest.parquet``) alongside each
             tar file. Manifests enable metadata queries via
             ``QueryExecutor`` without opening the tars.
+        content_metadata: Optional dataset-level content metadata. Accepts
+            either a ``Packable`` instance (typed, schema-derivable) or a
+            plain ``dict`` (validated at ATProto publish time). When a
+            ``dict`` is provided, keys must be JSON-serializable.
 
     Returns:
         A ``Dataset`` wrapping the written file(s), typed to the sample
-        type of the input samples.
+        type of the input samples. The returned dataset's
+        ``content_metadata`` property is set to the provided value.
 
     Raises:
         ValueError: If *samples* is empty.
+        TypeError: If *content_metadata* is not a Packable, dict, or None.
 
     Examples:
         >>> samples = [MySample(key="0", text="hello")]
         >>> ds = write_samples(samples, "out.tar")
         >>> list(ds.ordered())
         [MySample(key='0', text='hello')]
+
+        >>> ds = write_samples(samples, "out.tar", content_metadata={"instrument": "Zeiss"})
+        >>> ds.content_metadata
+        {'instrument': 'Zeiss'}
     """
     from ._hf_api import _shards_to_wds_url
     from ._logging import get_logger, log_operation
@@ -1466,7 +1499,16 @@ def write_samples(
             sample_type.__name__,
         )
 
+    # Validate content_metadata type
+    if content_metadata is not None:
+        if not isinstance(content_metadata, (dict, Packable)):
+            raise TypeError(
+                f"content_metadata must be a Packable instance or dict, "
+                f"got {type(content_metadata).__name__}"
+            )
+
     url = _shards_to_wds_url(written_paths)
     ds: Dataset = Dataset(url)
     ds._sample_type_cache = sample_type
+    ds._content_metadata = content_metadata
     return ds
