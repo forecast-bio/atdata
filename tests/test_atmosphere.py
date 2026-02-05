@@ -3072,7 +3072,7 @@ class TestAtmosphereIndex:
         assert hasattr(index, "publish_schema")
         assert hasattr(index, "get_schema")
         assert hasattr(index, "list_schemas")
-        assert hasattr(index, "decode_schema")
+        assert hasattr(index, "get_schema_type")
 
     def test_publish_schema(self, authenticated_client, mock_atproto_client):
         """publish_schema delegates to SchemaPublisher."""

@@ -310,17 +310,17 @@ def test_iter_schemas(backend) -> None:
     assert schemas[1] == {"name": "schema_b"}
 
 
-def test_decode_schema(backend) -> None:
-    """decode_schema calls get_schema then schema_to_type."""
+def test_get_schema_type(backend) -> None:
+    """get_schema_type calls get_schema then _schema_to_type."""
     _patch_loaders(backend)
     backend._schema_loader.get.return_value = {"name": "Decoded", "fields": []}
 
     fake_type = type("Decoded", (), {})
 
     with patch(
-        "atdata._schema_codec.schema_to_type", return_value=fake_type
+        "atdata._schema_codec._schema_to_type", return_value=fake_type
     ) as mock_s2t:
-        result = backend.decode_schema("at://did/schema/decode")
+        result = backend.get_schema_type("at://did/schema/decode")
 
     mock_s2t.assert_called_once_with({"name": "Decoded", "fields": []})
     assert result is fake_type

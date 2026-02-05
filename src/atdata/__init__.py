@@ -84,8 +84,24 @@ from ._exceptions import (
 )
 
 from ._schema_codec import (
-    schema_to_type as schema_to_type,
+    _schema_to_type as _schema_to_type,
 )
+
+
+def schema_to_type(schema: dict, *, use_cache: bool = True):
+    """Generate a PackableSample subclass from a schema record.
+
+    .. deprecated::
+        Use ``index.get_schema_type()`` instead.
+    """
+    import warnings
+
+    warnings.warn(
+        "atdata.schema_to_type() is deprecated, use index.get_schema_type() instead",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return _schema_to_type(schema, use_cache=use_cache)
 
 from ._logging import (
     configure_logging as configure_logging,

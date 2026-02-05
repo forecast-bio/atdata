@@ -18,7 +18,7 @@ Examples:
     ...         {"name": "label", "fieldType": {"$type": "...#primitive", "primitive": "str"}, "optional": False},
     ...     ]
     ... }
-    >>> ImageSample = schema_to_type(schema)
+    >>> ImageSample = _schema_to_type(schema)
     >>> sample = ImageSample(image=np.zeros((64, 64)), label="cat")
 """
 
@@ -224,7 +224,7 @@ def _is_atmosphere_schema(schema: dict) -> bool:
     return isinstance(inner, dict) and "schemaBody" in inner
 
 
-def schema_to_type(
+def _schema_to_type(
     schema: dict,
     *,
     use_cache: bool = True,
@@ -253,7 +253,7 @@ def schema_to_type(
 
     Examples:
         >>> schema = index.get_schema("local://schemas/MySample@1.0.0")
-        >>> MySample = schema_to_type(schema)
+        >>> MySample = _schema_to_type(schema)
         >>> ds = Dataset[MySample]("data.tar")
         >>> for sample in ds.ordered():
         ...     print(sample)
@@ -378,7 +378,7 @@ def generate_stub(schema: dict) -> str:
     decoded sample types.
 
     Note:
-        Types created by ``schema_to_type()`` work correctly at runtime but
+        Types created by ``_schema_to_type()`` work correctly at runtime but
         static type checkers cannot analyze dynamically generated classes.
         Stub files bridge this gap by providing static type information.
 
@@ -452,7 +452,7 @@ def generate_module(schema: dict) -> str:
 
     This function creates a Python module that defines a PackableSample subclass
     matching the schema. Unlike stub files, this module can be imported at runtime,
-    allowing ``decode_schema`` to return properly typed classes.
+    allowing ``get_schema_type`` to return properly typed classes.
 
     The generated class inherits from PackableSample and uses @dataclass decorator
     for proper initialization. This provides both runtime functionality and static
@@ -535,8 +535,29 @@ def get_cached_types() -> dict[str, Type[Packable]]:
     return dict(_type_cache)
 
 
+def schema_to_type(
+    schema: dict,
+    *,
+    use_cache: bool = True,
+) -> Type[Packable]:
+    """Generate a PackableSample subclass from a schema record.
+
+    .. deprecated::
+        Use ``_schema_to_type`` directly or ``index.get_schema_type()`` instead.
+    """
+    import warnings
+
+    warnings.warn(
+        "schema_to_type() is deprecated, use index.get_schema_type() instead",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return _schema_to_type(schema, use_cache=use_cache)
+
+
 __all__ = [
     "schema_to_type",
+    "_schema_to_type",
     "generate_stub",
     "generate_module",
     "clear_type_cache",

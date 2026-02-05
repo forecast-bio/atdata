@@ -5,7 +5,7 @@ for dynamically decoded schema types. When enabled, modules are generated
 on schema access to provide IDE autocomplete and type checking support.
 
 Unlike simple .pyi stubs, the generated modules are actual Python code that
-can be imported at runtime. This allows ``decode_schema`` to return properly
+can be imported at runtime. This allows ``get_schema_type`` to return properly
 typed classes that work with both static type checkers and runtime.
 
 Examples:
@@ -14,8 +14,8 @@ Examples:
     >>> # Enable auto-stub generation
     >>> index = Index(auto_stubs=True)
     >>>
-    >>> # Modules are generated automatically on decode_schema
-    >>> MyType = index.decode_schema("atdata://local/schema/MySample@1.0.0")
+    >>> # Modules are generated automatically on get_schema_type
+    >>> MyType = index.get_schema_type("atdata://local/schema/MySample@1.0.0")
     >>> # MyType is now properly typed for IDE autocomplete!
     >>>
     >>> # Get the stub directory path for IDE configuration

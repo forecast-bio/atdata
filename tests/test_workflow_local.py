@@ -261,12 +261,12 @@ class TestSchemaManagement:
         schemas = list(index.list_schemas())
         assert len(schemas) >= 2
 
-    def test_decode_schema_creates_type(self, clean_redis):
-        """decode_schema should reconstruct a usable type."""
+    def test_get_schema_type_creates_type(self, clean_redis):
+        """get_schema_type should reconstruct a usable type."""
         index = atlocal.Index(redis=clean_redis)
 
         schema_ref = index.publish_schema(WorkflowSample)
-        reconstructed = index.decode_schema(schema_ref)
+        reconstructed = index.get_schema_type(schema_ref)
 
         assert reconstructed is not None
         # Should be able to create instances

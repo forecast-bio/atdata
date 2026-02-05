@@ -577,11 +577,11 @@ def _resolve_at_uri(
         schema_ref = record.get("schemaRef")
         if schema_ref:
             from .atmosphere.schema import SchemaLoader
-            from ._schema_codec import schema_to_type
+            from ._schema_codec import _schema_to_type
 
             schema_loader = SchemaLoader(client)
             schema_record = schema_loader.get(schema_ref)
-            resolved_type = schema_to_type(schema_record)
+            resolved_type = _schema_to_type(schema_record)
         else:
             resolved_type = DictSample
     else:
@@ -886,7 +886,7 @@ def load_dataset(
 
         # Resolve sample_type from schema if not provided
         resolved_type: Type = (
-            sample_type if sample_type is not None else index.decode_schema(schema_ref)
+            sample_type if sample_type is not None else index.get_schema_type(schema_ref)
         )
 
         # Create dataset from the resolved source (includes credentials if S3)

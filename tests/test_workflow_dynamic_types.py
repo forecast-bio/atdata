@@ -1,6 +1,6 @@
 """Integration tests for dynamic type loading from schemas.
 
-Tests the schema_to_type() functionality for:
+Tests the _schema_to_type() functionality for:
 - Schema → Type reconstruction
 - Reconstructed types working with Dataset
 - Complex field types (NDArray, optional, lists)
@@ -17,7 +17,7 @@ import webdataset as wds
 
 import atdata
 from atdata._schema_codec import (
-    schema_to_type,
+    _schema_to_type,
     generate_stub,
     clear_type_cache,
     get_cached_types,
@@ -107,7 +107,7 @@ class TestSchemaToType:
             ],
         }
 
-        SampleType = schema_to_type(schema)
+        SampleType = _schema_to_type(schema)
 
         # Should be able to create instances
         instance = SampleType(name="test", value=42, score=0.5)
@@ -134,7 +134,7 @@ class TestSchemaToType:
             ],
         }
 
-        SampleType = schema_to_type(schema)
+        SampleType = _schema_to_type(schema)
 
         # Should work with numpy arrays
         arr = np.random.randn(32, 32).astype(np.float32)
@@ -161,7 +161,7 @@ class TestSchemaToType:
             ],
         }
 
-        SampleType = schema_to_type(schema)
+        SampleType = _schema_to_type(schema)
 
         # Optional field should default to None
         instance = SampleType(name="test")
@@ -197,7 +197,7 @@ class TestSchemaToType:
             ],
         }
 
-        SampleType = schema_to_type(schema)
+        SampleType = _schema_to_type(schema)
 
         instance = SampleType(tags=["a", "b", "c"], scores=[1.0, 2.0, 3.0])
         assert instance.tags == ["a", "b", "c"]
@@ -237,7 +237,7 @@ class TestSchemaToType:
             ],
         }
 
-        SampleType = schema_to_type(schema)
+        SampleType = _schema_to_type(schema)
 
         instance = SampleType(s="hello", i=42, f=3.14, b=True, raw=b"bytes")
         assert instance.s == "hello"
@@ -286,7 +286,7 @@ class TestDynamicTypeWithDataset:
             ],
         }
 
-        DynamicType = schema_to_type(schema)
+        DynamicType = _schema_to_type(schema)
 
         # Load with dynamic type
         dataset = atdata.Dataset[DynamicType](str(tar_path))
@@ -327,7 +327,7 @@ class TestDynamicTypeWithDataset:
             ],
         }
 
-        DynamicType = schema_to_type(schema)
+        DynamicType = _schema_to_type(schema)
         dataset = atdata.Dataset[DynamicType](str(tar_path))
         loaded = list(dataset.ordered(batch_size=None))
 
@@ -367,7 +367,7 @@ class TestDynamicTypeWithDataset:
             ],
         }
 
-        DynamicType = schema_to_type(schema)
+        DynamicType = _schema_to_type(schema)
         dataset = atdata.Dataset[DynamicType](str(tar_path))
 
         batches = list(dataset.ordered(batch_size=5))
@@ -395,8 +395,8 @@ class TestTypeCaching:
             ],
         }
 
-        Type1 = schema_to_type(schema)
-        Type2 = schema_to_type(schema)
+        Type1 = _schema_to_type(schema)
+        Type2 = _schema_to_type(schema)
 
         assert Type1 is Type2
 
@@ -425,8 +425,8 @@ class TestTypeCaching:
             ],
         }
 
-        Type1 = schema_to_type(schema1)
-        Type2 = schema_to_type(schema2)
+        Type1 = _schema_to_type(schema1)
+        Type2 = _schema_to_type(schema2)
 
         # Different versions = different types
         assert Type1 is not Type2
@@ -456,8 +456,8 @@ class TestTypeCaching:
             ],
         }
 
-        Type1 = schema_to_type(schema1)
-        Type2 = schema_to_type(schema2)
+        Type1 = _schema_to_type(schema1)
+        Type2 = _schema_to_type(schema2)
 
         assert Type1 is not Type2
 
@@ -475,8 +475,8 @@ class TestTypeCaching:
             ],
         }
 
-        Type1 = schema_to_type(schema, use_cache=False)
-        Type2 = schema_to_type(schema, use_cache=False)
+        Type1 = _schema_to_type(schema, use_cache=False)
+        Type2 = _schema_to_type(schema, use_cache=False)
 
         # Without cache, each call creates new type
         assert Type1 is not Type2
@@ -495,9 +495,9 @@ class TestTypeCaching:
             ],
         }
 
-        Type1 = schema_to_type(schema)
+        Type1 = _schema_to_type(schema)
         clear_type_cache()
-        Type2 = schema_to_type(schema)
+        Type2 = _schema_to_type(schema)
 
         # After clear, should get new type
         assert Type1 is not Type2
@@ -516,7 +516,7 @@ class TestTypeCaching:
             ],
         }
 
-        schema_to_type(schema)
+        _schema_to_type(schema)
         cache = get_cached_types()
 
         assert len(cache) == 1
@@ -526,7 +526,7 @@ class TestTypeCaching:
 class TestSchemaFromIndex:
     """Tests for loading types from Index schemas."""
 
-    def test_publish_then_decode_schema(self, clean_redis):
+    def test_publish_then_get_schema_type(self, clean_redis):
         """Published schema should be decodable to usable type."""
         index = atlocal.Index(redis=clean_redis)
 
@@ -534,7 +534,7 @@ class TestSchemaFromIndex:
         schema_ref = index.publish_schema(SimpleSample)
 
         # Decode it back
-        ReconstructedType = index.decode_schema(schema_ref)
+        ReconstructedType = index.get_schema_type(schema_ref)
 
         # Should be usable
         instance = ReconstructedType(name="test", value=42, score=0.5)
@@ -546,7 +546,7 @@ class TestSchemaFromIndex:
         index = atlocal.Index(redis=clean_redis)
 
         schema_ref = index.publish_schema(ArraySample)
-        ReconstructedType = index.decode_schema(schema_ref)
+        ReconstructedType = index.get_schema_type(schema_ref)
 
         arr = np.random.randn(8, 8).astype(np.float32)
         instance = ReconstructedType(label="test", image=arr)
@@ -565,7 +565,7 @@ class TestSchemaFromIndex:
 
         # Publish and decode schema
         schema_ref = index.publish_schema(SimpleSample)
-        DecodedType = index.decode_schema(schema_ref)
+        DecodedType = index.get_schema_type(schema_ref)
 
         # Load with decoded type
         dataset = atdata.Dataset[DecodedType](str(tar_path))
@@ -594,14 +594,14 @@ class TestSchemaValidation:
         }
 
         with pytest.raises(ValueError, match="must have a 'name'"):
-            schema_to_type(schema)
+            _schema_to_type(schema)
 
     def test_schema_without_fields_raises(self):
         """Schema without fields should raise ValueError."""
         schema = {"name": "EmptySample", "version": "1.0.0", "fields": []}
 
         with pytest.raises(ValueError, match="must have at least one field"):
-            schema_to_type(schema)
+            _schema_to_type(schema)
 
     def test_field_without_name_raises(self):
         """Field without name should raise an error."""
@@ -618,7 +618,7 @@ class TestSchemaValidation:
 
         # Raises KeyError during cache key generation or ValueError during field processing
         with pytest.raises((KeyError, ValueError)):
-            schema_to_type(schema)
+            _schema_to_type(schema)
 
     def test_unknown_primitive_raises(self):
         """Unknown primitive type should raise ValueError."""
@@ -638,7 +638,7 @@ class TestSchemaValidation:
         }
 
         with pytest.raises(ValueError, match="Unknown primitive type"):
-            schema_to_type(schema)
+            _schema_to_type(schema)
 
     def test_unknown_field_type_raises(self):
         """Unknown field type kind should raise ValueError."""
@@ -655,7 +655,7 @@ class TestSchemaValidation:
         }
 
         with pytest.raises(ValueError, match="Unknown field type kind"):
-            schema_to_type(schema)
+            _schema_to_type(schema)
 
 
 class TestComplexSchemaScenarios:
@@ -680,7 +680,7 @@ class TestComplexSchemaScenarios:
             ],
         }
 
-        DynamicType = schema_to_type(schema)
+        DynamicType = _schema_to_type(schema)
 
         # Create dataset with some None values
         tar_path = tmp_path / "optional_array.tar"
@@ -723,7 +723,7 @@ class TestComplexSchemaScenarios:
             ],
         }
 
-        DynamicType = schema_to_type(schema)
+        DynamicType = _schema_to_type(schema)
 
         instance = DynamicType(matrix=[[1, 2], [3, 4], [5, 6]])
         assert instance.matrix == [[1, 2], [3, 4], [5, 6]]
@@ -738,9 +738,9 @@ class TestComplexSchemaScenarios:
         ref3 = index.publish_schema(ListSample, version="1.0.0")
 
         # Decode all
-        Type1 = index.decode_schema(ref1)
-        Type2 = index.decode_schema(ref2)
-        Type3 = index.decode_schema(ref3)
+        Type1 = index.get_schema_type(ref1)
+        Type2 = index.get_schema_type(ref2)
+        Type3 = index.get_schema_type(ref3)
 
         # All should be usable
         assert Type1(name="a", value=1, score=0.5).name == "a"
@@ -996,7 +996,7 @@ class TestAtmosphereSchemaConversion:
             },
         }
 
-        SampleType = schema_to_type(schema)
+        SampleType = _schema_to_type(schema)
 
         assert SampleType.__name__ == "MNISTSample"
         import dataclasses
@@ -1019,7 +1019,7 @@ class TestAtmosphereSchemaConversion:
             },
         }
 
-        SampleType = schema_to_type(schema)
+        SampleType = _schema_to_type(schema)
         sample = SampleType(text="hello")
         assert sample.text == "hello"
 
@@ -1040,7 +1040,7 @@ class TestAtmosphereSchemaConversion:
             },
         }
 
-        SampleType = schema_to_type(schema)
+        SampleType = _schema_to_type(schema)
         sample = SampleType(name="test")
         assert sample.name == "test"
         assert sample.extra is None
@@ -1062,7 +1062,7 @@ class TestAtmosphereSchemaConversion:
             },
         }
 
-        SampleType = schema_to_type(schema)
+        SampleType = _schema_to_type(schema)
         sample = SampleType(score=0.95, flag=True)
         assert sample.score == 0.95
         assert sample.flag is True
@@ -1083,7 +1083,7 @@ class TestAtmosphereSchemaConversion:
             },
         }
 
-        SampleType = schema_to_type(schema)
+        SampleType = _schema_to_type(schema)
         sample = SampleType(tags=["a", "b"])
         assert sample.tags == ["a", "b"]
 
@@ -1107,7 +1107,7 @@ class TestAtmosphereSchemaConversion:
             },
         }
 
-        SampleType = schema_to_type(schema)
+        SampleType = _schema_to_type(schema)
         sample = SampleType(data=b"hello")
         assert sample.data == b"hello"
 
@@ -1130,7 +1130,7 @@ class TestAtmosphereSchemaConversion:
             },
         }
 
-        SampleType = schema_to_type(schema)
+        SampleType = _schema_to_type(schema)
         arr = np.array([1.0, 2.0, 3.0], dtype=np.float32)
         sample = SampleType(embedding=arr, label="test")
 
@@ -1168,7 +1168,7 @@ class TestAtmosphereSchemaConversion:
             "createdAt": "2025-01-01T00:00:00+00:00",
         }
 
-        SampleType = schema_to_type(schema, use_cache=False)
+        SampleType = _schema_to_type(schema, use_cache=False)
 
         assert SampleType.__name__ == "MNISTSampleFlat"
         import dataclasses
@@ -1198,6 +1198,6 @@ class TestAtmosphereSchemaConversion:
             ],
         }
 
-        SampleType = schema_to_type(schema)
+        SampleType = _schema_to_type(schema)
         sample = SampleType(name="hello")
         assert sample.name == "hello"
