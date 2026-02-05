@@ -3005,6 +3005,48 @@ class TestAtmosphereIndexEntry:
 
         assert entry.data_urls == []
 
+    @patch("atdata.atmosphere._resolve_pds_endpoint")
+    def test_data_urls_resolves_storage_blobs(self, mock_resolve):
+        """storageBlobs entries are resolved to PDS HTTP URLs."""
+        mock_resolve.return_value = "https://pds.example.com"
+        record = {
+            "name": "blob-dataset",
+            "storage": {
+                "$type": f"{LEXICON_NAMESPACE}.storageBlobs",
+                "blobs": [
+                    {
+                        "blob": {
+                            "ref": {"$link": "bafyabc"},
+                            "mimeType": "application/octet-stream",
+                        }
+                    },
+                    {
+                        "blob": {
+                            "ref": {"$link": "bafydef"},
+                            "mimeType": "application/octet-stream",
+                        }
+                    },
+                ],
+            },
+        }
+
+        entry = AtmosphereIndexEntry(
+            "at://did:plc:testdid/ac.foundation.dataset.record/rkey123",
+            record,
+        )
+        urls = entry.data_urls
+
+        assert len(urls) == 2
+        assert urls[0] == (
+            "https://pds.example.com/xrpc/com.atproto.sync.getBlob"
+            "?did=did:plc:testdid&cid=bafyabc"
+        )
+        assert urls[1] == (
+            "https://pds.example.com/xrpc/com.atproto.sync.getBlob"
+            "?did=did:plc:testdid&cid=bafydef"
+        )
+        mock_resolve.assert_called_once_with("did:plc:testdid")
+
 
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
 class TestAtmosphereIndex:

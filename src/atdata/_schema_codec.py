@@ -127,6 +127,110 @@ def _field_type_to_python(field_type: dict, optional: bool = False) -> Any:
     return python_type
 
 
+def _convert_atmosphere_schema(record: dict) -> dict:
+    """Convert atmosphere JSON Schema format to local fields format.
+
+    Atmosphere schemas use JSON Schema (published by ``SchemaPublisher``):
+
+    .. code-block:: json
+
+        {
+          "name": "MNISTSample", "version": "1.0.0",
+          "schemaType": "jsonSchema",
+          "schema": {
+            "schemaBody": {
+              "properties": {"image": {"$ref": "...ndarray..."}, "label": {"type": "integer"}},
+              "required": ["image", "label"]
+            }
+          }
+        }
+
+    This function converts that to the local format with a ``fields`` array
+    that ``schema_to_type()`` expects.
+
+    Args:
+        record: Atmosphere schema record dict.
+
+    Returns:
+        Schema dict in local format with ``fields`` array.
+    """
+    schema_body = record.get("schema", {}).get("schemaBody", {})
+    properties = schema_body.get("properties", {})
+    required = set(schema_body.get("required", []))
+
+    fields_list = []
+    for field_name, prop in properties.items():
+        field_type_dict = _json_schema_prop_to_field_type(prop)
+        fields_list.append(
+            {
+                "name": field_name,
+                "fieldType": field_type_dict,
+                "optional": field_name not in required,
+            }
+        )
+
+    return {
+        "name": record.get("name", "Unknown"),
+        "version": record.get("version", "1.0.0"),
+        "fields": fields_list,
+        "description": record.get("description"),
+    }
+
+
+def _json_schema_prop_to_field_type(prop: dict) -> dict:
+    """Convert a single JSON Schema property to a local fieldType dict.
+
+    Args:
+        prop: JSON Schema property definition.
+
+    Returns:
+        Local fieldType dict with ``$type`` key.
+    """
+    # NDArray reference
+    if "$ref" in prop and "ndarray" in prop["$ref"]:
+        return {"$type": "local#ndarray"}
+
+    json_type = prop.get("type", "")
+
+    if json_type == "string":
+        # Check for bytes (base64-encoded)
+        if prop.get("format") == "byte" or prop.get("contentEncoding") == "base64":
+            return {"$type": "local#primitive", "primitive": "bytes"}
+        return {"$type": "local#primitive", "primitive": "str"}
+
+    if json_type == "integer":
+        return {"$type": "local#primitive", "primitive": "int"}
+
+    if json_type == "number":
+        return {"$type": "local#primitive", "primitive": "float"}
+
+    if json_type == "boolean":
+        return {"$type": "local#primitive", "primitive": "bool"}
+
+    if json_type == "array":
+        items = prop.get("items")
+        if items:
+            return {
+                "$type": "local#array",
+                "items": _json_schema_prop_to_field_type(items),
+            }
+        return {
+            "$type": "local#array",
+            "items": {"$type": "local#primitive", "primitive": "str"},
+        }
+
+    # Fallback: treat as string
+    return {"$type": "local#primitive", "primitive": "str"}
+
+
+def _is_atmosphere_schema(schema: dict) -> bool:
+    """Detect if a schema dict uses atmosphere JSON Schema format."""
+    if schema.get("schemaType") == "jsonSchema":
+        return True
+    inner = schema.get("schema")
+    return isinstance(inner, dict) and "schemaBody" in inner
+
+
 def schema_to_type(
     schema: dict,
     *,
@@ -137,6 +241,10 @@ def schema_to_type(
     This function dynamically creates a dataclass that inherits from PackableSample,
     with fields matching the schema definition. The generated class can be used
     with ``Dataset[T]`` to load and process samples.
+
+    Supports both local schema format (with ``fields`` array) and atmosphere
+    JSON Schema format (with ``schemaType: "jsonSchema"``). The latter is
+    automatically converted before processing.
 
     Args:
         schema: Schema record dict with 'name', 'version', 'fields', etc.
@@ -157,6 +265,10 @@ def schema_to_type(
         >>> for sample in ds.ordered():
         ...     print(sample)
     """
+    # Convert atmosphere JSON Schema format to local format
+    if _is_atmosphere_schema(schema):
+        schema = _convert_atmosphere_schema(schema)
+
     # Check cache first
     if use_cache:
         cache_key = _schema_cache_key(schema)

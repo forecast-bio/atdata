@@ -333,12 +333,17 @@ class Index:
         if ref.startswith("at://"):
             return ("_atmosphere", ref, None)
 
-        # @ prefix -> atmosphere
+        # @ prefix -> atmosphere (unless the handle matches a known repo name)
         if ref.startswith("@"):
             rest = ref[1:]
             parts = rest.split("/", 1)
             if len(parts) == 2:
-                return ("_atmosphere", parts[1], parts[0])
+                handle, name = parts
+                # Route @local/name to the local repo, @reponame/name to
+                # that repo, and everything else to atmosphere.
+                if handle in self._repos:
+                    return (handle, name, None)
+                return ("_atmosphere", name, handle)
             return ("_atmosphere", rest, None)
 
         # atdata:// full URI
@@ -1342,9 +1347,10 @@ class Index:
         """Get a schema record by reference (AbstractIndex protocol).
 
         Args:
-            ref: Schema reference string. Supports both new format
-                (atdata://local/schema/{name}@{version}) and legacy
-                format (local://schemas/{module.Class}@{version}).
+            ref: Schema reference string. Supports:
+                - New format: ``atdata://local/schema/{name}@{version}``
+                - Legacy format: ``local://schemas/{module.Class}@{version}``
+                - AT URI: ``at://did:plc:xxx/ac.foundation.dataset.schema/rkey``
 
         Returns:
             Schema record as a dictionary with keys 'name', 'version',
@@ -1352,8 +1358,18 @@ class Index:
 
         Raises:
             KeyError: If schema not found.
-            ValueError: If reference format is invalid.
+            ValueError: If reference format is invalid or atmosphere unavailable.
         """
+        # AT URIs route to atmosphere backend
+        if ref.startswith("at://"):
+            atmo = self._get_atmosphere()
+            if atmo is None:
+                raise ValueError(
+                    f"Atmosphere backend required to resolve schema {ref!r} "
+                    "but not available."
+                )
+            return atmo.get_schema(ref)
+
         name, version = _parse_schema_ref(ref)
 
         schema_json = self._provider.get_schema_json(name, version)

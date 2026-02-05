@@ -185,7 +185,7 @@ class TestDatasetEdgeCases:
         ds = atdata.Dataset[DictSample](url=str(tar_path))
         d = ds.to_dict(limit=3)
         assert isinstance(d, dict)
-        assert len(d) > 0
+        assert len(d) == 2  # name + value columns
 
 
 class TestWriteSamplesMaxsize:
@@ -236,6 +236,39 @@ class TestIndexEdgeCases:
         record = index.get_schema_record(ref)
         assert record.name == "SharedBasicSample"
         assert record.version == "1.0.0"
+
+    def test_get_schema_at_uri_routes_to_atmosphere(self, tmp_path):
+        """get_schema with at:// URI routes to atmosphere backend."""
+        provider = SqliteProvider(path=tmp_path / "test.db")
+        mock_atmo = MagicMock()
+        mock_atmo.get_schema.return_value = {
+            "name": "RemoteSample",
+            "version": "1.0.0",
+            "schemaType": "jsonSchema",
+            "schema": {
+                "schemaBody": {
+                    "properties": {"label": {"type": "integer"}},
+                    "required": ["label"],
+                },
+            },
+        }
+
+        index = atlocal.Index(provider=provider, atmosphere=None)
+        index._atmosphere = mock_atmo
+        index._atmosphere_deferred = False
+
+        at_uri = "at://did:plc:abc/ac.foundation.dataset.schema/rkey123"
+        result = index.get_schema(at_uri)
+        assert result["name"] == "RemoteSample"
+        mock_atmo.get_schema.assert_called_once_with(at_uri)
+
+    def test_get_schema_at_uri_no_atmosphere_raises(self, tmp_path):
+        """get_schema with at:// URI raises when atmosphere unavailable."""
+        provider = SqliteProvider(path=tmp_path / "test.db")
+        index = atlocal.Index(provider=provider, atmosphere=None)
+
+        with pytest.raises(ValueError, match="Atmosphere backend required"):
+            index.get_schema("at://did:plc:abc/ac.foundation.dataset.schema/rkey")
 
     def test_insert_dataset_atmosphere_path(self, tmp_path):
         """insert_dataset with at:// prefix routes to atmosphere."""

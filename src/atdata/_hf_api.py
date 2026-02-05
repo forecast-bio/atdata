@@ -677,12 +677,16 @@ def _resolve_indexed_path(
     """
     handle_or_did, dataset_name, version = _parse_indexed_path(path)
 
+    # Reconstruct full @handle/name so Index._resolve_prefix sees the @
+    # prefix and routes to the atmosphere backend.
+    full_path = f"@{handle_or_did}/{dataset_name}"
+
     # Try label-based resolution first (supports versioning), then fall
     # back to direct name lookup for indexes without label support.
     try:
-        entry = index.get_label(dataset_name, version)  # type: ignore[attr-defined]
+        entry = index.get_label(full_path, version)  # type: ignore[attr-defined]
     except (KeyError, TypeError, AttributeError):
-        entry = index.get_dataset(dataset_name)
+        entry = index.get_dataset(full_path)
     data_urls = entry.data_urls
 
     # Check if index has a data store
