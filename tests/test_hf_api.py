@@ -811,7 +811,7 @@ class TestLoadDatasetWithIndex:
             split="train",
         )
 
-        mock_index.get_dataset.assert_called_once_with("my-dataset")
+        mock_index.get_dataset.assert_called_once_with("@local/my-dataset")
         assert ds.url == "s3://bucket/data.tar"
 
     def test_indexed_path_auto_type_resolution(self):
@@ -940,6 +940,31 @@ class TestLoadDatasetWithIndex:
         assert ds.source.endpoint == "https://r2.example.com"
         assert ds.source.access_key == "test-access-key"
         assert ds.source.secret_key == "test-secret-key"
+
+
+class TestIndexedPathAtmosphereRouting:
+    """Tests that @handle/dataset routes to atmosphere via Index."""
+
+    def test_atmosphere_handle_routes_to_get_dataset(self):
+        """@handle.domain/name passes full @handle/name to index methods."""
+        mock_index = Mock()
+        mock_index.data_store = None
+        mock_index.get_label.side_effect = KeyError("no label")
+        mock_entry = Mock()
+        mock_entry.data_urls = ["https://cdn.example.com/data.tar"]
+        mock_entry.schema_ref = "local://schemas/test@1.0.0"
+        mock_index.get_dataset.return_value = mock_entry
+
+        ds = load_dataset(
+            "@maxine.science/test-mnist",
+            SimpleTestSample,
+            index=mock_index,
+            split="train",
+        )
+
+        mock_index.get_label.assert_called_once_with("@maxine.science/test-mnist", None)
+        mock_index.get_dataset.assert_called_once_with("@maxine.science/test-mnist")
+        assert ds.url == "https://cdn.example.com/data.tar"
 
 
 ##

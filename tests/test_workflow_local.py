@@ -142,7 +142,7 @@ class TestFullRepoWorkflow:
         # Query back
         assert entry.cid is not None
         assert entry.name == "workflow-test"
-        assert len(entry.data_urls) > 0
+        assert len(entry.data_urls) == 1  # 15 samples, maxcount=100 → 1 shard
 
         # Verify in index
         all_entries = repo.index.all_entries
@@ -534,7 +534,7 @@ class TestCacheLocalModes:
         entry, new_ds = repo.insert(ds, name="cached", cache_local=True, maxcount=100)
 
         assert entry.cid is not None
-        assert len(entry.data_urls) > 0
+        assert len(entry.data_urls) == 1  # 10 samples, maxcount=100 → 1 shard
         assert ".tar" in entry.data_urls[0]
 
     @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
@@ -554,7 +554,7 @@ class TestCacheLocalModes:
         entry, new_ds = repo.insert(ds, name="direct", cache_local=False, maxcount=100)
 
         assert entry.cid is not None
-        assert len(entry.data_urls) > 0
+        assert len(entry.data_urls) == 1  # 10 samples, maxcount=100 → 1 shard
         assert ".tar" in entry.data_urls[0]
 
     @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")

@@ -115,7 +115,7 @@ class TestLocalDiskStoreChecksums:
 
         assert entry.metadata is not None
         assert "checksums" in entry.metadata
-        assert len(entry.metadata["checksums"]) > 0
+        assert len(entry.metadata["checksums"]) == 1  # 5 samples → 1 shard
 
     def test_checksums_preserved_with_existing_metadata(self, tmp_path):
         store = LocalDiskStore(root=tmp_path / "data")

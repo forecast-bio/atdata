@@ -493,6 +493,95 @@ class TestInsertDatasetAtmosphere:
         assert call_kwargs["blob_refs"] == [mock_blob_ref]
         assert call_kwargs["data_urls"] == ["at://did:plc:test/blob/bafyreiabc"]
 
+    def test_insert_dataset_extracts_checksums_from_upload_result(
+        self, sqlite_provider, tmp_path
+    ):
+        """insert_dataset extracts checksums from ShardUploadResult and converts to ShardChecksum."""
+        mock_atmo = MagicMock()
+        mock_atmo.client = MagicMock()
+        mock_atmo.client.did = "did:plc:test"
+        mock_entry = MagicMock()
+        mock_atmo.insert_dataset.return_value = mock_entry
+
+        idx = atlocal.Index(provider=sqlite_provider, atmosphere=None)
+
+        samples = [SharedBasicSample(name="x", value=1)]
+        ds = atdata.write_samples(samples, tmp_path / "data.tar")
+
+        mock_blob_ref = {
+            "$type": "blob",
+            "ref": {"$link": "bafyreiabc"},
+            "mimeType": "application/x-tar",
+            "size": 1024,
+        }
+
+        at_uri = "at://did:plc:test/blob/bafyreiabc"
+        digest = "a1b2c3d4e5f6"
+
+        def fake_write_shards(self_store, ds, *, prefix, **kwargs):
+            from atdata.atmosphere.store import ShardUploadResult
+
+            return ShardUploadResult(
+                [at_uri],
+                [mock_blob_ref],
+                checksums={at_uri: digest},
+            )
+
+        with (
+            patch.object(
+                atlocal.Index,
+                "_resolve_prefix",
+                return_value=("_atmosphere", "test", None),
+            ),
+            patch.object(atlocal.Index, "_get_atmosphere", return_value=mock_atmo),
+            patch(
+                "atdata.atmosphere.store.PDSBlobStore.write_shards",
+                autospec=True,
+                side_effect=fake_write_shards,
+            ),
+        ):
+            idx.insert_dataset(ds, name="@handle/test")
+
+        call_kwargs = mock_atmo.insert_dataset.call_args[1]
+        checksums = call_kwargs["checksums"]
+        assert checksums is not None
+        assert len(checksums) == 1
+        assert checksums[0].algorithm == "sha256"
+        assert checksums[0].digest == digest
+        # Checksums should NOT be in metadata when blob_refs are present
+        assert call_kwargs["metadata"] is None
+
+    def test_insert_dataset_no_checksums_when_no_blob_refs(self, sqlite_provider):
+        """insert_dataset passes checksums=None when store returns no blob_refs."""
+        mock_atmo = MagicMock()
+        mock_atmo.client = MagicMock()
+        mock_atmo.client.did = "did:plc:test"
+        mock_entry = MagicMock()
+        mock_atmo.insert_dataset.return_value = mock_entry
+
+        ds = MagicMock()
+        ds.url = "https://example.com/data.tar"
+        ds.list_shards.return_value = ["https://example.com/data-000.tar"]
+        ds.source = MagicMock(spec=[])
+        ds._metadata = None
+
+        idx = atlocal.Index(provider=sqlite_provider, atmosphere=None)
+
+        with (
+            patch.object(
+                atlocal.Index,
+                "_resolve_prefix",
+                return_value=("_atmosphere", "test", None),
+            ),
+            patch.object(atlocal.Index, "_get_atmosphere", return_value=mock_atmo),
+        ):
+            idx.insert_dataset(ds, name="@handle/test")
+
+        call_kwargs = mock_atmo.insert_dataset.call_args[1]
+        # Remote URL path doesn't pass checksums or blob_refs
+        assert call_kwargs.get("checksums") is None
+        assert call_kwargs.get("blob_refs") is None
+
     def test_remote_source_references_urls(self, sqlite_provider):
         """Public http source should reference existing URLs, not copy."""
         mock_atmo = MagicMock()
