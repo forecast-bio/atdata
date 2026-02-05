@@ -8,13 +8,12 @@ Every record created is cleaned up in a finalizer so the test account
 stays tidy.
 """
 
-from __future__ import annotations
-
 import io
 import os
 
 import pytest
 import webdataset as wds
+from numpy.typing import NDArray
 
 import atdata
 from atdata.atmosphere import (
@@ -25,7 +24,6 @@ from atdata.atmosphere import (
     DatasetLoader,
 )
 from atdata.atmosphere._types import LEXICON_NAMESPACE
-from numpy.typing import NDArray
 
 from .conftest import unique_name, RUN_ID
 
@@ -108,9 +106,22 @@ class TestBlobOperations:
         assert blob_ref["size"] == len(payload)
         assert "ref" in blob_ref
 
+        # Blobs must be referenced by a record for the PDS to serve them.
+        name = unique_name("blob-dl")
+        record = {
+            "$type": TEST_COLLECTION_SCHEMA,
+            "name": name,
+            "version": "1.0.0",
+            "fields": [],
+            "blob": blob_ref,
+        }
+        uri = atproto_client.create_record(TEST_COLLECTION_SCHEMA, record)
+
         cid = blob_ref["ref"]["$link"]
         downloaded = atproto_client.get_blob(atproto_client.did, cid)
         assert downloaded == payload
+
+        atproto_client.delete_record(uri)
 
     def test_upload_larger_blob(self, atproto_client: Atmosphere):
         """Upload a ~10 KB blob to verify timeout heuristics work."""
@@ -173,29 +184,33 @@ class TestSchemaPublishing:
         loader = SchemaLoader(atproto_client)
         schema = loader.get(str(uri))
         assert schema["version"] == "1.0.0"
-        field_names = {f["name"] for f in schema["fields"]}
-        assert field_names == {"text", "score"}
+        properties = schema["schema"]["properties"]
+        assert set(properties.keys()) == {"text", "score"}
+        assert properties["text"]["type"] == "string"
+        assert properties["score"]["type"] == "integer"
 
         # cleanup
         atproto_client.delete_record(uri)
 
     def test_schema_with_ndarray_field(self, atproto_client: Atmosphere):
-        name = unique_name("arr-schema")
-
         @atdata.packable
         class _ArraySample:
             embedding: NDArray
             label: str
 
-        _ArraySample.__module__ = f"integ.{name}"
+        # Don't override __module__ here — get_type_hints() needs to resolve
+        # NDArray from this module's globals.  Record key uniqueness comes
+        # from the auto-generated TID rkey.
 
         pub = SchemaPublisher(atproto_client)
         uri = pub.publish(_ArraySample, version="1.0.0")
 
         loader = SchemaLoader(atproto_client)
         schema = loader.get(str(uri))
-        emb = next(f for f in schema["fields"] if f["name"] == "embedding")
-        assert "ndarray" in emb["fieldType"]["$type"].lower()
+        properties = schema["schema"]["properties"]
+        assert "embedding" in properties
+        assert "$ref" in properties["embedding"]
+        assert "ndarray" in properties["embedding"]["$ref"].lower()
 
         atproto_client.delete_record(uri)
 
@@ -286,8 +301,8 @@ class TestBlobRoundTrip:
         ds = loader.to_dataset(str(ds_uri), _BlobSample)
         result = list(ds.ordered())
         assert len(result) == 2
-        assert result[0].message == ["hello"]
-        assert result[1].message == ["world"]
+        assert result[0].message == "hello"
+        assert result[1].message == "world"
 
         # cleanup
         atproto_client.delete_record(ds_uri)
@@ -350,8 +365,8 @@ class TestErrorHandling:
         ds = loader.to_dataset(str(ds_uri), _FixtureSample)
         samples = list(ds.ordered())
         assert len(samples) == 3
-        assert samples[0].id == [0]
-        assert samples[0].name == ["test_sample_0"]
+        assert samples[0].id == 0
+        assert samples[0].name == "test_sample_0"
 
         # cleanup
         atproto_client.delete_record(ds_uri)

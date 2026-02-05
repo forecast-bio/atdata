@@ -17,13 +17,19 @@ from .conftest import unique_name
 
 
 def _make_entry(**overrides):
-    """Create a LocalDatasetEntry with sensible defaults."""
+    """Create a LocalDatasetEntry with sensible defaults.
+
+    Each entry gets a unique name AND unique data_urls so that the
+    content-derived CID is distinct (CID is based on schema_ref +
+    data_urls, not name).
+    """
     from atdata.index._entry import LocalDatasetEntry
 
+    entry_name = overrides.pop("name", unique_name("entry"))
     defaults = dict(
-        name=unique_name("entry"),
+        name=entry_name,
         schema_ref="local://schemas/TestSample@1.0.0",
-        data_urls=["/data/shard-000000.tar"],
+        data_urls=[f"/data/{entry_name}/shard-000000.tar"],
         metadata={"split": "train"},
     )
     defaults.update(overrides)
