@@ -190,7 +190,14 @@ def test_insert_dataset_forwards_checksums_to_publisher(backend) -> None:
 
     from atdata.atmosphere._lexicon_types import ShardChecksum
 
-    blob_refs = [{"$type": "blob", "ref": {"$link": "abc"}, "mimeType": "application/x-tar", "size": 100}]
+    blob_refs = [
+        {
+            "$type": "blob",
+            "ref": {"$link": "abc"},
+            "mimeType": "application/x-tar",
+            "size": 100,
+        }
+    ]
     checksums = [ShardChecksum(algorithm="sha256", digest="deadbeef")]
 
     backend.insert_dataset(
@@ -210,10 +217,19 @@ def test_insert_dataset_forwards_checksums_to_publisher(backend) -> None:
 def test_insert_dataset_blob_refs_without_checksums(backend) -> None:
     """insert_dataset passes checksums=None when no checksums provided."""
     _patch_loaders(backend)
-    backend._dataset_publisher.publish_with_blob_refs.return_value = "at://did/col/nochk"
+    backend._dataset_publisher.publish_with_blob_refs.return_value = (
+        "at://did/col/nochk"
+    )
     backend._dataset_loader.get.return_value = {"name": "nochk-ds"}
 
-    blob_refs = [{"$type": "blob", "ref": {"$link": "abc"}, "mimeType": "application/x-tar", "size": 100}]
+    blob_refs = [
+        {
+            "$type": "blob",
+            "ref": {"$link": "abc"},
+            "mimeType": "application/x-tar",
+            "size": 100,
+        }
+    ]
 
     backend.insert_dataset(
         MagicMock(),

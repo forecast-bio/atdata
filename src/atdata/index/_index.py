@@ -1039,9 +1039,7 @@ class Index:
                     # Fall back to storageExternal with AT URIs otherwise.
                     blob_refs = getattr(written_urls, "blob_refs", None) or None
 
-                    shard_checksums = _extract_blob_checksums(
-                        written_urls, blob_refs
-                    )
+                    shard_checksums = _extract_blob_checksums(written_urls, blob_refs)
                     effective_metadata = (
                         metadata
                         if blob_refs is not None
