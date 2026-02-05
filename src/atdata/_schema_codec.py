@@ -31,6 +31,10 @@ from numpy.typing import NDArray
 # Import PackableSample for inheritance in dynamic class generation
 from .dataset import PackableSample
 from ._protocols import Packable
+from ._exceptions import SchemaError
+
+# Maximum $atdataSchemaVersion this library can read.
+_MAX_SUPPORTED_SCHEMA_VERSION = 1
 
 
 # Type cache to avoid regenerating identical types
@@ -216,6 +220,27 @@ def _json_schema_prop_to_field_type(prop: dict) -> dict:
     return {"$type": "local#primitive", "primitive": "str"}
 
 
+def _check_schema_record_version(schema: dict) -> None:
+    """Validate that a schema record's ``$atdataSchemaVersion`` is supported.
+
+    Records without the field are treated as version 1 (backward compat).
+
+    Args:
+        schema: Schema record dict.
+
+    Raises:
+        SchemaError: If the version is higher than this library supports.
+    """
+    v = schema.get("$atdataSchemaVersion", 1)
+    if v > _MAX_SUPPORTED_SCHEMA_VERSION:
+        raise SchemaError(
+            f"Unsupported schema record version: {v}. "
+            f"This version of atdata supports schema record versions "
+            f"up to {_MAX_SUPPORTED_SCHEMA_VERSION}. "
+            f"Upgrade atdata to read this schema."
+        )
+
+
 def _is_atmosphere_schema(schema: dict) -> bool:
     """Detect if a schema dict uses atmosphere JSON Schema format."""
     if schema.get("schemaType") == "jsonSchema":
@@ -258,6 +283,9 @@ def schema_to_type(
         >>> for sample in ds.ordered():
         ...     print(sample)
     """
+    # Check $atdataSchemaVersion before processing
+    _check_schema_record_version(schema)
+
     # Convert atmosphere JSON Schema format to local format
     if _is_atmosphere_schema(schema):
         schema = _convert_atmosphere_schema(schema)

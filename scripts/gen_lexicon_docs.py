@@ -37,7 +37,7 @@ _NSID_ORDER = [
     "ac.foundation.dataset.storageExternal",
     "ac.foundation.dataset.schemaType",
     "ac.foundation.dataset.arrayFormat",
-    "ac.foundation.dataset.getLatestSchema",
+    "ac.foundation.dataset.resolveSchema",
 ]
 
 

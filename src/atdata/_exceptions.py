@@ -60,28 +60,40 @@ class LensNotFoundError(AtdataError, ValueError):
 
 
 class SchemaError(AtdataError):
-    """Schema mismatch during sample deserialization.
+    """Schema-related error.
 
-    Raised when the data in a shard doesn't match the expected sample type.
+    Raised for schema mismatches during sample deserialization, or for
+    unsupported schema record versions.
+
+    Can be constructed with a plain message string or with field-mismatch
+    details:
+
+    - ``SchemaError("some message")`` — general schema error.
+    - ``SchemaError(name, expected_fields, actual_fields)`` — field mismatch.
 
     Attributes:
-        expected_fields: Fields expected by the sample type.
-        actual_fields: Fields found in the data.
-        sample_type_name: Name of the target sample type.
+        expected_fields: Fields expected by the sample type (field-mismatch only).
+        actual_fields: Fields found in the data (field-mismatch only).
+        sample_type_name: Name of the target sample type (field-mismatch only).
     """
 
     def __init__(
         self,
         sample_type_name: str,
-        expected_fields: list[str],
-        actual_fields: list[str],
+        expected_fields: list[str] | None = None,
+        actual_fields: list[str] | None = None,
     ) -> None:
         self.sample_type_name = sample_type_name
-        self.expected_fields = expected_fields
-        self.actual_fields = actual_fields
+        self.expected_fields = expected_fields or []
+        self.actual_fields = actual_fields or []
 
-        missing = sorted(set(expected_fields) - set(actual_fields))
-        extra = sorted(set(actual_fields) - set(expected_fields))
+        # Plain message mode: no field lists provided
+        if expected_fields is None and actual_fields is None:
+            super().__init__(sample_type_name)
+            return
+
+        missing = sorted(set(self.expected_fields) - set(self.actual_fields))
+        extra = sorted(set(self.actual_fields) - set(self.expected_fields))
 
         lines = [f"Schema mismatch for {sample_type_name}"]
         if missing:
@@ -89,8 +101,8 @@ class SchemaError(AtdataError):
         if extra:
             lines.append(f"  Unexpected fields: {', '.join(extra)}")
         lines.append("")
-        lines.append(f"Expected: {', '.join(sorted(expected_fields))}")
-        lines.append(f"Got:      {', '.join(sorted(actual_fields))}")
+        lines.append(f"Expected: {', '.join(sorted(self.expected_fields))}")
+        lines.append(f"Got:      {', '.join(sorted(self.actual_fields))}")
 
         super().__init__("\n".join(lines))
 

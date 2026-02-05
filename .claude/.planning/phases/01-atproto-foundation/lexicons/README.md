@@ -28,7 +28,7 @@ This directory contains the ATProto Lexicon JSON definitions for the distributed
 
 ### Query APIs
 
-4. **[ac.foundation.dataset.getLatestSchema](ac.foundation.dataset.getLatestSchema.json)**
+4. **[ac.foundation.dataset.resolveSchema](ac.foundation.dataset.resolveSchema.json)**
    - Query to get the latest version of a schema by NSID
    - Returns full record + all available versions
    - Handles the custom rkey versioning scheme
@@ -54,7 +54,7 @@ All Lexicons use the `ac.foundation.dataset.*` namespace:
 **Benefits**:
 - Immutable version records
 - Easy to list all versions of a schema
-- Natural query pattern via `getLatestSchema`
+- Natural query pattern via `resolveSchema`
 - Clear semantic versioning enforcement
 
 **Implementation**: The schema Lexicon uses `"key": "any"` to support this custom format.
