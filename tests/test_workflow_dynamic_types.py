@@ -1139,6 +1139,51 @@ class TestAtmosphereSchemaConversion:
         np.testing.assert_array_equal(restored.embedding, arr)
         assert restored.label == "test"
 
+    def test_flattened_atmosphere_format(self):
+        """Flattened ATProto wire format (no schemaBody wrapper) works.
+
+        JsonSchemaFormat.to_record() merges schema body keys directly into
+        the schema dict. Records fetched from a PDS have this flattened
+        layout, not the nested schemaBody format used in earlier tests.
+        """
+        # Simulate what LexSchemaRecord.to_record() actually produces
+        schema = {
+            "$type": "ac.foundation.dataset.schema",
+            "name": "MNISTSampleFlat",
+            "version": "1.0.0",
+            "schemaType": "jsonSchema",
+            "schema": {
+                "$type": "ac.foundation.dataset.schema#jsonSchemaFormat",
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {
+                    "image": {
+                        "$ref": "https://foundation.ac/schemas/atdata-ndarray-bytes/1.0.0#/$defs/ndarray"
+                    },
+                    "label": {"type": "integer"},
+                },
+                "required": ["image", "label"],
+                "arrayFormatVersions": {"ndarrayBytes": "1.0.0"},
+            },
+            "createdAt": "2025-01-01T00:00:00+00:00",
+        }
+
+        SampleType = schema_to_type(schema, use_cache=False)
+
+        assert SampleType.__name__ == "MNISTSampleFlat"
+        import dataclasses
+
+        field_names = [f.name for f in dataclasses.fields(SampleType)]
+        assert "image" in field_names
+        assert "label" in field_names
+
+        # Verify the types are correct
+        arr = np.random.randn(28, 28).astype(np.float32)
+        sample = SampleType(image=arr, label=7)
+        restored = SampleType.from_bytes(sample.packed)
+        np.testing.assert_array_equal(restored.image, arr)
+        assert restored.label == 7
+
     def test_local_schema_format_still_works(self):
         """Local schema format with fields array still works."""
         schema = {
