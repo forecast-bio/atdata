@@ -3,6 +3,8 @@ name: Integration tests
 on:
   push:
     branches: [main, develop]
+  pull_request:
+    branches: [main]
   schedule:
     # Nightly at 06:00 UTC
     - cron: "0 6 * * *"
@@ -20,8 +22,8 @@ jobs:
     name: Live integration tests
     runs-on: ubuntu-latest
     environment: integration
-    # Do not block merges — integration failures are informational
-    continue-on-error: true
+    # Integration failures show as red but don't block merges (the check
+    # is not listed as required in branch protection rules).
 
     services:
       postgres:
@@ -34,6 +36,15 @@ jobs:
           POSTGRES_DB: atdata_integration
         options: >-
           --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -79,6 +90,8 @@ jobs:
           MINIO_SECRET_KEY: minioadmin
           # PostgreSQL
           POSTGRES_DSN: postgresql://atdata:atdata_test@localhost:5432/atdata_integration
+          # Redis
+          REDIS_URL: redis://localhost:6379/0
         # Override addopts to drop the default '-m not integration' filter
         # and disable coverage (integration tests don't contribute to it).
         run: >

@@ -115,7 +115,7 @@ class TestWriteShards:
         prefix = f"test/{unique_name('split')}"
         urls = store.write_shards(ds, prefix=prefix, maxcount=5)
 
-        assert len(urls) >= 4  # 20 samples / 5 per shard
+        assert len(urls) == 4  # 20 samples / 5 per shard
 
 
 # ── Read-back via URL resolution ──────────────────────────────────
