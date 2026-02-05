@@ -130,23 +130,14 @@ def _field_type_to_python(field_type: dict, optional: bool = False) -> Any:
 def _convert_atmosphere_schema(record: dict) -> dict:
     """Convert atmosphere JSON Schema format to local fields format.
 
-    Atmosphere schemas use JSON Schema (published by ``SchemaPublisher``):
+    Handles two variants of the atmosphere schema ``schema`` object:
 
-    .. code-block:: json
+    * **Nested** (legacy/test format): ``schema.schemaBody.properties``
+    * **Flattened** (actual ATProto wire format): ``schema.properties``
 
-        {
-          "name": "MNISTSample", "version": "1.0.0",
-          "schemaType": "jsonSchema",
-          "schema": {
-            "schemaBody": {
-              "properties": {"image": {"$ref": "...ndarray..."}, "label": {"type": "integer"}},
-              "required": ["image", "label"]
-            }
-          }
-        }
-
-    This function converts that to the local format with a ``fields`` array
-    that ``schema_to_type()`` expects.
+    ``JsonSchemaFormat.to_record()`` merges schema-body keys directly into
+    the ``schema`` dict, so records fetched from a PDS have ``properties``
+    at the top level of ``schema`` with no ``schemaBody`` wrapper.
 
     Args:
         record: Atmosphere schema record dict.
@@ -154,7 +145,9 @@ def _convert_atmosphere_schema(record: dict) -> dict:
     Returns:
         Schema dict in local format with ``fields`` array.
     """
-    schema_body = record.get("schema", {}).get("schemaBody", {})
+    inner_schema = record.get("schema", {})
+    # Prefer nested schemaBody if present; fall back to flattened format.
+    schema_body = inner_schema.get("schemaBody", inner_schema)
     properties = schema_body.get("properties", {})
     required = set(schema_body.get("required", []))
 
