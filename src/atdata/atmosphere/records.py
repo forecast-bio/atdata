@@ -480,6 +480,11 @@ class DatasetLoader:
     ) -> list[dict]:
         """List dataset records from a repository.
 
+        This delegates to ``com.atproto.repo.listRecords`` which returns at
+        most ``limit`` records with no automatic pagination.  Repositories
+        with more dataset records than ``limit`` will return a truncated
+        result.
+
         Args:
             repo: The DID of the repository. Defaults to authenticated user.
             limit: Maximum number of records to return.

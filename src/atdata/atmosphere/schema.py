@@ -199,6 +199,16 @@ class SchemaLoader:
     This class fetches schema records from ATProto and can list available
     schemas from a repository.
 
+    Note:
+        The ``ac.foundation.dataset.getLatestSchema`` query lexicon is
+        defined but has no AppView to serve it yet. A client-side
+        equivalent (fetching all schema records and picking the latest
+        version) has not been implemented here. When the AppView ships,
+        add a ``resolve()``-style method backed by
+        ``GET /xrpc/ac.foundation.dataset.getLatestSchema``.
+        See also: ``LabelLoader.resolve()`` for the label workaround
+        pattern.
+
     Examples:
         >>> atmo = Atmosphere.login("handle", "password")
         >>>
@@ -258,6 +268,11 @@ class SchemaLoader:
         limit: int = 100,
     ) -> list[dict]:
         """List schema records from a repository.
+
+        This delegates to ``com.atproto.repo.listRecords`` which returns at
+        most ``limit`` records with no automatic pagination.  Repositories
+        with more schema records than ``limit`` will return a truncated
+        result.
 
         Args:
             repo: The DID of the repository. Defaults to authenticated user.
