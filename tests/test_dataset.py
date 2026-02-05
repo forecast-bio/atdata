@@ -892,7 +892,7 @@ def test_dictsample_to_typed_via_as_type(tmp_path):
 
 def test_structural_lens_fallback_in_as_type(tmp_path):
     """as_type() falls back to structural field mapping when no lens is registered."""
-    from dataclasses import dataclass, fields as dc_fields
+    from dataclasses import dataclass
 
     # Simulate a dynamically-generated schema type (like from schema_to_type)
     @dataclass
