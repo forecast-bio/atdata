@@ -1135,7 +1135,22 @@ class Index:
                     f"Atmosphere backend required for path {ref!r} but not available. "
                     "Install 'atproto' or pass an Atmosphere."
                 )
-            return atmo.get_dataset(resolved_ref)
+            # AT URIs go directly to the backend
+            if resolved_ref.startswith("at://"):
+                return atmo.get_dataset(resolved_ref)
+            # Bare names need label resolution
+            if handle_or_did is not None:
+                try:
+                    dataset_uri = atmo.resolve_label(handle_or_did, resolved_ref)
+                    return atmo.get_dataset(dataset_uri)
+                except KeyError:
+                    pass  # fall through to error below
+                except Exception:
+                    pass  # network/SDK errors treated as "not found"
+            raise KeyError(
+                f"Cannot resolve {ref!r} on atmosphere. No label found. "
+                "Use an AT URI or ensure a label exists for @handle/name."
+            )
 
         repo = self._repos.get(backend_key)
         if repo is None:
@@ -1226,6 +1241,7 @@ class Index:
 
         Args:
             name: Label name, optionally prefixed with a repository name.
+                Supports atmosphere paths (``"@handle/dataset"``).
             version: Specific version to resolve. If ``None``, returns the
                 most recently created label.
 
@@ -1234,11 +1250,36 @@ class Index:
 
         Raises:
             KeyError: If no label or dataset found.
+            ValueError: If atmosphere backend is required but unavailable.
 
         Examples:
             >>> entry = index.get_label("mnist", version="1.0.0")
+            >>> entry = index.get_label("@handle/mnist", version="1.0.0")
         """
-        backend_key, resolved_name, _ = self._resolve_prefix(name)
+        backend_key, resolved_name, handle_or_did = self._resolve_prefix(name)
+
+        if backend_key == "_atmosphere":
+            atmo = self._get_atmosphere()
+            if atmo is None:
+                raise ValueError(
+                    f"Atmosphere backend required for path {name!r} but not available. "
+                    "Install 'atproto' or pass an Atmosphere."
+                )
+            if handle_or_did is None:
+                raise KeyError(
+                    f"Cannot resolve atmosphere label without a handle: {name!r}. "
+                    "Use @handle/name format."
+                )
+            try:
+                dataset_uri = atmo.resolve_label(handle_or_did, resolved_name, version)
+            except KeyError:
+                raise
+            except Exception as exc:
+                raise KeyError(
+                    f"Cannot resolve atmosphere label {name!r}: {exc}"
+                ) from exc
+            return atmo.get_dataset(dataset_uri)
+
         repo = self._repos.get(backend_key)
         if repo is None:
             raise KeyError(f"Unknown repository {backend_key!r} in name {name!r}")

@@ -97,6 +97,8 @@ def _patch_loaders(backend):
     backend._schema_loader = MagicMock()
     backend._dataset_publisher = MagicMock()
     backend._dataset_loader = MagicMock()
+    backend._label_publisher = MagicMock()
+    backend._label_loader = MagicMock()
 
 
 def test_get_dataset(backend) -> None:

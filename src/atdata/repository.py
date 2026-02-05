@@ -131,6 +131,8 @@ class _AtmosphereBackend:
         self._schema_loader: Any = None
         self._dataset_publisher: Any = None
         self._dataset_loader: Any = None
+        self._label_publisher: Any = None
+        self._label_loader: Any = None
 
     def _ensure_loaders(self) -> None:
         """Lazily create publishers/loaders on first use."""
@@ -138,11 +140,14 @@ class _AtmosphereBackend:
             return
         from .atmosphere.schema import SchemaPublisher, SchemaLoader
         from .atmosphere.records import DatasetPublisher, DatasetLoader
+        from .atmosphere.labels import LabelPublisher, LabelLoader
 
         self._schema_publisher = SchemaPublisher(self.client)
         self._schema_loader = SchemaLoader(self.client)
         self._dataset_publisher = DatasetPublisher(self.client)
         self._dataset_loader = DatasetLoader(self.client)
+        self._label_publisher = LabelPublisher(self.client)
+        self._label_loader = LabelLoader(self.client)
 
     @property
     def data_store(self) -> Optional[AbstractDataStore]:
@@ -289,8 +294,40 @@ class _AtmosphereBackend:
                 auto_publish_schema=(schema_ref is None),
             )
 
+        # Create a label record for name-based resolution
+        self._label_publisher.publish(
+            name=name,
+            dataset_uri=str(uri),
+            version=kwargs.get("version"),
+            description=kwargs.get("description"),
+        )
+
         record = self._dataset_loader.get(uri)
         return AtmosphereIndexEntry(str(uri), record)
+
+    # -- Label operations --
+
+    def resolve_label(
+        self,
+        handle_or_did: str,
+        name: str,
+        version: str | None = None,
+    ) -> str:
+        """Resolve a named label to its dataset AT URI.
+
+        Args:
+            handle_or_did: DID or handle of the dataset owner.
+            name: Label name (e.g. 'mnist').
+            version: Specific version to resolve.
+
+        Returns:
+            AT URI of the referenced dataset record.
+
+        Raises:
+            KeyError: If no matching label is found.
+        """
+        self._ensure_loaders()
+        return self._label_loader.resolve(handle_or_did, name, version)
 
     # -- Schema operations --
 
