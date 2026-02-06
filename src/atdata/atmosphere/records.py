@@ -5,6 +5,7 @@ and loading them back. Dataset records are published as
 ``ac.foundation.dataset.record`` records.
 """
 
+import dataclasses
 from typing import Type, TypeVar, Optional
 import msgpack
 
@@ -45,8 +46,6 @@ def _packable_to_dict(instance: "Packable") -> dict:
     Raises:
         TypeError: If the instance is not a dataclass.
     """
-    import dataclasses
-
     if not dataclasses.is_dataclass(instance):
         raise TypeError(
             f"Cannot convert {type(instance).__name__} to content metadata dict; "

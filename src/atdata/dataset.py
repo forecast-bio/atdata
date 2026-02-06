@@ -1381,6 +1381,14 @@ def write_samples(
         >>> ds.content_metadata
         {'instrument': 'Zeiss'}
     """
+    # Validate content_metadata type early, before writing any files.
+    if content_metadata is not None:
+        if not isinstance(content_metadata, (dict, Packable)):
+            raise TypeError(
+                f"content_metadata must be a Packable instance or dict, "
+                f"got {type(content_metadata).__name__}"
+            )
+
     from ._hf_api import _shards_to_wds_url
     from ._logging import get_logger, log_operation
 
@@ -1498,14 +1506,6 @@ def write_samples(
             len(written_paths),
             sample_type.__name__,
         )
-
-    # Validate content_metadata type
-    if content_metadata is not None:
-        if not isinstance(content_metadata, (dict, Packable)):
-            raise TypeError(
-                f"content_metadata must be a Packable instance or dict, "
-                f"got {type(content_metadata).__name__}"
-            )
 
     url = _shards_to_wds_url(written_paths)
     ds: Dataset = Dataset(url)

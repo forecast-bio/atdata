@@ -8,9 +8,7 @@ Covers:
 - Round-trip serialization of content metadata fields
 """
 
-import dataclasses
-from datetime import datetime, timezone
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 
@@ -174,8 +172,6 @@ class TestPackableToDict:
 
 class TestWriteSamplesContentMetadata:
     def test_dict_metadata_attached(self, tmp_path):
-        samples = [atdata.PackableSample.__init_subclass__]  # dummy, need real
-        # Create real samples
         @atdata.packable
         class SimpleSample:
             text: str
