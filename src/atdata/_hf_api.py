@@ -886,7 +886,9 @@ def load_dataset(
 
         # Resolve sample_type from schema if not provided
         resolved_type: Type = (
-            sample_type if sample_type is not None else index.get_schema_type(schema_ref)
+            sample_type
+            if sample_type is not None
+            else index.get_schema_type(schema_ref)
         )
 
         # Create dataset from the resolved source (includes credentials if S3)
