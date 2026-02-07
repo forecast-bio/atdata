@@ -533,6 +533,13 @@ class Atmosphere:
         return records, response.cursor
 
     # Convenience methods for atdata collections
+    #
+    # These thin wrappers call list_records() which maps to
+    # com.atproto.repo.listRecords — a generic PDS endpoint.
+    # They return at most `limit` records with no automatic pagination.
+    # When a dedicated AppView with collection-specific listing endpoints
+    # is available, these should be updated to use those endpoints for
+    # proper server-side pagination and filtering.
 
     def list_schemas(
         self,
@@ -543,7 +550,8 @@ class Atmosphere:
 
         Args:
             repo: The DID to query. Defaults to authenticated user.
-            limit: Maximum number to return.
+            limit: Maximum number to return.  No automatic pagination;
+                repositories with more records return a truncated result.
 
         Returns:
             List of schema records.
@@ -564,7 +572,8 @@ class Atmosphere:
 
         Args:
             repo: The DID to query. Defaults to authenticated user.
-            limit: Maximum number to return.
+            limit: Maximum number to return.  No automatic pagination;
+                repositories with more records return a truncated result.
 
         Returns:
             List of dataset records.
@@ -585,7 +594,8 @@ class Atmosphere:
 
         Args:
             repo: The DID to query. Defaults to authenticated user.
-            limit: Maximum number to return.
+            limit: Maximum number to return.  No automatic pagination;
+                repositories with more records return a truncated result.
 
         Returns:
             List of lens records.
@@ -606,7 +616,8 @@ class Atmosphere:
 
         Args:
             repo: The DID to query. Defaults to authenticated user.
-            limit: Maximum number to return.
+            limit: Maximum number to return.  No automatic pagination;
+                repositories with more records return a truncated result.
 
         Returns:
             List of label records.

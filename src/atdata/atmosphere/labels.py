@@ -80,6 +80,12 @@ class LabelPublisher:
 class LabelLoader:
     """Loads and resolves dataset label records from ATProto.
 
+    Note:
+        The ``resolve()`` method is a **client-side workaround** for the
+        ``ac.foundation.dataset.resolveLabel`` query lexicon, which is
+        defined but has no AppView to serve it yet. See ``resolve()`` for
+        details and known limitations.
+
     Examples:
         >>> atmo = Atmosphere.login("handle", "password")
         >>> loader = LabelLoader(atmo)
@@ -137,6 +143,10 @@ class LabelLoader:
     ) -> list[dict]:
         """List label records from a repository.
 
+        This delegates to ``com.atproto.repo.listRecords`` which returns at
+        most ``limit`` records with no automatic pagination.  Repositories
+        with more labels than ``limit`` will return a truncated result.
+
         Args:
             repo: The DID of the repository. Defaults to authenticated user.
             limit: Maximum number of records to return.
@@ -158,6 +168,23 @@ class LabelLoader:
         in the specified repository. When no version is given, returns the
         most recently created matching label.
 
+        .. note:: **Client-side workaround (no AppView)**
+
+           This method emulates the ``ac.foundation.dataset.resolveLabel``
+           query lexicon by fetching all label records via
+           ``com.atproto.repo.listRecords`` and filtering in Python.
+           When an AppView is available, replace this with a direct
+           ``GET /xrpc/ac.foundation.dataset.resolveLabel`` call.
+
+           Known limitations of the client-side approach:
+
+           - Hard-coded limit of 100 records (repos with >100 labels
+             silently lose results)
+           - No pagination (would need a cursor loop for correctness)
+           - O(n) per resolve (fetches all labels every time)
+           - No server-side filtering (defeats the purpose of the query
+             lexicon)
+
         Args:
             handle_or_did: DID or handle of the dataset owner.
             name: Label name (e.g. 'mnist').
@@ -171,6 +198,16 @@ class LabelLoader:
             KeyError: If no matching label is found.
         """
         did = self._resolve_did(handle_or_did)
+
+        # WORKAROUND: Client-side query (no AppView)
+        # Lexicon: ac.foundation.dataset.resolveLabel
+        # This fetches all records via list_records() and filters in Python.
+        # Replace with GET /xrpc/ac.foundation.dataset.resolveLabel when
+        # AppView is available.
+        # Known limitations:
+        #   - Hard-coded limit of 100 records (repos with >100 silently lose results)
+        #   - No pagination (would need cursor loop)
+        #   - O(n) per resolve (fetches all records every time)
         records, _ = self.client.list_records(
             f"{LEXICON_NAMESPACE}.label",
             repo=did,
