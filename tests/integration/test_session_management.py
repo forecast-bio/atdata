@@ -136,14 +136,36 @@ class TestSessionErrors:
         with pytest.raises(Exception):
             Atmosphere.from_session("")
 
-    def test_truncated_session_string_raises(self, atproto_client: Atmosphere):
-        """A truncated (corrupted) session string raises an error."""
+    def test_truncated_session_string_is_nonfunctional(
+        self, atproto_client: Atmosphere
+    ):
+        """A truncated (corrupted) session string produces a broken client.
+
+        The atproto SDK silently accepts truncated session strings without
+        raising during ``from_session()``.  However, the resulting client
+        should fail on any authenticated operation.
+
+        See: https://github.com/MarshalX/atproto/issues/656
+        """
         session_str = atproto_client.export_session()
 
         # Corrupt the session by truncating it
         corrupted = session_str[: len(session_str) // 2]
+
+        # SDK may or may not raise during session import itself
+        try:
+            broken = Atmosphere.from_session(corrupted)
+        except Exception:
+            return  # raised eagerly — acceptable behavior
+
+        # If it didn't raise, the client should be non-functional:
+        # either not authenticated or unable to make API calls.
+        if not broken.is_authenticated:
+            return  # correctly reports as unauthenticated
+
+        # If it claims to be authenticated, any real API call should fail
         with pytest.raises(Exception):
-            Atmosphere.from_session(corrupted)
+            broken.export_session()
 
 
 # ── Cross-session consistency ────────────────────────────────────
