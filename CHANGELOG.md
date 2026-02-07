@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.5.0b1] - 2026-02-07
+
+### Added
+- **Typed content metadata**: Datasets can now carry a metadata schema describing dataset-level properties (description, license, creation date) alongside the sample schema (#58)
+- **Atmosphere label integration**: `Index.insert_dataset()` publishes a label record alongside the dataset record, enabling `@handle/name` path resolution through `get_label()` and `get_dataset()` (#59)
+- **E2E lens integration tests**: Comprehensive tests for the lens publish → retrieve → execute lifecycle against a real ATProto PDS (#55)
+- **E2E session management tests**: Integration tests covering ATProto login, session export/import round-trip, unauthenticated reads, and error handling (#57)
+- **XRPC query workaround docs**: Documented client-side `list_records()` + filter patterns used as temporary workarounds pending AppView support (#56)
+
+### Changed
+- **Schema lexicon rename**: `getLatestSchema` renamed to `resolveSchema` to match `resolveLabel` semantics; added `$atdataSchemaVersion` property for format versioning (#53)
+- **Schema API consolidation**: `decode_schema`, `load_schema`, `decode_schema_as`, and `schema_to_type` consolidated into `get_schema_type()` with deprecation shims for old names (#54)
+- **Build config cleanup**: `.chainlink/` and `.claude/` directories excluded from sdist builds (#54)
+
+### Fixed
+- **Lens discovery pagination**: `find_by_schemas()` now paginates with `limit=100` + cursor instead of exceeding ATProto's `list_records` cap of 100
+- **Truncated session test**: Rewrote `test_truncated_session_string_raises` to handle the atproto SDK silently accepting truncated sessions via its 4-field backward compat path ([MarshalX/atproto#656](https://github.com/MarshalX/atproto/issues/656))
+- **Exception chaining**: Proper `raise ... from` exception chaining and best-effort label publish error handling
+- **Content metadata validation**: Metadata validated before writing files; dead code removed
+- **Chainlink db protection**: Added git hooks (`.githooks/`) to prevent worktree symlinks from overwriting the issues database on merge
+
 ## [0.4.1b2] - 2026-02-05
 
 ### Fixed

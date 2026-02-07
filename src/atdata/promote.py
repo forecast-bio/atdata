@@ -137,7 +137,7 @@ def promote_to_atmosphere(
         at://did:plc:abc123/ac.foundation.dataset.datasetIndex/...
     """
     from .atmosphere import DatasetPublisher
-    from ._schema_codec import schema_to_type
+    from ._schema_codec import _schema_to_type
 
     # Validate entry has data
     if not local_entry.data_urls:
@@ -148,7 +148,7 @@ def promote_to_atmosphere(
     schema_record = local_index.get_schema(schema_ref)
 
     # Reconstruct sample type from schema
-    sample_type = schema_to_type(schema_record)
+    sample_type = _schema_to_type(schema_record)
     schema_version = schema_record.get("version", "1.0.0")
 
     # Find or publish schema on atmosphere (deduplication)

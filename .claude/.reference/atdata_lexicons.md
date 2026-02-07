@@ -24,7 +24,7 @@ All lexicons live under the `ac.foundation.dataset` namespace:
 | `ac.foundation.dataset.schema` | record | Sample type definitions (JSON Schema + NDArray shim) |
 | `ac.foundation.dataset.record` | record | Dataset index entries with storage references |
 | `ac.foundation.dataset.lens` | record | Bidirectional transformations between sample types |
-| `ac.foundation.dataset.getLatestSchema` | query | Fetch latest schema version by NSID |
+| `ac.foundation.dataset.resolveSchema` | query | Fetch latest schema version by NSID |
 | `ac.foundation.dataset.schemaType` | token | Extensible registry of schema format identifiers |
 | `ac.foundation.dataset.arrayFormat` | token | Extensible registry of array serialization formats |
 | `ac.foundation.dataset.storageExternal` | object | External URL-based storage (union member) |
@@ -340,26 +340,27 @@ References a function in an external git repository. Code is referenced rather t
 
 ## Query Endpoint
 
-### `ac.foundation.dataset.getLatestSchema`
+### `ac.foundation.dataset.resolveSchema`
 
-Fetches the latest version of a schema by its permanent NSID identifier. This bridges the custom rkey versioning scheme — a consumer that only knows the schema NSID can discover the latest version without listing all records.
+Resolve a schema by its permanent NSID identifier. When version is omitted, resolves to the most recently created schema with the given NSID. Follows the same pattern as `resolveLabel`.
 
 - **Lexicon type:** `query`
 
 #### Parameters
 
-| Param | Type | Required | Constraints | Description |
-|-------|------|----------|-------------|-------------|
-| `schemaId` | `string` | yes | maxLength: 500 | The permanent NSID identifier (the `{NSID}` portion of the rkey, without the `@{semver}` suffix). |
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `handle` | `string` | yes | DID or handle of the schema owner. |
+| `schemaId` | `string` | yes | The permanent NSID identifier (the `{NSID}` portion of the rkey, without the `@{semver}` suffix). maxLength: 500 |
+| `version` | `string` | no | Specific version to resolve. If omitted, resolves to latest. maxLength: 20 |
 
 #### Response
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `uri` | `string` | yes | AT-URI of the latest schema version. |
-| `version` | `string` | yes | Semantic version of the latest schema. |
+| `uri` | `string` (at-uri) | yes | AT-URI of the resolved schema record. |
+| `cid` | `string` | yes | CID of the resolved schema record. |
 | `record` | `ref` → `ac.foundation.dataset.schema` | yes | The full schema record. |
-| `allVersions` | `array` of `{uri, version}` | no | All available versions, sorted by semver descending. |
 
 #### Errors
 

@@ -83,16 +83,19 @@ def _resolve_pds_endpoint(did: str) -> str:
 
     import requests
 
-    if did.startswith("did:plc:"):
-        response = requests.get(f"https://plc.directory/{did}", timeout=10)
-        response.raise_for_status()
-        doc = response.json()
+    try:
+        if did.startswith("did:plc:"):
+            response = requests.get(f"https://plc.directory/{did}", timeout=10)
+            response.raise_for_status()
+            doc = response.json()
 
-        for service in doc.get("service", []):
-            if service.get("type") == "AtprotoPersonalDataServer":
-                endpoint = service.get("serviceEndpoint", "")
-                _pds_endpoint_cache[did] = endpoint
-                return endpoint
+            for service in doc.get("service", []):
+                if service.get("type") == "AtprotoPersonalDataServer":
+                    endpoint = service.get("serviceEndpoint", "")
+                    _pds_endpoint_cache[did] = endpoint
+                    return endpoint
+    except requests.RequestException as exc:
+        raise ValueError(f"Could not resolve PDS endpoint for {did}") from exc
 
     raise ValueError(f"Could not resolve PDS endpoint for {did}")
 
@@ -159,29 +162,9 @@ class AtmosphereIndexEntry:
         Returns a flat dict for backward compatibility. Handles both the new
         structured JSON metadata and legacy msgpack-encoded bytes.
         """
-        raw = self._record.get("metadata")
-        if raw is None:
-            return None
+        from ._lexicon_types import decode_metadata_raw
 
-        # Legacy: raw msgpack bytes (from local tests or pre-decoded records).
-        if isinstance(raw, bytes):
-            import msgpack
-
-            return msgpack.unpackb(raw, raw=False)
-
-        # Legacy: ATProto $bytes envelope.
-        if isinstance(raw, dict) and "$bytes" in raw:
-            import base64
-            import msgpack
-
-            legacy_bytes = base64.b64decode(raw["$bytes"])
-            return msgpack.unpackb(legacy_bytes, raw=False)
-
-        # New structured format: plain JSON object.
-        if isinstance(raw, dict):
-            return DatasetMetadata.from_record(raw).to_dict()
-
-        return None
+        return decode_metadata_raw(self._record.get("metadata"))
 
     @property
     def uri(self) -> str:
@@ -389,7 +372,7 @@ class AtmosphereIndex:
         records = self._schema_loader.list_all(repo=repo)
         return [rec.get("value", rec) for rec in records]
 
-    def decode_schema(self, ref: str) -> "Type[Packable]":
+    def get_schema_type(self, ref: str) -> "Type[Packable]":
         """Reconstruct a Python type from a schema record.
 
         Args:
@@ -401,10 +384,25 @@ class AtmosphereIndex:
         Raises:
             ValueError: If schema cannot be decoded.
         """
-        from .._schema_codec import schema_to_type
+        from .._schema_codec import _schema_to_type
 
         schema = self.get_schema(ref)
-        return schema_to_type(schema)
+        return _schema_to_type(schema)
+
+    def decode_schema(self, ref: str) -> "Type[Packable]":
+        """Reconstruct a Python type from a schema record.
+
+        .. deprecated::
+            Use :meth:`get_schema_type` instead.
+        """
+        import warnings
+
+        warnings.warn(
+            "Atmosphere.decode_schema() is deprecated, use Atmosphere.get_schema_type() instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.get_schema_type(ref)
 
 
 # Deprecated alias for backward compatibility
@@ -435,6 +433,7 @@ __all__ = [
     "AtUri",
     "LEXICON_NAMESPACE",
     # Lexicon-mirror types (Tier 1)
+    "DatasetMetadata",
     "LexSchemaRecord",
     "LexDatasetRecord",
     "LexLensRecord",

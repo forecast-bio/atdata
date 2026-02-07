@@ -19,6 +19,43 @@ from typing import Any
 LEXICON_NAMESPACE = "ac.foundation.dataset"
 
 
+def decode_metadata_raw(raw: Any) -> dict | None:
+    """Decode legacy or structured metadata to a plain dict.
+
+    Handles three ATProto metadata formats:
+
+    1. ``$bytes`` envelope — base64-encoded msgpack from ATProto wire format
+    2. Raw ``bytes`` — msgpack from local storage or tests
+    3. Plain ``dict`` — new structured JSON format
+
+    Args:
+        raw: The raw metadata value from the record.
+
+    Returns:
+        A flat dictionary, or ``None`` if *raw* is ``None``.
+
+    Raises:
+        ValueError: If *raw* is an unrecognised type.
+    """
+    if raw is None:
+        return None
+
+    if isinstance(raw, bytes):
+        import msgpack
+
+        return msgpack.unpackb(raw, raw=False)
+
+    if isinstance(raw, dict) and "$bytes" in raw:
+        import msgpack
+
+        return msgpack.unpackb(base64.b64decode(raw["$bytes"]), raw=False)
+
+    if isinstance(raw, dict):
+        return DatasetMetadata.from_record(raw).to_dict()
+
+    raise ValueError(f"Unexpected metadata format: {type(raw).__name__}")
+
+
 # ---------------------------------------------------------------------------
 # Shared definitions
 # ---------------------------------------------------------------------------
@@ -547,6 +584,9 @@ class LexSchemaRecord:
     metadata: dict[str, Any] | None = None
     """Optional metadata (license, tags, etc.)."""
 
+    atdata_schema_version: int = 1
+    """Format version discriminator for the schema record structure itself."""
+
     def to_record(self) -> dict[str, Any]:
         """Serialize to ATProto record dict."""
         d: dict[str, Any] = {
@@ -556,6 +596,7 @@ class LexSchemaRecord:
             "schemaType": self.schema_type,
             "schema": self.schema.to_record(),
             "createdAt": self.created_at.isoformat(),
+            "$atdataSchemaVersion": self.atdata_schema_version,
         }
         if self.description is not None:
             d["description"] = self.description
@@ -574,6 +615,7 @@ class LexSchemaRecord:
             created_at=datetime.fromisoformat(d["createdAt"]),
             description=d.get("description"),
             metadata=d.get("metadata"),
+            atdata_schema_version=d.get("$atdataSchemaVersion", 1),
         )
 
 
@@ -616,6 +658,12 @@ class LexDatasetRecord:
     license: str | None = None
     """SPDX license identifier or URL."""
 
+    metadata_schema_ref: str | None = None
+    """AT-URI reference to a schema record for content metadata."""
+
+    content_metadata: dict[str, Any] | None = None
+    """Dataset-level content metadata (e.g., instrument settings)."""
+
     def to_record(self) -> dict[str, Any]:
         """Serialize to ATProto record dict."""
         d: dict[str, Any] = {
@@ -635,6 +683,10 @@ class LexDatasetRecord:
             d["size"] = self.size.to_record()
         if self.license is not None:
             d["license"] = self.license
+        if self.metadata_schema_ref is not None:
+            d["metadataSchemaRef"] = self.metadata_schema_ref
+        if self.content_metadata is not None:
+            d["contentMetadata"] = self.content_metadata
         return d
 
     @classmethod
@@ -644,24 +696,10 @@ class LexDatasetRecord:
         if "size" in d:
             size = DatasetSize.from_record(d["size"])
 
-        raw_metadata = d.get("metadata")
+        decoded_meta = decode_metadata_raw(d.get("metadata"))
         metadata: DatasetMetadata | None = None
-        if isinstance(raw_metadata, dict) and "$bytes" in raw_metadata:
-            # Legacy format: msgpack-encoded bytes in ATProto $bytes envelope.
-            import msgpack
-
-            legacy_bytes = base64.b64decode(raw_metadata["$bytes"])
-            legacy_dict = msgpack.unpackb(legacy_bytes, raw=False)
-            metadata = DatasetMetadata.from_dict(legacy_dict)
-        elif isinstance(raw_metadata, bytes):
-            # Legacy format: raw msgpack bytes (local storage / tests).
-            import msgpack
-
-            legacy_dict = msgpack.unpackb(raw_metadata, raw=False)
-            metadata = DatasetMetadata.from_dict(legacy_dict)
-        elif isinstance(raw_metadata, dict):
-            # New structured format: plain JSON object.
-            metadata = DatasetMetadata.from_record(raw_metadata)
+        if decoded_meta is not None:
+            metadata = DatasetMetadata.from_dict(decoded_meta)
 
         return cls(
             name=d["name"],
@@ -673,6 +711,8 @@ class LexDatasetRecord:
             tags=d.get("tags"),
             size=size,
             license=d.get("license"),
+            metadata_schema_ref=d.get("metadataSchemaRef"),
+            content_metadata=d.get("contentMetadata"),
         )
 
 

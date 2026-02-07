@@ -6,7 +6,15 @@ records.
 """
 
 from dataclasses import fields, is_dataclass
-from typing import Type, TypeVar, Optional, get_type_hints, get_origin, get_args
+from typing import (
+    TYPE_CHECKING,
+    Type,
+    TypeVar,
+    Optional,
+    get_type_hints,
+    get_origin,
+    get_args,
+)
 
 from .client import Atmosphere
 from ._types import AtUri, LEXICON_NAMESPACE
@@ -15,9 +23,10 @@ from .._type_utils import (
     unwrap_optional,
     is_ndarray_type,
 )
+from .._exceptions import SchemaError
 
-# Import for type checking only to avoid circular imports
-from typing import TYPE_CHECKING
+# Maximum $atdataSchemaVersion this library can read.
+_MAX_SUPPORTED_SCHEMA_VERSION = 1
 
 if TYPE_CHECKING:
     from .._protocols import Packable
@@ -199,6 +208,16 @@ class SchemaLoader:
     This class fetches schema records from ATProto and can list available
     schemas from a repository.
 
+    Note:
+        The ``ac.foundation.dataset.getLatestSchema`` query lexicon is
+        defined but has no AppView to serve it yet. A client-side
+        equivalent (fetching all schema records and picking the latest
+        version) has not been implemented here. When the AppView ships,
+        add a ``resolve()``-style method backed by
+        ``GET /xrpc/ac.foundation.dataset.getLatestSchema``.
+        See also: ``LabelLoader.resolve()`` for the label workaround
+        pattern.
+
     Examples:
         >>> atmo = Atmosphere.login("handle", "password")
         >>>
@@ -227,6 +246,7 @@ class SchemaLoader:
 
         Raises:
             ValueError: If the record is not a schema record.
+            SchemaError: If the record uses an unsupported schema version.
             atproto.exceptions.AtProtocolError: If record not found.
         """
         record = self.client.get_record(uri)
@@ -238,6 +258,7 @@ class SchemaLoader:
                 f"Expected $type='{expected_type}', got '{record.get('$type')}'"
             )
 
+        _check_schema_record_version(record)
         return record
 
     def get_typed(self, uri: str | AtUri) -> LexSchemaRecord:
@@ -259,6 +280,11 @@ class SchemaLoader:
     ) -> list[dict]:
         """List schema records from a repository.
 
+        This delegates to ``com.atproto.repo.listRecords`` which returns at
+        most ``limit`` records with no automatic pagination.  Repositories
+        with more schema records than ``limit`` will return a truncated
+        result.
+
         Args:
             repo: The DID of the repository. Defaults to authenticated user.
             limit: Maximum number of records to return.
@@ -267,3 +293,24 @@ class SchemaLoader:
             List of schema records.
         """
         return self.client.list_schemas(repo=repo, limit=limit)
+
+
+def _check_schema_record_version(record: dict) -> None:
+    """Validate that a schema record's ``$atdataSchemaVersion`` is supported.
+
+    Records without the field are treated as version 1 (backward compat).
+
+    Args:
+        record: Schema record dict.
+
+    Raises:
+        SchemaError: If the version is higher than this library supports.
+    """
+    v = record.get("$atdataSchemaVersion", 1)
+    if v > _MAX_SUPPORTED_SCHEMA_VERSION:
+        raise SchemaError(
+            f"Unsupported schema record version: {v}. "
+            f"This version of atdata supports schema record versions "
+            f"up to {_MAX_SUPPORTED_SCHEMA_VERSION}. "
+            f"Upgrade atdata to read this schema."
+        )

@@ -28,9 +28,12 @@ quartodoc:
           children: embedded
         - name: SampleBatch
           children: embedded
+        - name: write_samples
         - name: Lens
           children: embedded
         - name: lens
+        - name: LensNetwork
+          children: embedded
         - name: load_dataset
         - name: DatasetDict
           children: embedded
@@ -61,7 +64,7 @@ quartodoc:
 
     # Local storage
     - title: Local Storage
-      desc: Local Redis/S3 storage backend
+      desc: Index providers and data stores
       contents:
         - name: local.Index
           children: embedded
@@ -75,7 +78,7 @@ quartodoc:
       desc: ATProto federation
       package: atdata.atmosphere
       contents:
-        - name: AtmosphereClient
+        - name: Atmosphere
           children: embedded
         - name: AtmosphereIndex
           children: embedded
@@ -89,6 +92,10 @@ quartodoc:
         - name: DatasetLoader
         - name: LensPublisher
         - name: LensLoader
+        - name: LabelPublisher
+        - name: LabelLoader
+        - name: DatasetMetadata
+          children: embedded
         - name: AtUri
 
     # Promotion

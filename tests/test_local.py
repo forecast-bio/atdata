@@ -352,7 +352,7 @@ def test_index_implements_abstract_index_protocol():
     assert hasattr(index, "publish_schema")
     assert hasattr(index, "get_schema")
     assert hasattr(index, "list_schemas")
-    assert hasattr(index, "decode_schema")
+    assert hasattr(index, "get_schema_type")
 
     # Check they are callable
     assert callable(index.insert_dataset)
@@ -1368,12 +1368,12 @@ def test_schema_ndarray_field(clean_redis):
     assert data_field["fieldType"]["dtype"] == "float32"
 
 
-def test_decode_schema(clean_redis):
+def test_get_schema_type(clean_redis):
     """Test reconstructing a Python type from a schema."""
     index = atlocal.Index(redis=clean_redis)
 
     schema_ref = index.publish_schema(SimpleTestSample, version="1.0.0")
-    ReconstructedType = index.decode_schema(schema_ref)
+    ReconstructedType = index.get_schema_type(schema_ref)
 
     # Should be able to create instances
     instance = ReconstructedType(name="test", value=42)
@@ -1381,12 +1381,12 @@ def test_decode_schema(clean_redis):
     assert instance.value == 42
 
 
-def test_decode_schema_preserves_structure(clean_redis):
+def test_get_schema_type_preserves_structure(clean_redis):
     """Test that decoded schema matches original type structure."""
     index = atlocal.Index(redis=clean_redis)
 
     schema_ref = index.publish_schema(ArrayTestSample, version="1.0.0")
-    ReconstructedType = index.decode_schema(schema_ref)
+    ReconstructedType = index.get_schema_type(schema_ref)
 
     # Check fields exist
     import numpy as np
@@ -1396,14 +1396,14 @@ def test_decode_schema_preserves_structure(clean_redis):
     assert instance.data.shape == (3, 3)
 
 
-def test_decode_schema_as_typed_helper(clean_redis):
-    """Test decode_schema_as returns properly typed result."""
+def test_get_schema_type_typed_helper(clean_redis):
+    """Test get_schema_type returns properly typed result."""
     index = atlocal.Index(redis=clean_redis)
 
     schema_ref = index.publish_schema(SimpleTestSample, version="1.0.0")
 
-    # decode_schema_as should work like decode_schema but with type hint
-    DecodedType = index.decode_schema_as(schema_ref, SimpleTestSample)
+    # get_schema_type should reconstruct the type
+    DecodedType = index.get_schema_type(schema_ref)
 
     # Should be able to create instances
     instance = DecodedType(name="test", value=42)
@@ -1439,7 +1439,7 @@ def test_schema_version_handling(clean_redis):
 
 def test_schema_codec_type_caching():
     """Test that schema_to_type caches generated types."""
-    from atdata._schema_codec import schema_to_type, clear_type_cache, get_cached_types
+    from atdata._schema_codec import _schema_to_type, clear_type_cache, get_cached_types
 
     clear_type_cache()
     assert len(get_cached_types()) == 0
@@ -1457,12 +1457,12 @@ def test_schema_codec_type_caching():
     }
 
     # First call creates and caches type
-    Type1 = schema_to_type(schema)
+    Type1 = _schema_to_type(schema)
     cached = get_cached_types()
     assert len(cached) == 1
 
     # Second call returns cached type
-    Type2 = schema_to_type(schema)
+    Type2 = _schema_to_type(schema)
     assert Type1 is Type2
 
     clear_type_cache()
@@ -1471,7 +1471,7 @@ def test_schema_codec_type_caching():
 
 def test_schema_to_type_missing_name():
     """Test schema_to_type raises on schema without name."""
-    from atdata._schema_codec import schema_to_type, clear_type_cache
+    from atdata._schema_codec import _schema_to_type, clear_type_cache
 
     clear_type_cache()
     schema = {
@@ -1486,12 +1486,12 @@ def test_schema_to_type_missing_name():
     }
 
     with pytest.raises(ValueError, match="must have a 'name' field"):
-        schema_to_type(schema)
+        _schema_to_type(schema)
 
 
 def test_schema_to_type_empty_fields():
     """Test schema_to_type raises on schema with no fields."""
-    from atdata._schema_codec import schema_to_type, clear_type_cache
+    from atdata._schema_codec import _schema_to_type, clear_type_cache
 
     clear_type_cache()
     schema = {
@@ -1501,12 +1501,12 @@ def test_schema_to_type_empty_fields():
     }
 
     with pytest.raises(ValueError, match="must have at least one field"):
-        schema_to_type(schema)
+        _schema_to_type(schema)
 
 
 def test_schema_to_type_field_missing_name():
     """Test schema_to_type raises on field without name."""
-    from atdata._schema_codec import schema_to_type, clear_type_cache
+    from atdata._schema_codec import _schema_to_type, clear_type_cache
 
     clear_type_cache()
     schema = {
@@ -1523,12 +1523,12 @@ def test_schema_to_type_field_missing_name():
     # Raises KeyError from cache key generation (accesses f['name']) or
     # ValueError from validation - both indicate invalid schema is rejected
     with pytest.raises((KeyError, ValueError)):
-        schema_to_type(schema)
+        _schema_to_type(schema)
 
 
 def test_schema_to_type_unknown_primitive():
     """Test schema_to_type raises on unknown primitive type."""
-    from atdata._schema_codec import schema_to_type, clear_type_cache
+    from atdata._schema_codec import _schema_to_type, clear_type_cache
 
     clear_type_cache()
     schema = {
@@ -1544,12 +1544,12 @@ def test_schema_to_type_unknown_primitive():
     }
 
     with pytest.raises(ValueError, match="Unknown primitive type"):
-        schema_to_type(schema)
+        _schema_to_type(schema)
 
 
 def test_schema_to_type_unknown_field_kind():
     """Test schema_to_type raises on unknown field type kind."""
-    from atdata._schema_codec import schema_to_type, clear_type_cache
+    from atdata._schema_codec import _schema_to_type, clear_type_cache
 
     clear_type_cache()
     schema = {
@@ -1565,12 +1565,12 @@ def test_schema_to_type_unknown_field_kind():
     }
 
     with pytest.raises(ValueError, match="Unknown field type kind"):
-        schema_to_type(schema)
+        _schema_to_type(schema)
 
 
 def test_schema_to_type_ref_not_supported():
     """Test schema_to_type raises on ref field types (not yet supported)."""
-    from atdata._schema_codec import schema_to_type, clear_type_cache
+    from atdata._schema_codec import _schema_to_type, clear_type_cache
 
     clear_type_cache()
     schema = {
@@ -1586,12 +1586,12 @@ def test_schema_to_type_ref_not_supported():
     }
 
     with pytest.raises(ValueError, match="Schema references.*not yet supported"):
-        schema_to_type(schema)
+        _schema_to_type(schema)
 
 
 def test_schema_to_type_all_primitives():
     """Test schema_to_type handles all primitive types correctly."""
-    from atdata._schema_codec import schema_to_type, clear_type_cache
+    from atdata._schema_codec import _schema_to_type, clear_type_cache
 
     clear_type_cache()
     schema = {
@@ -1626,7 +1626,7 @@ def test_schema_to_type_all_primitives():
         ],
     }
 
-    SampleType = schema_to_type(schema)
+    SampleType = _schema_to_type(schema)
     instance = SampleType(s="hello", i=42, f=3.14, b=True, by=b"data")
 
     assert instance.s == "hello"
@@ -1638,7 +1638,7 @@ def test_schema_to_type_all_primitives():
 
 def test_schema_to_type_optional_fields():
     """Test schema_to_type handles optional fields with None defaults."""
-    from atdata._schema_codec import schema_to_type, clear_type_cache
+    from atdata._schema_codec import _schema_to_type, clear_type_cache
 
     clear_type_cache()
     schema = {
@@ -1658,7 +1658,7 @@ def test_schema_to_type_optional_fields():
         ],
     }
 
-    SampleType = schema_to_type(schema)
+    SampleType = _schema_to_type(schema)
 
     # Can create with only required field
     instance1 = SampleType(required="test")
@@ -1672,7 +1672,7 @@ def test_schema_to_type_optional_fields():
 
 def test_schema_to_type_ndarray_field():
     """Test schema_to_type handles NDArray fields."""
-    from atdata._schema_codec import schema_to_type, clear_type_cache
+    from atdata._schema_codec import _schema_to_type, clear_type_cache
 
     clear_type_cache()
     schema = {
@@ -1687,7 +1687,7 @@ def test_schema_to_type_ndarray_field():
         ],
     }
 
-    SampleType = schema_to_type(schema)
+    SampleType = _schema_to_type(schema)
     arr = np.zeros((3, 3), dtype=np.float32)
     instance = SampleType(data=arr)
 
@@ -1696,7 +1696,7 @@ def test_schema_to_type_ndarray_field():
 
 def test_schema_to_type_array_field():
     """Test schema_to_type handles array (list) fields."""
-    from atdata._schema_codec import schema_to_type, clear_type_cache
+    from atdata._schema_codec import _schema_to_type, clear_type_cache
 
     clear_type_cache()
     schema = {
@@ -1714,7 +1714,7 @@ def test_schema_to_type_array_field():
         ],
     }
 
-    SampleType = schema_to_type(schema)
+    SampleType = _schema_to_type(schema)
     instance = SampleType(tags=["a", "b", "c"])
 
     assert instance.tags == ["a", "b", "c"]
@@ -1722,7 +1722,7 @@ def test_schema_to_type_array_field():
 
 def test_schema_to_type_use_cache_false():
     """Test schema_to_type with use_cache=False creates new types."""
-    from atdata._schema_codec import schema_to_type, clear_type_cache
+    from atdata._schema_codec import _schema_to_type, clear_type_cache
 
     clear_type_cache()
     schema = {
@@ -1737,8 +1737,8 @@ def test_schema_to_type_use_cache_false():
         ],
     }
 
-    Type1 = schema_to_type(schema, use_cache=False)
-    Type2 = schema_to_type(schema, use_cache=False)
+    Type1 = _schema_to_type(schema, use_cache=False)
+    Type2 = _schema_to_type(schema, use_cache=False)
 
     # Different instances since caching is disabled
     assert Type1 is not Type2
@@ -1783,16 +1783,16 @@ class TestAutoStubs:
         assert "class SimpleTestSample(PackableSample):" in content
         assert "name: str" in content
 
-    def test_stub_generated_on_decode_schema(self, clean_redis, tmp_path):
-        """Stub should be generated when decode_schema is called."""
+    def test_stub_generated_on_get_schema_type(self, clean_redis, tmp_path):
+        """Stub should be generated when get_schema_type is called."""
         stub_dir = tmp_path / "stubs"
         index = atlocal.Index(redis=clean_redis, stub_dir=stub_dir)
 
         # Publish a schema
         ref = index.publish_schema(SimpleTestSample, version="2.0.0")
 
-        # Decode schema should trigger stub generation
-        DecodedType = index.decode_schema(ref)
+        # get_schema_type should trigger stub generation
+        DecodedType = index.get_schema_type(ref)
 
         # Check stub was created (in local/ subdirectory for namespacing)
         stub_path = stub_dir / "local" / "SimpleTestSample_2_0_0.py"
@@ -1863,13 +1863,13 @@ class TestAutoStubs:
         stub_path = stub_dir / "local" / "SimpleTestSample_1_0_0.py"
         assert stub_path.exists()
 
-    def test_decode_schema_returns_importable_class(self, clean_redis, tmp_path):
-        """decode_schema with auto_stubs returns a class from the generated module."""
+    def test_get_schema_type_returns_importable_class(self, clean_redis, tmp_path):
+        """get_schema_type with auto_stubs returns a class from the generated module."""
         stub_dir = tmp_path / "stubs"
         index = atlocal.Index(redis=clean_redis, auto_stubs=True, stub_dir=stub_dir)
 
         ref = index.publish_schema(SimpleTestSample, version="1.0.0")
-        DecodedType = index.decode_schema(ref)
+        DecodedType = index.get_schema_type(ref)
 
         # The decoded type should be usable
         assert DecodedType.__name__ == "SimpleTestSample"
@@ -1890,30 +1890,30 @@ class TestAutoStubs:
         assert (stub_dir / "__init__.py").exists()
         assert (stub_dir / "local" / "__init__.py").exists()
 
-    def test_decode_schema_class_caching(self, clean_redis, tmp_path):
-        """decode_schema returns the same class on subsequent calls."""
+    def test_get_schema_type_class_caching(self, clean_redis, tmp_path):
+        """get_schema_type returns the same class on subsequent calls."""
         stub_dir = tmp_path / "stubs"
         index = atlocal.Index(redis=clean_redis, auto_stubs=True, stub_dir=stub_dir)
 
         ref = index.publish_schema(SimpleTestSample, version="1.0.0")
 
         # Decode twice
-        Type1 = index.decode_schema(ref)
-        Type2 = index.decode_schema(ref)
+        Type1 = index.get_schema_type(ref)
+        Type2 = index.get_schema_type(ref)
 
         # Should return the same class (from cache)
         assert Type1 is Type2
 
 
 class TestSchemaNamespace:
-    """Tests for load_schema() and schemas namespace API."""
+    """Tests for get_schema_type() and types namespace API."""
 
-    def test_load_schema_returns_class(self, clean_redis):
-        """load_schema returns the decoded class."""
+    def test_get_schema_type_returns_class(self, clean_redis):
+        """get_schema_type returns the decoded class."""
         index = atlocal.Index(redis=clean_redis)
         ref = index.publish_schema(SimpleTestSample, version="1.0.0")
 
-        cls = index.load_schema(ref)
+        cls = index.get_schema_type(ref)
 
         assert cls.__name__ == "SimpleTestSample"
         sample = cls(name="test", value=123)
@@ -1921,11 +1921,11 @@ class TestSchemaNamespace:
         assert sample.value == 123
 
     def test_schemas_namespace_access(self, clean_redis):
-        """After load_schema, type is accessible via schemas namespace."""
+        """After get_schema_type, type is accessible via types namespace."""
         index = atlocal.Index(redis=clean_redis)
         ref = index.publish_schema(SimpleTestSample, version="1.0.0")
 
-        index.load_schema(ref)
+        index.get_schema_type(ref)
 
         # Access via namespace
         MyType = index.types.SimpleTestSample
@@ -1944,7 +1944,7 @@ class TestSchemaNamespace:
             _ = index.types.NotLoadedType
 
         assert "not loaded" in str(exc_info.value)
-        assert "load_schema" in str(exc_info.value)
+        assert "get_schema_type" in str(exc_info.value)
 
     def test_schemas_namespace_contains(self, clean_redis):
         """schemas namespace supports 'in' operator."""
@@ -1952,7 +1952,7 @@ class TestSchemaNamespace:
         ref = index.publish_schema(SimpleTestSample, version="1.0.0")
 
         assert "SimpleTestSample" not in index.types
-        index.load_schema(ref)
+        index.get_schema_type(ref)
         assert "SimpleTestSample" in index.types
 
     def test_schemas_namespace_iteration(self, clean_redis):
@@ -1960,7 +1960,7 @@ class TestSchemaNamespace:
         index = atlocal.Index(redis=clean_redis)
         ref1 = index.publish_schema(SimpleTestSample, version="1.0.0")
 
-        index.load_schema(ref1)
+        index.get_schema_type(ref1)
 
         names = list(index.types)
         assert "SimpleTestSample" in names
@@ -1971,7 +1971,7 @@ class TestSchemaNamespace:
         ref = index.publish_schema(SimpleTestSample, version="1.0.0")
 
         assert len(index.types) == 0
-        index.load_schema(ref)
+        index.get_schema_type(ref)
         assert len(index.types) == 1
 
     def test_schemas_namespace_repr(self, clean_redis):
@@ -1980,16 +1980,16 @@ class TestSchemaNamespace:
         ref = index.publish_schema(SimpleTestSample, version="1.0.0")
 
         assert "empty" in repr(index.types)
-        index.load_schema(ref)
+        index.get_schema_type(ref)
         assert "SimpleTestSample" in repr(index.types)
 
-    def test_load_schema_with_auto_stubs(self, clean_redis, tmp_path):
-        """load_schema works with auto_stubs enabled."""
+    def test_get_schema_type_with_auto_stubs(self, clean_redis, tmp_path):
+        """get_schema_type works with auto_stubs enabled."""
         stub_dir = tmp_path / "stubs"
         index = atlocal.Index(redis=clean_redis, auto_stubs=True, stub_dir=stub_dir)
 
         ref = index.publish_schema(SimpleTestSample, version="1.0.0")
-        cls = index.load_schema(ref)
+        cls = index.get_schema_type(ref)
 
         # Class works
         sample = cls(name="test", value=99)
@@ -2008,7 +2008,7 @@ class TestSchemaNamespace:
         index = atlocal.Index(redis=clean_redis, auto_stubs=True, stub_dir=stub_dir)
 
         ref = index.publish_schema(SimpleTestSample, version="1.0.0")
-        index.load_schema(ref)
+        index.get_schema_type(ref)
 
         import_path = index.get_import_path(ref)
         assert import_path == "local.SimpleTestSample_1_0_0"

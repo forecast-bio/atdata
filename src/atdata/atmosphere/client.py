@@ -420,43 +420,13 @@ class Atmosphere:
         """
         import requests
 
-        # Resolve PDS endpoint from DID document
-        pds_endpoint = self._resolve_pds_endpoint(did)
-        if not pds_endpoint:
-            raise ValueError(f"Could not resolve PDS endpoint for {did}")
+        from . import _resolve_pds_endpoint
 
-        # Fetch blob from PDS
+        pds_endpoint = _resolve_pds_endpoint(did)
         url = f"{pds_endpoint}/xrpc/com.atproto.sync.getBlob"
         response = requests.get(url, params={"did": did, "cid": cid})
         response.raise_for_status()
         return response.content
-
-    def _resolve_pds_endpoint(self, did: str) -> Optional[str]:
-        """Resolve the PDS endpoint for a DID.
-
-        Args:
-            did: The DID to resolve.
-
-        Returns:
-            The PDS service endpoint URL, or None if not found.
-        """
-        import requests
-
-        # For did:plc, query the PLC directory
-        if did.startswith("did:plc:"):
-            try:
-                response = requests.get(f"https://plc.directory/{did}")
-                response.raise_for_status()
-                did_doc = response.json()
-
-                for service in did_doc.get("service", []):
-                    if service.get("type") == "AtprotoPersonalDataServer":
-                        return service.get("serviceEndpoint")
-            except requests.RequestException:
-                return None
-
-        # For did:web, would need different resolution (not implemented)
-        return None
 
     def get_blob_url(self, did: str, cid: str) -> str:
         """Get the direct URL for fetching a blob.
@@ -473,9 +443,9 @@ class Atmosphere:
         Raises:
             ValueError: If PDS endpoint cannot be resolved.
         """
-        pds_endpoint = self._resolve_pds_endpoint(did)
-        if not pds_endpoint:
-            raise ValueError(f"Could not resolve PDS endpoint for {did}")
+        from . import _resolve_pds_endpoint
+
+        pds_endpoint = _resolve_pds_endpoint(did)
         return f"{pds_endpoint}/xrpc/com.atproto.sync.getBlob?did={did}&cid={cid}"
 
     def list_records(
@@ -533,6 +503,37 @@ class Atmosphere:
         return records, response.cursor
 
     # Convenience methods for atdata collections
+    #
+    # These thin wrappers call list_records() which maps to
+    # com.atproto.repo.listRecords — a generic PDS endpoint.
+    # They return at most `limit` records with no automatic pagination.
+    # When a dedicated AppView with collection-specific listing endpoints
+    # is available, these should be updated to use those endpoints for
+    # proper server-side pagination and filtering.
+
+    def _list_collection(
+        self,
+        collection_suffix: str,
+        repo: Optional[str] = None,
+        limit: int = 100,
+    ) -> list[dict]:
+        """List records from a collection, warning on truncation."""
+        collection = f"{LEXICON_NAMESPACE}.{collection_suffix}"
+        records, cursor = self.list_records(
+            collection,
+            repo=repo,
+            limit=limit,
+        )
+        if cursor:
+            import warnings
+
+            warnings.warn(
+                f"list_{collection_suffix}s() returned {len(records)} records "
+                f"but more exist (cursor={cursor!r}). Use list_records() with "
+                f"pagination to retrieve all records.",
+                stacklevel=3,
+            )
+        return records
 
     def list_schemas(
         self,
@@ -543,17 +544,13 @@ class Atmosphere:
 
         Args:
             repo: The DID to query. Defaults to authenticated user.
-            limit: Maximum number to return.
+            limit: Maximum number to return.  Warns if more records exist
+                beyond the limit.
 
         Returns:
             List of schema records.
         """
-        records, _ = self.list_records(
-            f"{LEXICON_NAMESPACE}.schema",
-            repo=repo,
-            limit=limit,
-        )
-        return records
+        return self._list_collection("schema", repo=repo, limit=limit)
 
     def list_datasets(
         self,
@@ -564,17 +561,13 @@ class Atmosphere:
 
         Args:
             repo: The DID to query. Defaults to authenticated user.
-            limit: Maximum number to return.
+            limit: Maximum number to return.  Warns if more records exist
+                beyond the limit.
 
         Returns:
             List of dataset records.
         """
-        records, _ = self.list_records(
-            f"{LEXICON_NAMESPACE}.record",
-            repo=repo,
-            limit=limit,
-        )
-        return records
+        return self._list_collection("record", repo=repo, limit=limit)
 
     def list_lenses(
         self,
@@ -585,17 +578,13 @@ class Atmosphere:
 
         Args:
             repo: The DID to query. Defaults to authenticated user.
-            limit: Maximum number to return.
+            limit: Maximum number to return.  Warns if more records exist
+                beyond the limit.
 
         Returns:
             List of lens records.
         """
-        records, _ = self.list_records(
-            f"{LEXICON_NAMESPACE}.lens",
-            repo=repo,
-            limit=limit,
-        )
-        return records
+        return self._list_collection("lens", repo=repo, limit=limit)
 
     def list_labels(
         self,
@@ -606,14 +595,10 @@ class Atmosphere:
 
         Args:
             repo: The DID to query. Defaults to authenticated user.
-            limit: Maximum number to return.
+            limit: Maximum number to return.  Warns if more records exist
+                beyond the limit.
 
         Returns:
             List of label records.
         """
-        records, _ = self.list_records(
-            f"{LEXICON_NAMESPACE}.label",
-            repo=repo,
-            limit=limit,
-        )
-        return records
+        return self._list_collection("label", repo=repo, limit=limit)

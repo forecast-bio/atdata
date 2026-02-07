@@ -158,7 +158,7 @@ class TestIndexWrite:
         assert len(entries) == 3
 
     def test_write_persists_schema(self, index):
-        """write() should store the schema so decode_schema() works."""
+        """write() should store the schema so get_schema_type() works."""
         samples = [SharedBasicSample(name="x", value=1)]
         entry = index.write(samples, name="schema-persist")
 
@@ -171,7 +171,7 @@ class TestIndexWrite:
         samples = [SharedBasicSample(name="x", value=1)]
         entry = index.write(samples, name="decode-rt")
 
-        decoded_type = index.decode_schema(entry.schema_ref)
+        decoded_type = index.get_schema_type(entry.schema_ref)
         instance = decoded_type(name="test", value=42)
         assert instance.name == "test"
         assert instance.value == 42

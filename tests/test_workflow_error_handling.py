@@ -64,7 +64,7 @@ class TestMissingSchema:
 
         # Attempting to decode schema should fail
         with pytest.raises(KeyError):
-            index.decode_schema(retrieved.schema_ref)
+            index.get_schema_type(retrieved.schema_ref)
 
 
 ##

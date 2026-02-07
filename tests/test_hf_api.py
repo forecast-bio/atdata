@@ -803,7 +803,7 @@ class TestLoadDatasetWithIndex:
         mock_entry.schema_ref = "local://schemas/test@1.0.0"
         mock_index.get_dataset.return_value = mock_entry
 
-        # Need to mock decode_schema since sample_type is provided
+        # sample_type is provided so get_schema_type won't be called
         ds = load_dataset(
             "@local/my-dataset",
             SimpleTestSample,
@@ -815,7 +815,7 @@ class TestLoadDatasetWithIndex:
         assert ds.url == "s3://bucket/data.tar"
 
     def test_indexed_path_auto_type_resolution(self):
-        """load_dataset with sample_type=None uses decode_schema."""
+        """load_dataset with sample_type=None uses get_schema_type."""
         mock_index = Mock()
         mock_index.data_store = None  # No data store, so no URL transformation
         mock_index.get_label.side_effect = KeyError("no label")
@@ -823,7 +823,7 @@ class TestLoadDatasetWithIndex:
         mock_entry.data_urls = ["s3://bucket/data.tar"]
         mock_entry.schema_ref = "local://schemas/test@1.0.0"
         mock_index.get_dataset.return_value = mock_entry
-        mock_index.decode_schema.return_value = SimpleTestSample
+        mock_index.get_schema_type.return_value = SimpleTestSample
 
         ds = load_dataset(
             "@local/my-dataset",
@@ -832,7 +832,7 @@ class TestLoadDatasetWithIndex:
             split="train",
         )
 
-        mock_index.decode_schema.assert_called_once_with("local://schemas/test@1.0.0")
+        mock_index.get_schema_type.assert_called_once_with("local://schemas/test@1.0.0")
         assert ds.sample_type == SimpleTestSample
 
     def test_indexed_path_returns_datasetdict_without_split(self):

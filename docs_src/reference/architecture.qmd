@@ -30,7 +30,7 @@ atdata provides a three-layer architecture that addresses each problem:
                         Promotion
                               ↑
 ┌─────────────────────────────────────────────────────────────┐
-│  Layer 2: Team Storage (Redis + S3)                         │
+│  Layer 2: Team Storage (SQLite/Redis/PostgreSQL + S3)        │
 │  - Shared index for team discovery                          │
 │  - Scalable object storage for data                         │
 │  - Schema registry for type consistency                     │
@@ -145,58 +145,53 @@ Lenses are registered globally in a `LensNetwork`, enabling automatic discovery 
 
 ## Storage Backends
 
-### Local Index (Redis + S3)
+### Unified Index with Pluggable Providers
 
-For team-scale usage, atdata provides a two-component storage system:
+The `Index` class provides a two-component architecture:
 
-**Redis Index**: Stores metadata and enables fast lookups
+**Index Provider**: Stores metadata and enables fast lookups
 
 - Dataset entries (name, schema, URLs, metadata)
 - Schema registry (type definitions)
 - CID-based content addressing
+- Options: SQLite (default), Redis, PostgreSQL
 
-**S3 DataStore**: Stores actual data files
+**Data Store**: Stores actual data files
 
 - WebDataset tar shards
-- Any S3-compatible storage (AWS, MinIO, Cloudflare R2)
+- Options: `LocalDiskStore` (filesystem), `S3DataStore` (S3-compatible)
 
 ```{python}
 #| eval: false
-store = S3DataStore(credentials=creds, bucket="datasets")
-index = LocalIndex(data_store=store)
+# SQLite default — zero dependencies
+index = atdata.Index(data_store=atdata.LocalDiskStore())
 
-# Insert dataset: writes to S3, indexes in Redis
-entry = index.insert_dataset(dataset, name="training-v1")
+# Redis for team deployments
+from redis import Redis
+index = atdata.Index(redis=Redis(), data_store=S3DataStore(credentials=creds, bucket="datasets"))
+
+# PostgreSQL
+index = atdata.Index(provider="postgres", dsn="postgresql://...")
 ```
 
 **Why this split?**
 
 - **Separation of concerns**: Metadata queries don't touch data storage
-- **Flexibility**: Use any S3-compatible storage
-- **Scalability**: Redis handles high-throughput lookups; S3 handles large files
+- **Flexibility**: Mix any provider with any data store
+- **Scalability**: Provider handles high-throughput lookups; data store handles large files
 
-### Atmosphere Index (ATProto)
+### Atmosphere Backend
 
-For public or cross-organization sharing, atdata integrates with the AT Protocol:
-
-**ATProto PDS**: Your Personal Data Server stores records
-
-- Schema definitions
-- Dataset index records
-- Lens transformation records
-
-**PDSBlobStore**: Optional blob storage on your PDS
-
-- Store actual data shards as ATProto blobs
-- Fully decentralized—no external dependencies
+For public or cross-organization sharing, attach an ATProto client to the same `Index`:
 
 ```{python}
 #| eval: false
-client = AtmosphereClient()
-client.login("handle.bsky.social", "app-password")
+from atdata.atmosphere import Atmosphere, PDSBlobStore
+
+client = Atmosphere.login("handle.bsky.social", "app-password")
 
 store = PDSBlobStore(client)
-index = AtmosphereIndex(client, data_store=store)
+index = atdata.Index(atmosphere=client, data_store=store)
 
 # Publish: creates ATProto records, uploads blobs
 entry = index.insert_dataset(dataset, name="public-features")
@@ -208,20 +203,20 @@ atdata uses **protocols** (structural typing) to enable backend interoperability
 
 ### AbstractIndex
 
-Common interface for both `LocalIndex` and `AtmosphereIndex`:
+Common interface implemented by `Index` regardless of backend:
 
 ```{python}
 #| eval: false
 def process_dataset(index: AbstractIndex, name: str):
     entry = index.get_dataset(name)
-    schema = index.decode_schema(entry.schema_ref)
-    # Works with either LocalIndex or AtmosphereIndex
+    SampleType = index.get_schema_type(entry.schema_ref)
+    # Works with any Index backend (SQLite, Redis, PostgreSQL, Atmosphere)
 ```
 
 Key methods:
 
 - `insert_dataset()` / `get_dataset()`: Dataset CRUD
-- `publish_schema()` / `decode_schema()`: Schema management
+- `publish_schema()` / `get_schema_type()`: Schema management
 - `list_datasets()` / `list_schemas()`: Discovery
 
 ### AbstractDataStore
@@ -272,11 +267,10 @@ dataset = atdata.Dataset[MySample]("data.tar")
 #| eval: false
 # Set up team storage
 store = S3DataStore(credentials=team_creds, bucket="team-datasets")
-index = LocalIndex(data_store=store)
+index = atdata.Index(data_store=store)
 
-# Publish schema and insert
-index.publish_schema(MySample, version="1.0.0")
-entry = index.insert_dataset(dataset, name="my-features")
+# Write through index (schema persisted automatically)
+entry = index.write_samples(samples, name="my-features")
 
 # Team members can now load via index
 ds = load_dataset("@local/my-features", index=index)
@@ -287,10 +281,11 @@ ds = load_dataset("@local/my-features", index=index)
 ```{python}
 #| eval: false
 # Promote to atmosphere
-client = AtmosphereClient()
-client.login("handle.bsky.social", "app-password")
+from atdata.atmosphere import Atmosphere
+client = Atmosphere.login("handle.bsky.social", "app-password")
+index = atdata.Index(atmosphere=client, data_store=store)
 
-at_uri = promote_to_atmosphere(entry, index, client)
+at_uri = index.promote_entry("my-features")
 
 # Anyone can now discover and load
 # ds = load_dataset("@handle.bsky.social/my-features")
@@ -363,8 +358,8 @@ index.publish_schema(
 | **Samples** | Typed, serializable data | `PackableSample`, `@packable` |
 | **Datasets** | Typed iteration over WebDataset | `Dataset[T]`, `SampleBatch[T]` |
 | **Lenses** | Schema transformations | `Lens`, `@lens`, `LensNetwork` |
-| **Local Storage** | Team-scale index + data | `LocalIndex`, `S3DataStore` |
-| **Atmosphere** | Federated sharing | `AtmosphereIndex`, `PDSBlobStore` |
+| **Local Storage** | Team-scale index + data | `Index`, `LocalDiskStore`, `S3DataStore` |
+| **Atmosphere** | Federated sharing | `Index(atmosphere=...)`, `PDSBlobStore` |
 | **Protocols** | Backend abstraction | `AbstractIndex`, `AbstractDataStore`, `DataSource` |
 
 The architecture enables a smooth progression from local experimentation to team collaboration to public federation, all while maintaining type safety and efficient data handling.
@@ -373,6 +368,6 @@ The architecture enables a smooth progression from local experimentation to team
 
 - [Packable Samples](packable-samples.qmd) - Defining sample types
 - [Datasets](datasets.qmd) - Dataset iteration and batching
-- [Local Storage](local-storage.qmd) - Redis + S3 backend
+- [Local Storage](local-storage.qmd) - Index providers and data stores
 - [Atmosphere](atmosphere.qmd) - ATProto federation
 - [Protocols](protocols.qmd) - Abstract interfaces

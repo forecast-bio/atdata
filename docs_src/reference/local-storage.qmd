@@ -1,44 +1,63 @@
 ---
 title: "Local Storage"
-description: "Redis + S3 backend for dataset management"
+description: "Index providers and data stores for dataset management"
 ---
 
-The local storage module provides a Redis + S3 backend for storing and managing datasets before publishing to the ATProto federation.
+The local storage layer provides pluggable backends for storing and managing datasets. By default, `Index()` uses SQLite with no external dependencies. For team deployments, swap in Redis or PostgreSQL as the index provider and S3-compatible storage for data.
 
 ## Overview
 
-Local storage uses:
+Local storage has two components:
 
-- **Redis** for indexing and tracking dataset metadata
-- **S3-compatible storage** for dataset tar files
+| Component | Purpose | Options |
+|-----------|---------|---------|
+| **Index Provider** | Metadata queries, schema registry, dataset discovery | SQLite (default), Redis, PostgreSQL |
+| **Data Store** | Persistent shard storage | `LocalDiskStore` (filesystem), `S3DataStore` (S3-compatible) |
 
-This enables development and small-scale deployment before promoting to the full ATProto infrastructure.
+This separation means metadata operations (listing datasets, resolving schemas) are fast and don't touch large data files.
 
-## LocalIndex
+## Index
 
-The index tracks datasets in Redis:
-
-```{python}
-#| eval: false
-from atdata.local import LocalIndex
-
-# Default connection (localhost:6379)
-index = LocalIndex()
-
-# Custom Redis connection
-import redis
-r = redis.Redis(host='custom-host', port=6379)
-index = LocalIndex(redis=r)
-
-# With connection kwargs
-index = LocalIndex(host='custom-host', port=6379, db=1)
-```
-
-### Adding Entries
+The `Index` class is the unified entry point:
 
 ```{python}
 #| eval: false
 import atdata
+
+# Zero-config: SQLite in memory (default)
+index = atdata.Index()
+
+# Persist SQLite to disk
+index = atdata.Index(path="~/.atdata/index.db")
+
+# With a data store for shard storage
+index = atdata.Index(
+    data_store=atdata.LocalDiskStore(root="~/.atdata/data/"),
+)
+```
+
+### Alternative Providers
+
+For team-scale deployments:
+
+```{python}
+#| eval: false
+from redis import Redis
+
+# Redis provider
+index = atdata.Index(redis=Redis(host="localhost", port=6379))
+
+# PostgreSQL provider
+index = atdata.Index(provider="postgres", dsn="postgresql://user:pass@host/db")
+```
+
+### Writing Datasets
+
+`index.write_samples()` handles sharding, storage, schema persistence, and indexing in one call:
+
+```{python}
+#| eval: false
+import numpy as np
 from numpy.typing import NDArray
 
 @atdata.packable
@@ -46,143 +65,42 @@ class ImageSample:
     image: NDArray
     label: str
 
-dataset = atdata.Dataset[ImageSample]("data-{000000..000009}.tar")
+samples = [
+    ImageSample(
+        image=np.random.rand(224, 224, 3).astype(np.float32),
+        label=f"sample_{i}",
+    )
+    for i in range(1000)
+]
 
-entry = index.add_entry(
-    dataset,
+entry = index.write_samples(
+    samples,
     name="my-dataset",
-    schema_ref="atdata://local/sampleSchema/ImageSample@1.0.0",  # optional
-    metadata={"description": "Training images"},              # optional
+    maxcount=500,
+    metadata={"description": "Training images"},
 )
 
 print(entry.cid)        # Content identifier
 print(entry.name)       # "my-dataset"
-print(entry.data_urls)  # ["data-{000000..000009}.tar"]
+print(entry.data_urls)  # Shard URLs
 ```
 
 ### Listing and Retrieving
 
 ```{python}
 #| eval: false
-# Iterate all entries
-for entry in index.entries:
+# Lazy iteration (property)
+for entry in index.datasets:
     print(f"{entry.name}: {entry.cid}")
 
-# Get as list
-all_entries = index.all_entries
+# Eager list (method)
+all_entries = index.list_datasets()
 
 # Get by name
 entry = index.get_entry_by_name("my-dataset")
 
 # Get by CID
 entry = index.get_entry("bafyrei...")
-```
-
-## Repo (Deprecated)
-
-::: {.callout-warning}
-`Repo` is deprecated. Use `LocalIndex` with `S3DataStore` instead for new code.
-:::
-
-The Repo class combines S3 storage with Redis indexing:
-
-```{python}
-#| eval: false
-from atdata.local import Repo
-
-# From credentials file
-repo = Repo(
-    s3_credentials="path/to/.env",
-    hive_path="my-bucket/datasets",
-)
-
-# From credentials dict
-repo = Repo(
-    s3_credentials={
-        "AWS_ENDPOINT": "http://localhost:9000",
-        "AWS_ACCESS_KEY_ID": "minioadmin",
-        "AWS_SECRET_ACCESS_KEY": "minioadmin",
-    },
-    hive_path="my-bucket/datasets",
-)
-```
-
-**Preferred approach** - Use `LocalIndex` with `S3DataStore`:
-
-```{python}
-#| eval: false
-from atdata.local import LocalIndex, S3DataStore
-
-store = S3DataStore(
-    credentials={
-        "AWS_ENDPOINT": "http://localhost:9000",
-        "AWS_ACCESS_KEY_ID": "minioadmin",
-        "AWS_SECRET_ACCESS_KEY": "minioadmin",
-    },
-    bucket="my-bucket",
-)
-index = LocalIndex(data_store=store)
-
-# Insert dataset
-entry = index.insert_dataset(dataset, name="my-dataset", prefix="datasets/v1")
-```
-
-### Credentials File Format
-
-The `.env` file should contain:
-
-```bash
-AWS_ENDPOINT=http://localhost:9000
-AWS_ACCESS_KEY_ID=your-access-key
-AWS_SECRET_ACCESS_KEY=your-secret-key
-```
-
-::: {.callout-note}
-For AWS S3, omit `AWS_ENDPOINT` to use the default endpoint.
-:::
-
-### Inserting Datasets
-
-```{python}
-#| eval: false
-import webdataset as wds
-import numpy as np
-
-# Create dataset from samples
-samples = [ImageSample(
-    image=np.random.rand(224, 224, 3).astype(np.float32),
-    label=f"sample_{i}"
-) for i in range(1000)]
-
-with wds.writer.TarWriter("temp.tar") as sink:
-    for i, s in enumerate(samples):
-        sink.write({**s.as_wds, "__key__": f"{i:06d}"})
-
-dataset = atdata.Dataset[ImageSample]("temp.tar")
-
-# Insert into repo (writes to S3 + indexes in Redis)
-entry, stored_dataset = repo.insert(
-    dataset,
-    name="training-images-v1",
-    cache_local=False,  # Stream directly to S3
-)
-
-print(entry.cid)                # Content identifier
-print(stored_dataset.url)       # S3 URL for the stored data
-print(stored_dataset.shard_list)  # Individual shard URLs
-```
-
-### Insert Options
-
-```{python}
-#| eval: false
-entry, ds = repo.insert(
-    dataset,
-    name="my-dataset",
-    cache_local=True,   # Write locally first, then copy (faster for some workloads)
-    maxcount=10000,     # Samples per shard
-    maxsize=100_000_000,  # Max shard size in bytes
-)
 ```
 
 ## LocalDatasetEntry
@@ -201,19 +119,51 @@ entry.metadata    # Arbitrary metadata dict or None
 
 # Content addressing
 entry.cid         # ATProto-compatible CID (content identifier)
-
-# Legacy compatibility
-entry.wds_url     # First data URL
-entry.sample_kind # Same as schema_ref
 ```
 
 ::: {.callout-tip}
 The CID is generated from the entry's content (schema_ref + data_urls), ensuring identical data produces identical CIDs whether stored locally or in the atmosphere.
 :::
 
+## Data Stores
+
+Data stores implement the `AbstractDataStore` protocol for persistent shard storage.
+
+### LocalDiskStore
+
+The simplest option — stores shards on the local filesystem:
+
+```{python}
+#| eval: false
+store = atdata.LocalDiskStore(root="~/.atdata/data/")
+
+# Or accept the default root (~/.atdata/data/)
+store = atdata.LocalDiskStore()
+```
+
+### S3DataStore
+
+For team-scale storage with S3-compatible backends (AWS S3, MinIO, Cloudflare R2):
+
+```{python}
+#| eval: false
+from atdata.stores import S3DataStore
+
+store = S3DataStore(
+    credentials={
+        "AWS_ENDPOINT": "http://localhost:9000",
+        "AWS_ACCESS_KEY_ID": "minioadmin",
+        "AWS_SECRET_ACCESS_KEY": "minioadmin",
+    },
+    bucket="my-bucket",
+)
+
+index = atdata.Index(data_store=store)
+```
+
 ## Schema Storage
 
-Schemas can be stored and retrieved from the index:
+Schemas are persisted automatically by `index.write_samples()`. You can also manage them explicitly:
 
 ```{python}
 #| eval: false
@@ -223,61 +173,46 @@ schema_ref = index.publish_schema(
     version="1.0.0",
     description="Image with label annotation",
 )
-# Returns: "atdata://local/sampleSchema/ImageSample@1.0.0"
 
 # Retrieve schema record
 schema = index.get_schema(schema_ref)
-# {
-#     "name": "ImageSample",
-#     "version": "1.0.0",
-#     "fields": [...],
-#     "description": "...",
-#     "createdAt": "...",
-# }
 
 # List all schemas
 for schema in index.list_schemas():
     print(f"{schema['name']}@{schema['version']}")
 
 # Reconstruct sample type from schema
-SampleType = index.decode_schema(schema_ref)
+SampleType = index.get_schema_type(schema_ref)
 dataset = atdata.Dataset[SampleType](entry.data_urls[0])
 ```
 
-## S3DataStore
+## Labels
 
-For direct S3 operations without Redis indexing:
+Labels provide human-readable, versioned aliases for dataset entries:
 
 ```{python}
 #| eval: false
-from atdata.local import S3DataStore
+# Create a label
+index.label("training-latest", entry.cid)
 
-store = S3DataStore(
-    credentials="path/to/.env",
-    bucket="my-bucket",
-)
+# With version
+index.label("training", entry.cid, version="2.0.0")
 
-# Write dataset shards
-urls = store.write_shards(
-    dataset,
-    prefix="datasets/v1",
-    maxcount=10000,
-)
-# Returns: ["s3://my-bucket/datasets/v1/data--uuid--000000.tar", ...]
+# Resolve label to entry
+entry = index.get_label("training-latest")
 
-# Check capabilities
-store.supports_streaming()  # True
+# List all labels
+for name, cid, version in index.list_labels():
+    print(f"  {name} v{version or 'latest'} -> {cid[:12]}...")
 ```
 
-## Complete Workflow Example
+## Complete Workflow
 
 ```{python}
 #| eval: false
 import numpy as np
 from numpy.typing import NDArray
 import atdata
-from atdata.local import LocalIndex, S3DataStore
-import webdataset as wds
 
 # 1. Define sample type
 @atdata.packable
@@ -296,33 +231,20 @@ samples = [
     for i in range(10000)
 ]
 
-# 3. Write to local tar
-with wds.writer.TarWriter("local-data.tar") as sink:
-    for i, sample in enumerate(samples):
-        sink.write({**sample.as_wds, "__key__": f"{i:06d}"})
+# 3. Set up index with data store
+store = atdata.LocalDiskStore(root="~/.atdata/data/")
+index = atdata.Index(data_store=store)
 
-# 4. Set up index with S3 data store and insert
-store = S3DataStore(
-    credentials={
-        "AWS_ENDPOINT": "http://localhost:9000",
-        "AWS_ACCESS_KEY_ID": "minioadmin",
-        "AWS_SECRET_ACCESS_KEY": "minioadmin",
-    },
-    bucket="datasets-bucket",
-)
-index = LocalIndex(data_store=store)
+# 4. Write through index (schema persisted automatically)
+entry = index.write_samples(samples, name="training-v1", maxcount=5000)
 
-# Publish schema and insert dataset
-index.publish_schema(TrainingSample, version="1.0.0")
-local_ds = atdata.Dataset[TrainingSample]("local-data.tar")
-entry = index.insert_dataset(local_ds, name="training-v1", prefix="training")
+# 5. Load by name — schema auto-resolved
+atdata.set_default_index(index)
+ds = atdata.load_dataset("@local/training-v1", split="train")
 
-# 5. Retrieve later
-entry = index.get_entry_by_name("training-v1")
-dataset = atdata.Dataset[TrainingSample](entry.data_urls[0])
-
-for batch in dataset.ordered(batch_size=32):
+for batch in ds.ordered(batch_size=32):
     print(batch.features.shape)  # (32, 128)
+    break
 ```
 
 ## Related

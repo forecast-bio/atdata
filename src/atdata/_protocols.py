@@ -257,7 +257,7 @@ class AbstractIndex(Protocol):
 
     def list_schemas(self) -> list[dict]: ...
 
-    def decode_schema(self, ref: str) -> Type[Packable]:
+    def get_schema_type(self, ref: str) -> Type[Packable]:
         """Reconstruct a Packable type from a stored schema.
 
         Raises:
@@ -265,7 +265,7 @@ class AbstractIndex(Protocol):
             ValueError: If schema has unsupported field types.
 
         Examples:
-            >>> SampleType = index.decode_schema(entry.schema_ref)
+            >>> SampleType = index.get_schema_type(entry.schema_ref)
             >>> ds = Dataset[SampleType](entry.data_urls[0])
         """
         ...

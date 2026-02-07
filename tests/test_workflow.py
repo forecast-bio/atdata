@@ -226,7 +226,7 @@ class TestLoadDatasetWithIndex:
         mock_index.data_store = None  # No data store, so no URL transformation
         mock_index.get_label.side_effect = AttributeError("no labels")
         mock_index.get_dataset.return_value = local_entry
-        mock_index.decode_schema.return_value = IntegrationTestSample
+        mock_index.get_schema_type.return_value = IntegrationTestSample
 
         # Load via index
         ds = atdata.load_dataset(
@@ -262,7 +262,7 @@ class TestLoadDatasetWithIndex:
         mock_index.get_label.side_effect = AttributeError("no labels")
         mock_index.get_dataset.return_value = local_entry
 
-        # Load with explicit type (should not call decode_schema)
+        # Load with explicit type (should not call get_schema_type)
         ds = atdata.load_dataset(
             "@local/typed-dataset",
             IntegrationTestSample,
@@ -270,8 +270,8 @@ class TestLoadDatasetWithIndex:
             split="train",
         )
 
-        # decode_schema should not be called when type is explicit
-        mock_index.decode_schema.assert_not_called()
+        # get_schema_type should not be called when type is explicit
+        mock_index.get_schema_type.assert_not_called()
 
         samples = list(ds.ordered(batch_size=None))
         assert len(samples) == 1

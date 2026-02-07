@@ -50,7 +50,7 @@ from atdata.atmosphere import Atmosphere
 
 ## Prepare a Local Dataset
 
-First, set up a dataset in local storage using `index.write()`:
+First, set up a dataset in local storage using `index.write_samples()`:
 
 ```{python}
 #| eval: false
@@ -74,7 +74,7 @@ samples = [
 
 # 3. Write through index (handles sharding, schema, and storage)
 index = atdata.Index(data_store=atdata.LocalDiskStore())
-local_entry = index.write(samples, name="experiment-2024-001", maxcount=500)
+local_entry = index.write_samples(samples, name="experiment-2024-001", maxcount=500)
 
 print(f"Local entry name: {local_entry.name}")
 print(f"Local entry CID: {local_entry.cid}")
@@ -211,8 +211,8 @@ except ValueError as e:
 
 Before promotion:
 
-- [ ] Dataset is in the index (via `index.write()` or `index.insert_dataset()`)
-- [ ] Schema is persisted (automatic when using `index.write()`)
+- [ ] Dataset is in the index (via `index.write_samples()` or `index.insert_dataset()`)
+- [ ] Schema is persisted (automatic when using `index.write_samples()`)
 - [ ] `Atmosphere` client is authenticated and attached to the index
 - [ ] Data URLs are publicly accessible (or will be copied)
 
@@ -243,7 +243,7 @@ samples = [
 
 # 3. Write through index (schema persisted automatically)
 index = atdata.Index(data_store=atdata.LocalDiskStore())
-entry = index.write(samples, name="feature-vectors-v1", maxcount=500)
+entry = index.write_samples(samples, name="feature-vectors-v1", maxcount=500)
 
 # 4. Promote to atmosphere
 client = Atmosphere.login("myhandle.bsky.social", "app-password")
@@ -281,7 +281,7 @@ Promotion completes atdata's three-layer story: you can now move seamlessly from
 ```
 ┌──────────────────┐   index.write  ┌──────────────────┐   promote    ┌──────────────────┐
 │  Local Files     │ ────────────→  │  Managed Storage │ ───────────→ │  Federation      │
-│                  │                │                  │              │                  │
+│                  │  write_samples │                  │   promote    │                  │
 │  write_samples() │                │  Index (SQLite)  │              │  Index +         │
 │  Dataset[T]      │                │  LocalDiskStore  │              │  Atmosphere      │
 └──────────────────┘                └──────────────────┘              └──────────────────┘

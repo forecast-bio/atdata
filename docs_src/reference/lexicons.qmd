@@ -37,7 +37,9 @@ auxiliary definitions within the same namespace.
 | [`ac.foundation.dataset.storageExternal`](#ac-foundation-dataset-storageexternal) | Object | (Deprecated: use storageHttp or storageS3 instead.) External storage via URLs for WebDataset tar archives. URLs suppo... |
 | [`ac.foundation.dataset.schemaType`](#ac-foundation-dataset-schematype) | String | Schema type identifier for atdata sample definitions. Known values correspond to token definitions in this Lexicon. N... |
 | [`ac.foundation.dataset.arrayFormat`](#ac-foundation-dataset-arrayformat) | String | Array serialization format identifier for NDArray fields in sample schemas. Known values correspond to token definiti... |
-| [`ac.foundation.dataset.getLatestSchema`](#ac-foundation-dataset-getlatestschema) | Query | Get the latest version of a sample schema by its permanent NSID identifier |
+| [`ac.foundation.dataset.resolveSchema`](#ac-foundation-dataset-resolveschema) | Query | Resolve a schema by its permanent NSID identifier. When version is omitted, resolves to the most recently created sch... |
+| [`ac.foundation.dataset.label`](#ac-foundation-dataset-label) | Record | Named label pointing to a dataset record. Multiple labels with the same name but different versions can coexist, enab... |
+| [`ac.foundation.dataset.resolveLabel`](#ac-foundation-dataset-resolvelabel) | Query | Resolve a named dataset label to its underlying dataset record. When version is omitted, resolves to the most recentl... |
 
 ## Definitions
 
@@ -56,6 +58,7 @@ Definition of a PackableSample-compatible sample type. Supports versioning via r
 | `description` | string | no | Human-readable description of what this sample type represents *max length: 5000* |
 | `metadata` | object | no | Optional metadata about this schema. Common fields include license and tags, but any additional fields are permitted. *max properties: 50* |
 | `createdAt` | string (datetime) | **yes** | Timestamp when this schema version was created. Immutable once set (ATProto records are permanent). |
+| `$atdataSchemaVersion` | integer | no | Format version discriminator for the schema record itself. Used to detect breaking changes in the record structure. When absent, treated as version 1 for backward compatibility. *min: 1* |
 
 #### `ac.foundation.dataset.schema#jsonSchemaFormat` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-schema-jsonschemaformat}
 
@@ -239,15 +242,17 @@ Numpy .npy binary format for NDArray serialization. Stores arrays with dtype and
 
 ---
 
-### `ac.foundation.dataset.getLatestSchema` <span class='lexicon-badge lexicon-badge-query'>Query</span> {#ac-foundation-dataset-getlatestschema}
+### `ac.foundation.dataset.resolveSchema` <span class='lexicon-badge lexicon-badge-query'>Query</span> {#ac-foundation-dataset-resolveschema}
 
-Get the latest version of a sample schema by its permanent NSID identifier
+Resolve a schema by its permanent NSID identifier. When version is omitted, resolves to the most recently created schema with the given NSID.
 
 #### Parameters
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
+| `handle` | string | **yes** | DID or handle of the schema owner |
 | `schemaId` | string | **yes** | The permanent NSID identifier for the schema (the {NSID} part of the rkey {NSID}@{semver}) *max length: 500* |
+| `version` | string | no | Specific version to resolve. If omitted, resolves to latest. *max length: 20* |
 
 #### Output
 
@@ -255,11 +260,50 @@ Encoding: `application/json`
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
-| `uri` | string | **yes** | AT-URI of the latest schema version *max length: 500* |
-| `version` | string | **yes** | Semantic version of the latest schema *max length: 20* |
+| `uri` | string (at-uri) | **yes** | AT-URI of the resolved schema record |
+| `cid` | string | **yes** | CID of the resolved schema record |
 | `record` | [`ac.foundation.dataset.schema`](#ac-foundation-dataset-schema) | **yes** | The full schema record |
-| `allVersions` | array\<object\> | no | All available versions (optional, sorted by semver descending) |
 
 #### Errors
 
 - **SchemaNotFound** — No schema found with the given NSID
+
+---
+
+### `ac.foundation.dataset.label` <span class='lexicon-badge lexicon-badge-record'>Record</span> {#ac-foundation-dataset-label}
+
+Named label pointing to a dataset record. Multiple labels with the same name but different versions can coexist, enabling versioned references to immutable dataset records.
+
+**Record key:** `tid`
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `name` | string | **yes** | User-facing label name, e.g. 'mnist' *max length: 200* |
+| `datasetUri` | string (at-uri) | **yes** | AT-URI pointing to the dataset record this label refers to *max length: 500* |
+| `version` | string | no | Semver or free-form version string, e.g. '1.0.1'. When omitted, the label is unversioned. *max length: 50* |
+| `description` | string | no | Optional description of this labeled version *max length: 5000* |
+| `createdAt` | string (datetime) | **yes** | Timestamp when this label was created |
+
+---
+
+### `ac.foundation.dataset.resolveLabel` <span class='lexicon-badge lexicon-badge-query'>Query</span> {#ac-foundation-dataset-resolvelabel}
+
+Resolve a named dataset label to its underlying dataset record. When version is omitted, resolves to the most recently created label with the given name.
+
+#### Parameters
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `handle` | string | **yes** | DID or handle of the dataset owner |
+| `name` | string | **yes** | Label name, e.g. 'mnist' |
+| `version` | string | no | Specific version to resolve. If omitted, resolves to latest. |
+
+#### Output
+
+Encoding: `application/json`
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `uri` | string (at-uri) | **yes** | AT-URI of the resolved dataset record |
+| `cid` | string | **yes** | CID of the resolved dataset record |
+| `label` | [`ac.foundation.dataset.label#main`](#ac-foundation-dataset-label-main) | **yes** | The label record that was resolved |

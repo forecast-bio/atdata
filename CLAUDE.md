@@ -451,18 +451,33 @@ When using the `/commit` command or creating commits:
 - This ensures issue tracking history is preserved across sessions
 - The issues.db file tracks all chainlink issues, comments, and status changes
 
+### Git Hooks
+
+The `.githooks/` directory contains shared hooks. Activate them after cloning:
+
+```bash
+just setup   # sets core.hooksPath to .githooks/
+```
+
+**Included hooks:**
+- **`pre-commit`** — Blocks commits where `issues.db` is staged as a symlink (mode 120000). Prevents worktree artifacts from overwriting the real database on merge.
+- **`pre-merge-commit`** — Backs up `issues.db` to `issues.db.pre-merge` before every merge, so the database can be restored if a merge corrupts it.
+
 ### Worktrees and Chainlink
 
 When using git worktrees (via `/featree`), the worktree's `.chainlink/issues.db`
 is replaced with a **symlink** to the base clone's copy. This ensures all
 worktrees share a single authoritative database on the `develop` branch.
 
-**Important rules:**
-- Do not commit the symlink — it is a local convenience only.
-- The symlink target is an absolute path: `<repo-root>/.chainlink/issues.db`
-- Worktree branches that get merged via GitHub PRs will carry the symlink (51 bytes) into the merge commit, which **overwrites the real database on `develop`**.
-- **After merging worktree PRs into `develop`**: check that `issues.db` is still a real SQLite file, not a broken symlink. If it was overwritten, restore from the pre-merge commit: `git show <pre-merge-sha>:.chainlink/issues.db > .chainlink/issues.db`
-- To prevent this: add `.chainlink/issues.db` to the worktree's `.git/info/exclude` before committing, or ensure the worktree agent doesn't stage the symlink.
+**Protection layers (in order of defense):**
+1. `/featree` adds `.chainlink/issues.db` to the worktree's `.git/info/exclude` so the symlink is never staged.
+2. The `pre-commit` hook blocks any commit that stages `issues.db` as a symlink (mode 120000).
+3. The `pre-merge-commit` hook backs up the db before merges so it can be restored if a symlink slips through.
+
+**If the database is corrupted after a merge:**
+```bash
+cp .chainlink/issues.db.pre-merge .chainlink/issues.db
+```
 
 ### CLI Module
 

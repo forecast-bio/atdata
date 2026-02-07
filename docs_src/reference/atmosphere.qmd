@@ -21,18 +21,19 @@ ATProto integration publishes datasets, schemas, and lenses as records in the `a
 - **Federation** across different hosts
 - **Verifiability** through content-addressable records
 
-## AtmosphereClient
+## Atmosphere Client
 
-The client handles authentication and record operations:
+The `Atmosphere` class handles authentication and record operations:
 
 ```{python}
 #| eval: false
-from atdata.atmosphere import AtmosphereClient
+from atdata.atmosphere import Atmosphere
 
-client = AtmosphereClient()
+# Login returns an authenticated client
+client = Atmosphere.login("alice.bsky.social", "app-password")
 
-# Login with app-specific password (not your main password!)
-client.login("alice.bsky.social", "app-password")
+# Or from environment variables (ATDATA_HANDLE, ATDATA_PASSWORD)
+client = Atmosphere.from_env()
 
 print(client.did)     # 'did:plc:...'
 print(client.handle)  # 'alice.bsky.social'
@@ -52,8 +53,7 @@ Save and restore sessions to avoid re-authentication:
 session_string = client.export_session()
 
 # Later: restore session
-new_client = AtmosphereClient()
-new_client.login_with_session(session_string)
+new_client = Atmosphere.from_session(session_string)
 ```
 
 ### Custom PDS
@@ -62,7 +62,94 @@ Connect to a custom PDS instead of bsky.social:
 
 ```{python}
 #| eval: false
-client = AtmosphereClient(base_url="https://pds.example.com")
+client = Atmosphere.login(
+    "handle.example.com",
+    "app-password",
+    base_url="https://pds.example.com",
+)
+```
+
+## Unified Index with Atmosphere
+
+The recommended way to use atmosphere is through the unified `Index`:
+
+```{python}
+#| eval: false
+import atdata
+from atdata.atmosphere import Atmosphere, PDSBlobStore
+
+client = Atmosphere.login("handle.bsky.social", "app-password")
+
+# Without blob storage (use external URLs)
+index = atdata.Index(atmosphere=client)
+
+# With PDS blob storage (recommended for full decentralization)
+store = PDSBlobStore(client)
+index = atdata.Index(atmosphere=client, data_store=store)
+```
+
+### Publishing Schemas
+
+```{python}
+#| eval: false
+import atdata
+from numpy.typing import NDArray
+
+@atdata.packable
+class ImageSample:
+    image: NDArray
+    label: str
+    confidence: float
+
+# Publish schema
+schema_uri = index.publish_schema(
+    ImageSample,
+    version="1.0.0",
+    description="Image classification sample",
+)
+# Returns: "at://did:plc:.../ac.foundation.dataset.sampleSchema/..."
+```
+
+### Publishing Datasets
+
+```{python}
+#| eval: false
+dataset = atdata.Dataset[ImageSample]("data-{000000..000009}.tar")
+
+entry = index.insert_dataset(
+    dataset,
+    name="imagenet-subset",
+    schema_ref=schema_uri,           # Optional — auto-publishes if omitted
+    description="ImageNet subset",
+    tags=["images", "classification"],
+    license="MIT",
+)
+
+print(entry.uri)        # AT URI of the record
+print(entry.data_urls)  # WebDataset URLs
+```
+
+### Listing and Retrieving
+
+```{python}
+#| eval: false
+# List your datasets
+for entry in index.list_datasets():
+    print(f"{entry.name}: {entry.schema_ref}")
+
+# List from another user
+for entry in index.list_datasets(repo="did:plc:other-user"):
+    print(entry.name)
+
+# Get specific dataset
+entry = index.get_dataset("at://did:plc:.../ac.foundation.dataset.record/...")
+
+# List schemas
+for schema in index.list_schemas():
+    print(f"{schema['name']} v{schema['version']}")
+
+# Reconstruct schema to Python type
+SampleType = index.get_schema_type(schema_uri)
 ```
 
 ## PDSBlobStore
@@ -71,11 +158,9 @@ Store dataset shards as ATProto blobs for fully decentralized storage:
 
 ```{python}
 #| eval: false
-from atdata.atmosphere import AtmosphereClient, PDSBlobStore
+from atdata.atmosphere import Atmosphere, PDSBlobStore
 
-client = AtmosphereClient()
-client.login("handle.bsky.social", "app-password")
-
+client = Atmosphere.login("handle.bsky.social", "app-password")
 store = PDSBlobStore(client)
 
 # Write shards as blobs
@@ -84,7 +169,6 @@ urls = store.write_shards(dataset, prefix="my-data/v1")
 
 # Transform AT URIs to HTTP URLs for reading
 http_url = store.read_url(urls[0])
-# Returns: 'https://pds.example.com/xrpc/com.atproto.sync.getBlob?...'
 
 # Create a BlobSource for streaming
 source = store.create_source(urls)
@@ -93,7 +177,7 @@ ds = atdata.Dataset[MySample](source)
 
 ### Size Limits
 
-PDS blobs typically have size limits (often 50MB-5GB depending on the PDS). Use `maxcount` and `maxsize` parameters to control shard sizes:
+PDS blobs typically have size limits (often 50MB–5GB depending on the PDS). Use `maxcount` and `maxsize` to control shard sizes:
 
 ```{python}
 #| eval: false
@@ -128,92 +212,9 @@ for batch in ds.ordered(batch_size=32):
     process(batch)
 ```
 
-## AtmosphereIndex
-
-The unified interface for ATProto operations, implementing the AbstractIndex protocol:
-
-```{python}
-#| eval: false
-from atdata.atmosphere import AtmosphereClient, AtmosphereIndex, PDSBlobStore
-
-client = AtmosphereClient()
-client.login("handle.bsky.social", "app-password")
-
-# Without blob storage (use external URLs)
-index = AtmosphereIndex(client)
-
-# With PDS blob storage (recommended for full decentralization)
-store = PDSBlobStore(client)
-index = AtmosphereIndex(client, data_store=store)
-```
-
-### Publishing Schemas
-
-```{python}
-#| eval: false
-import atdata
-from numpy.typing import NDArray
-
-@atdata.packable
-class ImageSample:
-    image: NDArray
-    label: str
-    confidence: float
-
-# Publish schema
-schema_uri = index.publish_schema(
-    ImageSample,
-    version="1.0.0",
-    description="Image classification sample",
-)
-# Returns: "at://did:plc:.../ac.foundation.dataset.sampleSchema/..."
-```
-
-### Publishing Datasets
-
-```{python}
-#| eval: false
-dataset = atdata.Dataset[ImageSample]("data-{000000..000009}.tar")
-
-entry = index.insert_dataset(
-    dataset,
-    name="imagenet-subset",
-    schema_ref=schema_uri,           # Optional - auto-publishes if omitted
-    description="ImageNet subset",
-    tags=["images", "classification"],
-    license="MIT",
-)
-
-print(entry.uri)        # AT URI of the record
-print(entry.data_urls)  # WebDataset URLs
-```
-
-### Listing and Retrieving
-
-```{python}
-#| eval: false
-# List your datasets
-for entry in index.list_datasets():
-    print(f"{entry.name}: {entry.schema_ref}")
-
-# List from another user
-for entry in index.list_datasets(repo="did:plc:other-user"):
-    print(entry.name)
-
-# Get specific dataset
-entry = index.get_dataset("at://did:plc:.../ac.foundation.dataset.record/...")
-
-# List schemas
-for schema in index.list_schemas():
-    print(f"{schema['name']} v{schema['version']}")
-
-# Decode schema to Python type
-SampleType = index.decode_schema(schema_uri)
-```
-
 ## Lower-Level Publishers
 
-For more control, use the individual publisher classes:
+For more control, use the individual publisher classes directly:
 
 ### SchemaPublisher
 
@@ -243,8 +244,8 @@ publisher = DatasetPublisher(client)
 uri = publisher.publish(
     dataset,
     name="training-images",
-    schema_uri=schema_uri,           # Required if auto_publish_schema=False
-    auto_publish_schema=True,        # Publish schema automatically
+    schema_uri=schema_uri,
+    auto_publish_schema=True,
     description="Training images",
     tags=["training", "images"],
     license="MIT",
@@ -253,18 +254,14 @@ uri = publisher.publish(
 
 #### Blob Storage {#blob-storage}
 
-There are two approaches to storing data as ATProto blobs:
-
-**Approach 1: PDSBlobStore (Recommended)**
-
-Use `PDSBlobStore` with `AtmosphereIndex` for automatic shard management:
+**Approach 1: PDSBlobStore with Index (Recommended)**
 
 ```{python}
 #| eval: false
-from atdata.atmosphere import PDSBlobStore, AtmosphereIndex
+from atdata.atmosphere import PDSBlobStore
 
 store = PDSBlobStore(client)
-index = AtmosphereIndex(client, data_store=store)
+index = atdata.Index(atmosphere=client, data_store=store)
 
 # Dataset shards are automatically uploaded as blobs
 entry = index.insert_dataset(
@@ -279,8 +276,6 @@ ds = atdata.Dataset[MySample](source)
 ```
 
 **Approach 2: Manual Blob Publishing**
-
-For more control, use `DatasetPublisher.publish_with_blobs()` directly:
 
 ```{python}
 #| eval: false
@@ -303,30 +298,6 @@ uri = publisher.publish_with_blobs(
 )
 ```
 
-**Loading Blob-Stored Datasets**
-
-```{python}
-#| eval: false
-from atdata.atmosphere import DatasetLoader
-from atdata import BlobSource
-
-loader = DatasetLoader(client)
-
-# Check storage type
-storage_type = loader.get_storage_type(uri)  # "external" or "blobs"
-
-if storage_type == "blobs":
-    # Get blob URLs and create BlobSource
-    blob_urls = loader.get_blob_urls(uri)
-    # Parse to blob refs for BlobSource
-    # Or use loader.to_dataset() which handles this automatically
-
-# to_dataset() handles both storage types automatically
-dataset = loader.to_dataset(uri, MySample)
-for batch in dataset.ordered(batch_size=32):
-    process(batch)
-```
-
 ### LensPublisher
 
 ```{python}
@@ -335,7 +306,6 @@ from atdata.atmosphere import LensPublisher
 
 publisher = LensPublisher(client)
 
-# With code references
 uri = publisher.publish(
     name="simplify",
     source_schema=full_schema_uri,
@@ -346,30 +316,10 @@ uri = publisher.publish(
         "commit": "abc123def...",
         "path": "transforms/simplify.py:simplify_getter",
     },
-    putter_code={
-        "repository": "https://github.com/org/repo",
-        "commit": "abc123def...",
-        "path": "transforms/simplify.py:simplify_putter",
-    },
-)
-
-# Or publish from a Lens object
-from atdata.lens import lens
-
-@lens
-def simplify(src: FullSample) -> SimpleSample:
-    return SimpleSample(label=src.label)
-
-uri = publisher.publish_from_lens(
-    simplify,
-    source_schema=full_schema_uri,
-    target_schema=simple_schema_uri,
 )
 ```
 
 ## Lower-Level Loaders
-
-For direct access to records, use the loader classes:
 
 ### SchemaLoader
 
@@ -402,15 +352,6 @@ record = loader.get("at://did:plc:abc/ac.foundation.dataset.record/xyz")
 # Check storage type
 storage_type = loader.get_storage_type(uri)  # "external" or "blobs"
 
-# Get URLs based on storage type
-if storage_type == "external":
-    urls = loader.get_urls(uri)
-else:
-    urls = loader.get_blob_urls(uri)
-
-# Get metadata
-metadata = loader.get_metadata(uri)
-
 # Create a Dataset object directly
 dataset = loader.to_dataset(uri, MySampleType)
 for batch in dataset.ordered(batch_size=32):
@@ -426,13 +367,8 @@ from atdata.atmosphere import LensLoader
 loader = LensLoader(client)
 
 # Get a specific lens record
-lens = loader.get("at://did:plc:abc/ac.foundation.dataset.lens/xyz")
-print(lens["name"])
-print(lens["sourceSchema"], "->", lens["targetSchema"])
-
-# List all lenses from a repository
-for lens in loader.list_all():
-    print(lens["name"])
+lens_rec = loader.get("at://did:plc:abc/ac.foundation.dataset.lens/xyz")
+print(lens_rec["name"])
 
 # Find lenses by schema
 lenses = loader.find_by_schemas(
@@ -462,8 +398,6 @@ print(str(uri))  # 'at://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz'
 
 ## Supported Field Types
 
-Schemas support these field types:
-
 | Python Type | ATProto Type |
 |-------------|--------------|
 | `str` | `primitive/str` |
@@ -478,15 +412,12 @@ Schemas support these field types:
 
 ## Complete Example
 
-This example shows the full workflow using `PDSBlobStore` for decentralized storage:
-
 ```{python}
 #| eval: false
 import numpy as np
 from numpy.typing import NDArray
 import atdata
-from atdata.atmosphere import AtmosphereClient, AtmosphereIndex, PDSBlobStore
-import webdataset as wds
+from atdata.atmosphere import Atmosphere, PDSBlobStore
 
 # 1. Define and create samples
 @atdata.packable
@@ -505,16 +436,13 @@ samples = [
 ]
 
 # 2. Write to tar
-with wds.writer.TarWriter("features.tar") as sink:
-    for i, s in enumerate(samples):
-        sink.write({**s.as_wds, "__key__": f"{i:06d}"})
+ds = atdata.write_samples(samples, "features.tar", maxcount=500)
 
 # 3. Authenticate and set up blob storage
-client = AtmosphereClient()
-client.login("myhandle.bsky.social", "app-password")
+client = Atmosphere.login("myhandle.bsky.social", "app-password")
 
 store = PDSBlobStore(client)
-index = AtmosphereIndex(client, data_store=store)
+index = atdata.Index(atmosphere=client, data_store=store)
 
 # 4. Publish schema
 schema_uri = index.publish_schema(
@@ -524,9 +452,8 @@ schema_uri = index.publish_schema(
 )
 
 # 5. Publish dataset (shards uploaded as blobs)
-dataset = atdata.Dataset[FeatureSample]("features.tar")
 entry = index.insert_dataset(
-    dataset,
+    ds,
     name="synthetic-features-v1",
     schema_ref=schema_uri,
     tags=["features", "synthetic"],
@@ -540,39 +467,21 @@ for dataset_entry in index.list_datasets():
     print(f"Found: {dataset_entry.name}")
 
     # Reconstruct type from schema
-    SampleType = index.decode_schema(dataset_entry.schema_ref)
+    SampleType = index.get_schema_type(dataset_entry.schema_ref)
 
     # Create source from blob URLs
     source = store.create_source(dataset_entry.data_urls)
 
     # Load dataset from blobs
-    ds = atdata.Dataset[SampleType](source)
-    for batch in ds.ordered(batch_size=32):
+    loaded = atdata.Dataset[SampleType](source)
+    for batch in loaded.ordered(batch_size=32):
         print(batch.features.shape)
         break
 ```
 
-For external URL storage (without `PDSBlobStore`):
-
-```{python}
-#| eval: false
-# Use AtmosphereIndex without data_store
-index = AtmosphereIndex(client)
-
-# Dataset URLs will be stored as-is (external references)
-entry = index.insert_dataset(
-    dataset,
-    name="external-features",
-    schema_ref=schema_uri,
-)
-
-# Load using standard URL source
-ds = atdata.Dataset[FeatureSample](entry.data_urls[0])
-```
-
 ## Related
 
-- [Local Storage](local-storage.qmd) - Redis + S3 backend
+- [Local Storage](local-storage.qmd) - Index providers and data stores
 - [Promotion](promotion.qmd) - Promoting local datasets to ATProto
-- [Protocols](protocols.qmd) - AbstractIndex interface
+- [Protocols](protocols.qmd) - AbstractIndex and AbstractDataStore
 - [Packable Samples](packable-samples.qmd) - Defining sample types

@@ -24,8 +24,8 @@ Lexicons:
         ATProto PDS blob-based storage.
     ac.foundation.dataset.storageExternal
         (Deprecated) External URL-based storage.
-    ac.foundation.dataset.getLatestSchema
-        XRPC query for fetching the latest schema version.
+    ac.foundation.dataset.resolveSchema
+        XRPC query for resolving a schema by NSID, optionally pinned to a version.
 
 The ``ndarray_shim.json`` file defines the standard NDArray type
 for use within JSON Schema definitions.
@@ -55,7 +55,7 @@ LEXICON_IDS = (
     f"{NAMESPACE}.storageS3",
     f"{NAMESPACE}.storageBlobs",
     f"{NAMESPACE}.storageExternal",  # deprecated
-    f"{NAMESPACE}.getLatestSchema",
+    f"{NAMESPACE}.resolveSchema",
 )
 
 

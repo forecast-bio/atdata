@@ -40,7 +40,15 @@ rm <worktree-path>/.chainlink/issues.db
 ln -s <repo-root>/.chainlink/issues.db <worktree-path>/.chainlink/issues.db
 ```
 
-### 5. Report to user
+### 5. Exclude symlink from git staging
+
+Prevent the symlink from being accidentally committed and merged (which would overwrite the real SQLite database on the target branch):
+
+```bash
+echo ".chainlink/issues.db" >> <worktree-path>/.git/info/exclude
+```
+
+### 6. Report to user
 
 Print a summary:
 ```

@@ -68,12 +68,16 @@ def test_ensure_loaders_lazy_init(backend) -> None:
     """Loaders/publishers are None until _ensure_loaders is called."""
     assert backend._schema_loader is None
     assert backend._dataset_loader is None
+    assert backend._label_publisher is None
+    assert backend._label_loader is None
 
     with (
         patch("atdata.atmosphere.schema.SchemaPublisher") as MockSP,
         patch("atdata.atmosphere.schema.SchemaLoader") as MockSL,
         patch("atdata.atmosphere.records.DatasetPublisher") as MockDP,
         patch("atdata.atmosphere.records.DatasetLoader") as MockDL,
+        patch("atdata.atmosphere.labels.LabelPublisher") as MockLP,
+        patch("atdata.atmosphere.labels.LabelLoader") as MockLL,
     ):
         backend._ensure_loaders()
 
@@ -81,6 +85,8 @@ def test_ensure_loaders_lazy_init(backend) -> None:
         MockSL.assert_called_once_with(backend.client)
         MockDP.assert_called_once_with(backend.client)
         MockDL.assert_called_once_with(backend.client)
+        MockLP.assert_called_once_with(backend.client)
+        MockLL.assert_called_once_with(backend.client)
 
     # Second call is a no-op (already initialised)
     backend._ensure_loaders()
@@ -97,6 +103,8 @@ def _patch_loaders(backend):
     backend._schema_loader = MagicMock()
     backend._dataset_publisher = MagicMock()
     backend._dataset_loader = MagicMock()
+    backend._label_publisher = MagicMock()
+    backend._label_loader = MagicMock()
 
 
 def test_get_dataset(backend) -> None:
@@ -310,17 +318,17 @@ def test_iter_schemas(backend) -> None:
     assert schemas[1] == {"name": "schema_b"}
 
 
-def test_decode_schema(backend) -> None:
-    """decode_schema calls get_schema then schema_to_type."""
+def test_get_schema_type(backend) -> None:
+    """get_schema_type calls get_schema then _schema_to_type."""
     _patch_loaders(backend)
     backend._schema_loader.get.return_value = {"name": "Decoded", "fields": []}
 
     fake_type = type("Decoded", (), {})
 
     with patch(
-        "atdata._schema_codec.schema_to_type", return_value=fake_type
+        "atdata._schema_codec._schema_to_type", return_value=fake_type
     ) as mock_s2t:
-        result = backend.decode_schema("at://did/schema/decode")
+        result = backend.get_schema_type("at://did/schema/decode")
 
     mock_s2t.assert_called_once_with({"name": "Decoded", "fields": []})
     assert result is fake_type

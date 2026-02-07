@@ -1168,10 +1168,12 @@ class TestAtmosphere:
             with pytest.raises(ValueError, match="Could not resolve PDS"):
                 authenticated_client.get_blob_url("did:plc:unknown", "cid123")
 
-    def test_resolve_pds_endpoint_did_web(self, authenticated_client):
-        """PDS resolution returns None for did:web (not implemented)."""
-        result = authenticated_client._resolve_pds_endpoint("did:web:example.com")
-        assert result is None
+    def test_resolve_pds_endpoint_did_web(self):
+        """PDS resolution raises ValueError for did:web (not implemented)."""
+        from atdata.atmosphere import _resolve_pds_endpoint
+
+        with pytest.raises(ValueError, match="Could not resolve PDS"):
+            _resolve_pds_endpoint("did:web:example.com")
 
     def test_list_records(self, authenticated_client, mock_atproto_client):
         """List records in a collection."""
@@ -3072,7 +3074,7 @@ class TestAtmosphereIndex:
         assert hasattr(index, "publish_schema")
         assert hasattr(index, "get_schema")
         assert hasattr(index, "list_schemas")
-        assert hasattr(index, "decode_schema")
+        assert hasattr(index, "get_schema_type")
 
     def test_publish_schema(self, authenticated_client, mock_atproto_client):
         """publish_schema delegates to SchemaPublisher."""

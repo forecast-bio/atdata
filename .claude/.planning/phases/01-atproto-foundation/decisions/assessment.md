@@ -15,7 +15,7 @@ The finalized design decisions prioritize **flexibility and future-proofing** ov
 1. **Schema Format (#45)**: JSON Schema with NDArray shim, extensible via open union
 2. **Lens Code (#46)**: External repos (GitHub + tangled.org), language metadata, future attestation
 3. **Storage (#47)**: Hybrid (URLs + blobs) from start, AppView proxy for blobs
-4. **Evolution (#48)**: rkey as {NSID}@{semver}, getLatestSchema query, optional migration Lenses
+4. **Evolution (#48)**: rkey as {NSID}@{semver}, resolveSchema query, optional migration Lenses
 5. **Namespace (#49)**: `ac.foundation.dataset.*` (schema, record, lens)
 
 ---
@@ -55,7 +55,7 @@ Pairing this with GitHub/tangled.org for Lenses means developers can use existin
 
 **Strength**: This is elegant. By making versioning part of the identity (rkey), you get:
 - Immutable version records (can't accidentally update a published version)
-- Natural query pattern (`getLatestSchema` Lexicon)
+- Natural query pattern (`resolveSchema` Lexicon)
 - Clear semantic versioning enforcement
 
 **Synergy**: Combining this with Lenses for migration is brilliant. The rkey structure makes it trivial to discover what migrations exist (e.g., "show me all versions of schema X").
@@ -107,7 +107,7 @@ This is a **strong security model** that's missing from many distributed systems
 **Observation**: Using some non-standard ATProto patterns:
 - rkey type `any` (not typical)
 - Custom versioning scheme in rkey
-- `getLatestSchema` query Lexicon (not standard CRUD)
+- `resolveSchema` query Lexicon (not standard CRUD)
 
 **Assessment**: This is **justified innovation**. ATProto is designed to support custom use cases. The versioning scheme in particular is a good use of flexible rkey.
 
@@ -137,7 +137,7 @@ This is a **strong security model** that's missing from many distributed systems
 This trilogy works beautifully together:
 - rkey embeds version → easy to list all versions
 - Lenses enable migration → versions can evolve safely
-- `getLatestSchema` query → discoverable latest version
+- `resolveSchema` query → discoverable latest version
 
 This creates a **complete version management story** that's rare in distributed systems.
 
@@ -197,7 +197,7 @@ Each layer adds security without requiring the next layer to exist.
 **Mitigation**:
 - **Document clearly** in all Lexicon definitions
 - Provide **helper functions** in SDK (`parseSchemaRkey`, `formatSchemaRkey`)
-- Ensure `getLatestSchema` query is the primary discovery mechanism (hides rkey complexity)
+- Ensure `resolveSchema` query is the primary discovery mechanism (hides rkey complexity)
 
 ---
 
@@ -249,7 +249,7 @@ The decisions set up a compelling long-term vision:
 
 - [ ] Define the **NDArray JSON Schema shim** precisely (schema structure, examples)
 - [ ] Spec out the **rkey format** (`{NSID}@{semver}` - what's valid NSID here? full NSID or partial?)
-- [ ] Design the **`getLatestSchema` query Lexicon** (parameters, return type)
+- [ ] Design the **`resolveSchema` query Lexicon** (parameters, return type)
 - [ ] Define the **storage union type** (external URL variant vs PDS blob variant)
 
 ### 2. **Phase 1-2** (Lexicon + Python Client)
@@ -263,7 +263,7 @@ The decisions set up a compelling long-term vision:
 
 - [ ] Implement **hybrid storage support** in AppView
 - [ ] Build **proxy for PDS blobs** (unified WebDataset URL interface)
-- [ ] Add **getLatestSchema endpoint**
+- [ ] Add **resolveSchema endpoint**
 
 ### 4. **Phase 4+** (Future Work)
 
@@ -308,6 +308,6 @@ The decisions form a **coherent whole** where each piece reinforces the others. 
 3. Proceed to Issue #50 (Lexicon validation) with:
    - NDArray JSON Schema shim definition
    - rkey format specification
-   - `getLatestSchema` query Lexicon design
+   - `resolveSchema` query Lexicon design
    - Storage union type definition
 4. Begin Phase 1 implementation after validation complete

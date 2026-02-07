@@ -98,7 +98,7 @@ class TestAbstractIndexProtocol:
             "publish_schema",
             "get_schema",
             "list_schemas",
-            "decode_schema",
+            "get_schema_type",
         ):
             assert callable(getattr(index, method_name)), (
                 f"Missing method: {method_name}"
