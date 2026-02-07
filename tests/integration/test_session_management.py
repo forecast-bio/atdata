@@ -163,9 +163,11 @@ class TestSessionErrors:
         if not broken.is_authenticated:
             return  # correctly reports as unauthenticated
 
-        # If it claims to be authenticated, any real API call should fail
+        # If it claims to be authenticated, any real network call should fail.
+        # export_session() only re-serializes local state so it won't catch
+        # corruption — use an actual PDS call instead.
         with pytest.raises(Exception):
-            broken.export_session()
+            broken.list_schemas()
 
 
 # ── Cross-session consistency ────────────────────────────────────
