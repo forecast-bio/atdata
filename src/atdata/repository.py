@@ -294,13 +294,25 @@ class _AtmosphereBackend:
                 auto_publish_schema=(schema_ref is None),
             )
 
-        # Create a label record for name-based resolution
-        self._label_publisher.publish(
-            name=name,
-            dataset_uri=str(uri),
-            version=kwargs.get("version"),
-            description=kwargs.get("description"),
-        )
+        # Create a label record for name-based resolution (best-effort;
+        # the dataset record is already committed so we log and continue
+        # if the label publish fails).
+        try:
+            self._label_publisher.publish(
+                name=name,
+                dataset_uri=str(uri),
+                version=kwargs.get("version"),
+                description=kwargs.get("description"),
+            )
+        except Exception:
+            from ._logging import get_logger
+
+            get_logger().warning(
+                "Label publish failed for dataset %s (uri=%s); "
+                "dataset was created but label was not.",
+                name,
+                uri,
+            )
 
         record = self._dataset_loader.get(uri)
         return AtmosphereIndexEntry(str(uri), record)

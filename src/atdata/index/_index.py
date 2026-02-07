@@ -1144,9 +1144,11 @@ class Index:
                     dataset_uri = atmo.resolve_label(handle_or_did, resolved_ref)
                     return atmo.get_dataset(dataset_uri)
                 except KeyError:
-                    pass  # fall through to error below
-                except Exception:
-                    pass  # network/SDK errors treated as "not found"
+                    raise
+                except Exception as exc:
+                    raise KeyError(
+                        f"Cannot resolve {ref!r} on atmosphere: {exc}"
+                    ) from exc
             raise KeyError(
                 f"Cannot resolve {ref!r} on atmosphere. No label found. "
                 "Use an AT URI or ensure a label exists for @handle/name."

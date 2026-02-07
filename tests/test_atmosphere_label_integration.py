@@ -314,7 +314,7 @@ class TestIndexGetDatasetAtmosphere:
 
     def test_get_dataset_no_label_raises(self, atmo_index, mock_atmo):
         """get_dataset with bare name raises KeyError when no label exists."""
-        with pytest.raises(KeyError, match="Cannot resolve"):
+        with pytest.raises(KeyError, match="No label"):
             atmo_index.get_dataset(f"@{mock_atmo.did}/missing")
 
     def test_get_dataset_atmosphere_unavailable(self, tmp_path):
@@ -322,6 +322,29 @@ class TestIndexGetDatasetAtmosphere:
         index = Index(provider="sqlite", path=tmp_path / "index.db", atmosphere=None)
         with pytest.raises(ValueError, match="Atmosphere backend required"):
             index.get_dataset("@handle/dataset")
+
+    def test_get_dataset_no_handle_raises(self, tmp_path):
+        """get_dataset raises KeyError for atmosphere path without handle."""
+        mock = MockAtmosphere(did="did:plc:x", handle="x.social")
+        index = Index(provider="sqlite", path=tmp_path / "index.db", atmosphere=None)
+        index._atmosphere = _FakeAtmoBackend(mock)
+        index._atmosphere_deferred = False
+
+        with pytest.raises(KeyError, match="No label found"):
+            index.get_dataset("@foo")
+
+    def test_get_dataset_sdk_error_chains_exception(self, atmo_index, mock_atmo):
+        """get_dataset wraps non-KeyError exceptions with chained cause."""
+        # Make resolve_label raise a RuntimeError to simulate SDK failure
+        atmo_index._atmosphere._label_loader = MagicMock()
+        atmo_index._atmosphere._label_loader.resolve.side_effect = RuntimeError(
+            "connection refused"
+        )
+
+        with pytest.raises(KeyError, match="connection refused") as exc_info:
+            atmo_index.get_dataset(f"@{mock_atmo.did}/some-dataset")
+        assert exc_info.value.__cause__ is not None
+        assert isinstance(exc_info.value.__cause__, RuntimeError)
 
 
 # ---------------------------------------------------------------------------
