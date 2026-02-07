@@ -18,7 +18,7 @@ Examples:
     ...         {"name": "label", "fieldType": {"$type": "...#primitive", "primitive": "str"}, "optional": False},
     ...     ]
     ... }
-    >>> ImageSample = schema_to_type(schema)
+    >>> ImageSample = _schema_to_type(schema)
     >>> sample = ImageSample(image=np.zeros((64, 64)), label="cat")
 """
 
@@ -31,6 +31,10 @@ from numpy.typing import NDArray
 # Import PackableSample for inheritance in dynamic class generation
 from .dataset import PackableSample
 from ._protocols import Packable
+from ._exceptions import SchemaError
+
+# Maximum $atdataSchemaVersion this library can read.
+_MAX_SUPPORTED_SCHEMA_VERSION = 1
 
 
 # Type cache to avoid regenerating identical types
@@ -130,23 +134,14 @@ def _field_type_to_python(field_type: dict, optional: bool = False) -> Any:
 def _convert_atmosphere_schema(record: dict) -> dict:
     """Convert atmosphere JSON Schema format to local fields format.
 
-    Atmosphere schemas use JSON Schema (published by ``SchemaPublisher``):
+    Handles two variants of the atmosphere schema ``schema`` object:
 
-    .. code-block:: json
+    * **Nested** (legacy/test format): ``schema.schemaBody.properties``
+    * **Flattened** (actual ATProto wire format): ``schema.properties``
 
-        {
-          "name": "MNISTSample", "version": "1.0.0",
-          "schemaType": "jsonSchema",
-          "schema": {
-            "schemaBody": {
-              "properties": {"image": {"$ref": "...ndarray..."}, "label": {"type": "integer"}},
-              "required": ["image", "label"]
-            }
-          }
-        }
-
-    This function converts that to the local format with a ``fields`` array
-    that ``schema_to_type()`` expects.
+    ``JsonSchemaFormat.to_record()`` merges schema-body keys directly into
+    the ``schema`` dict, so records fetched from a PDS have ``properties``
+    at the top level of ``schema`` with no ``schemaBody`` wrapper.
 
     Args:
         record: Atmosphere schema record dict.
@@ -154,7 +149,9 @@ def _convert_atmosphere_schema(record: dict) -> dict:
     Returns:
         Schema dict in local format with ``fields`` array.
     """
-    schema_body = record.get("schema", {}).get("schemaBody", {})
+    inner_schema = record.get("schema", {})
+    # Prefer nested schemaBody if present; fall back to flattened format.
+    schema_body = inner_schema.get("schemaBody", inner_schema)
     properties = schema_body.get("properties", {})
     required = set(schema_body.get("required", []))
 
@@ -223,6 +220,27 @@ def _json_schema_prop_to_field_type(prop: dict) -> dict:
     return {"$type": "local#primitive", "primitive": "str"}
 
 
+def _check_schema_record_version(schema: dict) -> None:
+    """Validate that a schema record's ``$atdataSchemaVersion`` is supported.
+
+    Records without the field are treated as version 1 (backward compat).
+
+    Args:
+        schema: Schema record dict.
+
+    Raises:
+        SchemaError: If the version is higher than this library supports.
+    """
+    v = schema.get("$atdataSchemaVersion", 1)
+    if v > _MAX_SUPPORTED_SCHEMA_VERSION:
+        raise SchemaError(
+            f"Unsupported schema record version: {v}. "
+            f"This version of atdata supports schema record versions "
+            f"up to {_MAX_SUPPORTED_SCHEMA_VERSION}. "
+            f"Upgrade atdata to read this schema."
+        )
+
+
 def _is_atmosphere_schema(schema: dict) -> bool:
     """Detect if a schema dict uses atmosphere JSON Schema format."""
     if schema.get("schemaType") == "jsonSchema":
@@ -231,7 +249,7 @@ def _is_atmosphere_schema(schema: dict) -> bool:
     return isinstance(inner, dict) and "schemaBody" in inner
 
 
-def schema_to_type(
+def _schema_to_type(
     schema: dict,
     *,
     use_cache: bool = True,
@@ -260,11 +278,14 @@ def schema_to_type(
 
     Examples:
         >>> schema = index.get_schema("local://schemas/MySample@1.0.0")
-        >>> MySample = schema_to_type(schema)
+        >>> MySample = _schema_to_type(schema)
         >>> ds = Dataset[MySample]("data.tar")
         >>> for sample in ds.ordered():
         ...     print(sample)
     """
+    # Check $atdataSchemaVersion before processing
+    _check_schema_record_version(schema)
+
     # Convert atmosphere JSON Schema format to local format
     if _is_atmosphere_schema(schema):
         schema = _convert_atmosphere_schema(schema)
@@ -385,7 +406,7 @@ def generate_stub(schema: dict) -> str:
     decoded sample types.
 
     Note:
-        Types created by ``schema_to_type()`` work correctly at runtime but
+        Types created by ``_schema_to_type()`` work correctly at runtime but
         static type checkers cannot analyze dynamically generated classes.
         Stub files bridge this gap by providing static type information.
 
@@ -459,7 +480,7 @@ def generate_module(schema: dict) -> str:
 
     This function creates a Python module that defines a PackableSample subclass
     matching the schema. Unlike stub files, this module can be imported at runtime,
-    allowing ``decode_schema`` to return properly typed classes.
+    allowing ``get_schema_type`` to return properly typed classes.
 
     The generated class inherits from PackableSample and uses @dataclass decorator
     for proper initialization. This provides both runtime functionality and static
@@ -542,8 +563,29 @@ def get_cached_types() -> dict[str, Type[Packable]]:
     return dict(_type_cache)
 
 
+def schema_to_type(
+    schema: dict,
+    *,
+    use_cache: bool = True,
+) -> Type[Packable]:
+    """Generate a PackableSample subclass from a schema record.
+
+    .. deprecated::
+        Use ``_schema_to_type`` directly or ``index.get_schema_type()`` instead.
+    """
+    import warnings
+
+    warnings.warn(
+        "schema_to_type() is deprecated, use index.get_schema_type() instead",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return _schema_to_type(schema, use_cache=use_cache)
+
+
 __all__ = [
     "schema_to_type",
+    "_schema_to_type",
     "generate_stub",
     "generate_module",
     "clear_type_cache",

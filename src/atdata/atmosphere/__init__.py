@@ -389,7 +389,7 @@ class AtmosphereIndex:
         records = self._schema_loader.list_all(repo=repo)
         return [rec.get("value", rec) for rec in records]
 
-    def decode_schema(self, ref: str) -> "Type[Packable]":
+    def get_schema_type(self, ref: str) -> "Type[Packable]":
         """Reconstruct a Python type from a schema record.
 
         Args:
@@ -401,10 +401,25 @@ class AtmosphereIndex:
         Raises:
             ValueError: If schema cannot be decoded.
         """
-        from .._schema_codec import schema_to_type
+        from .._schema_codec import _schema_to_type
 
         schema = self.get_schema(ref)
-        return schema_to_type(schema)
+        return _schema_to_type(schema)
+
+    def decode_schema(self, ref: str) -> "Type[Packable]":
+        """Reconstruct a Python type from a schema record.
+
+        .. deprecated::
+            Use :meth:`get_schema_type` instead.
+        """
+        import warnings
+
+        warnings.warn(
+            "Atmosphere.decode_schema() is deprecated, use Atmosphere.get_schema_type() instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.get_schema_type(ref)
 
 
 # Deprecated alias for backward compatibility

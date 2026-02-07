@@ -187,7 +187,7 @@ class Index:
                 - ``Atmosphere`` instance: uses that client directly.
                 - ``None``: disables atmosphere backend entirely.
             auto_stubs: If True, automatically generate .pyi stub files when
-                schemas are accessed via get_schema() or decode_schema().
+                schemas are accessed via get_schema() or get_schema_type().
                 This enables IDE autocomplete for dynamically decoded types.
             stub_dir: Directory to write stub files. Only used if auto_stubs
                 is True or if this parameter is provided (which implies auto_stubs).
@@ -297,7 +297,7 @@ class Index:
         else:
             self._stub_manager = None
 
-        # Initialize schema namespace for load_schema/schemas API
+        # Initialize schema namespace for get_schema_type/types API
         self._schema_namespace = SchemaNamespace()
 
     # -- Repository access --
@@ -439,11 +439,11 @@ class Index:
     def types(self) -> SchemaNamespace:
         """Namespace for accessing loaded schema types.
 
-        After calling :meth:`load_schema`, schema types become available
+        After calling :meth:`get_schema_type`, schema types become available
         as attributes on this namespace.
 
         Examples:
-            >>> index.load_schema("atdata://local/schema/MySample@1.0.0")
+            >>> index.get_schema_type("atdata://local/schema/MySample@1.0.0")
             >>> MyType = index.types.MySample
             >>> sample = MyType(name="hello", value=42)
 
@@ -455,38 +455,17 @@ class Index:
     def load_schema(self, ref: str) -> Type[Packable]:
         """Load a schema and make it available in the types namespace.
 
-        This method decodes the schema, optionally generates a Python module
-        for IDE support (if auto_stubs is enabled), and registers the type
-        in the :attr:`types` namespace for easy access.
-
-        Args:
-            ref: Schema reference string (atdata://local/schema/... or
-                legacy local://schemas/...).
-
-        Returns:
-            The decoded PackableSample subclass. Also available via
-            ``index.types.<ClassName>`` after this call.
-
-        Raises:
-            KeyError: If schema not found.
-            ValueError: If schema cannot be decoded.
-
-        Examples:
-            >>> # Load and use immediately
-            >>> MyType = index.load_schema("atdata://local/schema/MySample@1.0.0")
-            >>> sample = MyType(field1="hello", field2=42)
-            >>>
-            >>> # Or access later via namespace
-            >>> index.load_schema("atdata://local/schema/OtherType@1.0.0")
-            >>> other = index.types.OtherType(data="test")
+        .. deprecated::
+            Use :meth:`get_schema_type` instead (registers by default).
         """
-        # Decode the schema (uses generated module if auto_stubs enabled)
-        cls = self.decode_schema(ref)
+        import warnings
 
-        # Register in namespace using the class name
-        self._schema_namespace._register(cls.__name__, cls)
-
-        return cls
+        warnings.warn(
+            "Index.load_schema() is deprecated, use Index.get_schema_type() instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.get_schema_type(ref, register=True)
 
     def get_import_path(self, ref: str) -> str | None:
         """Get the import path for a schema's generated module.
@@ -504,7 +483,7 @@ class Index:
         Examples:
             >>> index = Index(auto_stubs=True)
             >>> ref = index.publish_schema(MySample, version="1.0.0")
-            >>> index.load_schema(ref)
+            >>> index.get_schema_type(ref)
             >>> print(index.get_import_path(ref))
             local.MySample_1_0_0
             >>> # Then in your code:
@@ -623,7 +602,7 @@ class Index:
     ) -> None:
         """Persist the schema definition if not already stored.
 
-        Called during dataset insertion so that ``decode_schema()`` can
+        Called during dataset insertion so that ``get_schema_type()`` can
         reconstruct the type later without the caller needing to publish
         the schema separately.
         """
@@ -1135,7 +1114,24 @@ class Index:
                     f"Atmosphere backend required for path {ref!r} but not available. "
                     "Install 'atproto' or pass an Atmosphere."
                 )
-            return atmo.get_dataset(resolved_ref)
+            # AT URIs go directly to the backend
+            if resolved_ref.startswith("at://"):
+                return atmo.get_dataset(resolved_ref)
+            # Bare names need label resolution
+            if handle_or_did is not None:
+                try:
+                    dataset_uri = atmo.resolve_label(handle_or_did, resolved_ref)
+                    return atmo.get_dataset(dataset_uri)
+                except KeyError:
+                    raise
+                except Exception as exc:
+                    raise KeyError(
+                        f"Cannot resolve {ref!r} on atmosphere: {exc}"
+                    ) from exc
+            raise KeyError(
+                f"Cannot resolve {ref!r} on atmosphere. No label found. "
+                "Use an AT URI or ensure a label exists for @handle/name."
+            )
 
         repo = self._repos.get(backend_key)
         if repo is None:
@@ -1226,6 +1222,7 @@ class Index:
 
         Args:
             name: Label name, optionally prefixed with a repository name.
+                Supports atmosphere paths (``"@handle/dataset"``).
             version: Specific version to resolve. If ``None``, returns the
                 most recently created label.
 
@@ -1234,11 +1231,36 @@ class Index:
 
         Raises:
             KeyError: If no label or dataset found.
+            ValueError: If atmosphere backend is required but unavailable.
 
         Examples:
             >>> entry = index.get_label("mnist", version="1.0.0")
+            >>> entry = index.get_label("@handle/mnist", version="1.0.0")
         """
-        backend_key, resolved_name, _ = self._resolve_prefix(name)
+        backend_key, resolved_name, handle_or_did = self._resolve_prefix(name)
+
+        if backend_key == "_atmosphere":
+            atmo = self._get_atmosphere()
+            if atmo is None:
+                raise ValueError(
+                    f"Atmosphere backend required for path {name!r} but not available. "
+                    "Install 'atproto' or pass an Atmosphere."
+                )
+            if handle_or_did is None:
+                raise KeyError(
+                    f"Cannot resolve atmosphere label without a handle: {name!r}. "
+                    "Use @handle/name format."
+                )
+            try:
+                dataset_uri = atmo.resolve_label(handle_or_did, resolved_name, version)
+            except KeyError:
+                raise
+            except Exception as exc:
+                raise KeyError(
+                    f"Cannot resolve atmosphere label {name!r}: {exc}"
+                ) from exc
+            return atmo.get_dataset(dataset_uri)
+
         repo = self._repos.get(backend_key)
         if repo is None:
             raise KeyError(f"Unknown repository {backend_key!r} in name {name!r}")
@@ -1424,7 +1446,7 @@ class Index:
         """
         return [record.to_dict() for record in self.schemas]
 
-    def decode_schema(self, ref: str) -> Type[Packable]:
+    def get_schema_type(self, ref: str, *, register: bool = True) -> Type[Packable]:
         """Reconstruct a Python PackableSample type from a stored schema.
 
         This method enables loading datasets without knowing the sample type
@@ -1438,6 +1460,9 @@ class Index:
         Args:
             ref: Schema reference string (atdata://local/schema/... or
                 legacy local://schemas/...).
+            register: If True (default), register the type in the
+                :attr:`types` namespace so it's accessible as
+                ``index.types.<ClassName>``.
 
         Returns:
             A PackableSample subclass - either imported from a generated module
@@ -1446,6 +1471,18 @@ class Index:
         Raises:
             KeyError: If schema not found.
             ValueError: If schema cannot be decoded.
+
+        Examples:
+            >>> # Load and use immediately
+            >>> MyType = index.get_schema_type("atdata://local/schema/MySample@1.0.0")
+            >>> sample = MyType(field1="hello", field2=42)
+            >>>
+            >>> # Or access later via namespace
+            >>> index.get_schema_type("atdata://local/schema/OtherType@1.0.0")
+            >>> other = index.types.OtherType(data="test")
+            >>>
+            >>> # Without namespace registration
+            >>> MyType = index.get_schema_type(ref, register=False)
         """
         schema_dict = self.get_schema(ref)
 
@@ -1453,44 +1490,59 @@ class Index:
         if self._stub_manager is not None:
             cls = self._stub_manager.ensure_module(schema_dict)
             if cls is not None:
+                if register:
+                    self._schema_namespace._register(cls.__name__, cls)
                 return cls
 
         # Fall back to dynamic type generation
-        from atdata._schema_codec import schema_to_type
+        from atdata._schema_codec import _schema_to_type
 
-        return schema_to_type(schema_dict)
+        cls = _schema_to_type(schema_dict)
+        if register:
+            self._schema_namespace._register(cls.__name__, cls)
+        return cls
+
+    def _decode_schema(self, ref: str) -> Type[Packable]:
+        """Internal: reconstruct type from schema without namespace registration."""
+        return self.get_schema_type(ref, register=False)
+
+    def _decode_schema_as(self, ref: str, type_hint: type[T]) -> type[T]:
+        """Internal: typed wrapper around _decode_schema."""
+        from typing import cast
+
+        return cast(type[T], self._decode_schema(ref))
+
+    def decode_schema(self, ref: str) -> Type[Packable]:
+        """Reconstruct a Python PackableSample type from a stored schema.
+
+        .. deprecated::
+            Use :meth:`get_schema_type` instead.
+        """
+        import warnings
+
+        warnings.warn(
+            "Index.decode_schema() is deprecated, use Index.get_schema_type() instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.get_schema_type(ref, register=False)
 
     def decode_schema_as(self, ref: str, type_hint: type[T]) -> type[T]:
         """Decode a schema with explicit type hint for IDE support.
 
-        This is a typed wrapper around decode_schema() that preserves the
-        type information for IDE autocomplete. Use this when you have a
-        stub file for the schema and want full IDE support.
-
-        Args:
-            ref: Schema reference string.
-            type_hint: The stub type to use for type hints. Import this from
-                the generated stub file.
-
-        Returns:
-            The decoded type, cast to match the type_hint for IDE support.
-
-        Examples:
-            >>> # After enabling auto_stubs and configuring IDE extraPaths:
-            >>> from local.MySample_1_0_0 import MySample
-            >>>
-            >>> # This gives full IDE autocomplete:
-            >>> DecodedType = index.decode_schema_as(ref, MySample)
-            >>> sample = DecodedType(text="hello", value=42)  # IDE knows signature!
-
-        Note:
-            The type_hint is only used for static type checking - at runtime,
-            the actual decoded type from the schema is returned. Ensure the
-            stub matches the schema to avoid runtime surprises.
+        .. deprecated::
+            Use :meth:`get_schema_type` instead.
         """
+        import warnings
+
+        warnings.warn(
+            "Index.decode_schema_as() is deprecated, use Index.get_schema_type() instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         from typing import cast
 
-        return cast(type[T], self.decode_schema(ref))
+        return cast(type[T], self.get_schema_type(ref, register=False))
 
     def clear_stubs(self) -> int:
         """Remove all auto-generated stub files.
@@ -1549,7 +1601,7 @@ class Index:
         )
         from atdata.promote import _find_or_publish_schema
         from atdata.atmosphere import DatasetPublisher
-        from atdata._schema_codec import schema_to_type
+        from atdata._schema_codec import _schema_to_type
         from atdata._logging import log_operation
 
         atmo = self._get_atmosphere()
@@ -1562,7 +1614,7 @@ class Index:
                 raise ValueError(f"Local entry {entry_name!r} has no data URLs")
 
             schema_record = self.get_schema(entry.schema_ref)
-            sample_type = schema_to_type(schema_record)
+            sample_type = _schema_to_type(schema_record)
             schema_version = schema_record.get("version", "1.0.0")
 
             atmosphere_schema_uri = _find_or_publish_schema(

@@ -547,6 +547,9 @@ class LexSchemaRecord:
     metadata: dict[str, Any] | None = None
     """Optional metadata (license, tags, etc.)."""
 
+    atdata_schema_version: int = 1
+    """Format version discriminator for the schema record structure itself."""
+
     def to_record(self) -> dict[str, Any]:
         """Serialize to ATProto record dict."""
         d: dict[str, Any] = {
@@ -556,6 +559,7 @@ class LexSchemaRecord:
             "schemaType": self.schema_type,
             "schema": self.schema.to_record(),
             "createdAt": self.created_at.isoformat(),
+            "$atdataSchemaVersion": self.atdata_schema_version,
         }
         if self.description is not None:
             d["description"] = self.description
@@ -574,6 +578,7 @@ class LexSchemaRecord:
             created_at=datetime.fromisoformat(d["createdAt"]),
             description=d.get("description"),
             metadata=d.get("metadata"),
+            atdata_schema_version=d.get("$atdataSchemaVersion", 1),
         )
 
 
@@ -616,6 +621,12 @@ class LexDatasetRecord:
     license: str | None = None
     """SPDX license identifier or URL."""
 
+    metadata_schema_ref: str | None = None
+    """AT-URI reference to a schema record for content metadata."""
+
+    content_metadata: dict[str, Any] | None = None
+    """Dataset-level content metadata (e.g., instrument settings)."""
+
     def to_record(self) -> dict[str, Any]:
         """Serialize to ATProto record dict."""
         d: dict[str, Any] = {
@@ -635,6 +646,10 @@ class LexDatasetRecord:
             d["size"] = self.size.to_record()
         if self.license is not None:
             d["license"] = self.license
+        if self.metadata_schema_ref is not None:
+            d["metadataSchemaRef"] = self.metadata_schema_ref
+        if self.content_metadata is not None:
+            d["contentMetadata"] = self.content_metadata
         return d
 
     @classmethod
@@ -673,6 +688,8 @@ class LexDatasetRecord:
             tags=d.get("tags"),
             size=size,
             license=d.get("license"),
+            metadata_schema_ref=d.get("metadataSchemaRef"),
+            content_metadata=d.get("contentMetadata"),
         )
 
 

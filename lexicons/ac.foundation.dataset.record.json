@@ -68,6 +68,16 @@
             "type": "string",
             "format": "datetime",
             "description": "Timestamp when this dataset record was created"
+          },
+          "metadataSchemaRef": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "Optional AT-URI reference to a schema record defining the structure of this dataset's content metadata. When present, contentMetadata is validated against this schema at write time.",
+            "maxLength": 500
+          },
+          "contentMetadata": {
+            "type": "unknown",
+            "description": "Dataset-level content metadata (e.g., instrument settings, acquisition parameters). Structure is validated against the schema referenced by metadataSchemaRef when present. Stored as an open JSON object."
           }
         }
       }

@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.4.1b2] - 2026-02-05
+
+### Fixed
+- **Atmosphere schema codec**: `_convert_atmosphere_schema()` now handles the flattened ATProto wire format where `properties`/`required` are at the top level of the `schema` dict, not nested under a `schemaBody` key. Previously, schemas fetched from a PDS produced types with zero fields.
+
 ## [0.4.1b1] - 2026-02-05
 
 ### Fixed

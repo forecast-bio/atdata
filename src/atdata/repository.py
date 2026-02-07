@@ -131,6 +131,8 @@ class _AtmosphereBackend:
         self._schema_loader: Any = None
         self._dataset_publisher: Any = None
         self._dataset_loader: Any = None
+        self._label_publisher: Any = None
+        self._label_loader: Any = None
 
     def _ensure_loaders(self) -> None:
         """Lazily create publishers/loaders on first use."""
@@ -138,11 +140,14 @@ class _AtmosphereBackend:
             return
         from .atmosphere.schema import SchemaPublisher, SchemaLoader
         from .atmosphere.records import DatasetPublisher, DatasetLoader
+        from .atmosphere.labels import LabelPublisher, LabelLoader
 
         self._schema_publisher = SchemaPublisher(self.client)
         self._schema_loader = SchemaLoader(self.client)
         self._dataset_publisher = DatasetPublisher(self.client)
         self._dataset_loader = DatasetLoader(self.client)
+        self._label_publisher = LabelPublisher(self.client)
+        self._label_loader = LabelLoader(self.client)
 
     @property
     def data_store(self) -> Optional[AbstractDataStore]:
@@ -289,8 +294,52 @@ class _AtmosphereBackend:
                 auto_publish_schema=(schema_ref is None),
             )
 
+        # Create a label record for name-based resolution (best-effort;
+        # the dataset record is already committed so we log and continue
+        # if the label publish fails).
+        try:
+            self._label_publisher.publish(
+                name=name,
+                dataset_uri=str(uri),
+                version=kwargs.get("version"),
+                description=kwargs.get("description"),
+            )
+        except Exception:
+            from ._logging import get_logger
+
+            get_logger().warning(
+                "Label publish failed for dataset %s (uri=%s); "
+                "dataset was created but label was not.",
+                name,
+                uri,
+            )
+
         record = self._dataset_loader.get(uri)
         return AtmosphereIndexEntry(str(uri), record)
+
+    # -- Label operations --
+
+    def resolve_label(
+        self,
+        handle_or_did: str,
+        name: str,
+        version: str | None = None,
+    ) -> str:
+        """Resolve a named label to its dataset AT URI.
+
+        Args:
+            handle_or_did: DID or handle of the dataset owner.
+            name: Label name (e.g. 'mnist').
+            version: Specific version to resolve.
+
+        Returns:
+            AT URI of the referenced dataset record.
+
+        Raises:
+            KeyError: If no matching label is found.
+        """
+        self._ensure_loaders()
+        return self._label_loader.resolve(handle_or_did, name, version)
 
     # -- Schema operations --
 
@@ -356,7 +405,7 @@ class _AtmosphereBackend:
         for rec in records:
             yield rec.get("value", rec)
 
-    def decode_schema(self, ref: str) -> type:
+    def get_schema_type(self, ref: str) -> type:
         """Reconstruct a Python type from a schema record.
 
         Args:
@@ -365,10 +414,25 @@ class _AtmosphereBackend:
         Returns:
             Dynamically generated Packable type.
         """
-        from ._schema_codec import schema_to_type
+        from ._schema_codec import _schema_to_type
 
         schema = self.get_schema(ref)
-        return schema_to_type(schema)
+        return _schema_to_type(schema)
+
+    def decode_schema(self, ref: str) -> type:
+        """Reconstruct a Python type from a schema record.
+
+        .. deprecated::
+            Use :meth:`get_schema_type` instead.
+        """
+        import warnings
+
+        warnings.warn(
+            "Repository.decode_schema() is deprecated, use Repository.get_schema_type() instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.get_schema_type(ref)
 
 
 __all__ = [
