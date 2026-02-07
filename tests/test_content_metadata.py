@@ -16,9 +16,7 @@ import atdata
 from atdata.atmosphere._lexicon_types import (
     LEXICON_NAMESPACE,
     DatasetMetadata,
-    HttpShardEntry,
     LexDatasetRecord,
-    ShardChecksum,
     StorageHttp,
 )
 from atdata.atmosphere.records import DatasetPublisher, _packable_to_dict
