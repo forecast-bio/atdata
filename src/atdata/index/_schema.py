@@ -34,11 +34,11 @@ _ATDATA_LENS_URI_PREFIX = "atdata://local/lens/"
 class SchemaNamespace:
     """Namespace for accessing loaded schema types as attributes.
 
-    After ``index.load_schema(uri)``, the type is available as an attribute.
+    After ``index.get_schema_type(uri)``, the type is available as an attribute.
     Supports attribute access, iteration, ``len()``, and ``in`` checks.
 
     Examples:
-        >>> index.load_schema("atdata://local/schema/MySample@1.0.0")
+        >>> index.get_schema_type("atdata://local/schema/MySample@1.0.0")
         >>> MyType = index.types.MySample
         >>> sample = MyType(field1="hello", field2=42)
 
@@ -62,7 +62,7 @@ class SchemaNamespace:
         if name not in self._types:
             raise AttributeError(
                 f"Schema '{name}' not loaded. "
-                f"Call index.load_schema() first to load the schema."
+                f"Call index.get_schema_type() first to load the schema."
             )
         return self._types[name]
 

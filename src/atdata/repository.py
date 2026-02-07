@@ -356,7 +356,7 @@ class _AtmosphereBackend:
         for rec in records:
             yield rec.get("value", rec)
 
-    def decode_schema(self, ref: str) -> type:
+    def get_schema_type(self, ref: str) -> type:
         """Reconstruct a Python type from a schema record.
 
         Args:
@@ -365,10 +365,25 @@ class _AtmosphereBackend:
         Returns:
             Dynamically generated Packable type.
         """
-        from ._schema_codec import schema_to_type
+        from ._schema_codec import _schema_to_type
 
         schema = self.get_schema(ref)
-        return schema_to_type(schema)
+        return _schema_to_type(schema)
+
+    def decode_schema(self, ref: str) -> type:
+        """Reconstruct a Python type from a schema record.
+
+        .. deprecated::
+            Use :meth:`get_schema_type` instead.
+        """
+        import warnings
+
+        warnings.warn(
+            "Repository.decode_schema() is deprecated, use Repository.get_schema_type() instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.get_schema_type(ref)
 
 
 __all__ = [

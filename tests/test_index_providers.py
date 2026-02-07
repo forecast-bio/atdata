@@ -397,12 +397,12 @@ class TestIndexWithProvider:
         schemas = index.list_schemas()
         assert len(schemas) == 2
 
-    def test_index_decode_schema_sqlite(self, tmp_path: Path):
+    def test_index_get_schema_type_sqlite(self, tmp_path: Path):
         provider = SqliteProvider(path=tmp_path / "idx.db")
         index = atlocal.Index(provider=provider)
 
         ref = index.publish_schema(ProviderTestSample, version="1.0.0")
-        decoded = index.decode_schema(ref)
+        decoded = index.get_schema_type(ref)
 
         assert decoded.__name__ == "ProviderTestSample"
 
