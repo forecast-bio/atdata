@@ -15,7 +15,8 @@ A loose federation of distributed, typed datasets built on WebDataset.
 - **WebDataset Integration** - Efficient storage and streaming for large-scale datasets
 - **Flexible Data Sources** - Stream from local files, HTTP URLs, or S3-compatible storage
 - **HuggingFace-style API** - `load_dataset()` with path resolution and split handling
-- **Local & Atmosphere Storage** - Index datasets locally with Redis or publish to ATProto network
+- **Managed Storage** - Index datasets with pluggable providers (SQLite, Redis, PostgreSQL) and data stores (local disk, S3)
+- **ATProto Federation** - Publish and discover datasets on the decentralized AT Protocol network
 
 ## Installation
 
@@ -101,6 +102,24 @@ processed_ds = dataset.as_type(ProcessedSample)
 for sample in processed_ds.ordered(batch_size=None):
     # sample is now a ProcessedSample
     print(sample.features.shape)
+```
+
+### Managed Storage
+
+Use `Index` for dataset discovery, versioning, and schema management:
+
+```python
+import atdata
+
+# Zero-config: SQLite + local disk (default)
+index = atdata.Index(data_store=atdata.LocalDiskStore())
+
+# Write samples through the index (handles sharding, schema, and indexing)
+entry = index.write_samples(samples, name="training-v1", maxcount=5000)
+
+# Load by name — schema auto-resolved
+atdata.set_default_index(index)
+ds = atdata.load_dataset("@local/training-v1", split="train")
 ```
 
 ## Core Concepts
