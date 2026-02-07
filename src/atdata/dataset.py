@@ -625,9 +625,7 @@ class Dataset(Generic[ST]):
         return self._content_metadata
 
     @content_metadata.setter
-    def content_metadata(
-        self, value: "Packable | dict[str, Any] | None"
-    ) -> None:
+    def content_metadata(self, value: "Packable | dict[str, Any] | None") -> None:
         self._content_metadata = value
 
     ##

@@ -72,7 +72,10 @@ class TestLexDatasetRecordContentMetadata:
             metadata_schema_ref="at://did:plc:abc/ac.foundation.dataset.schema/meta1"
         )
         d = rec.to_record()
-        assert d["metadataSchemaRef"] == "at://did:plc:abc/ac.foundation.dataset.schema/meta1"
+        assert (
+            d["metadataSchemaRef"]
+            == "at://did:plc:abc/ac.foundation.dataset.schema/meta1"
+        )
 
     def test_to_record_includes_content_metadata(self):
         rec = self._make_record(
@@ -236,9 +239,7 @@ class TestDatasetContentMetadata:
         class SimpleSample:
             text: str
 
-        ds = atdata.write_samples(
-            [SimpleSample(text="a")], str(tmp_path / "data.tar")
-        )
+        ds = atdata.write_samples([SimpleSample(text="a")], str(tmp_path / "data.tar"))
         assert ds.content_metadata is None
 
     def test_setter_accepts_dict(self, tmp_path):
@@ -246,9 +247,7 @@ class TestDatasetContentMetadata:
         class SimpleSample:
             text: str
 
-        ds = atdata.write_samples(
-            [SimpleSample(text="a")], str(tmp_path / "data.tar")
-        )
+        ds = atdata.write_samples([SimpleSample(text="a")], str(tmp_path / "data.tar"))
         ds.content_metadata = {"key": "value"}
         assert ds.content_metadata == {"key": "value"}
 
@@ -257,9 +256,7 @@ class TestDatasetContentMetadata:
         class SimpleSample:
             text: str
 
-        ds = atdata.write_samples(
-            [SimpleSample(text="a")], str(tmp_path / "data.tar")
-        )
+        ds = atdata.write_samples([SimpleSample(text="a")], str(tmp_path / "data.tar"))
         meta = InstrumentMetadata(
             instrument="Zeiss", acquisition_date="2025-01-01", operator="Eve"
         )
@@ -304,7 +301,10 @@ class TestDatasetPublisherContentMetadata:
 
         call_args = mock_client.create_record.call_args
         record_dict = call_args.kwargs.get("record") or call_args[1].get("record")
-        assert record_dict["metadataSchemaRef"] == "at://did:plc:abc/collection/meta_schema1"
+        assert (
+            record_dict["metadataSchemaRef"]
+            == "at://did:plc:abc/collection/meta_schema1"
+        )
         assert record_dict["contentMetadata"] == {"instrument": "Zeiss"}
 
     def test_create_record_without_content_metadata(self):
