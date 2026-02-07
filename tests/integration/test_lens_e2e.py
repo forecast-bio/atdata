@@ -169,10 +169,19 @@ class TestLensPublishRetrieve:
         assert record["name"] == name
         assert record["sourceSchema"] == source_schema_uri
         assert record["targetSchema"] == target_schema_uri
-        assert record["getterCode"]["repository"] == "https://github.com/forecast-bio/atdata"
+        assert (
+            record["getterCode"]["repository"]
+            == "https://github.com/forecast-bio/atdata"
+        )
         assert record["getterCode"]["commit"] == "a" * 40
-        assert record["getterCode"]["path"] == "tests.integration.test_lens_e2e:_full_to_namescore_get"
-        assert record["putterCode"]["path"] == "tests.integration.test_lens_e2e:_full_to_namescore_put"
+        assert (
+            record["getterCode"]["path"]
+            == "tests.integration.test_lens_e2e:_full_to_namescore_get"
+        )
+        assert (
+            record["putterCode"]["path"]
+            == "tests.integration.test_lens_e2e:_full_to_namescore_put"
+        )
         assert record["description"] == "E2E test lens: FullSample -> NameScore"
         assert record["language"] == "python"
 
@@ -211,7 +220,10 @@ class TestLensPublishRetrieve:
         assert typed_record.source_schema == source_uri
         assert typed_record.target_schema == target_uri
         assert isinstance(typed_record.getter_code, LexCodeReference)
-        assert typed_record.getter_code.repository == "https://github.com/forecast-bio/atdata"
+        assert (
+            typed_record.getter_code.repository
+            == "https://github.com/forecast-bio/atdata"
+        )
         assert typed_record.getter_code.commit == "b" * 40
         assert typed_record.getter_code.path == "lenses.get_fn"
         assert typed_record.putter_code.path == "lenses.put_fn"
@@ -326,9 +338,7 @@ class TestLensLawsAfterRoundTrip:
         assert r1.label == r2.label
         np.testing.assert_array_equal(r1.embedding, r2.embedding)
 
-    def test_published_record_references_match_lens(
-        self, atproto_client: Atmosphere
-    ):
+    def test_published_record_references_match_lens(self, atproto_client: Atmosphere):
         """Publish a lens, retrieve it, and verify code references match."""
         name = unique_name("lens-laws")
 
@@ -566,6 +576,7 @@ class TestLensDatasetIntegration:
 
     def test_lens_transforms_dataset_samples(self, tmp_path):
         """Write samples, apply lens via Dataset.as_type, verify output."""
+
         # Register the lens via @lens for this test
         @atdata.lens
         def e2e_lens(s: FullSample) -> NameScore:
@@ -772,12 +783,8 @@ class TestLexLensRecordRoundTrip:
 
     def test_record_has_correct_type(self):
         """Serialized record has correct $type field."""
-        getter = LexCodeReference(
-            repository="repo", commit="c" * 40, path="p:get"
-        )
-        putter = LexCodeReference(
-            repository="repo", commit="c" * 40, path="p:put"
-        )
+        getter = LexCodeReference(repository="repo", commit="c" * 40, path="p:get")
+        putter = LexCodeReference(repository="repo", commit="c" * 40, path="p:put")
 
         record = LexLensRecord(
             name="type-check",
