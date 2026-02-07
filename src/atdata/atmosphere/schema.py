@@ -6,7 +6,7 @@ records.
 """
 
 from dataclasses import fields, is_dataclass
-from typing import Type, TypeVar, Optional, get_type_hints, get_origin, get_args
+from typing import TYPE_CHECKING, Type, TypeVar, Optional, get_type_hints, get_origin, get_args
 
 from .client import Atmosphere
 from ._types import AtUri, LEXICON_NAMESPACE
@@ -19,9 +19,6 @@ from .._exceptions import SchemaError
 
 # Maximum $atdataSchemaVersion this library can read.
 _MAX_SUPPORTED_SCHEMA_VERSION = 1
-
-# Import for type checking only to avoid circular imports
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .._protocols import Packable
