@@ -6,7 +6,15 @@ records.
 """
 
 from dataclasses import fields, is_dataclass
-from typing import TYPE_CHECKING, Type, TypeVar, Optional, get_type_hints, get_origin, get_args
+from typing import (
+    TYPE_CHECKING,
+    Type,
+    TypeVar,
+    Optional,
+    get_type_hints,
+    get_origin,
+    get_args,
+)
 
 from .client import Atmosphere
 from ._types import AtUri, LEXICON_NAMESPACE
