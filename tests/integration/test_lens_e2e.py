@@ -23,7 +23,6 @@ import atdata
 from atdata.atmosphere import (
     Atmosphere,
     SchemaPublisher,
-    SchemaLoader,
     DatasetPublisher,
     DatasetLoader,
     LensPublisher,
@@ -440,8 +439,6 @@ class TestCodeReferencePatterns:
         putter_commit = "def456" + "0" * 34
 
         # Use explicit publish to set different repos per code ref
-        lens_pub = LensPublisher(atproto_client)
-
         getter_code = LexCodeReference(
             repository=getter_repo,
             commit=getter_commit,
