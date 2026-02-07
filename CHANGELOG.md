@@ -21,8 +21,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Build config cleanup**: `.chainlink/` and `.claude/` directories excluded from sdist builds (#54)
 
 ### Fixed
+- **Lens discovery pagination**: `find_by_schemas()` now paginates with `limit=100` + cursor instead of exceeding ATProto's `list_records` cap of 100
+- **Truncated session test**: Rewrote `test_truncated_session_string_raises` to handle the atproto SDK silently accepting truncated sessions via its 4-field backward compat path ([MarshalX/atproto#656](https://github.com/MarshalX/atproto/issues/656))
 - **Exception chaining**: Proper `raise ... from` exception chaining and best-effort label publish error handling
 - **Content metadata validation**: Metadata validated before writing files; dead code removed
+- **Chainlink db protection**: Added git hooks (`.githooks/`) to prevent worktree symlinks from overwriting the issues database on merge
 
 ## [0.4.1b2] - 2026-02-05
 
