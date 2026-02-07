@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Prevent committing .chainlink/issues.db as a symlink.
+#
+# Worktrees replace issues.db with a symlink to the base clone's copy.
+# If that symlink gets committed and merged, it overwrites the real
+# SQLite database on the target branch.
+
+# Check the staged mode of issues.db. The raw diff format is:
+#   :old_mode new_mode old_sha new_sha status\tpath
+# We want the new_mode (field after first space, before second space).
+new_mode=$(git diff --cached --raw -- .chainlink/issues.db \
+    | awk '{print $2}')
+
+if [ "$new_mode" = "120000" ]; then
+    echo "ERROR: .chainlink/issues.db is staged as a symlink (mode 120000)."
+    echo ""
+    echo "This is a worktree artifact. Committing it would overwrite the"
+    echo "real SQLite database when merged."
+    echo ""
+    echo "Fix: unstage it with:"
+    echo "  git reset HEAD .chainlink/issues.db"
+    exit 1
+fi

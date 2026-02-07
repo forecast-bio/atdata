@@ -1,5 +1,9 @@
 _bench_base := "uv run pytest benchmarks/ --override-ini='python_files=bench_*.py' --benchmark-enable --benchmark-sort=mean --no-cov"
 
+setup:
+    git config core.hooksPath .githooks
+    @echo "Git hooks activated from .githooks/"
+
 sync-lexicons:
     cp lexicons/*.json src/atdata/lexicons/
 
