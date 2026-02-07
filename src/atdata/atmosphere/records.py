@@ -5,6 +5,7 @@ and loading them back. Dataset records are published as
 ``ac.foundation.dataset.record`` records.
 """
 
+import dataclasses
 from typing import Type, TypeVar, Optional
 import msgpack
 
@@ -31,6 +32,26 @@ if TYPE_CHECKING:
     from .._protocols import Packable
 
 ST = TypeVar("ST", bound="Packable")
+
+
+def _packable_to_dict(instance: "Packable") -> dict:
+    """Convert a Packable instance to a JSON-serializable dict for content metadata.
+
+    Args:
+        instance: A Packable (dataclass) instance.
+
+    Returns:
+        A plain dict of field names to values.
+
+    Raises:
+        TypeError: If the instance is not a dataclass.
+    """
+    if not dataclasses.is_dataclass(instance):
+        raise TypeError(
+            f"Cannot convert {type(instance).__name__} to content metadata dict; "
+            "expected a @packable or PackableSample dataclass"
+        )
+    return dataclasses.asdict(instance)
 
 
 def _placeholder_checksum() -> ShardChecksum:
@@ -77,6 +98,8 @@ class DatasetPublisher:
         tags: Optional[list[str]] = None,
         license: Optional[str] = None,
         metadata: Optional[DatasetMetadata | dict] = None,
+        metadata_schema_ref: Optional[str] = None,
+        content_metadata: Optional[dict] = None,
         rkey: Optional[str] = None,
     ) -> AtUri:
         """Build a LexDatasetRecord and publish it to ATProto."""
@@ -94,6 +117,8 @@ class DatasetPublisher:
             tags=tags or [],
             license=license,
             metadata=typed_metadata,
+            metadata_schema_ref=metadata_schema_ref,
+            content_metadata=content_metadata,
         )
 
         return self.client.create_record(
@@ -114,6 +139,8 @@ class DatasetPublisher:
         license: Optional[str] = None,
         auto_publish_schema: bool = True,
         schema_version: str = "1.0.0",
+        metadata_schema_uri: Optional[str] = None,
+        auto_publish_metadata_schema: bool = True,
         rkey: Optional[str] = None,
     ) -> AtUri:
         """Publish a dataset index record to ATProto.
@@ -129,6 +156,12 @@ class DatasetPublisher:
             auto_publish_schema: If True and schema_uri not provided,
                 automatically publish the schema first.
             schema_version: Version for auto-published schema.
+            metadata_schema_uri: AT URI of the content metadata schema. If not
+                provided and the dataset has typed content metadata,
+                auto_publish_metadata_schema controls whether to publish it.
+            auto_publish_metadata_schema: If True and dataset has typed content
+                metadata (Packable instance), automatically publish the metadata
+                schema.
             rkey: Optional explicit record key.
 
         Returns:
@@ -148,6 +181,27 @@ class DatasetPublisher:
             )
             schema_uri = str(schema_uri_obj)
 
+        # Resolve content metadata and its schema
+        content_metadata_dict: Optional[dict] = None
+        metadata_schema_ref: Optional[str] = None
+        raw_content = dataset.content_metadata
+        if raw_content is not None:
+            from .._protocols import Packable
+
+            if isinstance(raw_content, Packable):
+                content_metadata_dict = _packable_to_dict(raw_content)
+                if metadata_schema_uri is not None:
+                    metadata_schema_ref = metadata_schema_uri
+                elif auto_publish_metadata_schema:
+                    meta_schema_uri_obj = self._schema_publisher.publish(
+                        type(raw_content),
+                        version=schema_version,
+                    )
+                    metadata_schema_ref = str(meta_schema_uri_obj)
+            elif isinstance(raw_content, dict):
+                content_metadata_dict = raw_content
+                metadata_schema_ref = metadata_schema_uri
+
         shard_urls = dataset.list_shards()
         storage = StorageHttp(
             shards=[
@@ -164,6 +218,8 @@ class DatasetPublisher:
             tags=tags,
             license=license,
             metadata=dataset.metadata,
+            metadata_schema_ref=metadata_schema_ref,
+            content_metadata=content_metadata_dict,
             rkey=rkey,
         )
 
@@ -177,6 +233,8 @@ class DatasetPublisher:
         tags: Optional[list[str]] = None,
         license: Optional[str] = None,
         metadata: Optional[dict] = None,
+        metadata_schema_ref: Optional[str] = None,
+        content_metadata: Optional[dict] = None,
         checksums: Optional[list[ShardChecksum]] = None,
         rkey: Optional[str] = None,
     ) -> AtUri:
@@ -194,6 +252,8 @@ class DatasetPublisher:
             tags: Searchable tags for discovery.
             license: SPDX license identifier.
             metadata: Arbitrary metadata dictionary.
+            metadata_schema_ref: AT URI of the content metadata schema.
+            content_metadata: Dataset-level content metadata dict.
             checksums: Per-shard checksums. If not provided, empty checksums
                 are used.
             rkey: Optional explicit record key.
@@ -223,6 +283,8 @@ class DatasetPublisher:
             tags=tags,
             license=license,
             metadata=metadata,
+            metadata_schema_ref=metadata_schema_ref,
+            content_metadata=content_metadata,
             rkey=rkey,
         )
 
@@ -239,6 +301,8 @@ class DatasetPublisher:
         tags: Optional[list[str]] = None,
         license: Optional[str] = None,
         metadata: Optional[dict] = None,
+        metadata_schema_ref: Optional[str] = None,
+        content_metadata: Optional[dict] = None,
         checksums: Optional[list[ShardChecksum]] = None,
         rkey: Optional[str] = None,
     ) -> AtUri:
@@ -255,6 +319,8 @@ class DatasetPublisher:
             tags: Searchable tags for discovery.
             license: SPDX license identifier.
             metadata: Arbitrary metadata dictionary.
+            metadata_schema_ref: AT URI of the content metadata schema.
+            content_metadata: Dataset-level content metadata dict.
             checksums: Per-shard checksums.
             rkey: Optional explicit record key.
 
@@ -283,6 +349,8 @@ class DatasetPublisher:
             tags=tags,
             license=license,
             metadata=metadata,
+            metadata_schema_ref=metadata_schema_ref,
+            content_metadata=content_metadata,
             rkey=rkey,
         )
 
@@ -296,6 +364,8 @@ class DatasetPublisher:
         tags: Optional[list[str]] = None,
         license: Optional[str] = None,
         metadata: Optional[dict] = None,
+        metadata_schema_ref: Optional[str] = None,
+        content_metadata: Optional[dict] = None,
         checksums: Optional[list[ShardChecksum]] = None,
         rkey: Optional[str] = None,
     ) -> AtUri:
@@ -316,6 +386,8 @@ class DatasetPublisher:
             tags: Searchable tags for discovery.
             license: SPDX license identifier.
             metadata: Arbitrary metadata dictionary.
+            metadata_schema_ref: AT URI of the content metadata schema.
+            content_metadata: Dataset-level content metadata dict.
             checksums: Per-shard checksums. If not provided, empty checksums
                 are used.
             rkey: Optional explicit record key.
@@ -345,6 +417,8 @@ class DatasetPublisher:
             tags=tags,
             license=license,
             metadata=metadata,
+            metadata_schema_ref=metadata_schema_ref,
+            content_metadata=content_metadata,
             rkey=rkey,
         )
 
@@ -358,6 +432,8 @@ class DatasetPublisher:
         tags: Optional[list[str]] = None,
         license: Optional[str] = None,
         metadata: Optional[dict] = None,
+        metadata_schema_ref: Optional[str] = None,
+        content_metadata: Optional[dict] = None,
         mime_type: str = "application/x-tar",
         rkey: Optional[str] = None,
     ) -> AtUri:
@@ -375,6 +451,8 @@ class DatasetPublisher:
             tags: Searchable tags for discovery.
             license: SPDX license identifier.
             metadata: Arbitrary metadata dictionary.
+            metadata_schema_ref: AT URI of the content metadata schema.
+            content_metadata: Dataset-level content metadata dict.
             mime_type: MIME type for the blobs (default: application/x-tar).
             rkey: Optional explicit record key.
 
@@ -406,6 +484,8 @@ class DatasetPublisher:
             tags=tags,
             license=license,
             metadata=metadata,
+            metadata_schema_ref=metadata_schema_ref,
+            content_metadata=content_metadata,
             rkey=rkey,
         )
 
@@ -702,6 +782,30 @@ class DatasetLoader:
         typed_record = LexDatasetRecord.from_record(record)
         return typed_record.metadata
 
+    def get_content_metadata(self, uri: str | AtUri) -> Optional[dict]:
+        """Get the content metadata from a dataset record.
+
+        Args:
+            uri: The AT URI of the dataset record.
+
+        Returns:
+            The content metadata as a dict, or None if not present.
+        """
+        record = self.get(uri)
+        return record.get("contentMetadata")
+
+    def get_metadata_schema_ref(self, uri: str | AtUri) -> Optional[str]:
+        """Get the metadata schema reference from a dataset record.
+
+        Args:
+            uri: The AT URI of the dataset record.
+
+        Returns:
+            The AT-URI of the metadata schema, or None if not present.
+        """
+        record = self.get(uri)
+        return record.get("metadataSchemaRef")
+
     def to_dataset(
         self,
         uri: str | AtUri,
@@ -751,4 +855,11 @@ class DatasetLoader:
         record = self.get(uri)
         metadata_url = record.get("metadataUrl")
 
-        return Dataset[sample_type](url, metadata_url=metadata_url)
+        ds = Dataset[sample_type](url, metadata_url=metadata_url)
+
+        # Attach content metadata from the record if present
+        content_meta = record.get("contentMetadata")
+        if content_meta is not None:
+            ds._content_metadata = content_meta
+
+        return ds
