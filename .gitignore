@@ -3,6 +3,9 @@
 # Lexicon JSON copies (authoritative source is lexicons/ at project root)
 src/atdata/lexicons/*.json
 
+# Chainlink pre-merge backup (created by .githooks/pre-merge-commit)
+.chainlink/issues.db.pre-merge
+
 # mac garbage
 **/.DS_Store
 # Don't commit any .env files

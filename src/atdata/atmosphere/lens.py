@@ -273,16 +273,13 @@ class LensLoader:
         .. note:: **Client-side workaround (no AppView)**
 
            There is no query lexicon for finding lenses by schema yet.
-           This method fetches all lens records via
-           ``com.atproto.repo.listRecords`` (up to 1000) and filters in
-           Python.  When an AppView with a dedicated query endpoint is
-           available, this should be replaced with a server-side query.
+           This method paginates through all lens records via
+           ``com.atproto.repo.listRecords`` and filters in Python.
+           When an AppView with a dedicated query endpoint is available,
+           this should be replaced with a server-side query.
 
            Known limitations of the client-side approach:
 
-           - Hard-coded limit of 1000 records (repos with more silently
-             lose results)
-           - No pagination (would need a cursor loop for correctness)
            - O(n) per call (fetches all lens records every time)
            - No server-side filtering
 
@@ -297,20 +294,27 @@ class LensLoader:
         """
         # WORKAROUND: Client-side query (no AppView)
         # No query lexicon exists for lens-by-schema lookup yet.
-        # This fetches all records via list_records() and filters in Python.
-        # Replace with a dedicated XRPC query when an AppView is available.
-        # Known limitations:
-        #   - Hard-coded limit of 1000 records (repos with more silently lose results)
-        #   - No pagination (would need cursor loop)
-        #   - O(n) per call (fetches all lens records every time)
-        all_lenses = self.list_all(repo=repo, limit=1000)
+        # This paginates through all records via list_records() and filters
+        # in Python. Replace with a dedicated XRPC query when an AppView
+        # is available.
+        collection = f"{LEXICON_NAMESPACE}.lens"
+        if repo is None:
+            self.client._ensure_authenticated()
+            repo = self.client.did
 
         matches = []
-        for lens_record in all_lenses:
-            if lens_record.get("sourceSchema") == source_schema_uri:
-                if target_schema_uri is None:
-                    matches.append(lens_record)
-                elif lens_record.get("targetSchema") == target_schema_uri:
-                    matches.append(lens_record)
+        cursor: Optional[str] = None
+        while True:
+            records, cursor = self.client.list_records(
+                collection, repo=repo, limit=100, cursor=cursor,
+            )
+            for lens_record in records:
+                if lens_record.get("sourceSchema") == source_schema_uri:
+                    if target_schema_uri is None:
+                        matches.append(lens_record)
+                    elif lens_record.get("targetSchema") == target_schema_uri:
+                        matches.append(lens_record)
+            if not cursor:
+                break
 
         return matches
