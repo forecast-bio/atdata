@@ -68,12 +68,16 @@ def test_ensure_loaders_lazy_init(backend) -> None:
     """Loaders/publishers are None until _ensure_loaders is called."""
     assert backend._schema_loader is None
     assert backend._dataset_loader is None
+    assert backend._label_publisher is None
+    assert backend._label_loader is None
 
     with (
         patch("atdata.atmosphere.schema.SchemaPublisher") as MockSP,
         patch("atdata.atmosphere.schema.SchemaLoader") as MockSL,
         patch("atdata.atmosphere.records.DatasetPublisher") as MockDP,
         patch("atdata.atmosphere.records.DatasetLoader") as MockDL,
+        patch("atdata.atmosphere.labels.LabelPublisher") as MockLP,
+        patch("atdata.atmosphere.labels.LabelLoader") as MockLL,
     ):
         backend._ensure_loaders()
 
@@ -81,6 +85,8 @@ def test_ensure_loaders_lazy_init(backend) -> None:
         MockSL.assert_called_once_with(backend.client)
         MockDP.assert_called_once_with(backend.client)
         MockDL.assert_called_once_with(backend.client)
+        MockLP.assert_called_once_with(backend.client)
+        MockLL.assert_called_once_with(backend.client)
 
     # Second call is a no-op (already initialised)
     backend._ensure_loaders()
@@ -97,6 +103,8 @@ def _patch_loaders(backend):
     backend._schema_loader = MagicMock()
     backend._dataset_publisher = MagicMock()
     backend._dataset_loader = MagicMock()
+    backend._label_publisher = MagicMock()
+    backend._label_loader = MagicMock()
 
 
 def test_get_dataset(backend) -> None:
