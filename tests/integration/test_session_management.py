@@ -36,9 +36,7 @@ class TestSessionLogin:
         assert atmo.did.startswith("did:plc:")
         assert atmo.handle == handle
 
-    def test_login_populates_did_and_handle(
-        self, atproto_credentials: tuple[str, str]
-    ):
+    def test_login_populates_did_and_handle(self, atproto_credentials: tuple[str, str]):
         """Login populates both did and handle with non-empty strings."""
         handle, password = atproto_credentials
         atmo = Atmosphere.login(handle, password)
@@ -63,9 +61,7 @@ class TestSessionExportImport:
         assert isinstance(session_str, str)
         assert len(session_str) > 0
 
-    def test_session_roundtrip_preserves_identity(
-        self, atproto_client: Atmosphere
-    ):
+    def test_session_roundtrip_preserves_identity(self, atproto_client: Atmosphere):
         """Exported session can be used to create a new client with same identity."""
         session_str = atproto_client.export_session()
 
@@ -74,9 +70,7 @@ class TestSessionExportImport:
         assert atmo2.did == atproto_client.did
         assert atmo2.handle == atproto_client.handle
 
-    def test_reimported_client_can_export_again(
-        self, atproto_client: Atmosphere
-    ):
+    def test_reimported_client_can_export_again(self, atproto_client: Atmosphere):
         """A client created from an imported session can re-export."""
         session1 = atproto_client.export_session()
 
