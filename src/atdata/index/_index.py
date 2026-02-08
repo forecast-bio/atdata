@@ -1267,6 +1267,16 @@ class Index:
         cid, _resolved_version = repo.provider.get_label(resolved_name, version)
         return repo.provider.get_entry_by_cid(cid)
 
+    @property
+    def labels(self) -> Generator[tuple[str, str, str | None], None, None]:
+        """Lazily iterate over all labels across local repositories.
+
+        Yields:
+            ``(name, cid, version)`` tuples.
+        """
+        for r in self._repos.values():
+            yield from r.provider.iter_labels()
+
     def list_labels(self, repo: str | None = None) -> list[tuple[str, str, str | None]]:
         """List all labels as ``(name, cid, version)`` tuples.
 

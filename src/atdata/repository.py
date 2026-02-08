@@ -312,6 +312,7 @@ class _AtmosphereBackend:
                 "dataset was created but label was not.",
                 name,
                 uri,
+                exc_info=True,
             )
 
         record = self._dataset_loader.get(uri)

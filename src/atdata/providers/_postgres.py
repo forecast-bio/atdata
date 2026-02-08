@@ -16,7 +16,7 @@ from typing import Iterator
 import msgpack
 
 from ._base import IndexProvider
-from .._type_utils import parse_semver
+
 
 _CREATE_TABLES = """\
 CREATE TABLE IF NOT EXISTS dataset_entries (
@@ -186,22 +186,14 @@ class PostgresProvider(IndexProvider):
                 yield row[0], row[1], row[2]
 
     def find_latest_version(self, name: str) -> str | None:
+        from ._base import _find_latest_semver
+
         with self._conn.cursor() as cur:
             cur.execute(
                 "SELECT version FROM schemas WHERE name = %s",
                 (name,),
             )
-            latest: tuple[int, int, int] | None = None
-            latest_str: str | None = None
-            for (version_str,) in cur:
-                try:
-                    v = parse_semver(version_str)
-                    if latest is None or v > latest:
-                        latest = v
-                        latest_str = version_str
-                except ValueError:
-                    continue
-        return latest_str
+            return _find_latest_semver(row[0] for row in cur)
 
     # ------------------------------------------------------------------
     # Label operations
@@ -287,22 +279,14 @@ class PostgresProvider(IndexProvider):
                 yield row[0], row[1], row[2]
 
     def find_latest_lens_version(self, name: str) -> str | None:
+        from ._base import _find_latest_semver
+
         with self._conn.cursor() as cur:
             cur.execute(
                 "SELECT version FROM lenses WHERE name = %s",
                 (name,),
             )
-            latest: tuple[int, int, int] | None = None
-            latest_str: str | None = None
-            for (version_str,) in cur:
-                try:
-                    v = parse_semver(version_str)
-                    if latest is None or v > latest:
-                        latest = v
-                        latest_str = version_str
-                except ValueError:
-                    continue
-        return latest_str
+            return _find_latest_semver(row[0] for row in cur)
 
     # ------------------------------------------------------------------
     # Lifecycle

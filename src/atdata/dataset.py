@@ -920,7 +920,12 @@ class Dataset(Generic[ST]):
                 result[i] = sample
             if i >= max_idx:
                 break
-        return [result[i] for i in indices if i in result]
+        missing = [i for i in indices if i not in result]
+        if missing:
+            raise IndexError(
+                f"Indices {missing} not found in dataset (dataset has {i + 1} samples)"
+            )
+        return [result[i] for i in indices]
 
     @property
     def fields(self) -> "Any":

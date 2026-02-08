@@ -13,7 +13,7 @@ import msgpack
 from redis import Redis
 
 from ._base import IndexProvider
-from .._type_utils import parse_semver
+
 
 # Redis key prefixes — kept in sync with local.py constants
 _KEY_DATASET_ENTRY = "LocalDatasetEntry"
@@ -116,21 +116,11 @@ class RedisProvider(IndexProvider):
             yield raw_name, version, schema_json  # type: ignore[misc]
 
     def find_latest_version(self, name: str) -> str | None:
-        latest: tuple[int, int, int] | None = None
-        latest_str: str | None = None
+        from ._base import _find_latest_semver
 
-        for schema_name, version, _ in self.iter_schemas():
-            if schema_name != name:
-                continue
-            try:
-                v = parse_semver(version)
-                if latest is None or v > latest:
-                    latest = v
-                    latest_str = version
-            except ValueError:
-                continue
-
-        return latest_str
+        return _find_latest_semver(
+            version for sname, version, _ in self.iter_schemas() if sname == name
+        )
 
     # ------------------------------------------------------------------
     # Label operations
@@ -241,21 +231,11 @@ class RedisProvider(IndexProvider):
             yield name, version, lens_json  # type: ignore[misc]
 
     def find_latest_lens_version(self, name: str) -> str | None:
-        latest: tuple[int, int, int] | None = None
-        latest_str: str | None = None
+        from ._base import _find_latest_semver
 
-        for lens_name, version, _ in self.iter_lenses():
-            if lens_name != name:
-                continue
-            try:
-                v = parse_semver(version)
-                if latest is None or v > latest:
-                    latest = v
-                    latest_str = version
-            except ValueError:
-                continue
-
-        return latest_str
+        return _find_latest_semver(
+            version for lname, version, _ in self.iter_lenses() if lname == name
+        )
 
     # ------------------------------------------------------------------
     # Lifecycle

@@ -3,17 +3,17 @@ title: "Deployment Guide"
 description: "Production deployment for local storage and ATProto integration"
 ---
 
-This guide covers deploying atdata in production environments, including Redis setup for LocalIndex, S3 storage configuration, and ATProto publishing considerations.
+This guide covers deploying atdata in production environments, including provider setup, S3 storage configuration, and ATProto publishing considerations.
 
 ## Local Storage Deployment
 
-The local storage backend uses Redis for metadata indexing and S3-compatible storage for dataset files.
+By default, `Index()` uses SQLite (zero dependencies). For team deployments, use Redis or PostgreSQL as the index provider and S3-compatible storage for data files.
 
 ### Redis Setup
 
 #### Requirements
 
-- Redis 6.0+ (for Redis-OM compatibility)
+- Redis 6.0+
 - Sufficient memory for index metadata (typically < 100MB for most deployments)
 
 #### Docker Deployment
@@ -40,11 +40,11 @@ docker run -d \
 
 ```python
 from redis import Redis
-from atdata.local import LocalIndex
+import atdata
 
 # Basic connection
 redis = Redis(host="localhost", port=6379)
-index = LocalIndex(redis=redis)
+index = atdata.Index(redis=redis)
 
 # With authentication
 redis = Redis(
@@ -53,7 +53,7 @@ redis = Redis(
     password="yourpassword",
     ssl=True,  # For production
 )
-index = LocalIndex(redis=redis)
+index = atdata.Index(redis=redis)
 ```
 
 #### Redis Clustering
@@ -69,11 +69,11 @@ redis = RedisCluster(
     port=6379,
     password="yourpassword",
 )
-index = LocalIndex(redis=redis)
+index = atdata.Index(redis=redis)
 ```
 
 ::: {.callout-note}
-Redis-OM (used internally) supports Redis Cluster mode. Ensure all nodes have the same configuration.
+Redis Cluster mode is supported. Ensure all nodes have the same configuration.
 :::
 
 ### S3 Storage Setup
@@ -169,10 +169,9 @@ store = S3DataStore(
 
 ```python
 import os
-from atdata.atmosphere import AtmosphereClient
+from atdata.atmosphere import Atmosphere
 
-client = AtmosphereClient()
-client.login(
+client = Atmosphere.login(
     os.environ["ATPROTO_HANDLE"],
     os.environ["ATPROTO_APP_PASSWORD"],
 )
@@ -188,21 +187,19 @@ from pathlib import Path
 
 SESSION_FILE = Path("~/.atdata/session").expanduser()
 
-client = AtmosphereClient()
-
 if SESSION_FILE.exists():
     # Restore existing session
     session_string = SESSION_FILE.read_text()
     try:
-        client.login_with_session(session_string)
+        client = Atmosphere.from_session(session_string)
     except Exception:
         # Session expired, re-authenticate
-        client.login(handle, app_password)
+        client = Atmosphere.login(handle, app_password)
         SESSION_FILE.parent.mkdir(parents=True, exist_ok=True)
         SESSION_FILE.write_text(client.export_session())
 else:
     # Initial login
-    client.login(handle, app_password)
+    client = Atmosphere.login(handle, app_password)
     SESSION_FILE.parent.mkdir(parents=True, exist_ok=True)
     SESSION_FILE.write_text(client.export_session())
 ```
@@ -212,8 +209,11 @@ else:
 For self-hosted ATProto infrastructure:
 
 ```python
-client = AtmosphereClient(base_url="https://pds.example.com")
-client.login("handle.example.com", "app-password")
+client = Atmosphere.login(
+    "handle.example.com",
+    "app-password",
+    base_url="https://pds.example.com",
+)
 ```
 
 See [ATProto PDS documentation](https://github.com/bluesky-social/pds) for self-hosting setup.

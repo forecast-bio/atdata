@@ -125,11 +125,11 @@ index = atdata.Index(provider="postgres", dsn="postgresql://user:pass@host/db")
 
 **Schema publishing** is how you ensure type consistency across your team. When you publish a schema, atdata stores the complete type definition (field names, types, metadata) so anyone can reconstruct the Python class from just the schema reference.
 
-When you use `index.write()`, schemas are **persisted automatically**—no separate `publish_schema()` call needed. Consumers can load datasets by name and the sample type is reconstructed from the stored schema.
+When you use `index.write_samples()`, schemas are **persisted automatically**—no separate `publish_schema()` call needed. Consumers can load datasets by name and the sample type is reconstructed from the stored schema.
 
 ```{python}
 #| eval: false
-# Explicit schema publishing (optional — index.write() does this for you)
+# Explicit schema publishing (optional — index.write_samples() does this for you)
 schema_ref = index.publish_schema(TrainingSample, version="1.0.0")
 print(f"Published schema: {schema_ref}")
 
@@ -138,7 +138,7 @@ for schema in index.list_schemas():
     print(f"  - {schema.get('name', 'Unknown')} v{schema.get('version', '?')}")
 
 # Decode schema back to a PackableSample class
-decoded_type = index.decode_schema(schema_ref)
+decoded_type = index.get_schema_type(schema_ref)
 print(f"Decoded type: {decoded_type.__name__}")
 ```
 
@@ -181,7 +181,7 @@ store = S3DataStore(
 The typical workflow has just three steps:
 
 1. **Create samples** using your `@packable` type
-2. **Write through the index** (`index.write()` handles sharding, storage, schema persistence, and indexing)
+2. **Write through the index** (`index.write_samples()` handles sharding, storage, schema persistence, and indexing)
 3. **Load by name** (`load_dataset()` auto-resolves schema and data URLs)
 
 ```{python}
@@ -197,7 +197,7 @@ samples = [
 
 # 2. Write through the index (schema is persisted automatically)
 index = atdata.Index(data_store=atdata.LocalDiskStore())
-entry = index.write(samples, name="training-v1", maxcount=500)
+entry = index.write_samples(samples, name="training-v1", maxcount=500)
 print(f"CID: {entry.cid}")
 print(f"Shards: {entry.data_urls}")
 
@@ -225,7 +225,7 @@ store = S3DataStore(
     bucket="team-datasets",
 )
 index = atdata.Index(data_store=store)
-entry = index.write(samples, name="training-v1")
+entry = index.write_samples(samples, name="training-v1")
 ```
 
 ## Using load_dataset with Index
@@ -251,7 +251,7 @@ You now understand managed storage in atdata:
 | Concept | Purpose |
 |---------|---------|
 | `Index` | Dataset registry with pluggable providers (SQLite, Redis, PostgreSQL) |
-| `index.write()` | Write samples + persist schema + create entry in one call |
+| `index.write_samples()` | Write samples + persist schema + create entry in one call |
 | `LocalDiskStore` / `S3DataStore` | Persistent shard storage implementing `AbstractDataStore` |
 | `load_dataset("@local/...")` | Load by name with auto-resolved schema |
 | `LocalDatasetEntry` | Content-addressed dataset entries with CIDs |

@@ -12,10 +12,27 @@ from __future__ import annotations
 
 import json
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Iterator
+from typing import TYPE_CHECKING, Iterable, Iterator
+
+from .._type_utils import parse_semver
 
 if TYPE_CHECKING:
     from ..local import LocalDatasetEntry
+
+
+def _find_latest_semver(versions: Iterable[str]) -> str | None:
+    """Return the highest semantic version string from *versions*, or None."""
+    latest: tuple[int, int, int] | None = None
+    latest_str: str | None = None
+    for version_str in versions:
+        try:
+            v = parse_semver(version_str)
+            if latest is None or v > latest:
+                latest = v
+                latest_str = version_str
+        except ValueError:
+            continue
+    return latest_str
 
 
 class IndexProvider(ABC):
@@ -117,9 +134,11 @@ class IndexProvider(ABC):
             Tuples of ``(name, version, schema_json)``.
         """
 
-    @abstractmethod
     def find_latest_version(self, name: str) -> str | None:
         """Find the latest semantic version for a schema name.
+
+        The default implementation iterates all schemas and compares
+        in Python.  Subclasses with indexed storage may override.
 
         Args:
             name: Schema name to search for.
@@ -128,6 +147,9 @@ class IndexProvider(ABC):
             The latest version string (e.g. ``"1.2.3"``), or ``None``
             if no schema with *name* exists.
         """
+        return _find_latest_semver(
+            version for sname, version, _ in self.iter_schemas() if sname == name
+        )
 
     # ------------------------------------------------------------------
     # Label operations
@@ -210,9 +232,11 @@ class IndexProvider(ABC):
             Tuples of ``(name, version, lens_json)``.
         """
 
-    @abstractmethod
     def find_latest_lens_version(self, name: str) -> str | None:
         """Find the latest semantic version for a lens name.
+
+        The default implementation iterates all lenses and compares
+        in Python.  Subclasses with indexed storage may override.
 
         Args:
             name: Lens name to search for.
@@ -221,6 +245,9 @@ class IndexProvider(ABC):
             The latest version string (e.g. ``"1.2.3"``), or ``None``
             if no lens with *name* exists.
         """
+        return _find_latest_semver(
+            version for lname, version, _ in self.iter_lenses() if lname == name
+        )
 
     def find_lenses_by_schemas(
         self,

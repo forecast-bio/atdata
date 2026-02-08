@@ -306,7 +306,10 @@ class LensLoader:
         cursor: Optional[str] = None
         while True:
             records, cursor = self.client.list_records(
-                collection, repo=repo, limit=100, cursor=cursor,
+                collection,
+                repo=repo,
+                limit=100,
+                cursor=cursor,
             )
             for lens_record in records:
                 if lens_record.get("sourceSchema") == source_schema_uri:

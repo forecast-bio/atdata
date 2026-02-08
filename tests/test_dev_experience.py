@@ -306,6 +306,12 @@ class TestDatasetSelect:
         ds = Dataset[DevSample](url)
         assert ds.select([]) == []
 
+    def test_select_out_of_bounds(self, dev_tar):
+        url, _ = dev_tar
+        ds = Dataset[DevSample](url)
+        with pytest.raises(IndexError, match="not found in dataset"):
+            ds.select([0, 999])
+
 
 class TestDatasetToPandas:
     def test_to_pandas(self, dev_tar):

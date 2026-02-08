@@ -3,34 +3,34 @@ title: "Promotion Workflow"
 description: "Migrating datasets from local storage to ATProto"
 ---
 
-The promotion workflow migrates datasets from local storage (Redis + S3) to the ATProto atmosphere network, enabling federation and discovery.
+The promotion workflow migrates datasets from local storage to the ATProto atmosphere network, enabling federation and discovery.
 
 ## Overview
 
 Promotion handles:
 
 - **Schema deduplication**: Avoids publishing duplicate schemas
-- **Data URL preservation**: Keeps existing S3 URLs or copies to new storage
+- **Data URL preservation**: Keeps existing URLs or copies to new storage
 - **Metadata transfer**: Preserves tags, descriptions, and custom metadata
 
-## Basic Usage
+## Using Index.promote_entry()
+
+The recommended approach uses the unified `Index` with an attached atmosphere client:
 
 ```{python}
 #| eval: false
-from atdata.local import LocalIndex
-from atdata.atmosphere import AtmosphereClient
-from atdata.promote import promote_to_atmosphere
+import atdata
+from atdata.atmosphere import Atmosphere
 
-# Setup
-local_index = LocalIndex()
-client = AtmosphereClient()
-client.login("handle.bsky.social", "app-password")
+# Set up index with both local and atmosphere backends
+client = Atmosphere.login("handle.bsky.social", "app-password")
+index = atdata.Index(
+    atmosphere=client,
+    data_store=atdata.LocalDiskStore(),
+)
 
-# Get local entry
-entry = local_index.get_entry_by_name("my-dataset")
-
-# Promote to atmosphere
-at_uri = promote_to_atmosphere(entry, local_index, client)
+# Promote a local entry to the atmosphere by name
+at_uri = index.promote_entry("my-dataset")
 print(f"Published: {at_uri}")
 ```
 
@@ -38,10 +38,8 @@ print(f"Published: {at_uri}")
 
 ```{python}
 #| eval: false
-at_uri = promote_to_atmosphere(
-    entry,
-    local_index,
-    client,
+at_uri = index.promote_entry(
+    "my-dataset",
     name="my-dataset-v2",           # Override name
     description="Training images",  # Add description
     tags=["images", "training"],    # Add discovery tags
@@ -56,10 +54,10 @@ The promotion workflow automatically checks for existing schemas:
 ```{python}
 #| eval: false
 # First promotion: publishes schema
-uri1 = promote_to_atmosphere(entry1, local_index, client)
+uri1 = index.promote_entry("batch-1")
 
 # Second promotion with same schema type + version: reuses existing schema
-uri2 = promote_to_atmosphere(entry2, local_index, client)
+uri2 = index.promote_entry("batch-2")
 ```
 
 Schema matching is based on:
@@ -77,8 +75,8 @@ By default, promotion keeps the original data URLs:
 
 ```{python}
 #| eval: false
-# Data stays in original S3 location
-at_uri = promote_to_atmosphere(entry, local_index, client)
+# Data stays in original storage location
+at_uri = index.promote_entry("my-dataset")
 ```
 
 - Data stays in original S3 location
@@ -88,44 +86,36 @@ at_uri = promote_to_atmosphere(entry, local_index, client)
 
 ## Copy to New Storage
 
-To copy data to a different storage location:
+To copy data to a different storage location, use `promote_dataset()` with
+a Dataset loaded from the entry's URLs:
 
 ```{python}
 #| eval: false
-from atdata.local import S3DataStore
+# Load the dataset and promote directly
+entry = index.get_entry_by_name("my-dataset")
+ds = atdata.Dataset[MySample](entry.data_urls[0])
 
-# Create new data store
-new_store = S3DataStore(
-    credentials="new-s3-creds.env",
-    bucket="public-datasets",
-)
-
-# Promote with data copy
-at_uri = promote_to_atmosphere(
-    entry,
-    local_index,
-    client,
-    data_store=new_store,  # Copy data to new storage
+at_uri = index.promote_dataset(
+    ds,
+    name="my-dataset",
+    description="Training images",
 )
 ```
 
-- Data is copied to new bucket
-- Dataset record points to new URLs
+- Data is copied to new storage
 - Good for moving from private to public storage
+- Original storage can be retired
 
 :::
 
-## Complete Workflow Example
+## Complete Workflow
 
 ```{python}
 #| eval: false
 import numpy as np
 from numpy.typing import NDArray
 import atdata
-from atdata.local import LocalIndex, S3DataStore
-from atdata.atmosphere import AtmosphereClient
-from atdata.promote import promote_to_atmosphere
-import webdataset as wds
+from atdata.atmosphere import Atmosphere
 
 # 1. Define sample type
 @atdata.packable
@@ -133,7 +123,7 @@ class FeatureSample:
     features: NDArray
     label: int
 
-# 2. Create local dataset
+# 2. Create samples
 samples = [
     FeatureSample(
         features=np.random.randn(128).astype(np.float32),
@@ -142,49 +132,27 @@ samples = [
     for i in range(1000)
 ]
 
-with wds.writer.TarWriter("features.tar") as sink:
-    for i, s in enumerate(samples):
-        sink.write({**s.as_wds, "__key__": f"{i:06d}"})
+# 3. Write to local index
+index = atdata.Index(data_store=atdata.LocalDiskStore())
+entry = index.write_samples(samples, name="feature-vectors-v1", maxcount=500)
 
-# 3. Set up index with S3 data store
-store = S3DataStore(
-    credentials={
-        "AWS_ENDPOINT": "http://localhost:9000",
-        "AWS_ACCESS_KEY_ID": "minioadmin",
-        "AWS_SECRET_ACCESS_KEY": "minioadmin",
-    },
-    bucket="datasets-bucket",
-)
-local_index = LocalIndex(data_store=store)
+# 4. Attach atmosphere client and promote
+client = Atmosphere.login("myhandle.bsky.social", "app-password")
+index = atdata.Index(atmosphere=client, data_store=atdata.LocalDiskStore())
 
-# 4. Publish schema and insert dataset
-local_index.publish_schema(FeatureSample, version="1.0.0")
-dataset = atdata.Dataset[FeatureSample]("features.tar")
-local_entry = local_index.insert_dataset(dataset, name="feature-vectors-v1", prefix="features")
-
-# 5. Promote to atmosphere
-client = AtmosphereClient()
-client.login("myhandle.bsky.social", "app-password")
-
-at_uri = promote_to_atmosphere(
-    local_entry,
-    local_index,
-    client,
+at_uri = index.promote_entry(
+    "feature-vectors-v1",
     description="Feature vectors for classification",
     tags=["features", "embeddings"],
     license="MIT",
 )
-
 print(f"Dataset published: {at_uri}")
 
-# 6. Verify on atmosphere
-from atdata.atmosphere import AtmosphereIndex
-
-atm_index = AtmosphereIndex(client)
-entry = atm_index.get_dataset(at_uri)
-print(f"Name: {entry.name}")
-print(f"Schema: {entry.schema_ref}")
-print(f"URLs: {entry.data_urls}")
+# 5. Verify on atmosphere
+atm_entry = index.get_dataset(at_uri)
+print(f"Name: {atm_entry.name}")
+print(f"Schema: {atm_entry.schema_ref}")
+print(f"URLs: {atm_entry.data_urls}")
 ```
 
 ## Error Handling
@@ -192,22 +160,22 @@ print(f"URLs: {entry.data_urls}")
 ```{python}
 #| eval: false
 try:
-    at_uri = promote_to_atmosphere(entry, local_index, client)
+    at_uri = index.promote_entry("my-dataset")
 except KeyError as e:
-    # Schema not found in local index
-    print(f"Missing schema: {e}")
+    # Entry or schema not found in index
+    print(f"Not found: {e}")
 except ValueError as e:
-    # Entry has no data URLs
-    print(f"Invalid entry: {e}")
+    # Entry has no data URLs or atmosphere not available
+    print(f"Invalid state: {e}")
 ```
 
 ## Requirements
 
 Before promotion:
 
-1. Dataset must be in local index (via `Index.insert_dataset()` or `Index.add_entry()`)
-2. Schema must be published to local index (via `Index.publish_schema()`)
-3. AtmosphereClient must be authenticated
+1. Dataset must be in the index (via `index.write_samples()` or `index.insert_dataset()`)
+2. Schema must be published (automatic when using `index.write_samples()`)
+3. `Atmosphere` client must be authenticated and attached to the index
 
 ## Related
 

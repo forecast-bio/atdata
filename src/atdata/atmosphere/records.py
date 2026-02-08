@@ -7,7 +7,6 @@ and loading them back. Dataset records are published as
 
 import dataclasses
 from typing import Type, TypeVar, Optional
-import msgpack
 
 from .client import Atmosphere
 from .schema import SchemaPublisher
@@ -739,28 +738,10 @@ class DatasetLoader:
         Returns:
             The metadata as a flat dictionary, or None if no metadata.
         """
-        import base64
+        from ._lexicon_types import decode_metadata_raw
 
         record = self.get(uri)
-        metadata_raw = record.get("metadata")
-
-        if metadata_raw is None:
-            return None
-
-        # Legacy: ATProto $bytes-encoded msgpack.
-        if isinstance(metadata_raw, dict) and "$bytes" in metadata_raw:
-            metadata_bytes = base64.b64decode(metadata_raw["$bytes"])
-            return msgpack.unpackb(metadata_bytes, raw=False)
-
-        # Legacy: raw msgpack bytes (local storage / tests).
-        if isinstance(metadata_raw, bytes):
-            return msgpack.unpackb(metadata_raw, raw=False)
-
-        # New structured format: plain JSON object.
-        if isinstance(metadata_raw, dict):
-            return DatasetMetadata.from_record(metadata_raw).to_dict()
-
-        raise ValueError(f"Unexpected metadata format: {type(metadata_raw).__name__}")
+        return decode_metadata_raw(record.get("metadata"))
 
     def get_metadata_typed(self, uri: str | AtUri) -> Optional[DatasetMetadata]:
         """Get the metadata from a dataset record as a typed object.

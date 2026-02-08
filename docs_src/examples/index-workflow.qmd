@@ -62,7 +62,7 @@ print(f"Data root  : {tmpdir / 'data'}")
 
 ## 3 --- Write datasets through the index
 
-`index.write()` serializes samples to sharded tars via the data store and
+`index.write_samples()` serializes samples to sharded tars via the data store and
 creates a tracked entry with a content-addressed CID.
 
 ```{python}
@@ -78,7 +78,7 @@ text_samples = [
     for i in range(500)
 ]
 
-text_entry = index.write(
+text_entry = index.write_samples(
     text_samples,
     name="docs-v1",
     description="500 synthetic text documents",
@@ -101,7 +101,7 @@ embedding_samples = [
     for i in range(300)
 ]
 
-emb_entry = index.write(
+emb_entry = index.write_samples(
     embedding_samples,
     name="embeddings-v1",
     description="300 synthetic 128-d embeddings",
@@ -151,7 +151,7 @@ for batch in emb_ds.ordered(batch_size=8):
 ## 6 --- Schema tracking
 
 The index records the schema for each dataset, enabling type reconstruction
-at load time.  Schemas are persisted automatically by `index.write()`.
+at load time.  Schemas are persisted automatically by `index.write_samples()`.
 
 ```{python}
 for schema in index.schemas:
@@ -183,7 +183,7 @@ shutil.rmtree(tmpdir, ignore_errors=True)
 | Concept | API |
 |---------|-----|
 | Create an index | `atdata.Index(path=..., data_store=...)` |
-| Write with tracking | `index.write(samples, name=..., tags=...)` |
+| Write with tracking | `index.write_samples(samples, name=..., tags=...)` |
 | List datasets | `index.list_datasets()` |
 | Schema discovery | `index.list_schemas()` |
 | Inspect repositories | `index.repos` (dict including `"local"`) |
