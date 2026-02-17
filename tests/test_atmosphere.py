@@ -40,6 +40,7 @@ from atdata.atmosphere import (
     ShardChecksum,
     BlobEntry,
     DatasetMetadata,
+    ShardManifestRef,
 )
 from atdata.atmosphere._lexicon_types import storage_from_record
 from atdata.atmosphere._types import LEXICON_NAMESPACE
@@ -576,6 +577,183 @@ class TestLexDatasetRecord:
         assert restored.metadata is not None
         assert restored.metadata.split == "test"
         assert restored.metadata.version == "1.0"
+
+
+# =============================================================================
+# Tests for _lexicon_types.py - ShardManifestRef
+# =============================================================================
+
+
+class TestShardManifestRef:
+    """Tests for ShardManifestRef dataclass and round-trip serialization."""
+
+    def test_header_only_to_record(self):
+        """Serialize with only the required header field."""
+        header_blob = {
+            "$type": "blob",
+            "ref": {"$link": "bafyheader"},
+            "mimeType": "application/json",
+            "size": 512,
+        }
+        ref = ShardManifestRef(header=header_blob)
+
+        record = ref.to_record()
+
+        assert record["header"] == header_blob
+        assert "samples" not in record
+
+    def test_header_and_samples_to_record(self):
+        """Serialize with both header and samples blobs."""
+        header_blob = {
+            "$type": "blob",
+            "ref": {"$link": "bafyheader"},
+            "mimeType": "application/json",
+            "size": 512,
+        }
+        samples_blob = {
+            "$type": "blob",
+            "ref": {"$link": "bafysamples"},
+            "mimeType": "application/octet-stream",
+            "size": 10240,
+        }
+        ref = ShardManifestRef(header=header_blob, samples=samples_blob)
+
+        record = ref.to_record()
+
+        assert record["header"] == header_blob
+        assert record["samples"] == samples_blob
+
+    def test_header_only_roundtrip(self):
+        """Header-only ShardManifestRef survives to_record -> from_record."""
+        header_blob = {
+            "$type": "blob",
+            "ref": {"$link": "bafyheader"},
+            "mimeType": "application/json",
+            "size": 256,
+        }
+        ref = ShardManifestRef(header=header_blob)
+
+        restored = ShardManifestRef.from_record(ref.to_record())
+
+        assert restored.header == header_blob
+        assert restored.samples is None
+
+    def test_full_roundtrip(self):
+        """ShardManifestRef with both fields survives to_record -> from_record."""
+        header_blob = {
+            "$type": "blob",
+            "ref": {"$link": "bafyheader"},
+            "mimeType": "application/json",
+            "size": 512,
+        }
+        samples_blob = {
+            "$type": "blob",
+            "ref": {"$link": "bafysamples"},
+            "mimeType": "application/octet-stream",
+            "size": 10240,
+        }
+        ref = ShardManifestRef(header=header_blob, samples=samples_blob)
+
+        restored = ShardManifestRef.from_record(ref.to_record())
+
+        assert restored.header == header_blob
+        assert restored.samples == samples_blob
+
+
+class TestLexDatasetRecordManifests:
+    """Tests for LexDatasetRecord with the optional manifests field."""
+
+    def _make_dataset(self, **kwargs):
+        """Build a minimal LexDatasetRecord with optional overrides."""
+        defaults = dict(
+            name="ManifestDataset",
+            schema_ref="at://did:plc:abc/ac.foundation.dataset.schema/xyz",
+            storage=StorageHttp(shards=[]),
+        )
+        defaults.update(kwargs)
+        return LexDatasetRecord(**defaults)
+
+    def test_without_manifests_backward_compat(self):
+        """Dataset without manifests serializes without the key."""
+        dataset = self._make_dataset()
+
+        record = dataset.to_record()
+
+        assert "manifests" not in record
+
+    def test_without_manifests_roundtrip(self):
+        """Dataset without manifests survives roundtrip with manifests=None."""
+        dataset = self._make_dataset()
+
+        restored = LexDatasetRecord.from_record(dataset.to_record())
+
+        assert restored.manifests is None
+
+    def test_with_manifests_to_record(self):
+        """Dataset with manifests serializes the array."""
+        header_blob = {
+            "$type": "blob",
+            "ref": {"$link": "bafyheader1"},
+            "mimeType": "application/json",
+            "size": 512,
+        }
+        samples_blob = {
+            "$type": "blob",
+            "ref": {"$link": "bafysamples1"},
+            "mimeType": "application/octet-stream",
+            "size": 10240,
+        }
+        manifests = [ShardManifestRef(header=header_blob, samples=samples_blob)]
+        dataset = self._make_dataset(manifests=manifests)
+
+        record = dataset.to_record()
+
+        assert "manifests" in record
+        assert len(record["manifests"]) == 1
+        assert record["manifests"][0]["header"] == header_blob
+        assert record["manifests"][0]["samples"] == samples_blob
+
+    def test_with_manifests_roundtrip(self):
+        """Dataset with manifests survives to_record -> from_record."""
+        header_blob = {
+            "$type": "blob",
+            "ref": {"$link": "bafyheader1"},
+            "mimeType": "application/json",
+            "size": 512,
+        }
+        manifests = [
+            ShardManifestRef(header=header_blob),
+            ShardManifestRef(
+                header=header_blob,
+                samples={
+                    "$type": "blob",
+                    "ref": {"$link": "bafysamples2"},
+                    "mimeType": "application/octet-stream",
+                    "size": 20480,
+                },
+            ),
+        ]
+        dataset = self._make_dataset(manifests=manifests)
+
+        restored = LexDatasetRecord.from_record(dataset.to_record())
+
+        assert restored.manifests is not None
+        assert len(restored.manifests) == 2
+        assert restored.manifests[0].header == header_blob
+        assert restored.manifests[0].samples is None
+        assert restored.manifests[1].samples is not None
+        assert restored.manifests[1].samples["ref"]["$link"] == "bafysamples2"
+
+    def test_empty_manifests_list(self):
+        """Dataset with an empty manifests list serializes it."""
+        dataset = self._make_dataset(manifests=[])
+
+        record = dataset.to_record()
+
+        assert record["manifests"] == []
+
+        restored = LexDatasetRecord.from_record(record)
+        assert restored.manifests == []
 
 
 # =============================================================================

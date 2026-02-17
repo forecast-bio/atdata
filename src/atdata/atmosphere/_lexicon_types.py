@@ -117,6 +117,35 @@ class DatasetSize:
 
 
 @dataclass
+class ShardManifestRef:
+    """References to manifest sidecar data for a single shard.
+
+    Mirrors ``ac.foundation.dataset.record#shardManifestRef``.
+    The header contains schema info, sample count, and per-field aggregates.
+    The samples file is a Parquet table with per-sample metadata for
+    query-based access.
+    """
+
+    header: dict[str, Any]
+    """ATProto blob reference for the manifest JSON header."""
+
+    samples: dict[str, Any] | None = None
+    """ATProto blob reference for the Parquet samples file."""
+
+    def to_record(self) -> dict[str, Any]:
+        """Serialize to ATProto record dict."""
+        d: dict[str, Any] = {"header": self.header}
+        if self.samples is not None:
+            d["samples"] = self.samples
+        return d
+
+    @classmethod
+    def from_record(cls, d: dict[str, Any]) -> ShardManifestRef:
+        """Deserialize from ATProto record dict."""
+        return cls(header=d["header"], samples=d.get("samples"))
+
+
+@dataclass
 class DatasetMetadata:
     """Typed metadata for dataset records.
 
@@ -664,6 +693,9 @@ class LexDatasetRecord:
     content_metadata: dict[str, Any] | None = None
     """Dataset-level content metadata (e.g., instrument settings)."""
 
+    manifests: list[ShardManifestRef] | None = None
+    """Per-shard manifest metadata for query-based access."""
+
     def to_record(self) -> dict[str, Any]:
         """Serialize to ATProto record dict."""
         d: dict[str, Any] = {
@@ -687,6 +719,8 @@ class LexDatasetRecord:
             d["metadataSchemaRef"] = self.metadata_schema_ref
         if self.content_metadata is not None:
             d["contentMetadata"] = self.content_metadata
+        if self.manifests is not None:
+            d["manifests"] = [m.to_record() for m in self.manifests]
         return d
 
     @classmethod
@@ -701,6 +735,11 @@ class LexDatasetRecord:
         if decoded_meta is not None:
             metadata = DatasetMetadata.from_dict(decoded_meta)
 
+        raw_manifests = d.get("manifests")
+        manifests: list[ShardManifestRef] | None = None
+        if raw_manifests is not None:
+            manifests = [ShardManifestRef.from_record(m) for m in raw_manifests]
+
         return cls(
             name=d["name"],
             schema_ref=d["schemaRef"],
@@ -713,6 +752,7 @@ class LexDatasetRecord:
             license=d.get("license"),
             metadata_schema_ref=d.get("metadataSchemaRef"),
             content_metadata=d.get("contentMetadata"),
+            manifests=manifests,
         )
 
 
@@ -850,6 +890,7 @@ __all__ = [
     "LEXICON_NAMESPACE",
     "ShardChecksum",
     "DatasetSize",
+    "ShardManifestRef",
     "DatasetMetadata",
     "HttpShardEntry",
     "StorageHttp",
