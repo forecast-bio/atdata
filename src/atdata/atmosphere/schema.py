@@ -28,6 +28,46 @@ from .._exceptions import SchemaError
 # Maximum $atdataSchemaVersion this library can read.
 _MAX_SUPPORTED_SCHEMA_VERSION = 1
 
+
+def _parse_handle_schema_ref(ref: str) -> tuple[str, str, str]:
+    """Parse ``@handle/TypeName@version`` into ``(handle, name, version)``.
+
+    Args:
+        ref: Schema reference in ``@handle/TypeName@version`` format.
+
+    Returns:
+        Tuple of ``(handle_or_did, type_name, version)``.
+
+    Raises:
+        ValueError: If the format is invalid or version is missing.
+    """
+    if not ref.startswith("@"):
+        raise ValueError(f"Not a handle schema ref: {ref}")
+
+    rest = ref[1:]
+
+    if "/" not in rest:
+        raise ValueError(
+            f"Invalid handle schema ref: {ref}. "
+            "Expected @handle/TypeName@version"
+        )
+
+    handle_or_did, type_part = rest.split("/", 1)
+    if not handle_or_did or not type_part:
+        raise ValueError(f"Invalid handle schema ref: {ref}")
+
+    if "@" not in type_part:
+        raise ValueError(
+            f"Handle schema ref must include version: {ref}. "
+            "Expected @handle/TypeName@version"
+        )
+
+    type_name, version = type_part.rsplit("@", 1)
+    if not type_name or not version:
+        raise ValueError(f"Invalid version syntax in handle schema ref: {ref}")
+
+    return handle_or_did, type_name, version
+
 if TYPE_CHECKING:
     from .._protocols import Packable
 
@@ -236,19 +276,25 @@ class SchemaLoader:
         self.client = client
 
     def get(self, uri: str | AtUri) -> dict:
-        """Fetch a schema record by AT URI.
+        """Fetch a schema record by AT URI or handle reference.
 
         Args:
-            uri: The AT URI of the schema record.
+            uri: The AT URI of the schema record, or a handle reference
+                in ``@handle/TypeName@version`` format.
 
         Returns:
             The schema record as a dictionary.
 
         Raises:
-            ValueError: If the record is not a schema record.
+            ValueError: If the record is not a schema record or format
+                is invalid.
+            KeyError: If no matching schema is found for a handle reference.
             SchemaError: If the record uses an unsupported schema version.
             atproto.exceptions.AtProtocolError: If record not found.
         """
+        if isinstance(uri, str) and uri.startswith("@"):
+            return self._resolve_handle_ref(uri)
+
         record = self.client.get_record(uri)
 
         expected_type = f"{LEXICON_NAMESPACE}.schema"
@@ -260,6 +306,52 @@ class SchemaLoader:
 
         _check_schema_record_version(record)
         return record
+
+    def _resolve_handle_ref(self, ref: str) -> dict:
+        """Resolve ``@handle/TypeName@version`` to a schema record.
+
+        Args:
+            ref: Handle reference in ``@handle/TypeName@version`` format.
+
+        Returns:
+            The matching schema record dictionary.
+
+        Raises:
+            ValueError: If the ref format is invalid.
+            KeyError: If no matching schema is found.
+        """
+        handle_or_did, type_name, version = _parse_handle_schema_ref(ref)
+        did = self._resolve_did(handle_or_did)
+
+        records = self.list_all(repo=did)
+
+        for record in records:
+            value = record.get("value", record)
+            if value.get("name") == type_name and value.get("version") == version:
+                _check_schema_record_version(value)
+                return value
+
+        raise KeyError(
+            f"Schema {type_name!r} version {version!r} not found "
+            f"in repository {handle_or_did!r}"
+        )
+
+    def _resolve_did(self, handle_or_did: str) -> str:
+        """Resolve a handle to a DID, or return the DID directly.
+
+        Args:
+            handle_or_did: A DID string or handle to resolve.
+
+        Returns:
+            The DID string.
+        """
+        if handle_or_did.startswith("did:"):
+            return handle_or_did
+
+        response = self.client._client.com.atproto.identity.resolve_handle(
+            params={"handle": handle_or_did}
+        )
+        return response.did
 
     def get_typed(self, uri: str | AtUri) -> LexSchemaRecord:
         """Fetch a schema record and return as a typed object.

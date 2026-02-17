@@ -371,10 +371,11 @@ class _AtmosphereBackend:
         return str(uri)
 
     def get_schema(self, ref: str) -> dict:
-        """Get a schema record by AT URI.
+        """Get a schema record by AT URI or handle reference.
 
         Args:
-            ref: AT URI of the schema record.
+            ref: AT URI of the schema record, or a handle reference
+                in ``@handle/TypeName@version`` format.
 
         Returns:
             Schema record dictionary.

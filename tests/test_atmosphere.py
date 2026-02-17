@@ -1529,6 +1529,156 @@ class TestSchemaLoader:
         assert len(schemas) == 1
         assert schemas[0]["name"] == "Schema1"
 
+    def test_get_schema_handle_ref(self, authenticated_client, mock_atproto_client):
+        """Get schema by @handle/TypeName@version resolves correctly."""
+        # Mock handle resolution
+        mock_resolve = Mock()
+        mock_resolve.did = "did:plc:resolved123"
+        mock_atproto_client.com.atproto.identity.resolve_handle.return_value = (
+            mock_resolve
+        )
+
+        # Mock list_records to return a matching schema
+        mock_record = Mock()
+        mock_record.value = {
+            "$type": f"{LEXICON_NAMESPACE}.schema",
+            "name": "MnistSample",
+            "version": "1.0.0",
+            "schemaType": "jsonSchema",
+            "schema": {
+                "schemaBody": {
+                    "properties": {"label": {"type": "integer"}},
+                    "required": ["label"],
+                },
+            },
+        }
+        mock_response = Mock()
+        mock_response.records = [mock_record]
+        mock_response.cursor = None
+        mock_atproto_client.com.atproto.repo.list_records.return_value = mock_response
+
+        loader = SchemaLoader(authenticated_client)
+        result = loader.get("@foundation.ac/MnistSample@1.0.0")
+
+        assert result["name"] == "MnistSample"
+        assert result["version"] == "1.0.0"
+        mock_atproto_client.com.atproto.identity.resolve_handle.assert_called_once_with(
+            params={"handle": "foundation.ac"}
+        )
+
+    def test_get_schema_handle_ref_not_found(
+        self, authenticated_client, mock_atproto_client
+    ):
+        """Get schema by handle ref raises KeyError when not found."""
+        mock_resolve = Mock()
+        mock_resolve.did = "did:plc:resolved123"
+        mock_atproto_client.com.atproto.identity.resolve_handle.return_value = (
+            mock_resolve
+        )
+
+        # Return a schema that doesn't match
+        mock_record = Mock()
+        mock_record.value = {
+            "$type": f"{LEXICON_NAMESPACE}.schema",
+            "name": "OtherSample",
+            "version": "2.0.0",
+        }
+        mock_response = Mock()
+        mock_response.records = [mock_record]
+        mock_response.cursor = None
+        mock_atproto_client.com.atproto.repo.list_records.return_value = mock_response
+
+        loader = SchemaLoader(authenticated_client)
+        with pytest.raises(KeyError, match="MnistSample"):
+            loader.get("@foundation.ac/MnistSample@1.0.0")
+
+    def test_get_schema_handle_ref_did_passthrough(
+        self, authenticated_client, mock_atproto_client
+    ):
+        """Handle ref with DID skips handle resolution."""
+        mock_record = Mock()
+        mock_record.value = {
+            "$type": f"{LEXICON_NAMESPACE}.schema",
+            "name": "TestSample",
+            "version": "1.0.0",
+        }
+        mock_response = Mock()
+        mock_response.records = [mock_record]
+        mock_response.cursor = None
+        mock_atproto_client.com.atproto.repo.list_records.return_value = mock_response
+
+        loader = SchemaLoader(authenticated_client)
+        result = loader.get("@did:plc:abc123/TestSample@1.0.0")
+
+        assert result["name"] == "TestSample"
+        # Should NOT call resolve_handle for a DID
+        mock_atproto_client.com.atproto.identity.resolve_handle.assert_not_called()
+
+    def test_get_schema_handle_ref_no_version(self, authenticated_client):
+        """Handle ref without version raises ValueError."""
+        loader = SchemaLoader(authenticated_client)
+        with pytest.raises(ValueError, match="must include version"):
+            loader.get("@foundation.ac/MnistSample")
+
+    def test_get_schema_handle_ref_no_slash(self, authenticated_client):
+        """Handle ref without / raises ValueError."""
+        loader = SchemaLoader(authenticated_client)
+        with pytest.raises(ValueError, match="Expected @handle/TypeName@version"):
+            loader.get("@foundation.ac")
+
+
+# =============================================================================
+# Tests for _parse_handle_schema_ref
+# =============================================================================
+
+
+class TestParseHandleSchemaRef:
+    """Tests for _parse_handle_schema_ref parser."""
+
+    def test_valid_handle_ref(self):
+        from atdata.atmosphere.schema import _parse_handle_schema_ref
+
+        handle, name, version = _parse_handle_schema_ref(
+            "@foundation.ac/MnistSample@1.0.0"
+        )
+        assert handle == "foundation.ac"
+        assert name == "MnistSample"
+        assert version == "1.0.0"
+
+    def test_valid_did_ref(self):
+        from atdata.atmosphere.schema import _parse_handle_schema_ref
+
+        handle, name, version = _parse_handle_schema_ref(
+            "@did:plc:abc123/TestType@2.1.0"
+        )
+        assert handle == "did:plc:abc123"
+        assert name == "TestType"
+        assert version == "2.1.0"
+
+    def test_missing_version(self):
+        from atdata.atmosphere.schema import _parse_handle_schema_ref
+
+        with pytest.raises(ValueError, match="must include version"):
+            _parse_handle_schema_ref("@foundation.ac/MnistSample")
+
+    def test_missing_slash(self):
+        from atdata.atmosphere.schema import _parse_handle_schema_ref
+
+        with pytest.raises(ValueError, match="Expected @handle/TypeName@version"):
+            _parse_handle_schema_ref("@foundation.ac")
+
+    def test_not_handle_ref(self):
+        from atdata.atmosphere.schema import _parse_handle_schema_ref
+
+        with pytest.raises(ValueError, match="Not a handle schema ref"):
+            _parse_handle_schema_ref("atdata://local/schema/Foo@1.0.0")
+
+    def test_empty_parts(self):
+        from atdata.atmosphere.schema import _parse_handle_schema_ref
+
+        with pytest.raises(ValueError, match="Invalid handle schema ref"):
+            _parse_handle_schema_ref("@/TypeName@1.0.0")
+
 
 # =============================================================================
 # Tests for records.py - DatasetPublisher
