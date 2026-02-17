@@ -321,9 +321,7 @@ class Atmosphere:
         # If the target DID differs from our authenticated user, route
         # through the public AppView.  getRecord is an unauthenticated
         # query so this always works.
-        is_foreign = (
-            self.is_authenticated and uri.authority != self.did
-        )
+        is_foreign = self.is_authenticated and uri.authority != self.did
         if is_foreign:
             client = self._get_appview_client()
         else:
