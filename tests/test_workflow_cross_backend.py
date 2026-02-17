@@ -68,6 +68,7 @@ def authenticated_atmosphere_client(mock_atproto_client):
     """Create an authenticated Atmosphere."""
     client = Atmosphere(_client=mock_atproto_client)
     client._login("crossbackend.test.social", "test-password")
+    client._appview_client = mock_atproto_client
     return client
 
 

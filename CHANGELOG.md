@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.5.1b1] - 2026-02-16
+
+### Fixed
+- **Cross-account record reads**: `get_record()` and `list_records()` now route reads for foreign DIDs through the public AppView instead of the authenticated PDS, fixing `RecordNotFound` errors when fetching records published by other users (e.g. schemas from `foundation.ac` while logged in as `maxine.science`)
+
 ## [0.5.0b1] - 2026-02-07
 
 ### Added
@@ -16,6 +21,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **XRPC query workaround docs**: Documented client-side `list_records()` + filter patterns used as temporary workarounds pending AppView support (#56)
 
 ### Changed
+- Generalize /kickoff, /check, /featree to global Claude skills (#768)
+- GitHub issue: rename dataset.record → dataset.entry lexicon (#767)
+- GitHub issue: manifest info in dataset record lexicon (#766)
+- Investigate shard querying/indexing with ATProto blob storage (#765)
+- Penguins atmosphere round-trip prototype (#764)
+- Investigate schema type introspection for @foundation.ac/MnistSample@1.0.0 (#762)
+- Run MNIST prototype scripts end-to-end (#761)
+- MNIST end-to-end atmosphere prototype scripts (#758)
+- Create download/verify script: atmosphere → local (#760)
+- Create upload script: MNIST → atmosphere (#759)
 - **Schema lexicon rename**: `getLatestSchema` renamed to `resolveSchema` to match `resolveLabel` semantics; added `$atdataSchemaVersion` property for format versioning (#53)
 - **Schema API consolidation**: `decode_schema`, `load_schema`, `decode_schema_as`, and `schema_to_type` consolidated into `get_schema_type()` with deprecation shims for old names (#54)
 - **Build config cleanup**: `.chainlink/` and `.claude/` directories excluded from sdist builds (#54)

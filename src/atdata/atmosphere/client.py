@@ -199,6 +199,19 @@ class Atmosphere:
         if not self.is_authenticated:
             raise ValueError("Client must be authenticated to perform this operation")
 
+    _APPVIEW_URL = "https://bsky.social"
+
+    def _get_appview_client(self) -> Any:
+        """Return a shared, unauthenticated client pointed at the public AppView.
+
+        Used for cross-account reads where the authenticated PDS doesn't
+        host the target repository.
+        """
+        if not hasattr(self, "_appview_client") or self._appview_client is None:
+            Client = _get_atproto_client_class()
+            self._appview_client = Client(base_url=self._APPVIEW_URL)
+        return self._appview_client
+
     # Low-level record operations
 
     def create_record(
@@ -287,6 +300,12 @@ class Atmosphere:
     ) -> dict:
         """Fetch a record by AT URI.
 
+        When the target record belongs to a different user than the
+        authenticated client, the request is routed through the public
+        AppView (``bsky.social``) instead of the authenticated PDS.
+        This avoids ``RecordNotFound`` errors caused by querying a PDS
+        that doesn't host the target repository.
+
         Args:
             uri: The AT URI of the record.
 
@@ -299,7 +318,16 @@ class Atmosphere:
         if isinstance(uri, str):
             uri = AtUri.parse(uri)
 
-        response = self._client.com.atproto.repo.get_record(
+        # If the target DID differs from our authenticated user, route
+        # through the public AppView.  getRecord is an unauthenticated
+        # query so this always works.
+        is_foreign = self.is_authenticated and uri.authority != self.did
+        if is_foreign:
+            client = self._get_appview_client()
+        else:
+            client = self._client
+
+        response = client.com.atproto.repo.get_record(
             params={
                 "repo": uri.authority,
                 "collection": uri.collection,
@@ -476,7 +504,11 @@ class Atmosphere:
             self._ensure_authenticated()
             repo = self.did
 
-        response = self._client.com.atproto.repo.list_records(
+        # Route through AppView for foreign repos.
+        is_foreign = self.is_authenticated and repo != self.did
+        client = self._get_appview_client() if is_foreign else self._client
+
+        response = client.com.atproto.repo.list_records(
             params={
                 "repo": repo,
                 "collection": collection,
