@@ -335,16 +335,18 @@ class AtmosphereIndex:
         return str(uri)
 
     def get_schema(self, ref: str) -> dict:
-        """Get a schema record by AT URI.
+        """Get a schema record by AT URI or handle reference.
 
         Args:
-            ref: AT URI of the schema record.
+            ref: AT URI of the schema record, or a handle reference
+                in ``@handle/TypeName@version`` format.
 
         Returns:
             Schema record dictionary.
 
         Raises:
-            ValueError: If record is not a schema.
+            ValueError: If record is not a schema or format is invalid.
+            KeyError: If no matching schema found for a handle reference.
         """
         return self._schema_loader.get(ref)
 

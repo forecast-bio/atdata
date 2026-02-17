@@ -1383,6 +1383,7 @@ class Index:
                 - New format: ``atdata://local/schema/{name}@{version}``
                 - Legacy format: ``local://schemas/{module.Class}@{version}``
                 - AT URI: ``at://did:plc:xxx/ac.foundation.dataset.schema/rkey``
+                - Handle ref: ``@handle/TypeName@version``
 
         Returns:
             Schema record as a dictionary with keys 'name', 'version',
@@ -1392,8 +1393,8 @@ class Index:
             KeyError: If schema not found.
             ValueError: If reference format is invalid or atmosphere unavailable.
         """
-        # AT URIs route to atmosphere backend
-        if ref.startswith("at://"):
+        # AT URIs and handle refs route to atmosphere backend
+        if ref.startswith("at://") or ref.startswith("@"):
             atmo = self._get_atmosphere()
             if atmo is None:
                 raise ValueError(
@@ -1468,8 +1469,9 @@ class Index:
         The returned class has proper type information that IDEs can understand.
 
         Args:
-            ref: Schema reference string (atdata://local/schema/... or
-                legacy local://schemas/...).
+            ref: Schema reference string (atdata://local/schema/...,
+                legacy local://schemas/..., at:// URI, or
+                @handle/TypeName@version).
             register: If True (default), register the type in the
                 :attr:`types` namespace so it's accessible as
                 ``index.types.<ClassName>``.
