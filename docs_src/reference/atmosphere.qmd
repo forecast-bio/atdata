@@ -142,7 +142,7 @@ for entry in index.list_datasets(repo="did:plc:other-user"):
     print(entry.name)
 
 # Get specific dataset
-entry = index.get_dataset("at://did:plc:.../ac.foundation.dataset.record/...")
+entry = index.get_dataset("at://did:plc:.../ac.foundation.dataset.entry/...")
 
 # List schemas
 for schema in index.list_schemas():
@@ -347,7 +347,7 @@ from atdata.atmosphere import DatasetLoader
 loader = DatasetLoader(client)
 
 # Get a specific dataset record
-record = loader.get("at://did:plc:abc/ac.foundation.dataset.record/xyz")
+record = loader.get("at://did:plc:abc/ac.foundation.dataset.entry/xyz")
 
 # Check storage type
 storage_type = loader.get_storage_type(uri)  # "external" or "blobs"

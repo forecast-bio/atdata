@@ -39,7 +39,7 @@ from ._types import AtUri, LEXICON_NAMESPACE
 from ._lexicon_types import (
     DatasetMetadata,
     LexSchemaRecord,
-    LexDatasetRecord,
+    LexDatasetEntry,
     LexLensRecord,
     LexLabelRecord,
     LexCodeReference,
@@ -438,7 +438,7 @@ __all__ = [
     # Lexicon-mirror types (Tier 1)
     "DatasetMetadata",
     "LexSchemaRecord",
-    "LexDatasetRecord",
+    "LexDatasetEntry",
     "LexLensRecord",
     "LexLabelRecord",
     "LexCodeReference",

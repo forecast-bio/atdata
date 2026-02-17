@@ -2,7 +2,7 @@
 
 ## Overview
 
-Comprehensive assessment of `ac.foundation.dataset.record` Lexicon design against ATProto standards and atdata project requirements.
+Comprehensive assessment of `ac.foundation.dataset.entry` Lexicon design against ATProto standards and atdata project requirements.
 
 **Assessment Date:** 2026-01-07
 **Lexicon Version:** Initial design
@@ -218,7 +218,7 @@ storageExternal:
   "properties": {
     "$type": {
       "type": "string",
-      "const": "ac.foundation.dataset.record#storageExternal"
+      "const": "ac.foundation.dataset.entry#storageExternal"
     }
   }
 }
@@ -337,7 +337,7 @@ Comparing to Schema.org Dataset and schema patterns:
 | Requirement | Status | Notes |
 |-------------|--------|-------|
 | Valid Lexicon version | ✅ | lexicon: 1 |
-| NSID format | ✅ | ac.foundation.dataset.record |
+| NSID format | ✅ | ac.foundation.dataset.entry |
 | Key type specified | ✅ | tid (appropriate) |
 | Required fields present | ✅ | name, schemaRef, storage, createdAt |
 | Union discriminators | ⚠️ | Missing $type in variants |
@@ -355,7 +355,7 @@ Comparing to Schema.org Dataset and schema patterns:
 
 ```json
 {
-  "$type": "ac.foundation.dataset.record",
+  "$type": "ac.foundation.dataset.entry",
   "name": "CIFAR-10 Training Set",
   "schemaRef": "at://did:plc:abc123/ac.foundation.dataset.schema/imageclassification@1.0.0",
   "storage": {"type": "external", "urls": ["..."]}

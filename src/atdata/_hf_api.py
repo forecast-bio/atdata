@@ -483,7 +483,7 @@ def _is_at_uri(path: str) -> bool:
     """Check if path is an AT Protocol URI (at://...).
 
     Examples:
-        >>> _is_at_uri("at://did:plc:abc123/ac.foundation.dataset.record/my-ds")
+        >>> _is_at_uri("at://did:plc:abc123/ac.foundation.dataset.entry/my-ds")
         True
         >>> _is_at_uri("@local/my-dataset")
         False
@@ -525,7 +525,7 @@ def _resolve_at_uri(
 
     # Single fetch — all routing derived from this dict
     record = client.get_record(path)
-    expected_type = f"{LEXICON_NAMESPACE}.record"
+    expected_type = f"{LEXICON_NAMESPACE}.entry"
     if record.get("$type") != expected_type:
         raise ValueError(
             f"Record at {path} is not a dataset record. "
@@ -797,7 +797,7 @@ def load_dataset(
 
     Args:
         path: Path to dataset. Can be:
-            - AT URI: "at://did:plc:abc/ac.foundation.dataset.record/rkey"
+            - AT URI: "at://did:plc:abc/ac.foundation.dataset.entry/rkey"
             - Index lookup: "@handle/dataset-name" or "@local/dataset-name"
             - WebDataset brace notation: "path/to/{train,test}-{000..099}.tar"
             - Local directory: "./data/" (scans for .tar files)

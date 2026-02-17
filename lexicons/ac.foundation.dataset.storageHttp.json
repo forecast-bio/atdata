@@ -36,7 +36,7 @@
         },
         "checksum": {
           "type": "ref",
-          "ref": "ac.foundation.dataset.record#shardChecksum",
+          "ref": "ac.foundation.dataset.entry#shardChecksum",
           "description": "Content hash for integrity verification"
         }
       }

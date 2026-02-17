@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **XRPC query workaround docs**: Documented client-side `list_records()` + filter patterns used as temporary workarounds pending AppView support (#56)
 
 ### Changed
+- Rename ac.foundation.dataset.record → ac.foundation.dataset.entry (#801)
 - Adversarial review: rename-dollar, handle-ref, manifest features (#792)
 - Batch test improvements: strengthen assertions, add missing edge cases, parametrize (#798)
 - Create GitHub issue: migrate authoritative lexicons to separate repo (#791)

@@ -609,7 +609,7 @@ class Atmosphere:
         Returns:
             List of dataset records.
         """
-        return self._list_collection("record", repo=repo, limit=limit)
+        return self._list_collection("entry", repo=repo, limit=limit)
 
     def list_lenses(
         self,

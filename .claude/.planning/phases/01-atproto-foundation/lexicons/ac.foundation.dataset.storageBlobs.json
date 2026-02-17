@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "object",
-      "description": "Storage via ATProto PDS blobs for WebDataset tar archives. Each blob contains one or more tar files. Used in ac.foundation.dataset.record storage union for maximum decentralization.",
+      "description": "Storage via ATProto PDS blobs for WebDataset tar archives. Each blob contains one or more tar files. Used in ac.foundation.dataset.entry storage union for maximum decentralization.",
       "required": [
         "blobs"
       ],

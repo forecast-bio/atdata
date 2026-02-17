@@ -1,7 +1,7 @@
 """Type definitions for ATProto record structures.
 
 This module provides the ``AtUri`` utility class and the ``LEXICON_NAMESPACE``
-constant. Lexicon-mirror record types (``LexSchemaRecord``, ``LexDatasetRecord``,
+constant. Lexicon-mirror record types (``LexSchemaRecord``, ``LexDatasetEntry``,
 ``LexLensRecord``, etc.) have moved to ``atdata.atmosphere._lexicon_types``.
 
 The old type names (``SchemaRecord``, ``DatasetRecord``, ``LensRecord``,
@@ -93,7 +93,7 @@ def __getattr__(name: str) -> Any:
         "FieldType": ("FieldType", "atdata.atmosphere._lexicon_types"),
         "FieldDef": ("FieldDef", "atdata.atmosphere._lexicon_types"),
         "SchemaRecord": ("LexSchemaRecord", "atdata.atmosphere._lexicon_types"),
-        "DatasetRecord": ("LexDatasetRecord", "atdata.atmosphere._lexicon_types"),
+        "DatasetRecord": ("LexDatasetEntry", "atdata.atmosphere._lexicon_types"),
         "LensRecord": ("LexLensRecord", "atdata.atmosphere._lexicon_types"),
         "StorageLocation": ("StorageLocation", "atdata.atmosphere._lexicon_types"),
         "CodeReference": ("LexCodeReference", "atdata.atmosphere._lexicon_types"),

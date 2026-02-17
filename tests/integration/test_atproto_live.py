@@ -45,7 +45,7 @@ class IntegArraySample:
 # ── Helpers ───────────────────────────────────────────────────────
 
 TEST_COLLECTION_SCHEMA = f"{LEXICON_NAMESPACE}.schema"
-TEST_COLLECTION_RECORD = f"{LEXICON_NAMESPACE}.record"
+TEST_COLLECTION_RECORD = f"{LEXICON_NAMESPACE}.entry"
 
 
 def _cleanup_records(client: Atmosphere, collection: str, prefix: str) -> None:

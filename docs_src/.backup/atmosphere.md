@@ -116,7 +116,7 @@ for entry in index.list_datasets(repo="did:plc:other-user"):
     print(entry.name)
 
 # Get specific dataset
-entry = index.get_dataset("at://did:plc:.../ac.foundation.dataset.record/...")
+entry = index.get_dataset("at://did:plc:.../ac.foundation.dataset.entry/...")
 
 # List schemas
 for schema in index.list_schemas():

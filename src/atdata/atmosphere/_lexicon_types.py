@@ -67,7 +67,7 @@ def decode_metadata_raw(raw: Any) -> dict | None:
 class ShardChecksum:
     """Content hash for shard integrity verification.
 
-    Mirrors ``ac.foundation.dataset.record#shardChecksum``.
+    Mirrors ``ac.foundation.dataset.entry#shardChecksum``.
     """
 
     algorithm: str
@@ -90,7 +90,7 @@ class ShardChecksum:
 class DatasetSize:
     """Dataset size metadata.
 
-    Mirrors ``ac.foundation.dataset.record#datasetSize``.
+    Mirrors ``ac.foundation.dataset.entry#datasetSize``.
     """
 
     samples: int | None = None
@@ -122,7 +122,7 @@ class DatasetSize:
 class ShardManifestRef:
     """References to manifest sidecar data for a single shard.
 
-    Mirrors ``ac.foundation.dataset.record#shardManifestRef``.
+    Mirrors ``ac.foundation.dataset.entry#shardManifestRef``.
     The header contains schema info, sample count, and per-field aggregates.
     The samples file is a Parquet table with per-sample metadata for
     query-based access.
@@ -151,7 +151,7 @@ class ShardManifestRef:
 class DatasetMetadata:
     """Typed metadata for dataset records.
 
-    Mirrors ``ac.foundation.dataset.record#datasetMetadata``. Provides
+    Mirrors ``ac.foundation.dataset.entry#datasetMetadata``. Provides
     well-known fields for common dataset metadata, plus a ``custom`` dict
     for domain-specific extensions.
 
@@ -656,10 +656,10 @@ class LexSchemaRecord:
 
 
 @dataclass
-class LexDatasetRecord:
-    """Dataset index record pointing to WebDataset storage.
+class LexDatasetEntry:
+    """Dataset index entry pointing to WebDataset storage.
 
-    Mirrors ``ac.foundation.dataset.record`` (main record).
+    Mirrors ``ac.foundation.dataset.entry`` (main record).
     """
 
     name: str
@@ -701,7 +701,7 @@ class LexDatasetRecord:
     def to_record(self) -> dict[str, Any]:
         """Serialize to ATProto record dict."""
         d: dict[str, Any] = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": self.name,
             "schemaRef": self.schema_ref,
             "storage": self.storage.to_record(),
@@ -726,7 +726,7 @@ class LexDatasetRecord:
         return d
 
     @classmethod
-    def from_record(cls, d: dict[str, Any]) -> LexDatasetRecord:
+    def from_record(cls, d: dict[str, Any]) -> LexDatasetEntry:
         """Deserialize from ATProto record dict."""
         size = None
         if "size" in d:
@@ -905,7 +905,7 @@ __all__ = [
     "LexCodeReference",
     "JsonSchemaFormat",
     "LexSchemaRecord",
-    "LexDatasetRecord",
+    "LexDatasetEntry",
     "LexLensRecord",
     "LexLabelRecord",
 ]

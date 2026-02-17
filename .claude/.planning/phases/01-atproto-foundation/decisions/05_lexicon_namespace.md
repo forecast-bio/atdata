@@ -17,7 +17,7 @@ The choices we have then are
 
 ```
 ac.foundation.dataset.schema
-ac.foundation.dataset.record
+ac.foundation.dataset.entry
 ac.foundation.dataset.lens
 ```
 

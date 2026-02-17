@@ -2,7 +2,7 @@
 
 This module provides classes for publishing dataset index records to ATProto
 and loading them back. Dataset records are published as
-``ac.foundation.dataset.record`` records.
+``ac.foundation.dataset.entry`` records.
 """
 
 import dataclasses
@@ -13,7 +13,7 @@ from .schema import SchemaPublisher
 from ._types import AtUri, LEXICON_NAMESPACE
 from ._lexicon_types import (
     DatasetMetadata,
-    LexDatasetRecord,
+    LexDatasetEntry,
     StorageHttp,
     StorageS3,
     StorageBlobs,
@@ -101,14 +101,14 @@ class DatasetPublisher:
         content_metadata: Optional[dict] = None,
         rkey: Optional[str] = None,
     ) -> AtUri:
-        """Build a LexDatasetRecord and publish it to ATProto."""
+        """Build a LexDatasetEntry and publish it to ATProto."""
         typed_metadata: Optional[DatasetMetadata] = None
         if isinstance(metadata, DatasetMetadata):
             typed_metadata = metadata
         elif isinstance(metadata, dict):
             typed_metadata = DatasetMetadata.from_dict(metadata)
 
-        dataset_record = LexDatasetRecord(
+        dataset_entry = LexDatasetEntry(
             name=name,
             schema_ref=schema_uri,
             storage=storage,
@@ -121,8 +121,8 @@ class DatasetPublisher:
         )
 
         return self.client.create_record(
-            collection=f"{LEXICON_NAMESPACE}.record",
-            record=dataset_record.to_record(),
+            collection=f"{LEXICON_NAMESPACE}.entry",
+            record=dataset_entry.to_record(),
             rkey=rkey,
             validate=False,
         )
@@ -506,7 +506,7 @@ class DatasetLoader:
         ...     print(ds["name"], ds["schemaRef"])
         >>>
         >>> # Get a specific dataset record
-        >>> record = loader.get("at://did:plc:abc/ac.foundation.dataset.record/xyz")
+        >>> record = loader.get("at://did:plc:abc/ac.foundation.dataset.entry/xyz")
     """
 
     def __init__(self, client: Atmosphere):
@@ -531,7 +531,7 @@ class DatasetLoader:
         """
         record = self.client.get_record(uri)
 
-        expected_type = f"{LEXICON_NAMESPACE}.record"
+        expected_type = f"{LEXICON_NAMESPACE}.entry"
         if record.get("$type") != expected_type:
             raise ValueError(
                 f"Record at {uri} is not a dataset record. "
@@ -540,17 +540,17 @@ class DatasetLoader:
 
         return record
 
-    def get_typed(self, uri: str | AtUri) -> LexDatasetRecord:
+    def get_typed(self, uri: str | AtUri) -> LexDatasetEntry:
         """Fetch a dataset record and return as a typed object.
 
         Args:
             uri: The AT URI of the dataset record.
 
         Returns:
-            LexDatasetRecord instance.
+            LexDatasetEntry instance.
         """
         record = self.get(uri)
-        return LexDatasetRecord.from_record(record)
+        return LexDatasetEntry.from_record(record)
 
     def list_all(
         self,
@@ -759,8 +759,8 @@ class DatasetLoader:
         raw = record.get("metadata")
         if raw is None:
             return None
-        # Delegate to LexDatasetRecord.from_record which handles all formats.
-        typed_record = LexDatasetRecord.from_record(record)
+        # Delegate to LexDatasetEntry.from_record which handles all formats.
+        typed_record = LexDatasetEntry.from_record(record)
         return typed_record.metadata
 
     def get_content_metadata(self, uri: str | AtUri) -> Optional[dict]:

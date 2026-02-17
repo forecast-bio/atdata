@@ -22,7 +22,7 @@ All lexicons live under the `ac.foundation.dataset` namespace:
 | NSID | Lexicon Type | Purpose |
 |------|-------------|---------|
 | `ac.foundation.dataset.schema` | record | Sample type definitions (JSON Schema + NDArray shim) |
-| `ac.foundation.dataset.record` | record | Dataset index entries with storage references |
+| `ac.foundation.dataset.entry` | record | Dataset index entries with storage references |
 | `ac.foundation.dataset.lens` | record | Bidirectional transformations between sample types |
 | `ac.foundation.dataset.resolveSchema` | query | Fetch latest schema version by NSID |
 | `ac.foundation.dataset.schemaType` | token | Extensible registry of schema format identifiers |
@@ -59,7 +59,7 @@ Any PDS can host records in this namespace. The PDS is lexicon-agnostic — reco
                    │ AT-URI (schemaRef)
                    ▼
     ┌─────────────────────────────┐
-    │ ac.foundation.dataset.record│
+    │ ac.foundation.dataset.entry│
     │                              │
     │  storage (union):           │
     │    ├─ storageExternal       │
@@ -180,7 +180,7 @@ Stored at rkey `imagesample@1.0.0`:
 
 ---
 
-### `ac.foundation.dataset.record`
+### `ac.foundation.dataset.entry`
 
 Index record for a WebDataset-backed dataset.
 
@@ -213,7 +213,7 @@ Index record for a WebDataset-backed dataset.
 
 ```json
 {
-  "$type": "ac.foundation.dataset.record",
+  "$type": "ac.foundation.dataset.entry",
   "name": "CIFAR-10 Training Set",
   "schemaRef": "at://did:plc:abc123/ac.foundation.dataset.schema/imageclassification@1.0.0",
   "storage": {
@@ -238,7 +238,7 @@ Index record for a WebDataset-backed dataset.
 
 ```json
 {
-  "$type": "ac.foundation.dataset.record",
+  "$type": "ac.foundation.dataset.entry",
   "name": "Small Sample Dataset",
   "schemaRef": "at://did:plc:def456/ac.foundation.dataset.schema/textsample@2.1.0",
   "storage": {
@@ -372,7 +372,7 @@ Resolve a schema by its permanent NSID identifier. When version is omitted, reso
 
 ## Storage Union Types
 
-The `storage` field on `ac.foundation.dataset.record` is a union with two members.
+The `storage` field on `ac.foundation.dataset.entry` is a union with two members.
 
 ### `ac.foundation.dataset.storageExternal`
 
@@ -491,7 +491,7 @@ Concrete URI templates for each collection:
 
 ```
 at://{did}/ac.foundation.dataset.schema/{nsid}@{semver}
-at://{did}/ac.foundation.dataset.record/{tid}
+at://{did}/ac.foundation.dataset.entry/{tid}
 at://{did}/ac.foundation.dataset.lens/{tid}
 ```
 
@@ -506,7 +506,7 @@ at://{did}/ac.foundation.dataset.lens/{tid}
 | Lexicon NSID | Python Type | Source File |
 |-------------|-------------|-------------|
 | `ac.foundation.dataset.schema` | `SchemaRecord` | `src/atdata/atmosphere/schema.py` |
-| `ac.foundation.dataset.record` | `DatasetRecord` | `src/atdata/atmosphere/records.py` |
+| `ac.foundation.dataset.entry` | `DatasetEntry` | `src/atdata/atmosphere/records.py` |
 | `ac.foundation.dataset.lens` | `LensRecord` | `src/atdata/atmosphere/lens.py` |
 | (all types) | `AtUri`, `FieldType`, `FieldDef`, `StorageLocation`, `CodeReference` | `src/atdata/atmosphere/_types.py` |
 | (blob storage) | `PDSBlobStore` | `src/atdata/atmosphere/store.py` |

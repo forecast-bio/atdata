@@ -8,7 +8,7 @@ to the AT Protocol network.
 Lexicons:
     ac.foundation.dataset.schema
         Versioned sample type definitions (PackableSample schemas).
-    ac.foundation.dataset.record
+    ac.foundation.dataset.entry
         Dataset index records pointing to WebDataset storage.
     ac.foundation.dataset.lens
         Bidirectional transformations between schemas.
@@ -47,7 +47,7 @@ NAMESPACE = "ac.foundation.dataset"
 
 LEXICON_IDS = (
     f"{NAMESPACE}.schema",
-    f"{NAMESPACE}.record",
+    f"{NAMESPACE}.entry",
     f"{NAMESPACE}.lens",
     f"{NAMESPACE}.schemaType",
     f"{NAMESPACE}.arrayFormat",

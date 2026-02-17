@@ -37,7 +37,7 @@ class TestLexLabelRecord:
         ts = datetime(2025, 6, 1, 12, 0, 0, tzinfo=timezone.utc)
         record = LexLabelRecord(
             name="mnist",
-            dataset_uri="at://did:plc:abc/ac.foundation.dataset.record/xyz",
+            dataset_uri="at://did:plc:abc/ac.foundation.dataset.entry/xyz",
             created_at=ts,
             version="1.0.0",
             description="Initial release of MNIST",
@@ -46,7 +46,7 @@ class TestLexLabelRecord:
         d = record.to_record()
         assert d["$type"] == "ac.foundation.dataset.label"
         assert d["name"] == "mnist"
-        assert d["datasetUri"] == "at://did:plc:abc/ac.foundation.dataset.record/xyz"
+        assert d["datasetUri"] == "at://did:plc:abc/ac.foundation.dataset.entry/xyz"
         assert d["version"] == "1.0.0"
         assert d["description"] == "Initial release of MNIST"
         assert d["createdAt"] == ts.isoformat()
@@ -62,7 +62,7 @@ class TestLexLabelRecord:
         """Round-trip with only required fields."""
         record = LexLabelRecord(
             name="cifar10",
-            dataset_uri="at://did:plc:abc/ac.foundation.dataset.record/123",
+            dataset_uri="at://did:plc:abc/ac.foundation.dataset.entry/123",
         )
 
         d = record.to_record()
@@ -304,7 +304,7 @@ class TestLabelPublisher:
 
         uri = publisher.publish(
             name="mnist",
-            dataset_uri="at://did:plc:mock/ac.foundation.dataset.record/abc",
+            dataset_uri="at://did:plc:mock/ac.foundation.dataset.entry/abc",
             version="1.0.0",
             description="Test label",
         )
@@ -316,7 +316,7 @@ class TestLabelPublisher:
         assert record["$type"] == "ac.foundation.dataset.label"
         assert record["name"] == "mnist"
         assert (
-            record["datasetUri"] == "at://did:plc:mock/ac.foundation.dataset.record/abc"
+            record["datasetUri"] == "at://did:plc:mock/ac.foundation.dataset.entry/abc"
         )
         assert record["version"] == "1.0.0"
         assert record["description"] == "Test label"
@@ -329,7 +329,7 @@ class TestLabelPublisher:
 
         uri = publisher.publish(
             name="cifar10",
-            dataset_uri="at://did:plc:mock/ac.foundation.dataset.record/xyz",
+            dataset_uri="at://did:plc:mock/ac.foundation.dataset.entry/xyz",
         )
 
         record = mock.get_record(uri)
@@ -350,7 +350,7 @@ class TestLabelLoader:
         publisher = LabelPublisher(mock)
         uri = publisher.publish(
             name="test-label",
-            dataset_uri="at://did:plc:mock/ac.foundation.dataset.record/abc",
+            dataset_uri="at://did:plc:mock/ac.foundation.dataset.entry/abc",
         )
 
         loader = LabelLoader(mock)
@@ -365,7 +365,7 @@ class TestLabelLoader:
         publisher = LabelPublisher(mock)
         uri = publisher.publish(
             name="typed-label",
-            dataset_uri="at://did:plc:mock/ac.foundation.dataset.record/abc",
+            dataset_uri="at://did:plc:mock/ac.foundation.dataset.entry/abc",
             version="2.0.0",
         )
 
@@ -382,10 +382,10 @@ class TestLabelLoader:
 
         publisher = LabelPublisher(mock)
         publisher.publish(
-            name="a", dataset_uri="at://did:plc:mock/ac.foundation.dataset.record/1"
+            name="a", dataset_uri="at://did:plc:mock/ac.foundation.dataset.entry/1"
         )
         publisher.publish(
-            name="b", dataset_uri="at://did:plc:mock/ac.foundation.dataset.record/2"
+            name="b", dataset_uri="at://did:plc:mock/ac.foundation.dataset.entry/2"
         )
 
         loader = LabelLoader(mock)
@@ -407,8 +407,8 @@ class TestMockAtmosphereLabels:
             {"$type": "ac.foundation.dataset.label", "name": "test"},
         )
         mock.create_record(
-            "ac.foundation.dataset.record",
-            {"$type": "ac.foundation.dataset.record", "name": "dataset"},
+            "ac.foundation.dataset.entry",
+            {"$type": "ac.foundation.dataset.entry", "name": "dataset"},
         )
 
         labels = mock.list_labels()
@@ -431,8 +431,8 @@ class TestLabelLoaderEdgeCases:
 
         # Create a non-label record
         uri = mock.create_record(
-            "ac.foundation.dataset.record",
-            {"$type": "ac.foundation.dataset.record", "name": "not-a-label"},
+            "ac.foundation.dataset.entry",
+            {"$type": "ac.foundation.dataset.entry", "name": "not-a-label"},
         )
 
         loader = LabelLoader(mock)
@@ -447,16 +447,16 @@ class TestLabelLoaderEdgeCases:
         publisher = LabelPublisher(mock)
         publisher.publish(
             name="mnist",
-            dataset_uri="at://did:plc:mock/ac.foundation.dataset.record/abc",
+            dataset_uri="at://did:plc:mock/ac.foundation.dataset.entry/abc",
         )
         publisher.publish(
             name="cifar10",
-            dataset_uri="at://did:plc:mock/ac.foundation.dataset.record/xyz",
+            dataset_uri="at://did:plc:mock/ac.foundation.dataset.entry/xyz",
         )
 
         loader = LabelLoader(mock)
         uri = loader.resolve("did:plc:mock000000000000", "mnist")
-        assert uri == "at://did:plc:mock/ac.foundation.dataset.record/abc"
+        assert uri == "at://did:plc:mock/ac.foundation.dataset.entry/abc"
 
     def test_resolve_by_name_and_version(self):
         """resolve() filters by version when specified."""
@@ -466,18 +466,18 @@ class TestLabelLoaderEdgeCases:
         publisher = LabelPublisher(mock)
         publisher.publish(
             name="ds",
-            dataset_uri="at://did:plc:mock/ac.foundation.dataset.record/v1",
+            dataset_uri="at://did:plc:mock/ac.foundation.dataset.entry/v1",
             version="1.0.0",
         )
         publisher.publish(
             name="ds",
-            dataset_uri="at://did:plc:mock/ac.foundation.dataset.record/v2",
+            dataset_uri="at://did:plc:mock/ac.foundation.dataset.entry/v2",
             version="2.0.0",
         )
 
         loader = LabelLoader(mock)
         uri = loader.resolve("did:plc:mock000000000000", "ds", version="1.0.0")
-        assert uri == "at://did:plc:mock/ac.foundation.dataset.record/v1"
+        assert uri == "at://did:plc:mock/ac.foundation.dataset.entry/v1"
 
     def test_resolve_not_found_raises(self):
         """resolve() raises KeyError when no matching label exists."""

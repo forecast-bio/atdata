@@ -29,7 +29,7 @@ from typing import Any
 
 _NSID_ORDER = [
     "ac.foundation.dataset.schema",
-    "ac.foundation.dataset.record",
+    "ac.foundation.dataset.entry",
     "ac.foundation.dataset.lens",
     "ac.foundation.dataset.storageHttp",
     "ac.foundation.dataset.storageS3",

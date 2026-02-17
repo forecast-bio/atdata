@@ -115,7 +115,7 @@ class TestListLexicons:
     def test_contains_known_ids(self):
         result = list_lexicons()
         assert "ac.foundation.dataset.schema" in result
-        assert "ac.foundation.dataset.record" in result
+        assert "ac.foundation.dataset.entry" in result
         assert "ac.foundation.dataset.lens" in result
 
     def test_matches_constant(self):
