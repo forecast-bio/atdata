@@ -235,18 +235,5 @@ class LabelLoader:
         return best["datasetUri"]
 
     def _resolve_did(self, handle_or_did: str) -> str:
-        """Resolve a handle to a DID, or return the DID directly.
-
-        Args:
-            handle_or_did: A DID string or handle to resolve.
-
-        Returns:
-            The DID string.
-        """
-        if handle_or_did.startswith("did:"):
-            return handle_or_did
-
-        response = self.client._client.com.atproto.identity.resolve_handle(
-            params={"handle": handle_or_did}
-        )
-        return response.did
+        """Resolve a handle to a DID, or return the DID directly."""
+        return self.client.resolve_did(handle_or_did)

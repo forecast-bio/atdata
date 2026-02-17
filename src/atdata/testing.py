@@ -134,6 +134,12 @@ class MockAtmosphere:
         ]
         return records, None
 
+    def resolve_did(self, handle_or_did: str) -> str:
+        """Resolve a handle to a DID, or return a DID unchanged."""
+        if handle_or_did.startswith("did:"):
+            return handle_or_did
+        return self.did
+
     def list_labels(
         self, repo: str | None = None, limit: int = 100
     ) -> list[dict[str, Any]]:

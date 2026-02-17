@@ -326,10 +326,9 @@ class SchemaLoader:
         records = self.list_all(repo=did)
 
         for record in records:
-            value = record.get("value", record)
-            if value.get("name") == type_name and value.get("version") == version:
-                _check_schema_record_version(value)
-                return value
+            if record.get("name") == type_name and record.get("version") == version:
+                _check_schema_record_version(record)
+                return record
 
         raise KeyError(
             f"Schema {type_name!r} version {version!r} not found "
@@ -337,21 +336,8 @@ class SchemaLoader:
         )
 
     def _resolve_did(self, handle_or_did: str) -> str:
-        """Resolve a handle to a DID, or return the DID directly.
-
-        Args:
-            handle_or_did: A DID string or handle to resolve.
-
-        Returns:
-            The DID string.
-        """
-        if handle_or_did.startswith("did:"):
-            return handle_or_did
-
-        response = self.client._client.com.atproto.identity.resolve_handle(
-            params={"handle": handle_or_did}
-        )
-        return response.did
+        """Resolve a handle to a DID, or return the DID directly."""
+        return self.client.resolve_did(handle_or_did)
 
     def get_typed(self, uri: str | AtUri) -> LexSchemaRecord:
         """Fetch a schema record and return as a typed object.

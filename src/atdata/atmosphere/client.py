@@ -476,6 +476,24 @@ class Atmosphere:
         pds_endpoint = _resolve_pds_endpoint(did)
         return f"{pds_endpoint}/xrpc/com.atproto.sync.getBlob?did={did}&cid={cid}"
 
+    def resolve_did(self, handle_or_did: str) -> str:
+        """Resolve a handle to a DID, or return a DID string unchanged.
+
+        Args:
+            handle_or_did: An AT Protocol handle (e.g. ``alice.bsky.social``)
+                or a DID string (e.g. ``did:plc:abc123``).
+
+        Returns:
+            The DID string.
+        """
+        if handle_or_did.startswith("did:"):
+            return handle_or_did
+
+        response = self._client.com.atproto.identity.resolve_handle(
+            params={"handle": handle_or_did}
+        )
+        return response.did
+
     def list_records(
         self,
         collection: str,

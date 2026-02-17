@@ -1626,6 +1626,121 @@ class TestSchemaLoader:
         with pytest.raises(ValueError, match="Expected @handle/TypeName@version"):
             loader.get("@foundation.ac")
 
+    def test_get_schema_handle_ref_selects_from_multiple(
+        self, authenticated_client, mock_atproto_client
+    ):
+        """Handle ref selects correct schema when repo has multiple."""
+        mock_resolve = Mock()
+        mock_resolve.did = "did:plc:resolved123"
+        mock_atproto_client.com.atproto.identity.resolve_handle.return_value = (
+            mock_resolve
+        )
+
+        mock_records = [
+            Mock(value={"name": "OtherType", "version": "1.0.0"}),
+            Mock(value={"name": "MnistSample", "version": "2.0.0"}),
+            Mock(value={"name": "MnistSample", "version": "1.0.0"}),
+        ]
+        mock_response = Mock()
+        mock_response.records = mock_records
+        mock_response.cursor = None
+        mock_atproto_client.com.atproto.repo.list_records.return_value = mock_response
+
+        loader = SchemaLoader(authenticated_client)
+        result = loader.get("@foundation.ac/MnistSample@1.0.0")
+
+        assert result["name"] == "MnistSample"
+        assert result["version"] == "1.0.0"
+
+    def test_get_schema_handle_ref_empty_repo(
+        self, authenticated_client, mock_atproto_client
+    ):
+        """Handle ref raises KeyError when repository has no schemas."""
+        mock_resolve = Mock()
+        mock_resolve.did = "did:plc:resolved123"
+        mock_atproto_client.com.atproto.identity.resolve_handle.return_value = (
+            mock_resolve
+        )
+
+        mock_response = Mock()
+        mock_response.records = []
+        mock_response.cursor = None
+        mock_atproto_client.com.atproto.repo.list_records.return_value = mock_response
+
+        loader = SchemaLoader(authenticated_client)
+        with pytest.raises(KeyError, match="not found"):
+            loader.get("@foundation.ac/MnistSample@1.0.0")
+
+    def test_get_schema_handle_ref_verifies_resolved_did(
+        self, authenticated_client, mock_atproto_client
+    ):
+        """Handle ref passes resolved DID to list_records."""
+        mock_resolve = Mock()
+        mock_resolve.did = "did:plc:target999"
+        mock_atproto_client.com.atproto.identity.resolve_handle.return_value = (
+            mock_resolve
+        )
+
+        mock_record = Mock()
+        mock_record.value = {"name": "Sample", "version": "1.0.0"}
+        mock_response = Mock()
+        mock_response.records = [mock_record]
+        mock_response.cursor = None
+        mock_atproto_client.com.atproto.repo.list_records.return_value = mock_response
+
+        loader = SchemaLoader(authenticated_client)
+        loader.get("@example.com/Sample@1.0.0")
+
+        # Verify list_records was called with the resolved DID
+        call_args = mock_atproto_client.com.atproto.repo.list_records.call_args
+        assert call_args[1]["params"]["repo"] == "did:plc:target999"
+
+    def test_get_schema_unsupported_version_raises(
+        self, authenticated_client, mock_atproto_client
+    ):
+        """SchemaError raised for unsupported $atdataSchemaVersion."""
+        from atdata._exceptions import SchemaError
+
+        mock_response = Mock()
+        mock_response.value = {
+            "$type": f"{LEXICON_NAMESPACE}.schema",
+            "name": "FutureSchema",
+            "version": "1.0.0",
+            "$atdataSchemaVersion": 999,
+        }
+        mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
+
+        loader = SchemaLoader(authenticated_client)
+        with pytest.raises(SchemaError, match="Unsupported schema record version"):
+            loader.get(f"at://did:plc:abc/{LEXICON_NAMESPACE}.schema/xyz")
+
+    def test_get_schema_handle_ref_unsupported_version_raises(
+        self, authenticated_client, mock_atproto_client
+    ):
+        """SchemaError raised for unsupported version via handle ref."""
+        from atdata._exceptions import SchemaError
+
+        mock_resolve = Mock()
+        mock_resolve.did = "did:plc:resolved123"
+        mock_atproto_client.com.atproto.identity.resolve_handle.return_value = (
+            mock_resolve
+        )
+
+        mock_record = Mock()
+        mock_record.value = {
+            "name": "FutureSample",
+            "version": "1.0.0",
+            "$atdataSchemaVersion": 999,
+        }
+        mock_response = Mock()
+        mock_response.records = [mock_record]
+        mock_response.cursor = None
+        mock_atproto_client.com.atproto.repo.list_records.return_value = mock_response
+
+        loader = SchemaLoader(authenticated_client)
+        with pytest.raises(SchemaError, match="Unsupported schema record version"):
+            loader.get("@foundation.ac/FutureSample@1.0.0")
+
 
 # =============================================================================
 # Tests for _parse_handle_schema_ref
@@ -1678,6 +1793,18 @@ class TestParseHandleSchemaRef:
 
         with pytest.raises(ValueError, match="Invalid handle schema ref"):
             _parse_handle_schema_ref("@/TypeName@1.0.0")
+
+    def test_empty_version(self):
+        from atdata.atmosphere.schema import _parse_handle_schema_ref
+
+        with pytest.raises(ValueError, match="Invalid version syntax"):
+            _parse_handle_schema_ref("@handle/TypeName@")
+
+    def test_empty_type_name(self):
+        from atdata.atmosphere.schema import _parse_handle_schema_ref
+
+        with pytest.raises(ValueError, match="Invalid version syntax"):
+            _parse_handle_schema_ref("@handle/@1.0.0")
 
 
 # =============================================================================
