@@ -16,6 +16,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any
 
+from .._schema_codec import _get_schema_version
+
 LEXICON_NAMESPACE = "ac.foundation.dataset"
 
 
@@ -644,9 +646,7 @@ class LexSchemaRecord:
             created_at=datetime.fromisoformat(d["createdAt"]),
             description=d.get("description"),
             metadata=d.get("metadata"),
-            atdata_schema_version=d.get(
-                "atdataSchemaVersion", d.get("$atdataSchemaVersion", 1)
-            ),
+            atdata_schema_version=_get_schema_version(d),
         )
 
 
@@ -711,7 +711,7 @@ class LexDatasetRecord:
             d["description"] = self.description
         if self.metadata is not None:
             d["metadata"] = self.metadata.to_record()
-        if self.tags:
+        if self.tags is not None:
             d["tags"] = self.tags
         if self.size is not None:
             d["size"] = self.size.to_record()
@@ -721,7 +721,7 @@ class LexDatasetRecord:
             d["metadataSchemaRef"] = self.metadata_schema_ref
         if self.content_metadata is not None:
             d["contentMetadata"] = self.content_metadata
-        if self.manifests:
+        if self.manifests is not None:
             d["manifests"] = [m.to_record() for m in self.manifests]
         return d
 

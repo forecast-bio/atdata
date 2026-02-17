@@ -23,10 +23,7 @@ from .._type_utils import (
     unwrap_optional,
     is_ndarray_type,
 )
-from .._exceptions import SchemaError
-
-# Maximum atdataSchemaVersion this library can read.
-_MAX_SUPPORTED_SCHEMA_VERSION = 1
+from .._schema_codec import _check_schema_record_version
 
 
 def _parse_handle_schema_ref(ref: str) -> tuple[str, str, str]:
@@ -371,24 +368,3 @@ class SchemaLoader:
             List of schema records.
         """
         return self.client.list_schemas(repo=repo, limit=limit)
-
-
-def _check_schema_record_version(record: dict) -> None:
-    """Validate that a schema record's ``atdataSchemaVersion`` is supported.
-
-    Records without the field are treated as version 1 (backward compat).
-
-    Args:
-        record: Schema record dict.
-
-    Raises:
-        SchemaError: If the version is higher than this library supports.
-    """
-    v = record.get("atdataSchemaVersion", record.get("$atdataSchemaVersion", 1))
-    if v > _MAX_SUPPORTED_SCHEMA_VERSION:
-        raise SchemaError(
-            f"Unsupported schema record version: {v}. "
-            f"This version of atdata supports schema record versions "
-            f"up to {_MAX_SUPPORTED_SCHEMA_VERSION}. "
-            f"Upgrade atdata to read this schema."
-        )

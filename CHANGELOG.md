@@ -21,6 +21,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **XRPC query workaround docs**: Documented client-side `list_records()` + filter patterns used as temporary workarounds pending AppView support (#56)
 
 ### Changed
+- Adversarial review: rename-dollar, handle-ref, manifest features (#792)
+- Batch test improvements: strengthen assertions, add missing edge cases, parametrize (#798)
+- Create GitHub issue: migrate authoritative lexicons to separate repo (#791)
+- Update lexicons.qmd docs with missing manifest/contentMetadata properties (#794)
+- Extract _to_dict helper in client.py to deduplicate value conversion (#797)
+- Fix truthiness checks: manifests and tags should use 'is not None' (#796)
+- Deduplicate _check_schema_record_version and extract schema version helper (#793)
+- Add pagination limitation docstring to _resolve_handle_ref (#795)
 - Generalize /kickoff, /check, /featree to global Claude skills (#768)
 - GitHub issue: rename dataset.record → dataset.entry lexicon (#767)
 - GitHub issue: manifest info in dataset record lexicon (#766)

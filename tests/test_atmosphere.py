@@ -457,6 +457,25 @@ class TestLexSchemaRecord:
         restored = LexSchemaRecord.from_record(record)
         assert restored.atdata_schema_version == 1
 
+    def test_from_record_new_key_takes_precedence_over_old(self):
+        """from_record() prefers atdataSchemaVersion when both keys are present."""
+        record = {
+            "name": "BothKeys",
+            "version": "1.0.0",
+            "schemaType": "jsonSchema",
+            "schema": {
+                "$type": "ac.foundation.dataset.schema#jsonSchemaFormat",
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {"x": {"type": "string"}},
+            },
+            "createdAt": "2025-01-01T00:00:00+00:00",
+            "atdataSchemaVersion": 1,
+            "$atdataSchemaVersion": 1,
+        }
+        restored = LexSchemaRecord.from_record(record)
+        assert restored.atdata_schema_version == 1
+
 
 # =============================================================================
 # Tests for _types.py - StorageLocation
@@ -816,12 +835,26 @@ class TestLexDatasetRecordManifests:
         assert restored.manifests[1].samples is not None
         assert restored.manifests[1].samples["ref"]["$link"] == "bafysamples2"
 
-    def test_empty_manifests_list_not_serialized(self):
-        """Empty manifests list is not serialized, matching tags behavior."""
+    def test_empty_manifests_list_serialized(self):
+        """Empty manifests list is serialized to preserve None vs [] distinction."""
         dataset = self._make_dataset(manifests=[])
 
         record = dataset.to_record()
 
+        assert "manifests" in record
+        assert record["manifests"] == []
+
+    def test_empty_manifests_roundtrip(self):
+        """Empty manifests list survives to_record -> from_record roundtrip."""
+        dataset = self._make_dataset(manifests=[])
+        record = dataset.to_record()
+        restored = LexDatasetRecord.from_record(record)
+        assert restored.manifests == []
+
+    def test_none_manifests_not_serialized(self):
+        """None manifests are omitted from serialized record."""
+        dataset = self._make_dataset(manifests=None)
+        record = dataset.to_record()
         assert "manifests" not in record
 
 
@@ -1915,7 +1948,7 @@ class TestSchemaLoader:
         mock_atproto_client.com.atproto.repo.list_records.return_value = mock_response
 
         loader = SchemaLoader(authenticated_client)
-        with pytest.raises(KeyError, match="not found"):
+        with pytest.raises(KeyError, match="MnistSample.*not found.*foundation.ac"):
             loader.get("@foundation.ac/MnistSample@1.0.0")
 
     def test_get_schema_handle_ref_verifies_resolved_did(
@@ -1936,16 +1969,21 @@ class TestSchemaLoader:
         mock_atproto_client.com.atproto.repo.list_records.return_value = mock_response
 
         loader = SchemaLoader(authenticated_client)
-        loader.get("@example.com/Sample@1.0.0")
+        result = loader.get("@example.com/Sample@1.0.0")
 
+        assert result["name"] == "Sample"
+        assert result["version"] == "1.0.0"
         # Verify list_records was called with the resolved DID
         call_args = mock_atproto_client.com.atproto.repo.list_records.call_args
         assert call_args[1]["params"]["repo"] == "did:plc:target999"
 
+    @pytest.mark.parametrize(
+        "version_key", ["atdataSchemaVersion", "$atdataSchemaVersion"]
+    )
     def test_get_schema_unsupported_version_raises(
-        self, authenticated_client, mock_atproto_client
+        self, authenticated_client, mock_atproto_client, version_key
     ):
-        """SchemaError raised for unsupported $atdataSchemaVersion."""
+        """SchemaError raised for unsupported schema version (both key names)."""
         from atdata._exceptions import SchemaError
 
         mock_response = Mock()
@@ -1953,18 +1991,21 @@ class TestSchemaLoader:
             "$type": f"{LEXICON_NAMESPACE}.schema",
             "name": "FutureSchema",
             "version": "1.0.0",
-            "$atdataSchemaVersion": 999,
+            version_key: 999,
         }
         mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
 
         loader = SchemaLoader(authenticated_client)
-        with pytest.raises(SchemaError, match="Unsupported schema record version"):
+        with pytest.raises(SchemaError, match="Unsupported schema record version: 999"):
             loader.get(f"at://did:plc:abc/{LEXICON_NAMESPACE}.schema/xyz")
 
+    @pytest.mark.parametrize(
+        "version_key", ["atdataSchemaVersion", "$atdataSchemaVersion"]
+    )
     def test_get_schema_handle_ref_unsupported_version_raises(
-        self, authenticated_client, mock_atproto_client
+        self, authenticated_client, mock_atproto_client, version_key
     ):
-        """SchemaError raised for unsupported version via handle ref."""
+        """SchemaError raised for unsupported version via handle ref (both key names)."""
         from atdata._exceptions import SchemaError
 
         mock_resolve = Mock()
@@ -1977,7 +2018,7 @@ class TestSchemaLoader:
         mock_record.value = {
             "name": "FutureSample",
             "version": "1.0.0",
-            "$atdataSchemaVersion": 999,
+            version_key: 999,
         }
         mock_response = Mock()
         mock_response.records = [mock_record]
@@ -1985,7 +2026,7 @@ class TestSchemaLoader:
         mock_atproto_client.com.atproto.repo.list_records.return_value = mock_response
 
         loader = SchemaLoader(authenticated_client)
-        with pytest.raises(SchemaError, match="Unsupported schema record version"):
+        with pytest.raises(SchemaError, match="Unsupported schema record version: 999"):
             loader.get("@foundation.ac/FutureSample@1.0.0")
 
 
@@ -1997,61 +2038,41 @@ class TestSchemaLoader:
 class TestParseHandleSchemaRef:
     """Tests for _parse_handle_schema_ref parser."""
 
-    def test_valid_handle_ref(self):
+    @pytest.mark.parametrize(
+        "ref, expected",
+        [
+            (
+                "@foundation.ac/MnistSample@1.0.0",
+                ("foundation.ac", "MnistSample", "1.0.0"),
+            ),
+            ("@did:plc:abc123/TestType@2.1.0", ("did:plc:abc123", "TestType", "2.1.0")),
+            (
+                "@my-host.example.com/Type@0.1.0",
+                ("my-host.example.com", "Type", "0.1.0"),
+            ),
+        ],
+    )
+    def test_valid_refs(self, ref, expected):
         from atdata.atmosphere.schema import _parse_handle_schema_ref
 
-        handle, name, version = _parse_handle_schema_ref(
-            "@foundation.ac/MnistSample@1.0.0"
-        )
-        assert handle == "foundation.ac"
-        assert name == "MnistSample"
-        assert version == "1.0.0"
+        assert _parse_handle_schema_ref(ref) == expected
 
-    def test_valid_did_ref(self):
+    @pytest.mark.parametrize(
+        "ref, error_match",
+        [
+            ("@foundation.ac/MnistSample", "must include version"),
+            ("@foundation.ac", "Expected @handle/TypeName@version"),
+            ("atdata://local/schema/Foo@1.0.0", "Not a handle schema ref"),
+            ("@/TypeName@1.0.0", "Invalid handle schema ref"),
+            ("@handle/TypeName@", "Invalid version syntax"),
+            ("@handle/@1.0.0", "Invalid version syntax"),
+        ],
+    )
+    def test_invalid_refs(self, ref, error_match):
         from atdata.atmosphere.schema import _parse_handle_schema_ref
 
-        handle, name, version = _parse_handle_schema_ref(
-            "@did:plc:abc123/TestType@2.1.0"
-        )
-        assert handle == "did:plc:abc123"
-        assert name == "TestType"
-        assert version == "2.1.0"
-
-    def test_missing_version(self):
-        from atdata.atmosphere.schema import _parse_handle_schema_ref
-
-        with pytest.raises(ValueError, match="must include version"):
-            _parse_handle_schema_ref("@foundation.ac/MnistSample")
-
-    def test_missing_slash(self):
-        from atdata.atmosphere.schema import _parse_handle_schema_ref
-
-        with pytest.raises(ValueError, match="Expected @handle/TypeName@version"):
-            _parse_handle_schema_ref("@foundation.ac")
-
-    def test_not_handle_ref(self):
-        from atdata.atmosphere.schema import _parse_handle_schema_ref
-
-        with pytest.raises(ValueError, match="Not a handle schema ref"):
-            _parse_handle_schema_ref("atdata://local/schema/Foo@1.0.0")
-
-    def test_empty_parts(self):
-        from atdata.atmosphere.schema import _parse_handle_schema_ref
-
-        with pytest.raises(ValueError, match="Invalid handle schema ref"):
-            _parse_handle_schema_ref("@/TypeName@1.0.0")
-
-    def test_empty_version(self):
-        from atdata.atmosphere.schema import _parse_handle_schema_ref
-
-        with pytest.raises(ValueError, match="Invalid version syntax"):
-            _parse_handle_schema_ref("@handle/TypeName@")
-
-    def test_empty_type_name(self):
-        from atdata.atmosphere.schema import _parse_handle_schema_ref
-
-        with pytest.raises(ValueError, match="Invalid version syntax"):
-            _parse_handle_schema_ref("@handle/@1.0.0")
+        with pytest.raises(ValueError, match=error_match):
+            _parse_handle_schema_ref(ref)
 
 
 # =============================================================================

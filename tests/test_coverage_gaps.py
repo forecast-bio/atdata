@@ -237,8 +237,15 @@ class TestIndexEdgeCases:
         assert record.name == "SharedBasicSample"
         assert record.version == "1.0.0"
 
-    def test_get_schema_at_uri_routes_to_atmosphere(self, tmp_path):
-        """get_schema with at:// URI routes to atmosphere backend."""
+    @pytest.mark.parametrize(
+        "ref",
+        [
+            "at://did:plc:abc/ac.foundation.dataset.schema/rkey123",
+            "@foundation.ac/MnistSample@1.0.0",
+        ],
+    )
+    def test_get_schema_atmosphere_ref_routes_to_backend(self, tmp_path, ref):
+        """get_schema with at:// URI or @handle ref routes to atmosphere."""
         provider = SqliteProvider(path=tmp_path / "test.db")
         mock_atmo = MagicMock()
         mock_atmo.get_schema.return_value = {
@@ -257,51 +264,25 @@ class TestIndexEdgeCases:
         index._atmosphere = mock_atmo
         index._atmosphere_deferred = False
 
-        at_uri = "at://did:plc:abc/ac.foundation.dataset.schema/rkey123"
-        result = index.get_schema(at_uri)
-        assert result["name"] == "RemoteSample"
-        mock_atmo.get_schema.assert_called_once_with(at_uri)
-
-    def test_get_schema_at_uri_no_atmosphere_raises(self, tmp_path):
-        """get_schema with at:// URI raises when atmosphere unavailable."""
-        provider = SqliteProvider(path=tmp_path / "test.db")
-        index = atlocal.Index(provider=provider, atmosphere=None)
-
-        with pytest.raises(ValueError, match="Atmosphere backend required"):
-            index.get_schema("at://did:plc:abc/ac.foundation.dataset.schema/rkey")
-
-    def test_get_schema_handle_ref_routes_to_atmosphere(self, tmp_path):
-        """get_schema with @handle/Type@version routes to atmosphere backend."""
-        provider = SqliteProvider(path=tmp_path / "test.db")
-        mock_atmo = MagicMock()
-        mock_atmo.get_schema.return_value = {
-            "name": "MnistSample",
-            "version": "1.0.0",
-            "schemaType": "jsonSchema",
-            "schema": {
-                "schemaBody": {
-                    "properties": {"label": {"type": "integer"}},
-                    "required": ["label"],
-                },
-            },
-        }
-
-        index = atlocal.Index(provider=provider, atmosphere=None)
-        index._atmosphere = mock_atmo
-        index._atmosphere_deferred = False
-
-        ref = "@foundation.ac/MnistSample@1.0.0"
         result = index.get_schema(ref)
-        assert result["name"] == "MnistSample"
+        assert result["name"] == "RemoteSample"
+        assert result["version"] == "1.0.0"
         mock_atmo.get_schema.assert_called_once_with(ref)
 
-    def test_get_schema_handle_ref_no_atmosphere_raises(self, tmp_path):
-        """get_schema with @handle ref raises when atmosphere unavailable."""
+    @pytest.mark.parametrize(
+        "ref",
+        [
+            "at://did:plc:abc/ac.foundation.dataset.schema/rkey",
+            "@foundation.ac/MnistSample@1.0.0",
+        ],
+    )
+    def test_get_schema_atmosphere_ref_no_backend_raises(self, tmp_path, ref):
+        """get_schema with atmosphere ref raises when backend unavailable."""
         provider = SqliteProvider(path=tmp_path / "test.db")
         index = atlocal.Index(provider=provider, atmosphere=None)
 
         with pytest.raises(ValueError, match="Atmosphere backend required"):
-            index.get_schema("@foundation.ac/MnistSample@1.0.0")
+            index.get_schema(ref)
 
     def test_insert_dataset_atmosphere_path(self, tmp_path):
         """insert_dataset with at:// prefix routes to atmosphere."""

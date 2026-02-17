@@ -37,6 +37,15 @@ from ._exceptions import SchemaError
 _MAX_SUPPORTED_SCHEMA_VERSION = 1
 
 
+def _get_schema_version(record: dict) -> int:
+    """Extract the schema record version, supporting both old and new keys.
+
+    Tries ``atdataSchemaVersion`` first, falls back to ``$atdataSchemaVersion``
+    (pre-rename), defaults to 1 for records without either key.
+    """
+    return record.get("atdataSchemaVersion", record.get("$atdataSchemaVersion", 1))
+
+
 # Type cache to avoid regenerating identical types
 # Uses insertion order (Python 3.7+) for simple FIFO eviction
 _type_cache: dict[str, Type[Packable]] = {}
@@ -231,7 +240,7 @@ def _check_schema_record_version(schema: dict) -> None:
     Raises:
         SchemaError: If the version is higher than this library supports.
     """
-    v = schema.get("atdataSchemaVersion", schema.get("$atdataSchemaVersion", 1))
+    v = _get_schema_version(schema)
     if v > _MAX_SUPPORTED_SCHEMA_VERSION:
         raise SchemaError(
             f"Unsupported schema record version: {v}. "

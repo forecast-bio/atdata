@@ -28,6 +28,23 @@ def _get_atproto_client_class():
     return _atproto_client_class
 
 
+def _value_to_dict(value: Any) -> dict | Any:
+    """Convert an ATProto model value to a plain dict.
+
+    Handles DotDict (to_dict), pydantic (model_dump), plain dict, and
+    generic objects with __dict__.
+    """
+    if hasattr(value, "to_dict") and callable(value.to_dict):
+        return value.to_dict()
+    if isinstance(value, dict):
+        return dict(value)
+    if hasattr(value, "model_dump") and callable(value.model_dump):
+        return value.model_dump()
+    if hasattr(value, "__dict__"):
+        return dict(value.__dict__)
+    return value
+
+
 class Atmosphere:
     """ATProto client wrapper for atdata operations.
 
@@ -335,18 +352,7 @@ class Atmosphere:
             }
         )
 
-        # Convert ATProto model to dict if needed
-        value = response.value
-        # DotDict and similar ATProto models have to_dict()
-        if hasattr(value, "to_dict") and callable(value.to_dict):
-            return value.to_dict()
-        elif isinstance(value, dict):
-            return dict(value)
-        elif hasattr(value, "model_dump") and callable(value.model_dump):
-            return value.model_dump()
-        elif hasattr(value, "__dict__"):
-            return dict(value.__dict__)
-        return value
+        return _value_to_dict(response.value)
 
     def delete_record(
         self,
@@ -535,21 +541,7 @@ class Atmosphere:
             }
         )
 
-        # Convert ATProto models to dicts if needed
-        records = []
-        for r in response.records:
-            value = r.value
-            # DotDict and similar ATProto models have to_dict()
-            if hasattr(value, "to_dict") and callable(value.to_dict):
-                records.append(value.to_dict())
-            elif isinstance(value, dict):
-                records.append(dict(value))
-            elif hasattr(value, "model_dump") and callable(value.model_dump):
-                records.append(value.model_dump())
-            elif hasattr(value, "__dict__"):
-                records.append(dict(value.__dict__))
-            else:
-                records.append(value)
+        records = [_value_to_dict(r.value) for r in response.records]
         return records, response.cursor
 
     # Convenience methods for atdata collections

@@ -91,6 +91,18 @@ Index record for a WebDataset-backed dataset with references to storage location
 | `size` | [`#datasetSize`](#ac-foundation-dataset-record-datasetsize) | no | Dataset size information (optional) |
 | `license` | string | no | License identifier or URL. SPDX identifiers recommended (e.g., MIT, Apache-2.0, CC-BY-4.0) or full SPDX URLs (e.g., http://spdx.org/licenses/MIT). Aligns with Schema.org license property. *max length: 200* |
 | `createdAt` | string (datetime) | **yes** | Timestamp when this dataset record was created |
+| `metadataSchemaRef` | string (at-uri) | no | AT-URI reference to a schema record defining the structure of this dataset's content metadata. When present, contentMetadata is validated against this schema at write time. *max length: 500* |
+| `contentMetadata` | unknown | no | Dataset-level content metadata (e.g., instrument settings, acquisition parameters). Structure is validated against the schema referenced by metadataSchemaRef when present. Stored as an open JSON object. |
+| `manifests` | array\<[`#shardManifestRef`](#ac-foundation-dataset-record-shardmanifestref)\> | no | Per-shard manifest metadata for query-based access. Each entry corresponds to a shard in the storage union (matched by array index). Optional — datasets without manifests are still fully usable via sequential iteration. |
+
+#### `ac.foundation.dataset.record#shardManifestRef` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-record-shardmanifestref}
+
+References to manifest sidecar data for a single shard. The header contains schema info, sample count, and per-field aggregates. The samples file is a Parquet table with per-sample metadata for query-based access.
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `header` | blob (application/json) | **yes** | Manifest JSON header containing schema info, sample count, and per-field aggregates (min/max/mean for numeric, value_counts for categorical) *max size: 1 MB* |
+| `samples` | blob (application/octet-stream) | no | Parquet file with per-sample metadata (\_\_key\_\_, \_\_offset\_\_, \_\_size\_\_, plus queryable field values) *max size: 50 MB* |
 
 #### `ac.foundation.dataset.record#shardChecksum` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-record-shardchecksum}
 
