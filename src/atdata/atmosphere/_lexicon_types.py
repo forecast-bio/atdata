@@ -615,7 +615,9 @@ class LexSchemaRecord:
             created_at=datetime.fromisoformat(d["createdAt"]),
             description=d.get("description"),
             metadata=d.get("metadata"),
-            atdata_schema_version=d.get("atdataSchemaVersion", d.get("$atdataSchemaVersion", 1)),
+            atdata_schema_version=d.get(
+                "atdataSchemaVersion", d.get("$atdataSchemaVersion", 1)
+            ),
         )
 
 
