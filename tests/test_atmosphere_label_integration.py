@@ -70,9 +70,7 @@ class _FakeAtmoBackend:
     ):
         """Stub insert that stores a dataset record and publishes a label."""
         self._counter += 1
-        uri = (
-            f"at://{self.client.did}/{LEXICON_NAMESPACE}.entry/{name}-{self._counter}"
-        )
+        uri = f"at://{self.client.did}/{LEXICON_NAMESPACE}.entry/{name}-{self._counter}"
         record = {
             "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": name,

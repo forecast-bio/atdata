@@ -2116,9 +2116,7 @@ class TestDatasetPublisher:
 
         # Mock for dataset creation
         dataset_response = Mock()
-        dataset_response.uri = (
-            f"at://did:plc:test/{LEXICON_NAMESPACE}.entry/dataset456"
-        )
+        dataset_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.entry/dataset456"
 
         mock_atproto_client.com.atproto.repo.create_record.side_effect = [
             schema_response,
@@ -2355,9 +2353,7 @@ class TestDatasetPublisher:
 
         # Mock create_record response
         mock_create_response = Mock()
-        mock_create_response.uri = (
-            f"at://did:plc:test/{LEXICON_NAMESPACE}.entry/blobds"
-        )
+        mock_create_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.entry/blobds"
         mock_atproto_client.com.atproto.repo.create_record.return_value = (
             mock_create_response
         )
@@ -2399,9 +2395,7 @@ class TestDatasetPublisher:
         )
 
         mock_create_response = Mock()
-        mock_create_response.uri = (
-            f"at://did:plc:test/{LEXICON_NAMESPACE}.entry/metads"
-        )
+        mock_create_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.entry/metads"
         mock_atproto_client.com.atproto.repo.create_record.return_value = (
             mock_create_response
         )

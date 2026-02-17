@@ -95,7 +95,10 @@ def __getattr__(name: str) -> Any:
         "SchemaRecord": ("LexSchemaRecord", "atdata.atmosphere._lexicon_types"),
         "DatasetRecord": ("LexDatasetEntry", "atdata.atmosphere._lexicon_types"),
         "LensRecord": ("LexLensRecord", "atdata.atmosphere._lexicon_types"),
-        "StorageLocation": ("StorageLocation", "use StorageHttp/StorageS3/StorageBlobs instead"),
+        "StorageLocation": (
+            "StorageLocation",
+            "use StorageHttp/StorageS3/StorageBlobs instead",
+        ),
         "CodeReference": ("LexCodeReference", "atdata.atmosphere._lexicon_types"),
     }
     if name in _DEPRECATED_ALIASES:
