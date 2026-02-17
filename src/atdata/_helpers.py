@@ -43,8 +43,8 @@ def array_to_bytes(x: np.ndarray) -> bytes:
     """Convert a numpy array to bytes for msgpack serialization.
 
     Uses a compact binary format: a short header (dtype + shape) followed by
-    raw array bytes via ``ndarray.tobytes()``. Falls back to numpy's ``.npy``
-    format for object dtypes that cannot be represented as raw bytes.
+    raw array bytes via ``ndarray.tobytes()``. Object-dtype arrays are
+    rejected to prevent pickle-based serialization (security risk).
 
     Args:
         x: A numpy array to serialize.
@@ -53,9 +53,10 @@ def array_to_bytes(x: np.ndarray) -> bytes:
         Raw bytes representing the serialized array.
     """
     if x.dtype == object:
-        buf = BytesIO()
-        np.save(buf, x, allow_pickle=True)
-        return buf.getvalue()
+        raise ValueError(
+            "Cannot serialize object-dtype arrays. "
+            "Convert to a concrete dtype before serializing."
+        )
 
     dtype_str = x.dtype.str.encode()  # e.g. b'<f4'
     header = struct.pack(f"<B{len(x.shape)}q", len(x.shape), *x.shape)
@@ -75,7 +76,7 @@ def bytes_to_array(b: bytes) -> np.ndarray:
         The deserialized numpy array with original dtype and shape.
     """
     if b[:6] == _NPY_MAGIC:
-        return np.load(BytesIO(b), allow_pickle=True)
+        return np.load(BytesIO(b), allow_pickle=False)
 
     # Compact format: dtype_len(1B) + dtype_str + ndim(1B) + shape(ndim×8B) + data
     if len(b) < 2:

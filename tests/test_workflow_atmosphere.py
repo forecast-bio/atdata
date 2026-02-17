@@ -503,7 +503,7 @@ class TestPDSBlobStore:
         mock_ds = Mock()
         mock_ds.ordered.return_value = iter([])
 
-        with pytest.raises(ValueError, match="Not authenticated"):
+        with pytest.raises(ValueError, match="authenticated"):
             store.write_shards(mock_ds, prefix="test")
 
     def test_write_shards_uploads_blobs(

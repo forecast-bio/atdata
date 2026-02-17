@@ -17,8 +17,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from .._schema_codec import _get_schema_version
-
-LEXICON_NAMESPACE = "ac.foundation.dataset"
+from ._types import LEXICON_NAMESPACE
 
 
 def decode_metadata_raw(raw: Any) -> dict | None:

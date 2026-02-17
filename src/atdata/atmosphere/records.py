@@ -462,11 +462,11 @@ class DatasetPublisher:
             Blobs are only retained by the PDS when referenced in a committed
             record. This method handles that automatically.
         """
+        import hashlib
+
         blob_entries = []
         for blob_data in blobs:
             blob_ref = self.client.upload_blob(blob_data, mime_type=mime_type)
-            import hashlib
-
             digest = hashlib.sha256(blob_data).hexdigest()
             blob_entries.append(
                 BlobEntry(
@@ -829,14 +829,13 @@ class DatasetLoader:
         if not urls:
             raise ValueError("Dataset record has no storage URLs")
 
-        # Use the first URL (multi-URL support could be added later)
-        url = urls[0]
+        from .._hf_api import _shards_to_wds_url
 
-        # Get metadata URL if available
+        url = _shards_to_wds_url(urls)
+
         record = self.get(uri)
-        metadata_url = record.get("metadataUrl")
 
-        ds = Dataset[sample_type](url, metadata_url=metadata_url)
+        ds = Dataset[sample_type](url)
 
         # Attach content metadata from the record if present
         content_meta = record.get("contentMetadata")

@@ -89,19 +89,19 @@ class AtUri:
 
 def __getattr__(name: str) -> Any:
     _DEPRECATED_ALIASES: dict[str, tuple[str, str]] = {
-        # old name → (new module attribute, import path in _lexicon_types)
-        "FieldType": ("FieldType", "atdata.atmosphere._lexicon_types"),
-        "FieldDef": ("FieldDef", "atdata.atmosphere._lexicon_types"),
+        # old name → (new name, migration hint)
+        "FieldType": ("FieldType", "removed (internal-only type)"),
+        "FieldDef": ("FieldDef", "removed (internal-only type)"),
         "SchemaRecord": ("LexSchemaRecord", "atdata.atmosphere._lexicon_types"),
         "DatasetRecord": ("LexDatasetEntry", "atdata.atmosphere._lexicon_types"),
         "LensRecord": ("LexLensRecord", "atdata.atmosphere._lexicon_types"),
-        "StorageLocation": ("StorageLocation", "atdata.atmosphere._lexicon_types"),
+        "StorageLocation": ("StorageLocation", "use StorageHttp/StorageS3/StorageBlobs instead"),
         "CodeReference": ("LexCodeReference", "atdata.atmosphere._lexicon_types"),
     }
     if name in _DEPRECATED_ALIASES:
-        new_name, mod_path = _DEPRECATED_ALIASES[name]
+        new_name, hint = _DEPRECATED_ALIASES[name]
         warnings.warn(
-            f"{name} has been moved. Import {new_name} from {mod_path} instead.",
+            f"{name} is deprecated: {hint}.",
             DeprecationWarning,
             stacklevel=2,
         )

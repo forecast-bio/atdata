@@ -21,6 +21,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **XRPC query workaround docs**: Documented client-side `list_records()` + filter patterns used as temporary workarounds pending AppView support (#56)
 
 ### Changed
+- Adversarial review: rename-dataset-entry branch codebase & test suite (#802)
+- Batch cleanup: dead code, misleading deprecation warnings, hashlib import, duplicate constant (#807)
+- BUG: select() UnboundLocalError on empty dataset with non-empty indices (#806)
+- BUG: to_dataset() only uses first shard URL, silently drops multi-shard data (#805)
+- SECURITY: Sanitize schema field names in _schema_codec.py and _stub_manager.py (#804)
+- SECURITY: Remove allow_pickle=True from numpy save/load in _helpers.py (#803)
+- Close: Low-value findings (fcntl Windows, thread safety, write_samples decomposition, etc.) (#809)
+- Close: testing.py field default check (line 274) (#808)
 - Rename ac.foundation.dataset.record → ac.foundation.dataset.entry (#801)
 - Adversarial review: rename-dollar, handle-ref, manifest features (#792)
 - Batch test improvements: strengthen assertions, add missing edge cases, parametrize (#798)
