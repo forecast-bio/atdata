@@ -75,6 +75,9 @@ def authenticated_client(mock_atproto_client):
     """Create an authenticated Atmosphere with mocked backend."""
     client = Atmosphere(_client=mock_atproto_client)
     client._login("test.bsky.social", "test-password")
+    # Use the same mock for cross-account reads so tests don't hit the
+    # real AppView when URIs contain a foreign DID.
+    client._appview_client = mock_atproto_client
     return client
 
 
@@ -1045,7 +1048,9 @@ class TestAtmosphere:
         mock_response.value = {"$type": "test", "field": "value"}
         mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
 
-        record = authenticated_client.get_record("at://did:plc:abc/collection/key")
+        record = authenticated_client.get_record(
+            "at://did:plc:test123456789/collection/key"
+        )
 
         assert record["field"] == "value"
 
@@ -1057,7 +1062,9 @@ class TestAtmosphere:
         mock_response.value = {"$type": "test", "data": 123}
         mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
 
-        uri = AtUri(authority="did:plc:abc", collection="collection", rkey="key")
+        uri = AtUri(
+            authority="did:plc:test123456789", collection="collection", rkey="key"
+        )
         record = authenticated_client.get_record(uri)
 
         assert record["data"] == 123
@@ -1257,7 +1264,7 @@ class TestAtmosphereClientEdgeCases:
         mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
 
         result = authenticated_client.get_record(
-            f"at://did:plc:test/{LEXICON_NAMESPACE}.record/abc"
+            f"at://did:plc:test123456789/{LEXICON_NAMESPACE}.record/abc"
         )
         assert result == {"name": "from_model_dump"}
 
@@ -1273,7 +1280,7 @@ class TestAtmosphereClientEdgeCases:
         mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
 
         result = authenticated_client.get_record(
-            f"at://did:plc:test/{LEXICON_NAMESPACE}.record/abc"
+            f"at://did:plc:test123456789/{LEXICON_NAMESPACE}.record/abc"
         )
         assert result["name"] == "from_dict"
 
