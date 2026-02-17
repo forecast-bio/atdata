@@ -52,6 +52,7 @@ from ._lexicon_types import (
     S3ShardEntry,
     BlobEntry,
     DatasetSize,
+    ShardManifestRef,
     StorageUnion,
     storage_from_record,
 )
@@ -450,4 +451,5 @@ __all__ = [
     "S3ShardEntry",
     "BlobEntry",
     "DatasetSize",
+    "ShardManifestRef",
 ]
