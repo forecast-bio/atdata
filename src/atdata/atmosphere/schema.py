@@ -48,8 +48,7 @@ def _parse_handle_schema_ref(ref: str) -> tuple[str, str, str]:
 
     if "/" not in rest:
         raise ValueError(
-            f"Invalid handle schema ref: {ref}. "
-            "Expected @handle/TypeName@version"
+            f"Invalid handle schema ref: {ref}. Expected @handle/TypeName@version"
         )
 
     handle_or_did, type_part = rest.split("/", 1)
@@ -67,6 +66,7 @@ def _parse_handle_schema_ref(ref: str) -> tuple[str, str, str]:
         raise ValueError(f"Invalid version syntax in handle schema ref: {ref}")
 
     return handle_or_did, type_name, version
+
 
 if TYPE_CHECKING:
     from .._protocols import Packable
