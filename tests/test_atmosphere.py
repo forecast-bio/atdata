@@ -385,6 +385,78 @@ class TestLexSchemaRecord:
         # Check array format versions
         assert record["schema"]["arrayFormatVersions"] == {"ndarrayBytes": "1.0.0"}
 
+    def test_to_record_uses_new_schema_version_key(self):
+        """to_record() serializes atdataSchemaVersion without $ prefix."""
+        schema = LexSchemaRecord(
+            name="VersionKeySchema",
+            version="1.0.0",
+            schema_type="jsonSchema",
+            schema=JsonSchemaFormat(
+                schema_body={
+                    "$schema": "http://json-schema.org/draft-07/schema#",
+                    "type": "object",
+                    "properties": {"x": {"type": "string"}},
+                },
+            ),
+        )
+        record = schema.to_record()
+        assert "atdataSchemaVersion" in record
+        assert "$atdataSchemaVersion" not in record
+        assert record["atdataSchemaVersion"] == 1
+
+    def test_from_record_reads_new_key(self):
+        """from_record() reads atdataSchemaVersion (no $ prefix)."""
+        record = {
+            "name": "NewKey",
+            "version": "1.0.0",
+            "schemaType": "jsonSchema",
+            "schema": {
+                "$type": "ac.foundation.dataset.schema#jsonSchemaFormat",
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {"x": {"type": "string"}},
+            },
+            "createdAt": "2025-01-01T00:00:00+00:00",
+            "atdataSchemaVersion": 1,
+        }
+        restored = LexSchemaRecord.from_record(record)
+        assert restored.atdata_schema_version == 1
+
+    def test_from_record_backward_compat_old_key(self):
+        """from_record() falls back to $atdataSchemaVersion for old records."""
+        record = {
+            "name": "OldKey",
+            "version": "1.0.0",
+            "schemaType": "jsonSchema",
+            "schema": {
+                "$type": "ac.foundation.dataset.schema#jsonSchemaFormat",
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {"x": {"type": "string"}},
+            },
+            "createdAt": "2025-01-01T00:00:00+00:00",
+            "$atdataSchemaVersion": 1,
+        }
+        restored = LexSchemaRecord.from_record(record)
+        assert restored.atdata_schema_version == 1
+
+    def test_from_record_defaults_to_1_when_absent(self):
+        """from_record() defaults to version 1 when neither key is present."""
+        record = {
+            "name": "NoKey",
+            "version": "1.0.0",
+            "schemaType": "jsonSchema",
+            "schema": {
+                "$type": "ac.foundation.dataset.schema#jsonSchemaFormat",
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {"x": {"type": "string"}},
+            },
+            "createdAt": "2025-01-01T00:00:00+00:00",
+        }
+        restored = LexSchemaRecord.from_record(record)
+        assert restored.atdata_schema_version == 1
+
 
 # =============================================================================
 # Tests for _types.py - StorageLocation

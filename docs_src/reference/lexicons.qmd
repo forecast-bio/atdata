@@ -58,7 +58,7 @@ Definition of a PackableSample-compatible sample type. Supports versioning via r
 | `description` | string | no | Human-readable description of what this sample type represents *max length: 5000* |
 | `metadata` | object | no | Optional metadata about this schema. Common fields include license and tags, but any additional fields are permitted. *max properties: 50* |
 | `createdAt` | string (datetime) | **yes** | Timestamp when this schema version was created. Immutable once set (ATProto records are permanent). |
-| `$atdataSchemaVersion` | integer | no | Format version discriminator for the schema record itself. Used to detect breaking changes in the record structure. When absent, treated as version 1 for backward compatibility. *min: 1* |
+| `atdataSchemaVersion` | integer | no | Format version discriminator for the schema record itself. Used to detect breaking changes in the record structure. When absent, treated as version 1 for backward compatibility. *min: 1* |
 
 #### `ac.foundation.dataset.schema#jsonSchemaFormat` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-schema-jsonschemaformat}
 

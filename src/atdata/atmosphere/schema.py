@@ -25,7 +25,7 @@ from .._type_utils import (
 )
 from .._exceptions import SchemaError
 
-# Maximum $atdataSchemaVersion this library can read.
+# Maximum atdataSchemaVersion this library can read.
 _MAX_SUPPORTED_SCHEMA_VERSION = 1
 
 
@@ -374,7 +374,7 @@ class SchemaLoader:
 
 
 def _check_schema_record_version(record: dict) -> None:
-    """Validate that a schema record's ``$atdataSchemaVersion`` is supported.
+    """Validate that a schema record's ``atdataSchemaVersion`` is supported.
 
     Records without the field are treated as version 1 (backward compat).
 
@@ -384,7 +384,7 @@ def _check_schema_record_version(record: dict) -> None:
     Raises:
         SchemaError: If the version is higher than this library supports.
     """
-    v = record.get("$atdataSchemaVersion", 1)
+    v = record.get("atdataSchemaVersion", record.get("$atdataSchemaVersion", 1))
     if v > _MAX_SUPPORTED_SCHEMA_VERSION:
         raise SchemaError(
             f"Unsupported schema record version: {v}. "

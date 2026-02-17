@@ -69,7 +69,7 @@
             "format": "datetime",
             "description": "Timestamp when this schema version was created. Immutable once set (ATProto records are permanent)."
           },
-          "$atdataSchemaVersion": {
+          "atdataSchemaVersion": {
             "type": "integer",
             "description": "Format version discriminator for the schema record itself. Used to detect breaking changes in the record structure. When absent, treated as version 1 for backward compatibility.",
             "minimum": 1
