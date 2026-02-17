@@ -1,5 +1,7 @@
 ## Custom
 
+.private_notes/
+
 # Lexicon JSON copies (authoritative source is lexicons/ at project root)
 src/atdata/lexicons/*.json
 
