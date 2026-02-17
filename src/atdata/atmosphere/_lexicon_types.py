@@ -596,7 +596,7 @@ class LexSchemaRecord:
             "schemaType": self.schema_type,
             "schema": self.schema.to_record(),
             "createdAt": self.created_at.isoformat(),
-            "$atdataSchemaVersion": self.atdata_schema_version,
+            "atdataSchemaVersion": self.atdata_schema_version,
         }
         if self.description is not None:
             d["description"] = self.description
@@ -615,7 +615,7 @@ class LexSchemaRecord:
             created_at=datetime.fromisoformat(d["createdAt"]),
             description=d.get("description"),
             metadata=d.get("metadata"),
-            atdata_schema_version=d.get("$atdataSchemaVersion", 1),
+            atdata_schema_version=d.get("atdataSchemaVersion", d.get("$atdataSchemaVersion", 1)),
         )
 
 
