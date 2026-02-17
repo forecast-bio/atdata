@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.5.1b1] - 2026-02-16
+
+### Fixed
+- **Cross-account record reads**: `get_record()` and `list_records()` now route reads for foreign DIDs through the public AppView instead of the authenticated PDS, fixing `RecordNotFound` errors when fetching records published by other users (e.g. schemas from `foundation.ac` while logged in as `maxine.science`)
+
 ## [0.5.0b1] - 2026-02-07
 
 ### Added
