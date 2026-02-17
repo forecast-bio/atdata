@@ -67,6 +67,9 @@ def authenticated_client(mock_atproto_client):
     """Create an authenticated Atmosphere."""
     client = Atmosphere(_client=mock_atproto_client)
     client._login("promotion.test.social", "test-password")
+    # Use the same mock for cross-account reads so tests don't hit the
+    # real AppView when URIs contain a foreign DID.
+    client._appview_client = mock_atproto_client
     return client
 
 

@@ -16,6 +16,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **XRPC query workaround docs**: Documented client-side `list_records()` + filter patterns used as temporary workarounds pending AppView support (#56)
 
 ### Changed
+- Generalize /kickoff, /check, /featree to global Claude skills (#768)
+- GitHub issue: rename dataset.record → dataset.entry lexicon (#767)
+- GitHub issue: manifest info in dataset record lexicon (#766)
+- Investigate shard querying/indexing with ATProto blob storage (#765)
+- Penguins atmosphere round-trip prototype (#764)
+- Investigate schema type introspection for @foundation.ac/MnistSample@1.0.0 (#762)
+- Run MNIST prototype scripts end-to-end (#761)
+- MNIST end-to-end atmosphere prototype scripts (#758)
+- Create download/verify script: atmosphere → local (#760)
+- Create upload script: MNIST → atmosphere (#759)
 - **Schema lexicon rename**: `getLatestSchema` renamed to `resolveSchema` to match `resolveLabel` semantics; added `$atdataSchemaVersion` property for format versioning (#53)
 - **Schema API consolidation**: `decode_schema`, `load_schema`, `decode_schema_as`, and `schema_to_type` consolidated into `get_schema_type()` with deprecation shims for old names (#54)
 - **Build config cleanup**: `.chainlink/` and `.claude/` directories excluded from sdist builds (#54)
