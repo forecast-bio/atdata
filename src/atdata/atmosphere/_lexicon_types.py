@@ -719,7 +719,7 @@ class LexDatasetRecord:
             d["metadataSchemaRef"] = self.metadata_schema_ref
         if self.content_metadata is not None:
             d["contentMetadata"] = self.content_metadata
-        if self.manifests is not None:
+        if self.manifests:
             d["manifests"] = [m.to_record() for m in self.manifests]
         return d
 

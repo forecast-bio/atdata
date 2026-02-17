@@ -744,16 +744,13 @@ class TestLexDatasetRecordManifests:
         assert restored.manifests[1].samples is not None
         assert restored.manifests[1].samples["ref"]["$link"] == "bafysamples2"
 
-    def test_empty_manifests_list(self):
-        """Dataset with an empty manifests list serializes it."""
+    def test_empty_manifests_list_not_serialized(self):
+        """Empty manifests list is not serialized, matching tags behavior."""
         dataset = self._make_dataset(manifests=[])
 
         record = dataset.to_record()
 
-        assert record["manifests"] == []
-
-        restored = LexDatasetRecord.from_record(record)
-        assert restored.manifests == []
+        assert "manifests" not in record
 
 
 # =============================================================================
