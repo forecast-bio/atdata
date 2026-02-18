@@ -117,7 +117,7 @@ ATProto records are identified by AT URIs:
 #| eval: false
 uris = [
     "at://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz789",
-    "at://alice.bsky.social/ac.foundation.dataset.record/my-dataset",
+    "at://alice.bsky.social/ac.foundation.dataset.entry/my-dataset",
 ]
 
 for uri_str in uris:

@@ -12,7 +12,7 @@ This directory contains the ATProto Lexicon JSON definitions for the distributed
    - Includes NDArray shim for ML/scientific data types
    - Example: [schema_example.json](../examples/schema_example.json)
 
-2. **[ac.foundation.dataset.record](ac.foundation.dataset.record.json)**
+2. **[ac.foundation.dataset.entry](ac.foundation.dataset.entry.json)**
    - Index records for WebDataset-backed datasets
    - Hybrid storage support (external URLs + PDS blobs)
    - References schema for type information

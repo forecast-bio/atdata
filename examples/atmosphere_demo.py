@@ -109,7 +109,7 @@ def demo_at_uri_parsing():
     # Example AT URIs
     uris = [
         "at://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz789",
-        "at://alice.bsky.social/ac.foundation.dataset.record/my-dataset",
+        "at://alice.bsky.social/ac.foundation.dataset.entry/my-dataset",
     ]
 
     for uri_str in uris:
@@ -488,7 +488,7 @@ Once you have published a dataset, others can load it like this:
     loader = DatasetLoader(client)
 
     # Get the dataset record
-    record = loader.get("at://did:plc:abc123/ac.foundation.dataset.record/xyz")
+    record = loader.get("at://did:plc:abc123/ac.foundation.dataset.entry/xyz")
 
     # Check storage type (external URLs or ATProto blobs)
     storage_type = loader.get_storage_type(uri)
@@ -506,7 +506,7 @@ Once you have published a dataset, others can load it like this:
 
     # to_dataset() handles both storage types automatically:
     dataset = loader.to_dataset(
-        "at://did:plc:abc123/ac.foundation.dataset.record/xyz",
+        "at://did:plc:abc123/ac.foundation.dataset.entry/xyz",
         sample_type=ImageSample,
     )
 

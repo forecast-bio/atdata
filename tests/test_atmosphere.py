@@ -28,7 +28,7 @@ from atdata.atmosphere import (
     LensLoader,
     AtUri,
     LexSchemaRecord,
-    LexDatasetRecord,
+    LexDatasetEntry,
     LexLensRecord,
     LexCodeReference,
     JsonSchemaFormat,
@@ -457,6 +457,25 @@ class TestLexSchemaRecord:
         restored = LexSchemaRecord.from_record(record)
         assert restored.atdata_schema_version == 1
 
+    def test_from_record_new_key_takes_precedence_over_old(self):
+        """from_record() prefers atdataSchemaVersion when both keys are present."""
+        record = {
+            "name": "BothKeys",
+            "version": "1.0.0",
+            "schemaType": "jsonSchema",
+            "schema": {
+                "$type": "ac.foundation.dataset.schema#jsonSchemaFormat",
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {"x": {"type": "string"}},
+            },
+            "createdAt": "2025-01-01T00:00:00+00:00",
+            "atdataSchemaVersion": 1,
+            "$atdataSchemaVersion": 1,
+        }
+        restored = LexSchemaRecord.from_record(record)
+        assert restored.atdata_schema_version == 1
+
 
 # =============================================================================
 # Tests for _types.py - StorageLocation
@@ -499,12 +518,12 @@ class TestStorageLocation:
 # =============================================================================
 
 
-class TestLexDatasetRecord:
-    """Tests for LexDatasetRecord dataclass and to_record()."""
+class TestLexDatasetEntry:
+    """Tests for LexDatasetEntry dataclass and to_record()."""
 
     def test_to_record_http_storage(self):
         """Convert dataset record with HTTP storage."""
-        dataset = LexDatasetRecord(
+        dataset = LexDatasetEntry(
             name="TestDataset",
             schema_ref="at://did:plc:abc/ac.foundation.dataset.schema/xyz",
             storage=StorageHttp(
@@ -519,7 +538,7 @@ class TestLexDatasetRecord:
 
         record = dataset.to_record()
 
-        assert record["$type"] == f"{LEXICON_NAMESPACE}.record"
+        assert record["$type"] == f"{LEXICON_NAMESPACE}.entry"
         assert record["name"] == "TestDataset"
         assert (
             record["schemaRef"] == "at://did:plc:abc/ac.foundation.dataset.schema/xyz"
@@ -529,7 +548,7 @@ class TestLexDatasetRecord:
 
     def test_to_record_blob_storage(self):
         """Convert dataset record with blob storage."""
-        dataset = LexDatasetRecord(
+        dataset = LexDatasetEntry(
             name="BlobDataset",
             schema_ref="at://did:plc:abc/collection/key",
             storage=StorageBlobs(
@@ -554,7 +573,7 @@ class TestLexDatasetRecord:
 
     def test_to_record_with_tags_and_license(self):
         """Convert dataset record with tags and license."""
-        dataset = LexDatasetRecord(
+        dataset = LexDatasetEntry(
             name="TaggedDataset",
             schema_ref="at://did:plc:abc/collection/key",
             storage=StorageHttp(shards=[]),
@@ -570,7 +589,7 @@ class TestLexDatasetRecord:
     def test_to_record_with_metadata(self):
         """Convert dataset record with typed metadata to structured JSON."""
         meta = DatasetMetadata(split="train", custom={"size": 1000})
-        dataset = LexDatasetRecord(
+        dataset = LexDatasetEntry(
             name="MetaDataset",
             schema_ref="at://did:plc:abc/collection/key",
             storage=StorageHttp(shards=[]),
@@ -593,7 +612,7 @@ class TestLexDatasetRecord:
             source_uri="https://example.com/raw",
             custom={"size": 1000},
         )
-        dataset = LexDatasetRecord(
+        dataset = LexDatasetEntry(
             name="MetaDataset",
             schema_ref="at://did:plc:abc/collection/key",
             storage=StorageHttp(shards=[]),
@@ -601,7 +620,7 @@ class TestLexDatasetRecord:
         )
 
         record = dataset.to_record()
-        restored = LexDatasetRecord.from_record(record)
+        restored = LexDatasetEntry.from_record(record)
 
         assert restored.metadata is not None
         assert restored.metadata.split == "train"
@@ -617,7 +636,7 @@ class TestLexDatasetRecord:
         legacy_dict = {"size": 1000, "split": "train"}
         legacy_bytes = msgpack.packb(legacy_dict)
         record_dict = {
-            "$type": "ac.foundation.dataset.record",
+            "$type": "ac.foundation.dataset.entry",
             "name": "LegacyDataset",
             "schemaRef": "at://did:plc:abc/collection/key",
             "storage": {"$type": "ac.foundation.dataset.storageHttp", "shards": []},
@@ -625,7 +644,7 @@ class TestLexDatasetRecord:
             "metadata": {"$bytes": base64.b64encode(legacy_bytes).decode("ascii")},
         }
 
-        restored = LexDatasetRecord.from_record(record_dict)
+        restored = LexDatasetEntry.from_record(record_dict)
         assert restored.metadata is not None
         assert restored.metadata.split == "train"
         assert restored.metadata.custom == {"size": 1000}
@@ -637,7 +656,7 @@ class TestLexDatasetRecord:
         legacy_dict = {"split": "test", "version": "1.0"}
         legacy_bytes = msgpack.packb(legacy_dict)
         record_dict = {
-            "$type": "ac.foundation.dataset.record",
+            "$type": "ac.foundation.dataset.entry",
             "name": "LegacyDataset",
             "schemaRef": "at://did:plc:abc/collection/key",
             "storage": {"$type": "ac.foundation.dataset.storageHttp", "shards": []},
@@ -645,7 +664,7 @@ class TestLexDatasetRecord:
             "metadata": legacy_bytes,
         }
 
-        restored = LexDatasetRecord.from_record(record_dict)
+        restored = LexDatasetEntry.from_record(record_dict)
         assert restored.metadata is not None
         assert restored.metadata.split == "test"
         assert restored.metadata.version == "1.0"
@@ -732,18 +751,18 @@ class TestShardManifestRef:
         assert restored.samples == samples_blob
 
 
-class TestLexDatasetRecordManifests:
-    """Tests for LexDatasetRecord with the optional manifests field."""
+class TestLexDatasetEntryManifests:
+    """Tests for LexDatasetEntry with the optional manifests field."""
 
     def _make_dataset(self, **kwargs):
-        """Build a minimal LexDatasetRecord with optional overrides."""
+        """Build a minimal LexDatasetEntry with optional overrides."""
         defaults = dict(
             name="ManifestDataset",
             schema_ref="at://did:plc:abc/ac.foundation.dataset.schema/xyz",
             storage=StorageHttp(shards=[]),
         )
         defaults.update(kwargs)
-        return LexDatasetRecord(**defaults)
+        return LexDatasetEntry(**defaults)
 
     def test_without_manifests_backward_compat(self):
         """Dataset without manifests serializes without the key."""
@@ -757,7 +776,7 @@ class TestLexDatasetRecordManifests:
         """Dataset without manifests survives roundtrip with manifests=None."""
         dataset = self._make_dataset()
 
-        restored = LexDatasetRecord.from_record(dataset.to_record())
+        restored = LexDatasetEntry.from_record(dataset.to_record())
 
         assert restored.manifests is None
 
@@ -807,7 +826,7 @@ class TestLexDatasetRecordManifests:
         ]
         dataset = self._make_dataset(manifests=manifests)
 
-        restored = LexDatasetRecord.from_record(dataset.to_record())
+        restored = LexDatasetEntry.from_record(dataset.to_record())
 
         assert restored.manifests is not None
         assert len(restored.manifests) == 2
@@ -816,12 +835,26 @@ class TestLexDatasetRecordManifests:
         assert restored.manifests[1].samples is not None
         assert restored.manifests[1].samples["ref"]["$link"] == "bafysamples2"
 
-    def test_empty_manifests_list_not_serialized(self):
-        """Empty manifests list is not serialized, matching tags behavior."""
+    def test_empty_manifests_list_serialized(self):
+        """Empty manifests list is serialized to preserve None vs [] distinction."""
         dataset = self._make_dataset(manifests=[])
 
         record = dataset.to_record()
 
+        assert "manifests" in record
+        assert record["manifests"] == []
+
+    def test_empty_manifests_roundtrip(self):
+        """Empty manifests list survives to_record -> from_record roundtrip."""
+        dataset = self._make_dataset(manifests=[])
+        record = dataset.to_record()
+        restored = LexDatasetEntry.from_record(record)
+        assert restored.manifests == []
+
+    def test_none_manifests_not_serialized(self):
+        """None manifests are omitted from serialized record."""
+        dataset = self._make_dataset(manifests=None)
+        record = dataset.to_record()
         assert "manifests" not in record
 
 
@@ -921,8 +954,8 @@ class TestDatasetMetadata:
         assert restored.custom == {"extra": True}
 
     def test_metadata_none_omitted_from_record(self):
-        """LexDatasetRecord with metadata=None omits metadata key."""
-        rec = LexDatasetRecord(
+        """LexDatasetEntry with metadata=None omits metadata key."""
+        rec = LexDatasetEntry(
             name="NoMeta",
             schema_ref="at://schema",
             storage=StorageHttp(shards=[]),
@@ -1473,11 +1506,11 @@ class TestAtmosphereClientEdgeCases:
     ):
         """put_record passes swapCommit when provided."""
         mock_response = Mock()
-        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.record/abc"
+        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.entry/abc"
         mock_atproto_client.com.atproto.repo.put_record.return_value = mock_response
 
         authenticated_client.put_record(
-            collection=f"{LEXICON_NAMESPACE}.record",
+            collection=f"{LEXICON_NAMESPACE}.entry",
             rkey="abc",
             record={"name": "test"},
             swap_commit="bafyswap123",
@@ -1492,7 +1525,7 @@ class TestAtmosphereClientEdgeCases:
         self, authenticated_client, mock_atproto_client
     ):
         """delete_record passes swapCommit when provided."""
-        uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.record/abc"
+        uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.entry/abc"
         authenticated_client.delete_record(uri, swap_commit="bafyswap456")
 
         call_data = mock_atproto_client.com.atproto.repo.delete_record.call_args.kwargs[
@@ -1511,7 +1544,7 @@ class TestAtmosphereClientEdgeCases:
         mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
 
         result = authenticated_client.get_record(
-            f"at://did:plc:test123456789/{LEXICON_NAMESPACE}.record/abc"
+            f"at://did:plc:test123456789/{LEXICON_NAMESPACE}.entry/abc"
         )
         assert result == {"name": "from_model_dump"}
 
@@ -1527,7 +1560,7 @@ class TestAtmosphereClientEdgeCases:
         mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
 
         result = authenticated_client.get_record(
-            f"at://did:plc:test123456789/{LEXICON_NAMESPACE}.record/abc"
+            f"at://did:plc:test123456789/{LEXICON_NAMESPACE}.entry/abc"
         )
         assert result["name"] == "from_dict"
 
@@ -1915,7 +1948,7 @@ class TestSchemaLoader:
         mock_atproto_client.com.atproto.repo.list_records.return_value = mock_response
 
         loader = SchemaLoader(authenticated_client)
-        with pytest.raises(KeyError, match="not found"):
+        with pytest.raises(KeyError, match="MnistSample.*not found.*foundation.ac"):
             loader.get("@foundation.ac/MnistSample@1.0.0")
 
     def test_get_schema_handle_ref_verifies_resolved_did(
@@ -1936,16 +1969,21 @@ class TestSchemaLoader:
         mock_atproto_client.com.atproto.repo.list_records.return_value = mock_response
 
         loader = SchemaLoader(authenticated_client)
-        loader.get("@example.com/Sample@1.0.0")
+        result = loader.get("@example.com/Sample@1.0.0")
 
+        assert result["name"] == "Sample"
+        assert result["version"] == "1.0.0"
         # Verify list_records was called with the resolved DID
         call_args = mock_atproto_client.com.atproto.repo.list_records.call_args
         assert call_args[1]["params"]["repo"] == "did:plc:target999"
 
+    @pytest.mark.parametrize(
+        "version_key", ["atdataSchemaVersion", "$atdataSchemaVersion"]
+    )
     def test_get_schema_unsupported_version_raises(
-        self, authenticated_client, mock_atproto_client
+        self, authenticated_client, mock_atproto_client, version_key
     ):
-        """SchemaError raised for unsupported $atdataSchemaVersion."""
+        """SchemaError raised for unsupported schema version (both key names)."""
         from atdata._exceptions import SchemaError
 
         mock_response = Mock()
@@ -1953,18 +1991,21 @@ class TestSchemaLoader:
             "$type": f"{LEXICON_NAMESPACE}.schema",
             "name": "FutureSchema",
             "version": "1.0.0",
-            "$atdataSchemaVersion": 999,
+            version_key: 999,
         }
         mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
 
         loader = SchemaLoader(authenticated_client)
-        with pytest.raises(SchemaError, match="Unsupported schema record version"):
+        with pytest.raises(SchemaError, match="Unsupported schema record version: 999"):
             loader.get(f"at://did:plc:abc/{LEXICON_NAMESPACE}.schema/xyz")
 
+    @pytest.mark.parametrize(
+        "version_key", ["atdataSchemaVersion", "$atdataSchemaVersion"]
+    )
     def test_get_schema_handle_ref_unsupported_version_raises(
-        self, authenticated_client, mock_atproto_client
+        self, authenticated_client, mock_atproto_client, version_key
     ):
-        """SchemaError raised for unsupported version via handle ref."""
+        """SchemaError raised for unsupported version via handle ref (both key names)."""
         from atdata._exceptions import SchemaError
 
         mock_resolve = Mock()
@@ -1977,7 +2018,7 @@ class TestSchemaLoader:
         mock_record.value = {
             "name": "FutureSample",
             "version": "1.0.0",
-            "$atdataSchemaVersion": 999,
+            version_key: 999,
         }
         mock_response = Mock()
         mock_response.records = [mock_record]
@@ -1985,7 +2026,7 @@ class TestSchemaLoader:
         mock_atproto_client.com.atproto.repo.list_records.return_value = mock_response
 
         loader = SchemaLoader(authenticated_client)
-        with pytest.raises(SchemaError, match="Unsupported schema record version"):
+        with pytest.raises(SchemaError, match="Unsupported schema record version: 999"):
             loader.get("@foundation.ac/FutureSample@1.0.0")
 
 
@@ -1997,61 +2038,41 @@ class TestSchemaLoader:
 class TestParseHandleSchemaRef:
     """Tests for _parse_handle_schema_ref parser."""
 
-    def test_valid_handle_ref(self):
+    @pytest.mark.parametrize(
+        "ref, expected",
+        [
+            (
+                "@foundation.ac/MnistSample@1.0.0",
+                ("foundation.ac", "MnistSample", "1.0.0"),
+            ),
+            ("@did:plc:abc123/TestType@2.1.0", ("did:plc:abc123", "TestType", "2.1.0")),
+            (
+                "@my-host.example.com/Type@0.1.0",
+                ("my-host.example.com", "Type", "0.1.0"),
+            ),
+        ],
+    )
+    def test_valid_refs(self, ref, expected):
         from atdata.atmosphere.schema import _parse_handle_schema_ref
 
-        handle, name, version = _parse_handle_schema_ref(
-            "@foundation.ac/MnistSample@1.0.0"
-        )
-        assert handle == "foundation.ac"
-        assert name == "MnistSample"
-        assert version == "1.0.0"
+        assert _parse_handle_schema_ref(ref) == expected
 
-    def test_valid_did_ref(self):
+    @pytest.mark.parametrize(
+        "ref, error_match",
+        [
+            ("@foundation.ac/MnistSample", "must include version"),
+            ("@foundation.ac", "Expected @handle/TypeName@version"),
+            ("atdata://local/schema/Foo@1.0.0", "Not a handle schema ref"),
+            ("@/TypeName@1.0.0", "Invalid handle schema ref"),
+            ("@handle/TypeName@", "Invalid version syntax"),
+            ("@handle/@1.0.0", "Invalid version syntax"),
+        ],
+    )
+    def test_invalid_refs(self, ref, error_match):
         from atdata.atmosphere.schema import _parse_handle_schema_ref
 
-        handle, name, version = _parse_handle_schema_ref(
-            "@did:plc:abc123/TestType@2.1.0"
-        )
-        assert handle == "did:plc:abc123"
-        assert name == "TestType"
-        assert version == "2.1.0"
-
-    def test_missing_version(self):
-        from atdata.atmosphere.schema import _parse_handle_schema_ref
-
-        with pytest.raises(ValueError, match="must include version"):
-            _parse_handle_schema_ref("@foundation.ac/MnistSample")
-
-    def test_missing_slash(self):
-        from atdata.atmosphere.schema import _parse_handle_schema_ref
-
-        with pytest.raises(ValueError, match="Expected @handle/TypeName@version"):
-            _parse_handle_schema_ref("@foundation.ac")
-
-    def test_not_handle_ref(self):
-        from atdata.atmosphere.schema import _parse_handle_schema_ref
-
-        with pytest.raises(ValueError, match="Not a handle schema ref"):
-            _parse_handle_schema_ref("atdata://local/schema/Foo@1.0.0")
-
-    def test_empty_parts(self):
-        from atdata.atmosphere.schema import _parse_handle_schema_ref
-
-        with pytest.raises(ValueError, match="Invalid handle schema ref"):
-            _parse_handle_schema_ref("@/TypeName@1.0.0")
-
-    def test_empty_version(self):
-        from atdata.atmosphere.schema import _parse_handle_schema_ref
-
-        with pytest.raises(ValueError, match="Invalid version syntax"):
-            _parse_handle_schema_ref("@handle/TypeName@")
-
-    def test_empty_type_name(self):
-        from atdata.atmosphere.schema import _parse_handle_schema_ref
-
-        with pytest.raises(ValueError, match="Invalid version syntax"):
-            _parse_handle_schema_ref("@handle/@1.0.0")
+        with pytest.raises(ValueError, match=error_match):
+            _parse_handle_schema_ref(ref)
 
 
 # =============================================================================
@@ -2065,7 +2086,7 @@ class TestDatasetPublisher:
     def test_publish_with_urls(self, authenticated_client, mock_atproto_client):
         """Publish dataset with explicit URLs."""
         mock_response = Mock()
-        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.record/abc"
+        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.entry/abc"
         mock_atproto_client.com.atproto.repo.create_record.return_value = mock_response
 
         publisher = DatasetPublisher(authenticated_client)
@@ -2095,9 +2116,7 @@ class TestDatasetPublisher:
 
         # Mock for dataset creation
         dataset_response = Mock()
-        dataset_response.uri = (
-            f"at://did:plc:test/{LEXICON_NAMESPACE}.record/dataset456"
-        )
+        dataset_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.entry/dataset456"
 
         mock_atproto_client.com.atproto.repo.create_record.side_effect = [
             schema_response,
@@ -2126,7 +2145,7 @@ class TestDatasetPublisher:
     ):
         """Publish dataset with explicit schema URI (no auto publish)."""
         mock_response = Mock()
-        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.record/abc"
+        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.entry/abc"
         mock_atproto_client.com.atproto.repo.create_record.return_value = mock_response
 
         mock_dataset = Mock()
@@ -2179,7 +2198,7 @@ class TestDatasetPublisher:
 
         mock_create_response = Mock()
         mock_create_response.uri = (
-            f"at://did:plc:test/{LEXICON_NAMESPACE}.record/blobrefds"
+            f"at://did:plc:test/{LEXICON_NAMESPACE}.entry/blobrefds"
         )
         mock_atproto_client.com.atproto.repo.create_record.return_value = (
             mock_create_response
@@ -2234,7 +2253,7 @@ class TestDatasetPublisher:
 
         mock_create_response = Mock()
         mock_create_response.uri = (
-            f"at://did:plc:test/{LEXICON_NAMESPACE}.record/blobchk"
+            f"at://did:plc:test/{LEXICON_NAMESPACE}.entry/blobchk"
         )
         mock_atproto_client.com.atproto.repo.create_record.return_value = (
             mock_create_response
@@ -2273,7 +2292,7 @@ class TestDatasetPublisher:
 
         mock_create_response = Mock()
         mock_create_response.uri = (
-            f"at://did:plc:test/{LEXICON_NAMESPACE}.record/blobnocheck"
+            f"at://did:plc:test/{LEXICON_NAMESPACE}.entry/blobnocheck"
         )
         mock_atproto_client.com.atproto.repo.create_record.return_value = (
             mock_create_response
@@ -2334,9 +2353,7 @@ class TestDatasetPublisher:
 
         # Mock create_record response
         mock_create_response = Mock()
-        mock_create_response.uri = (
-            f"at://did:plc:test/{LEXICON_NAMESPACE}.record/blobds"
-        )
+        mock_create_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.entry/blobds"
         mock_atproto_client.com.atproto.repo.create_record.return_value = (
             mock_create_response
         )
@@ -2378,9 +2395,7 @@ class TestDatasetPublisher:
         )
 
         mock_create_response = Mock()
-        mock_create_response.uri = (
-            f"at://did:plc:test/{LEXICON_NAMESPACE}.record/metads"
-        )
+        mock_create_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.entry/metads"
         mock_atproto_client.com.atproto.repo.create_record.return_value = (
             mock_create_response
         )
@@ -2410,7 +2425,7 @@ class TestDatasetLoader:
         """Get a dataset record."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "TestDataset",
             "schemaRef": "at://schema",
             "storage": {
@@ -2421,7 +2436,7 @@ class TestDatasetLoader:
         mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
 
         loader = DatasetLoader(authenticated_client)
-        record = loader.get(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+        record = loader.get(f"at://did:plc:abc/{LEXICON_NAMESPACE}.entry/xyz")
 
         assert record["name"] == "TestDataset"
 
@@ -2443,7 +2458,7 @@ class TestDatasetLoader:
         """Get WebDataset URLs from a dataset record."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "TestDataset",
             "schemaRef": "at://schema",
             "storage": {
@@ -2457,7 +2472,7 @@ class TestDatasetLoader:
         mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
 
         loader = DatasetLoader(authenticated_client)
-        urls = loader.get_urls(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+        urls = loader.get_urls(f"at://did:plc:abc/{LEXICON_NAMESPACE}.entry/xyz")
 
         assert len(urls) == 2
         assert "data-{000000..000009}.tar" in urls[0]
@@ -2468,7 +2483,7 @@ class TestDatasetLoader:
         """Get URLs raises for blob storage datasets."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "BlobDataset",
             "schemaRef": "at://schema",
             "storage": {
@@ -2481,13 +2496,13 @@ class TestDatasetLoader:
         loader = DatasetLoader(authenticated_client)
 
         with pytest.raises(ValueError, match="blob storage"):
-            loader.get_urls(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+            loader.get_urls(f"at://did:plc:abc/{LEXICON_NAMESPACE}.entry/xyz")
 
     def test_get_metadata(self, authenticated_client, mock_atproto_client):
         """Get metadata from dataset record (new structured format)."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "MetaDataset",
             "schemaRef": "at://schema",
             "storage": {"$type": f"{LEXICON_NAMESPACE}.storageExternal", "urls": []},
@@ -2497,7 +2512,7 @@ class TestDatasetLoader:
 
         loader = DatasetLoader(authenticated_client)
         metadata = loader.get_metadata(
-            f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz"
+            f"at://did:plc:abc/{LEXICON_NAMESPACE}.entry/xyz"
         )
 
         assert metadata["split"] == "train"
@@ -2511,7 +2526,7 @@ class TestDatasetLoader:
 
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "MetaDataset",
             "schemaRef": "at://schema",
             "storage": {"$type": f"{LEXICON_NAMESPACE}.storageExternal", "urls": []},
@@ -2521,7 +2536,7 @@ class TestDatasetLoader:
 
         loader = DatasetLoader(authenticated_client)
         metadata = loader.get_metadata(
-            f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz"
+            f"at://did:plc:abc/{LEXICON_NAMESPACE}.entry/xyz"
         )
 
         assert metadata["split"] == "train"
@@ -2531,7 +2546,7 @@ class TestDatasetLoader:
         """Get metadata returns None when not present."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "NoMetaDataset",
             "schemaRef": "at://schema",
             "storage": {"$type": f"{LEXICON_NAMESPACE}.storageExternal", "urls": []},
@@ -2540,7 +2555,7 @@ class TestDatasetLoader:
 
         loader = DatasetLoader(authenticated_client)
         metadata = loader.get_metadata(
-            f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz"
+            f"at://did:plc:abc/{LEXICON_NAMESPACE}.entry/xyz"
         )
 
         assert metadata is None
@@ -2549,7 +2564,7 @@ class TestDatasetLoader:
         """get_metadata_typed returns DatasetMetadata instance."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "TypedMeta",
             "schemaRef": "at://schema",
             "storage": {"$type": f"{LEXICON_NAMESPACE}.storageHttp", "shards": []},
@@ -2560,7 +2575,7 @@ class TestDatasetLoader:
 
         loader = DatasetLoader(authenticated_client)
         meta = loader.get_metadata_typed(
-            f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz"
+            f"at://did:plc:abc/{LEXICON_NAMESPACE}.entry/xyz"
         )
 
         assert isinstance(meta, DatasetMetadata)
@@ -2572,7 +2587,7 @@ class TestDatasetLoader:
         """get_metadata_typed returns None when no metadata."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "NoMeta",
             "schemaRef": "at://schema",
             "storage": {"$type": f"{LEXICON_NAMESPACE}.storageExternal", "urls": []},
@@ -2581,7 +2596,7 @@ class TestDatasetLoader:
 
         loader = DatasetLoader(authenticated_client)
         meta = loader.get_metadata_typed(
-            f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz"
+            f"at://did:plc:abc/{LEXICON_NAMESPACE}.entry/xyz"
         )
         assert meta is None
 
@@ -2590,7 +2605,7 @@ class TestDatasetLoader:
     ):
         """DatasetPublisher accepts DatasetMetadata directly."""
         mock_response = Mock()
-        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.record/abc"
+        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.entry/abc"
         mock_atproto_client.com.atproto.repo.create_record.return_value = mock_response
 
         publisher = DatasetPublisher(authenticated_client)
@@ -2627,7 +2642,7 @@ class TestDatasetLoader:
         """Get storage type returns 'external' for external storage."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "ExternalDataset",
             "schemaRef": "at://schema",
             "storage": {
@@ -2639,7 +2654,7 @@ class TestDatasetLoader:
 
         loader = DatasetLoader(authenticated_client)
         storage_type = loader.get_storage_type(
-            f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz"
+            f"at://did:plc:abc/{LEXICON_NAMESPACE}.entry/xyz"
         )
 
         assert storage_type == "external"
@@ -2648,7 +2663,7 @@ class TestDatasetLoader:
         """Get storage type returns 'blobs' for blob storage."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "BlobDataset",
             "schemaRef": "at://schema",
             "storage": {
@@ -2660,7 +2675,7 @@ class TestDatasetLoader:
 
         loader = DatasetLoader(authenticated_client)
         storage_type = loader.get_storage_type(
-            f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz"
+            f"at://did:plc:abc/{LEXICON_NAMESPACE}.entry/xyz"
         )
 
         assert storage_type == "blobs"
@@ -2669,7 +2684,7 @@ class TestDatasetLoader:
         """Get storage type raises for unknown storage type."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "UnknownStorageDataset",
             "schemaRef": "at://schema",
             "storage": {
@@ -2681,7 +2696,7 @@ class TestDatasetLoader:
         loader = DatasetLoader(authenticated_client)
 
         with pytest.raises(ValueError, match="Unknown storage type"):
-            loader.get_storage_type(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+            loader.get_storage_type(f"at://did:plc:abc/{LEXICON_NAMESPACE}.entry/xyz")
 
     def test_get_blobs(self, authenticated_client, mock_atproto_client):
         """Get blobs returns blob entry dicts from storage."""
@@ -2707,7 +2722,7 @@ class TestDatasetLoader:
         ]
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "BlobDataset",
             "schemaRef": "at://schema",
             "storage": {
@@ -2718,7 +2733,7 @@ class TestDatasetLoader:
         mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
 
         loader = DatasetLoader(authenticated_client)
-        blobs = loader.get_blobs(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+        blobs = loader.get_blobs(f"at://did:plc:abc/{LEXICON_NAMESPACE}.entry/xyz")
 
         assert len(blobs) == 2
         assert blobs[0]["blob"]["ref"]["$link"] == "bafkreitest1"
@@ -2730,7 +2745,7 @@ class TestDatasetLoader:
         """Get blobs raises for external URL storage datasets."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "ExternalDataset",
             "schemaRef": "at://schema",
             "storage": {
@@ -2743,7 +2758,7 @@ class TestDatasetLoader:
         loader = DatasetLoader(authenticated_client)
 
         with pytest.raises(ValueError, match="does not use blob storage"):
-            loader.get_blobs(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+            loader.get_blobs(f"at://did:plc:abc/{LEXICON_NAMESPACE}.entry/xyz")
 
     def test_get_blobs_unknown_storage_error(
         self, authenticated_client, mock_atproto_client
@@ -2751,7 +2766,7 @@ class TestDatasetLoader:
         """Get blobs raises for unknown storage type."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "UnknownDataset",
             "schemaRef": "at://schema",
             "storage": {
@@ -2763,13 +2778,13 @@ class TestDatasetLoader:
         loader = DatasetLoader(authenticated_client)
 
         with pytest.raises(ValueError, match="does not use blob storage"):
-            loader.get_blobs(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+            loader.get_blobs(f"at://did:plc:abc/{LEXICON_NAMESPACE}.entry/xyz")
 
     def test_get_blob_urls(self, authenticated_client, mock_atproto_client):
         """Get blob URLs resolves PDS and constructs download URLs."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "BlobDataset",
             "schemaRef": "at://schema",
             "storage": {
@@ -2814,7 +2829,7 @@ class TestDatasetLoader:
 
             loader = DatasetLoader(authenticated_client)
             urls = loader.get_blob_urls(
-                f"at://did:plc:abc123/{LEXICON_NAMESPACE}.record/xyz"
+                f"at://did:plc:abc123/{LEXICON_NAMESPACE}.entry/xyz"
             )
 
             assert len(urls) == 2
@@ -2828,7 +2843,7 @@ class TestDatasetLoader:
         """Get URLs raises for unknown storage type."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "UnknownDataset",
             "schemaRef": "at://schema",
             "storage": {
@@ -2840,13 +2855,13 @@ class TestDatasetLoader:
         loader = DatasetLoader(authenticated_client)
 
         with pytest.raises(ValueError, match="Unknown storage type"):
-            loader.get_urls(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+            loader.get_urls(f"at://did:plc:abc/{LEXICON_NAMESPACE}.entry/xyz")
 
     def test_get_storage_type_http(self, authenticated_client, mock_atproto_client):
         """get_storage_type returns 'http' for HTTP storage."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "HttpDataset",
             "schemaRef": "at://schema",
             "storage": {
@@ -2858,7 +2873,7 @@ class TestDatasetLoader:
 
         loader = DatasetLoader(authenticated_client)
         assert (
-            loader.get_storage_type(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+            loader.get_storage_type(f"at://did:plc:abc/{LEXICON_NAMESPACE}.entry/xyz")
             == "http"
         )
 
@@ -2866,7 +2881,7 @@ class TestDatasetLoader:
         """get_storage_type returns 's3' for S3 storage."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "S3Dataset",
             "schemaRef": "at://schema",
             "storage": {
@@ -2879,7 +2894,7 @@ class TestDatasetLoader:
 
         loader = DatasetLoader(authenticated_client)
         assert (
-            loader.get_storage_type(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+            loader.get_storage_type(f"at://did:plc:abc/{LEXICON_NAMESPACE}.entry/xyz")
             == "s3"
         )
 
@@ -2887,7 +2902,7 @@ class TestDatasetLoader:
         """get_urls extracts URLs from HTTP storage shards."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "HttpDataset",
             "schemaRef": "at://schema",
             "storage": {
@@ -2901,7 +2916,7 @@ class TestDatasetLoader:
         mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
 
         loader = DatasetLoader(authenticated_client)
-        urls = loader.get_urls(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+        urls = loader.get_urls(f"at://did:plc:abc/{LEXICON_NAMESPACE}.entry/xyz")
 
         assert urls == [
             "https://cdn.example.com/shard-000.tar",
@@ -2914,7 +2929,7 @@ class TestDatasetLoader:
         """get_urls builds s3:// URLs when no endpoint specified."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "S3Dataset",
             "schemaRef": "at://schema",
             "storage": {
@@ -2926,7 +2941,7 @@ class TestDatasetLoader:
         mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
 
         loader = DatasetLoader(authenticated_client)
-        urls = loader.get_urls(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+        urls = loader.get_urls(f"at://did:plc:abc/{LEXICON_NAMESPACE}.entry/xyz")
 
         assert urls == ["s3://my-bucket/train/shard-000.tar"]
 
@@ -2936,7 +2951,7 @@ class TestDatasetLoader:
         """get_urls builds full URLs with custom S3 endpoint."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "S3Dataset",
             "schemaRef": "at://schema",
             "storage": {
@@ -2949,7 +2964,7 @@ class TestDatasetLoader:
         mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
 
         loader = DatasetLoader(authenticated_client)
-        urls = loader.get_urls(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+        urls = loader.get_urls(f"at://did:plc:abc/{LEXICON_NAMESPACE}.entry/xyz")
 
         assert urls == ["https://s3.us-west-2.amazonaws.com/my-bucket/shard.tar"]
 
@@ -2957,7 +2972,7 @@ class TestDatasetLoader:
         """get_s3_info extracts bucket, keys, region, endpoint."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "S3Dataset",
             "schemaRef": "at://schema",
             "storage": {
@@ -2971,7 +2986,7 @@ class TestDatasetLoader:
         mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
 
         loader = DatasetLoader(authenticated_client)
-        info = loader.get_s3_info(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+        info = loader.get_s3_info(f"at://did:plc:abc/{LEXICON_NAMESPACE}.entry/xyz")
 
         assert info["bucket"] == "my-bucket"
         assert info["keys"] == ["a.tar", "b.tar"]
@@ -2982,7 +2997,7 @@ class TestDatasetLoader:
         """get_s3_info raises ValueError for non-S3 storage."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "HttpDataset",
             "schemaRef": "at://schema",
             "storage": {
@@ -2994,7 +3009,7 @@ class TestDatasetLoader:
 
         loader = DatasetLoader(authenticated_client)
         with pytest.raises(ValueError, match="does not use S3 storage"):
-            loader.get_s3_info(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+            loader.get_s3_info(f"at://did:plc:abc/{LEXICON_NAMESPACE}.entry/xyz")
 
     def test_get_blob_urls_with_aturi_object(
         self, authenticated_client, mock_atproto_client
@@ -3002,7 +3017,7 @@ class TestDatasetLoader:
         """get_blob_urls accepts AtUri object (not just string)."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "BlobDataset",
             "schemaRef": "at://schema",
             "storage": {
@@ -3035,17 +3050,17 @@ class TestDatasetLoader:
             mock_get.return_value = mock_did_response
 
             loader = DatasetLoader(authenticated_client)
-            uri_obj = AtUri.parse(f"at://did:plc:abc123/{LEXICON_NAMESPACE}.record/xyz")
+            uri_obj = AtUri.parse(f"at://did:plc:abc123/{LEXICON_NAMESPACE}.entry/xyz")
             urls = loader.get_blob_urls(uri_obj)
 
             assert len(urls) == 1
             assert "bafkreitest1" in urls[0]
 
     def test_get_typed(self, authenticated_client, mock_atproto_client):
-        """get_typed returns LexDatasetRecord."""
+        """get_typed returns LexDatasetEntry."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "TestDataset",
             "schemaRef": "at://did:plc:abc/schema/xyz",
             "createdAt": "2026-01-01T00:00:00Z",
@@ -3057,7 +3072,7 @@ class TestDatasetLoader:
         mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
 
         loader = DatasetLoader(authenticated_client)
-        record = loader.get_typed(f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz")
+        record = loader.get_typed(f"at://did:plc:abc/{LEXICON_NAMESPACE}.entry/xyz")
 
         assert record.name == "TestDataset"
 
@@ -3065,7 +3080,7 @@ class TestDatasetLoader:
         """to_dataset creates Dataset from HTTP storage record."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "TestDataset",
             "schemaRef": "at://schema",
             "storage": {
@@ -3077,7 +3092,7 @@ class TestDatasetLoader:
 
         loader = DatasetLoader(authenticated_client)
         ds = loader.to_dataset(
-            f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz",
+            f"at://did:plc:abc/{LEXICON_NAMESPACE}.entry/xyz",
             BasicSample,
         )
 
@@ -3091,7 +3106,7 @@ class TestDatasetLoader:
         """to_dataset raises ValueError when record has no URLs."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "EmptyDataset",
             "schemaRef": "at://schema",
             "storage": {
@@ -3104,7 +3119,7 @@ class TestDatasetLoader:
         loader = DatasetLoader(authenticated_client)
         with pytest.raises(ValueError, match="no storage URLs"):
             loader.to_dataset(
-                f"at://did:plc:abc/{LEXICON_NAMESPACE}.record/xyz",
+                f"at://did:plc:abc/{LEXICON_NAMESPACE}.entry/xyz",
                 BasicSample,
             )
 
@@ -3128,7 +3143,7 @@ class TestDatasetPublisherValidation:
     def test_publish_with_s3(self, authenticated_client, mock_atproto_client):
         """publish_with_s3 creates record with S3 storage."""
         mock_response = Mock()
-        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.record/abc"
+        mock_response.uri = f"at://did:plc:test/{LEXICON_NAMESPACE}.entry/abc"
         mock_atproto_client.com.atproto.repo.create_record.return_value = mock_response
 
         publisher = DatasetPublisher(authenticated_client)
@@ -3260,7 +3275,7 @@ class TestLensLoader:
         """Get raises error for wrong record type."""
         mock_response = Mock()
         mock_response.value = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "NotALens",
         }
         mock_atproto_client.com.atproto.repo.get_record.return_value = mock_response
@@ -3564,7 +3579,7 @@ class TestAtmosphereIndexEntry:
         }
 
         entry = AtmosphereIndexEntry(
-            "at://did:plc:testdid/ac.foundation.dataset.record/rkey123",
+            "at://did:plc:testdid/ac.foundation.dataset.entry/rkey123",
             record,
         )
         urls = entry.data_urls

@@ -22,9 +22,10 @@ Examples:
     >>> sample = ImageSample(image=np.zeros((64, 64)), label="cat")
 """
 
+import hashlib
+import keyword
 from dataclasses import field, make_dataclass
 from typing import Any, Optional, Type
-import hashlib
 
 from numpy.typing import NDArray
 
@@ -35,6 +36,34 @@ from ._exceptions import SchemaError
 
 # Maximum atdataSchemaVersion this library can read.
 _MAX_SUPPORTED_SCHEMA_VERSION = 1
+
+
+def _validate_identifier(name: str, context: str = "field") -> None:
+    """Validate that *name* is a safe Python identifier.
+
+    Prevents code injection when field names flow into generated source code.
+    For class names, dotted qualified names (e.g. ``module.ClassName``) are
+    accepted since schema names may include a module prefix.
+
+    Raises:
+        ValueError: If the name is not a valid Python identifier or is a keyword.
+    """
+    # Class names may be dotted qualified names (e.g. "module.ClassName")
+    parts = name.split(".") if context == "class" else [name]
+    for part in parts:
+        if not part.isidentifier() or keyword.iskeyword(part):
+            raise ValueError(
+                f"Invalid {context} name {name!r}: must be a valid Python identifier"
+            )
+
+
+def _get_schema_version(record: dict) -> int:
+    """Extract the schema record version, supporting both old and new keys.
+
+    Tries ``atdataSchemaVersion`` first, falls back to ``$atdataSchemaVersion``
+    (pre-rename), defaults to 1 for records without either key.
+    """
+    return record.get("atdataSchemaVersion", record.get("$atdataSchemaVersion", 1))
 
 
 # Type cache to avoid regenerating identical types
@@ -231,7 +260,7 @@ def _check_schema_record_version(schema: dict) -> None:
     Raises:
         SchemaError: If the version is higher than this library supports.
     """
-    v = schema.get("atdataSchemaVersion", schema.get("$atdataSchemaVersion", 1))
+    v = _get_schema_version(schema)
     if v > _MAX_SUPPORTED_SCHEMA_VERSION:
         raise SchemaError(
             f"Unsupported schema record version: {v}. "
@@ -300,6 +329,7 @@ def _schema_to_type(
     name = schema.get("name")
     if not name:
         raise ValueError("Schema must have a 'name' field")
+    _validate_identifier(name, "class")
 
     version = schema.get("version", "1.0.0")
     fields_data = schema.get("fields", [])
@@ -315,6 +345,7 @@ def _schema_to_type(
         field_name = field_def.get("name")
         if not field_name:
             raise ValueError("Each field must have a 'name'")
+        _validate_identifier(field_name)
 
         field_type_dict = field_def.get("fieldType", {})
         is_optional = field_def.get("optional", False)
@@ -424,8 +455,11 @@ def generate_stub(schema: dict) -> str:
         ...     f.write(stub_content)
     """
     name = schema.get("name", "UnknownSample")
+    _validate_identifier(name, "class")
     version = schema.get("version", "1.0.0")
     fields = schema.get("fields", [])
+    for f in fields:
+        _validate_identifier(f.get("name", "unknown"))
 
     lines = [
         "# Auto-generated stub for dynamically decoded schema",
@@ -498,8 +532,11 @@ def generate_module(schema: dict) -> str:
         >>> # The module can be imported after being saved
     """
     name = schema.get("name", "UnknownSample")
+    _validate_identifier(name, "class")
     version = schema.get("version", "1.0.0")
     fields = schema.get("fields", [])
+    for f in fields:
+        _validate_identifier(f.get("name", "unknown"))
 
     lines = [
         '"""Auto-generated module for dynamically decoded schema.',

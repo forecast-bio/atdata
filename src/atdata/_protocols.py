@@ -85,7 +85,7 @@ class Packable(Protocol):
 class IndexEntry(Protocol):
     """Common interface for index entries (local or atmosphere).
 
-    Both LocalDatasetEntry and atmosphere DatasetRecord-based entries
+    Both LocalDatasetEntry and atmosphere DatasetEntry-based entries
     should satisfy this protocol, enabling code that works with either.
 
     Properties:

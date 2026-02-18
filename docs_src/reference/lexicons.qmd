@@ -29,11 +29,11 @@ auxiliary definitions within the same namespace.
 | NSID | Type | Description |
 |------|------|-------------|
 | [`ac.foundation.dataset.schema`](#ac-foundation-dataset-schema) | Record | Definition of a PackableSample-compatible sample type. Supports versioning via rkey format: {NSID}@{semver}. Schema f... |
-| [`ac.foundation.dataset.record`](#ac-foundation-dataset-record) | Record | Index record for a WebDataset-backed dataset with references to storage location and sample schema |
+| [`ac.foundation.dataset.entry`](#ac-foundation-dataset-entry) | Record | Index entry for a WebDataset-backed dataset with references to storage location and sample schema |
 | [`ac.foundation.dataset.lens`](#ac-foundation-dataset-lens) | Record | Bidirectional transformation (Lens) between two sample types, with code stored in external repositories |
 | [`ac.foundation.dataset.storageHttp`](#ac-foundation-dataset-storagehttp) | Object | HTTP/HTTPS storage for WebDataset tar archives. Each shard is listed individually with a checksum for integrity verif... |
 | [`ac.foundation.dataset.storageS3`](#ac-foundation-dataset-storages3) | Object | S3 or S3-compatible storage for WebDataset tar archives. Supports custom endpoints for MinIO, Cloudflare R2, and othe... |
-| [`ac.foundation.dataset.storageBlobs`](#ac-foundation-dataset-storageblobs) | Object | Storage via ATProto PDS blobs for WebDataset tar archives. Used in ac.foundation.dataset.record storage union for max... |
+| [`ac.foundation.dataset.storageBlobs`](#ac-foundation-dataset-storageblobs) | Object | Storage via ATProto PDS blobs for WebDataset tar archives. Used in ac.foundation.dataset.entry storage union for max... |
 | [`ac.foundation.dataset.storageExternal`](#ac-foundation-dataset-storageexternal) | Object | (Deprecated: use storageHttp or storageS3 instead.) External storage via URLs for WebDataset tar archives. URLs suppo... |
 | [`ac.foundation.dataset.schemaType`](#ac-foundation-dataset-schematype) | String | Schema type identifier for atdata sample definitions. Known values correspond to token definitions in this Lexicon. N... |
 | [`ac.foundation.dataset.arrayFormat`](#ac-foundation-dataset-arrayformat) | String | Array serialization format identifier for NDArray fields in sample schemas. Known values correspond to token definiti... |
@@ -74,9 +74,9 @@ JSON Schema Draft 7 format for sample type definitions. Used with NDArray shim f
 
 ---
 
-### `ac.foundation.dataset.record` <span class='lexicon-badge lexicon-badge-record'>Record</span> {#ac-foundation-dataset-record}
+### `ac.foundation.dataset.entry` <span class='lexicon-badge lexicon-badge-record'>Record</span> {#ac-foundation-dataset-entry}
 
-Index record for a WebDataset-backed dataset with references to storage location and sample schema
+Index entry for a WebDataset-backed dataset with references to storage location and sample schema
 
 **Record key:** `tid`
 
@@ -88,11 +88,23 @@ Index record for a WebDataset-backed dataset with references to storage location
 | `description` | string | no | Human-readable description of the dataset *max length: 5000* |
 | `metadata` | bytes | no | Msgpack-encoded metadata dict for arbitrary extended key-value pairs. Use this for additional metadata beyond the core top-level fields (license, tags, size). Top-level fields are preferred for discoverable/searchable metadata. *max length: 100000* |
 | `tags` | array\<string\> | no | Searchable tags for dataset discovery. Aligns with Schema.org keywords property. *max length: 30* |
-| `size` | [`#datasetSize`](#ac-foundation-dataset-record-datasetsize) | no | Dataset size information (optional) |
+| `size` | [`#datasetSize`](#ac-foundation-dataset-entry-datasetsize) | no | Dataset size information (optional) |
 | `license` | string | no | License identifier or URL. SPDX identifiers recommended (e.g., MIT, Apache-2.0, CC-BY-4.0) or full SPDX URLs (e.g., http://spdx.org/licenses/MIT). Aligns with Schema.org license property. *max length: 200* |
-| `createdAt` | string (datetime) | **yes** | Timestamp when this dataset record was created |
+| `createdAt` | string (datetime) | **yes** | Timestamp when this dataset entry was created |
+| `metadataSchemaRef` | string (at-uri) | no | AT-URI reference to a schema record defining the structure of this dataset's content metadata. When present, contentMetadata is validated against this schema at write time. *max length: 500* |
+| `contentMetadata` | unknown | no | Dataset-level content metadata (e.g., instrument settings, acquisition parameters). Structure is validated against the schema referenced by metadataSchemaRef when present. Stored as an open JSON object. |
+| `manifests` | array\<[`#shardManifestRef`](#ac-foundation-dataset-entry-shardmanifestref)\> | no | Per-shard manifest metadata for query-based access. Each entry corresponds to a shard in the storage union (matched by array index). Optional — datasets without manifests are still fully usable via sequential iteration. |
 
-#### `ac.foundation.dataset.record#shardChecksum` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-record-shardchecksum}
+#### `ac.foundation.dataset.entry#shardManifestRef` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-entry-shardmanifestref}
+
+References to manifest sidecar data for a single shard. The header contains schema info, sample count, and per-field aggregates. The samples file is a Parquet table with per-sample metadata for query-based access.
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `header` | blob (application/json) | **yes** | Manifest JSON header containing schema info, sample count, and per-field aggregates (min/max/mean for numeric, value_counts for categorical) *max size: 1 MB* |
+| `samples` | blob (application/octet-stream) | no | Parquet file with per-sample metadata (\_\_key\_\_, \_\_offset\_\_, \_\_size\_\_, plus queryable field values) *max size: 50 MB* |
+
+#### `ac.foundation.dataset.entry#shardChecksum` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-entry-shardchecksum}
 
 Content hash for shard integrity verification. Algorithm is flexible to allow SHA-256, BLAKE3, or other hash functions.
 
@@ -101,7 +113,7 @@ Content hash for shard integrity verification. Algorithm is flexible to allow SH
 | `algorithm` | string | **yes** | Hash algorithm identifier (e.g., 'sha256', 'blake3') *max length: 20* |
 | `digest` | string | **yes** | Hex-encoded hash digest *max length: 128* |
 
-#### `ac.foundation.dataset.record#datasetSize` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-record-datasetsize}
+#### `ac.foundation.dataset.entry#datasetSize` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-entry-datasetsize}
 
 Information about dataset size
 
@@ -159,7 +171,7 @@ A single HTTP-accessible shard with integrity checksum
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
 | `url` | string (uri) | **yes** | HTTP/HTTPS URL for this WebDataset tar shard *max length: 2000* |
-| `checksum` | [`ac.foundation.dataset.record#shardChecksum`](#ac-foundation-dataset-record-shardchecksum) | **yes** | Content hash for integrity verification |
+| `checksum` | [`ac.foundation.dataset.entry#shardChecksum`](#ac-foundation-dataset-entry-shardchecksum) | **yes** | Content hash for integrity verification |
 
 ---
 
@@ -181,13 +193,13 @@ A single S3 object shard with integrity checksum
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
 | `key` | string | **yes** | S3 object key for this WebDataset tar shard *max length: 1024* |
-| `checksum` | [`ac.foundation.dataset.record#shardChecksum`](#ac-foundation-dataset-record-shardchecksum) | **yes** | Content hash for integrity verification |
+| `checksum` | [`ac.foundation.dataset.entry#shardChecksum`](#ac-foundation-dataset-entry-shardchecksum) | **yes** | Content hash for integrity verification |
 
 ---
 
 ### `ac.foundation.dataset.storageBlobs` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-storageblobs}
 
-Storage via ATProto PDS blobs for WebDataset tar archives. Used in ac.foundation.dataset.record storage union for maximum decentralization.
+Storage via ATProto PDS blobs for WebDataset tar archives. Used in ac.foundation.dataset.entry storage union for maximum decentralization.
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
@@ -200,7 +212,7 @@ A single PDS blob shard with optional integrity checksum
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
 | `blob` | blob | **yes** | Blob reference to a WebDataset tar archive *accept: `application/x-tar`* · *max size: 50 MB* |
-| `checksum` | [`ac.foundation.dataset.record#shardChecksum`](#ac-foundation-dataset-record-shardchecksum) | no | Content hash for integrity verification (optional since PDS blobs have built-in CID integrity) |
+| `checksum` | [`ac.foundation.dataset.entry#shardChecksum`](#ac-foundation-dataset-entry-shardchecksum) | no | Content hash for integrity verification (optional since PDS blobs have built-in CID integrity) |
 
 ---
 

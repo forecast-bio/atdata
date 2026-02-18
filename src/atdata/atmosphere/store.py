@@ -112,8 +112,7 @@ class PDSBlobStore:
             ValueError: If not authenticated.
             RuntimeError: If no shards are found on the dataset.
         """
-        if not self.client.did:
-            raise ValueError("Client must be authenticated to upload blobs")
+        self.client._ensure_authenticated()
 
         from .._helpers import sha256_bytes
 

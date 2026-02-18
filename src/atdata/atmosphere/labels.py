@@ -27,7 +27,7 @@ class LabelPublisher:
         >>> publisher = LabelPublisher(atmo)
         >>> uri = publisher.publish(
         ...     name="mnist",
-        ...     dataset_uri="at://did:plc:abc/ac.foundation.dataset.record/xyz",
+        ...     dataset_uri="at://did:plc:abc/ac.foundation.dataset.entry/xyz",
         ...     version="1.0.0",
         ...     description="Initial release",
         ... )

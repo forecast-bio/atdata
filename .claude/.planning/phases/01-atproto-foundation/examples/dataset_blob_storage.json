@@ -1,5 +1,5 @@
 {
-  "$type": "ac.foundation.dataset.record",
+  "$type": "ac.foundation.dataset.entry",
   "name": "Small Sample Dataset",
   "schemaRef": "at://did:plc:def456/ac.foundation.dataset.schema/textsample@2.1.0",
   "storage": {
