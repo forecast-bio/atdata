@@ -13,27 +13,35 @@ from atdata.lexicons import (
     load_ndarray_shim,
 )
 
-# The JSON files live in the repo root `lexicons/` directory and are only
-# available via importlib.resources when installed from the built wheel
-# (via pyproject.toml force-include). In editable installs, we fall back
-# to loading directly from the repo root.
+# Lexicon JSON files now live under the NSID-to-path structure inside the
+# package directory (src/atdata/lexicons/science/alt/dataset/) and also in
+# the top-level vendor directory (lexicons/science/alt/dataset/).
 REPO_ROOT = Path(__file__).resolve().parent.parent
-LEXICON_DIR = REPO_ROOT / "lexicons"
-_HAS_LEXICON_FILES = (LEXICON_DIR / "ac.foundation.dataset.schema.json").exists()
+LEXICON_DIR = REPO_ROOT / "lexicons" / "science" / "alt" / "dataset"
+PKG_LEXICON_DIR = (
+    REPO_ROOT / "src" / "atdata" / "lexicons" / "science" / "alt" / "dataset"
+)
+_HAS_LEXICON_FILES = (LEXICON_DIR / "schema.json").exists()
+
+
+def _lexicon_path(lexicon_id: str) -> Path:
+    """Convert an NSID to the NSID-to-path file location."""
+    parts = lexicon_id.split(".")
+    return REPO_ROOT / "lexicons" / Path(*parts[:-1]) / f"{parts[-1]}.json"
 
 
 class TestNamespace:
     """Verify module constants."""
 
     def test_namespace_value(self):
-        assert NAMESPACE == "ac.foundation.dataset"
+        assert NAMESPACE == "science.alt.dataset"
 
     def test_lexicon_ids_are_namespaced(self):
         for lid in LEXICON_IDS:
             assert lid.startswith(NAMESPACE), f"{lid} missing namespace prefix"
 
     def test_lexicon_ids_count(self):
-        assert len(LEXICON_IDS) >= 10
+        assert len(LEXICON_IDS) == 12
 
 
 @pytest.mark.skipif(not _HAS_LEXICON_FILES, reason="lexicon JSON files not found")
@@ -42,29 +50,29 @@ class TestLexiconFilesExist:
 
     def test_all_lexicon_ids_have_files(self):
         for lid in LEXICON_IDS:
-            path = LEXICON_DIR / f"{lid}.json"
+            path = _lexicon_path(lid)
             assert path.exists(), f"Missing lexicon file: {path}"
 
     def test_lexicon_files_are_valid_json(self):
         for lid in LEXICON_IDS:
-            path = LEXICON_DIR / f"{lid}.json"
+            path = _lexicon_path(lid)
             data = json.loads(path.read_text(encoding="utf-8"))
             assert data["id"] == lid
 
     def test_all_lexicons_declare_version_1(self):
         for lid in LEXICON_IDS:
-            path = LEXICON_DIR / f"{lid}.json"
+            path = _lexicon_path(lid)
             data = json.loads(path.read_text(encoding="utf-8"))
             assert data.get("lexicon") == 1, f"{lid} missing lexicon: 1"
 
     def test_lexicon_roundtrips_through_json(self):
-        path = LEXICON_DIR / "ac.foundation.dataset.schema.json"
+        path = _lexicon_path("science.alt.dataset.schema")
         data = json.loads(path.read_text(encoding="utf-8"))
         roundtripped = json.loads(json.dumps(data))
         assert roundtripped == data
 
     def test_ndarray_shim_exists(self):
-        path = LEXICON_DIR / "ndarray_shim.json"
+        path = REPO_ROOT / "lexicons" / "ndarray_shim.json"
         assert path.exists()
         data = json.loads(path.read_text(encoding="utf-8"))
         assert "$defs" in data
@@ -77,32 +85,61 @@ class TestLoadLexicon:
     def test_nonexistent_raises_file_not_found(self):
         load_lexicon.cache_clear()
         with pytest.raises(FileNotFoundError, match="No lexicon file found"):
-            load_lexicon("ac.foundation.dataset.nonexistent")
+            load_lexicon("science.alt.dataset.nonexistent")
 
     def test_caching_returns_same_object(self):
         """Repeated calls with same ID return identical object (lru_cache)."""
         load_lexicon.cache_clear()
-        # This will raise if files aren't installed, but the cache behavior
-        # is testable even with the error path.
-        try:
-            a = load_lexicon("ac.foundation.dataset.schema")
-            b = load_lexicon("ac.foundation.dataset.schema")
-            assert a is b
-        except FileNotFoundError:
-            pytest.skip("lexicon files not installed in dev mode")
+        a = load_lexicon("science.alt.dataset.schema")
+        b = load_lexicon("science.alt.dataset.schema")
+        assert a is b
+
+    def test_load_all_lexicons(self):
+        """Every declared lexicon ID can be loaded via load_lexicon."""
+        load_lexicon.cache_clear()
+        for lid in LEXICON_IDS:
+            data = load_lexicon(lid)
+            assert data["id"] == lid
+
+    def test_label_and_resolve_label_present(self):
+        """Verify new label and resolveLabel lexicons are loadable."""
+        load_lexicon.cache_clear()
+        label = load_lexicon("science.alt.dataset.label")
+        assert label["defs"]["main"]["type"] == "record"
+        resolve = load_lexicon("science.alt.dataset.resolveLabel")
+        assert resolve["defs"]["main"]["type"] == "query"
+
+    @pytest.mark.parametrize(
+        "bad_nsid",
+        [
+            "",
+            "schema",
+            ".leading.dot",
+            "trailing.dot.",
+            "a",
+            "too.few",
+        ],
+    )
+    def test_malformed_nsid_raises_file_not_found(self, bad_nsid: str):
+        """Malformed NSIDs should raise FileNotFoundError, not crash."""
+        load_lexicon.cache_clear()
+        with pytest.raises((FileNotFoundError, TypeError)):
+            load_lexicon(bad_nsid)
 
 
 class TestLoadNdarrayShim:
     """Tests for load_ndarray_shim()."""
 
-    def test_returns_dict_or_raises(self):
+    def test_returns_dict(self):
         load_ndarray_shim.cache_clear()
-        try:
-            shim = load_ndarray_shim()
-            assert isinstance(shim, dict)
-            assert "$defs" in shim
-        except FileNotFoundError:
-            pytest.skip("ndarray_shim.json not installed in dev mode")
+        shim = load_ndarray_shim()
+        assert isinstance(shim, dict)
+        assert "$defs" in shim
+
+    def test_ndarray_shim_id(self):
+        load_ndarray_shim.cache_clear()
+        shim = load_ndarray_shim()
+        assert shim["$id"] == "https://alt.science/schemas/atdata-ndarray-bytes/1.0.0"
 
 
 class TestListLexicons:
@@ -114,9 +151,33 @@ class TestListLexicons:
 
     def test_contains_known_ids(self):
         result = list_lexicons()
-        assert "ac.foundation.dataset.schema" in result
-        assert "ac.foundation.dataset.entry" in result
-        assert "ac.foundation.dataset.lens" in result
+        assert "science.alt.dataset.schema" in result
+        assert "science.alt.dataset.entry" in result
+        assert "science.alt.dataset.lens" in result
+        assert "science.alt.dataset.label" in result
+        assert "science.alt.dataset.resolveLabel" in result
 
     def test_matches_constant(self):
         assert list_lexicons() is LEXICON_IDS
+
+
+@pytest.mark.skipif(not _HAS_LEXICON_FILES, reason="lexicon JSON files not found")
+class TestLexiconSync:
+    """Verify top-level lexicons/ and src/atdata/lexicons/ stay in sync."""
+
+    def test_vendored_and_package_lexicons_identical(self):
+        """Every JSON file in lexicons/science/alt/dataset/ must have an
+        identical copy in src/atdata/lexicons/science/alt/dataset/."""
+        for vendor_path in sorted(LEXICON_DIR.glob("*.json")):
+            pkg_path = PKG_LEXICON_DIR / vendor_path.name
+            assert pkg_path.exists(), f"Package copy missing: {pkg_path}"
+            vendor_data = json.loads(vendor_path.read_text(encoding="utf-8"))
+            pkg_data = json.loads(pkg_path.read_text(encoding="utf-8"))
+            assert vendor_data == pkg_data, f"Mismatch: {vendor_path.name}"
+
+    def test_ndarray_shim_identical(self):
+        vendor = REPO_ROOT / "lexicons" / "ndarray_shim.json"
+        pkg = REPO_ROOT / "src" / "atdata" / "lexicons" / "ndarray_shim.json"
+        vendor_data = json.loads(vendor.read_text(encoding="utf-8"))
+        pkg_data = json.loads(pkg.read_text(encoding="utf-8"))
+        assert vendor_data == pkg_data

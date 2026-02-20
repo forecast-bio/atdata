@@ -21,8 +21,8 @@ and point to the transformation code in a git repository.
 >>> publisher = LensPublisher(atmo)
 >>> uri = publisher.publish(
 ...     name="my_lens",
-...     source_schema_uri="at://did:plc:abc/ac.foundation.dataset.schema/source",
-...     target_schema_uri="at://did:plc:abc/ac.foundation.dataset.schema/target",
+...     source_schema_uri="at://did:plc:abc/science.alt.dataset.schema/source",
+...     target_schema_uri="at://did:plc:abc/science.alt.dataset.schema/target",
 ...     code_repository="https://github.com/user/repo",
 ...     code_commit="abc123def456",
 ...     getter_path="mymodule.lenses:my_lens",

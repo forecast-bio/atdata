@@ -168,7 +168,7 @@ Schema references vary by backend:
 | Backend | Format | Example |
 |---------|--------|---------|
 | Local | `local://schemas/{module.Class}@{version}` | `local://schemas/myapp.ImageSample@1.0.0` |
-| Atmosphere | `at://{did}/{collection}/{rkey}` | `at://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz` |
+| Atmosphere | `at://{did}/{collection}/{rkey}` | `at://did:plc:abc123/science.alt.dataset.sampleSchema/xyz` |
 
 ## Type Checking
 

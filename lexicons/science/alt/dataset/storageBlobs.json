@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "ac.foundation.dataset.storageBlobs",
+  "id": "science.alt.dataset.storageBlobs",
   "defs": {
     "main": {
       "type": "object",
-      "description": "Storage via ATProto PDS blobs for WebDataset tar archives. Used in ac.foundation.dataset.entry storage union for maximum decentralization.",
+      "description": "Storage via ATProto PDS blobs for WebDataset tar archives. Used in science.alt.dataset.entry storage union for maximum decentralization.",
       "required": [
         "blobs"
       ],
@@ -37,7 +37,7 @@
         },
         "checksum": {
           "type": "ref",
-          "ref": "ac.foundation.dataset.entry#shardChecksum",
+          "ref": "science.alt.dataset.entry#shardChecksum",
           "description": "Content hash for integrity verification (optional since PDS blobs have built-in CID integrity)"
         }
       }

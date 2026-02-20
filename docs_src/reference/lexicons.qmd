@@ -1,12 +1,12 @@
 ---
 title: "Lexicon Reference"
-description: "ATProto Lexicon definitions for the ac.foundation.dataset namespace"
+description: "ATProto Lexicon definitions for the science.alt.dataset namespace"
 ---
 
 {{< include _lexicon-styles.qmd >}}
 
 This page documents the [ATProto Lexicon](https://atproto.com/specs/lexicon)
-definitions that make up the `ac.foundation.dataset` namespace. These
+definitions that make up the `science.alt.dataset` namespace. These
 lexicons define the record types, objects, tokens, and queries used by
 atdata for publishing schemas, datasets, and lenses to the AT Protocol
 network.
@@ -28,22 +28,22 @@ auxiliary definitions within the same namespace.
 
 | NSID | Type | Description |
 |------|------|-------------|
-| [`ac.foundation.dataset.schema`](#ac-foundation-dataset-schema) | Record | Definition of a PackableSample-compatible sample type. Supports versioning via rkey format: {NSID}@{semver}. Schema f... |
-| [`ac.foundation.dataset.entry`](#ac-foundation-dataset-entry) | Record | Index entry for a WebDataset-backed dataset with references to storage location and sample schema |
-| [`ac.foundation.dataset.lens`](#ac-foundation-dataset-lens) | Record | Bidirectional transformation (Lens) between two sample types, with code stored in external repositories |
-| [`ac.foundation.dataset.storageHttp`](#ac-foundation-dataset-storagehttp) | Object | HTTP/HTTPS storage for WebDataset tar archives. Each shard is listed individually with a checksum for integrity verif... |
-| [`ac.foundation.dataset.storageS3`](#ac-foundation-dataset-storages3) | Object | S3 or S3-compatible storage for WebDataset tar archives. Supports custom endpoints for MinIO, Cloudflare R2, and othe... |
-| [`ac.foundation.dataset.storageBlobs`](#ac-foundation-dataset-storageblobs) | Object | Storage via ATProto PDS blobs for WebDataset tar archives. Used in ac.foundation.dataset.entry storage union for max... |
-| [`ac.foundation.dataset.storageExternal`](#ac-foundation-dataset-storageexternal) | Object | (Deprecated: use storageHttp or storageS3 instead.) External storage via URLs for WebDataset tar archives. URLs suppo... |
-| [`ac.foundation.dataset.schemaType`](#ac-foundation-dataset-schematype) | String | Schema type identifier for atdata sample definitions. Known values correspond to token definitions in this Lexicon. N... |
-| [`ac.foundation.dataset.arrayFormat`](#ac-foundation-dataset-arrayformat) | String | Array serialization format identifier for NDArray fields in sample schemas. Known values correspond to token definiti... |
-| [`ac.foundation.dataset.resolveSchema`](#ac-foundation-dataset-resolveschema) | Query | Resolve a schema by its permanent NSID identifier. When version is omitted, resolves to the most recently created sch... |
-| [`ac.foundation.dataset.label`](#ac-foundation-dataset-label) | Record | Named label pointing to a dataset record. Multiple labels with the same name but different versions can coexist, enab... |
-| [`ac.foundation.dataset.resolveLabel`](#ac-foundation-dataset-resolvelabel) | Query | Resolve a named dataset label to its underlying dataset record. When version is omitted, resolves to the most recentl... |
+| [`science.alt.dataset.schema`](#ac-foundation-dataset-schema) | Record | Definition of a PackableSample-compatible sample type. Supports versioning via rkey format: {NSID}@{semver}. Schema f... |
+| [`science.alt.dataset.entry`](#ac-foundation-dataset-entry) | Record | Index entry for a WebDataset-backed dataset with references to storage location and sample schema |
+| [`science.alt.dataset.lens`](#ac-foundation-dataset-lens) | Record | Bidirectional transformation (Lens) between two sample types, with code stored in external repositories |
+| [`science.alt.dataset.storageHttp`](#ac-foundation-dataset-storagehttp) | Object | HTTP/HTTPS storage for WebDataset tar archives. Each shard is listed individually with a checksum for integrity verif... |
+| [`science.alt.dataset.storageS3`](#ac-foundation-dataset-storages3) | Object | S3 or S3-compatible storage for WebDataset tar archives. Supports custom endpoints for MinIO, Cloudflare R2, and othe... |
+| [`science.alt.dataset.storageBlobs`](#ac-foundation-dataset-storageblobs) | Object | Storage via ATProto PDS blobs for WebDataset tar archives. Used in science.alt.dataset.entry storage union for max... |
+| [`science.alt.dataset.storageExternal`](#ac-foundation-dataset-storageexternal) | Object | (Deprecated: use storageHttp or storageS3 instead.) External storage via URLs for WebDataset tar archives. URLs suppo... |
+| [`science.alt.dataset.schemaType`](#ac-foundation-dataset-schematype) | String | Schema type identifier for atdata sample definitions. Known values correspond to token definitions in this Lexicon. N... |
+| [`science.alt.dataset.arrayFormat`](#ac-foundation-dataset-arrayformat) | String | Array serialization format identifier for NDArray fields in sample schemas. Known values correspond to token definiti... |
+| [`science.alt.dataset.resolveSchema`](#ac-foundation-dataset-resolveschema) | Query | Resolve a schema by its permanent NSID identifier. When version is omitted, resolves to the most recently created sch... |
+| [`science.alt.dataset.label`](#ac-foundation-dataset-label) | Record | Named label pointing to a dataset record. Multiple labels with the same name but different versions can coexist, enab... |
+| [`science.alt.dataset.resolveLabel`](#ac-foundation-dataset-resolvelabel) | Query | Resolve a named dataset label to its underlying dataset record. When version is omitted, resolves to the most recentl... |
 
 ## Definitions
 
-### `ac.foundation.dataset.schema` <span class='lexicon-badge lexicon-badge-record'>Record</span> {#ac-foundation-dataset-schema}
+### `science.alt.dataset.schema` <span class='lexicon-badge lexicon-badge-record'>Record</span> {#ac-foundation-dataset-schema}
 
 Definition of a PackableSample-compatible sample type. Supports versioning via rkey format: {NSID}@{semver}. Schema format is extensible via union type.
 
@@ -53,28 +53,28 @@ Definition of a PackableSample-compatible sample type. Supports versioning via r
 |----------|------|----------|-------------|
 | `name` | string | **yes** | Human-readable display name for this sample type. Used for documentation and UI. The NSID in the record URI provides unique identification; name collisions across NSIDs are acceptable. *max length: 100* |
 | `version` | string | **yes** | Semantic version (e.g., '1.0.0') *max length: 100* · *pattern: `^(0\|[1-9]\d*)\.(0\|[1-9]\d*)\.(0\|[1-9]\d*)(?:-((?:0\|[1-9]\d*\|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0\|[1-9]\d*\|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$`* |
-| `schemaType` | [`ac.foundation.dataset.schemaType`](#ac-foundation-dataset-schematype) | **yes** | Type of schema definition. This field indicates which union member is present in the schema field. |
-| `schema` | [`ac.foundation.dataset.schema#jsonSchemaFormat`](#ac-foundation-dataset-schema-jsonschemaformat) | **yes** | Schema definition for this sample type. Currently supports JSON Schema Draft 7. Union allows for future schema formats (Avro, Protobuf, etc.) without breaking changes. |
+| `schemaType` | [`science.alt.dataset.schemaType`](#ac-foundation-dataset-schematype) | **yes** | Type of schema definition. This field indicates which union member is present in the schema field. |
+| `schema` | [`science.alt.dataset.schema#jsonSchemaFormat`](#ac-foundation-dataset-schema-jsonschemaformat) | **yes** | Schema definition for this sample type. Currently supports JSON Schema Draft 7. Union allows for future schema formats (Avro, Protobuf, etc.) without breaking changes. |
 | `description` | string | no | Human-readable description of what this sample type represents *max length: 5000* |
 | `metadata` | object | no | Optional metadata about this schema. Common fields include license and tags, but any additional fields are permitted. *max properties: 50* |
 | `createdAt` | string (datetime) | **yes** | Timestamp when this schema version was created. Immutable once set (ATProto records are permanent). |
 | `atdataSchemaVersion` | integer | no | Format version discriminator for the schema record itself. Used to detect breaking changes in the record structure. When absent, treated as version 1 for backward compatibility. *min: 1* |
 
-#### `ac.foundation.dataset.schema#jsonSchemaFormat` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-schema-jsonschemaformat}
+#### `science.alt.dataset.schema#jsonSchemaFormat` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-schema-jsonschemaformat}
 
 JSON Schema Draft 7 format for sample type definitions. Used with NDArray shim for array types.
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
-| `$type` | string | **yes** |  *const: `ac.foundation.dataset.schema#jsonSchemaFormat`* |
+| `$type` | string | **yes** |  *const: `science.alt.dataset.schema#jsonSchemaFormat`* |
 | `$schema` | string | **yes** | JSON Schema version identifier *const: `http://json-schema.org/draft-07/schema#`* |
 | `type` | string | **yes** | Sample types must be objects *const: `object`* |
 | `properties` | object | **yes** | Field definitions for the sample type *min properties: 1* |
-| `arrayFormatVersions` | object | no | Mapping from array format identifiers to semantic versions. Keys are ac.foundation.dataset.arrayFormat values (e.g., 'ndarrayBytes'), values are semver strings (e.g., '1.0.0'). Foundation.ac maintains canonical shim schemas at https://foundation.ac/schemas/atdata-{format}-bytes/{version}/. *max properties: 10* |
+| `arrayFormatVersions` | object | no | Mapping from array format identifiers to semantic versions. Keys are science.alt.dataset.arrayFormat values (e.g., 'ndarrayBytes'), values are semver strings (e.g., '1.0.0'). Alt.science maintains canonical shim schemas at https://alt.science/schemas/atdata-{format}-bytes/{version}/. *max properties: 10* |
 
 ---
 
-### `ac.foundation.dataset.entry` <span class='lexicon-badge lexicon-badge-record'>Record</span> {#ac-foundation-dataset-entry}
+### `science.alt.dataset.entry` <span class='lexicon-badge lexicon-badge-record'>Record</span> {#ac-foundation-dataset-entry}
 
 Index entry for a WebDataset-backed dataset with references to storage location and sample schema
 
@@ -84,7 +84,7 @@ Index entry for a WebDataset-backed dataset with references to storage location 
 |----------|------|----------|-------------|
 | `name` | string | **yes** | Human-readable dataset name *max length: 200* |
 | `schemaRef` | string (at-uri) | **yes** | AT-URI reference to the schema record for this dataset's samples *max length: 500* |
-| `storage` | [`ac.foundation.dataset.storageHttp`](#ac-foundation-dataset-storagehttp) \| [`ac.foundation.dataset.storageS3`](#ac-foundation-dataset-storages3) \| [`ac.foundation.dataset.storageBlobs`](#ac-foundation-dataset-storageblobs) | **yes** | Storage location for dataset files (WebDataset tar archives) |
+| `storage` | [`science.alt.dataset.storageHttp`](#ac-foundation-dataset-storagehttp) \| [`science.alt.dataset.storageS3`](#ac-foundation-dataset-storages3) \| [`science.alt.dataset.storageBlobs`](#ac-foundation-dataset-storageblobs) | **yes** | Storage location for dataset files (WebDataset tar archives) |
 | `description` | string | no | Human-readable description of the dataset *max length: 5000* |
 | `metadata` | bytes | no | Msgpack-encoded metadata dict for arbitrary extended key-value pairs. Use this for additional metadata beyond the core top-level fields (license, tags, size). Top-level fields are preferred for discoverable/searchable metadata. *max length: 100000* |
 | `tags` | array\<string\> | no | Searchable tags for dataset discovery. Aligns with Schema.org keywords property. *max length: 30* |
@@ -95,7 +95,7 @@ Index entry for a WebDataset-backed dataset with references to storage location 
 | `contentMetadata` | unknown | no | Dataset-level content metadata (e.g., instrument settings, acquisition parameters). Structure is validated against the schema referenced by metadataSchemaRef when present. Stored as an open JSON object. |
 | `manifests` | array\<[`#shardManifestRef`](#ac-foundation-dataset-entry-shardmanifestref)\> | no | Per-shard manifest metadata for query-based access. Each entry corresponds to a shard in the storage union (matched by array index). Optional — datasets without manifests are still fully usable via sequential iteration. |
 
-#### `ac.foundation.dataset.entry#shardManifestRef` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-entry-shardmanifestref}
+#### `science.alt.dataset.entry#shardManifestRef` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-entry-shardmanifestref}
 
 References to manifest sidecar data for a single shard. The header contains schema info, sample count, and per-field aggregates. The samples file is a Parquet table with per-sample metadata for query-based access.
 
@@ -104,7 +104,7 @@ References to manifest sidecar data for a single shard. The header contains sche
 | `header` | blob (application/json) | **yes** | Manifest JSON header containing schema info, sample count, and per-field aggregates (min/max/mean for numeric, value_counts for categorical) *max size: 1 MB* |
 | `samples` | blob (application/octet-stream) | no | Parquet file with per-sample metadata (\_\_key\_\_, \_\_offset\_\_, \_\_size\_\_, plus queryable field values) *max size: 50 MB* |
 
-#### `ac.foundation.dataset.entry#shardChecksum` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-entry-shardchecksum}
+#### `science.alt.dataset.entry#shardChecksum` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-entry-shardchecksum}
 
 Content hash for shard integrity verification. Algorithm is flexible to allow SHA-256, BLAKE3, or other hash functions.
 
@@ -113,7 +113,7 @@ Content hash for shard integrity verification. Algorithm is flexible to allow SH
 | `algorithm` | string | **yes** | Hash algorithm identifier (e.g., 'sha256', 'blake3') *max length: 20* |
 | `digest` | string | **yes** | Hex-encoded hash digest *max length: 128* |
 
-#### `ac.foundation.dataset.entry#datasetSize` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-entry-datasetsize}
+#### `science.alt.dataset.entry#datasetSize` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-entry-datasetsize}
 
 Information about dataset size
 
@@ -125,7 +125,7 @@ Information about dataset size
 
 ---
 
-### `ac.foundation.dataset.lens` <span class='lexicon-badge lexicon-badge-record'>Record</span> {#ac-foundation-dataset-lens}
+### `science.alt.dataset.lens` <span class='lexicon-badge lexicon-badge-record'>Record</span> {#ac-foundation-dataset-lens}
 
 Bidirectional transformation (Lens) between two sample types, with code stored in external repositories
 
@@ -143,7 +143,7 @@ Bidirectional transformation (Lens) between two sample types, with code stored i
 | `metadata` | object | no | Arbitrary metadata (author, performance notes, etc.) |
 | `createdAt` | string (datetime) | **yes** | Timestamp when this lens was created |
 
-#### `ac.foundation.dataset.lens#codeReference` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-lens-codereference}
+#### `science.alt.dataset.lens#codeReference` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-lens-codereference}
 
 Reference to code in an external repository (GitHub, tangled.org, etc.)
 
@@ -156,7 +156,7 @@ Reference to code in an external repository (GitHub, tangled.org, etc.)
 
 ---
 
-### `ac.foundation.dataset.storageHttp` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-storagehttp}
+### `science.alt.dataset.storageHttp` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-storagehttp}
 
 HTTP/HTTPS storage for WebDataset tar archives. Each shard is listed individually with a checksum for integrity verification. Consumers build brace-expansion patterns on the fly when needed.
 
@@ -164,18 +164,18 @@ HTTP/HTTPS storage for WebDataset tar archives. Each shard is listed individuall
 |----------|------|----------|-------------|
 | `shards` | array\<[`#shardEntry`](#ac-foundation-dataset-storagehttp-shardentry)\> | **yes** | Array of shard entries with URL and integrity checksum *min length: 1* |
 
-#### `ac.foundation.dataset.storageHttp#shardEntry` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-storagehttp-shardentry}
+#### `science.alt.dataset.storageHttp#shardEntry` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-storagehttp-shardentry}
 
 A single HTTP-accessible shard with integrity checksum
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
 | `url` | string (uri) | **yes** | HTTP/HTTPS URL for this WebDataset tar shard *max length: 2000* |
-| `checksum` | [`ac.foundation.dataset.entry#shardChecksum`](#ac-foundation-dataset-entry-shardchecksum) | **yes** | Content hash for integrity verification |
+| `checksum` | [`science.alt.dataset.entry#shardChecksum`](#ac-foundation-dataset-entry-shardchecksum) | **yes** | Content hash for integrity verification |
 
 ---
 
-### `ac.foundation.dataset.storageS3` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-storages3}
+### `science.alt.dataset.storageS3` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-storages3}
 
 S3 or S3-compatible storage for WebDataset tar archives. Supports custom endpoints for MinIO, Cloudflare R2, and other S3-compatible services.
 
@@ -186,37 +186,37 @@ S3 or S3-compatible storage for WebDataset tar archives. Supports custom endpoin
 | `endpoint` | string (uri) | no | Custom S3-compatible endpoint URL (e.g., for MinIO, Cloudflare R2). Omit for standard AWS S3. *max length: 500* |
 | `shards` | array\<[`#shardEntry`](#ac-foundation-dataset-storages3-shardentry)\> | **yes** | Array of shard entries with object key and integrity checksum *min length: 1* |
 
-#### `ac.foundation.dataset.storageS3#shardEntry` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-storages3-shardentry}
+#### `science.alt.dataset.storageS3#shardEntry` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-storages3-shardentry}
 
 A single S3 object shard with integrity checksum
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
 | `key` | string | **yes** | S3 object key for this WebDataset tar shard *max length: 1024* |
-| `checksum` | [`ac.foundation.dataset.entry#shardChecksum`](#ac-foundation-dataset-entry-shardchecksum) | **yes** | Content hash for integrity verification |
+| `checksum` | [`science.alt.dataset.entry#shardChecksum`](#ac-foundation-dataset-entry-shardchecksum) | **yes** | Content hash for integrity verification |
 
 ---
 
-### `ac.foundation.dataset.storageBlobs` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-storageblobs}
+### `science.alt.dataset.storageBlobs` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-storageblobs}
 
-Storage via ATProto PDS blobs for WebDataset tar archives. Used in ac.foundation.dataset.entry storage union for maximum decentralization.
+Storage via ATProto PDS blobs for WebDataset tar archives. Used in science.alt.dataset.entry storage union for maximum decentralization.
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
 | `blobs` | array\<[`#blobEntry`](#ac-foundation-dataset-storageblobs-blobentry)\> | **yes** | Array of blob entries for WebDataset tar files *min length: 1* |
 
-#### `ac.foundation.dataset.storageBlobs#blobEntry` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-storageblobs-blobentry}
+#### `science.alt.dataset.storageBlobs#blobEntry` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-storageblobs-blobentry}
 
 A single PDS blob shard with optional integrity checksum
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
 | `blob` | blob | **yes** | Blob reference to a WebDataset tar archive *accept: `application/x-tar`* · *max size: 50 MB* |
-| `checksum` | [`ac.foundation.dataset.entry#shardChecksum`](#ac-foundation-dataset-entry-shardchecksum) | no | Content hash for integrity verification (optional since PDS blobs have built-in CID integrity) |
+| `checksum` | [`science.alt.dataset.entry#shardChecksum`](#ac-foundation-dataset-entry-shardchecksum) | no | Content hash for integrity verification (optional since PDS blobs have built-in CID integrity) |
 
 ---
 
-### `ac.foundation.dataset.storageExternal` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-storageexternal}
+### `science.alt.dataset.storageExternal` <span class='lexicon-badge lexicon-badge-object'>Object</span> {#ac-foundation-dataset-storageexternal}
 
 ::: {.callout-warning}
 This type is deprecated.
@@ -230,31 +230,31 @@ This type is deprecated.
 
 ---
 
-### `ac.foundation.dataset.schemaType` <span class='lexicon-badge lexicon-badge-string'>String</span> {#ac-foundation-dataset-schematype}
+### `science.alt.dataset.schemaType` <span class='lexicon-badge lexicon-badge-string'>String</span> {#ac-foundation-dataset-schematype}
 
 Schema type identifier for atdata sample definitions. Known values correspond to token definitions in this Lexicon. New schema types can be added as tokens without breaking changes.
 
 *max length: 50* · *known values: `jsonSchema`*
 
-#### `ac.foundation.dataset.schemaType#jsonSchema` <span class='lexicon-badge lexicon-badge-token'>Token</span> {#ac-foundation-dataset-schematype-jsonschema}
+#### `science.alt.dataset.schemaType#jsonSchema` <span class='lexicon-badge lexicon-badge-token'>Token</span> {#ac-foundation-dataset-schematype-jsonschema}
 
-JSON Schema Draft 7 format for sample type definitions. When schemaType is 'jsonSchema', the schema field must contain an object conforming to ac.foundation.dataset.schema#jsonSchemaFormat.
+JSON Schema Draft 7 format for sample type definitions. When schemaType is 'jsonSchema', the schema field must contain an object conforming to science.alt.dataset.schema#jsonSchemaFormat.
 
 ---
 
-### `ac.foundation.dataset.arrayFormat` <span class='lexicon-badge lexicon-badge-string'>String</span> {#ac-foundation-dataset-arrayformat}
+### `science.alt.dataset.arrayFormat` <span class='lexicon-badge lexicon-badge-string'>String</span> {#ac-foundation-dataset-arrayformat}
 
-Array serialization format identifier for NDArray fields in sample schemas. Known values correspond to token definitions in this Lexicon. Each format has versioned specifications maintained by foundation.ac at canonical URLs.
+Array serialization format identifier for NDArray fields in sample schemas. Known values correspond to token definitions in this Lexicon. Each format has versioned specifications maintained by alt.science at canonical URLs.
 
 *max length: 50* · *known values: `ndarrayBytes`*
 
-#### `ac.foundation.dataset.arrayFormat#ndarrayBytes` <span class='lexicon-badge lexicon-badge-token'>Token</span> {#ac-foundation-dataset-arrayformat-ndarraybytes}
+#### `science.alt.dataset.arrayFormat#ndarrayBytes` <span class='lexicon-badge lexicon-badge-token'>Token</span> {#ac-foundation-dataset-arrayformat-ndarraybytes}
 
-Numpy .npy binary format for NDArray serialization. Stores arrays with dtype and shape in binary header. Versions maintained at https://foundation.ac/schemas/atdata-ndarray-bytes/{version}/
+Numpy .npy binary format for NDArray serialization. Stores arrays with dtype and shape in binary header. Versions maintained at https://alt.science/schemas/atdata-ndarray-bytes/{version}/
 
 ---
 
-### `ac.foundation.dataset.resolveSchema` <span class='lexicon-badge lexicon-badge-query'>Query</span> {#ac-foundation-dataset-resolveschema}
+### `science.alt.dataset.resolveSchema` <span class='lexicon-badge lexicon-badge-query'>Query</span> {#ac-foundation-dataset-resolveschema}
 
 Resolve a schema by its permanent NSID identifier. When version is omitted, resolves to the most recently created schema with the given NSID.
 
@@ -274,7 +274,7 @@ Encoding: `application/json`
 |----------|------|----------|-------------|
 | `uri` | string (at-uri) | **yes** | AT-URI of the resolved schema record |
 | `cid` | string | **yes** | CID of the resolved schema record |
-| `record` | [`ac.foundation.dataset.schema`](#ac-foundation-dataset-schema) | **yes** | The full schema record |
+| `record` | [`science.alt.dataset.schema`](#ac-foundation-dataset-schema) | **yes** | The full schema record |
 
 #### Errors
 
@@ -282,7 +282,7 @@ Encoding: `application/json`
 
 ---
 
-### `ac.foundation.dataset.label` <span class='lexicon-badge lexicon-badge-record'>Record</span> {#ac-foundation-dataset-label}
+### `science.alt.dataset.label` <span class='lexicon-badge lexicon-badge-record'>Record</span> {#ac-foundation-dataset-label}
 
 Named label pointing to a dataset record. Multiple labels with the same name but different versions can coexist, enabling versioned references to immutable dataset records.
 
@@ -298,7 +298,7 @@ Named label pointing to a dataset record. Multiple labels with the same name but
 
 ---
 
-### `ac.foundation.dataset.resolveLabel` <span class='lexicon-badge lexicon-badge-query'>Query</span> {#ac-foundation-dataset-resolvelabel}
+### `science.alt.dataset.resolveLabel` <span class='lexicon-badge lexicon-badge-query'>Query</span> {#ac-foundation-dataset-resolvelabel}
 
 Resolve a named dataset label to its underlying dataset record. When version is omitted, resolves to the most recently created label with the given name.
 
@@ -318,4 +318,4 @@ Encoding: `application/json`
 |----------|------|----------|-------------|
 | `uri` | string (at-uri) | **yes** | AT-URI of the resolved dataset record |
 | `cid` | string | **yes** | CID of the resolved dataset record |
-| `label` | [`ac.foundation.dataset.label#main`](#ac-foundation-dataset-label-main) | **yes** | The label record that was resolved |
+| `label` | [`science.alt.dataset.label#main`](#ac-foundation-dataset-label-main) | **yes** | The label record that was resolved |

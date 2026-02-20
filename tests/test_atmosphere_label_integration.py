@@ -490,14 +490,14 @@ class TestAtmosphereBackendResolveLabel:
         # Mock the label loader's resolve method
         backend._label_loader = MagicMock()
         backend._label_loader.resolve.return_value = (
-            "at://did:plc:test/ac.foundation.dataset.entry/abc"
+            "at://did:plc:test/science.alt.dataset.entry/abc"
         )
 
         result = backend.resolve_label("did:plc:test", "my-ds", "1.0.0")
         backend._label_loader.resolve.assert_called_once_with(
             "did:plc:test", "my-ds", "1.0.0"
         )
-        assert result == "at://did:plc:test/ac.foundation.dataset.entry/abc"
+        assert result == "at://did:plc:test/science.alt.dataset.entry/abc"
 
 
 # ---------------------------------------------------------------------------
@@ -562,7 +562,7 @@ class TestRealAtmosphereBackendLabelPublish:
         backend.insert_dataset(
             ds,
             name="url-test",
-            schema_ref="at://did:plc:real123/ac.foundation.dataset.schema/s1",
+            schema_ref="at://did:plc:real123/science.alt.dataset.schema/s1",
             data_urls=["http://example.com/data.tar"],
             description="URL test",
         )
@@ -592,7 +592,7 @@ class TestRealAtmosphereBackendLabelPublish:
         backend.insert_dataset(
             ds,
             name="blob-test",
-            schema_ref="at://did:plc:real123/ac.foundation.dataset.schema/s1",
+            schema_ref="at://did:plc:real123/science.alt.dataset.schema/s1",
             data_urls=["http://example.com/data.tar"],
             blob_refs=blob_refs,
             description="Blob test",
@@ -611,7 +611,7 @@ class TestRealAtmosphereBackendLabelPublish:
         backend.insert_dataset(
             ds,
             name="uri-check",
-            schema_ref="at://did:plc:real123/ac.foundation.dataset.schema/s1",
+            schema_ref="at://did:plc:real123/science.alt.dataset.schema/s1",
             data_urls=["http://example.com/data.tar"],
         )
 

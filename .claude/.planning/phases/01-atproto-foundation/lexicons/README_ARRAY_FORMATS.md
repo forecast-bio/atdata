@@ -6,9 +6,9 @@ This document explains the token-based registry pattern for atdata array seriali
 
 Array formats define how numpy NDArray fields are serialized in atdata sample types. The system provides:
 
-1. **Token-based registry**: `ac.foundation.dataset.arrayFormat` Lexicon
+1. **Token-based registry**: `science.alt.dataset.arrayFormat` Lexicon
 2. **Version tracking**: Each schema declares which format versions it uses
-3. **Canonical shim schemas**: Foundation.ac maintains standard JSON Schema shims at predictable URLs
+3. **Canonical shim schemas**: Alt.science maintains standard JSON Schema shims at predictable URLs
 
 ## Pattern
 
@@ -17,7 +17,7 @@ Array formats define how numpy NDArray fields are serialized in atdata sample ty
 ```json
 {
   "lexicon": 1,
-  "id": "ac.foundation.dataset.arrayFormat",
+  "id": "science.alt.dataset.arrayFormat",
   "defs": {
     "main": {
       "type": "string",
@@ -38,10 +38,10 @@ Schema records declare format versions in `arrayFormatVersions` field:
 
 ```json
 {
-  "$type": "ac.foundation.dataset.schema",
+  "$type": "science.alt.dataset.schema",
   "schemaType": "jsonSchema",
   "schema": {
-    "$type": "ac.foundation.dataset.schema#jsonSchemaFormat",
+    "$type": "science.alt.dataset.schema#jsonSchemaFormat",
     "arrayFormatVersions": {
       "ndarrayBytes": "1.0.0"
     },
@@ -64,15 +64,15 @@ Schema records declare format versions in `arrayFormatVersions` field:
 
 ## Canonical Shim Schema URLs
 
-Foundation.ac maintains JSON Schema shims at canonical URLs:
+Alt.science maintains JSON Schema shims at canonical URLs:
 
 ```
-https://foundation.ac/schemas/atdata-{format}-bytes/{version}/
+https://alt.science/schemas/atdata-{format}-bytes/{version}/
 ```
 
 Examples:
-- `https://foundation.ac/schemas/atdata-ndarray-bytes/1.0.0/`
-- `https://foundation.ac/schemas/atdata-arrow-bytes/1.0.0/` (future)
+- `https://alt.science/schemas/atdata-ndarray-bytes/1.0.0/`
+- `https://alt.science/schemas/atdata-arrow-bytes/1.0.0/` (future)
 
 These shim schemas define the JSON Schema representation (base64-encoded bytes) for each format.
 
@@ -100,7 +100,7 @@ To add support for a new array format (e.g., Apache Arrow):
 
 ### 1. Add token def to arrayFormat Lexicon
 
-Edit `ac.foundation.dataset.arrayFormat.json`:
+Edit `science.alt.dataset.arrayFormat.json`:
 
 ```json
 {
@@ -120,7 +120,7 @@ Edit `ac.foundation.dataset.arrayFormat.json`:
 
 Create and publish JSON Schema shim at:
 ```
-https://foundation.ac/schemas/atdata-arrow-bytes/1.0.0/
+https://alt.science/schemas/atdata-arrow-bytes/1.0.0/
 ```
 
 ### 3. Use in sample schemas
@@ -155,9 +155,9 @@ For breaking changes:
 
 This pattern provides:
 
-1. **Centralized Discovery**: Query `ac.foundation.dataset.arrayFormat` to see all supported formats
+1. **Centralized Discovery**: Query `science.alt.dataset.arrayFormat` to see all supported formats
 2. **Explicit Versioning**: Each schema declares exactly which format versions it uses
-3. **Canonical References**: Predictable URLs for shim schemas maintained by foundation.ac
+3. **Canonical References**: Predictable URLs for shim schemas maintained by alt.science
 4. **Extensibility**: New formats added via tokens without breaking existing schemas
 5. **Flexibility**: Schemas can use multiple formats simultaneously (if needed)
 
@@ -172,7 +172,7 @@ When atdata codegen processes a schema:
 
 ## References
 
-- [ac.foundation.dataset.arrayFormat Lexicon](./ac.foundation.dataset.arrayFormat.json)
-- [ac.foundation.dataset.schema Lexicon](./ac.foundation.dataset.schema.json)
+- [science.alt.dataset.arrayFormat Lexicon](./science.alt.dataset.arrayFormat.json)
+- [science.alt.dataset.schema Lexicon](./science.alt.dataset.schema.json)
 - [NDArray Shim Specification](../.planning/ndarray_shim_spec.md)
 - [ATProto Lexicon Token Type](https://atproto.com/guides/lexicon)

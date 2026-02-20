@@ -1,9 +1,9 @@
 {
-  "$type": "ac.foundation.dataset.entry",
+  "$type": "science.alt.dataset.entry",
   "name": "Small Sample Dataset",
-  "schemaRef": "at://did:plc:def456/ac.foundation.dataset.schema/textsample@2.1.0",
+  "schemaRef": "at://did:plc:def456/science.alt.dataset.schema/textsample@2.1.0",
   "storage": {
-    "$type": "ac.foundation.dataset.storageBlobs",
+    "$type": "science.alt.dataset.storageBlobs",
     "blobs": [
       {
         "$type": "blob",

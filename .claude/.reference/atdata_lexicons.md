@@ -1,4 +1,4 @@
-# atdata Lexicon Reference — `ac.foundation.dataset.*`
+# atdata Lexicon Reference — `science.alt.dataset.*`
 
 Developer-facing reference for the ATProto Lexicon definitions that power atdata's distributed dataset federation. These lexicons define the record types, query endpoints, and extensibility mechanisms used to publish, discover, and transform datasets on the atmosphere.
 
@@ -14,21 +14,21 @@ Lexicon source files: [`src/atdata/lexicons/`](../src/atdata/lexicons/)
 
 ## Namespace
 
-All lexicons live under the `ac.foundation.dataset` namespace:
+All lexicons live under the `science.alt.dataset` namespace:
 
 - `ac.foundation` — Organization (foundation.ac)
 - `dataset` — Domain (distributed datasets)
 
 | NSID | Lexicon Type | Purpose |
 |------|-------------|---------|
-| `ac.foundation.dataset.schema` | record | Sample type definitions (JSON Schema + NDArray shim) |
-| `ac.foundation.dataset.entry` | record | Dataset index entries with storage references |
-| `ac.foundation.dataset.lens` | record | Bidirectional transformations between sample types |
-| `ac.foundation.dataset.resolveSchema` | query | Fetch latest schema version by NSID |
-| `ac.foundation.dataset.schemaType` | token | Extensible registry of schema format identifiers |
-| `ac.foundation.dataset.arrayFormat` | token | Extensible registry of array serialization formats |
-| `ac.foundation.dataset.storageExternal` | object | External URL-based storage (union member) |
-| `ac.foundation.dataset.storageBlobs` | object | ATProto PDS blob storage (union member) |
+| `science.alt.dataset.schema` | record | Sample type definitions (JSON Schema + NDArray shim) |
+| `science.alt.dataset.entry` | record | Dataset index entries with storage references |
+| `science.alt.dataset.lens` | record | Bidirectional transformations between sample types |
+| `science.alt.dataset.resolveSchema` | query | Fetch latest schema version by NSID |
+| `science.alt.dataset.schemaType` | token | Extensible registry of schema format identifiers |
+| `science.alt.dataset.arrayFormat` | token | Extensible registry of array serialization formats |
+| `science.alt.dataset.storageExternal` | object | External URL-based storage (union member) |
+| `science.alt.dataset.storageBlobs` | object | ATProto PDS blob storage (union member) |
 | NDArray shim | JSON Schema | Numpy NDArray type definition for use in sample schemas |
 
 Any PDS can host records in this namespace. The PDS is lexicon-agnostic — records are created with `validate=False` since the PDS does not know custom lexicons.
@@ -39,7 +39,7 @@ Any PDS can host records in this namespace. The PDS is lexicon-agnostic — reco
 
 ```
                          ┌─────────────────────────────┐
-                         │  ac.foundation.dataset.lens  │
+                         │  science.alt.dataset.lens  │
                          │                               │
                          │  sourceSchema ──┐             │
                          │  targetSchema ──┼─ AT-URIs    │
@@ -48,7 +48,7 @@ Any PDS can host records in this namespace. The PDS is lexicon-agnostic — reco
                          └────────────────┬┘             │
                                           │              │
     ┌─────────────────────────────┐       │              │
-    │ ac.foundation.dataset.schema│◄──────┘              │
+    │ science.alt.dataset.schema│◄──────┘              │
     │                              │◄─────────────────────┘
     │  schemaType ─► schemaType   │
     │  schema (union):            │
@@ -59,7 +59,7 @@ Any PDS can host records in this namespace. The PDS is lexicon-agnostic — reco
                    │ AT-URI (schemaRef)
                    ▼
     ┌─────────────────────────────┐
-    │ ac.foundation.dataset.entry│
+    │ science.alt.dataset.entry│
     │                              │
     │  storage (union):           │
     │    ├─ storageExternal       │
@@ -77,7 +77,7 @@ Any PDS can host records in this namespace. The PDS is lexicon-agnostic — reco
 
 ## Core Record Types
 
-### `ac.foundation.dataset.schema`
+### `science.alt.dataset.schema`
 
 Defines a PackableSample-compatible sample type using JSON Schema.
 
@@ -95,7 +95,7 @@ Example rkey: `com.example.imagesample@1.0.0`
 |-------|------|----------|-------------|-------------|
 | `name` | `string` | yes | maxLength: 100 | Human-readable display name. The NSID in the record URI provides unique identification; name collisions across NSIDs are acceptable. |
 | `version` | `string` | yes | maxLength: 100, pattern: semver | Semantic version (e.g., `1.0.0`). Must match the version in the rkey. |
-| `schemaType` | `ref` → `ac.foundation.dataset.schemaType` | yes | — | Indicates which union member is present in the `schema` field. Currently: `"jsonSchema"`. |
+| `schemaType` | `ref` → `science.alt.dataset.schemaType` | yes | — | Indicates which union member is present in the `schema` field. Currently: `"jsonSchema"`. |
 | `schema` | `union` | yes | open (`closed: false`) | Schema definition. Currently supports `#jsonSchemaFormat`. Open union allows future formats without breaking changes. |
 | `description` | `string` | no | maxLength: 5000 | Human-readable description of the sample type. |
 | `metadata` | `object` | no | maxProperties: 50 | Optional metadata. Known sub-fields: `license` (string, SPDX, maxLength: 200), `tags` (array of strings, max 30 items). |
@@ -107,7 +107,7 @@ The currently supported schema format. This is a JSON Schema Draft 7 object with
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `$type` | `string` | yes | Must be `"ac.foundation.dataset.schema#jsonSchemaFormat"`. |
+| `$type` | `string` | yes | Must be `"science.alt.dataset.schema#jsonSchemaFormat"`. |
 | `$schema` | `string` | yes | Must be `"http://json-schema.org/draft-07/schema#"`. |
 | `type` | `string` | yes | Must be `"object"` (sample types are always objects). |
 | `properties` | `object` | yes | Field definitions for the sample type. Must have at least 1 property. |
@@ -127,12 +127,12 @@ Stored at rkey `imagesample@1.0.0`:
 
 ```json
 {
-  "$type": "ac.foundation.dataset.schema",
+  "$type": "science.alt.dataset.schema",
   "name": "ImageSample",
   "version": "1.0.0",
   "schemaType": "jsonSchema",
   "schema": {
-    "$type": "ac.foundation.dataset.schema#jsonSchemaFormat",
+    "$type": "science.alt.dataset.schema#jsonSchemaFormat",
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "ImageSample",
     "type": "object",
@@ -180,7 +180,7 @@ Stored at rkey `imagesample@1.0.0`:
 
 ---
 
-### `ac.foundation.dataset.entry`
+### `science.alt.dataset.entry`
 
 Index record for a WebDataset-backed dataset.
 
@@ -213,11 +213,11 @@ Index record for a WebDataset-backed dataset.
 
 ```json
 {
-  "$type": "ac.foundation.dataset.entry",
+  "$type": "science.alt.dataset.entry",
   "name": "CIFAR-10 Training Set",
-  "schemaRef": "at://did:plc:abc123/ac.foundation.dataset.schema/imageclassification@1.0.0",
+  "schemaRef": "at://did:plc:abc123/science.alt.dataset.schema/imageclassification@1.0.0",
   "storage": {
-    "$type": "ac.foundation.dataset.storageExternal",
+    "$type": "science.alt.dataset.storageExternal",
     "urls": [
       "s3://my-bucket/cifar10-train-{000000..000049}.tar"
     ]
@@ -238,11 +238,11 @@ Index record for a WebDataset-backed dataset.
 
 ```json
 {
-  "$type": "ac.foundation.dataset.entry",
+  "$type": "science.alt.dataset.entry",
   "name": "Small Sample Dataset",
-  "schemaRef": "at://did:plc:def456/ac.foundation.dataset.schema/textsample@2.1.0",
+  "schemaRef": "at://did:plc:def456/science.alt.dataset.schema/textsample@2.1.0",
   "storage": {
-    "$type": "ac.foundation.dataset.storageBlobs",
+    "$type": "science.alt.dataset.storageBlobs",
     "blobs": [
       {
         "$type": "blob",
@@ -272,7 +272,7 @@ Index record for a WebDataset-backed dataset.
 
 ---
 
-### `ac.foundation.dataset.lens`
+### `science.alt.dataset.lens`
 
 Bidirectional transformation between two sample types, with code stored in external repositories.
 
@@ -308,10 +308,10 @@ References a function in an external git repository. Code is referenced rather t
 
 ```json
 {
-  "$type": "ac.foundation.dataset.lens",
+  "$type": "science.alt.dataset.lens",
   "name": "RGB to Grayscale Conversion",
-  "sourceSchema": "at://did:plc:abc123/ac.foundation.dataset.schema/rgbimage@1.0.0",
-  "targetSchema": "at://did:plc:abc123/ac.foundation.dataset.schema/grayscaleimage@1.0.0",
+  "sourceSchema": "at://did:plc:abc123/science.alt.dataset.schema/rgbimage@1.0.0",
+  "targetSchema": "at://did:plc:abc123/science.alt.dataset.schema/grayscaleimage@1.0.0",
   "description": "Converts RGB images to grayscale using standard luminosity formula",
   "getterCode": {
     "repository": "https://github.com/alice/vision-lenses",
@@ -340,7 +340,7 @@ References a function in an external git repository. Code is referenced rather t
 
 ## Query Endpoint
 
-### `ac.foundation.dataset.resolveSchema`
+### `science.alt.dataset.resolveSchema`
 
 Resolve a schema by its permanent NSID identifier. When version is omitted, resolves to the most recently created schema with the given NSID. Follows the same pattern as `resolveLabel`.
 
@@ -360,7 +360,7 @@ Resolve a schema by its permanent NSID identifier. When version is omitted, reso
 |-------|------|----------|-------------|
 | `uri` | `string` (at-uri) | yes | AT-URI of the resolved schema record. |
 | `cid` | `string` | yes | CID of the resolved schema record. |
-| `record` | `ref` → `ac.foundation.dataset.schema` | yes | The full schema record. |
+| `record` | `ref` → `science.alt.dataset.schema` | yes | The full schema record. |
 
 #### Errors
 
@@ -372,9 +372,9 @@ Resolve a schema by its permanent NSID identifier. When version is omitted, reso
 
 ## Storage Union Types
 
-The `storage` field on `ac.foundation.dataset.entry` is a union with two members.
+The `storage` field on `science.alt.dataset.entry` is a union with two members.
 
-### `ac.foundation.dataset.storageExternal`
+### `science.alt.dataset.storageExternal`
 
 External URL-based storage for WebDataset tar archives.
 
@@ -386,7 +386,7 @@ External URL-based storage for WebDataset tar archives.
 
 Use cases: large datasets on S3, HTTP servers, IPFS gateways. No size limits imposed by ATProto.
 
-### `ac.foundation.dataset.storageBlobs`
+### `science.alt.dataset.storageBlobs`
 
 ATProto PDS blob-based storage for WebDataset tar archives.
 
@@ -422,7 +422,7 @@ Both `schemaType` and `arrayFormat` use the same extensibility pattern:
 3. New values are added to `knownValues` and a new token def is added — no breaking changes.
 4. Consumers should tolerate unknown values (forward compatibility).
 
-### `ac.foundation.dataset.schemaType`
+### `science.alt.dataset.schemaType`
 
 Registry of schema format identifiers. The `schemaType` field on a schema record declares which union member appears in the `schema` field.
 
@@ -432,13 +432,13 @@ Registry of schema format identifiers. The `schemaType` field on a schema record
 
 Extension path: to add e.g. Avro support, add `"avro"` to `knownValues`, create an `#avro` token def, and add a `schema#avroFormat` object def to the schema union.
 
-### `ac.foundation.dataset.arrayFormat`
+### `science.alt.dataset.arrayFormat`
 
 Registry of array serialization format identifiers. Schema records reference these via the `arrayFormatVersions` mapping in `#jsonSchemaFormat`.
 
 | Token | knownValue | Current Version | Shim URL Pattern | Description |
 |-------|------------|-----------------|------------------|-------------|
-| `#ndarrayBytes` | `"ndarrayBytes"` | `1.0.0` | `https://foundation.ac/schemas/atdata-ndarray-bytes/{version}/` | Numpy `.npy` binary format |
+| `#ndarrayBytes` | `"ndarrayBytes"` | `1.0.0` | `https://alt.science/schemas/atdata-ndarray-bytes/{version}/` | Numpy `.npy` binary format |
 
 Each format has versioned specifications maintained at canonical URLs by foundation.ac.
 
@@ -454,7 +454,7 @@ The `storage` field on dataset records is a standard union (implicitly open in A
 
 The NDArray shim (`ndarray_shim.json`) bridges ATProto/JSON Schema and numpy. It defines how NDArray fields are represented in JSON Schema while remaining compatible with atdata's msgpack/WebDataset serialization.
 
-- **`$id`:** `https://foundation.ac/schemas/atdata-ndarray-bytes/1.0.0`
+- **`$id`:** `https://alt.science/schemas/atdata-ndarray-bytes/1.0.0`
 - **Version:** `1.0.0`
 
 ### `$defs.ndarray` definition
@@ -490,9 +490,9 @@ atdata's codegen reads these fields to produce Python dataclasses with proper `N
 Concrete URI templates for each collection:
 
 ```
-at://{did}/ac.foundation.dataset.schema/{nsid}@{semver}
-at://{did}/ac.foundation.dataset.entry/{tid}
-at://{did}/ac.foundation.dataset.lens/{tid}
+at://{did}/science.alt.dataset.schema/{nsid}@{semver}
+at://{did}/science.alt.dataset.entry/{tid}
+at://{did}/science.alt.dataset.lens/{tid}
 ```
 
 - **`{did}`** — Decentralized Identifier of the repository owner (e.g., `did:plc:abc123`).
@@ -505,11 +505,11 @@ at://{did}/ac.foundation.dataset.lens/{tid}
 
 | Lexicon NSID | Python Type | Source File |
 |-------------|-------------|-------------|
-| `ac.foundation.dataset.schema` | `SchemaRecord` | `src/atdata/atmosphere/schema.py` |
-| `ac.foundation.dataset.entry` | `DatasetEntry` | `src/atdata/atmosphere/records.py` |
-| `ac.foundation.dataset.lens` | `LensRecord` | `src/atdata/atmosphere/lens.py` |
+| `science.alt.dataset.schema` | `SchemaRecord` | `src/atdata/atmosphere/schema.py` |
+| `science.alt.dataset.entry` | `DatasetEntry` | `src/atdata/atmosphere/records.py` |
+| `science.alt.dataset.lens` | `LensRecord` | `src/atdata/atmosphere/lens.py` |
 | (all types) | `AtUri`, `FieldType`, `FieldDef`, `StorageLocation`, `CodeReference` | `src/atdata/atmosphere/_types.py` |
 | (blob storage) | `PDSBlobStore` | `src/atdata/atmosphere/store.py` |
 | (lexicon loader) | `load_lexicon()`, `list_lexicons()` | `src/atdata/lexicons/__init__.py` |
 
-The namespace constant `LEXICON_NAMESPACE = "ac.foundation.dataset"` is defined in `src/atdata/atmosphere/_types.py`.
+The namespace constant `LEXICON_NAMESPACE = "science.alt.dataset"` is defined in `src/atdata/atmosphere/_types.py`.

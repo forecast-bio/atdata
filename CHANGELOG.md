@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+- **Namespace rename**: Lexicon namespace renamed from `ac.foundation.dataset` to `science.alt.dataset` across all source, tests, and documentation. Lexicon JSON files vendored from [forecast-bio/atdata-lexicon](https://github.com/forecast-bio/atdata-lexicon) with NSID-to-path directory structure. Lexicon loader updated to resolve NSIDs via path traversal. Added `label` and `resolveLabel` to `LEXICON_IDS`. (#71)
+
 ## [0.5.1b1] - 2026-02-16
 
 ### Fixed

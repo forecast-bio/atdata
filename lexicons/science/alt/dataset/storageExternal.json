@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "ac.foundation.dataset.storageExternal",
+  "id": "science.alt.dataset.storageExternal",
   "defs": {
     "main": {
       "type": "object",
