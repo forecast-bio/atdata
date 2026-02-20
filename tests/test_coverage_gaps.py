@@ -240,7 +240,7 @@ class TestIndexEdgeCases:
     @pytest.mark.parametrize(
         "ref",
         [
-            "at://did:plc:abc/ac.foundation.dataset.schema/rkey123",
+            "at://did:plc:abc/science.alt.dataset.schema/rkey123",
             "@foundation.ac/MnistSample@1.0.0",
         ],
     )
@@ -272,7 +272,7 @@ class TestIndexEdgeCases:
     @pytest.mark.parametrize(
         "ref",
         [
-            "at://did:plc:abc/ac.foundation.dataset.schema/rkey",
+            "at://did:plc:abc/science.alt.dataset.schema/rkey",
             "@foundation.ac/MnistSample@1.0.0",
         ],
     )

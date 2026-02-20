@@ -111,9 +111,9 @@ client.login('handle', 'password')
 response = client.com.atproto.repo.create_record(
     data={
         'repo': client.me.did,                    # Your DID
-        'collection': 'ac.foundation.dataset.sampleSchema',  # Custom NSID
+        'collection': 'science.alt.dataset.sampleSchema',  # Custom NSID
         'record': {
-            '$type': 'ac.foundation.dataset.sampleSchema',
+            '$type': 'science.alt.dataset.sampleSchema',
             # ... your record fields
         },
         'validate': False  # Skip lexicon validation for custom schemas
@@ -121,7 +121,7 @@ response = client.com.atproto.repo.create_record(
 )
 
 # Response contains:
-# - uri: AT URI for the record (at://did:plc:.../ac.foundation.dataset.sampleSchema/...)
+# - uri: AT URI for the record (at://did:plc:.../science.alt.dataset.sampleSchema/...)
 # - cid: Content hash of the record
 ```
 
@@ -131,10 +131,10 @@ response = client.com.atproto.repo.create_record(
 response = client.com.atproto.repo.put_record(
     data={
         'repo': client.me.did,
-        'collection': 'ac.foundation.dataset.sampleSchema',
+        'collection': 'science.alt.dataset.sampleSchema',
         'rkey': 'my-schema-key',  # Explicit record key
         'record': {
-            '$type': 'ac.foundation.dataset.sampleSchema',
+            '$type': 'science.alt.dataset.sampleSchema',
             # ... fields
         },
         'validate': False
@@ -148,7 +148,7 @@ response = client.com.atproto.repo.put_record(
 response = client.com.atproto.repo.get_record(
     params={
         'repo': 'did:plc:...',
-        'collection': 'ac.foundation.dataset.sampleSchema',
+        'collection': 'science.alt.dataset.sampleSchema',
         'rkey': 'my-schema-key'
     }
 )
@@ -161,7 +161,7 @@ response = client.com.atproto.repo.get_record(
 response = client.com.atproto.repo.list_records(
     params={
         'repo': 'did:plc:...',
-        'collection': 'ac.foundation.dataset.sampleSchema',
+        'collection': 'science.alt.dataset.sampleSchema',
         'limit': 100
     }
 )
@@ -174,7 +174,7 @@ response = client.com.atproto.repo.list_records(
 client.com.atproto.repo.delete_record(
     data={
         'repo': client.me.did,
-        'collection': 'ac.foundation.dataset.sampleSchema',
+        'collection': 'science.alt.dataset.sampleSchema',
         'rkey': 'my-schema-key'
     }
 )
@@ -188,7 +188,7 @@ From [GitHub Discussion #3116](https://github.com/bluesky-social/atproto/discuss
 
 The PDS stores any JSON data in any collection without requiring prior knowledge of the schema. This means:
 
-1. We can publish `ac.foundation.dataset.*` records immediately
+1. We can publish `science.alt.dataset.*` records immediately
 2. Set `validate: False` to bypass lexicon validation
 3. Rate limits and account bans prevent abuse, not schema enforcement
 
@@ -197,7 +197,7 @@ The PDS stores any JSON data in any collection without requiring prior knowledge
 Records are addressed using AT URIs:
 
 ```
-at://did:plc:abcd1234/ac.foundation.dataset.sampleSchema/record-key
+at://did:plc:abcd1234/science.alt.dataset.sampleSchema/record-key
 └──────────────────────┘ └──────────────────────────────────┘ └────────┘
        authority                    collection                   rkey
 ```
@@ -220,8 +220,8 @@ print(uri.rkey)        # key123
 ```python
 from atproto_core import NSID
 
-nsid = NSID.from_str('ac.foundation.dataset.sampleSchema')
-print(nsid.authority)  # ac.foundation.dataset
+nsid = NSID.from_str('science.alt.dataset.sampleSchema')
+print(nsid.authority)  # science.alt.dataset
 print(nsid.name)       # sampleSchema
 ```
 

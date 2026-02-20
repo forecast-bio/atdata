@@ -22,7 +22,7 @@ Python class for the sample type.
 ...     print(ds["name"], ds["schemaRef"])
 >>>
 >>> # Get a specific dataset record
->>> record = loader.get("at://did:plc:abc/ac.foundation.dataset.entry/xyz")
+>>> record = loader.get("at://did:plc:abc/science.alt.dataset.entry/xyz")
 ```
 
 ## Methods

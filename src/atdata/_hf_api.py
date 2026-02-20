@@ -483,7 +483,7 @@ def _is_at_uri(path: str) -> bool:
     """Check if path is an AT Protocol URI (at://...).
 
     Examples:
-        >>> _is_at_uri("at://did:plc:abc123/ac.foundation.dataset.entry/my-ds")
+        >>> _is_at_uri("at://did:plc:abc123/science.alt.dataset.entry/my-ds")
         True
         >>> _is_at_uri("@local/my-dataset")
         False
@@ -797,7 +797,7 @@ def load_dataset(
 
     Args:
         path: Path to dataset. Can be:
-            - AT URI: "at://did:plc:abc/ac.foundation.dataset.entry/rkey"
+            - AT URI: "at://did:plc:abc/science.alt.dataset.entry/rkey"
             - Index lookup: "@handle/dataset-name" or "@local/dataset-name"
             - WebDataset brace notation: "path/to/{train,test}-{000..099}.tar"
             - Local directory: "./data/" (scans for .tar files)

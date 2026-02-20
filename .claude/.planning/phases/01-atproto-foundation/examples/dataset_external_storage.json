@@ -1,9 +1,9 @@
 {
-  "$type": "ac.foundation.dataset.entry",
+  "$type": "science.alt.dataset.entry",
   "name": "CIFAR-10 Training Set",
-  "schemaRef": "at://did:plc:abc123/ac.foundation.dataset.schema/imageclassification@1.0.0",
+  "schemaRef": "at://did:plc:abc123/science.alt.dataset.schema/imageclassification@1.0.0",
   "storage": {
-    "$type": "ac.foundation.dataset.storageExternal",
+    "$type": "science.alt.dataset.storageExternal",
     "urls": [
       "s3://my-bucket/cifar10-train-{000000..000049}.tar"
     ]

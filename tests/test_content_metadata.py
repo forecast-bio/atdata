@@ -55,7 +55,7 @@ class TestLexDatasetEntryContentMetadata:
     def _make_record(self, **kwargs):
         defaults = dict(
             name="TestDS",
-            schema_ref="at://did:plc:abc/ac.foundation.dataset.schema/xyz",
+            schema_ref="at://did:plc:abc/science.alt.dataset.schema/xyz",
             storage=StorageHttp(shards=[]),
         )
         defaults.update(kwargs)
@@ -69,12 +69,12 @@ class TestLexDatasetEntryContentMetadata:
 
     def test_to_record_includes_metadata_schema_ref(self):
         rec = self._make_record(
-            metadata_schema_ref="at://did:plc:abc/ac.foundation.dataset.schema/meta1"
+            metadata_schema_ref="at://did:plc:abc/science.alt.dataset.schema/meta1"
         )
         d = rec.to_record()
         assert (
             d["metadataSchemaRef"]
-            == "at://did:plc:abc/ac.foundation.dataset.schema/meta1"
+            == "at://did:plc:abc/science.alt.dataset.schema/meta1"
         )
 
     def test_to_record_includes_content_metadata(self):
@@ -95,7 +95,7 @@ class TestLexDatasetEntryContentMetadata:
 
     def test_roundtrip_with_content_metadata(self):
         original = self._make_record(
-            metadata_schema_ref="at://did:plc:abc/ac.foundation.dataset.schema/meta1",
+            metadata_schema_ref="at://did:plc:abc/science.alt.dataset.schema/meta1",
             content_metadata={
                 "instrument": "Nikon A1R",
                 "acquisition_date": "2025-06-15",
@@ -287,7 +287,7 @@ class TestDatasetPublisherContentMetadata:
         """_create_record passes content metadata to LexDatasetEntry."""
         mock_client = Mock()
         mock_client.create_record.return_value = Mock(
-            uri="at://did:plc:abc/ac.foundation.dataset.entry/xyz"
+            uri="at://did:plc:abc/science.alt.dataset.entry/xyz"
         )
         publisher = DatasetPublisher(mock_client)
 
@@ -311,7 +311,7 @@ class TestDatasetPublisherContentMetadata:
         """_create_record omits content metadata fields when None."""
         mock_client = Mock()
         mock_client.create_record.return_value = Mock(
-            uri="at://did:plc:abc/ac.foundation.dataset.entry/xyz"
+            uri="at://did:plc:abc/science.alt.dataset.entry/xyz"
         )
         publisher = DatasetPublisher(mock_client)
 

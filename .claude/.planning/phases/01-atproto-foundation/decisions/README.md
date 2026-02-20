@@ -68,7 +68,7 @@ This directory contains detailed analysis and recommendations for the critical d
 | #46 | Lens code storage | ✅ Decided | External repos (GitHub + tangled.org) |
 | #47 | WebDataset storage | ✅ Decided | Hybrid (URLs + blobs from start) |
 | #48 | Schema evolution | ✅ Decided | rkey={NSID}@{semver} + migration Lenses |
-| #49 | Lexicon namespace | ✅ Decided | `ac.foundation.dataset.*` |
+| #49 | Lexicon namespace | ✅ Decided | `science.alt.dataset.*` |
 | #50 | Validation process | ⏳ Ready | Proceed with finalized decisions |
 | #51 | Architectural appraisal | ✅ Complete | See [assessment.md](assessment.md) |
 

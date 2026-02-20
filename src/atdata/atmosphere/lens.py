@@ -1,7 +1,7 @@
 """Lens transformation publishing for ATProto.
 
 This module provides classes for publishing Lens transformation records to
-ATProto. Lenses are published as ``ac.foundation.dataset.lens`` records.
+ATProto. Lenses are published as ``science.alt.dataset.lens`` records.
 
 Note:
     For security reasons, lens code is stored as references to git repositories
@@ -35,8 +35,8 @@ class LensPublisher:
         >>> publisher = LensPublisher(atmo)
         >>> uri = publisher.publish(
         ...     name="my_lens",
-        ...     source_schema_uri="at://did:plc:abc/ac.foundation.dataset.schema/source",
-        ...     target_schema_uri="at://did:plc:abc/ac.foundation.dataset.schema/target",
+        ...     source_schema_uri="at://did:plc:abc/science.alt.dataset.schema/source",
+        ...     target_schema_uri="at://did:plc:abc/science.alt.dataset.schema/target",
         ...     code_repository="https://github.com/user/repo",
         ...     code_commit="abc123def456",
         ...     getter_path="mymodule.lenses:my_lens",
@@ -193,7 +193,7 @@ class LensLoader:
         >>> atmo = Atmosphere.login("handle", "password")
         >>> loader = LensLoader(atmo)
         >>>
-        >>> record = loader.get("at://did:plc:abc/ac.foundation.dataset.lens/xyz")
+        >>> record = loader.get("at://did:plc:abc/science.alt.dataset.lens/xyz")
         >>> print(record["name"])
         >>> print(record["sourceSchema"])
         >>> print(record.get("getterCode", {}).get("repository"))

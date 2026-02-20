@@ -1,8 +1,8 @@
 {
-  "$type": "ac.foundation.dataset.lens",
+  "$type": "science.alt.dataset.lens",
   "name": "RGB to Grayscale Conversion",
-  "sourceSchema": "at://did:plc:abc123/ac.foundation.dataset.schema/rgbimage@1.0.0",
-  "targetSchema": "at://did:plc:abc123/ac.foundation.dataset.schema/grayscaleimage@1.0.0",
+  "sourceSchema": "at://did:plc:abc123/science.alt.dataset.schema/rgbimage@1.0.0",
+  "targetSchema": "at://did:plc:abc123/science.alt.dataset.schema/grayscaleimage@1.0.0",
   "description": "Converts RGB images to grayscale using standard luminosity formula",
   "getterCode": {
     "repository": "https://github.com/alice/vision-lenses",

@@ -6,13 +6,13 @@ This directory contains the ATProto Lexicon JSON definitions for the distributed
 
 ### Core Record Types
 
-1. **[ac.foundation.dataset.schema](ac.foundation.dataset.schema.json)**
+1. **[science.alt.dataset.schema](science.alt.dataset.schema.json)**
    - Defines PackableSample-compatible sample types using JSON Schema
    - Supports versioning via rkey format: `{NSID}@{semver}`
    - Includes NDArray shim for ML/scientific data types
    - Example: [schema_example.json](../examples/schema_example.json)
 
-2. **[ac.foundation.dataset.entry](ac.foundation.dataset.entry.json)**
+2. **[science.alt.dataset.entry](science.alt.dataset.entry.json)**
    - Index records for WebDataset-backed datasets
    - Hybrid storage support (external URLs + PDS blobs)
    - References schema for type information
@@ -20,7 +20,7 @@ This directory contains the ATProto Lexicon JSON definitions for the distributed
      - [External storage](../examples/dataset_external_storage.json)
      - [Blob storage](../examples/dataset_blob_storage.json)
 
-3. **[ac.foundation.dataset.lens](ac.foundation.dataset.lens.json)**
+3. **[science.alt.dataset.lens](science.alt.dataset.lens.json)**
    - Bidirectional transformations between sample types
    - External code references (GitHub, tangled.org)
    - Language metadata for multi-language support
@@ -28,7 +28,7 @@ This directory contains the ATProto Lexicon JSON definitions for the distributed
 
 ### Query APIs
 
-4. **[ac.foundation.dataset.resolveSchema](ac.foundation.dataset.resolveSchema.json)**
+4. **[science.alt.dataset.resolveSchema](science.alt.dataset.resolveSchema.json)**
    - Query to get the latest version of a schema by NSID
    - Returns full record + all available versions
    - Handles the custom rkey versioning scheme
@@ -37,7 +37,7 @@ This directory contains the ATProto Lexicon JSON definitions for the distributed
 
 ### 1. Namespace
 
-All Lexicons use the `ac.foundation.dataset.*` namespace:
+All Lexicons use the `science.alt.dataset.*` namespace:
 - `ac.foundation` - Organization namespace
 - `dataset` - Domain (distributed datasets)
 - Specific record types: `schema`, `record`, `lens`
@@ -151,7 +151,7 @@ schema_uri = publisher.publish_schema(
     version="1.0.0",
     description="RGB image with label"
 )
-# Result: at://did:plc:abc123/ac.foundation.dataset.schema/imagesample@1.0.0
+# Result: at://did:plc:abc123/science.alt.dataset.schema/imagesample@1.0.0
 ```
 
 ### Publishing a Dataset
@@ -226,7 +226,7 @@ See [06_lexicon_validation.md](../decisions/06_lexicon_validation.md) for valida
 
 ```bash
 # Validate Lexicon JSON (requires ATProto tooling)
-atproto-lexicon validate ac.foundation.dataset.schema.json
+atproto-lexicon validate science.alt.dataset.schema.json
 
 # Validate example records
 python scripts/validate_examples.py
@@ -236,10 +236,10 @@ python scripts/validate_examples.py
 
 ### Potential Additional Lexicons
 
-- `ac.foundation.dataset.collection` - Group multiple datasets
-- `ac.foundation.dataset.benchmark` - Evaluation results on datasets
-- `ac.foundation.dataset.attestation` - Formal correctness proofs for Lenses
-- `ac.foundation.dataset.verification` - Trusted DID attestations
+- `science.alt.dataset.collection` - Group multiple datasets
+- `science.alt.dataset.benchmark` - Evaluation results on datasets
+- `science.alt.dataset.attestation` - Formal correctness proofs for Lenses
+- `science.alt.dataset.verification` - Trusted DID attestations
 
 ### Schema Type Extensions
 

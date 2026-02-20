@@ -1382,7 +1382,7 @@ class Index:
             ref: Schema reference string. Supports:
                 - New format: ``atdata://local/schema/{name}@{version}``
                 - Legacy format: ``local://schemas/{module.Class}@{version}``
-                - AT URI: ``at://did:plc:xxx/ac.foundation.dataset.schema/rkey``
+                - AT URI: ``at://did:plc:xxx/science.alt.dataset.schema/rkey``
                 - Handle ref: ``@handle/TypeName@version``
 
         Returns:

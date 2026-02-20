@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "ac.foundation.dataset.storageS3",
+  "id": "science.alt.dataset.storageS3",
   "defs": {
     "main": {
       "type": "object",
@@ -52,7 +52,7 @@
         },
         "checksum": {
           "type": "ref",
-          "ref": "ac.foundation.dataset.entry#shardChecksum",
+          "ref": "science.alt.dataset.entry#shardChecksum",
           "description": "Content hash for integrity verification"
         }
       }

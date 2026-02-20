@@ -283,7 +283,7 @@ def validate_ndarray(
 
 The NDArray shim definition should be published at a canonical URI:
 
-**Proposed**: `at://did:plc:foundation/ac.foundation.dataset.ndarray-shim/1.0.0`
+**Proposed**: `at://did:plc:foundation/science.alt.dataset.ndarray-shim/1.0.0`
 
 This allows schemas to reference a standard definition:
 
@@ -291,7 +291,7 @@ This allows schemas to reference a standard definition:
 {
   "properties": {
     "image": {
-      "$ref": "at://did:plc:foundation/ac.foundation.dataset.ndarray-shim/1.0.0#/$defs/ndarray",
+      "$ref": "at://did:plc:foundation/science.alt.dataset.ndarray-shim/1.0.0#/$defs/ndarray",
       "x-atdata-dtype": "uint8"
     }
   }

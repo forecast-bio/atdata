@@ -1,40 +1,44 @@
 """ATProto Lexicon definitions for the atdata federation.
 
 This package contains the canonical Lexicon JSON files for the
-``ac.foundation.dataset`` namespace. These define the ATProto record
+``science.alt.dataset`` namespace. These define the ATProto record
 types used by atdata for publishing schemas, datasets, and lenses
 to the AT Protocol network.
 
 Lexicons:
-    ac.foundation.dataset.schema
+    science.alt.dataset.schema
         Versioned sample type definitions (PackableSample schemas).
-    ac.foundation.dataset.entry
+    science.alt.dataset.entry
         Dataset index records pointing to WebDataset storage.
-    ac.foundation.dataset.lens
+    science.alt.dataset.lens
         Bidirectional transformations between schemas.
-    ac.foundation.dataset.schemaType
+    science.alt.dataset.label
+        Named labels pointing to dataset entries with optional versioning.
+    science.alt.dataset.schemaType
         Extensible token for schema format identifiers.
-    ac.foundation.dataset.arrayFormat
+    science.alt.dataset.arrayFormat
         Extensible token for array serialization formats.
-    ac.foundation.dataset.storageHttp
+    science.alt.dataset.storageHttp
         HTTP/HTTPS URL-based storage with per-shard checksums.
-    ac.foundation.dataset.storageS3
+    science.alt.dataset.storageS3
         S3/S3-compatible object storage with per-shard checksums.
-    ac.foundation.dataset.storageBlobs
+    science.alt.dataset.storageBlobs
         ATProto PDS blob-based storage.
-    ac.foundation.dataset.storageExternal
+    science.alt.dataset.storageExternal
         (Deprecated) External URL-based storage.
-    ac.foundation.dataset.resolveSchema
+    science.alt.dataset.resolveSchema
         XRPC query for resolving a schema by NSID, optionally pinned to a version.
+    science.alt.dataset.resolveLabel
+        XRPC query for resolving a named dataset label.
 
 The ``ndarray_shim.json`` file defines the standard NDArray type
 for use within JSON Schema definitions.
 
 Examples:
     >>> from atdata.lexicons import load_lexicon
-    >>> schema_lex = load_lexicon("ac.foundation.dataset.schema")
+    >>> schema_lex = load_lexicon("science.alt.dataset.schema")
     >>> schema_lex["id"]
-    'ac.foundation.dataset.schema'
+    'science.alt.dataset.schema'
 """
 
 import json
@@ -43,12 +47,13 @@ from functools import lru_cache
 from typing import Any
 
 
-NAMESPACE = "ac.foundation.dataset"
+NAMESPACE = "science.alt.dataset"
 
 LEXICON_IDS = (
     f"{NAMESPACE}.schema",
     f"{NAMESPACE}.entry",
     f"{NAMESPACE}.lens",
+    f"{NAMESPACE}.label",
     f"{NAMESPACE}.schemaType",
     f"{NAMESPACE}.arrayFormat",
     f"{NAMESPACE}.storageHttp",
@@ -56,6 +61,7 @@ LEXICON_IDS = (
     f"{NAMESPACE}.storageBlobs",
     f"{NAMESPACE}.storageExternal",  # deprecated
     f"{NAMESPACE}.resolveSchema",
+    f"{NAMESPACE}.resolveLabel",
 )
 
 
@@ -63,8 +69,13 @@ LEXICON_IDS = (
 def load_lexicon(lexicon_id: str) -> dict[str, Any]:
     """Load a lexicon definition by its NSID.
 
+    Uses the NSID-to-path convention: dots become directory separators,
+    with the final segment as the filename.  For example,
+    ``science.alt.dataset.schema`` resolves to
+    ``science/alt/dataset/schema.json``.
+
     Args:
-        lexicon_id: The lexicon NSID, e.g. ``"ac.foundation.dataset.schema"``.
+        lexicon_id: The lexicon NSID, e.g. ``"science.alt.dataset.schema"``.
 
     Returns:
         Parsed JSON dictionary containing the lexicon definition.
@@ -73,18 +84,26 @@ def load_lexicon(lexicon_id: str) -> dict[str, Any]:
         FileNotFoundError: If no lexicon file exists for the given ID.
 
     Examples:
-        >>> lex = load_lexicon("ac.foundation.dataset.schema")
+        >>> lex = load_lexicon("science.alt.dataset.schema")
         >>> lex["defs"]["main"]["type"]
         'record'
     """
-    filename = f"{lexicon_id}.json"
-    ref = resources.files(__package__).joinpath(filename)
+    # Convert NSID to path: science.alt.dataset.schema → science/alt/dataset/schema.json
+    parts = lexicon_id.split(".")
+    path_parts = parts[:-1]  # directory components
+    filename = f"{parts[-1]}.json"  # final segment + .json
+
+    ref = resources.files(__package__)
+    for part in path_parts:
+        ref = ref.joinpath(part)
+    ref = ref.joinpath(filename)
+
     try:
         text = ref.read_text(encoding="utf-8")
     except FileNotFoundError:
         raise FileNotFoundError(
             f"No lexicon file found for '{lexicon_id}'. "
-            f"Expected {filename} in {__package__}."
+            f"Expected {'/'.join(path_parts)}/{filename} in {__package__}."
         ) from None
     return json.loads(text)
 
@@ -112,7 +131,7 @@ def list_lexicons() -> tuple[str, ...]:
         Tuple of lexicon ID strings.
 
     Examples:
-        >>> "ac.foundation.dataset.schema" in list_lexicons()
+        >>> "science.alt.dataset.schema" in list_lexicons()
         True
     """
     return LEXICON_IDS

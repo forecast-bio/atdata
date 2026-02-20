@@ -21,6 +21,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **XRPC query workaround docs**: Documented client-side `list_records()` + filter patterns used as temporary workarounds pending AppView support (#56)
 
 ### Changed
+- Consume atdata-lexicon and rename namespace ac.foundation.dataset → science.alt.dataset (#800)
+- Validate: run tests and lint (#806)
+- Rename namespace in docs and reference files (#805)
+- Rename namespace in all test files (#804)
+- Rename namespace ac.foundation.dataset → science.alt.dataset in all source files (#803)
+- Update lexicon loader for NSID-to-path structure (#802)
+- Vendor lexicon JSON files from atdata-lexicon v0.2.0b1 (#801)
 - Adversarial review: rename-dataset-entry branch codebase & test suite (#802)
 - Batch cleanup: dead code, misleading deprecation warnings, hashlib import, duplicate constant (#807)
 - BUG: select() UnboundLocalError on empty dataset with non-empty indices (#806)
