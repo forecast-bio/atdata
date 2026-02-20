@@ -18,6 +18,9 @@ from atdata.lexicons import (
 # the top-level vendor directory (lexicons/science/alt/dataset/).
 REPO_ROOT = Path(__file__).resolve().parent.parent
 LEXICON_DIR = REPO_ROOT / "lexicons" / "science" / "alt" / "dataset"
+PKG_LEXICON_DIR = (
+    REPO_ROOT / "src" / "atdata" / "lexicons" / "science" / "alt" / "dataset"
+)
 _HAS_LEXICON_FILES = (LEXICON_DIR / "schema.json").exists()
 
 
@@ -38,7 +41,7 @@ class TestNamespace:
             assert lid.startswith(NAMESPACE), f"{lid} missing namespace prefix"
 
     def test_lexicon_ids_count(self):
-        assert len(LEXICON_IDS) >= 10
+        assert len(LEXICON_IDS) == 12
 
 
 @pytest.mark.skipif(not _HAS_LEXICON_FILES, reason="lexicon JSON files not found")
@@ -106,6 +109,23 @@ class TestLoadLexicon:
         resolve = load_lexicon("science.alt.dataset.resolveLabel")
         assert resolve["defs"]["main"]["type"] == "query"
 
+    @pytest.mark.parametrize(
+        "bad_nsid",
+        [
+            "",
+            "schema",
+            ".leading.dot",
+            "trailing.dot.",
+            "a",
+            "too.few",
+        ],
+    )
+    def test_malformed_nsid_raises_file_not_found(self, bad_nsid: str):
+        """Malformed NSIDs should raise FileNotFoundError, not crash."""
+        load_lexicon.cache_clear()
+        with pytest.raises((FileNotFoundError, TypeError)):
+            load_lexicon(bad_nsid)
+
 
 class TestLoadNdarrayShim:
     """Tests for load_ndarray_shim()."""
@@ -139,3 +159,25 @@ class TestListLexicons:
 
     def test_matches_constant(self):
         assert list_lexicons() is LEXICON_IDS
+
+
+@pytest.mark.skipif(not _HAS_LEXICON_FILES, reason="lexicon JSON files not found")
+class TestLexiconSync:
+    """Verify top-level lexicons/ and src/atdata/lexicons/ stay in sync."""
+
+    def test_vendored_and_package_lexicons_identical(self):
+        """Every JSON file in lexicons/science/alt/dataset/ must have an
+        identical copy in src/atdata/lexicons/science/alt/dataset/."""
+        for vendor_path in sorted(LEXICON_DIR.glob("*.json")):
+            pkg_path = PKG_LEXICON_DIR / vendor_path.name
+            assert pkg_path.exists(), f"Package copy missing: {pkg_path}"
+            vendor_data = json.loads(vendor_path.read_text(encoding="utf-8"))
+            pkg_data = json.loads(pkg_path.read_text(encoding="utf-8"))
+            assert vendor_data == pkg_data, f"Mismatch: {vendor_path.name}"
+
+    def test_ndarray_shim_identical(self):
+        vendor = REPO_ROOT / "lexicons" / "ndarray_shim.json"
+        pkg = REPO_ROOT / "src" / "atdata" / "lexicons" / "ndarray_shim.json"
+        vendor_data = json.loads(vendor.read_text(encoding="utf-8"))
+        pkg_data = json.loads(pkg.read_text(encoding="utf-8"))
+        assert vendor_data == pkg_data
