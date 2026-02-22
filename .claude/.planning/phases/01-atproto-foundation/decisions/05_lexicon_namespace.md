@@ -10,15 +10,15 @@
 We're going to use an org NSID for the steward organization as the base:
 
 ```
-ac.foundation.dataset.*
+science.alt.dataset.*
 ```
 
 The choices we have then are
 
 ```
-ac.foundation.dataset.schema
-ac.foundation.dataset.entry
-ac.foundation.dataset.lens
+science.alt.dataset.schema
+science.alt.dataset.entry
+science.alt.dataset.lens
 ```
 
 ---

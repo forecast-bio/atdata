@@ -460,7 +460,7 @@ class TestAtUriParsing:
 
     def test_uri_str_roundtrip(self):
         """String conversion should roundtrip."""
-        original = "at://did:plc:test123/ac.foundation.dataset.schema/xyz789"
+        original = "at://did:plc:test123/science.alt.dataset.schema/xyz789"
         uri = AtUri.parse(original)
         assert str(uri) == original
 

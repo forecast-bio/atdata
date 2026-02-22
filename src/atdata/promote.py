@@ -134,7 +134,7 @@ def promote_to_atmosphere(
         >>> entry = local_index.get_dataset("mnist-train")
         >>> uri = promote_to_atmosphere(entry, local_index, atmo)
         >>> print(uri)
-        at://did:plc:abc123/ac.foundation.dataset.datasetIndex/...
+        at://did:plc:abc123/science.alt.dataset.datasetIndex/...
     """
     from .atmosphere import DatasetPublisher
     from ._schema_codec import _schema_to_type

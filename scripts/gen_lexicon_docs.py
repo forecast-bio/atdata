@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate Quarto lexicon reference documentation from lexicon JSON files.
 
-Reads all ``ac.foundation.dataset.*.json`` files in the ``lexicons/`` directory,
+Reads all ``science.alt.dataset.*.json`` files in the ``lexicons/`` directory,
 parses them according to the ATProto Lexicon v1 specification, and emits a
 single Quarto ``.qmd`` page suitable for the Reference section of the docs.
 
@@ -28,16 +28,16 @@ from typing import Any
 # ---------------------------------------------------------------------------
 
 _NSID_ORDER = [
-    "ac.foundation.dataset.schema",
-    "ac.foundation.dataset.entry",
-    "ac.foundation.dataset.lens",
-    "ac.foundation.dataset.storageHttp",
-    "ac.foundation.dataset.storageS3",
-    "ac.foundation.dataset.storageBlobs",
-    "ac.foundation.dataset.storageExternal",
-    "ac.foundation.dataset.schemaType",
-    "ac.foundation.dataset.arrayFormat",
-    "ac.foundation.dataset.resolveSchema",
+    "science.alt.dataset.schema",
+    "science.alt.dataset.entry",
+    "science.alt.dataset.lens",
+    "science.alt.dataset.storageHttp",
+    "science.alt.dataset.storageS3",
+    "science.alt.dataset.storageBlobs",
+    "science.alt.dataset.storageExternal",
+    "science.alt.dataset.schemaType",
+    "science.alt.dataset.arrayFormat",
+    "science.alt.dataset.resolveSchema",
 ]
 
 
@@ -319,13 +319,13 @@ def _render_lexicon(path: Path) -> str:
 _PREAMBLE = textwrap.dedent("""\
     ---
     title: "Lexicon Reference"
-    description: "ATProto Lexicon definitions for the ac.foundation.dataset namespace"
+    description: "ATProto Lexicon definitions for the science.alt.dataset namespace"
     ---
 
     {{< include _lexicon-styles.qmd >}}
 
     This page documents the [ATProto Lexicon](https://atproto.com/specs/lexicon)
-    definitions that make up the `ac.foundation.dataset` namespace. These
+    definitions that make up the `science.alt.dataset` namespace. These
     lexicons define the record types, objects, tokens, and queries used by
     atdata for publishing schemas, datasets, and lenses to the AT Protocol
     network.
@@ -389,7 +389,7 @@ def generate(lexicon_dir: Path, output_path: Path) -> None:
     """Generate the lexicon reference .qmd file."""
     # Collect lexicon files (skip ndarray_shim which is JSON Schema, not Lexicon)
     paths: list[tuple[str, Path]] = []
-    for p in sorted(lexicon_dir.glob("ac.foundation.dataset.*.json")):
+    for p in sorted(lexicon_dir.glob("science.alt.dataset.*.json")):
         nsid = p.stem
         paths.append((nsid, p))
 

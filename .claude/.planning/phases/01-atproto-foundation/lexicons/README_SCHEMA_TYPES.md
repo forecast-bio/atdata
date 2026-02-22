@@ -4,19 +4,19 @@ This document explains the token-based registry pattern for atdata schema types.
 
 ## Pattern
 
-Schema types in atdata are managed through the `ac.foundation.dataset.schemaType` Lexicon:
+Schema types in atdata are managed through the `science.alt.dataset.schemaType` Lexicon:
 
-1. **Single Lexicon file**: `ac.foundation.dataset.schemaType.json`
+1. **Single Lexicon file**: `science.alt.dataset.schemaType.json`
 2. **Main def**: String type with `knownValues` listing supported schema types
 3. **Token defs**: Each schema type has a corresponding token def (e.g., `#jsonSchema`)
-4. **Reference in schema**: The `schemaType` field refs to `ac.foundation.dataset.schemaType`
+4. **Reference in schema**: The `schemaType` field refs to `science.alt.dataset.schemaType`
 
 ## Structure
 
 ```json
 {
   "lexicon": 1,
-  "id": "ac.foundation.dataset.schemaType",
+  "id": "science.alt.dataset.schemaType",
   "defs": {
     "main": {
       "type": "string",
@@ -37,12 +37,12 @@ The `schemaType` field references the schemaType Lexicon:
 
 ```json
 {
-  "$type": "ac.foundation.dataset.schema",
+  "$type": "science.alt.dataset.schema",
   "name": "ImageSample",
   "version": "1.0.0",
   "schemaType": "jsonSchema",
   "schema": {
-    "$type": "ac.foundation.dataset.schema#jsonSchemaFormat",
+    "$type": "science.alt.dataset.schema#jsonSchemaFormat",
     ...
   }
 }
@@ -54,7 +54,7 @@ In the Lexicon definition:
 {
   "schemaType": {
     "type": "ref",
-    "ref": "ac.foundation.dataset.schemaType"
+    "ref": "science.alt.dataset.schemaType"
   }
 }
 ```
@@ -65,7 +65,7 @@ To add support for a new schema format (e.g., Avro, Protobuf):
 
 ### 1. Add token def to schemaType Lexicon
 
-Edit `ac.foundation.dataset.schemaType.json`:
+Edit `science.alt.dataset.schemaType.json`:
 
 ```json
 {
@@ -85,7 +85,7 @@ Edit `ac.foundation.dataset.schemaType.json`:
 
 ### 2. Add format def to schema Lexicon
 
-Edit `ac.foundation.dataset.schema.json`:
+Edit `science.alt.dataset.schema.json`:
 
 ```json
 {
@@ -97,7 +97,7 @@ Edit `ac.foundation.dataset.schema.json`:
       "properties": {
         "$type": {
           "type": "string",
-          "const": "ac.foundation.dataset.schema#avroFormat"
+          "const": "science.alt.dataset.schema#avroFormat"
         },
         "type": {
           "type": "string"
@@ -120,8 +120,8 @@ In schema main record:
   "schema": {
     "type": "union",
     "refs": [
-      "ac.foundation.dataset.schema#jsonSchemaFormat",
-      "ac.foundation.dataset.schema#avroFormat"
+      "science.alt.dataset.schema#jsonSchemaFormat",
+      "science.alt.dataset.schema#avroFormat"
     ],
     "closed": false
   }
@@ -142,7 +142,7 @@ This pattern provides:
 2. **Type Safety**: Token defs provide canonical documentation for each schema type
 3. **Extensibility**: New types added to `knownValues` + token defs without breaking changes
 4. **Validation**: Refs ensure schemaType values are validated against known types
-5. **Discoverability**: Query `ac.foundation.dataset.schemaType` to see all supported types
+5. **Discoverability**: Query `science.alt.dataset.schemaType` to see all supported types
 
 ## References
 

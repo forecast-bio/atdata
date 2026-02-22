@@ -1,7 +1,7 @@
 """Schema publishing and loading for ATProto.
 
 This module provides classes for publishing PackableSample schemas to ATProto
-and loading them back. Schemas are published as ``ac.foundation.dataset.schema``
+and loading them back. Schemas are published as ``science.alt.dataset.schema``
 records.
 """
 
@@ -88,7 +88,7 @@ class SchemaPublisher:
         >>> publisher = SchemaPublisher(atmo)
         >>> uri = publisher.publish(MySample, version="1.0.0")
         >>> print(uri)
-        at://did:plc:.../ac.foundation.dataset.schema/...
+        at://did:plc:.../science.alt.dataset.schema/...
     """
 
     def __init__(self, client: Atmosphere):
@@ -217,7 +217,7 @@ class SchemaPublisher:
 
         if is_ndarray_type(python_type):
             return {
-                "$ref": "https://foundation.ac/schemas/atdata-ndarray-bytes/1.0.0#/$defs/ndarray"
+                "$ref": "https://alt.science/schemas/atdata-ndarray-bytes/1.0.0#/$defs/ndarray"
             }
 
         origin = get_origin(python_type)
@@ -246,12 +246,12 @@ class SchemaLoader:
     schemas from a repository.
 
     Note:
-        The ``ac.foundation.dataset.getLatestSchema`` query lexicon is
+        The ``science.alt.dataset.getLatestSchema`` query lexicon is
         defined but has no AppView to serve it yet. A client-side
         equivalent (fetching all schema records and picking the latest
         version) has not been implemented here. When the AppView ships,
         add a ``resolve()``-style method backed by
-        ``GET /xrpc/ac.foundation.dataset.getLatestSchema``.
+        ``GET /xrpc/science.alt.dataset.getLatestSchema``.
         See also: ``LabelLoader.resolve()`` for the label workaround
         pattern.
 
@@ -259,7 +259,7 @@ class SchemaLoader:
         >>> atmo = Atmosphere.login("handle", "password")
         >>>
         >>> loader = SchemaLoader(atmo)
-        >>> schema = loader.get("at://did:plc:.../ac.foundation.dataset.schema/...")
+        >>> schema = loader.get("at://did:plc:.../science.alt.dataset.schema/...")
         >>> print(schema["name"])
         'MySample'
     """

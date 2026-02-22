@@ -2,7 +2,7 @@
 
 This module provides classes for publishing named label records to ATProto
 and resolving them back to dataset records. Labels are published as
-``ac.foundation.dataset.label`` records.
+``science.alt.dataset.label`` records.
 
 Labels separate dataset identity (CID-addressed records) from naming
 (mutable label records), enabling versioning, renaming, and flexible routing.
@@ -27,7 +27,7 @@ class LabelPublisher:
         >>> publisher = LabelPublisher(atmo)
         >>> uri = publisher.publish(
         ...     name="mnist",
-        ...     dataset_uri="at://did:plc:abc/ac.foundation.dataset.entry/xyz",
+        ...     dataset_uri="at://did:plc:abc/science.alt.dataset.entry/xyz",
         ...     version="1.0.0",
         ...     description="Initial release",
         ... )
@@ -82,7 +82,7 @@ class LabelLoader:
 
     Note:
         The ``resolve()`` method is a **client-side workaround** for the
-        ``ac.foundation.dataset.resolveLabel`` query lexicon, which is
+        ``science.alt.dataset.resolveLabel`` query lexicon, which is
         defined but has no AppView to serve it yet. See ``resolve()`` for
         details and known limitations.
 
@@ -170,11 +170,11 @@ class LabelLoader:
 
         .. note:: **Client-side workaround (no AppView)**
 
-           This method emulates the ``ac.foundation.dataset.resolveLabel``
+           This method emulates the ``science.alt.dataset.resolveLabel``
            query lexicon by fetching all label records via
            ``com.atproto.repo.listRecords`` and filtering in Python.
            When an AppView is available, replace this with a direct
-           ``GET /xrpc/ac.foundation.dataset.resolveLabel`` call.
+           ``GET /xrpc/science.alt.dataset.resolveLabel`` call.
 
            Known limitations of the client-side approach:
 
@@ -200,9 +200,9 @@ class LabelLoader:
         did = self._resolve_did(handle_or_did)
 
         # WORKAROUND: Client-side query (no AppView)
-        # Lexicon: ac.foundation.dataset.resolveLabel
+        # Lexicon: science.alt.dataset.resolveLabel
         # This fetches all records via list_records() and filters in Python.
-        # Replace with GET /xrpc/ac.foundation.dataset.resolveLabel when
+        # Replace with GET /xrpc/science.alt.dataset.resolveLabel when
         # AppView is available.
         # Known limitations:
         #   - Hard-coded limit of 100 records (repos with >100 silently lose results)

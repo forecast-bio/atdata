@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "ac.foundation.dataset.schemaType",
+  "id": "science.alt.dataset.schemaType",
   "defs": {
     "main": {
       "type": "string",
@@ -10,7 +10,7 @@
     },
     "jsonSchema": {
       "type": "token",
-      "description": "JSON Schema Draft 7 format for sample type definitions. When schemaType is 'jsonSchema', the schema field must contain an object conforming to ac.foundation.dataset.schema#jsonSchemaFormat."
+      "description": "JSON Schema Draft 7 format for sample type definitions. When schemaType is 'jsonSchema', the schema field must contain an object conforming to science.alt.dataset.schema#jsonSchemaFormat."
     }
   }
 }

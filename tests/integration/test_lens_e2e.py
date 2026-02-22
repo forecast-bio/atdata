@@ -1,6 +1,6 @@
 """End-to-end integration tests for the lens lifecycle.
 
-Proves the ``ac.foundation.dataset.lens`` lexicon works end-to-end:
+Proves the ``science.alt.dataset.lens`` lexicon works end-to-end:
 define → publish → retrieve → execute → verify lens laws.
 
 Requires ``ATPROTO_TEST_HANDLE`` and ``ATPROTO_TEST_PASSWORD`` env vars.
@@ -696,8 +696,8 @@ class TestLensErrorHandling:
         with pytest.raises((ValueError, Exception)):
             pub.publish(
                 name="should-fail",
-                source_schema_uri="at://did:plc:fake/ac.foundation.dataset.schema/x",
-                target_schema_uri="at://did:plc:fake/ac.foundation.dataset.schema/y",
+                source_schema_uri="at://did:plc:fake/science.alt.dataset.schema/x",
+                target_schema_uri="at://did:plc:fake/science.alt.dataset.schema/y",
                 code_repository="https://github.com/user/repo",
                 code_commit="a" * 40,
                 getter_path="mod:get",
@@ -727,8 +727,8 @@ class TestLexLensRecordRoundTrip:
 
         original = LexLensRecord(
             name="test-roundtrip",
-            source_schema="at://did:plc:abc/ac.foundation.dataset.schema/src",
-            target_schema="at://did:plc:abc/ac.foundation.dataset.schema/tgt",
+            source_schema="at://did:plc:abc/science.alt.dataset.schema/src",
+            target_schema="at://did:plc:abc/science.alt.dataset.schema/tgt",
             getter_code=getter,
             putter_code=putter,
             description="Round-trip test",
@@ -767,8 +767,8 @@ class TestLexLensRecordRoundTrip:
 
         original = LexLensRecord(
             name="minimal",
-            source_schema="at://did:plc:abc/ac.foundation.dataset.schema/s",
-            target_schema="at://did:plc:abc/ac.foundation.dataset.schema/t",
+            source_schema="at://did:plc:abc/science.alt.dataset.schema/s",
+            target_schema="at://did:plc:abc/science.alt.dataset.schema/t",
             getter_code=getter,
             putter_code=putter,
         )
@@ -788,8 +788,8 @@ class TestLexLensRecordRoundTrip:
 
         record = LexLensRecord(
             name="type-check",
-            source_schema="at://did:plc:abc/ac.foundation.dataset.schema/s",
-            target_schema="at://did:plc:abc/ac.foundation.dataset.schema/t",
+            source_schema="at://did:plc:abc/science.alt.dataset.schema/s",
+            target_schema="at://did:plc:abc/science.alt.dataset.schema/t",
             getter_code=getter,
             putter_code=putter,
         )

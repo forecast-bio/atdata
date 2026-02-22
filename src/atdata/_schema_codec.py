@@ -107,7 +107,7 @@ def _field_type_to_python(field_type: dict, optional: bool = False) -> Any:
     """
     type_str = field_type.get("$type", "")
 
-    # Extract kind from $type (e.g., "ac.foundation.dataset.schemaType#primitive" -> "primitive")
+    # Extract kind from $type (e.g., "science.alt.dataset.schemaType#primitive" -> "primitive")
     if "#" in type_str:
         kind = type_str.split("#")[-1]
     else:

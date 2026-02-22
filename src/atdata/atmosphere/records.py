@@ -2,7 +2,7 @@
 
 This module provides classes for publishing dataset index records to ATProto
 and loading them back. Dataset records are published as
-``ac.foundation.dataset.entry`` records.
+``science.alt.dataset.entry`` records.
 """
 
 import dataclasses
@@ -506,7 +506,7 @@ class DatasetLoader:
         ...     print(ds["name"], ds["schemaRef"])
         >>>
         >>> # Get a specific dataset record
-        >>> record = loader.get("at://did:plc:abc/ac.foundation.dataset.entry/xyz")
+        >>> record = loader.get("at://did:plc:abc/science.alt.dataset.entry/xyz")
     """
 
     def __init__(self, client: Atmosphere):

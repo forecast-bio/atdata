@@ -975,14 +975,11 @@ class TestIsAtUri:
     """Tests for _is_at_uri detection."""
 
     def test_valid_at_uri(self):
-        assert (
-            _is_at_uri("at://did:plc:abc123/ac.foundation.dataset.entry/rkey") is True
-        )
+        assert _is_at_uri("at://did:plc:abc123/science.alt.dataset.entry/rkey") is True
 
     def test_at_uri_with_handle(self):
         assert (
-            _is_at_uri("at://alice.bsky.social/ac.foundation.dataset.entry/rkey")
-            is True
+            _is_at_uri("at://alice.bsky.social/science.alt.dataset.entry/rkey") is True
         )
 
     def test_not_at_uri_indexed_path(self):
@@ -1002,12 +999,12 @@ class TestResolveAtUri:
     """Tests for _resolve_at_uri with mocked Atmosphere client."""
 
     def _make_mock_client(
-        self, storage, schema_ref="at://did:plc:abc/ac.foundation.dataset.schema/s1"
+        self, storage, schema_ref="at://did:plc:abc/science.alt.dataset.schema/s1"
     ):
         """Build a mock Atmosphere client that returns a dataset record with the given storage."""
         client = MagicMock()
         record = {
-            "$type": "ac.foundation.dataset.entry",
+            "$type": "science.alt.dataset.entry",
             "name": "test-dataset",
             "schemaRef": schema_ref,
             "storage": storage,
@@ -1020,7 +1017,7 @@ class TestResolveAtUri:
     def test_resolve_http_storage_with_explicit_type(self):
         """AT URI with storageHttp resolves to URLSource Dataset."""
         storage = {
-            "$type": "ac.foundation.dataset.storageHttp",
+            "$type": "science.alt.dataset.storageHttp",
             "shards": [
                 {"url": "https://cdn.example.com/shard-000.tar"},
                 {"url": "https://cdn.example.com/shard-001.tar"},
@@ -1029,7 +1026,7 @@ class TestResolveAtUri:
         client = self._make_mock_client(storage)
 
         ds, resolved_type = _resolve_at_uri(
-            "at://did:plc:abc/ac.foundation.dataset.entry/my-ds",
+            "at://did:plc:abc/science.alt.dataset.entry/my-ds",
             sample_type=SimpleTestSample,
             client=client,
         )
@@ -1040,13 +1037,13 @@ class TestResolveAtUri:
     def test_resolve_http_storage_single_shard(self):
         """Single HTTP shard produces a valid URL."""
         storage = {
-            "$type": "ac.foundation.dataset.storageHttp",
+            "$type": "science.alt.dataset.storageHttp",
             "shards": [{"url": "https://cdn.example.com/data.tar"}],
         }
         client = self._make_mock_client(storage)
 
         ds, _ = _resolve_at_uri(
-            "at://did:plc:abc/ac.foundation.dataset.entry/my-ds",
+            "at://did:plc:abc/science.alt.dataset.entry/my-ds",
             sample_type=SimpleTestSample,
             client=client,
         )
@@ -1056,14 +1053,14 @@ class TestResolveAtUri:
     def test_resolve_s3_storage(self):
         """AT URI with storageS3 resolves to s3:// URLs."""
         storage = {
-            "$type": "ac.foundation.dataset.storageS3",
+            "$type": "science.alt.dataset.storageS3",
             "bucket": "my-bucket",
             "shards": [{"key": "datasets/shard-000.tar"}],
         }
         client = self._make_mock_client(storage)
 
         ds, _ = _resolve_at_uri(
-            "at://did:plc:abc/ac.foundation.dataset.entry/my-ds",
+            "at://did:plc:abc/science.alt.dataset.entry/my-ds",
             sample_type=SimpleTestSample,
             client=client,
         )
@@ -1073,7 +1070,7 @@ class TestResolveAtUri:
     def test_resolve_s3_with_endpoint(self):
         """storageS3 with endpoint uses endpoint-based URLs."""
         storage = {
-            "$type": "ac.foundation.dataset.storageS3",
+            "$type": "science.alt.dataset.storageS3",
             "bucket": "my-bucket",
             "endpoint": "https://r2.example.com",
             "shards": [{"key": "data.tar"}],
@@ -1081,7 +1078,7 @@ class TestResolveAtUri:
         client = self._make_mock_client(storage)
 
         ds, _ = _resolve_at_uri(
-            "at://did:plc:abc/ac.foundation.dataset.entry/my-ds",
+            "at://did:plc:abc/science.alt.dataset.entry/my-ds",
             sample_type=SimpleTestSample,
             client=client,
         )
@@ -1093,7 +1090,7 @@ class TestResolveAtUri:
         from atdata._sources import BlobSource
 
         storage = {
-            "$type": "ac.foundation.dataset.storageBlobs",
+            "$type": "science.alt.dataset.storageBlobs",
             "blobs": [
                 {
                     "blob": {
@@ -1109,7 +1106,7 @@ class TestResolveAtUri:
         client = self._make_mock_client(storage)
 
         ds, _ = _resolve_at_uri(
-            "at://did:plc:abc/ac.foundation.dataset.entry/my-ds",
+            "at://did:plc:abc/science.alt.dataset.entry/my-ds",
             sample_type=SimpleTestSample,
             client=client,
         )
@@ -1123,13 +1120,13 @@ class TestResolveAtUri:
     def test_resolve_legacy_external_storage(self):
         """AT URI with legacy storageExternal resolves to URLSource."""
         storage = {
-            "$type": "ac.foundation.dataset.storageExternal",
+            "$type": "science.alt.dataset.storageExternal",
             "urls": ["https://example.com/data.tar"],
         }
         client = self._make_mock_client(storage)
 
         ds, _ = _resolve_at_uri(
-            "at://did:plc:abc/ac.foundation.dataset.entry/my-ds",
+            "at://did:plc:abc/science.alt.dataset.entry/my-ds",
             sample_type=SimpleTestSample,
             client=client,
         )
@@ -1139,14 +1136,14 @@ class TestResolveAtUri:
     def test_resolve_no_sample_type_decodes_schema(self):
         """When sample_type=None, schema is decoded from the record's schemaRef."""
         storage = {
-            "$type": "ac.foundation.dataset.storageHttp",
+            "$type": "science.alt.dataset.storageHttp",
             "shards": [{"url": "https://cdn.example.com/data.tar"}],
         }
         client = self._make_mock_client(storage)
 
         # Mock the schema loader to return a schema record
         schema_record = {
-            "$type": "ac.foundation.dataset.schema",
+            "$type": "science.alt.dataset.schema",
             "name": "TestSample",
             "version": "1.0.0",
             "fields": [
@@ -1163,27 +1160,27 @@ class TestResolveAtUri:
             mock_loader_instance.get.return_value = schema_record
 
             ds, resolved_type = _resolve_at_uri(
-                "at://did:plc:abc/ac.foundation.dataset.entry/my-ds",
+                "at://did:plc:abc/science.alt.dataset.entry/my-ds",
                 sample_type=None,
                 client=client,
             )
 
             MockSchemaLoader.assert_called_once_with(client)
             mock_loader_instance.get.assert_called_once_with(
-                "at://did:plc:abc/ac.foundation.dataset.schema/s1"
+                "at://did:plc:abc/science.alt.dataset.schema/s1"
             )
             assert resolved_type.__name__ == "TestSample"
 
     def test_resolve_no_sample_type_no_schema_ref_defaults_to_dictsample(self):
         """When sample_type=None and no schemaRef, falls back to DictSample."""
         storage = {
-            "$type": "ac.foundation.dataset.storageHttp",
+            "$type": "science.alt.dataset.storageHttp",
             "shards": [{"url": "https://cdn.example.com/data.tar"}],
         }
         client = self._make_mock_client(storage, schema_ref=None)
         # Override to return record without schemaRef
         record = {
-            "$type": "ac.foundation.dataset.entry",
+            "$type": "science.alt.dataset.entry",
             "name": "test-dataset",
             "storage": storage,
             "createdAt": "2026-01-01T00:00:00Z",
@@ -1191,7 +1188,7 @@ class TestResolveAtUri:
         client.get_record.return_value = record
 
         ds, resolved_type = _resolve_at_uri(
-            "at://did:plc:abc/ac.foundation.dataset.entry/my-ds",
+            "at://did:plc:abc/science.alt.dataset.entry/my-ds",
             sample_type=None,
             client=client,
         )
@@ -1203,14 +1200,14 @@ class TestResolveAtUri:
     def test_resolve_empty_urls_raises(self):
         """Empty storage URLs raise ValueError."""
         storage = {
-            "$type": "ac.foundation.dataset.storageHttp",
+            "$type": "science.alt.dataset.storageHttp",
             "shards": [],
         }
         client = self._make_mock_client(storage)
 
         with pytest.raises(ValueError, match="has no storage URLs"):
             _resolve_at_uri(
-                "at://did:plc:abc/ac.foundation.dataset.entry/my-ds",
+                "at://did:plc:abc/science.alt.dataset.entry/my-ds",
                 sample_type=SimpleTestSample,
                 client=client,
             )
@@ -1219,14 +1216,14 @@ class TestResolveAtUri:
         """AT URI pointing to a schema record (not dataset) raises ValueError."""
         client = MagicMock()
         client.get_record.return_value = {
-            "$type": "ac.foundation.dataset.schema",
+            "$type": "science.alt.dataset.schema",
             "name": "SomeSchema",
             "version": "1.0.0",
         }
 
         with pytest.raises(ValueError, match="is not a dataset record"):
             _resolve_at_uri(
-                "at://did:plc:abc/ac.foundation.dataset.schema/s1",
+                "at://did:plc:abc/science.alt.dataset.schema/s1",
                 sample_type=SimpleTestSample,
                 client=client,
             )
@@ -1235,15 +1232,15 @@ class TestResolveAtUri:
         """Unknown storage $type raises ValueError."""
         client = MagicMock()
         client.get_record.return_value = {
-            "$type": "ac.foundation.dataset.entry",
+            "$type": "science.alt.dataset.entry",
             "name": "test",
-            "storage": {"$type": "ac.foundation.dataset.storageFuture"},
+            "storage": {"$type": "science.alt.dataset.storageFuture"},
             "createdAt": "2026-01-01T00:00:00Z",
         }
 
         with pytest.raises(ValueError, match="Unknown storage type"):
             _resolve_at_uri(
-                "at://did:plc:abc/ac.foundation.dataset.entry/my-ds",
+                "at://did:plc:abc/science.alt.dataset.entry/my-ds",
                 sample_type=SimpleTestSample,
                 client=client,
             )
@@ -1253,7 +1250,7 @@ class TestResolveAtUri:
         from atdata._sources import BlobSource
 
         storage = {
-            "$type": "ac.foundation.dataset.storageBlobs",
+            "$type": "science.alt.dataset.storageBlobs",
             "blobs": [
                 {
                     "blob": {
@@ -1284,7 +1281,7 @@ class TestResolveAtUri:
         client = self._make_mock_client(storage)
 
         ds, _ = _resolve_at_uri(
-            "at://did:plc:abc/ac.foundation.dataset.entry/my-ds",
+            "at://did:plc:abc/science.alt.dataset.entry/my-ds",
             sample_type=SimpleTestSample,
             client=client,
         )
@@ -1298,13 +1295,13 @@ class TestResolveAtUri:
     def test_resolve_single_get_record_call(self):
         """Verify get_record is called exactly once (no redundant fetches)."""
         storage = {
-            "$type": "ac.foundation.dataset.storageHttp",
+            "$type": "science.alt.dataset.storageHttp",
             "shards": [{"url": "https://cdn.example.com/data.tar"}],
         }
         client = self._make_mock_client(storage)
 
         _resolve_at_uri(
-            "at://did:plc:abc/ac.foundation.dataset.entry/my-ds",
+            "at://did:plc:abc/science.alt.dataset.entry/my-ds",
             sample_type=SimpleTestSample,
             client=client,
         )
@@ -1318,11 +1315,11 @@ class TestResolveAtUri:
             MockAtmo.return_value = mock_client
 
             record = {
-                "$type": "ac.foundation.dataset.entry",
+                "$type": "science.alt.dataset.entry",
                 "name": "test",
                 "schemaRef": None,
                 "storage": {
-                    "$type": "ac.foundation.dataset.storageHttp",
+                    "$type": "science.alt.dataset.storageHttp",
                     "shards": [{"url": "https://cdn.example.com/data.tar"}],
                 },
                 "createdAt": "2026-01-01T00:00:00Z",
@@ -1330,7 +1327,7 @@ class TestResolveAtUri:
             mock_client.get_record.return_value = record
 
             ds, _ = _resolve_at_uri(
-                "at://did:plc:abc/ac.foundation.dataset.entry/my-ds",
+                "at://did:plc:abc/science.alt.dataset.entry/my-ds",
                 sample_type=SimpleTestSample,
             )
 
@@ -1344,7 +1341,7 @@ class TestLoadDatasetWithAtUri:
         """Build a mock Atmosphere client for AT URI resolution."""
         client = MagicMock()
         record = {
-            "$type": "ac.foundation.dataset.entry",
+            "$type": "science.alt.dataset.entry",
             "name": "test-dataset",
             "schemaRef": None,
             "storage": storage,
@@ -1359,18 +1356,18 @@ class TestLoadDatasetWithAtUri:
         mock_client = MagicMock()
         MockAtmo.return_value = mock_client
         mock_client.get_record.return_value = {
-            "$type": "ac.foundation.dataset.entry",
+            "$type": "science.alt.dataset.entry",
             "name": "test",
             "schemaRef": None,
             "storage": {
-                "$type": "ac.foundation.dataset.storageHttp",
+                "$type": "science.alt.dataset.storageHttp",
                 "shards": [{"url": "https://cdn.example.com/data.tar"}],
             },
             "createdAt": "2026-01-01T00:00:00Z",
         }
 
         ds = load_dataset(
-            "at://did:plc:abc/ac.foundation.dataset.entry/my-ds",
+            "at://did:plc:abc/science.alt.dataset.entry/my-ds",
             SimpleTestSample,
             split="train",
         )
@@ -1384,18 +1381,18 @@ class TestLoadDatasetWithAtUri:
         mock_client = MagicMock()
         MockAtmo.return_value = mock_client
         mock_client.get_record.return_value = {
-            "$type": "ac.foundation.dataset.entry",
+            "$type": "science.alt.dataset.entry",
             "name": "test",
             "schemaRef": None,
             "storage": {
-                "$type": "ac.foundation.dataset.storageHttp",
+                "$type": "science.alt.dataset.storageHttp",
                 "shards": [{"url": "https://cdn.example.com/data.tar"}],
             },
             "createdAt": "2026-01-01T00:00:00Z",
         }
 
         result = load_dataset(
-            "at://did:plc:abc/ac.foundation.dataset.entry/my-ds",
+            "at://did:plc:abc/science.alt.dataset.entry/my-ds",
             SimpleTestSample,
         )
 
@@ -1408,11 +1405,11 @@ class TestLoadDatasetWithAtUri:
         mock_client = MagicMock()
         MockAtmo.return_value = mock_client
         mock_client.get_record.return_value = {
-            "$type": "ac.foundation.dataset.entry",
+            "$type": "science.alt.dataset.entry",
             "name": "test",
             "schemaRef": None,
             "storage": {
-                "$type": "ac.foundation.dataset.storageHttp",
+                "$type": "science.alt.dataset.storageHttp",
                 "shards": [{"url": "https://cdn.example.com/data.tar"}],
             },
             "createdAt": "2026-01-01T00:00:00Z",
@@ -1420,7 +1417,7 @@ class TestLoadDatasetWithAtUri:
 
         # at:// should be handled before checking _is_indexed_path
         ds = load_dataset(
-            "at://did:plc:abc/ac.foundation.dataset.entry/rkey",
+            "at://did:plc:abc/science.alt.dataset.entry/rkey",
             SimpleTestSample,
             split="train",
         )

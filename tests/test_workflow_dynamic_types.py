@@ -987,7 +987,7 @@ class TestAtmosphereSchemaConversion:
                 "schemaBody": {
                     "properties": {
                         "image": {
-                            "$ref": "https://foundation.ac/schemas/atdata-ndarray-bytes/1.0.0#/$defs/ndarray"
+                            "$ref": "https://alt.science/schemas/atdata-ndarray-bytes/1.0.0#/$defs/ndarray"
                         },
                         "label": {"type": "integer"},
                     },
@@ -1121,7 +1121,7 @@ class TestAtmosphereSchemaConversion:
                 "schemaBody": {
                     "properties": {
                         "embedding": {
-                            "$ref": "https://foundation.ac/schemas/atdata-ndarray-bytes/1.0.0#/$defs/ndarray"
+                            "$ref": "https://alt.science/schemas/atdata-ndarray-bytes/1.0.0#/$defs/ndarray"
                         },
                         "label": {"type": "string"},
                     },
@@ -1148,17 +1148,17 @@ class TestAtmosphereSchemaConversion:
         """
         # Simulate what LexSchemaRecord.to_record() actually produces
         schema = {
-            "$type": "ac.foundation.dataset.schema",
+            "$type": "science.alt.dataset.schema",
             "name": "MNISTSampleFlat",
             "version": "1.0.0",
             "schemaType": "jsonSchema",
             "schema": {
-                "$type": "ac.foundation.dataset.schema#jsonSchemaFormat",
+                "$type": "science.alt.dataset.schema#jsonSchemaFormat",
                 "$schema": "http://json-schema.org/draft-07/schema#",
                 "type": "object",
                 "properties": {
                     "image": {
-                        "$ref": "https://foundation.ac/schemas/atdata-ndarray-bytes/1.0.0#/$defs/ndarray"
+                        "$ref": "https://alt.science/schemas/atdata-ndarray-bytes/1.0.0#/$defs/ndarray"
                     },
                     "label": {"type": "integer"},
                 },

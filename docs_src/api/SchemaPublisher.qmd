@@ -22,7 +22,7 @@ definitions and publishes them as an ATProto schema record.
 >>> publisher = SchemaPublisher(atmo)
 >>> uri = publisher.publish(MySample, version="1.0.0")
 >>> print(uri)
-at://did:plc:.../ac.foundation.dataset.schema/...
+at://did:plc:.../science.alt.dataset.schema/...
 ```
 
 ## Methods

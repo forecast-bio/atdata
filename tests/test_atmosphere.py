@@ -162,7 +162,7 @@ class TestAtUri:
 
     def test_str_roundtrip(self):
         """Verify __str__ produces valid URI that can be re-parsed."""
-        original = "at://did:plc:test123/ac.foundation.dataset.schema/xyz789"
+        original = "at://did:plc:test123/science.alt.dataset.schema/xyz789"
         uri = AtUri.parse(original)
         assert str(uri) == original
 
@@ -360,7 +360,7 @@ class TestLexSchemaRecord:
                     "properties": {
                         "primitive_field": {"type": "integer"},
                         "array_field": {
-                            "$ref": "https://foundation.ac/schemas/atdata-ndarray-bytes/1.0.0#/$defs/ndarray"
+                            "$ref": "https://alt.science/schemas/atdata-ndarray-bytes/1.0.0#/$defs/ndarray"
                         },
                     },
                     "required": ["primitive_field"],
@@ -411,7 +411,7 @@ class TestLexSchemaRecord:
             "version": "1.0.0",
             "schemaType": "jsonSchema",
             "schema": {
-                "$type": "ac.foundation.dataset.schema#jsonSchemaFormat",
+                "$type": "science.alt.dataset.schema#jsonSchemaFormat",
                 "$schema": "http://json-schema.org/draft-07/schema#",
                 "type": "object",
                 "properties": {"x": {"type": "string"}},
@@ -429,7 +429,7 @@ class TestLexSchemaRecord:
             "version": "1.0.0",
             "schemaType": "jsonSchema",
             "schema": {
-                "$type": "ac.foundation.dataset.schema#jsonSchemaFormat",
+                "$type": "science.alt.dataset.schema#jsonSchemaFormat",
                 "$schema": "http://json-schema.org/draft-07/schema#",
                 "type": "object",
                 "properties": {"x": {"type": "string"}},
@@ -447,7 +447,7 @@ class TestLexSchemaRecord:
             "version": "1.0.0",
             "schemaType": "jsonSchema",
             "schema": {
-                "$type": "ac.foundation.dataset.schema#jsonSchemaFormat",
+                "$type": "science.alt.dataset.schema#jsonSchemaFormat",
                 "$schema": "http://json-schema.org/draft-07/schema#",
                 "type": "object",
                 "properties": {"x": {"type": "string"}},
@@ -464,7 +464,7 @@ class TestLexSchemaRecord:
             "version": "1.0.0",
             "schemaType": "jsonSchema",
             "schema": {
-                "$type": "ac.foundation.dataset.schema#jsonSchemaFormat",
+                "$type": "science.alt.dataset.schema#jsonSchemaFormat",
                 "$schema": "http://json-schema.org/draft-07/schema#",
                 "type": "object",
                 "properties": {"x": {"type": "string"}},
@@ -525,7 +525,7 @@ class TestLexDatasetEntry:
         """Convert dataset record with HTTP storage."""
         dataset = LexDatasetEntry(
             name="TestDataset",
-            schema_ref="at://did:plc:abc/ac.foundation.dataset.schema/xyz",
+            schema_ref="at://did:plc:abc/science.alt.dataset.schema/xyz",
             storage=StorageHttp(
                 shards=[
                     HttpShardEntry(
@@ -540,9 +540,7 @@ class TestLexDatasetEntry:
 
         assert record["$type"] == f"{LEXICON_NAMESPACE}.entry"
         assert record["name"] == "TestDataset"
-        assert (
-            record["schemaRef"] == "at://did:plc:abc/ac.foundation.dataset.schema/xyz"
-        )
+        assert record["schemaRef"] == "at://did:plc:abc/science.alt.dataset.schema/xyz"
         assert record["storage"]["$type"] == f"{LEXICON_NAMESPACE}.storageHttp"
         assert record["storage"]["shards"][0]["url"] == "s3://bucket/data.tar"
 
@@ -636,10 +634,10 @@ class TestLexDatasetEntry:
         legacy_dict = {"size": 1000, "split": "train"}
         legacy_bytes = msgpack.packb(legacy_dict)
         record_dict = {
-            "$type": "ac.foundation.dataset.entry",
+            "$type": "science.alt.dataset.entry",
             "name": "LegacyDataset",
             "schemaRef": "at://did:plc:abc/collection/key",
-            "storage": {"$type": "ac.foundation.dataset.storageHttp", "shards": []},
+            "storage": {"$type": "science.alt.dataset.storageHttp", "shards": []},
             "createdAt": "2025-01-01T00:00:00+00:00",
             "metadata": {"$bytes": base64.b64encode(legacy_bytes).decode("ascii")},
         }
@@ -656,10 +654,10 @@ class TestLexDatasetEntry:
         legacy_dict = {"split": "test", "version": "1.0"}
         legacy_bytes = msgpack.packb(legacy_dict)
         record_dict = {
-            "$type": "ac.foundation.dataset.entry",
+            "$type": "science.alt.dataset.entry",
             "name": "LegacyDataset",
             "schemaRef": "at://did:plc:abc/collection/key",
-            "storage": {"$type": "ac.foundation.dataset.storageHttp", "shards": []},
+            "storage": {"$type": "science.alt.dataset.storageHttp", "shards": []},
             "createdAt": "2025-01-01T00:00:00+00:00",
             "metadata": legacy_bytes,
         }
@@ -758,7 +756,7 @@ class TestLexDatasetEntryManifests:
         """Build a minimal LexDatasetEntry with optional overrides."""
         defaults = dict(
             name="ManifestDataset",
-            schema_ref="at://did:plc:abc/ac.foundation.dataset.schema/xyz",
+            schema_ref="at://did:plc:abc/science.alt.dataset.schema/xyz",
             storage=StorageHttp(shards=[]),
         )
         defaults.update(kwargs)
@@ -3393,7 +3391,7 @@ class TestJsonSchemaEdgeCases:
                     "type": "object",
                     "properties": {
                         "image": {
-                            "$ref": "https://foundation.ac/schemas/atdata-ndarray-bytes/1.0.0#/$defs/ndarray"
+                            "$ref": "https://alt.science/schemas/atdata-ndarray-bytes/1.0.0#/$defs/ndarray"
                         },
                     },
                     "required": ["image"],
@@ -3579,7 +3577,7 @@ class TestAtmosphereIndexEntry:
         }
 
         entry = AtmosphereIndexEntry(
-            "at://did:plc:testdid/ac.foundation.dataset.entry/rkey123",
+            "at://did:plc:testdid/science.alt.dataset.entry/rkey123",
             record,
         )
         urls = entry.data_urls

@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "ac.foundation.dataset.entry",
+  "id": "science.alt.dataset.entry",
   "defs": {
     "main": {
       "type": "record",
@@ -30,8 +30,8 @@
             "type": "union",
             "description": "Storage location for dataset files (WebDataset tar archives)",
             "refs": [
-              "ac.foundation.dataset.storageExternal",
-              "ac.foundation.dataset.storageBlobs"
+              "science.alt.dataset.storageExternal",
+              "science.alt.dataset.storageBlobs"
             ]
           },
           "description": {

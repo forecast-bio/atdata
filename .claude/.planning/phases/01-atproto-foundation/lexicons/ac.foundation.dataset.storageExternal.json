@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "ac.foundation.dataset.storageExternal",
+  "id": "science.alt.dataset.storageExternal",
   "defs": {
     "main": {
       "type": "object",
-      "description": "External storage via URLs (S3, HTTP, IPFS, etc.) for WebDataset tar archives. URLs support brace notation for sharding (e.g., 'data-{000000..000099}.tar'). Used in ac.foundation.dataset.entry storage union.",
+      "description": "External storage via URLs (S3, HTTP, IPFS, etc.) for WebDataset tar archives. URLs support brace notation for sharding (e.g., 'data-{000000..000099}.tar'). Used in science.alt.dataset.entry storage union.",
       "required": [
         "urls"
       ],

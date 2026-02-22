@@ -1,6 +1,6 @@
 # schema Lexicon Design Questions
 
-This document captures open design questions for the `ac.foundation.dataset.schema` Lexicon that require user decisions before implementation.
+This document captures open design questions for the `science.alt.dataset.schema` Lexicon that require user decisions before implementation.
 
 ## Q1: Key Format Validation
 
@@ -132,14 +132,14 @@ Should we define a structured schema for common metadata fields?
 
 **Context:**
 - `ndarrayShimUri` is optional with default mentioned in description
-- Standard shim is at `https://foundation.ac/schemas/atdata-ndarray-bytes/1.0.0`
+- Standard shim is at `https://alt.science/schemas/atdata-ndarray-bytes/1.0.0`
 - No explicit default value in Lexicon
 
 **Question:**
 Should we add an explicit default value for `ndarrayShimUri`?
 
 **Options:**
-1. Add `"default": "https://foundation.ac/schemas/atdata-ndarray-bytes/1.0.0"`
+1. Add `"default": "https://alt.science/schemas/atdata-ndarray-bytes/1.0.0"`
 2. Keep as optional, codegen assumes standard shim if missing
 3. Make required - always explicit
 

@@ -243,7 +243,7 @@ class Atmosphere:
 
         Args:
             collection: The NSID of the record collection
-                (e.g., 'ac.foundation.dataset.schema').
+                (e.g., 'science.alt.dataset.schema').
             record: The record data. Must include a '$type' field.
             rkey: Optional explicit record key. If not provided, a TID is generated.
             validate: Whether to validate against the Lexicon schema. Set to False

@@ -1,4 +1,4 @@
-"""Lexicon-mirror types for the ``ac.foundation.dataset`` namespace.
+"""Lexicon-mirror types for the ``science.alt.dataset`` namespace.
 
 These dataclasses map 1:1 to the ATProto Lexicon JSON definitions. They are
 the canonical Python representation for serializing to and deserializing from
@@ -66,7 +66,7 @@ def decode_metadata_raw(raw: Any) -> dict | None:
 class ShardChecksum:
     """Content hash for shard integrity verification.
 
-    Mirrors ``ac.foundation.dataset.entry#shardChecksum``.
+    Mirrors ``science.alt.dataset.entry#shardChecksum``.
     """
 
     algorithm: str
@@ -89,7 +89,7 @@ class ShardChecksum:
 class DatasetSize:
     """Dataset size metadata.
 
-    Mirrors ``ac.foundation.dataset.entry#datasetSize``.
+    Mirrors ``science.alt.dataset.entry#datasetSize``.
     """
 
     samples: int | None = None
@@ -121,7 +121,7 @@ class DatasetSize:
 class ShardManifestRef:
     """References to manifest sidecar data for a single shard.
 
-    Mirrors ``ac.foundation.dataset.entry#shardManifestRef``.
+    Mirrors ``science.alt.dataset.entry#shardManifestRef``.
     The header contains schema info, sample count, and per-field aggregates.
     The samples file is a Parquet table with per-sample metadata for
     query-based access.
@@ -150,7 +150,7 @@ class ShardManifestRef:
 class DatasetMetadata:
     """Typed metadata for dataset records.
 
-    Mirrors ``ac.foundation.dataset.entry#datasetMetadata``. Provides
+    Mirrors ``science.alt.dataset.entry#datasetMetadata``. Provides
     well-known fields for common dataset metadata, plus a ``custom`` dict
     for domain-specific extensions.
 
@@ -310,7 +310,7 @@ class DatasetMetadata:
 class HttpShardEntry:
     """A single HTTP-accessible shard with integrity checksum.
 
-    Mirrors ``ac.foundation.dataset.storageHttp#shardEntry``.
+    Mirrors ``science.alt.dataset.storageHttp#shardEntry``.
     """
 
     url: str
@@ -333,7 +333,7 @@ class HttpShardEntry:
 class StorageHttp:
     """HTTP/HTTPS storage for WebDataset tar archives.
 
-    Mirrors ``ac.foundation.dataset.storageHttp``.
+    Mirrors ``science.alt.dataset.storageHttp``.
     """
 
     shards: list[HttpShardEntry]
@@ -357,7 +357,7 @@ class StorageHttp:
 class S3ShardEntry:
     """A single S3 object shard with integrity checksum.
 
-    Mirrors ``ac.foundation.dataset.storageS3#shardEntry``.
+    Mirrors ``science.alt.dataset.storageS3#shardEntry``.
     """
 
     key: str
@@ -380,7 +380,7 @@ class S3ShardEntry:
 class StorageS3:
     """S3/S3-compatible storage for WebDataset tar archives.
 
-    Mirrors ``ac.foundation.dataset.storageS3``.
+    Mirrors ``science.alt.dataset.storageS3``.
     """
 
     bucket: str
@@ -416,7 +416,7 @@ class StorageS3:
 class BlobEntry:
     """A single PDS blob shard with optional integrity checksum.
 
-    Mirrors ``ac.foundation.dataset.storageBlobs#blobEntry``.
+    Mirrors ``science.alt.dataset.storageBlobs#blobEntry``.
     """
 
     blob: dict[str, Any]
@@ -444,7 +444,7 @@ class BlobEntry:
 class StorageBlobs:
     """ATProto PDS blob storage for WebDataset tar archives.
 
-    Mirrors ``ac.foundation.dataset.storageBlobs``.
+    Mirrors ``science.alt.dataset.storageBlobs``.
     """
 
     blobs: list[BlobEntry]
@@ -510,7 +510,7 @@ def storage_from_record(d: dict[str, Any]) -> StorageUnion:
 class LexCodeReference:
     """Reference to code in an external repository.
 
-    Mirrors ``ac.foundation.dataset.lens#codeReference``.
+    Mirrors ``science.alt.dataset.lens#codeReference``.
     All fields are required per the lexicon.
     """
 
@@ -557,7 +557,7 @@ class LexCodeReference:
 class JsonSchemaFormat:
     """JSON Schema Draft 7 format for sample type definitions.
 
-    Mirrors ``ac.foundation.dataset.schema#jsonSchemaFormat``.
+    Mirrors ``science.alt.dataset.schema#jsonSchemaFormat``.
     """
 
     schema_body: dict[str, Any]
@@ -590,7 +590,7 @@ class JsonSchemaFormat:
 class LexSchemaRecord:
     """Versioned sample type definition.
 
-    Mirrors ``ac.foundation.dataset.schema`` (main record).
+    Mirrors ``science.alt.dataset.schema`` (main record).
     """
 
     name: str
@@ -658,7 +658,7 @@ class LexSchemaRecord:
 class LexDatasetEntry:
     """Dataset index entry pointing to WebDataset storage.
 
-    Mirrors ``ac.foundation.dataset.entry`` (main record).
+    Mirrors ``science.alt.dataset.entry`` (main record).
     """
 
     name: str
@@ -766,7 +766,7 @@ class LexDatasetEntry:
 class LexLensRecord:
     """Bidirectional transformation between two sample types.
 
-    Mirrors ``ac.foundation.dataset.lens`` (main record).
+    Mirrors ``science.alt.dataset.lens`` (main record).
     ``getter_code`` and ``putter_code`` are required per the lexicon.
     """
 
@@ -841,7 +841,7 @@ class LexLensRecord:
 class LexLabelRecord:
     """Named label pointing to a dataset record.
 
-    Mirrors ``ac.foundation.dataset.label`` (main record).
+    Mirrors ``science.alt.dataset.label`` (main record).
     Multiple labels with the same name but different versions can coexist,
     enabling versioned references to immutable, CID-addressed dataset records.
     """

@@ -12,7 +12,7 @@ pip install atproto
 
 ## Overview
 
-ATProto integration publishes datasets, schemas, and lenses as records in the `ac.foundation.dataset.*` namespace. This enables:
+ATProto integration publishes datasets, schemas, and lenses as records in the `science.alt.dataset.*` namespace. This enables:
 
 - **Discovery** through the ATProto network
 - **Federation** across different hosts
@@ -83,7 +83,7 @@ schema_uri = index.publish_schema(
     version="1.0.0",
     description="Image classification sample",
 )
-# Returns: "at://did:plc:.../ac.foundation.dataset.sampleSchema/..."
+# Returns: "at://did:plc:.../science.alt.dataset.sampleSchema/..."
 ```
 
 ### Publishing Datasets
@@ -116,7 +116,7 @@ for entry in index.list_datasets(repo="did:plc:other-user"):
     print(entry.name)
 
 # Get specific dataset
-entry = index.get_dataset("at://did:plc:.../ac.foundation.dataset.entry/...")
+entry = index.get_dataset("at://did:plc:.../science.alt.dataset.entry/...")
 
 # List schemas
 for schema in index.list_schemas():
@@ -255,14 +255,14 @@ ATProto records are identified by AT URIs:
 from atdata.atmosphere import AtUri
 
 # Parse an AT URI
-uri = AtUri.parse("at://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz")
+uri = AtUri.parse("at://did:plc:abc123/science.alt.dataset.sampleSchema/xyz")
 
 print(uri.authority)   # 'did:plc:abc123'
-print(uri.collection)  # 'ac.foundation.dataset.sampleSchema'
+print(uri.collection)  # 'science.alt.dataset.sampleSchema'
 print(uri.rkey)        # 'xyz'
 
 # Format back to string
-print(str(uri))  # 'at://did:plc:abc123/ac.foundation.dataset.sampleSchema/xyz'
+print(str(uri))  # 'at://did:plc:abc123/science.alt.dataset.sampleSchema/xyz'
 ```
 
 ## Record Types

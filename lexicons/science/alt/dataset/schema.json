@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "ac.foundation.dataset.schema",
+  "id": "science.alt.dataset.schema",
   "defs": {
     "main": {
       "type": "record",
@@ -29,12 +29,12 @@
           },
           "schemaType": {
             "type": "ref",
-            "ref": "ac.foundation.dataset.schemaType",
+            "ref": "science.alt.dataset.schemaType",
             "description": "Type of schema definition. This field indicates which union member is present in the schema field."
           },
           "schema": {
             "type": "union",
-            "refs": ["ac.foundation.dataset.schema#jsonSchemaFormat"],
+            "refs": ["science.alt.dataset.schema#jsonSchemaFormat"],
             "closed": false,
             "description": "Schema definition for this sample type. Currently supports JSON Schema Draft 7. Union allows for future schema formats (Avro, Protobuf, etc.) without breaking changes."
           },
@@ -44,25 +44,9 @@
             "maxLength": 5000
           },
           "metadata": {
-            "type": "object",
-            "description": "Optional metadata about this schema. Common fields include license and tags, but any additional fields are permitted.",
-            "maxProperties": 50,
-            "properties": {
-              "license": {
-                "type": "string",
-                "description": "License identifier or URL. SPDX identifiers recommended (e.g., MIT, Apache-2.0, CC-BY-4.0) or full SPDX URLs (e.g., http://spdx.org/licenses/MIT). Aligns with Schema.org license property.",
-                "maxLength": 200
-              },
-              "tags": {
-                "type": "array",
-                "description": "Categorization keywords for discovery. Aligns with Schema.org keywords property.",
-                "items": {
-                  "type": "string",
-                  "maxLength": 150
-                },
-                "maxLength": 30
-              }
-            }
+            "type": "ref",
+            "ref": "#schemaMetadata",
+            "description": "Optional metadata about this schema. Common fields include license and tags, but any additional fields are permitted."
           },
           "createdAt": {
             "type": "string",
@@ -77,6 +61,26 @@
         }
       }
     },
+    "schemaMetadata": {
+      "type": "object",
+      "description": "Open metadata object for schema records. Common fields include license and tags. Applications may extend with additional fields.",
+      "properties": {
+        "license": {
+          "type": "string",
+          "description": "License identifier or URL. SPDX identifiers recommended (e.g., MIT, Apache-2.0, CC-BY-4.0) or full SPDX URLs (e.g., http://spdx.org/licenses/MIT). Aligns with Schema.org license property.",
+          "maxLength": 200
+        },
+        "tags": {
+          "type": "array",
+          "description": "Categorization keywords for discovery. Aligns with Schema.org keywords property.",
+          "items": {
+            "type": "string",
+            "maxLength": 150
+          },
+          "maxLength": 30
+        }
+      }
+    },
     "jsonSchemaFormat": {
       "type": "object",
       "description": "JSON Schema Draft 7 format for sample type definitions. Used with NDArray shim for array types.",
@@ -84,7 +88,7 @@
       "properties": {
         "$type": {
           "type": "string",
-          "const": "ac.foundation.dataset.schema#jsonSchemaFormat"
+          "const": "science.alt.dataset.schema#jsonSchemaFormat"
         },
         "$schema": {
           "type": "string",
@@ -97,14 +101,12 @@
           "description": "Sample types must be objects"
         },
         "properties": {
-          "type": "object",
-          "description": "Field definitions for the sample type",
-          "minProperties": 1
+          "type": "unknown",
+          "description": "Field definitions for the sample type (JSON Schema properties object)"
         },
         "arrayFormatVersions": {
-          "type": "object",
-          "description": "Mapping from array format identifiers to semantic versions. Keys are ac.foundation.dataset.arrayFormat values (e.g., 'ndarrayBytes'), values are semver strings (e.g., '1.0.0'). Foundation.ac maintains canonical shim schemas at https://foundation.ac/schemas/atdata-{format}-bytes/{version}/.",
-          "maxProperties": 10
+          "type": "unknown",
+          "description": "Mapping from array format identifiers to semantic versions. Keys are science.alt.dataset.arrayFormat values (e.g., 'ndarrayBytes'), values are semver strings (e.g., '1.0.0'). Foundation.ac maintains canonical shim schemas at https://alt.science/schemas/atdata-{format}-bytes/{version}/."
         }
       }
     }

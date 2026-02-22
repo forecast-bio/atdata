@@ -17,7 +17,7 @@ from typing import Any, Literal, Optional
 
 # Canonical constant — also defined in _lexicon_types but kept here as the
 # historically authoritative location so existing imports continue to work.
-LEXICON_NAMESPACE = "ac.foundation.dataset"
+LEXICON_NAMESPACE = "science.alt.dataset"
 
 
 @dataclass
@@ -27,11 +27,11 @@ class AtUri:
     AT URIs follow the format: at://<authority>/<collection>/<rkey>
 
     Examples:
-        >>> uri = AtUri.parse("at://did:plc:abc123/ac.foundation.dataset.schema/xyz")
+        >>> uri = AtUri.parse("at://did:plc:abc123/science.alt.dataset.schema/xyz")
         >>> uri.authority
         'did:plc:abc123'
         >>> uri.collection
-        'ac.foundation.dataset.schema'
+        'science.alt.dataset.schema'
         >>> uri.rkey
         'xyz'
     """
