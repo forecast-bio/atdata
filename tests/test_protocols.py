@@ -42,7 +42,7 @@ class TestIndexEntryProtocol:
             "name": "atmo-dataset",
             "schemaRef": "at://did:plc:test/schema/abc",
             "storage": {
-                "$type": "ac.foundation.dataset.storageExternal",
+                "$type": "science.alt.dataset.storageExternal",
                 "urls": ["s3://bucket/data.tar"],
             },
         }
@@ -210,7 +210,7 @@ class TestProtocolInteroperability:
                 "name": "test",
                 "schemaRef": "at://schema",
                 "storage": {
-                    "$type": "ac.foundation.dataset.storageExternal",
+                    "$type": "science.alt.dataset.storageExternal",
                     "urls": ["url1", "url2"],
                 },
             },
@@ -246,7 +246,7 @@ class TestPolymorphicBehavior:
                     "name": "atmo-1",
                     "schemaRef": "at://did:plc:test/schema/A",
                     "storage": {
-                        "$type": "ac.foundation.dataset.storageExternal",
+                        "$type": "science.alt.dataset.storageExternal",
                         "urls": ["s3://bucket/atmo1.tar"],
                     },
                 },
@@ -293,7 +293,7 @@ class TestPolymorphicBehavior:
                     "name": "dataset-b",
                     "schemaRef": "at://schema",
                     "storage": {
-                        "$type": "ac.foundation.dataset.storageExternal",
+                        "$type": "science.alt.dataset.storageExternal",
                         "urls": ["url2"],
                     },
                 },
@@ -330,7 +330,7 @@ class TestPolymorphicBehavior:
                     "name": "ds2",
                     "schemaRef": "at://s",
                     "storage": {
-                        "$type": "ac.foundation.dataset.storageExternal",
+                        "$type": "science.alt.dataset.storageExternal",
                         "urls": ["s3://b/1.tar"],
                     },
                 },

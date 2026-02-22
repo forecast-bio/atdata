@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "ac.foundation.dataset.schema",
+  "id": "science.alt.dataset.schema",
   "defs": {
     "main": {
       "type": "record",
@@ -29,12 +29,12 @@
           },
           "schemaType": {
             "type": "ref",
-            "ref": "ac.foundation.dataset.schemaType",
+            "ref": "science.alt.dataset.schemaType",
             "description": "Type of schema definition. This field indicates which union member is present in the schema field."
           },
           "schema": {
             "type": "union",
-            "refs": ["ac.foundation.dataset.schema#jsonSchemaFormat"],
+            "refs": ["science.alt.dataset.schema#jsonSchemaFormat"],
             "closed": false,
             "description": "Schema definition for this sample type. Currently supports JSON Schema Draft 7. Union allows for future schema formats (Avro, Protobuf, etc.) without breaking changes."
           },
@@ -79,7 +79,7 @@
       "properties": {
         "$type": {
           "type": "string",
-          "const": "ac.foundation.dataset.schema#jsonSchemaFormat"
+          "const": "science.alt.dataset.schema#jsonSchemaFormat"
         },
         "$schema": {
           "type": "string",
@@ -98,7 +98,7 @@
         },
         "arrayFormatVersions": {
           "type": "object",
-          "description": "Mapping from array format identifiers to semantic versions. Keys are ac.foundation.dataset.arrayFormat values (e.g., 'ndarrayBytes'), values are semver strings (e.g., '1.0.0'). Foundation.ac maintains canonical shim schemas at https://foundation.ac/schemas/atdata-{format}-bytes/{version}/.",
+          "description": "Mapping from array format identifiers to semantic versions. Keys are science.alt.dataset.arrayFormat values (e.g., 'ndarrayBytes'), values are semver strings (e.g., '1.0.0'). Alt.science maintains canonical shim schemas at https://alt.science/schemas/atdata-{format}-bytes/{version}/.",
           "maxProperties": 10
         }
       }

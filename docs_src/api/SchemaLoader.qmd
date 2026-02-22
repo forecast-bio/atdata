@@ -15,7 +15,7 @@ schemas from a repository.
 >>> atmo = Atmosphere.login("handle", "password")
 >>>
 >>> loader = SchemaLoader(atmo)
->>> schema = loader.get("at://did:plc:.../ac.foundation.dataset.schema/...")
+>>> schema = loader.get("at://did:plc:.../science.alt.dataset.schema/...")
 >>> print(schema["name"])
 'MySample'
 ```

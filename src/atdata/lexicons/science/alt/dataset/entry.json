@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "ac.foundation.dataset.record",
+  "id": "science.alt.dataset.entry",
   "defs": {
     "main": {
       "type": "record",
-      "description": "Index record for a WebDataset-backed dataset with references to storage location and sample schema",
+      "description": "Index entry for a WebDataset-backed dataset with references to storage location and sample schema",
       "key": "tid",
       "record": {
         "type": "object",
@@ -30,8 +30,9 @@
             "type": "union",
             "description": "Storage location for dataset files (WebDataset tar archives)",
             "refs": [
-              "ac.foundation.dataset.storageExternal",
-              "ac.foundation.dataset.storageBlobs"
+              "science.alt.dataset.storageHttp",
+              "science.alt.dataset.storageS3",
+              "science.alt.dataset.storageBlobs"
             ]
           },
           "description": {
@@ -40,9 +41,9 @@
             "maxLength": 5000
           },
           "metadata": {
-            "type": "ref",
-            "ref": "#datasetMetadata",
-            "description": "Structured metadata for the dataset. Provides well-known fields for common metadata plus a custom object for domain-specific extensions."
+            "type": "bytes",
+            "description": "Msgpack-encoded metadata dict for arbitrary extended key-value pairs. Use this for additional metadata beyond the core top-level fields (license, tags, size). Top-level fields are preferred for discoverable/searchable metadata.",
+            "maxLength": 100000
           },
           "tags": {
             "type": "array",
@@ -66,48 +67,38 @@
           "createdAt": {
             "type": "string",
             "format": "datetime",
-            "description": "Timestamp when this dataset record was created"
+            "description": "Timestamp when this dataset entry was created"
+          },
+          "metadataSchemaRef": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "Optional AT-URI reference to a schema record defining the structure of this dataset's content metadata. When present, contentMetadata is validated against this schema at write time.",
+            "maxLength": 500
+          },
+          "contentMetadata": {
+            "type": "unknown",
+            "description": "Dataset-level content metadata (e.g., instrument settings, acquisition parameters). Structure is validated against the schema referenced by metadataSchemaRef when present. Stored as an open JSON object."
           }
         }
       }
     },
-    "datasetMetadata": {
+    "shardChecksum": {
       "type": "object",
-      "description": "Structured metadata for a dataset record. Well-known fields are first-class properties visible to ATProto relays and indexers. The custom object provides extensibility for domain-specific metadata.",
+      "description": "Content hash for shard integrity verification. Algorithm is flexible to allow SHA-256, BLAKE3, or other hash functions.",
+      "required": [
+        "algorithm",
+        "digest"
+      ],
       "properties": {
-        "sourceUri": {
+        "algorithm": {
           "type": "string",
-          "description": "URI or identifier of the upstream data source",
-          "maxLength": 1000
+          "description": "Hash algorithm identifier (e.g., 'sha256', 'blake3')",
+          "maxLength": 20
         },
-        "createdBy": {
+        "digest": {
           "type": "string",
-          "description": "Tool, pipeline, or user that created this dataset",
-          "maxLength": 500
-        },
-        "version": {
-          "type": "string",
-          "description": "Dataset version string (e.g., '2.1.0')",
-          "maxLength": 100
-        },
-        "processingSteps": {
-          "type": "array",
-          "description": "Ordered list of processing/transformation steps applied",
-          "items": {
-            "type": "string",
-            "maxLength": 200
-          },
-          "maxLength": 50
-        },
-        "split": {
-          "type": "string",
-          "description": "Dataset split name (e.g., 'train', 'test', 'validation')",
-          "maxLength": 100
-        },
-        "custom": {
-          "type": "object",
-          "description": "Arbitrary domain-specific metadata key-value pairs",
-          "maxProperties": 100
+          "description": "Hex-encoded hash digest",
+          "maxLength": 128
         }
       }
     },

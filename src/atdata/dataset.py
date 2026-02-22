@@ -915,15 +915,17 @@ class Dataset(Generic[ST]):
         target = set(indices)
         max_idx = max(indices)
         result: dict[int, ST] = {}
-        for i, sample in enumerate(self.ordered()):
-            if i in target:
-                result[i] = sample
-            if i >= max_idx:
+        count = 0
+        for count, sample in enumerate(self.ordered()):
+            if count in target:
+                result[count] = sample
+            if count >= max_idx:
                 break
-        missing = [i for i in indices if i not in result]
+        missing = [idx for idx in indices if idx not in result]
         if missing:
+            total = count + 1 if result or count > 0 else 0
             raise IndexError(
-                f"Indices {missing} not found in dataset (dataset has {i + 1} samples)"
+                f"Indices {missing} not found in dataset (dataset has {total} samples)"
             )
         return [result[i] for i in indices]
 

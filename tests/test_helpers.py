@@ -99,15 +99,11 @@ class TestArraySerialization:
         result = bytes_to_array(serialized)
         assert isinstance(result, np.ndarray)
 
-    def test_object_dtype_uses_npy_format(self):
-        """Object dtype arrays fall back to np.save format."""
+    def test_object_dtype_rejected(self):
+        """Object dtype arrays are rejected to prevent pickle serialization."""
         original = np.array([{"a": 1}, {"b": 2}], dtype=object)
-        serialized = array_to_bytes(original)
-        # Should use .npy format (starts with magic bytes)
-        assert serialized[:6] == b"\x93NUMPY"
-        restored = bytes_to_array(serialized)
-        assert restored[0] == {"a": 1}
-        assert restored[1] == {"b": 2}
+        with pytest.raises(ValueError, match="object-dtype"):
+            array_to_bytes(original)
 
     def test_legacy_npy_format_deserialization(self):
         """bytes_to_array can read legacy .npy-serialized arrays."""

@@ -16,7 +16,7 @@ it manually.
 >>> atmo = Atmosphere.login("handle", "password")
 >>> loader = LensLoader(atmo)
 >>>
->>> record = loader.get("at://did:plc:abc/ac.foundation.dataset.lens/xyz")
+>>> record = loader.get("at://did:plc:abc/science.alt.dataset.lens/xyz")
 >>> print(record["name"])
 >>> print(record["sourceSchema"])
 >>> print(record.get("getterCode", {}).get("repository"))

@@ -47,7 +47,18 @@ jobs:
     needs: [lint]
     environment:
       name: test
-    
+
+    services:
+      redis:
+        image: public.ecr.aws/docker/library/redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v5
 
@@ -63,11 +74,6 @@ jobs:
 
       - name: Install the project
         run: uv sync --locked --all-extras --dev
-
-      - name: Start Redis
-        uses: supercharge/redis-github-action@1.8.1
-        with:
-          redis-version: 7
 
       - name: Run tests with coverage
         run: uv run pytest --cov=atdata --cov-report=xml --cov-report=term --junitxml=junit.xml -o junit_family=legacy
@@ -105,6 +111,17 @@ jobs:
           - python-version: "3.14"
             redis-version: 7
 
+    services:
+      redis:
+        image: public.ecr.aws/docker/library/redis:${{ matrix.redis-version }}
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v5
 
@@ -120,11 +137,6 @@ jobs:
 
       - name: Install the project
         run: uv sync --locked --all-extras --dev
-
-      - name: Start Redis
-        uses: supercharge/redis-github-action@1.8.1
-        with:
-          redis-version: ${{ matrix.redis-version }}
 
       - name: Run tests
         run: uv run pytest

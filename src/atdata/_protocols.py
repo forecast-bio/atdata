@@ -85,7 +85,7 @@ class Packable(Protocol):
 class IndexEntry(Protocol):
     """Common interface for index entries (local or atmosphere).
 
-    Both LocalDatasetEntry and atmosphere DatasetRecord-based entries
+    Both LocalDatasetEntry and atmosphere DatasetEntry-based entries
     should satisfy this protocol, enabling code that works with either.
 
     Properties:
@@ -103,7 +103,7 @@ class IndexEntry(Protocol):
         """Schema reference string.
 
         Local: ``local://schemas/{module.Class}@{version}``
-        Atmosphere: ``at://did:plc:.../ac.foundation.dataset.schema/...``
+        Atmosphere: ``at://did:plc:.../science.alt.dataset.schema/...``
         """
         ...
 

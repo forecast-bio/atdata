@@ -15,7 +15,7 @@ Schemas use reverse-DNS format identifiers indicating ownership:
 ```
 com.atproto.repo.createRecord   # Core ATProto API
 app.bsky.feed.post              # Bluesky app record type
-ac.foundation.dataset.sampleSchema  # Our custom namespace
+science.alt.dataset.sampleSchema  # Our custom namespace
 ```
 
 Format: `authority.name` where authority is reverse-DNS
@@ -235,7 +235,7 @@ TID format: 13-character base32-sortable timestamp
 ```json
 {
   "lexicon": 1,
-  "id": "ac.foundation.dataset.sampleSchema",
+  "id": "science.alt.dataset.sampleSchema",
   "revision": 1,
   "description": "Schema definition for a PackableSample type",
   "defs": {

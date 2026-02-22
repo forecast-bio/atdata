@@ -28,6 +28,23 @@ def _get_atproto_client_class():
     return _atproto_client_class
 
 
+def _value_to_dict(value: Any) -> dict | Any:
+    """Convert an ATProto model value to a plain dict.
+
+    Handles DotDict (to_dict), pydantic (model_dump), plain dict, and
+    generic objects with __dict__.
+    """
+    if hasattr(value, "to_dict") and callable(value.to_dict):
+        return value.to_dict()
+    if isinstance(value, dict):
+        return dict(value)
+    if hasattr(value, "model_dump") and callable(value.model_dump):
+        return value.model_dump()
+    if hasattr(value, "__dict__"):
+        return dict(value.__dict__)
+    return value
+
+
 class Atmosphere:
     """ATProto client wrapper for atdata operations.
 
@@ -226,7 +243,7 @@ class Atmosphere:
 
         Args:
             collection: The NSID of the record collection
-                (e.g., 'ac.foundation.dataset.schema').
+                (e.g., 'science.alt.dataset.schema').
             record: The record data. Must include a '$type' field.
             rkey: Optional explicit record key. If not provided, a TID is generated.
             validate: Whether to validate against the Lexicon schema. Set to False
@@ -335,18 +352,7 @@ class Atmosphere:
             }
         )
 
-        # Convert ATProto model to dict if needed
-        value = response.value
-        # DotDict and similar ATProto models have to_dict()
-        if hasattr(value, "to_dict") and callable(value.to_dict):
-            return value.to_dict()
-        elif isinstance(value, dict):
-            return dict(value)
-        elif hasattr(value, "model_dump") and callable(value.model_dump):
-            return value.model_dump()
-        elif hasattr(value, "__dict__"):
-            return dict(value.__dict__)
-        return value
+        return _value_to_dict(response.value)
 
     def delete_record(
         self,
@@ -476,6 +482,24 @@ class Atmosphere:
         pds_endpoint = _resolve_pds_endpoint(did)
         return f"{pds_endpoint}/xrpc/com.atproto.sync.getBlob?did={did}&cid={cid}"
 
+    def resolve_did(self, handle_or_did: str) -> str:
+        """Resolve a handle to a DID, or return a DID string unchanged.
+
+        Args:
+            handle_or_did: An AT Protocol handle (e.g. ``alice.bsky.social``)
+                or a DID string (e.g. ``did:plc:abc123``).
+
+        Returns:
+            The DID string.
+        """
+        if handle_or_did.startswith("did:"):
+            return handle_or_did
+
+        response = self._client.com.atproto.identity.resolve_handle(
+            params={"handle": handle_or_did}
+        )
+        return response.did
+
     def list_records(
         self,
         collection: str,
@@ -517,21 +541,7 @@ class Atmosphere:
             }
         )
 
-        # Convert ATProto models to dicts if needed
-        records = []
-        for r in response.records:
-            value = r.value
-            # DotDict and similar ATProto models have to_dict()
-            if hasattr(value, "to_dict") and callable(value.to_dict):
-                records.append(value.to_dict())
-            elif isinstance(value, dict):
-                records.append(dict(value))
-            elif hasattr(value, "model_dump") and callable(value.model_dump):
-                records.append(value.model_dump())
-            elif hasattr(value, "__dict__"):
-                records.append(dict(value.__dict__))
-            else:
-                records.append(value)
+        records = [_value_to_dict(r.value) for r in response.records]
         return records, response.cursor
 
     # Convenience methods for atdata collections
@@ -599,7 +609,7 @@ class Atmosphere:
         Returns:
             List of dataset records.
         """
-        return self._list_collection("record", repo=repo, limit=limit)
+        return self._list_collection("entry", repo=repo, limit=limit)
 
     def list_lenses(
         self,
