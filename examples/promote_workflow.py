@@ -129,12 +129,12 @@ def demo_mock_promotion():
 
         with patch("atdata.atmosphere.SchemaPublisher") as MockSchemaPublisher:
             mock_schema_pub = MockSchemaPublisher.return_value
-            mock_schema_uri = Mock(__str__=lambda s: "at://did:plc:demo123456789/ac.foundation.dataset.sampleSchema/exp001")
+            mock_schema_uri = Mock(__str__=lambda s: "at://did:plc:demo123456789/science.alt.dataset.sampleSchema/exp001")
             mock_schema_pub.publish.return_value = mock_schema_uri
 
             with patch("atdata.atmosphere.DatasetPublisher") as MockDatasetPublisher:
                 mock_ds_pub = MockDatasetPublisher.return_value
-                mock_ds_uri = Mock(__str__=lambda s: "at://did:plc:demo123456789/ac.foundation.dataset.datasetIndex/exp2024001")
+                mock_ds_uri = Mock(__str__=lambda s: "at://did:plc:demo123456789/science.alt.dataset.datasetIndex/exp2024001")
                 mock_ds_pub.publish_with_urls.return_value = mock_ds_uri
 
                 # Perform the promotion

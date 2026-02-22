@@ -1,6 +1,6 @@
 [project]
 name = "atdata"
-version = "0.5.1b1"
+version = "0.6.0b1"
 description = "A loose federation of distributed, typed datasets"
 readme = "README.md"
 authors = [
@@ -51,9 +51,6 @@ exclude = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/atdata"]
-
-[tool.hatch.build.targets.wheel.force-include]
-"lexicons" = "atdata/lexicons"
 
 [tool.pytest.ini_options]
 addopts = "--cov=atdata --cov-report=html -m 'not integration'"

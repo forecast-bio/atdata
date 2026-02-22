@@ -288,6 +288,19 @@ def test_get_schema(backend) -> None:
     assert result == {"type": "object", "fields": []}
 
 
+def test_get_schema_handle_ref(backend) -> None:
+    """get_schema passes handle refs through to schema_loader.get."""
+    _patch_loaders(backend)
+    backend._schema_loader.get.return_value = {"name": "TestSample", "version": "1.0.0"}
+
+    result = backend.get_schema("@foundation.ac/TestSample@1.0.0")
+
+    backend._schema_loader.get.assert_called_once_with(
+        "@foundation.ac/TestSample@1.0.0"
+    )
+    assert result == {"name": "TestSample", "version": "1.0.0"}
+
+
 def test_list_schemas(backend) -> None:
     """list_schemas extracts 'value' from each record."""
     _patch_loaders(backend)

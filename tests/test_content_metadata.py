@@ -1,7 +1,7 @@
 """Tests for schematized dataset content metadata (GH #38).
 
 Covers:
-- LexDatasetRecord with metadataSchemaRef and contentMetadata
+- LexDatasetEntry with metadataSchemaRef and contentMetadata
 - write_samples() with content_metadata parameter (Packable and dict)
 - Dataset.content_metadata property
 - DatasetPublisher content metadata pass-through
@@ -16,7 +16,7 @@ import atdata
 from atdata.atmosphere._lexicon_types import (
     LEXICON_NAMESPACE,
     DatasetMetadata,
-    LexDatasetRecord,
+    LexDatasetEntry,
     StorageHttp,
 )
 from atdata.atmosphere.records import DatasetPublisher, _packable_to_dict
@@ -45,21 +45,21 @@ class CalibrationMetadata:
 
 
 # ---------------------------------------------------------------------------
-# LexDatasetRecord: metadataSchemaRef and contentMetadata
+# LexDatasetEntry: metadataSchemaRef and contentMetadata
 # ---------------------------------------------------------------------------
 
 
-class TestLexDatasetRecordContentMetadata:
+class TestLexDatasetEntryContentMetadata:
     """Tests for the new metadataSchemaRef and contentMetadata fields."""
 
     def _make_record(self, **kwargs):
         defaults = dict(
             name="TestDS",
-            schema_ref="at://did:plc:abc/ac.foundation.dataset.schema/xyz",
+            schema_ref="at://did:plc:abc/science.alt.dataset.schema/xyz",
             storage=StorageHttp(shards=[]),
         )
         defaults.update(kwargs)
-        return LexDatasetRecord(**defaults)
+        return LexDatasetEntry(**defaults)
 
     def test_to_record_omits_none_content_metadata(self):
         rec = self._make_record()
@@ -69,12 +69,12 @@ class TestLexDatasetRecordContentMetadata:
 
     def test_to_record_includes_metadata_schema_ref(self):
         rec = self._make_record(
-            metadata_schema_ref="at://did:plc:abc/ac.foundation.dataset.schema/meta1"
+            metadata_schema_ref="at://did:plc:abc/science.alt.dataset.schema/meta1"
         )
         d = rec.to_record()
         assert (
             d["metadataSchemaRef"]
-            == "at://did:plc:abc/ac.foundation.dataset.schema/meta1"
+            == "at://did:plc:abc/science.alt.dataset.schema/meta1"
         )
 
     def test_to_record_includes_content_metadata(self):
@@ -95,7 +95,7 @@ class TestLexDatasetRecordContentMetadata:
 
     def test_roundtrip_with_content_metadata(self):
         original = self._make_record(
-            metadata_schema_ref="at://did:plc:abc/ac.foundation.dataset.schema/meta1",
+            metadata_schema_ref="at://did:plc:abc/science.alt.dataset.schema/meta1",
             content_metadata={
                 "instrument": "Nikon A1R",
                 "acquisition_date": "2025-06-15",
@@ -103,20 +103,20 @@ class TestLexDatasetRecordContentMetadata:
             },
         )
         d = original.to_record()
-        restored = LexDatasetRecord.from_record(d)
+        restored = LexDatasetEntry.from_record(d)
         assert restored.metadata_schema_ref == original.metadata_schema_ref
         assert restored.content_metadata == original.content_metadata
 
     def test_roundtrip_without_content_metadata(self):
         """Backward compat: old records without content metadata still parse."""
         d = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "OldDataset",
             "schemaRef": "at://did:plc:abc/collection/key",
             "storage": {"$type": f"{LEXICON_NAMESPACE}.storageHttp", "shards": []},
             "createdAt": "2025-01-01T00:00:00+00:00",
         }
-        restored = LexDatasetRecord.from_record(d)
+        restored = LexDatasetEntry.from_record(d)
         assert restored.metadata_schema_ref is None
         assert restored.content_metadata is None
 
@@ -128,7 +128,7 @@ class TestLexDatasetRecordContentMetadata:
             content_metadata={"instrument": "Zeiss"},
         )
         d = rec.to_record()
-        restored = LexDatasetRecord.from_record(d)
+        restored = LexDatasetEntry.from_record(d)
         assert restored.metadata is not None
         assert restored.metadata.split == "train"
         assert restored.content_metadata == {"instrument": "Zeiss"}
@@ -284,10 +284,10 @@ class TestDatasetContentMetadata:
 
 class TestDatasetPublisherContentMetadata:
     def test_create_record_with_content_metadata(self):
-        """_create_record passes content metadata to LexDatasetRecord."""
+        """_create_record passes content metadata to LexDatasetEntry."""
         mock_client = Mock()
         mock_client.create_record.return_value = Mock(
-            uri="at://did:plc:abc/ac.foundation.dataset.record/xyz"
+            uri="at://did:plc:abc/science.alt.dataset.entry/xyz"
         )
         publisher = DatasetPublisher(mock_client)
 
@@ -311,7 +311,7 @@ class TestDatasetPublisherContentMetadata:
         """_create_record omits content metadata fields when None."""
         mock_client = Mock()
         mock_client.create_record.return_value = Mock(
-            uri="at://did:plc:abc/ac.foundation.dataset.record/xyz"
+            uri="at://did:plc:abc/science.alt.dataset.entry/xyz"
         )
         publisher = DatasetPublisher(mock_client)
 

@@ -26,7 +26,7 @@ def _make_schema(
             {
                 "name": "text",
                 "fieldType": {
-                    "$type": "ac.foundation.dataset.schemaType#primitive",
+                    "$type": "science.alt.dataset.schemaType#primitive",
                     "primitive": "str",
                 },
                 "optional": False,
@@ -34,7 +34,7 @@ def _make_schema(
             {
                 "name": "value",
                 "fieldType": {
-                    "$type": "ac.foundation.dataset.schemaType#primitive",
+                    "$type": "science.alt.dataset.schemaType#primitive",
                     "primitive": "int",
                 },
                 "optional": False,

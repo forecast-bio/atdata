@@ -1,4 +1,4 @@
-"""Lexicon-mirror types for the ``ac.foundation.dataset`` namespace.
+"""Lexicon-mirror types for the ``science.alt.dataset`` namespace.
 
 These dataclasses map 1:1 to the ATProto Lexicon JSON definitions. They are
 the canonical Python representation for serializing to and deserializing from
@@ -16,7 +16,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any
 
-LEXICON_NAMESPACE = "ac.foundation.dataset"
+from .._schema_codec import _get_schema_version
+from ._types import LEXICON_NAMESPACE
 
 
 def decode_metadata_raw(raw: Any) -> dict | None:
@@ -65,7 +66,7 @@ def decode_metadata_raw(raw: Any) -> dict | None:
 class ShardChecksum:
     """Content hash for shard integrity verification.
 
-    Mirrors ``ac.foundation.dataset.record#shardChecksum``.
+    Mirrors ``science.alt.dataset.entry#shardChecksum``.
     """
 
     algorithm: str
@@ -88,7 +89,7 @@ class ShardChecksum:
 class DatasetSize:
     """Dataset size metadata.
 
-    Mirrors ``ac.foundation.dataset.record#datasetSize``.
+    Mirrors ``science.alt.dataset.entry#datasetSize``.
     """
 
     samples: int | None = None
@@ -117,10 +118,39 @@ class DatasetSize:
 
 
 @dataclass
+class ShardManifestRef:
+    """References to manifest sidecar data for a single shard.
+
+    Mirrors ``science.alt.dataset.entry#shardManifestRef``.
+    The header contains schema info, sample count, and per-field aggregates.
+    The samples file is a Parquet table with per-sample metadata for
+    query-based access.
+    """
+
+    header: dict[str, Any]
+    """ATProto blob reference for the manifest JSON header."""
+
+    samples: dict[str, Any] | None = None
+    """ATProto blob reference for the Parquet samples file."""
+
+    def to_record(self) -> dict[str, Any]:
+        """Serialize to ATProto record dict."""
+        d: dict[str, Any] = {"header": self.header}
+        if self.samples is not None:
+            d["samples"] = self.samples
+        return d
+
+    @classmethod
+    def from_record(cls, d: dict[str, Any]) -> ShardManifestRef:
+        """Deserialize from ATProto record dict."""
+        return cls(header=d["header"], samples=d.get("samples"))
+
+
+@dataclass
 class DatasetMetadata:
     """Typed metadata for dataset records.
 
-    Mirrors ``ac.foundation.dataset.record#datasetMetadata``. Provides
+    Mirrors ``science.alt.dataset.entry#datasetMetadata``. Provides
     well-known fields for common dataset metadata, plus a ``custom`` dict
     for domain-specific extensions.
 
@@ -280,7 +310,7 @@ class DatasetMetadata:
 class HttpShardEntry:
     """A single HTTP-accessible shard with integrity checksum.
 
-    Mirrors ``ac.foundation.dataset.storageHttp#shardEntry``.
+    Mirrors ``science.alt.dataset.storageHttp#shardEntry``.
     """
 
     url: str
@@ -303,7 +333,7 @@ class HttpShardEntry:
 class StorageHttp:
     """HTTP/HTTPS storage for WebDataset tar archives.
 
-    Mirrors ``ac.foundation.dataset.storageHttp``.
+    Mirrors ``science.alt.dataset.storageHttp``.
     """
 
     shards: list[HttpShardEntry]
@@ -327,7 +357,7 @@ class StorageHttp:
 class S3ShardEntry:
     """A single S3 object shard with integrity checksum.
 
-    Mirrors ``ac.foundation.dataset.storageS3#shardEntry``.
+    Mirrors ``science.alt.dataset.storageS3#shardEntry``.
     """
 
     key: str
@@ -350,7 +380,7 @@ class S3ShardEntry:
 class StorageS3:
     """S3/S3-compatible storage for WebDataset tar archives.
 
-    Mirrors ``ac.foundation.dataset.storageS3``.
+    Mirrors ``science.alt.dataset.storageS3``.
     """
 
     bucket: str
@@ -386,7 +416,7 @@ class StorageS3:
 class BlobEntry:
     """A single PDS blob shard with optional integrity checksum.
 
-    Mirrors ``ac.foundation.dataset.storageBlobs#blobEntry``.
+    Mirrors ``science.alt.dataset.storageBlobs#blobEntry``.
     """
 
     blob: dict[str, Any]
@@ -414,7 +444,7 @@ class BlobEntry:
 class StorageBlobs:
     """ATProto PDS blob storage for WebDataset tar archives.
 
-    Mirrors ``ac.foundation.dataset.storageBlobs``.
+    Mirrors ``science.alt.dataset.storageBlobs``.
     """
 
     blobs: list[BlobEntry]
@@ -480,7 +510,7 @@ def storage_from_record(d: dict[str, Any]) -> StorageUnion:
 class LexCodeReference:
     """Reference to code in an external repository.
 
-    Mirrors ``ac.foundation.dataset.lens#codeReference``.
+    Mirrors ``science.alt.dataset.lens#codeReference``.
     All fields are required per the lexicon.
     """
 
@@ -527,7 +557,7 @@ class LexCodeReference:
 class JsonSchemaFormat:
     """JSON Schema Draft 7 format for sample type definitions.
 
-    Mirrors ``ac.foundation.dataset.schema#jsonSchemaFormat``.
+    Mirrors ``science.alt.dataset.schema#jsonSchemaFormat``.
     """
 
     schema_body: dict[str, Any]
@@ -560,7 +590,7 @@ class JsonSchemaFormat:
 class LexSchemaRecord:
     """Versioned sample type definition.
 
-    Mirrors ``ac.foundation.dataset.schema`` (main record).
+    Mirrors ``science.alt.dataset.schema`` (main record).
     """
 
     name: str
@@ -596,7 +626,7 @@ class LexSchemaRecord:
             "schemaType": self.schema_type,
             "schema": self.schema.to_record(),
             "createdAt": self.created_at.isoformat(),
-            "$atdataSchemaVersion": self.atdata_schema_version,
+            "atdataSchemaVersion": self.atdata_schema_version,
         }
         if self.description is not None:
             d["description"] = self.description
@@ -615,7 +645,7 @@ class LexSchemaRecord:
             created_at=datetime.fromisoformat(d["createdAt"]),
             description=d.get("description"),
             metadata=d.get("metadata"),
-            atdata_schema_version=d.get("$atdataSchemaVersion", 1),
+            atdata_schema_version=_get_schema_version(d),
         )
 
 
@@ -625,10 +655,10 @@ class LexSchemaRecord:
 
 
 @dataclass
-class LexDatasetRecord:
-    """Dataset index record pointing to WebDataset storage.
+class LexDatasetEntry:
+    """Dataset index entry pointing to WebDataset storage.
 
-    Mirrors ``ac.foundation.dataset.record`` (main record).
+    Mirrors ``science.alt.dataset.entry`` (main record).
     """
 
     name: str
@@ -664,10 +694,13 @@ class LexDatasetRecord:
     content_metadata: dict[str, Any] | None = None
     """Dataset-level content metadata (e.g., instrument settings)."""
 
+    manifests: list[ShardManifestRef] | None = None
+    """Per-shard manifest metadata for query-based access."""
+
     def to_record(self) -> dict[str, Any]:
         """Serialize to ATProto record dict."""
         d: dict[str, Any] = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": self.name,
             "schemaRef": self.schema_ref,
             "storage": self.storage.to_record(),
@@ -677,7 +710,7 @@ class LexDatasetRecord:
             d["description"] = self.description
         if self.metadata is not None:
             d["metadata"] = self.metadata.to_record()
-        if self.tags:
+        if self.tags is not None:
             d["tags"] = self.tags
         if self.size is not None:
             d["size"] = self.size.to_record()
@@ -687,10 +720,12 @@ class LexDatasetRecord:
             d["metadataSchemaRef"] = self.metadata_schema_ref
         if self.content_metadata is not None:
             d["contentMetadata"] = self.content_metadata
+        if self.manifests is not None:
+            d["manifests"] = [m.to_record() for m in self.manifests]
         return d
 
     @classmethod
-    def from_record(cls, d: dict[str, Any]) -> LexDatasetRecord:
+    def from_record(cls, d: dict[str, Any]) -> LexDatasetEntry:
         """Deserialize from ATProto record dict."""
         size = None
         if "size" in d:
@@ -700,6 +735,11 @@ class LexDatasetRecord:
         metadata: DatasetMetadata | None = None
         if decoded_meta is not None:
             metadata = DatasetMetadata.from_dict(decoded_meta)
+
+        raw_manifests = d.get("manifests")
+        manifests: list[ShardManifestRef] | None = None
+        if raw_manifests is not None:
+            manifests = [ShardManifestRef.from_record(m) for m in raw_manifests]
 
         return cls(
             name=d["name"],
@@ -713,6 +753,7 @@ class LexDatasetRecord:
             license=d.get("license"),
             metadata_schema_ref=d.get("metadataSchemaRef"),
             content_metadata=d.get("contentMetadata"),
+            manifests=manifests,
         )
 
 
@@ -725,7 +766,7 @@ class LexDatasetRecord:
 class LexLensRecord:
     """Bidirectional transformation between two sample types.
 
-    Mirrors ``ac.foundation.dataset.lens`` (main record).
+    Mirrors ``science.alt.dataset.lens`` (main record).
     ``getter_code`` and ``putter_code`` are required per the lexicon.
     """
 
@@ -800,7 +841,7 @@ class LexLensRecord:
 class LexLabelRecord:
     """Named label pointing to a dataset record.
 
-    Mirrors ``ac.foundation.dataset.label`` (main record).
+    Mirrors ``science.alt.dataset.label`` (main record).
     Multiple labels with the same name but different versions can coexist,
     enabling versioned references to immutable, CID-addressed dataset records.
     """
@@ -850,6 +891,7 @@ __all__ = [
     "LEXICON_NAMESPACE",
     "ShardChecksum",
     "DatasetSize",
+    "ShardManifestRef",
     "DatasetMetadata",
     "HttpShardEntry",
     "StorageHttp",
@@ -862,7 +904,7 @@ __all__ = [
     "LexCodeReference",
     "JsonSchemaFormat",
     "LexSchemaRecord",
-    "LexDatasetRecord",
+    "LexDatasetEntry",
     "LexLensRecord",
     "LexLabelRecord",
 ]

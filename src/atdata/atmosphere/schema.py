@@ -1,7 +1,7 @@
 """Schema publishing and loading for ATProto.
 
 This module provides classes for publishing PackableSample schemas to ATProto
-and loading them back. Schemas are published as ``ac.foundation.dataset.schema``
+and loading them back. Schemas are published as ``science.alt.dataset.schema``
 records.
 """
 
@@ -23,10 +23,47 @@ from .._type_utils import (
     unwrap_optional,
     is_ndarray_type,
 )
-from .._exceptions import SchemaError
+from .._schema_codec import _check_schema_record_version
 
-# Maximum $atdataSchemaVersion this library can read.
-_MAX_SUPPORTED_SCHEMA_VERSION = 1
+
+def _parse_handle_schema_ref(ref: str) -> tuple[str, str, str]:
+    """Parse ``@handle/TypeName@version`` into ``(handle, name, version)``.
+
+    Args:
+        ref: Schema reference in ``@handle/TypeName@version`` format.
+
+    Returns:
+        Tuple of ``(handle_or_did, type_name, version)``.
+
+    Raises:
+        ValueError: If the format is invalid or version is missing.
+    """
+    if not ref.startswith("@"):
+        raise ValueError(f"Not a handle schema ref: {ref}")
+
+    rest = ref[1:]
+
+    if "/" not in rest:
+        raise ValueError(
+            f"Invalid handle schema ref: {ref}. Expected @handle/TypeName@version"
+        )
+
+    handle_or_did, type_part = rest.split("/", 1)
+    if not handle_or_did or not type_part:
+        raise ValueError(f"Invalid handle schema ref: {ref}")
+
+    if "@" not in type_part:
+        raise ValueError(
+            f"Handle schema ref must include version: {ref}. "
+            "Expected @handle/TypeName@version"
+        )
+
+    type_name, version = type_part.rsplit("@", 1)
+    if not type_name or not version:
+        raise ValueError(f"Invalid version syntax in handle schema ref: {ref}")
+
+    return handle_or_did, type_name, version
+
 
 if TYPE_CHECKING:
     from .._protocols import Packable
@@ -51,7 +88,7 @@ class SchemaPublisher:
         >>> publisher = SchemaPublisher(atmo)
         >>> uri = publisher.publish(MySample, version="1.0.0")
         >>> print(uri)
-        at://did:plc:.../ac.foundation.dataset.schema/...
+        at://did:plc:.../science.alt.dataset.schema/...
     """
 
     def __init__(self, client: Atmosphere):
@@ -180,7 +217,7 @@ class SchemaPublisher:
 
         if is_ndarray_type(python_type):
             return {
-                "$ref": "https://foundation.ac/schemas/atdata-ndarray-bytes/1.0.0#/$defs/ndarray"
+                "$ref": "https://alt.science/schemas/atdata-ndarray-bytes/1.0.0#/$defs/ndarray"
             }
 
         origin = get_origin(python_type)
@@ -209,12 +246,12 @@ class SchemaLoader:
     schemas from a repository.
 
     Note:
-        The ``ac.foundation.dataset.getLatestSchema`` query lexicon is
+        The ``science.alt.dataset.getLatestSchema`` query lexicon is
         defined but has no AppView to serve it yet. A client-side
         equivalent (fetching all schema records and picking the latest
         version) has not been implemented here. When the AppView ships,
         add a ``resolve()``-style method backed by
-        ``GET /xrpc/ac.foundation.dataset.getLatestSchema``.
+        ``GET /xrpc/science.alt.dataset.getLatestSchema``.
         See also: ``LabelLoader.resolve()`` for the label workaround
         pattern.
 
@@ -222,7 +259,7 @@ class SchemaLoader:
         >>> atmo = Atmosphere.login("handle", "password")
         >>>
         >>> loader = SchemaLoader(atmo)
-        >>> schema = loader.get("at://did:plc:.../ac.foundation.dataset.schema/...")
+        >>> schema = loader.get("at://did:plc:.../science.alt.dataset.schema/...")
         >>> print(schema["name"])
         'MySample'
     """
@@ -236,19 +273,25 @@ class SchemaLoader:
         self.client = client
 
     def get(self, uri: str | AtUri) -> dict:
-        """Fetch a schema record by AT URI.
+        """Fetch a schema record by AT URI or handle reference.
 
         Args:
-            uri: The AT URI of the schema record.
+            uri: The AT URI of the schema record, or a handle reference
+                in ``@handle/TypeName@version`` format.
 
         Returns:
             The schema record as a dictionary.
 
         Raises:
-            ValueError: If the record is not a schema record.
+            ValueError: If the record is not a schema record or format
+                is invalid.
+            KeyError: If no matching schema is found for a handle reference.
             SchemaError: If the record uses an unsupported schema version.
             atproto.exceptions.AtProtocolError: If record not found.
         """
+        if isinstance(uri, str) and uri.startswith("@"):
+            return self._resolve_handle_ref(uri)
+
         record = self.client.get_record(uri)
 
         expected_type = f"{LEXICON_NAMESPACE}.schema"
@@ -260,6 +303,38 @@ class SchemaLoader:
 
         _check_schema_record_version(record)
         return record
+
+    def _resolve_handle_ref(self, ref: str) -> dict:
+        """Resolve ``@handle/TypeName@version`` to a schema record.
+
+        Args:
+            ref: Handle reference in ``@handle/TypeName@version`` format.
+
+        Returns:
+            The matching schema record dictionary.
+
+        Raises:
+            ValueError: If the ref format is invalid.
+            KeyError: If no matching schema is found.
+        """
+        handle_or_did, type_name, version = _parse_handle_schema_ref(ref)
+        did = self._resolve_did(handle_or_did)
+
+        records = self.list_all(repo=did)
+
+        for record in records:
+            if record.get("name") == type_name and record.get("version") == version:
+                _check_schema_record_version(record)
+                return record
+
+        raise KeyError(
+            f"Schema {type_name!r} version {version!r} not found "
+            f"in repository {handle_or_did!r}"
+        )
+
+    def _resolve_did(self, handle_or_did: str) -> str:
+        """Resolve a handle to a DID, or return the DID directly."""
+        return self.client.resolve_did(handle_or_did)
 
     def get_typed(self, uri: str | AtUri) -> LexSchemaRecord:
         """Fetch a schema record and return as a typed object.
@@ -293,24 +368,3 @@ class SchemaLoader:
             List of schema records.
         """
         return self.client.list_schemas(repo=repo, limit=limit)
-
-
-def _check_schema_record_version(record: dict) -> None:
-    """Validate that a schema record's ``$atdataSchemaVersion`` is supported.
-
-    Records without the field are treated as version 1 (backward compat).
-
-    Args:
-        record: Schema record dict.
-
-    Raises:
-        SchemaError: If the version is higher than this library supports.
-    """
-    v = record.get("$atdataSchemaVersion", 1)
-    if v > _MAX_SUPPORTED_SCHEMA_VERSION:
-        raise SchemaError(
-            f"Unsupported schema record version: {v}. "
-            f"This version of atdata supports schema record versions "
-            f"up to {_MAX_SUPPORTED_SCHEMA_VERSION}. "
-            f"Upgrade atdata to read this schema."
-        )

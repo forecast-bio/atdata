@@ -70,11 +70,9 @@ class _FakeAtmoBackend:
     ):
         """Stub insert that stores a dataset record and publishes a label."""
         self._counter += 1
-        uri = (
-            f"at://{self.client.did}/{LEXICON_NAMESPACE}.record/{name}-{self._counter}"
-        )
+        uri = f"at://{self.client.did}/{LEXICON_NAMESPACE}.entry/{name}-{self._counter}"
         record = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": name,
             "schemaRef": schema_ref or "",
             "storage": {
@@ -298,9 +296,9 @@ class TestIndexGetDatasetAtmosphere:
     def test_get_dataset_at_uri_bypasses_labels(self, atmo_index, mock_atmo):
         """get_dataset with AT URI goes directly to backend, not labels."""
         backend = atmo_index._atmosphere
-        uri = f"at://{mock_atmo.did}/{LEXICON_NAMESPACE}.record/direct-record"
+        uri = f"at://{mock_atmo.did}/{LEXICON_NAMESPACE}.entry/direct-record"
         backend._datasets[uri] = {
-            "$type": f"{LEXICON_NAMESPACE}.record",
+            "$type": f"{LEXICON_NAMESPACE}.entry",
             "name": "direct",
             "schemaRef": "",
             "storage": {
@@ -492,14 +490,14 @@ class TestAtmosphereBackendResolveLabel:
         # Mock the label loader's resolve method
         backend._label_loader = MagicMock()
         backend._label_loader.resolve.return_value = (
-            "at://did:plc:test/ac.foundation.dataset.record/abc"
+            "at://did:plc:test/science.alt.dataset.entry/abc"
         )
 
         result = backend.resolve_label("did:plc:test", "my-ds", "1.0.0")
         backend._label_loader.resolve.assert_called_once_with(
             "did:plc:test", "my-ds", "1.0.0"
         )
-        assert result == "at://did:plc:test/ac.foundation.dataset.record/abc"
+        assert result == "at://did:plc:test/science.alt.dataset.entry/abc"
 
 
 # ---------------------------------------------------------------------------
@@ -564,7 +562,7 @@ class TestRealAtmosphereBackendLabelPublish:
         backend.insert_dataset(
             ds,
             name="url-test",
-            schema_ref="at://did:plc:real123/ac.foundation.dataset.schema/s1",
+            schema_ref="at://did:plc:real123/science.alt.dataset.schema/s1",
             data_urls=["http://example.com/data.tar"],
             description="URL test",
         )
@@ -594,7 +592,7 @@ class TestRealAtmosphereBackendLabelPublish:
         backend.insert_dataset(
             ds,
             name="blob-test",
-            schema_ref="at://did:plc:real123/ac.foundation.dataset.schema/s1",
+            schema_ref="at://did:plc:real123/science.alt.dataset.schema/s1",
             data_urls=["http://example.com/data.tar"],
             blob_refs=blob_refs,
             description="Blob test",
@@ -613,12 +611,12 @@ class TestRealAtmosphereBackendLabelPublish:
         backend.insert_dataset(
             ds,
             name="uri-check",
-            schema_ref="at://did:plc:real123/ac.foundation.dataset.schema/s1",
+            schema_ref="at://did:plc:real123/science.alt.dataset.schema/s1",
             data_urls=["http://example.com/data.tar"],
         )
 
         # Find dataset and label URIs
-        dataset_uris = [uri for uri in records if f"{LEXICON_NAMESPACE}.record" in uri]
+        dataset_uris = [uri for uri in records if f"{LEXICON_NAMESPACE}.entry" in uri]
         label_uris = [uri for uri in records if f"{LEXICON_NAMESPACE}.label" in uri]
 
         assert len(dataset_uris) == 1

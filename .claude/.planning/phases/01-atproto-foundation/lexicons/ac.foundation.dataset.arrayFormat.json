@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "ac.foundation.dataset.arrayFormat",
+  "id": "science.alt.dataset.arrayFormat",
   "defs": {
     "main": {
       "type": "string",
@@ -10,7 +10,7 @@
     },
     "ndarrayBytes": {
       "type": "token",
-      "description": "Numpy .npy binary format for NDArray serialization. Stores arrays with dtype and shape in binary header. Versions maintained at https://foundation.ac/schemas/atdata-ndarray-bytes/{version}/"
+      "description": "Numpy .npy binary format for NDArray serialization. Stores arrays with dtype and shape in binary header. Versions maintained at https://alt.science/schemas/atdata-ndarray-bytes/{version}/"
     }
   }
 }

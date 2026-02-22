@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.6.0b1] - 2026-02-22
+
+### Added
+- **Dataset manifest support**: Optional `manifests` property on dataset entry records for per-shard metadata references, with `ShardManifestRef` and `LensCodeRef` Python mirror types (GH#62)
+- **Handle-based schema resolution**: `get_schema()` and `get_schema_type()` now accept `@handle/TypeName@version` format, resolving schemas by handle + name + optional semver instead of requiring raw AT-URIs (GH#61)
+
+### Changed
+- **Namespace rename**: Lexicon namespace renamed from `ac.foundation.dataset` to `science.alt.dataset` across all source, tests, and documentation. Lexicon JSON files vendored from [forecast-bio/atdata-lexicon](https://github.com/forecast-bio/atdata-lexicon) with NSID-to-path directory structure. Lexicon loader updated to resolve NSIDs via path traversal. Added `label` and `resolveLabel` to `LEXICON_IDS` (GH#71)
+- **Lexicon record → entry rename**: The dataset record lexicon is renamed from `ac.foundation.dataset.record` to `ac.foundation.dataset.entry` throughout the codebase — lexicon files, Python types, collection constants, tests, and documentation (GH#63)
+- **Schema version field rename**: `$atdataSchemaVersion` renamed to `atdataSchemaVersion` (no `$` prefix) to follow ATProto naming conventions for non-reserved properties (GH#65)
+- **DID resolution refactor**: Extracted `Atmosphere.resolve_did()` as a public method, deduplicating handle-to-DID resolution across schema, label, and record loaders
+- **CI**: Redis and Postgres container images pulled from AWS ECR Public Gallery (`public.ecr.aws/docker/library/`) instead of Docker Hub to avoid rate limits; replaced `supercharge/redis-github-action` with native service containers
+
+### Fixed
+- **Manifest serialization**: Manifests field now uses truthiness check consistent with the tags field pattern, preventing empty lists from being serialized as `None`
+
 ## [0.5.1b1] - 2026-02-16
 
 ### Fixed
@@ -21,19 +37,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **XRPC query workaround docs**: Documented client-side `list_records()` + filter patterns used as temporary workarounds pending AppView support (#56)
 
 ### Changed
-- Generalize /kickoff, /check, /featree to global Claude skills (#768)
-- GitHub issue: rename dataset.record → dataset.entry lexicon (#767)
-- GitHub issue: manifest info in dataset record lexicon (#766)
-- Investigate shard querying/indexing with ATProto blob storage (#765)
-- Penguins atmosphere round-trip prototype (#764)
-- Investigate schema type introspection for @foundation.ac/MnistSample@1.0.0 (#762)
-- Run MNIST prototype scripts end-to-end (#761)
-- MNIST end-to-end atmosphere prototype scripts (#758)
-- Create download/verify script: atmosphere → local (#760)
-- Create upload script: MNIST → atmosphere (#759)
 - **Schema lexicon rename**: `getLatestSchema` renamed to `resolveSchema` to match `resolveLabel` semantics; added `$atdataSchemaVersion` property for format versioning (#53)
 - **Schema API consolidation**: `decode_schema`, `load_schema`, `decode_schema_as`, and `schema_to_type` consolidated into `get_schema_type()` with deprecation shims for old names (#54)
 - **Build config cleanup**: `.chainlink/` and `.claude/` directories excluded from sdist builds (#54)
+- **Security hardening**: Sanitized schema field names in `_schema_codec.py` and `_stub_manager.py`; removed `allow_pickle=True` from numpy save/load in `_helpers.py`
 
 ### Fixed
 - **Lens discovery pagination**: `find_by_schemas()` now paginates with `limit=100` + cursor instead of exceeding ATProto's `list_records` cap of 100

@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "ac.foundation.dataset.lens",
+  "id": "science.alt.dataset.lens",
   "defs": {
     "main": {
       "type": "record",
@@ -55,7 +55,8 @@
             "maxLength": 50
           },
           "metadata": {
-            "type": "object",
+            "type": "ref",
+            "ref": "#lensMetadata",
             "description": "Arbitrary metadata (author, performance notes, etc.)"
           },
           "createdAt": {
@@ -65,6 +66,11 @@
           }
         }
       }
+    },
+    "lensMetadata": {
+      "type": "object",
+      "description": "Open metadata object for lens records. Applications may extend with additional fields (author, performance notes, etc.).",
+      "properties": {}
     },
     "codeReference": {
       "type": "object",

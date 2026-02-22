@@ -134,11 +134,17 @@ class MockAtmosphere:
         ]
         return records, None
 
+    def resolve_did(self, handle_or_did: str) -> str:
+        """Resolve a handle to a DID, or return a DID unchanged."""
+        if handle_or_did.startswith("did:"):
+            return handle_or_did
+        return self.did
+
     def list_labels(
         self, repo: str | None = None, limit: int = 100
     ) -> list[dict[str, Any]]:
         """List label records."""
-        collection = "ac.foundation.dataset.label"
+        collection = "science.alt.dataset.label"
         return [rec for uri, rec in self._records.items() if collection in uri][:limit]
 
     def upload_blob(self, data: bytes) -> dict[str, Any]:

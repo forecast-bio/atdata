@@ -460,7 +460,7 @@ class TestAtUriParsing:
 
     def test_uri_str_roundtrip(self):
         """String conversion should roundtrip."""
-        original = "at://did:plc:test123/ac.foundation.dataset.schema/xyz789"
+        original = "at://did:plc:test123/science.alt.dataset.schema/xyz789"
         uri = AtUri.parse(original)
         assert str(uri) == original
 
@@ -503,7 +503,7 @@ class TestPDSBlobStore:
         mock_ds = Mock()
         mock_ds.ordered.return_value = iter([])
 
-        with pytest.raises(ValueError, match="Not authenticated"):
+        with pytest.raises(ValueError, match="authenticated"):
             store.write_shards(mock_ds, prefix="test")
 
     def test_write_shards_uploads_blobs(

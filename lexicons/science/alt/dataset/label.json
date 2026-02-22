@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "ac.foundation.dataset.label",
+  "id": "science.alt.dataset.label",
   "defs": {
     "main": {
       "type": "record",
-      "description": "Named label pointing to a dataset record. Multiple labels with the same name but different versions can coexist, enabling versioned references to immutable dataset records.",
+      "description": "Named label pointing to a dataset entry. Multiple labels with the same name but different versions can coexist, enabling versioned references to immutable dataset entries.",
       "key": "tid",
       "record": {
         "type": "object",
@@ -22,7 +22,7 @@
           "datasetUri": {
             "type": "string",
             "format": "at-uri",
-            "description": "AT-URI pointing to the dataset record this label refers to",
+            "description": "AT-URI pointing to the dataset entry this label refers to",
             "maxLength": 500
           },
           "version": {

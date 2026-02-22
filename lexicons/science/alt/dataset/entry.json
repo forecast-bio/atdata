@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "ac.foundation.dataset.record",
+  "id": "science.alt.dataset.entry",
   "defs": {
     "main": {
       "type": "record",
-      "description": "Index record for a WebDataset-backed dataset with references to storage location and sample schema",
+      "description": "Index entry for a WebDataset-backed dataset with references to storage location and sample schema",
       "key": "tid",
       "record": {
         "type": "object",
@@ -30,9 +30,9 @@
             "type": "union",
             "description": "Storage location for dataset files (WebDataset tar archives)",
             "refs": [
-              "ac.foundation.dataset.storageHttp",
-              "ac.foundation.dataset.storageS3",
-              "ac.foundation.dataset.storageBlobs"
+              "science.alt.dataset.storageHttp",
+              "science.alt.dataset.storageS3",
+              "science.alt.dataset.storageBlobs"
             ]
           },
           "description": {
@@ -67,7 +67,7 @@
           "createdAt": {
             "type": "string",
             "format": "datetime",
-            "description": "Timestamp when this dataset record was created"
+            "description": "Timestamp when this dataset entry was created"
           },
           "metadataSchemaRef": {
             "type": "string",
