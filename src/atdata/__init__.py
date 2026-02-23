@@ -81,6 +81,9 @@ from ._exceptions import (
     SampleKeyError as SampleKeyError,
     ShardError as ShardError,
     PartialFailureError as PartialFailureError,
+    AppViewError as AppViewError,
+    AppViewUnavailableError as AppViewUnavailableError,
+    AppViewRequiredError as AppViewRequiredError,
 )
 
 from ._schema_codec import (

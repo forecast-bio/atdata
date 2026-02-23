@@ -13,6 +13,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Handle-based schema resolution**: `get_schema()` and `get_schema_type()` now accept `@handle/TypeName@version` format, resolving schemas by handle + name + optional semver instead of requiring raw AT-URIs (GH#61)
 
 ### Changed
+- Client-side AppView integration (#816)
+- Phase 5: load_dataset() AppView integration (#821)
+- Phase 4: New AppView-only capabilities (#820)
+- Phase 3: Migrate procedure methods to AppView (#819)
+- Phase 2: Migrate query methods to AppView (#818)
+- Phase 1: XRPC transport infrastructure (#817)
+- Phase 6: Exception types for AppView (#822)
 - **Namespace rename**: Lexicon namespace renamed from `ac.foundation.dataset` to `science.alt.dataset` across all source, tests, and documentation. Lexicon JSON files vendored from [forecast-bio/atdata-lexicon](https://github.com/forecast-bio/atdata-lexicon) with NSID-to-path directory structure. Lexicon loader updated to resolve NSIDs via path traversal. Added `label` and `resolveLabel` to `LEXICON_IDS` (GH#71)
 - **Lexicon record → entry rename**: The dataset record lexicon is renamed from `ac.foundation.dataset.record` to `ac.foundation.dataset.entry` throughout the codebase — lexicon files, Python types, collection constants, tests, and documentation (GH#63)
 - **Schema version field rename**: `$atdataSchemaVersion` renamed to `atdataSchemaVersion` (no `$` prefix) to follow ATProto naming conventions for non-reserved properties (GH#65)
