@@ -348,7 +348,8 @@ class SchemaLoader:
                 from .._logging import get_logger
 
                 get_logger().warning(
-                    "AppView schema resolution failed, falling back to client-side"
+                    "AppView schema resolution failed, falling back to client-side",
+                    exc_info=True,
                 )
 
         return self._resolve_client_side(handle_or_did, schema_id, version)
@@ -453,7 +454,8 @@ class SchemaLoader:
                 from .._logging import get_logger
 
                 get_logger().warning(
-                    "AppView schema listing failed, falling back to client-side"
+                    "AppView schema listing failed, falling back to client-side",
+                    exc_info=True,
                 )
 
         return self.client.list_schemas(repo=repo, limit=limit)

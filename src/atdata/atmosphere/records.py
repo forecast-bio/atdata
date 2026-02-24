@@ -566,7 +566,8 @@ class DatasetLoader:
                 from .._logging import get_logger
 
                 get_logger().warning(
-                    "AppView getEntry failed, falling back to client-side"
+                    "AppView getEntry failed, falling back to client-side",
+                    exc_info=True,
                 )
 
         record = self.client.get_record(uri)
@@ -626,7 +627,8 @@ class DatasetLoader:
                 from .._logging import get_logger
 
                 get_logger().warning(
-                    "AppView listEntries failed, falling back to client-side"
+                    "AppView listEntries failed, falling back to client-side",
+                    exc_info=True,
                 )
 
         return self.client.list_datasets(repo=repo, limit=limit)
@@ -808,7 +810,8 @@ class DatasetLoader:
                 from .._logging import get_logger
 
                 get_logger().warning(
-                    "AppView resolveBlobs failed, falling back to client-side"
+                    "AppView resolveBlobs failed, falling back to client-side",
+                    exc_info=True,
                 )
 
         blob_entries = self.get_blobs(uri)
@@ -830,7 +833,7 @@ class DatasetLoader:
         """Resolve blob URLs via AppView batch endpoint."""
         result = self.client.xrpc_query(
             f"{LEXICON_NAMESPACE}.resolveBlobs",
-            params={"uris": uri},
+            params={"uris": [uri]},
         )
         urls = []
         for blob in result.get("blobs", []):

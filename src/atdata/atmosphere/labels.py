@@ -210,7 +210,8 @@ class LabelLoader:
                 from .._logging import get_logger
 
                 get_logger().warning(
-                    "AppView label resolution failed, falling back to client-side"
+                    "AppView label resolution failed, falling back to client-side",
+                    exc_info=True,
                 )
 
         return self._resolve_client_side(handle_or_did, name, version)

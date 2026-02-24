@@ -440,12 +440,7 @@ class Atmosphere:
         import httpx
 
         # POST to the PDS with atproto-proxy header
-        pds_url = self._client._base_url
-        if hasattr(pds_url, "raw"):
-            pds_url = str(pds_url)
-        elif not isinstance(pds_url, str):
-            pds_url = str(pds_url)
-        pds_url = pds_url.rstrip("/")
+        pds_url = str(self._client._base_url).rstrip("/")
 
         url = f"{pds_url}/xrpc/{nsid}"
         headers = {

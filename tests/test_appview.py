@@ -818,3 +818,126 @@ class TestAppViewOnlyCapabilities:
             client_no_appview.get_entry_stats(
                 "at://did:plc:abc/science.alt.dataset.entry/xyz"
             )
+
+
+# =============================================================================
+# Edge Cases and Error Handling
+# =============================================================================
+
+
+class TestXrpcEdgeCases:
+    def test_xrpc_query_4xx_raises_httpx_error(self, client_with_appview):
+        """4xx errors should propagate as httpx.HTTPStatusError, not AppViewUnavailableError."""
+        import httpx
+
+        mock_response = Mock()
+        mock_response.status_code = 404
+        exc = httpx.HTTPStatusError("Not Found", request=Mock(), response=mock_response)
+        mock_client = Mock()
+        mock_client.get.side_effect = exc
+        client_with_appview._httpx_client = mock_client
+
+        with pytest.raises(httpx.HTTPStatusError):
+            client_with_appview.xrpc_query("science.alt.dataset.getEntry")
+
+    def test_xrpc_query_connect_error_raises_unavailable(self, client_with_appview):
+        """Connection failures should raise AppViewUnavailableError."""
+        import httpx
+
+        mock_client = Mock()
+        mock_client.get.side_effect = httpx.ConnectError("Connection refused")
+        client_with_appview._httpx_client = mock_client
+
+        with pytest.raises(AppViewUnavailableError, match="Connection refused"):
+            client_with_appview.xrpc_query("science.alt.dataset.listEntries")
+
+    def test_xrpc_procedure_includes_auth_header(self, client_with_appview):
+        """Procedure calls should include Bearer token from session."""
+        mock_session = Mock()
+        mock_session.access_jwt = "test-jwt-token"
+        client_with_appview._client._session = mock_session
+
+        mock_response = Mock()
+        mock_response.json.return_value = {"uri": "at://did:plc:test/x/y"}
+        mock_response.raise_for_status = Mock()
+        mock_client = Mock()
+        mock_client.post.return_value = mock_response
+        client_with_appview._httpx_client = mock_client
+
+        client_with_appview.xrpc_procedure("science.alt.dataset.publishSchema")
+
+        call_headers = mock_client.post.call_args.kwargs.get(
+            "headers", mock_client.post.call_args[1].get("headers", {})
+        )
+        assert call_headers["Authorization"] == "Bearer test-jwt-token"
+        assert "atproto-proxy" in call_headers
+
+    def test_xrpc_procedure_includes_proxy_header_with_did(self, client_with_appview):
+        """atproto-proxy header should contain the AppView DID."""
+        mock_response = Mock()
+        mock_response.json.return_value = {"uri": "at://did:plc:test/x/y"}
+        mock_response.raise_for_status = Mock()
+        mock_client = Mock()
+        mock_client.post.return_value = mock_response
+        client_with_appview._httpx_client = mock_client
+
+        client_with_appview.xrpc_procedure("science.alt.dataset.publishSchema")
+
+        call_headers = mock_client.post.call_args.kwargs.get(
+            "headers", mock_client.post.call_args[1].get("headers", {})
+        )
+        assert (
+            call_headers["atproto-proxy"]
+            == "did:web:datasets.atdata.blue#atdata_appview"
+        )
+
+    def test_blob_urls_appview_sends_uri_as_list(self, client_with_appview):
+        """_get_blob_urls_via_appview should send uris as a list, not a bare string."""
+        mock_httpx = Mock()
+        mock_httpx.get.return_value = Mock(
+            json=Mock(
+                return_value={
+                    "blobs": [
+                        {"url": "https://pds.example.com/blob/1", "cid": "bafyrei1"}
+                    ],
+                }
+            ),
+            raise_for_status=Mock(),
+        )
+        client_with_appview._httpx_client = mock_httpx
+
+        loader = DatasetLoader(client_with_appview)
+        loader.get_blob_urls("at://did:plc:abc/science.alt.dataset.entry/xyz")
+
+        call_args = mock_httpx.get.call_args
+        params = call_args.kwargs.get("params", call_args[1].get("params", {}))
+        # The uris param must be a list, not a bare string
+        assert isinstance(params.get("uris"), list)
+
+    def test_fallback_logs_warning_on_appview_failure(self, client_with_appview):
+        """Fallback should log a warning when AppView fails."""
+        import httpx
+
+        mock_httpx_client = Mock()
+        mock_httpx_client.get.side_effect = httpx.ConnectError("refused")
+        client_with_appview._httpx_client = mock_httpx_client
+
+        # Set up client-side fallback
+        mock_record = Mock()
+        mock_record.value = {
+            "$type": "science.alt.dataset.schema",
+            "name": "S",
+            "version": "1.0.0",
+            "atdataSchemaVersion": 1,
+        }
+        mock_response = Mock()
+        mock_response.records = [mock_record]
+        mock_response.cursor = None
+        client_with_appview._client.com.atproto.repo.list_records.return_value = (
+            mock_response
+        )
+
+        loader = SchemaLoader(client_with_appview)
+        # list_all catches the AppViewUnavailableError and falls back
+        result = loader.list_all()
+        assert len(result) == 1

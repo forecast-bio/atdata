@@ -289,7 +289,8 @@ class LensLoader:
                 from .._logging import get_logger
 
                 get_logger().warning(
-                    "AppView listLenses failed, falling back to client-side"
+                    "AppView listLenses failed, falling back to client-side",
+                    exc_info=True,
                 )
 
         return self.client.list_lenses(repo=repo, limit=limit)
@@ -355,7 +356,8 @@ class LensLoader:
                 from .._logging import get_logger
 
                 get_logger().warning(
-                    "AppView searchLenses failed, falling back to client-side"
+                    "AppView searchLenses failed, falling back to client-side",
+                    exc_info=True,
                 )
 
         return self._find_by_schemas_client_side(

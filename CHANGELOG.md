@@ -9,17 +9,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.6.0b1] - 2026-02-22
 
 ### Added
+- **AppView integration**: `Atmosphere` client gains optional `appview` parameter for routing XRPC queries directly to an AppView and proxying procedures through the PDS via `atproto-proxy` header. New `xrpc_query()` and `xrpc_procedure()` transport methods, `from_env()` classmethod, and `did:web` ↔ URL helpers (GH#50)
+- **AppView-only capabilities**: `search_datasets()`, `search_lenses()`, `describe_service()`, `get_entries()` (batch), and `get_entry_stats()` methods on `Atmosphere` for AppView-powered discovery and analytics (GH#50)
+- **AppView exception types**: `AppViewError`, `AppViewUnavailableError`, `AppViewRequiredError` for structured error handling when the AppView is misconfigured or unreachable (GH#50)
 - **Dataset manifest support**: Optional `manifests` property on dataset entry records for per-shard metadata references, with `ShardManifestRef` and `LensCodeRef` Python mirror types (GH#62)
 - **Handle-based schema resolution**: `get_schema()` and `get_schema_type()` now accept `@handle/TypeName@version` format, resolving schemas by handle + name + optional semver instead of requiring raw AT-URIs (GH#61)
 
 ### Changed
-- Client-side AppView integration (#816)
-- Phase 5: load_dataset() AppView integration (#821)
-- Phase 4: New AppView-only capabilities (#820)
-- Phase 3: Migrate procedure methods to AppView (#819)
-- Phase 2: Migrate query methods to AppView (#818)
-- Phase 1: XRPC transport infrastructure (#817)
-- Phase 6: Exception types for AppView (#822)
+- **AppView-aware loaders/publishers**: `SchemaLoader`, `LabelLoader`, `DatasetLoader`, `LensLoader` and their corresponding publishers now prefer AppView XRPC endpoints when configured, with automatic graceful fallback to client-side `com.atproto.repo` workarounds (GH#50)
+- **`load_dataset()` atmosphere parameter**: New optional `atmosphere` kwarg passes an `Atmosphere` client (and its AppView) through to AT URI resolution (GH#50)
 - **Namespace rename**: Lexicon namespace renamed from `ac.foundation.dataset` to `science.alt.dataset` across all source, tests, and documentation. Lexicon JSON files vendored from [forecast-bio/atdata-lexicon](https://github.com/forecast-bio/atdata-lexicon) with NSID-to-path directory structure. Lexicon loader updated to resolve NSIDs via path traversal. Added `label` and `resolveLabel` to `LEXICON_IDS` (GH#71)
 - **Lexicon record → entry rename**: The dataset record lexicon is renamed from `ac.foundation.dataset.record` to `ac.foundation.dataset.entry` throughout the codebase — lexicon files, Python types, collection constants, tests, and documentation (GH#63)
 - **Schema version field rename**: `$atdataSchemaVersion` renamed to `atdataSchemaVersion` (no `$` prefix) to follow ATProto naming conventions for non-reserved properties (GH#65)
