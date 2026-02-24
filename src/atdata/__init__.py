@@ -119,6 +119,15 @@ from ._cid import (
     verify_cid as verify_cid,
 )
 
+from .search import (
+    SearchResult as SearchResult,
+    SearchResults as SearchResults,
+    SearchBackend as SearchBackend,
+    AppViewSearchBackend as AppViewSearchBackend,
+    LocalSearchBackend as LocalSearchBackend,
+    SearchAggregator as SearchAggregator,
+)
+
 from .promote import (
     promote_to_atmosphere as promote_to_atmosphere,
 )
