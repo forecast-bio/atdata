@@ -90,6 +90,10 @@ class MockAtmosphere:
     def is_authenticated(self) -> bool:
         return self._logged_in
 
+    @property
+    def has_appview(self) -> bool:
+        return False
+
     def export_session_string(self) -> str:
         return self._session_string
 

@@ -52,6 +52,11 @@ class LabelPublisher:
     ) -> AtUri:
         """Publish a label record to ATProto.
 
+        When an AppView is configured, uses
+        ``science.alt.dataset.publishLabel`` for server-side validation
+        (verifies that ``dataset_uri`` exists). Falls back to direct
+        ``createRecord`` otherwise.
+
         Args:
             name: User-facing label name (e.g. 'mnist').
             dataset_uri: AT URI of the dataset record to label.
@@ -69,6 +74,9 @@ class LabelPublisher:
             description=description,
         )
 
+        if getattr(self.client, "has_appview", False) is True:
+            return self._publish_via_appview(label_record, rkey=rkey)
+
         return self.client.create_record(
             collection=f"{LEXICON_NAMESPACE}.label",
             record=label_record.to_record(),
@@ -76,15 +84,30 @@ class LabelPublisher:
             validate=False,
         )
 
+    def _publish_via_appview(
+        self,
+        label_record: LexLabelRecord,
+        *,
+        rkey: str | None = None,
+    ) -> AtUri:
+        """Publish via AppView procedure for server-side validation."""
+        body: dict = {"record": label_record.to_record()}
+        if rkey is not None:
+            body["rkey"] = rkey
+
+        result = self.client.xrpc_procedure(
+            f"{LEXICON_NAMESPACE}.publishLabel",
+            input=body,
+        )
+        return AtUri.parse(result["uri"])
+
 
 class LabelLoader:
     """Loads and resolves dataset label records from ATProto.
 
-    Note:
-        The ``resolve()`` method is a **client-side workaround** for the
-        ``science.alt.dataset.resolveLabel`` query lexicon, which is
-        defined but has no AppView to serve it yet. See ``resolve()`` for
-        details and known limitations.
+    When an AppView is configured, queries are routed through it for
+    efficient server-side resolution. Otherwise falls back to client-side
+    workarounds using ``com.atproto.repo.listRecords``.
 
     Examples:
         >>> atmo = Atmosphere.login("handle", "password")
@@ -164,26 +187,9 @@ class LabelLoader:
     ) -> str:
         """Resolve a named label to its dataset AT URI.
 
-        Finds label records matching the given name (and optionally version)
-        in the specified repository. When no version is given, returns the
-        most recently created matching label.
-
-        .. note:: **Client-side workaround (no AppView)**
-
-           This method emulates the ``science.alt.dataset.resolveLabel``
-           query lexicon by fetching all label records via
-           ``com.atproto.repo.listRecords`` and filtering in Python.
-           When an AppView is available, replace this with a direct
-           ``GET /xrpc/science.alt.dataset.resolveLabel`` call.
-
-           Known limitations of the client-side approach:
-
-           - Hard-coded limit of 100 records (repos with >100 labels
-             silently lose results)
-           - No pagination (would need a cursor loop for correctness)
-           - O(n) per resolve (fetches all labels every time)
-           - No server-side filtering (defeats the purpose of the query
-             lexicon)
+        When an AppView is configured, uses
+        ``science.alt.dataset.resolveLabel`` for efficient server-side
+        resolution. Falls back to client-side filtering otherwise.
 
         Args:
             handle_or_did: DID or handle of the dataset owner.
@@ -197,24 +203,58 @@ class LabelLoader:
         Raises:
             KeyError: If no matching label is found.
         """
+        if getattr(self.client, "has_appview", False) is True:
+            try:
+                return self._resolve_via_appview(handle_or_did, name, version)
+            except Exception:
+                from .._logging import get_logger
+
+                get_logger().warning(
+                    "AppView label resolution failed, falling back to client-side",
+                    exc_info=True,
+                )
+
+        return self._resolve_client_side(handle_or_did, name, version)
+
+    def _resolve_via_appview(
+        self,
+        handle_or_did: str,
+        name: str,
+        version: str | None = None,
+    ) -> str:
+        """Resolve a label via AppView XRPC query."""
+        params: dict[str, str] = {"handle": handle_or_did, "name": name}
+        if version is not None:
+            params["version"] = version
+
+        result = self.client.xrpc_query(
+            f"{LEXICON_NAMESPACE}.resolveLabel",
+            params=params,
+        )
+        return result["uri"]
+
+    def _resolve_client_side(
+        self,
+        handle_or_did: str,
+        name: str,
+        version: str | None = None,
+    ) -> str:
+        """Resolve a label by fetching all records and filtering in Python.
+
+        This is the client-side workaround used when no AppView is available.
+        Known limitations:
+        - Hard-coded limit of 100 records
+        - No pagination
+        - O(n) per resolve
+        """
         did = self._resolve_did(handle_or_did)
 
-        # WORKAROUND: Client-side query (no AppView)
-        # Lexicon: science.alt.dataset.resolveLabel
-        # This fetches all records via list_records() and filters in Python.
-        # Replace with GET /xrpc/science.alt.dataset.resolveLabel when
-        # AppView is available.
-        # Known limitations:
-        #   - Hard-coded limit of 100 records (repos with >100 silently lose results)
-        #   - No pagination (would need cursor loop)
-        #   - O(n) per resolve (fetches all records every time)
         records, _ = self.client.list_records(
             f"{LEXICON_NAMESPACE}.label",
             repo=did,
             limit=100,
         )
 
-        # Filter by name and optionally version
         matches: list[dict] = []
         for record in records:
             if record.get("name") != name:
@@ -230,7 +270,6 @@ class LabelLoader:
                 + f" found for {handle_or_did!r}"
             )
 
-        # Pick latest by createdAt
         best = max(matches, key=lambda r: r.get("createdAt", ""))
         return best["datasetUri"]
 
