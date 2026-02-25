@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://alt.science/schemas/atdata-safetensors/1.0.0",
+  "title": "ATDataSafetensors",
+  "description": "Standard definition for HuggingFace safetensors types in JSON Schema, compatible with atdata WebDataset serialization.",
+  "version": "1.0.0",
+  "$defs": {
+    "safetensors": {
+      "type": "string",
+      "format": "byte",
+      "description": "HuggingFace safetensors format for ML tensors with safe, memory-mapped access.",
+      "contentEncoding": "base64",
+      "contentMediaType": "application/octet-stream"
+    }
+  }
+}

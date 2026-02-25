@@ -16,6 +16,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Handle-based schema resolution**: `get_schema()` and `get_schema_type()` now accept `@handle/TypeName@version` format, resolving schemas by handle + name + optional semver instead of requiring raw AT-URIs (GH#61)
 
 ### Changed
+- Array format types and ndarray v1.1 annotations (#842)
+- Write tests for all new formats and annotations (#856)
+- Add NDArray v1.1.0 annotation support (dtype/shape/dimensionNames) (#854)
+- Update dataset pipeline (_make_packable/_ensure_good) for new types (#853)
+- Extend SchemaFieldType and codegen for new format kinds (#852)
+- Add serialization/deserialization helpers for new array formats (#851)
+- Add optional dependencies to pyproject.toml (#855)
+- Sync upstream lexicon files (arrayFormat.json + new shims) (#850)
 - **AppView-aware loaders/publishers**: `SchemaLoader`, `LabelLoader`, `DatasetLoader`, `LensLoader` and their corresponding publishers now prefer AppView XRPC endpoints when configured, with automatic graceful fallback to client-side `com.atproto.repo` workarounds (GH#50)
 - **`load_dataset()` atmosphere parameter**: New optional `atmosphere` kwarg passes an `Atmosphere` client (and its AppView) through to AT URI resolution (GH#50)
 - **Namespace rename**: Lexicon namespace renamed from `ac.foundation.dataset` to `science.alt.dataset` across all source, tests, and documentation. Lexicon JSON files vendored from [forecast-bio/atdata-lexicon](https://github.com/forecast-bio/atdata-lexicon) with NSID-to-path directory structure. Lexicon loader updated to resolve NSIDs via path traversal. Added `label` and `resolveLabel` to `LEXICON_IDS` (GH#71)
