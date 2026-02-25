@@ -16,6 +16,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Handle-based schema resolution**: `get_schema()` and `get_schema_type()` now accept `@handle/TypeName@version` format, resolving schemas by handle + name + optional semver instead of requiring raw AT-URIs (GH#61)
 
 ### Changed
+- Lens Lexicon E2E Validation — Trust Verification & Schema Compatibility (#843)
+- Write/extend E2E integration tests (#849)
+- Write unit tests for new types and verification (#848)
+- Create VerificationPublisher/VerificationLoader (#847)
+- Update LensPublisher for schema version params (#846)
+- Add Python types for new lexicons (LexCodeHash, LexLensVerification, update LexCodeReference/LexLensRecord) (#845)
+- Sync 3 new lexicon files + updated lens.json from upstream (#844)
 - **AppView-aware loaders/publishers**: `SchemaLoader`, `LabelLoader`, `DatasetLoader`, `LensLoader` and their corresponding publishers now prefer AppView XRPC endpoints when configured, with automatic graceful fallback to client-side `com.atproto.repo` workarounds (GH#50)
 - **`load_dataset()` atmosphere parameter**: New optional `atmosphere` kwarg passes an `Atmosphere` client (and its AppView) through to AT URI resolution (GH#50)
 - **Namespace rename**: Lexicon namespace renamed from `ac.foundation.dataset` to `science.alt.dataset` across all source, tests, and documentation. Lexicon JSON files vendored from [forecast-bio/atdata-lexicon](https://github.com/forecast-bio/atdata-lexicon) with NSID-to-path directory structure. Lexicon loader updated to resolve NSIDs via path traversal. Added `label` and `resolveLabel` to `LEXICON_IDS` (GH#71)

@@ -151,6 +151,20 @@ class MockAtmosphere:
         collection = "science.alt.dataset.label"
         return [rec for uri, rec in self._records.items() if collection in uri][:limit]
 
+    def list_lenses(
+        self, repo: str | None = None, limit: int = 100
+    ) -> list[dict[str, Any]]:
+        """List lens records."""
+        collection = "science.alt.dataset.lens"
+        return [rec for uri, rec in self._records.items() if collection in uri][:limit]
+
+    def _ensure_authenticated(self) -> None:
+        """No-op for mock; real client checks session validity."""
+
+    def delete_record(self, uri: str) -> None:
+        """Delete a previously created record by URI."""
+        self._records.pop(str(uri), None)
+
     def upload_blob(self, data: bytes) -> dict[str, Any]:
         """Simulate uploading a blob. Returns a mock blob ref."""
         ref = f"blob:{uuid.uuid4().hex[:16]}"

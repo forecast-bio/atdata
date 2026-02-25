@@ -70,6 +70,8 @@ class LensPublisher:
         description: Optional[str] = None,
         language: Optional[str] = None,
         metadata: Optional[dict] = None,
+        source_schema_version: Optional[str] = None,
+        target_schema_version: Optional[str] = None,
         rkey: Optional[str] = None,
     ) -> AtUri:
         """Publish a lens transformation record to ATProto.
@@ -92,6 +94,10 @@ class LensPublisher:
             description: What this transformation does.
             language: Programming language (e.g., 'python').
             metadata: Arbitrary metadata dictionary.
+            source_schema_version: Semver version or range for source
+                schema compatibility (e.g., '1.0.0', '>=1.0.0 <2.0.0').
+            target_schema_version: Semver version or range for target
+                schema compatibility.
             rkey: Optional explicit record key.
 
         Returns:
@@ -117,6 +123,8 @@ class LensPublisher:
             description=description,
             language=language,
             metadata=metadata,
+            source_schema_version=source_schema_version,
+            target_schema_version=target_schema_version,
         )
 
         if getattr(self.client, "has_appview", False) is True:
@@ -158,6 +166,8 @@ class LensPublisher:
         description: Optional[str] = None,
         language: Optional[str] = None,
         metadata: Optional[dict] = None,
+        source_schema_version: Optional[str] = None,
+        target_schema_version: Optional[str] = None,
         rkey: Optional[str] = None,
     ) -> AtUri:
         """Publish a lens record from an existing Lens object.
@@ -175,6 +185,10 @@ class LensPublisher:
             description: What this transformation does.
             language: Programming language (e.g., 'python').
             metadata: Arbitrary metadata dictionary.
+            source_schema_version: Semver version or range for source
+                schema compatibility.
+            target_schema_version: Semver version or range for target
+                schema compatibility.
             rkey: Optional explicit record key.
 
         Returns:
@@ -200,6 +214,8 @@ class LensPublisher:
             description=description,
             language=language,
             metadata=metadata,
+            source_schema_version=source_schema_version,
+            target_schema_version=target_schema_version,
             rkey=rkey,
         )
 
