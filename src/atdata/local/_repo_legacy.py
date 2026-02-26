@@ -208,7 +208,7 @@ class Repo:
         )
 
         # Add to index (use ds._metadata to avoid network requests)
-        new_entry = self.index.add_entry(
+        new_entry = self.index.insert_dataset(
             new_dataset,
             name=name,
             schema_ref=schema_ref,

@@ -6,60 +6,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.7.0b1] - 2026-02-26
+
+### Added
+- **Client-side AppView integration**: `Atmosphere` client now supports XRPC queries (`xrpc_query()`) and procedures (`xrpc_procedure()`) routed through a configurable AppView service. Schema, lens, label, and record loaders automatically use AppView for listing, search, and resolution when available, falling back to client-side pagination otherwise. New `has_appview` property and `AppViewRequiredError`/`AppViewUnavailableError` exceptions for clean error handling (GH#74)
+
+### Fixed
+- **Blob URL parameter bug**: Fixed incorrect parameter passing in blob URL construction within atmosphere record publishing
+- **Fallback logging**: Improved diagnostic logging when AppView is unavailable and client-side fallback is used
+
 ## [0.6.0b1] - 2026-02-22
 
 ### Added
-- **AppView integration**: `Atmosphere` client gains optional `appview` parameter for routing XRPC queries directly to an AppView and proxying procedures through the PDS via `atproto-proxy` header. New `xrpc_query()` and `xrpc_procedure()` transport methods, `from_env()` classmethod, and `did:web` ↔ URL helpers (GH#50)
-- **AppView-only capabilities**: `search_datasets()`, `search_lenses()`, `describe_service()`, `get_entries()` (batch), and `get_entry_stats()` methods on `Atmosphere` for AppView-powered discovery and analytics (GH#50)
-- **AppView exception types**: `AppViewError`, `AppViewUnavailableError`, `AppViewRequiredError` for structured error handling when the AppView is misconfigured or unreachable (GH#50)
 - **Dataset manifest support**: Optional `manifests` property on dataset entry records for per-shard metadata references, with `ShardManifestRef` and `LensCodeRef` Python mirror types (GH#62)
 - **Handle-based schema resolution**: `get_schema()` and `get_schema_type()` now accept `@handle/TypeName@version` format, resolving schemas by handle + name + optional semver instead of requiring raw AT-URIs (GH#61)
 
 ### Changed
-- Evaluate removing AbstractIndex protocol (#868)
-- Update docs_src references to AbstractIndex (#874)
-- Update test docstrings and class names referencing AbstractIndex (#873)
-- Update docstrings referencing AbstractIndex in index/, atmosphere/, _entry.py (#872)
-- Add deprecation note to AbstractIndex Protocol docstring (#871)
-- Add deprecation shim in __init__.py via __getattr__ (#870)
-- Replace AbstractIndex type annotations with Index in _hf_api.py (#869)
-- ADR: Array format types & NDArray v1.1 annotations review (#862)
-- Clean up FORMAT_SERIALIZERS typing and redundant Any import (#867)
-- Batch: tighten test assertions and add missing edge-case coverage (#866)
-- Clean up FORMAT_SERIALIZERS typing and redundant Any import (#867)
-- Remove dead v1.1 object-form codepath in _json_schema_prop_to_field_type (#865)
-- Fix SchemaFieldType.to_dict() writing dtype:None for ndarray/structured when unset (#864)
-- Fix _make_packable docstring overclaim (says safetensors, doesn't handle them) (#863)
-- Array format types and ndarray v1.1 annotations (#842)
-- Write tests for all new formats and annotations (#856)
-- Add NDArray v1.1.0 annotation support (dtype/shape/dimensionNames) (#854)
-- Update dataset pipeline (_make_packable/_ensure_good) for new types (#853)
-- Extend SchemaFieldType and codegen for new format kinds (#852)
-- Add serialization/deserialization helpers for new array formats (#851)
-- Add optional dependencies to pyproject.toml (#855)
-- Sync upstream lexicon files (arrayFormat.json + new shims) (#850)
-- ADR: Lens verification & schema compat review (b094772) (#857)
-- Add per-reference language params to LensPublisher.publish() (#861)
-- Normalize Optional[str] to str|None in verification.py and add missing return type hints (#860)
-- Strengthen unit test assertions and round-trip coverage (#859)
-- Fix MockAtmosphere.list_records substring collision (lens vs lensVerification) (#858)
-- Lens Lexicon E2E Validation — Trust Verification & Schema Compatibility (#843)
-- Write/extend E2E integration tests (#849)
-- Write unit tests for new types and verification (#848)
-- Create VerificationPublisher/VerificationLoader (#847)
-- Update LensPublisher for schema version params (#846)
-- Add Python types for new lexicons (LexCodeHash, LexLensVerification, update LexCodeReference/LexLensRecord) (#845)
-- Sync 3 new lexicon files + updated lens.json from upstream (#844)
-- Unified Search API with Pluggable Backends (#833)
-- Phase 7: Export public API and lint/test pass (#840)
-- Phase 6: Comprehensive tests (#839)
-- Phase 5: Index.search() integration (#838)
-- Phase 4: SearchAggregator (#837)
-- Phase 3: LocalSearchBackend implementation (#836)
-- Phase 2: AppViewSearchBackend implementation (#835)
-- Phase 1: Search types and SearchBackend protocol (#834)
+- ADR: v0.7.0b1 release review (#876)
+- Migrate test_local.py from deprecated add_entry() to insert_dataset() (#877)
 - **AppView-aware loaders/publishers**: `SchemaLoader`, `LabelLoader`, `DatasetLoader`, `LensLoader` and their corresponding publishers now prefer AppView XRPC endpoints when configured, with automatic graceful fallback to client-side `com.atproto.repo` workarounds (GH#50)
 - **`load_dataset()` atmosphere parameter**: New optional `atmosphere` kwarg passes an `Atmosphere` client (and its AppView) through to AT URI resolution (GH#50)
+- **AbstractIndex deprecation**: `AbstractIndex` protocol is deprecated in favor of direct `Index` usage; a backward-compatible `__getattr__` shim emits `DeprecationWarning` on import (GH#40)
+- **Unified search API**: New `SearchBackend` protocol with `LocalSearchBackend` and `AppViewSearchBackend` implementations, `SearchAggregator` for multi-backend queries, and `Index.search()` integration (GH#33)
+- **Lens verification workflow**: New `VerificationPublisher`/`VerificationLoader` for `science.alt.dataset.lensVerification` records, with `LexCodeHash` and `LexLensVerification` Python types (GH#34)
+- **Lens schema version compatibility**: `LensPublisher.publish()` now accepts `source_schema_version` and `target_schema_version` parameters; `LexLensRecord` updated with corresponding fields (GH#34)
+- **Array format support**: New serialization helpers for sparse matrices (`scipy`), structured arrays, Arrow tensors (`pyarrow`), safetensors, and DataFrames (`pandas`/Parquet). Codegen and pipeline updated to recognize new shim `$ref` types. Optional dependency groups added to `pyproject.toml` (GH#76)
+- **NDArray v1.1.0 annotations**: Schema codegen supports optional `dtype`, `shape`, and `dimensionNames` annotation fields from the v1.1.0 ndarray shim (GH#76)
+- **Upstream lexicon sync**: Added `lensVerification.json`, `verificationMethod.json`, `programmingLanguage.json`, and updated `arrayFormat.json`/`lens.json` from `forecast-bio/atdata-lexicon`
 - **Namespace rename**: Lexicon namespace renamed from `ac.foundation.dataset` to `science.alt.dataset` across all source, tests, and documentation. Lexicon JSON files vendored from [forecast-bio/atdata-lexicon](https://github.com/forecast-bio/atdata-lexicon) with NSID-to-path directory structure. Lexicon loader updated to resolve NSIDs via path traversal. Added `label` and `resolveLabel` to `LEXICON_IDS` (GH#71)
 - **Lexicon record → entry rename**: The dataset record lexicon is renamed from `ac.foundation.dataset.record` to `ac.foundation.dataset.entry` throughout the codebase — lexicon files, Python types, collection constants, tests, and documentation (GH#63)
 - **Schema version field rename**: `$atdataSchemaVersion` renamed to `atdataSchemaVersion` (no `$` prefix) to follow ATProto naming conventions for non-reserved properties (GH#65)

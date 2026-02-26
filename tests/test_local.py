@@ -389,15 +389,15 @@ def test_index_init_with_redis_kwargs():
     assert isinstance(index._redis, Redis)
 
 
-def test_index_add_entry(clean_redis):
-    """Test adding a dataset entry to the index."""
+def test_index_insert_dataset_full(clean_redis):
+    """Test inserting a dataset entry and verifying all stored fields."""
     index = atlocal.Index(redis=clean_redis)
 
     ds = atdata.Dataset[SimpleTestSample](
         url="s3://bucket/dataset.tar", metadata_url="s3://bucket/metadata.msgpack"
     )
 
-    entry = index.add_entry(ds, name="test-dataset")
+    entry = index.insert_dataset(ds, name="test-dataset")
 
     assert entry.cid is not None
     assert entry.cid.startswith("bafy")
@@ -410,26 +410,26 @@ def test_index_add_entry(clean_redis):
     assert b"name" in stored_data
 
 
-def test_index_add_entry_with_schema_ref(clean_redis):
-    """Test adding a dataset entry with explicit schema_ref."""
+def test_index_insert_dataset_with_schema_ref(clean_redis):
+    """Test inserting a dataset entry with explicit schema_ref."""
     index = atlocal.Index(redis=clean_redis)
 
     ds = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset.tar")
 
-    entry = index.add_entry(
+    entry = index.insert_dataset(
         ds, name="test-dataset", schema_ref="local://schemas/custom.Schema@2.0.0"
     )
 
     assert entry.schema_ref == "local://schemas/custom.Schema@2.0.0"
 
 
-def test_index_add_entry_with_metadata(clean_redis):
-    """Test adding a dataset entry with metadata."""
+def test_index_insert_dataset_with_metadata(clean_redis):
+    """Test inserting a dataset entry with metadata."""
     index = atlocal.Index(redis=clean_redis)
 
     ds = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset.tar")
 
-    entry = index.add_entry(
+    entry = index.insert_dataset(
         ds, name="test-dataset", metadata={"version": "1.0", "author": "test"}
     )
 
@@ -451,8 +451,8 @@ def test_index_entries_generator_multiple(clean_redis):
     ds1 = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset1.tar")
     ds2 = atdata.Dataset[ArrayTestSample](url="s3://bucket/dataset2.tar")
 
-    entry1 = index.add_entry(ds1, name="dataset1")
-    entry2 = index.add_entry(ds2, name="dataset2")
+    entry1 = index.insert_dataset(ds1, name="dataset1")
+    entry2 = index.insert_dataset(ds2, name="dataset2")
 
     entries = list(index.entries)
     assert len(entries) == 2
@@ -477,8 +477,8 @@ def test_index_all_entries_multiple(clean_redis):
     ds1 = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset1.tar")
     ds2 = atdata.Dataset[ArrayTestSample](url="s3://bucket/dataset2.tar")
 
-    index.add_entry(ds1, name="dataset1")
-    index.add_entry(ds2, name="dataset2")
+    index.insert_dataset(ds1, name="dataset1")
+    index.insert_dataset(ds2, name="dataset2")
 
     entries = index.all_entries
     assert len(entries) == 2
@@ -492,7 +492,7 @@ def test_index_entries_filtering(clean_redis):
 
     # Add a LocalDatasetEntry
     ds = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset.tar")
-    entry = index.add_entry(ds, name="test-dataset")
+    entry = index.insert_dataset(ds, name="test-dataset")
 
     # Add some other Redis keys that should be ignored
     clean_redis.set("other_key", "value")
@@ -512,7 +512,7 @@ def test_index_get_entry_by_cid(clean_redis):
     index = atlocal.Index(redis=clean_redis)
 
     ds = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset.tar")
-    entry = index.add_entry(ds, name="test-dataset")
+    entry = index.insert_dataset(ds, name="test-dataset")
 
     retrieved = index.get_entry(entry.cid)
 
@@ -526,7 +526,7 @@ def test_index_get_entry_by_name(clean_redis):
     index = atlocal.Index(redis=clean_redis)
 
     ds = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset.tar")
-    entry = index.add_entry(ds, name="my-special-dataset")
+    entry = index.insert_dataset(ds, name="my-special-dataset")
 
     retrieved = index.get_entry_by_name("my-special-dataset")
 
@@ -1014,7 +1014,7 @@ def test_index_persistence_across_instances(clean_redis):
     """Test that index entries persist across Index instance recreations."""
     index1 = atlocal.Index(redis=clean_redis)
     ds = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset.tar")
-    entry1 = index1.add_entry(ds, name="persistent-dataset")
+    entry1 = index1.insert_dataset(ds, name="persistent-dataset")
 
     index2 = atlocal.Index(redis=clean_redis)
     entries = index2.all_entries
@@ -1032,8 +1032,8 @@ def test_concurrent_index_access(clean_redis):
     ds1 = atdata.Dataset[SimpleTestSample](url="s3://bucket/dataset1.tar")
     ds2 = atdata.Dataset[ArrayTestSample](url="s3://bucket/dataset2.tar")
 
-    entry1 = index1.add_entry(ds1, name="dataset1")
-    entry2 = index2.add_entry(ds2, name="dataset2")
+    entry1 = index1.insert_dataset(ds1, name="dataset1")
+    entry2 = index2.insert_dataset(ds2, name="dataset2")
 
     entries1 = index1.all_entries
     entries2 = index2.all_entries
