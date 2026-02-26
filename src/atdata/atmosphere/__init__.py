@@ -174,7 +174,7 @@ class AtmosphereIndexEntry:
 
 
 class AtmosphereIndex:
-    """ATProto index implementing AbstractIndex protocol.
+    """ATProto index (deprecated).
 
     .. deprecated::
         Use ``atdata.Index(atmosphere=client)`` instead.  ``AtmosphereIndex``
@@ -280,7 +280,7 @@ class AtmosphereIndex:
 
     @property
     def datasets(self) -> Iterator[AtmosphereIndexEntry]:
-        """Lazily iterate over all dataset entries (AbstractIndex protocol).
+        """Lazily iterate over all dataset entries (Index protocol).
 
         Uses the authenticated user's repository.
 
@@ -293,7 +293,7 @@ class AtmosphereIndex:
             yield AtmosphereIndexEntry(uri, rec.get("value", rec))
 
     def list_datasets(self, repo: Optional[str] = None) -> list[AtmosphereIndexEntry]:
-        """Get all dataset entries as a materialized list (AbstractIndex protocol).
+        """Get all dataset entries as a materialized list (Index protocol).
 
         Args:
             repo: DID of repository. Defaults to authenticated user.
@@ -352,7 +352,7 @@ class AtmosphereIndex:
 
     @property
     def schemas(self) -> Iterator[dict]:
-        """Lazily iterate over all schema records (AbstractIndex protocol).
+        """Lazily iterate over all schema records (Index protocol).
 
         Uses the authenticated user's repository.
 
@@ -364,7 +364,7 @@ class AtmosphereIndex:
             yield rec.get("value", rec)
 
     def list_schemas(self, repo: Optional[str] = None) -> list[dict]:
-        """Get all schema records as a materialized list (AbstractIndex protocol).
+        """Get all schema records as a materialized list (Index protocol).
 
         Args:
             repo: DID of repository. Defaults to authenticated user.
@@ -417,7 +417,7 @@ __all__ = [
     "AtmosphereClient",  # deprecated alias
     # Storage
     "PDSBlobStore",
-    # Unified index (AbstractIndex protocol)
+    # Unified index (Index protocol)
     "AtmosphereIndex",
     "AtmosphereIndexEntry",
     # Schema operations

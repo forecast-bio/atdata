@@ -68,11 +68,11 @@ class TestIndexEntryProtocol:
         assert entry.metadata is None
 
 
-class TestAbstractIndexProtocol:
-    """Tests for AbstractIndex protocol compliance."""
+class TestIndexProtocol:
+    """Tests for Index protocol compliance."""
 
     def test_local_index_has_required_methods(self, tmp_path):
-        """Index should have all AbstractIndex methods and they work on empty index."""
+        """Index should have all required methods and they work on empty index."""
         index = Index(provider=SqliteProvider(path=tmp_path / "test.db"))
 
         # Exercise read methods on empty index — verifies methods exist and work
@@ -85,7 +85,7 @@ class TestAbstractIndexProtocol:
 
     @pytest.mark.filterwarnings("ignore::DeprecationWarning")
     def test_atmosphere_index_has_required_methods(self):
-        """AtmosphereIndex should have all AbstractIndex methods."""
+        """AtmosphereIndex should have all required Index methods."""
         mock_client = Mock()
         mock_client.did = "did:plc:test"
         index = AtmosphereIndex(mock_client)
@@ -184,7 +184,7 @@ class TestProtocolInteroperability:
         assert get_dataset_name(atmo_entry) == "atmo-data"
 
     def test_function_accepts_any_index(self, tmp_path):
-        """Functions typed with AbstractIndex should accept any implementation."""
+        """Functions typed with Index should accept any implementation."""
 
         def count_datasets(index) -> int:
             """Count datasets in an index."""

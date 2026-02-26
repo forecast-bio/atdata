@@ -1,10 +1,16 @@
 # AbstractIndex { #atdata.AbstractIndex }
 
+::: {.callout-warning}
+**Deprecated.** Use `atdata.Index` directly as the type annotation instead.
+`AbstractIndex` is retained for backward compatibility and will be removed
+in a future release. See [Index](local.Index.qmd) for the current API.
+:::
+
 ```python
 AbstractIndex()
 ```
 
-Protocol for index operations — implemented by Index and AtmosphereIndex.
+Protocol for index operations.
 
 Manages dataset metadata: publishing/retrieving schemas, inserting/listing
 datasets. A single index holds datasets of many sample types, tracked via

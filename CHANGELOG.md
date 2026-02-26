@@ -16,6 +16,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Handle-based schema resolution**: `get_schema()` and `get_schema_type()` now accept `@handle/TypeName@version` format, resolving schemas by handle + name + optional semver instead of requiring raw AT-URIs (GH#61)
 
 ### Changed
+- Evaluate removing AbstractIndex protocol (#868)
+- Update docs_src references to AbstractIndex (#874)
+- Update test docstrings and class names referencing AbstractIndex (#873)
+- Update docstrings referencing AbstractIndex in index/, atmosphere/, _entry.py (#872)
+- Add deprecation note to AbstractIndex Protocol docstring (#871)
+- Add deprecation shim in __init__.py via __getattr__ (#870)
+- Replace AbstractIndex type annotations with Index in _hf_api.py (#869)
 - **AppView-aware loaders/publishers**: `SchemaLoader`, `LabelLoader`, `DatasetLoader`, `LensLoader` and their corresponding publishers now prefer AppView XRPC endpoints when configured, with automatic graceful fallback to client-side `com.atproto.repo` workarounds (GH#50)
 - **`load_dataset()` atmosphere parameter**: New optional `atmosphere` kwarg passes an `Atmosphere` client (and its AppView) through to AT URI resolution (GH#50)
 - **Namespace rename**: Lexicon namespace renamed from `ac.foundation.dataset` to `science.alt.dataset` across all source, tests, and documentation. Lexicon JSON files vendored from [forecast-bio/atdata-lexicon](https://github.com/forecast-bio/atdata-lexicon) with NSID-to-path directory structure. Lexicon loader updated to resolve NSIDs via path traversal. Added `label` and `resolveLabel` to `LEXICON_IDS` (GH#71)

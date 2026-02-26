@@ -92,7 +92,7 @@ CIDs are generated from content (schema_ref + data_urls), so identical data prod
 
 ## The Index
 
-The `Index` is your dataset registry. It implements the `AbstractIndex` protocol, meaning code written against `Index` will also work with atmosphere backends when you're ready for federated sharing.
+The `Index` is your dataset registry. It provides a unified interface for both local and atmosphere backends, meaning code written against `Index` works regardless of the storage backend.
 
 By default, `Index()` uses SQLite (zero external dependencies):
 

@@ -181,4 +181,4 @@ Before promotion:
 
 - [Local Storage](local-storage.qmd) - Setting up local datasets
 - [Atmosphere](atmosphere.qmd) - ATProto integration
-- [Protocols](protocols.qmd) - AbstractIndex and AbstractDataStore
+- [Protocols](protocols.qmd) - Index and AbstractDataStore

@@ -121,7 +121,7 @@ def _estimate_dataset_bytes(ds: Dataset) -> int:
 class Index:
     """Unified index for tracking datasets across multiple repositories.
 
-    Implements the AbstractIndex protocol. Maintains a registry of
+    Maintains a registry of
     dataset entries across named repositories (always including a built-in
     ``"local"`` repository) and an optional atmosphere (ATProto) backend.
 
@@ -592,7 +592,7 @@ class Index:
         """
         return self._provider.get_entry_by_name(name)
 
-    # AbstractIndex protocol methods
+    # Index protocol methods
 
     @staticmethod
     def _ensure_schema_stored(
@@ -1159,7 +1159,7 @@ class Index:
             yield from repo.provider.iter_entries()
 
     def list_datasets(self, repo: str | None = None) -> list["IndexEntry"]:
-        """Get dataset entries as a materialized list (AbstractIndex protocol).
+        """Get dataset entries as a materialized list (Index protocol).
 
         Args:
             repo: Optional repository filter. If ``None``, aggregates entries
@@ -1376,7 +1376,7 @@ class Index:
         return schema_ref
 
     def get_schema(self, ref: str) -> dict:
-        """Get a schema record by reference (AbstractIndex protocol).
+        """Get a schema record by reference (Index protocol).
 
         Args:
             ref: Schema reference string. Supports:
@@ -1450,7 +1450,7 @@ class Index:
             yield LocalSchemaRecord.from_dict(schema)
 
     def list_schemas(self) -> list[dict]:
-        """Get all schema records as a materialized list (AbstractIndex protocol).
+        """Get all schema records as a materialized list (Index protocol).
 
         Returns:
             List of schema records as dictionaries.

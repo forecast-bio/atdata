@@ -24,7 +24,7 @@ Abstract protocols for storage backends
 | --- | --- |
 | [Packable](Packable-protocol.qmd#atdata.Packable) | Structural protocol for packable sample types. |
 | [IndexEntry](IndexEntry.qmd#atdata.IndexEntry) | Common interface for index entries (local or atmosphere). |
-| [AbstractIndex](AbstractIndex.qmd#atdata.AbstractIndex) | Protocol for index operations — implemented by Index and AtmosphereIndex. |
+| [AbstractIndex](AbstractIndex.qmd#atdata.AbstractIndex) | Protocol for index operations (deprecated — use Index directly). |
 | [AbstractDataStore](AbstractDataStore.qmd#atdata.AbstractDataStore) | Protocol for data storage backends (S3, local disk, PDS blobs). |
 | [DataSource](DataSource.qmd#atdata.DataSource) | Protocol for data sources that stream shard data to Dataset. |
 
@@ -55,7 +55,7 @@ ATProto federation
 | | |
 | --- | --- |
 | [AtmosphereClient](AtmosphereClient.qmd#atdata.atmosphere.AtmosphereClient) |  |
-| [AtmosphereIndex](AtmosphereIndex.qmd#atdata.atmosphere.AtmosphereIndex) | ATProto index implementing AbstractIndex protocol. |
+| [AtmosphereIndex](AtmosphereIndex.qmd#atdata.atmosphere.AtmosphereIndex) | ATProto index (deprecated). |
 | [AtmosphereIndexEntry](AtmosphereIndexEntry.qmd#atdata.atmosphere.AtmosphereIndexEntry) | Entry wrapper for ATProto dataset records implementing IndexEntry protocol. |
 | [PDSBlobStore](PDSBlobStore.qmd#atdata.atmosphere.PDSBlobStore) | PDS blob store implementing AbstractDataStore protocol. |
 | [SchemaPublisher](SchemaPublisher.qmd#atdata.atmosphere.SchemaPublisher) | Publishes PackableSample schemas to ATProto. |

@@ -22,7 +22,7 @@ REDIS_KEY_SCHEMA = "LocalSchema"
 class LocalDatasetEntry:
     """Index entry for a dataset stored in the local repository.
 
-    Implements the IndexEntry protocol for compatibility with AbstractIndex.
+    Implements the IndexEntry protocol for compatibility with Index.
     Uses dual identity: a content-addressable CID (ATProto-compatible) and
     a human-readable name.
 

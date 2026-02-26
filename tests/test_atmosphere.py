@@ -3609,7 +3609,7 @@ class TestAtmosphereIndex:
         assert index._dataset_loader is not None
 
     def test_has_protocol_methods(self, authenticated_client):
-        """Index has all AbstractIndex protocol methods."""
+        """Index has all required Index protocol methods."""
         index = AtmosphereIndex(authenticated_client)
 
         assert hasattr(index, "insert_dataset")
