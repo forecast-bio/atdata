@@ -18,7 +18,7 @@ local.Index(
 
 Unified index for tracking datasets across multiple repositories.
 
-Implements the AbstractIndex protocol. Maintains a registry of
+Maintains a registry of
 dataset entries across named repositories (always including a built-in
 ``"local"`` repository) and an optional atmosphere (ATProto) backend.
 
@@ -53,12 +53,12 @@ for write operations, or ``atmosphere=None`` to disable.
 | [get_entry](#atdata.local.Index.get_entry) | Get an entry by its CID. |
 | [get_entry_by_name](#atdata.local.Index.get_entry_by_name) | Get an entry by its human-readable name. |
 | [get_import_path](#atdata.local.Index.get_import_path) | Get the import path for a schema's generated module. |
-| [get_schema](#atdata.local.Index.get_schema) | Get a schema record by reference (AbstractIndex protocol). |
+| [get_schema](#atdata.local.Index.get_schema) | Get a schema record by reference (Index protocol). |
 | [get_schema_record](#atdata.local.Index.get_schema_record) | Get a schema record as LocalSchemaRecord object. |
-| [insert_dataset](#atdata.local.Index.insert_dataset) | Insert a dataset into the index (AbstractIndex protocol). |
-| [list_datasets](#atdata.local.Index.list_datasets) | Get dataset entries as a materialized list (AbstractIndex protocol). |
+| [insert_dataset](#atdata.local.Index.insert_dataset) | Insert a dataset into the index (Index protocol). |
+| [list_datasets](#atdata.local.Index.list_datasets) | Get dataset entries as a materialized list (Index protocol). |
 | [list_entries](#atdata.local.Index.list_entries) | Get all index entries as a materialized list. |
-| [list_schemas](#atdata.local.Index.list_schemas) | Get all schema records as a materialized list (AbstractIndex protocol). |
+| [list_schemas](#atdata.local.Index.list_schemas) | Get all schema records as a materialized list (Index protocol). |
 | [load_schema](#atdata.local.Index.load_schema) | Load a schema and make it available in the types namespace. |
 | [promote_dataset](#atdata.local.Index.promote_dataset) | Publish a Dataset directly to the atmosphere. |
 | [promote_entry](#atdata.local.Index.promote_entry) | Promote a locally-indexed dataset to the atmosphere. |
@@ -307,7 +307,7 @@ local.MySample_1_0_0
 local.Index.get_schema(ref)
 ```
 
-Get a schema record by reference (AbstractIndex protocol).
+Get a schema record by reference (Index protocol).
 
 #### Parameters {.doc-section .doc-section-parameters}
 
@@ -365,7 +365,7 @@ For Protocol-compliant dict access, use get_schema() instead.
 local.Index.insert_dataset(ds, *, name, schema_ref=None, **kwargs)
 ```
 
-Insert a dataset into the index (AbstractIndex protocol).
+Insert a dataset into the index (Index protocol).
 
 The target repository is determined by a prefix in the ``name``
 argument (e.g. ``"lab/mnist"``). If no prefix is given, or the
@@ -396,7 +396,7 @@ is indexed directly.
 local.Index.list_datasets(repo=None)
 ```
 
-Get dataset entries as a materialized list (AbstractIndex protocol).
+Get dataset entries as a materialized list (Index protocol).
 
 #### Parameters {.doc-section .doc-section-parameters}
 
@@ -430,7 +430,7 @@ Get all index entries as a materialized list.
 local.Index.list_schemas()
 ```
 
-Get all schema records as a materialized list (AbstractIndex protocol).
+Get all schema records as a materialized list (Index protocol).
 
 #### Returns {.doc-section .doc-section-returns}
 

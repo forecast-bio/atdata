@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.7.0b1] - 2026-02-26
+
+### Added
+- **Client-side AppView integration**: `Atmosphere` client now supports XRPC queries (`xrpc_query()`) and procedures (`xrpc_procedure()`) routed through a configurable AppView service. Schema, lens, label, and record loaders automatically use AppView for listing, search, and resolution when available, falling back to client-side pagination otherwise. New `has_appview` property and `AppViewRequiredError`/`AppViewUnavailableError` exceptions for clean error handling (GH#74)
+
+### Fixed
+- **Blob URL parameter bug**: Fixed incorrect parameter passing in blob URL construction within atmosphere record publishing
+- **Fallback logging**: Improved diagnostic logging when AppView is unavailable and client-side fallback is used
+
 ## [0.6.0b1] - 2026-02-22
 
 ### Added
@@ -13,6 +22,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Handle-based schema resolution**: `get_schema()` and `get_schema_type()` now accept `@handle/TypeName@version` format, resolving schemas by handle + name + optional semver instead of requiring raw AT-URIs (GH#61)
 
 ### Changed
+- ADR: v0.7.0b1 release review (#876)
+- Migrate test_local.py from deprecated add_entry() to insert_dataset() (#877)
+- **AppView-aware loaders/publishers**: `SchemaLoader`, `LabelLoader`, `DatasetLoader`, `LensLoader` and their corresponding publishers now prefer AppView XRPC endpoints when configured, with automatic graceful fallback to client-side `com.atproto.repo` workarounds (GH#50)
+- **`load_dataset()` atmosphere parameter**: New optional `atmosphere` kwarg passes an `Atmosphere` client (and its AppView) through to AT URI resolution (GH#50)
+- **AbstractIndex deprecation**: `AbstractIndex` protocol is deprecated in favor of direct `Index` usage; a backward-compatible `__getattr__` shim emits `DeprecationWarning` on import (GH#40)
+- **Unified search API**: New `SearchBackend` protocol with `LocalSearchBackend` and `AppViewSearchBackend` implementations, `SearchAggregator` for multi-backend queries, and `Index.search()` integration (GH#33)
+- **Lens verification workflow**: New `VerificationPublisher`/`VerificationLoader` for `science.alt.dataset.lensVerification` records, with `LexCodeHash` and `LexLensVerification` Python types (GH#34)
+- **Lens schema version compatibility**: `LensPublisher.publish()` now accepts `source_schema_version` and `target_schema_version` parameters; `LexLensRecord` updated with corresponding fields (GH#34)
+- **Array format support**: New serialization helpers for sparse matrices (`scipy`), structured arrays, Arrow tensors (`pyarrow`), safetensors, and DataFrames (`pandas`/Parquet). Codegen and pipeline updated to recognize new shim `$ref` types. Optional dependency groups added to `pyproject.toml` (GH#76)
+- **NDArray v1.1.0 annotations**: Schema codegen supports optional `dtype`, `shape`, and `dimensionNames` annotation fields from the v1.1.0 ndarray shim (GH#76)
+- **Upstream lexicon sync**: Added `lensVerification.json`, `verificationMethod.json`, `programmingLanguage.json`, and updated `arrayFormat.json`/`lens.json` from `forecast-bio/atdata-lexicon`
 - **Namespace rename**: Lexicon namespace renamed from `ac.foundation.dataset` to `science.alt.dataset` across all source, tests, and documentation. Lexicon JSON files vendored from [forecast-bio/atdata-lexicon](https://github.com/forecast-bio/atdata-lexicon) with NSID-to-path directory structure. Lexicon loader updated to resolve NSIDs via path traversal. Added `label` and `resolveLabel` to `LEXICON_IDS` (GH#71)
 - **Lexicon record → entry rename**: The dataset record lexicon is renamed from `ac.foundation.dataset.record` to `ac.foundation.dataset.entry` throughout the codebase — lexicon files, Python types, collection constants, tests, and documentation (GH#63)
 - **Schema version field rename**: `$atdataSchemaVersion` renamed to `atdataSchemaVersion` (no `$` prefix) to follow ATProto naming conventions for non-reserved properties (GH#65)

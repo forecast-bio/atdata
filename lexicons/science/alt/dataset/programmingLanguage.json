@@ -1,0 +1,16 @@
+{
+  "lexicon": 1,
+  "id": "science.alt.dataset.programmingLanguage",
+  "defs": {
+    "main": {
+      "type": "string",
+      "description": "Programming language identifier for code references. Uses Linguist language identifiers (lowercase). Known values correspond to token definitions in this Lexicon. New languages can be added as tokens without breaking changes.",
+      "knownValues": ["python", "typescript", "javascript", "rust"],
+      "maxLength": 50
+    },
+    "python": { "type": "token", "description": "Python programming language." },
+    "typescript": { "type": "token", "description": "TypeScript programming language." },
+    "javascript": { "type": "token", "description": "JavaScript programming language." },
+    "rust": { "type": "token", "description": "Rust programming language." }
+  }
+}

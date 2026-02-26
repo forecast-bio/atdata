@@ -111,6 +111,11 @@ class SchemaPublisher:
     ) -> AtUri:
         """Publish a PackableSample schema to ATProto.
 
+        When an AppView is configured, uses
+        ``science.alt.dataset.publishSchema`` for server-side validation
+        (checks version conflicts). Falls back to direct ``createRecord``
+        otherwise.
+
         Args:
             sample_type: The PackableSample class to publish.
             name: Human-readable name. Defaults to the class name.
@@ -136,7 +141,6 @@ class SchemaPublisher:
         with log_operation(
             "SchemaPublisher.publish", schema=sample_type.__name__, version=version
         ):
-            # Build the schema record
             schema_record = self._build_schema_record(
                 sample_type,
                 name=name,
@@ -145,13 +149,32 @@ class SchemaPublisher:
                 metadata=metadata,
             )
 
-            # Publish to ATProto
+            if getattr(self.client, "has_appview", False) is True:
+                return self._publish_via_appview(schema_record, rkey=rkey)
+
             return self.client.create_record(
                 collection=f"{LEXICON_NAMESPACE}.schema",
                 record=schema_record.to_record(),
                 rkey=rkey,
-                validate=False,  # PDS doesn't know our lexicon
+                validate=False,
             )
+
+    def _publish_via_appview(
+        self,
+        schema_record: LexSchemaRecord,
+        *,
+        rkey: Optional[str] = None,
+    ) -> AtUri:
+        """Publish via AppView procedure for server-side validation."""
+        body: dict = {"record": schema_record.to_record()}
+        if rkey is not None:
+            body["rkey"] = rkey
+
+        result = self.client.xrpc_procedure(
+            f"{LEXICON_NAMESPACE}.publishSchema",
+            input=body,
+        )
+        return AtUri.parse(result["uri"])
 
     def _build_schema_record(
         self,
@@ -242,24 +265,15 @@ class SchemaPublisher:
 class SchemaLoader:
     """Loads PackableSample schemas from ATProto.
 
-    This class fetches schema records from ATProto and can list available
-    schemas from a repository.
-
-    Note:
-        The ``science.alt.dataset.getLatestSchema`` query lexicon is
-        defined but has no AppView to serve it yet. A client-side
-        equivalent (fetching all schema records and picking the latest
-        version) has not been implemented here. When the AppView ships,
-        add a ``resolve()``-style method backed by
-        ``GET /xrpc/science.alt.dataset.getLatestSchema``.
-        See also: ``LabelLoader.resolve()`` for the label workaround
-        pattern.
+    When an AppView is configured, queries are routed through it for
+    paginated listing and efficient resolution. Otherwise falls back to
+    ``com.atproto.repo.listRecords``.
 
     Examples:
         >>> atmo = Atmosphere.login("handle", "password")
         >>>
         >>> loader = SchemaLoader(atmo)
-        >>> schema = loader.get("at://did:plc:.../science.alt.dataset.schema/...")
+        >>> schema = loader.get("at://did:plc:.../science.alt.dataset.schema/tid")
         >>> print(schema["name"])
         'MySample'
     """
@@ -304,6 +318,85 @@ class SchemaLoader:
         _check_schema_record_version(record)
         return record
 
+    def resolve(
+        self,
+        handle_or_did: str,
+        schema_id: str,
+        version: Optional[str] = None,
+    ) -> dict:
+        """Resolve a schema by handle/DID and schema ID.
+
+        When an AppView is configured, uses
+        ``science.alt.dataset.resolveSchema`` for efficient server-side
+        lookup. Falls back to listing all schemas and filtering.
+
+        Args:
+            handle_or_did: Handle or DID of the schema owner.
+            schema_id: Schema identifier (the ``name`` field).
+            version: Optional version to pin to.
+
+        Returns:
+            The matching schema record dictionary.
+
+        Raises:
+            KeyError: If no matching schema is found.
+        """
+        if getattr(self.client, "has_appview", False) is True:
+            try:
+                return self._resolve_via_appview(handle_or_did, schema_id, version)
+            except Exception:
+                from .._logging import get_logger
+
+                get_logger().warning(
+                    "AppView schema resolution failed, falling back to client-side",
+                    exc_info=True,
+                )
+
+        return self._resolve_client_side(handle_or_did, schema_id, version)
+
+    def _resolve_via_appview(
+        self,
+        handle_or_did: str,
+        schema_id: str,
+        version: Optional[str] = None,
+    ) -> dict:
+        """Resolve a schema via AppView XRPC query."""
+        params: dict[str, str] = {"handle": handle_or_did, "schemaId": schema_id}
+        if version is not None:
+            params["version"] = version
+
+        result = self.client.xrpc_query(
+            f"{LEXICON_NAMESPACE}.resolveSchema",
+            params=params,
+        )
+        record_data = result.get("record", result)
+        _check_schema_record_version(record_data)
+        return record_data
+
+    def _resolve_client_side(
+        self,
+        handle_or_did: str,
+        schema_id: str,
+        version: Optional[str] = None,
+    ) -> dict:
+        """Resolve a schema by listing all records and filtering."""
+        did = self._resolve_did(handle_or_did)
+        records = self.list_all(repo=did)
+
+        for record in records:
+            if record.get("name") != schema_id:
+                continue
+            if version is not None and record.get("version") != version:
+                continue
+            _check_schema_record_version(record)
+            return record
+
+        raise KeyError(
+            f"Schema {schema_id!r}"
+            + (f" version {version!r}" if version else "")
+            + f" not found in repository {handle_or_did!r}"
+        )
+
     def _resolve_handle_ref(self, ref: str) -> dict:
         """Resolve ``@handle/TypeName@version`` to a schema record.
 
@@ -318,19 +411,7 @@ class SchemaLoader:
             KeyError: If no matching schema is found.
         """
         handle_or_did, type_name, version = _parse_handle_schema_ref(ref)
-        did = self._resolve_did(handle_or_did)
-
-        records = self.list_all(repo=did)
-
-        for record in records:
-            if record.get("name") == type_name and record.get("version") == version:
-                _check_schema_record_version(record)
-                return record
-
-        raise KeyError(
-            f"Schema {type_name!r} version {version!r} not found "
-            f"in repository {handle_or_did!r}"
-        )
+        return self.resolve(handle_or_did, type_name, version)
 
     def _resolve_did(self, handle_or_did: str) -> str:
         """Resolve a handle to a DID, or return the DID directly."""
@@ -355,10 +436,9 @@ class SchemaLoader:
     ) -> list[dict]:
         """List schema records from a repository.
 
-        This delegates to ``com.atproto.repo.listRecords`` which returns at
-        most ``limit`` records with no automatic pagination.  Repositories
-        with more schema records than ``limit`` will return a truncated
-        result.
+        When an AppView is configured, uses
+        ``science.alt.dataset.listSchemas`` with cursor-based pagination.
+        Falls back to ``com.atproto.repo.listRecords`` otherwise.
 
         Args:
             repo: The DID of the repository. Defaults to authenticated user.
@@ -367,4 +447,45 @@ class SchemaLoader:
         Returns:
             List of schema records.
         """
+        if getattr(self.client, "has_appview", False) is True:
+            try:
+                return self._list_via_appview(repo=repo, limit=limit)
+            except Exception:
+                from .._logging import get_logger
+
+                get_logger().warning(
+                    "AppView schema listing failed, falling back to client-side",
+                    exc_info=True,
+                )
+
         return self.client.list_schemas(repo=repo, limit=limit)
+
+    def _list_via_appview(
+        self,
+        repo: Optional[str] = None,
+        limit: int = 100,
+    ) -> list[dict]:
+        """List schemas via AppView with cursor pagination."""
+        results: list[dict] = []
+        cursor: Optional[str] = None
+        page_size = min(limit, 100)
+
+        while len(results) < limit:
+            params: dict[str, str | int] = {"limit": page_size}
+            if repo is not None:
+                params["repo"] = repo
+            if cursor is not None:
+                params["cursor"] = cursor
+
+            response = self.client.xrpc_query(
+                f"{LEXICON_NAMESPACE}.listSchemas",
+                params=params,
+            )
+
+            schemas = response.get("schemas", [])
+            results.extend(schemas)
+            cursor = response.get("cursor")
+            if not cursor or not schemas:
+                break
+
+        return results[:limit]

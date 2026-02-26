@@ -201,13 +201,13 @@ entry = index.insert_dataset(dataset, name="public-features")
 
 atdata uses **protocols** (structural typing) to enable backend interoperability:
 
-### AbstractIndex
+### Index
 
-Common interface implemented by `Index` regardless of backend:
+Unified interface implemented by `Index` regardless of backend:
 
 ```{python}
 #| eval: false
-def process_dataset(index: AbstractIndex, name: str):
+def process_dataset(index: Index, name: str):
     entry = index.get_dataset(name)
     SampleType = index.get_schema_type(entry.schema_ref)
     # Works with any Index backend (SQLite, Redis, PostgreSQL, Atmosphere)
@@ -360,7 +360,7 @@ index.publish_schema(
 | **Lenses** | Schema transformations | `Lens`, `@lens`, `LensNetwork` |
 | **Local Storage** | Team-scale index + data | `Index`, `LocalDiskStore`, `S3DataStore` |
 | **Atmosphere** | Federated sharing | `Index(atmosphere=...)`, `PDSBlobStore` |
-| **Protocols** | Backend abstraction | `AbstractIndex`, `AbstractDataStore`, `DataSource` |
+| **Protocols** | Backend abstraction | `IndexEntry`, `AbstractDataStore`, `DataSource` |
 
 The architecture enables a smooth progression from local experimentation to team collaboration to public federation, all while maintaining type safety and efficient data handling.
 

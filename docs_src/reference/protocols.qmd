@@ -10,7 +10,7 @@ The protocols module defines abstract interfaces that enable interchangeable ind
 Both local and atmosphere implementations solve the same problem: indexed dataset storage with external data URLs. These protocols formalize that common interface:
 
 - **IndexEntry**: Common interface for dataset index entries
-- **AbstractIndex**: Protocol for index operations
+- **Index**: Unified index for all backends (replaces deprecated AbstractIndex)
 - **AbstractDataStore**: Protocol for data storage operations
 - **DataSource**: Protocol for streaming data from various backends
 
@@ -43,16 +43,22 @@ def process_entry(entry: IndexEntry) -> None:
 - `LocalDatasetEntry` (from `atdata.local`)
 - `AtmosphereIndexEntry` (from `atdata.atmosphere`)
 
-## AbstractIndex Protocol
+## Index Protocol
+
+::: {.callout-warning}
+The `AbstractIndex` protocol is deprecated. Use `atdata.Index` directly as the
+type annotation. `AbstractIndex` is retained for backward compatibility and will
+be removed in a future release.
+:::
 
 Defines operations for managing schemas and datasets:
 
 ```{python}
 #| eval: false
-from atdata._protocols import AbstractIndex
+from atdata import Index
 
-def list_all_datasets(index: AbstractIndex) -> None:
-    """Works with LocalIndex or AtmosphereIndex."""
+def list_all_datasets(index: Index) -> None:
+    """Works with any Index instance."""
     for entry in index.list_datasets():
         print(f"{entry.name}: {entry.schema_ref}")
 ```
@@ -99,10 +105,9 @@ SampleType = index.decode_schema(schema_ref)
 dataset = atdata.Dataset[SampleType](entry.data_urls[0])
 ```
 
-### Implementations
+### Implementation
 
-- `LocalIndex` / `Index` (from `atdata.local`)
-- `AtmosphereIndex` (from `atdata.atmosphere`)
+- `Index` (from `atdata`) — unified index supporting local and atmosphere backends
 
 ## AbstractDataStore Protocol
 
@@ -225,12 +230,11 @@ Write code that works with any backend:
 
 ```{python}
 #| eval: false
-from atdata._protocols import AbstractIndex, IndexEntry
-from atdata import Dataset
+from atdata import Index, IndexEntry, Dataset
 
 def backup_all_datasets(
-    source: AbstractIndex,
-    target: AbstractIndex,
+    source: Index,
+    target: Index,
 ) -> None:
     """Copy all datasets from source index to target."""
     for entry in source.list_datasets():
@@ -268,14 +272,14 @@ Protocols are runtime-checkable:
 
 ```{python}
 #| eval: false
-from atdata._protocols import IndexEntry, AbstractIndex
+from atdata import IndexEntry, Index
 
 # Check if object implements protocol
 entry = index.get_dataset("test")
 assert isinstance(entry, IndexEntry)
 
-# Type hints work with protocols
-def process(index: AbstractIndex) -> None:
+# Type hints work with Index
+def process(index: Index) -> None:
     ...  # IDE provides autocomplete
 ```
 
@@ -284,9 +288,8 @@ def process(index: AbstractIndex) -> None:
 ```{python}
 #| eval: false
 import atdata
-from atdata.local import LocalIndex, S3DataStore
-from atdata.atmosphere import AtmosphereClient, AtmosphereIndex
-from atdata._protocols import AbstractIndex
+from atdata import Index
+from atdata.atmosphere import Atmosphere
 import numpy as np
 from numpy.typing import NDArray
 
@@ -296,25 +299,24 @@ class FeatureSample:
     features: NDArray
     label: int
 
-# Function works with any index
-def count_datasets(index: AbstractIndex) -> int:
+# Function works with any Index instance
+def count_datasets(index: Index) -> int:
     return sum(1 for _ in index.list_datasets())
 
 # Use with local index
-local_index = LocalIndex()
+local_index = Index()
 print(f"Local datasets: {count_datasets(local_index)}")
 
 # Use with atmosphere index
-client = AtmosphereClient()
-client.login("handle.bsky.social", "app-password")
-atm_index = AtmosphereIndex(client)
+client = Atmosphere.login("handle.bsky.social", "app-password")
+atm_index = Index(atmosphere=client)
 print(f"Atmosphere datasets: {count_datasets(atm_index)}")
 
 # Migrate from local to atmosphere
 def migrate_dataset(
     name: str,
-    source: AbstractIndex,
-    target: AbstractIndex,
+    source: Index,
+    target: Index,
 ) -> None:
     entry = source.get_dataset(name)
     SampleType = source.decode_schema(entry.schema_ref)
