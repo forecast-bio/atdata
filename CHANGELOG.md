@@ -22,6 +22,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Handle-based schema resolution**: `get_schema()` and `get_schema_type()` now accept `@handle/TypeName@version` format, resolving schemas by handle + name + optional semver instead of requiring raw AT-URIs (GH#61)
 
 ### Changed
+- ADR: v0.7.0b1 release review (#876)
+- Migrate test_local.py from deprecated add_entry() to insert_dataset() (#877)
 - **AppView-aware loaders/publishers**: `SchemaLoader`, `LabelLoader`, `DatasetLoader`, `LensLoader` and their corresponding publishers now prefer AppView XRPC endpoints when configured, with automatic graceful fallback to client-side `com.atproto.repo` workarounds (GH#50)
 - **`load_dataset()` atmosphere parameter**: New optional `atmosphere` kwarg passes an `Atmosphere` client (and its AppView) through to AT URI resolution (GH#50)
 - **AbstractIndex deprecation**: `AbstractIndex` protocol is deprecated in favor of direct `Index` usage; a backward-compatible `__getattr__` shim emits `DeprecationWarning` on import (GH#40)
