@@ -63,7 +63,6 @@ from ._hf_api import (
 from ._protocols import (
     Packable as Packable,
     IndexEntry as IndexEntry,
-    AbstractIndex as AbstractIndex,
     AbstractDataStore as AbstractDataStore,
     DataSource as DataSource,
 )
@@ -119,6 +118,15 @@ from ._cid import (
     verify_cid as verify_cid,
 )
 
+from .search import (
+    SearchResult as SearchResult,
+    SearchResults as SearchResults,
+    SearchBackend as SearchBackend,
+    AppViewSearchBackend as AppViewSearchBackend,
+    LocalSearchBackend as LocalSearchBackend,
+    SearchAggregator as SearchAggregator,
+)
+
 from .promote import (
     promote_to_atmosphere as promote_to_atmosphere,
 )
@@ -138,6 +146,22 @@ from . import atmosphere as atmosphere
 
 # CLI entry point
 from .cli import main as main
+
+
+def __getattr__(name: str):
+    if name == "AbstractIndex":
+        import warnings
+
+        warnings.warn(
+            "atdata.AbstractIndex is deprecated. Use atdata.Index directly "
+            "as the type annotation instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        from ._protocols import AbstractIndex
+
+        return AbstractIndex
+    raise AttributeError(f"module 'atdata' has no attribute {name!r}")
 
 
 def schema_to_type(schema: dict, *, use_cache: bool = True):

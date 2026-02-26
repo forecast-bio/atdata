@@ -37,6 +37,7 @@ if TYPE_CHECKING:
     from atdata.repository import Repository, _AtmosphereBackend
     from atdata._protocols import IndexEntry
     from atdata.lens import Lens
+    from atdata.search import SearchResults
 
 T = TypeVar("T", bound=Packable)
 
@@ -121,7 +122,7 @@ def _estimate_dataset_bytes(ds: Dataset) -> int:
 class Index:
     """Unified index for tracking datasets across multiple repositories.
 
-    Implements the AbstractIndex protocol. Maintains a registry of
+    Maintains a registry of
     dataset entries across named repositories (always including a built-in
     ``"local"`` repository) and an optional atmosphere (ATProto) backend.
 
@@ -592,7 +593,7 @@ class Index:
         """
         return self._provider.get_entry_by_name(name)
 
-    # AbstractIndex protocol methods
+    # Index protocol methods
 
     @staticmethod
     def _ensure_schema_stored(
@@ -1159,7 +1160,7 @@ class Index:
             yield from repo.provider.iter_entries()
 
     def list_datasets(self, repo: str | None = None) -> list["IndexEntry"]:
-        """Get dataset entries as a materialized list (AbstractIndex protocol).
+        """Get dataset entries as a materialized list (Index protocol).
 
         Args:
             repo: Optional repository filter. If ``None``, aggregates entries
@@ -1376,7 +1377,7 @@ class Index:
         return schema_ref
 
     def get_schema(self, ref: str) -> dict:
-        """Get a schema record by reference (AbstractIndex protocol).
+        """Get a schema record by reference (Index protocol).
 
         Args:
             ref: Schema reference string. Supports:
@@ -1450,7 +1451,7 @@ class Index:
             yield LocalSchemaRecord.from_dict(schema)
 
     def list_schemas(self) -> list[dict]:
-        """Get all schema records as a materialized list (AbstractIndex protocol).
+        """Get all schema records as a materialized list (Index protocol).
 
         Returns:
             List of schema records as dictionaries.
@@ -1936,3 +1937,64 @@ class Index:
             record["$ref"] = f"atdata://local/lens/{name}@{version}"
             records.append(record)
         return records
+
+    # ------------------------------------------------------------------
+    # Search
+    # ------------------------------------------------------------------
+
+    def search(
+        self,
+        text: str | None = None,
+        tags: list[str] | None = None,
+        schema_ref: str | None = None,
+        repo: str | None = None,
+        limit: int = 50,
+        include_atmosphere: bool = True,
+    ) -> "SearchResults":
+        """Search datasets across local and atmosphere backends.
+
+        Queries the local index and, optionally, the AppView, then merges
+        and deduplicates the results.  If the atmosphere backend is
+        unavailable or unhealthy the search degrades gracefully to
+        local-only results.
+
+        Args:
+            text: Free-text query string (substring match for local,
+                full-text for AppView).
+            tags: Filter by tags.
+            schema_ref: Filter by schema reference.
+            repo: Filter by repository DID or handle (atmosphere only).
+            limit: Maximum total results.
+            include_atmosphere: If ``True`` (default), include atmosphere
+                results when an AppView is configured.
+
+        Returns:
+            :class:`~atdata.search.SearchResults` with merged items.
+
+        Examples:
+            >>> index = Index()
+            >>> results = index.search(text="mnist")
+            >>> for r in results.items:
+            ...     print(r.name, r.source)
+        """
+        from atdata.search import (
+            AppViewSearchBackend,
+            LocalSearchBackend,
+            SearchAggregator,
+        )
+
+        backends: list = [LocalSearchBackend(self)]
+
+        if include_atmosphere:
+            atmo = self._get_atmosphere()
+            if atmo is not None and atmo.client.has_appview:
+                backends.append(AppViewSearchBackend(atmo.client))
+
+        aggregator = SearchAggregator(backends)
+        return aggregator.search(
+            text=text,
+            tags=tags,
+            schema_ref=schema_ref,
+            repo=repo,
+            limit=limit,
+        )

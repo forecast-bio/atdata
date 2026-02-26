@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://alt.science/schemas/atdata-structured-bytes/1.0.0",
+  "title": "ATDataStructuredBytes",
+  "description": "Standard definition for numpy structured array types in JSON Schema, compatible with atdata WebDataset serialization.",
+  "version": "1.0.0",
+  "$defs": {
+    "structured": {
+      "type": "string",
+      "format": "byte",
+      "description": "Numpy structured array serialized using numpy .npy format via np.save (includes compound dtype info in header).",
+      "contentEncoding": "base64",
+      "contentMediaType": "application/octet-stream"
+    }
+  }
+}

@@ -250,6 +250,6 @@ for batch in ds.ordered(batch_size=32):
 ## Related
 
 - [Datasets](datasets.qmd) - Dataset iteration and batching
-- [Protocols](protocols.qmd) - AbstractIndex and IndexEntry interfaces
+- [Protocols](protocols.qmd) - Index and IndexEntry interfaces
 - [Promotion](promotion.qmd) - Promoting local datasets to ATProto
 - [Atmosphere](atmosphere.qmd) - ATProto federation

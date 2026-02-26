@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://alt.science/schemas/atdata-dataframe/1.0.0",
+  "title": "ATDataDataFrame",
+  "description": "Standard definition for tabular DataFrame types in JSON Schema, compatible with atdata WebDataset serialization.",
+  "version": "1.0.0",
+  "$defs": {
+    "dataframe": {
+      "type": "string",
+      "format": "byte",
+      "description": "Tabular data serialized as Parquet format.",
+      "contentEncoding": "base64",
+      "contentMediaType": "application/octet-stream"
+    }
+  }
+}

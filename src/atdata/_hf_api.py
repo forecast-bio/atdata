@@ -47,7 +47,7 @@ from ._sources import URLSource, S3Source
 from ._protocols import DataSource, Packable
 
 if TYPE_CHECKING:
-    from ._protocols import AbstractIndex
+    from .index._index import Index
     from .atmosphere.client import Atmosphere
 
 ##
@@ -660,7 +660,7 @@ def _parse_indexed_path(path: str) -> tuple[str, str, str | None]:
 
 def _resolve_indexed_path(
     path: str,
-    index: "AbstractIndex",
+    index: "Index",
 ) -> tuple[DataSource, str]:
     """Resolve @handle/dataset[@version] path to DataSource and schema_ref via index lookup.
 
@@ -735,7 +735,7 @@ def load_dataset(
     split: str,
     data_files: str | list[str] | dict[str, str | list[str]] | None = None,
     streaming: bool = False,
-    index: Optional["AbstractIndex"] = None,
+    index: Optional["Index"] = None,
     atmosphere: Optional["Atmosphere"] = None,
 ) -> Dataset[ST]: ...
 
@@ -749,7 +749,7 @@ def load_dataset(
     split: None = None,
     data_files: str | list[str] | dict[str, str | list[str]] | None = None,
     streaming: bool = False,
-    index: Optional["AbstractIndex"] = None,
+    index: Optional["Index"] = None,
     atmosphere: Optional["Atmosphere"] = None,
 ) -> DatasetDict[ST]: ...
 
@@ -763,7 +763,7 @@ def load_dataset(
     split: str,
     data_files: str | list[str] | dict[str, str | list[str]] | None = None,
     streaming: bool = False,
-    index: Optional["AbstractIndex"] = None,
+    index: Optional["Index"] = None,
     atmosphere: Optional["Atmosphere"] = None,
 ) -> Dataset[DictSample]: ...
 
@@ -777,7 +777,7 @@ def load_dataset(
     split: None = None,
     data_files: str | list[str] | dict[str, str | list[str]] | None = None,
     streaming: bool = False,
-    index: Optional["AbstractIndex"] = None,
+    index: Optional["Index"] = None,
     atmosphere: Optional["Atmosphere"] = None,
 ) -> DatasetDict[DictSample]: ...
 
@@ -789,7 +789,7 @@ def load_dataset(
     split: str | None = None,
     data_files: str | list[str] | dict[str, str | list[str]] | None = None,
     streaming: bool = False,
-    index: Optional["AbstractIndex"] = None,
+    index: Optional["Index"] = None,
     atmosphere: Optional["Atmosphere"] = None,
 ) -> Dataset[ST] | DatasetDict[ST]:
     """Load a dataset from local files, remote URLs, or an index.
@@ -830,7 +830,7 @@ def load_dataset(
             Note: atdata Datasets are already lazy/streaming via WebDataset
             pipelines, so this parameter primarily signals intent.
 
-        index: Optional AbstractIndex for dataset lookup. Required when using
+        index: Optional Index for dataset lookup. Required when using
             @handle/dataset syntax. When provided with an indexed path, the
             schema can be auto-resolved from the index.
 

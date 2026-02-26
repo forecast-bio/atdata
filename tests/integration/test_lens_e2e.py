@@ -29,6 +29,10 @@ from atdata.atmosphere import (
     LensLoader,
     LexLensRecord,
     LexCodeReference,
+    LexCodeHash,
+    LexLensVerification,
+    VerificationPublisher,
+    VerificationLoader,
 )
 from atdata.atmosphere._types import LEXICON_NAMESPACE
 
@@ -99,6 +103,7 @@ _array_to_label = atdata.Lens(_array_to_label_get, put=_array_to_label_put)
 
 TEST_COLLECTION_LENS = f"{LEXICON_NAMESPACE}.lens"
 TEST_COLLECTION_SCHEMA = f"{LEXICON_NAMESPACE}.schema"
+TEST_COLLECTION_VERIFICATION = f"{LEXICON_NAMESPACE}.lensVerification"
 
 
 def _cleanup_lens_records(client: Atmosphere) -> None:
@@ -798,6 +803,308 @@ class TestLexLensRecordRoundTrip:
         assert d["$type"] == f"{LEXICON_NAMESPACE}.lens"
 
 
+# ── Schema version round-trip ──────────────────────────────────────
+
+
+class TestSchemaVersionRoundTrip:
+    """Publish lens with schema version fields, retrieve, verify preserved."""
+
+    def test_publish_with_schema_versions(self, atproto_client: Atmosphere):
+        """Schema version fields survive a publish → retrieve cycle."""
+        name = unique_name("lens-schver")
+
+        schema_pub = SchemaPublisher(atproto_client)
+        FullSample.__module__ = f"integ.{name}.source"
+        source_uri = str(schema_pub.publish(FullSample, version="1.0.0"))
+        NameScore.__module__ = f"integ.{name}.target"
+        target_uri = str(schema_pub.publish(NameScore, version="1.0.0"))
+
+        lens_pub = LensPublisher(atproto_client)
+        lens_uri = lens_pub.publish(
+            name=name,
+            source_schema_uri=source_uri,
+            target_schema_uri=target_uri,
+            code_repository="https://github.com/forecast-bio/atdata",
+            code_commit="a" * 40,
+            getter_path="mod:get",
+            putter_path="mod:put",
+            source_schema_version="1.0.0",
+            target_schema_version=">=2.0.0 <3.0.0",
+        )
+
+        loader = LensLoader(atproto_client)
+        record = loader.get(str(lens_uri))
+        assert record["sourceSchemaVersion"] == "1.0.0"
+        assert record["targetSchemaVersion"] == ">=2.0.0 <3.0.0"
+
+        typed = loader.get_typed(str(lens_uri))
+        assert typed.source_schema_version == "1.0.0"
+        assert typed.target_schema_version == ">=2.0.0 <3.0.0"
+
+        # Cleanup
+        atproto_client.delete_record(lens_uri)
+        atproto_client.delete_record(source_uri)
+        atproto_client.delete_record(target_uri)
+
+    def test_publish_without_schema_versions_backward_compat(
+        self, atproto_client: Atmosphere
+    ):
+        """Lenses without version fields still work (backward compat)."""
+        name = unique_name("lens-noschver")
+
+        schema_pub = SchemaPublisher(atproto_client)
+        FullSample.__module__ = f"integ.{name}.source"
+        source_uri = str(schema_pub.publish(FullSample, version="1.0.0"))
+        NameScore.__module__ = f"integ.{name}.target"
+        target_uri = str(schema_pub.publish(NameScore, version="1.0.0"))
+
+        lens_pub = LensPublisher(atproto_client)
+        lens_uri = lens_pub.publish(
+            name=name,
+            source_schema_uri=source_uri,
+            target_schema_uri=target_uri,
+            code_repository="https://github.com/forecast-bio/atdata",
+            code_commit="b" * 40,
+            getter_path="mod:get",
+            putter_path="mod:put",
+        )
+
+        loader = LensLoader(atproto_client)
+        typed = loader.get_typed(str(lens_uri))
+        assert typed.source_schema_version is None
+        assert typed.target_schema_version is None
+
+        # Cleanup
+        atproto_client.delete_record(lens_uri)
+        atproto_client.delete_record(source_uri)
+        atproto_client.delete_record(target_uri)
+
+
+# ── Code reference with language ──────────────────────────────────
+
+
+class TestCodeReferenceLanguage:
+    """Publish lens with per-reference language, retrieve, verify."""
+
+    def test_code_reference_language_roundtrip(self, atproto_client: Atmosphere):
+        """Language field on code references survives publish → retrieve."""
+        name = unique_name("lens-codelang")
+
+        schema_pub = SchemaPublisher(atproto_client)
+        FullSample.__module__ = f"integ.{name}.source"
+        source_uri = str(schema_pub.publish(FullSample, version="1.0.0"))
+        NameScore.__module__ = f"integ.{name}.target"
+        target_uri = str(schema_pub.publish(NameScore, version="1.0.0"))
+
+        getter_code = LexCodeReference(
+            repository="https://github.com/forecast-bio/atdata",
+            commit="a" * 40,
+            path="lenses.vision:get",
+            language="python",
+        )
+        putter_code = LexCodeReference(
+            repository="https://github.com/forecast-bio/atdata",
+            commit="a" * 40,
+            path="lenses.vision:put",
+            language="python",
+        )
+
+        lens_record = LexLensRecord(
+            name=name,
+            source_schema=source_uri,
+            target_schema=target_uri,
+            getter_code=getter_code,
+            putter_code=putter_code,
+            description="Language field test",
+        )
+
+        lens_uri = atproto_client.create_record(
+            collection=TEST_COLLECTION_LENS,
+            record=lens_record.to_record(),
+            validate=False,
+        )
+
+        loader = LensLoader(atproto_client)
+        record = loader.get(str(lens_uri))
+        assert record["getterCode"]["language"] == "python"
+        assert record["putterCode"]["language"] == "python"
+
+        typed = loader.get_typed(str(lens_uri))
+        assert typed.getter_code.language == "python"
+        assert typed.putter_code.language == "python"
+
+        # Cleanup
+        atproto_client.delete_record(lens_uri)
+        atproto_client.delete_record(source_uri)
+        atproto_client.delete_record(target_uri)
+
+
+# ── Verification workflow ─────────────────────────────────────────
+
+
+def _cleanup_verification_records(client: Atmosphere) -> None:
+    """Delete all verification records from this test run."""
+    records, _ = client.list_records(TEST_COLLECTION_VERIFICATION)
+    for rec in records:
+        desc = rec.get("description", "")
+        if RUN_ID in desc:
+            uri = rec.get("uri") or rec.get("$uri")
+            if uri:
+                try:
+                    client.delete_record(uri)
+                except Exception:
+                    continue
+
+
+class TestVerificationWorkflow:
+    """Full verification lifecycle: publish lens → verify → retrieve."""
+
+    def test_verification_publish_and_retrieve(self, atproto_client: Atmosphere):
+        """Publish a verification record and retrieve it."""
+        name = unique_name("lens-verify")
+
+        # Publish a lens first
+        schema_pub = SchemaPublisher(atproto_client)
+        FullSample.__module__ = f"integ.{name}.source"
+        source_uri = str(schema_pub.publish(FullSample, version="1.0.0"))
+        NameScore.__module__ = f"integ.{name}.target"
+        target_uri = str(schema_pub.publish(NameScore, version="1.0.0"))
+
+        lens_pub = LensPublisher(atproto_client)
+        lens_uri = lens_pub.publish(
+            name=name,
+            source_schema_uri=source_uri,
+            target_schema_uri=target_uri,
+            code_repository="https://github.com/forecast-bio/atdata",
+            code_commit="a" * 40,
+            getter_path="mod:get",
+            putter_path="mod:put",
+        )
+
+        # Publish verification
+        ver_pub = VerificationPublisher(atproto_client)
+        ver_uri = ver_pub.publish(
+            lens_uri=str(lens_uri),
+            lens_commit="bafyabc123" + RUN_ID,
+            verification_method="codeReview",
+            description=f"E2E verification test {RUN_ID}",
+        )
+        assert "at://" in str(ver_uri)
+        assert "lensVerification" in str(ver_uri)
+
+        # Retrieve and verify
+        ver_loader = VerificationLoader(atproto_client)
+        record = ver_loader.get(str(ver_uri))
+        assert record["lens"] == str(lens_uri)
+        assert record["verificationMethod"] == "codeReview"
+        assert RUN_ID in record["description"]
+
+        typed = ver_loader.get_typed(str(ver_uri))
+        assert isinstance(typed, LexLensVerification)
+        assert typed.lens == str(lens_uri)
+        assert typed.verification_method == "codeReview"
+
+        # Cleanup
+        atproto_client.delete_record(ver_uri)
+        atproto_client.delete_record(lens_uri)
+        atproto_client.delete_record(source_uri)
+        atproto_client.delete_record(target_uri)
+
+    def test_verification_with_code_hash(self, atproto_client: Atmosphere):
+        """Verification with code hash survives round-trip."""
+        name = unique_name("lens-verhash")
+
+        schema_pub = SchemaPublisher(atproto_client)
+        FullSample.__module__ = f"integ.{name}.source"
+        source_uri = str(schema_pub.publish(FullSample, version="1.0.0"))
+        NameScore.__module__ = f"integ.{name}.target"
+        target_uri = str(schema_pub.publish(NameScore, version="1.0.0"))
+
+        lens_pub = LensPublisher(atproto_client)
+        lens_uri = lens_pub.publish(
+            name=name,
+            source_schema_uri=source_uri,
+            target_schema_uri=target_uri,
+            code_repository="https://github.com/forecast-bio/atdata",
+            code_commit="b" * 40,
+            getter_path="mod:get",
+            putter_path="mod:put",
+        )
+
+        code_hash = LexCodeHash(algorithm="sha256", digest="deadbeef" * 8)
+        ver_pub = VerificationPublisher(atproto_client)
+        ver_uri = ver_pub.publish(
+            lens_uri=str(lens_uri),
+            lens_commit="bafydef456" + RUN_ID,
+            verification_method="signedHash",
+            code_hash=code_hash,
+            description=f"Hash verification {RUN_ID}",
+        )
+
+        ver_loader = VerificationLoader(atproto_client)
+        typed = ver_loader.get_typed(str(ver_uri))
+        assert typed.verification_method == "signedHash"
+        assert typed.code_hash is not None
+        assert typed.code_hash.algorithm == "sha256"
+        assert typed.code_hash.digest == "deadbeef" * 8
+
+        # Cleanup
+        atproto_client.delete_record(ver_uri)
+        atproto_client.delete_record(lens_uri)
+        atproto_client.delete_record(source_uri)
+        atproto_client.delete_record(target_uri)
+
+    def test_verification_with_proof_ref(self, atproto_client: Atmosphere):
+        """Verification with proof reference survives round-trip."""
+        name = unique_name("lens-verproof")
+
+        schema_pub = SchemaPublisher(atproto_client)
+        FullSample.__module__ = f"integ.{name}.source"
+        source_uri = str(schema_pub.publish(FullSample, version="1.0.0"))
+        NameScore.__module__ = f"integ.{name}.target"
+        target_uri = str(schema_pub.publish(NameScore, version="1.0.0"))
+
+        lens_pub = LensPublisher(atproto_client)
+        lens_uri = lens_pub.publish(
+            name=name,
+            source_schema_uri=source_uri,
+            target_schema_uri=target_uri,
+            code_repository="https://github.com/forecast-bio/atdata",
+            code_commit="c" * 40,
+            getter_path="mod:get",
+            putter_path="mod:put",
+        )
+
+        proof_ref = LexCodeReference(
+            repository="https://github.com/forecast-bio/atdata",
+            commit="d" * 40,
+            path="tests/test_lens_laws.py",
+            language="python",
+        )
+        ver_pub = VerificationPublisher(atproto_client)
+        ver_uri = ver_pub.publish(
+            lens_uri=str(lens_uri),
+            lens_commit="bafyghi789" + RUN_ID,
+            verification_method="automatedTest",
+            proof_ref=proof_ref,
+            description=f"Proof ref verification {RUN_ID}",
+        )
+
+        ver_loader = VerificationLoader(atproto_client)
+        typed = ver_loader.get_typed(str(ver_uri))
+        assert typed.verification_method == "automatedTest"
+        assert typed.proof_ref is not None
+        assert typed.proof_ref.repository == "https://github.com/forecast-bio/atdata"
+        assert typed.proof_ref.language == "python"
+        assert typed.proof_ref.path == "tests/test_lens_laws.py"
+
+        # Cleanup
+        atproto_client.delete_record(ver_uri)
+        atproto_client.delete_record(lens_uri)
+        atproto_client.delete_record(source_uri)
+        atproto_client.delete_record(target_uri)
+
+
 # ── Sweep cleanup (runs last by naming convention) ────────────────
 
 
@@ -809,3 +1116,6 @@ class TestZZZLensCleanup:
 
     def test_cleanup_schema_records(self, atproto_client: Atmosphere):
         _cleanup_schema_records(atproto_client)
+
+    def test_cleanup_verification_records(self, atproto_client: Atmosphere):
+        _cleanup_verification_records(atproto_client)

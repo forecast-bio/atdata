@@ -6,12 +6,12 @@ Defines the abstract protocols that enable interchangeable index backends
 Protocols:
     Packable: Structural interface for packable sample types
     IndexEntry: Common interface for dataset index entries
-    AbstractIndex: Protocol for index operations (schemas, datasets, lenses)
+    AbstractIndex: Protocol for index operations (deprecated, use Index directly)
     AbstractDataStore: Protocol for data storage operations
     DataSource: Protocol for streaming shard data
 
 Examples:
-    >>> def process_datasets(index: AbstractIndex) -> None:
+    >>> def process_datasets(index: Index) -> None:
     ...     for entry in index.list_datasets():
     ...         print(f"{entry.name}: {entry.data_urls}")
 """
@@ -125,14 +125,18 @@ class IndexEntry(Protocol):
 
 
 class AbstractIndex(Protocol):
-    """Protocol for index operations — implemented by Index and AtmosphereIndex.
+    """Protocol for index operations.
 
-    Manages dataset metadata: publishing/retrieving schemas, inserting/listing
-    datasets. A single index holds datasets of many sample types, tracked via
-    schema references.
+    .. deprecated::
+        Use ``atdata.Index`` directly as the type annotation instead.
+        ``AbstractIndex`` is retained for backward compatibility and will
+        be removed in a future release.  The unified ``Index`` class is
+        now the only actively maintained implementation.
 
     Examples:
-        >>> def publish_and_list(index: AbstractIndex) -> None:
+        >>> # Preferred: use Index directly
+        >>> from atdata import Index
+        >>> def publish_and_list(index: Index) -> None:
         ...     index.publish_schema(ImageSample, version="1.0.0")
         ...     index.insert_dataset(image_ds, name="images")
         ...     for entry in index.list_datasets():

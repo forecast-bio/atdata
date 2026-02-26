@@ -35,6 +35,20 @@ atmosphere = [
 postgres = [
     "psycopg[binary]>=3.1",
 ]
+sparse = [
+    "scipy>=1.10",
+]
+arrow = [
+    "pyarrow>=14.0",
+]
+safetensors = [
+    "safetensors>=0.4",
+]
+all-formats = [
+    "scipy>=1.10",
+    "pyarrow>=14.0",
+    "safetensors>=0.4",
+]
 
 [project.scripts]
 atdata = "atdata:main"

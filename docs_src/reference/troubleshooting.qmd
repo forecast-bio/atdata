@@ -218,7 +218,7 @@ entry = index.insert_dataset(ds, name="my-dataset", schema_ref=schema_uri)
 | Auth | None required | ATProto account |
 | Use case | Development, private data | Public distribution |
 
-Both implement the `AbstractIndex` protocol, so code can work with either.
+Both use the unified `Index` class, so code works with either backend.
 
 ## Getting Help
 
