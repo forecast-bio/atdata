@@ -99,16 +99,39 @@ SampleExportMap: TypeAlias = Callable[["PackableSample"], SampleExportRow]
 DT = TypeVar("DT")
 
 
-def _make_packable(x):
-    """Convert numpy arrays to bytes; coerce numpy scalars to Python natives."""
+def _make_packable(x: Any) -> Any:
+    """Convert array-like values to bytes for msgpack serialization.
+
+    Auto-detects dense/structured numpy arrays, scipy sparse matrices,
+    pyarrow tensors, and pandas DataFrames.  Numpy scalars are coerced
+    to Python natives.  All other values pass through unchanged.
+    """
     if isinstance(x, np.ndarray):
+        if x.dtype.names is not None:
+            return eh.structured_to_bytes(x)
         return eh.array_to_bytes(x)
     if isinstance(x, np.generic):
         return x.item()
+
+    # Optional-dep types: check by class name to avoid top-level imports
+    cls_name = type(x).__name__
+    cls_module = type(x).__module__ or ""
+
+    if cls_name == "DataFrame" and "pandas" in cls_module:
+        return eh.dataframe_to_bytes(x)
+
+    # scipy sparse — any subclass of spmatrix / sparray
+    if "scipy" in cls_module and "sparse" in cls_module:
+        return eh.sparse_to_bytes(x)
+
+    # pyarrow Tensor
+    if cls_name == "Tensor" and "pyarrow" in cls_module:
+        return eh.arrow_tensor_to_bytes(x)
+
     return x
 
 
-def _is_possibly_ndarray_type(t):
+def _is_possibly_ndarray_type(t: Any) -> bool:
     """Return True if type annotation is NDArray or Optional[NDArray]."""
     if t == NDArray:
         return True
@@ -256,10 +279,25 @@ class PackableSample(ABC):
         >>> restored = MyData.from_bytes(packed)  # Deserialize
     """
 
-    def _ensure_good(self):
-        """Convert bytes to NDArray for fields annotated as NDArray or NDArray | None."""
+    def _ensure_good(self) -> None:
+        """Convert bytes to appropriate types for annotated fields.
+
+        For NDArray-typed fields, bytes are deserialized via
+        ``bytes_to_array``.  For fields listed in the class-level
+        ``__field_formats__`` dict (set by codegen for non-ndarray binary
+        formats), the matching deserializer from ``FORMAT_SERIALIZERS`` is
+        used instead.
+        """
+        field_formats: dict[str, str] = getattr(self.__class__, "__field_formats__", {})
+
         for field in dataclasses.fields(self):
-            if _is_possibly_ndarray_type(field.type):
+            fmt = field_formats.get(field.name)
+            if fmt:
+                value = getattr(self, field.name)
+                if isinstance(value, bytes):
+                    _, deserialize = eh.FORMAT_SERIALIZERS[fmt]
+                    setattr(self, field.name, deserialize(value))
+            elif _is_possibly_ndarray_type(field.type):
                 value = getattr(self, field.name)
                 if isinstance(value, np.ndarray):
                     continue

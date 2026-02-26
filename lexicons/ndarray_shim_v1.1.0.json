@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://alt.science/schemas/atdata-ndarray-bytes/1.1.0",
+  "title": "ATDataNDArrayBytes",
+  "description": "Standard definition for numpy NDArray types in JSON Schema, compatible with atdata WebDataset serialization. This version adds optional dtype, shape, and dimension name annotations.",
+  "version": "1.1.0",
+  "$defs": {
+    "ndarray": {
+      "type": "object",
+      "description": "Numpy array with optional type and shape annotations.",
+      "required": ["data"],
+      "properties": {
+        "data": {
+          "type": "string",
+          "format": "byte",
+          "description": "Numpy array serialized using numpy .npy format.",
+          "contentEncoding": "base64",
+          "contentMediaType": "application/octet-stream"
+        },
+        "dtype": {
+          "type": "string",
+          "description": "Numpy dtype string (e.g., 'float32', 'int64')."
+        },
+        "shape": {
+          "type": "array",
+          "description": "Expected array shape. Each element is an integer dimension size, or null for variable dimensions.",
+          "items": { "type": ["integer", "null"] }
+        },
+        "dimensionNames": {
+          "type": "array",
+          "description": "Human-readable names for each dimension (e.g., ['batch', 'height', 'width', 'channels']).",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

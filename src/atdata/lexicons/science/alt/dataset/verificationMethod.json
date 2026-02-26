@@ -1,0 +1,28 @@
+{
+  "lexicon": 1,
+  "id": "science.alt.dataset.verificationMethod",
+  "defs": {
+    "main": {
+      "type": "string",
+      "description": "Verification method identifier for lens verification records. Known values correspond to token definitions in this Lexicon. New verification methods can be added as tokens without breaking changes.",
+      "knownValues": ["codeReview", "formalProof", "signedHash", "automatedTest"],
+      "maxLength": 50
+    },
+    "codeReview": {
+      "type": "token",
+      "description": "Manual code review by a trusted party"
+    },
+    "formalProof": {
+      "type": "token",
+      "description": "Machine-checkable correctness proof (Coq, Lean, etc.)"
+    },
+    "signedHash": {
+      "type": "token",
+      "description": "Cryptographic signature over code hash at referenced commit"
+    },
+    "automatedTest": {
+      "type": "token",
+      "description": "Automated test suite verification"
+    }
+  }
+}
