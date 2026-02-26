@@ -133,9 +133,9 @@ class MockAtmosphere:
             Tuple of ``(records, cursor)`` matching the real
             ``Atmosphere.list_records`` signature.
         """
-        records = [rec for uri, rec in self._records.items() if collection in uri][
-            :limit
-        ]
+        records = [
+            rec for uri, rec in self._records.items() if f"/{collection}/" in uri
+        ][:limit]
         return records, None
 
     def resolve_did(self, handle_or_did: str) -> str:
@@ -149,14 +149,18 @@ class MockAtmosphere:
     ) -> list[dict[str, Any]]:
         """List label records."""
         collection = "science.alt.dataset.label"
-        return [rec for uri, rec in self._records.items() if collection in uri][:limit]
+        return [rec for uri, rec in self._records.items() if f"/{collection}/" in uri][
+            :limit
+        ]
 
     def list_lenses(
         self, repo: str | None = None, limit: int = 100
     ) -> list[dict[str, Any]]:
         """List lens records."""
         collection = "science.alt.dataset.lens"
-        return [rec for uri, rec in self._records.items() if collection in uri][:limit]
+        return [rec for uri, rec in self._records.items() if f"/{collection}/" in uri][
+            :limit
+        ]
 
     def _ensure_authenticated(self) -> None:
         """No-op for mock; real client checks session validity."""

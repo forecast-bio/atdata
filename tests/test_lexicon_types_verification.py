@@ -34,19 +34,39 @@ class TestLexCodeHash:
         original = LexCodeHash(algorithm="sha256", digest="abc123" * 10)
         d = original.to_record()
         restored = LexCodeHash.from_record(d)
-        assert restored.algorithm == "sha256"
-        assert restored.digest == "abc123" * 10
+        assert restored == original
+
+    def test_dict_inverse(self):
+        """to_record → from_record → to_record produces identical dict."""
+        original = LexCodeHash(algorithm="blake3", digest="deadbeef")
+        assert (
+            LexCodeHash.from_record(original.to_record()).to_record()
+            == original.to_record()
+        )
 
     def test_to_record_keys(self):
         h = LexCodeHash(algorithm="blake3", digest="deadbeef")
         d = h.to_record()
         assert set(d.keys()) == {"algorithm", "digest"}
 
-    def test_from_record_required_fields(self):
-        with pytest.raises(KeyError):
+    def test_from_record_missing_digest(self):
+        with pytest.raises(KeyError, match="digest"):
             LexCodeHash.from_record({"algorithm": "sha256"})
-        with pytest.raises(KeyError):
+
+    def test_from_record_missing_algorithm(self):
+        with pytest.raises(KeyError, match="algorithm"):
             LexCodeHash.from_record({"digest": "abc"})
+
+    def test_from_record_empty_dict(self):
+        with pytest.raises(KeyError):
+            LexCodeHash.from_record({})
+
+    def test_from_record_ignores_unknown_keys(self):
+        """Extra keys (future lexicon fields) are silently ignored."""
+        d = {"algorithm": "sha256", "digest": "abc", "futureField": 42}
+        h = LexCodeHash.from_record(d)
+        assert h.algorithm == "sha256"
+        assert h.digest == "abc"
 
 
 # ---------------------------------------------------------------------------
@@ -67,7 +87,19 @@ class TestLexCodeReferenceLanguage:
         d = ref.to_record()
         assert d["language"] == "python"
         restored = LexCodeReference.from_record(d)
-        assert restored.language == "python"
+        assert restored == ref
+
+    def test_dict_inverse(self):
+        ref = LexCodeReference(
+            repository="repo",
+            commit="a" * 40,
+            path="p:f",
+            branch="main",
+            language="rust",
+        )
+        assert (
+            LexCodeReference.from_record(ref.to_record()).to_record() == ref.to_record()
+        )
 
     def test_language_none_omitted(self):
         ref = LexCodeReference(
@@ -132,6 +164,18 @@ class TestLexLensRecordSchemaVersions:
         assert restored.source_schema_version == "1.0.0"
         assert restored.target_schema_version == ">=2.0.0 <3.0.0"
 
+    def test_dict_inverse(self):
+        record = self._make_record(
+            source_schema_version="1.0.0",
+            target_schema_version=">=2.0.0 <3.0.0",
+            description="test",
+            language="python",
+        )
+        assert (
+            LexLensRecord.from_record(record.to_record()).to_record()
+            == record.to_record()
+        )
+
     def test_schema_versions_none_omitted(self):
         record = self._make_record()
         d = record.to_record()
@@ -194,6 +238,7 @@ class TestLexLensVerification:
         assert restored.lens == v.lens
         assert restored.lens_commit == v.lens_commit
         assert restored.verification_method == "codeReview"
+        assert restored.created_at == ts
         assert restored.code_hash is None
         assert restored.proof_ref is None
         assert restored.description is None
@@ -223,22 +268,76 @@ class TestLexLensVerification:
         assert d["description"] == "Verified via Lean4 proof"
 
         restored = LexLensVerification.from_record(d)
-        assert restored.code_hash is not None
-        assert restored.code_hash.algorithm == "sha256"
-        assert restored.code_hash.digest == "abc" * 20
-        assert restored.proof_ref is not None
-        assert restored.proof_ref.repository == "https://github.com/user/proofs"
-        assert restored.proof_ref.language == "lean"
+        assert restored.created_at == ts
+        assert restored.code_hash == code_hash
+        assert restored.proof_ref == proof
         assert restored.description == "Verified via Lean4 proof"
 
-    def test_from_record_required_fields(self):
-        with pytest.raises(KeyError):
-            LexLensVerification.from_record({"lens": "x"})
+    def test_dict_inverse(self):
+        """to_record → from_record → to_record produces identical dict."""
+        ts = datetime(2025, 6, 1, 12, 0, 0, tzinfo=timezone.utc)
+        v = LexLensVerification(
+            lens="at://did:plc:abc/science.alt.dataset.lens/xyz",
+            lens_commit="bafyabc123",
+            verification_method="automatedTest",
+            created_at=ts,
+            code_hash=LexCodeHash(algorithm="sha256", digest="dead" * 16),
+            description="test",
+        )
+        assert (
+            LexLensVerification.from_record(v.to_record()).to_record() == v.to_record()
+        )
+
+    def test_from_record_missing_lens_commit(self):
+        with pytest.raises(KeyError, match="lensCommit"):
+            LexLensVerification.from_record(
+                {
+                    "lens": "at://x",
+                    "verificationMethod": "codeReview",
+                    "createdAt": "2025-06-01T12:00:00+00:00",
+                }
+            )
+
+    def test_from_record_missing_verification_method(self):
+        with pytest.raises(KeyError, match="verificationMethod"):
+            LexLensVerification.from_record(
+                {
+                    "lens": "at://x",
+                    "lensCommit": "bafy",
+                    "createdAt": "2025-06-01T12:00:00+00:00",
+                }
+            )
+
+    def test_from_record_missing_created_at(self):
+        with pytest.raises(KeyError, match="createdAt"):
+            LexLensVerification.from_record(
+                {
+                    "lens": "at://x",
+                    "lensCommit": "bafy",
+                    "verificationMethod": "codeReview",
+                }
+            )
+
+    def test_from_record_ignores_unknown_keys(self):
+        """Future lexicon fields don't break deserialization."""
+        d = {
+            "lens": "at://did:plc:abc/science.alt.dataset.lens/xyz",
+            "lensCommit": "bafy",
+            "verificationMethod": "codeReview",
+            "createdAt": "2025-06-01T12:00:00+00:00",
+            "unknownFutureField": {"nested": "data"},
+        }
+        v = LexLensVerification.from_record(d)
+        assert v.verification_method == "codeReview"
 
 
 # ---------------------------------------------------------------------------
 # VerificationPublisher (mock)
 # ---------------------------------------------------------------------------
+
+_MOCK_DID = "did:plc:mock000000000000"
+_LENS_URI = f"at://{_MOCK_DID}/science.alt.dataset.lens/abc"
+_VERIFICATION_COLLECTION = f"{LEXICON_NAMESPACE}.lensVerification"
 
 
 class TestVerificationPublisher:
@@ -253,22 +352,24 @@ class TestVerificationPublisher:
     def test_publish_minimal(self, client):
         pub = VerificationPublisher(client)
         uri = pub.publish(
-            lens_uri="at://did:plc:mock000000000000/science.alt.dataset.lens/abc",
+            lens_uri=_LENS_URI,
             lens_commit="bafyabc",
             verification_method="codeReview",
         )
-        assert "at://" in str(uri)
-        assert "lensVerification" in str(uri)
+        uri_str = str(uri)
+        assert uri_str.startswith(f"at://{_MOCK_DID}/")
+        assert f"/{_VERIFICATION_COLLECTION}/" in uri_str
 
-        record = client.get_record(str(uri))
-        assert record["$type"] == f"{LEXICON_NAMESPACE}.lensVerification"
+        record = client.get_record(uri_str)
+        assert record["$type"] == _VERIFICATION_COLLECTION
         assert record["verificationMethod"] == "codeReview"
+        assert record["lens"] == _LENS_URI
 
     def test_publish_with_code_hash(self, client):
         pub = VerificationPublisher(client)
         code_hash = LexCodeHash(algorithm="sha256", digest="dead" * 16)
         uri = pub.publish(
-            lens_uri="at://did:plc:mock000000000000/science.alt.dataset.lens/abc",
+            lens_uri=_LENS_URI,
             lens_commit="bafyabc",
             verification_method="signedHash",
             code_hash=code_hash,
@@ -276,6 +377,7 @@ class TestVerificationPublisher:
         )
         record = client.get_record(str(uri))
         assert record["codeHash"]["algorithm"] == "sha256"
+        assert record["codeHash"]["digest"] == "dead" * 16
         assert record["description"] == "Signed hash verification"
 
     def test_publish_with_proof_ref(self, client):
@@ -287,7 +389,7 @@ class TestVerificationPublisher:
             language="python",
         )
         uri = pub.publish(
-            lens_uri="at://did:plc:mock000000000000/science.alt.dataset.lens/abc",
+            lens_uri=_LENS_URI,
             lens_commit="bafyabc",
             verification_method="automatedTest",
             proof_ref=proof,
@@ -299,12 +401,30 @@ class TestVerificationPublisher:
     def test_publish_with_rkey(self, client):
         pub = VerificationPublisher(client)
         uri = pub.publish(
-            lens_uri="at://did:plc:mock000000000000/science.alt.dataset.lens/abc",
+            lens_uri=_LENS_URI,
             lens_commit="bafyabc",
             verification_method="codeReview",
             rkey="custom-key",
         )
-        assert "custom-key" in str(uri)
+        assert str(uri).endswith("/custom-key")
+
+    def test_published_record_survives_typed_roundtrip(self, client):
+        """Publish via publisher, then load via get_typed — full pipeline."""
+        pub = VerificationPublisher(client)
+        uri = pub.publish(
+            lens_uri=_LENS_URI,
+            lens_commit="bafyabc",
+            verification_method="formalProof",
+            code_hash=LexCodeHash(algorithm="blake3", digest="cafe" * 16),
+            description="Full pipeline test",
+        )
+        loader = VerificationLoader(client)
+        typed = loader.get_typed(str(uri))
+        assert typed.lens == _LENS_URI
+        assert typed.verification_method == "formalProof"
+        assert typed.code_hash is not None
+        assert typed.code_hash.algorithm == "blake3"
+        assert typed.description == "Full pipeline test"
 
 
 # ---------------------------------------------------------------------------
@@ -331,18 +451,16 @@ class TestVerificationLoader:
         )
 
     def test_get(self, client):
-        uri = self._publish(
-            client,
-            lens_uri="at://did:plc:mock000000000000/science.alt.dataset.lens/abc",
-        )
+        uri = self._publish(client, lens_uri=_LENS_URI)
         loader = VerificationLoader(client)
         record = loader.get(str(uri))
         assert record["verificationMethod"] == "codeReview"
+        assert record["lens"] == _LENS_URI
 
     def test_get_typed(self, client):
         uri = self._publish(
             client,
-            lens_uri="at://did:plc:mock000000000000/science.alt.dataset.lens/abc",
+            lens_uri=_LENS_URI,
             description="Test typed",
         )
         loader = VerificationLoader(client)
@@ -352,20 +470,18 @@ class TestVerificationLoader:
         assert typed.description == "Test typed"
 
     def test_get_wrong_type_raises(self, client):
-        # Create a lens record (not verification)
-        client.create_record(
+        lens_uri = client.create_record(
             collection=f"{LEXICON_NAMESPACE}.lens",
             record={"$type": f"{LEXICON_NAMESPACE}.lens", "name": "test"},
             rkey="wrong-type",
         )
-        uri = f"at://{client.did}/{LEXICON_NAMESPACE}.lens/wrong-type"
         loader = VerificationLoader(client)
         with pytest.raises(ValueError, match="not a lensVerification record"):
-            loader.get(uri)
+            loader.get(str(lens_uri))
 
     def test_list_for_lens(self, client):
-        lens_a = "at://did:plc:mock000000000000/science.alt.dataset.lens/a"
-        lens_b = "at://did:plc:mock000000000000/science.alt.dataset.lens/b"
+        lens_a = f"at://{_MOCK_DID}/science.alt.dataset.lens/a"
+        lens_b = f"at://{_MOCK_DID}/science.alt.dataset.lens/b"
         self._publish(client, lens_uri=lens_a, method="codeReview")
         self._publish(client, lens_uri=lens_a, method="automatedTest")
         self._publish(client, lens_uri=lens_b, method="codeReview")
@@ -376,8 +492,27 @@ class TestVerificationLoader:
         methods = {r["verificationMethod"] for r in results}
         assert methods == {"codeReview", "automatedTest"}
 
+    def test_list_for_lens_does_not_return_plain_lens_records(self, client):
+        """Regression: list_for_lens must not return lens records (substring collision)."""
+        lens_a = f"at://{_MOCK_DID}/science.alt.dataset.lens/a"
+        self._publish(client, lens_uri=lens_a, method="codeReview")
+        # Also create a plain lens record whose lens URI happens to match
+        client.create_record(
+            collection=f"{LEXICON_NAMESPACE}.lens",
+            record={
+                "$type": f"{LEXICON_NAMESPACE}.lens",
+                "name": "decoy",
+                "lens": lens_a,  # same key name, wrong collection
+            },
+        )
+        loader = VerificationLoader(client)
+        results = loader.list_for_lens(lens_a)
+        # Should only get the verification record, not the lens record
+        assert len(results) == 1
+        assert results[0]["verificationMethod"] == "codeReview"
+
     def test_find_by_method(self, client):
-        lens_a = "at://did:plc:mock000000000000/science.alt.dataset.lens/a"
+        lens_a = f"at://{_MOCK_DID}/science.alt.dataset.lens/a"
         self._publish(client, lens_uri=lens_a, method="codeReview")
         self._publish(client, lens_uri=lens_a, method="automatedTest")
         self._publish(client, lens_uri=lens_a, method="codeReview")
@@ -389,7 +524,7 @@ class TestVerificationLoader:
     def test_list_for_lens_empty(self, client):
         loader = VerificationLoader(client)
         results = loader.list_for_lens(
-            "at://did:plc:mock000000000000/science.alt.dataset.lens/nonexistent"
+            f"at://{_MOCK_DID}/science.alt.dataset.lens/nonexistent"
         )
         assert results == []
 
@@ -455,3 +590,51 @@ class TestLensPublisherSchemaVersions:
         record = client.get_record(str(uri))
         assert "sourceSchemaVersion" not in record
         assert "targetSchemaVersion" not in record
+
+    def test_language_propagated_to_code_references(self, client):
+        """language= should propagate to both getter and putter code refs."""
+        from atdata.atmosphere.lens import LensPublisher, LensLoader
+
+        pub = LensPublisher(client)
+        uri = pub.publish(
+            name="lang-lens",
+            source_schema_uri="at://did:plc:abc/science.alt.dataset.schema/src",
+            target_schema_uri="at://did:plc:abc/science.alt.dataset.schema/tgt",
+            code_repository="https://github.com/user/repo",
+            code_commit="c" * 40,
+            getter_path="mod:get",
+            putter_path="mod:put",
+            language="python",
+        )
+
+        record = client.get_record(str(uri))
+        # Top-level deprecated field
+        assert record["language"] == "python"
+        # Per-reference language
+        assert record["getterCode"]["language"] == "python"
+        assert record["putterCode"]["language"] == "python"
+
+        # Round-trip through typed loader
+        loader = LensLoader(client)
+        typed = loader.get_typed(str(uri))
+        assert typed.getter_code.language == "python"
+        assert typed.putter_code.language == "python"
+
+    def test_no_language_omits_field_from_code_references(self, client):
+        """When language is None, code references should omit the field."""
+        from atdata.atmosphere.lens import LensPublisher
+
+        pub = LensPublisher(client)
+        uri = pub.publish(
+            name="no-lang-lens",
+            source_schema_uri="at://did:plc:abc/science.alt.dataset.schema/src",
+            target_schema_uri="at://did:plc:abc/science.alt.dataset.schema/tgt",
+            code_repository="https://github.com/user/repo",
+            code_commit="d" * 40,
+            getter_path="mod:get",
+            putter_path="mod:put",
+        )
+
+        record = client.get_record(str(uri))
+        assert "language" not in record.get("getterCode", {})
+        assert "language" not in record.get("putterCode", {})

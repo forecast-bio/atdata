@@ -11,8 +11,6 @@ of the repo owner who writes the record.
 
 from __future__ import annotations
 
-from typing import Optional
-
 from .client import Atmosphere
 from ._types import AtUri, LEXICON_NAMESPACE
 from ._lexicon_types import (
@@ -54,8 +52,8 @@ class VerificationPublisher:
         verification_method: str,
         code_hash: LexCodeHash | None = None,
         proof_ref: LexCodeReference | None = None,
-        description: Optional[str] = None,
-        rkey: Optional[str] = None,
+        description: str | None = None,
+        rkey: str | None = None,
     ) -> AtUri:
         """Publish a lens verification record to ATProto.
 
@@ -103,7 +101,7 @@ class VerificationPublisher:
         self,
         record: LexLensVerification,
         *,
-        rkey: Optional[str] = None,
+        rkey: str | None = None,
     ) -> AtUri:
         """Publish via AppView procedure for server-side validation."""
         body: dict = {"record": record.to_record()}
@@ -172,7 +170,7 @@ class VerificationLoader:
     def list_for_lens(
         self,
         lens_uri: str,
-        repo: Optional[str] = None,
+        repo: str | None = None,
         limit: int = 100,
     ) -> list[dict]:
         """List verification records for a specific lens.
@@ -193,7 +191,7 @@ class VerificationLoader:
             repo = self.client.did
 
         matches: list[dict] = []
-        cursor: Optional[str] = None
+        cursor: str | None = None
         while len(matches) < limit:
             records, cursor = self.client.list_records(
                 _COLLECTION,
@@ -214,7 +212,7 @@ class VerificationLoader:
     def find_by_method(
         self,
         method: str,
-        repo: Optional[str] = None,
+        repo: str | None = None,
         limit: int = 100,
     ) -> list[dict]:
         """Find verification records by verification method.
@@ -232,7 +230,7 @@ class VerificationLoader:
             repo = self.client.did
 
         matches: list[dict] = []
-        cursor: Optional[str] = None
+        cursor: str | None = None
         while len(matches) < limit:
             records, cursor = self.client.list_records(
                 _COLLECTION,
