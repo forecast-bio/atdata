@@ -1,7 +1,7 @@
 """Integration tests for cross-backend interoperability.
 
 Tests that abstract protocols work consistently across:
-- Index and AtmosphereIndex (AbstractIndex protocol)
+- Index and AtmosphereIndex (Index protocol)
 - LocalDatasetEntry and AtmosphereIndexEntry (IndexEntry protocol)
 - S3DataStore (AbstractDataStore protocol)
 """
@@ -221,10 +221,10 @@ class TestIndexEntryProtocol:
 
 
 ##
-# AbstractIndex Protocol Tests
+# Index Protocol Tests
 
 
-class TestAbstractIndexProtocol:
+class TestIndexProtocol:
     """Tests that Index and AtmosphereIndex share common behavior."""
 
     def test_local_index_list_datasets_yields_entries(self, local_index, clean_redis):
@@ -476,10 +476,10 @@ class TestListingConsistency:
 
 
 class TestGenericIndexFunction:
-    """Tests for functions that work with any AbstractIndex implementation."""
+    """Tests for functions that work with any Index implementation."""
 
     def count_datasets(self, index) -> int:
-        """Count datasets in an index (works with any AbstractIndex)."""
+        """Count datasets in an index (works with any Index)."""
         return sum(1 for _ in index.list_datasets())
 
     def get_all_names(self, index) -> list[str]:

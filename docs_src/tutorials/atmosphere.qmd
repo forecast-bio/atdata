@@ -385,7 +385,7 @@ You now understand federated dataset publishing in atdata:
 | `BlobSource` | Stream datasets from PDS blobs |
 | AT URIs | Universal identifiers for schemas and datasets |
 
-The protocol abstractions (`AbstractIndex`, `AbstractDataStore`, `DataSource`) ensure your code works across all three layers of atdata—local files, team storage, and federated sharing.
+The protocol abstractions (`Index`, `AbstractDataStore`, `DataSource`) ensure your code works across all three layers of atdata—local files, team storage, and federated sharing.
 
 ## The Full Picture
 

@@ -270,4 +270,4 @@ for batch in train_ds.ordered(batch_size=32):
 - [Datasets](datasets.qmd) - Dataset iteration and batching
 - [Packable Samples](packable-samples.qmd) - Defining sample types
 - [Local Storage](local-storage.qmd) - LocalIndex for index lookup
-- [Protocols](protocols.qmd) - AbstractIndex interface
+- [Protocols](protocols.qmd) - Index and protocol interfaces

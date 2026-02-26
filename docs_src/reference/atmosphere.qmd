@@ -483,5 +483,5 @@ for dataset_entry in index.list_datasets():
 
 - [Local Storage](local-storage.qmd) - Index providers and data stores
 - [Promotion](promotion.qmd) - Promoting local datasets to ATProto
-- [Protocols](protocols.qmd) - AbstractIndex and AbstractDataStore
+- [Protocols](protocols.qmd) - Index and AbstractDataStore
 - [Packable Samples](packable-samples.qmd) - Defining sample types

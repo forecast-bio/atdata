@@ -16,6 +16,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Handle-based schema resolution**: `get_schema()` and `get_schema_type()` now accept `@handle/TypeName@version` format, resolving schemas by handle + name + optional semver instead of requiring raw AT-URIs (GH#61)
 
 ### Changed
+- Evaluate removing AbstractIndex protocol (#868)
+- Update docs_src references to AbstractIndex (#874)
+- Update test docstrings and class names referencing AbstractIndex (#873)
+- Update docstrings referencing AbstractIndex in index/, atmosphere/, _entry.py (#872)
+- Add deprecation note to AbstractIndex Protocol docstring (#871)
+- Add deprecation shim in __init__.py via __getattr__ (#870)
+- Replace AbstractIndex type annotations with Index in _hf_api.py (#869)
 - ADR: Array format types & NDArray v1.1 annotations review (#862)
 - Clean up FORMAT_SERIALIZERS typing and redundant Any import (#867)
 - Batch: tighten test assertions and add missing edge-case coverage (#866)

@@ -4,7 +4,7 @@
 atmosphere.AtmosphereIndex(client, *, data_store=None)
 ```
 
-ATProto index implementing AbstractIndex protocol.
+ATProto index (deprecated).
 
 .. deprecated::
     Use ``atdata.Index(atmosphere=client)`` instead.  ``AtmosphereIndex``
@@ -34,8 +34,8 @@ ATProto blobs, enabling fully decentralized dataset storage.
 | Name | Description |
 | --- | --- |
 | [data_store](#atdata.atmosphere.AtmosphereIndex.data_store) | The PDS blob store for writing shards, or None if not configured. |
-| [datasets](#atdata.atmosphere.AtmosphereIndex.datasets) | Lazily iterate over all dataset entries (AbstractIndex protocol). |
-| [schemas](#atdata.atmosphere.AtmosphereIndex.schemas) | Lazily iterate over all schema records (AbstractIndex protocol). |
+| [datasets](#atdata.atmosphere.AtmosphereIndex.datasets) | Lazily iterate over all dataset entries (Index protocol). |
+| [schemas](#atdata.atmosphere.AtmosphereIndex.schemas) | Lazily iterate over all schema records (Index protocol). |
 
 ## Methods
 
@@ -45,8 +45,8 @@ ATProto blobs, enabling fully decentralized dataset storage.
 | [get_dataset](#atdata.atmosphere.AtmosphereIndex.get_dataset) | Get a dataset by AT URI. |
 | [get_schema](#atdata.atmosphere.AtmosphereIndex.get_schema) | Get a schema record by AT URI. |
 | [insert_dataset](#atdata.atmosphere.AtmosphereIndex.insert_dataset) | Insert a dataset into ATProto. |
-| [list_datasets](#atdata.atmosphere.AtmosphereIndex.list_datasets) | Get all dataset entries as a materialized list (AbstractIndex protocol). |
-| [list_schemas](#atdata.atmosphere.AtmosphereIndex.list_schemas) | Get all schema records as a materialized list (AbstractIndex protocol). |
+| [list_datasets](#atdata.atmosphere.AtmosphereIndex.list_datasets) | Get all dataset entries as a materialized list (Index protocol). |
+| [list_schemas](#atdata.atmosphere.AtmosphereIndex.list_schemas) | Get all schema records as a materialized list (Index protocol). |
 | [publish_schema](#atdata.atmosphere.AtmosphereIndex.publish_schema) | Publish a schema to ATProto. |
 
 ### decode_schema { #atdata.atmosphere.AtmosphereIndex.decode_schema }
@@ -162,7 +162,7 @@ Insert a dataset into ATProto.
 atmosphere.AtmosphereIndex.list_datasets(repo=None)
 ```
 
-Get all dataset entries as a materialized list (AbstractIndex protocol).
+Get all dataset entries as a materialized list (Index protocol).
 
 #### Parameters {.doc-section .doc-section-parameters}
 
@@ -182,7 +182,7 @@ Get all dataset entries as a materialized list (AbstractIndex protocol).
 atmosphere.AtmosphereIndex.list_schemas(repo=None)
 ```
 
-Get all schema records as a materialized list (AbstractIndex protocol).
+Get all schema records as a materialized list (Index protocol).
 
 #### Parameters {.doc-section .doc-section-parameters}
 

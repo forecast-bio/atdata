@@ -341,8 +341,8 @@ def test_local_dataset_entry_implements_index_entry_protocol():
     assert isinstance(entry, IndexEntry)
 
 
-def test_index_implements_abstract_index_protocol():
-    """Test that Index has all AbstractIndex protocol methods."""
+def test_index_implements_index_protocol():
+    """Test that Index has all required Index protocol methods."""
     index = atlocal.Index()
 
     # Check protocol methods exist
@@ -543,7 +543,7 @@ def test_index_get_entry_by_name_not_found(clean_redis):
 
 
 ##
-# AbstractIndex protocol method tests
+# Index protocol method tests
 
 
 def test_index_insert_dataset(clean_redis):

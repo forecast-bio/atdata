@@ -4,7 +4,7 @@ Tests end-to-end Atmosphere operations including:
 - Full publish workflow (login → publish schema → publish dataset → query)
 - Session persistence and restoration
 - Record discovery and querying
-- AtmosphereIndex compliance with AbstractIndex
+- AtmosphereIndex compliance with Index protocol
 """
 
 import pytest
@@ -220,7 +220,7 @@ class TestRecordDiscovery:
 
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
 class TestAtmosphereIndex:
-    """Tests for AtmosphereIndex AbstractIndex compliance."""
+    """Tests for AtmosphereIndex Index protocol compliance."""
 
     def test_index_list_datasets_yields_entries(
         self, authenticated_client, mock_atproto_client
