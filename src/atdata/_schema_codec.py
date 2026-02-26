@@ -134,6 +134,16 @@ def _field_type_to_python(field_type: dict, optional: bool = False) -> Any:
         # The dtype is handled at runtime by PackableSample serialization
         python_type = NDArray
 
+    elif kind == "structured":
+        # Structured arrays are numpy arrays with compound dtypes
+        python_type = NDArray
+
+    elif kind in ("sparse", "arrow_tensor", "safetensors", "dataframe"):
+        # Binary format types — stored as bytes in the dataclass. The field
+        # format metadata on the generated class tells _ensure_good which
+        # deserializer to use at runtime.
+        python_type = bytes
+
     elif kind == "array":
         # List type - recursively resolve item type
         items = field_type.get("items")
@@ -206,15 +216,41 @@ def _convert_atmosphere_schema(record: dict) -> dict:
 def _json_schema_prop_to_field_type(prop: dict) -> dict:
     """Convert a single JSON Schema property to a local fieldType dict.
 
+    Recognises ``$ref`` patterns from the upstream shim schemas to map fields
+    to the correct array format kind.
+
     Args:
         prop: JSON Schema property definition.
 
     Returns:
         Local fieldType dict with ``$type`` key.
     """
-    # NDArray reference
-    if "$ref" in prop and "ndarray" in prop["$ref"]:
-        return {"$type": "local#ndarray"}
+    ref = prop.get("$ref", "")
+    if ref:
+        ref_lower = ref.lower()
+        # NDArray v1.0 / v1.1 reference
+        if "ndarray" in ref_lower:
+            result: dict[str, Any] = {"$type": "local#ndarray"}
+            # v1.1.0 annotations (dtype, shape, dimensionNames) may be
+            # present as sibling properties when the $ref uses an object form.
+            if "dtype" in prop:
+                result["dtype"] = prop["dtype"]
+            if "shape" in prop:
+                result["shape"] = prop["shape"]
+            if "dimensionNames" in prop:
+                result["dimensionNames"] = prop["dimensionNames"]
+            return result
+        if "sparse" in ref_lower:
+            return {"$type": "local#sparse"}
+        if "structured" in ref_lower:
+            return {"$type": "local#structured"}
+        # Check safetensors before arrow/tensor ("safetensors" contains "tensor")
+        if "safetensors" in ref_lower:
+            return {"$type": "local#safetensors"}
+        if "arrow" in ref_lower or "tensor" in ref_lower:
+            return {"$type": "local#arrow_tensor"}
+        if "dataframe" in ref_lower:
+            return {"$type": "local#dataframe"}
 
     json_type = prop.get("type", "")
 
@@ -341,6 +377,13 @@ def _schema_to_type(
     # Format: (name, type) or (name, type, field())
     dataclass_fields: list[tuple[str, Any] | tuple[str, Any, Any]] = []
 
+    # Track non-ndarray binary format fields so _ensure_good can dispatch
+    # to the correct deserializer at runtime.
+    field_formats: dict[str, str] = {}
+
+    # Collect NDArray v1.1 annotations (dtype, shape, dimensionNames) per field.
+    ndarray_annotations: dict[str, dict[str, Any]] = {}
+
     for field_def in fields_data:
         field_name = field_def.get("name")
         if not field_name:
@@ -349,6 +392,29 @@ def _schema_to_type(
 
         field_type_dict = field_def.get("fieldType", {})
         is_optional = field_def.get("optional", False)
+
+        # Extract kind for format metadata
+        type_str = field_type_dict.get("$type", "")
+        kind = (
+            type_str.split("#")[-1]
+            if "#" in type_str
+            else field_type_dict.get("kind", "")
+        )
+        if kind in ("sparse", "structured", "arrow_tensor", "safetensors", "dataframe"):
+            field_formats[field_name] = kind
+
+        # Collect v1.1 annotations for ndarray fields
+        if kind == "ndarray":
+            ann: dict[str, Any] = {}
+            if "dtype" in field_type_dict and field_type_dict["dtype"] is not None:
+                ann["dtype"] = field_type_dict["dtype"]
+            if "shape" in field_type_dict and field_type_dict["shape"] is not None:
+                ann["shape"] = field_type_dict["shape"]
+            dim_names = field_type_dict.get("dimensionNames")
+            if dim_names is not None:
+                ann["dimensionNames"] = dim_names
+            if ann:
+                ndarray_annotations[field_name] = ann
 
         # Convert to Python type
         python_type = _field_type_to_python(field_type_dict, optional=is_optional)
@@ -371,6 +437,8 @@ def _schema_to_type(
             "__schema_ref__": schema.get(
                 "$ref", None
             ),  # Store original ref if available
+            "__field_formats__": field_formats,
+            "__ndarray_annotations__": ndarray_annotations,
         },
     )
 
@@ -409,8 +477,10 @@ def _field_type_to_stub_str(field_type: dict, optional: bool = False) -> str:
         py_type = (
             primitive  # str, int, float, bool, bytes are all valid Python type names
         )
-    elif kind == "ndarray":
+    elif kind in ("ndarray", "structured"):
         py_type = "NDArray[Any]"
+    elif kind in ("sparse", "arrow_tensor", "safetensors", "dataframe"):
+        py_type = "bytes"
     elif kind == "array":
         items = field_type.get("items")
         if items:

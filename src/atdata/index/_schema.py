@@ -101,28 +101,48 @@ class SchemaNamespace:
 # Schema types
 
 
+_FIELD_TYPE_KINDS = Literal[
+    "primitive",
+    "ndarray",
+    "sparse",
+    "structured",
+    "arrow_tensor",
+    "safetensors",
+    "dataframe",
+    "ref",
+    "array",
+]
+
+
 @dataclass
 class SchemaFieldType:
     """Schema field type definition for local storage.
 
     Represents a type in the schema type system, supporting primitives,
-    ndarrays, arrays, and references to other schemas.
+    ndarrays (and related array formats), arrays, and references to other
+    schemas.
     """
 
-    kind: Literal["primitive", "ndarray", "ref", "array"]
+    kind: _FIELD_TYPE_KINDS
     """The category of type."""
 
     primitive: Optional[str] = None
     """For kind='primitive': one of 'str', 'int', 'float', 'bool', 'bytes'."""
 
     dtype: Optional[str] = None
-    """For kind='ndarray': numpy dtype string (e.g., 'float32')."""
+    """For kind='ndarray' or 'structured': numpy dtype string (e.g., 'float32')."""
 
     ref: Optional[str] = None
     """For kind='ref': URI of referenced schema."""
 
     items: Optional["SchemaFieldType"] = None
     """For kind='array': type of array elements."""
+
+    shape: Optional[list[int | None]] = None
+    """For kind='ndarray': expected array shape (None dims are variable)."""
+
+    dimension_names: Optional[list[str]] = None
+    """For kind='ndarray': human-readable names for each dimension."""
 
     @classmethod
     def from_dict(cls, data: dict) -> "SchemaFieldType":
@@ -143,6 +163,8 @@ class SchemaFieldType:
             dtype=data.get("dtype"),
             ref=data.get("ref"),
             items=items,
+            shape=data.get("shape"),
+            dimension_names=data.get("dimensionNames"),
         )
 
     def to_dict(self) -> dict:
@@ -150,12 +172,18 @@ class SchemaFieldType:
         result: dict[str, Any] = {"$type": f"local#{self.kind}"}
         if self.kind == "primitive":
             result["primitive"] = self.primitive
-        elif self.kind == "ndarray":
-            result["dtype"] = self.dtype
+        elif self.kind in ("ndarray", "structured"):
+            if self.dtype is not None:
+                result["dtype"] = self.dtype
+            if self.shape is not None:
+                result["shape"] = self.shape
+            if self.dimension_names is not None:
+                result["dimensionNames"] = self.dimension_names
         elif self.kind == "ref":
             result["ref"] = self.ref
         elif self.kind == "array" and self.items:
             result["items"] = self.items.to_dict()
+        # sparse, arrow_tensor, safetensors, dataframe have no extra fields
         return result
 
 
@@ -325,6 +353,12 @@ def _python_type_to_field_type(python_type: Any) -> dict:
 
     if is_ndarray_type(python_type):
         return {"$type": "local#ndarray", "dtype": extract_ndarray_dtype(python_type)}
+
+    # Detect pandas DataFrame
+    type_name = getattr(python_type, "__name__", "")
+    type_module = getattr(python_type, "__module__", "")
+    if type_name == "DataFrame" and "pandas" in type_module:
+        return {"$type": "local#dataframe"}
 
     origin = get_origin(python_type)
     if origin is list:
