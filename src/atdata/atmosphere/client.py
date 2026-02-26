@@ -4,6 +4,8 @@ This module provides the ``Atmosphere`` class which wraps the atproto SDK
 client with atdata-specific helpers for publishing and querying records.
 """
 
+from __future__ import annotations
+
 from typing import Optional, Any
 
 from ._types import AtUri, LEXICON_NAMESPACE
@@ -45,6 +47,46 @@ def _value_to_dict(value: Any) -> dict | Any:
     return value
 
 
+def _did_web_to_url(did: str) -> str:
+    """Convert a ``did:web:`` DID to an HTTPS URL.
+
+    Args:
+        did: A ``did:web:`` DID string (e.g., ``did:web:datasets.atdata.blue``
+            or ``did:web:localhost%3A8000``).
+
+    Returns:
+        The resolved HTTPS URL.
+    """
+    from urllib.parse import unquote
+
+    if not did.startswith("did:web:"):
+        raise ValueError(f"Not a did:web DID: {did}")
+    host_part = did[len("did:web:") :]
+    host_part = unquote(host_part)
+    return f"https://{host_part}"
+
+
+def _url_to_did_web(url: str) -> str:
+    """Convert an HTTPS URL to a ``did:web:`` DID.
+
+    Args:
+        url: An HTTPS URL (e.g., ``https://datasets.atdata.blue``).
+
+    Returns:
+        The ``did:web:`` DID string.
+    """
+    from urllib.parse import urlparse, quote
+
+    parsed = urlparse(url)
+    host = parsed.hostname or ""
+    port = parsed.port
+    if port:
+        host = f"{host}%3A{port}"
+    else:
+        host = quote(host, safe=".")
+    return f"did:web:{host}"
+
+
 class Atmosphere:
     """ATProto client wrapper for atdata operations.
 
@@ -65,12 +107,18 @@ class Atmosphere:
         self,
         base_url: Optional[str] = None,
         *,
+        appview: Optional[str] = None,
         _client: Optional[Any] = None,
     ):
         """Initialize the ATProto client.
 
         Args:
             base_url: Optional PDS base URL. Defaults to bsky.social.
+            appview: Optional AppView URL or DID. When set, XRPC queries
+                are sent directly to the AppView and procedures are proxied
+                through the PDS. Accepts an HTTPS URL
+                (e.g., ``"https://datasets.atdata.blue"``) or a ``did:web``
+                DID (e.g., ``"did:web:datasets.atdata.blue"``).
             _client: Optional pre-configured atproto Client for testing.
         """
         if _client is not None:
@@ -80,6 +128,12 @@ class Atmosphere:
             self._client = Client(base_url=base_url) if base_url else Client()
 
         self._session: Optional[dict] = None
+        self._appview_url: Optional[str] = None
+        self._appview_did: Optional[str] = None
+        self._httpx_client: Any = None  # lazily created httpx.Client
+
+        if appview is not None:
+            self._configure_appview(appview)
 
     @classmethod
     def login(
@@ -88,13 +142,15 @@ class Atmosphere:
         password: str,
         *,
         base_url: Optional[str] = None,
-    ) -> "Atmosphere":
+        appview: Optional[str] = None,
+    ) -> Atmosphere:
         """Create an authenticated Atmosphere client.
 
         Args:
             handle: Your Bluesky handle (e.g., 'alice.bsky.social').
             password: App-specific password (not your main password).
             base_url: Optional PDS base URL. Defaults to bsky.social.
+            appview: Optional AppView URL or DID for XRPC queries/procedures.
 
         Returns:
             An authenticated Atmosphere instance.
@@ -105,8 +161,13 @@ class Atmosphere:
         Examples:
             >>> atmo = Atmosphere.login("alice.bsky.social", "app-password")
             >>> index = Index(atmosphere=atmo)
+
+            >>> atmo = Atmosphere.login(
+            ...     "alice.bsky.social", "app-password",
+            ...     appview="https://datasets.atdata.blue",
+            ... )
         """
-        instance = cls(base_url=base_url)
+        instance = cls(base_url=base_url, appview=appview)
         instance._login(handle, password)
         return instance
 
@@ -116,7 +177,8 @@ class Atmosphere:
         session_string: str,
         *,
         base_url: Optional[str] = None,
-    ) -> "Atmosphere":
+        appview: Optional[str] = None,
+    ) -> Atmosphere:
         """Create an Atmosphere client from an exported session string.
 
         This allows reusing a session without re-authenticating, which helps
@@ -125,6 +187,7 @@ class Atmosphere:
         Args:
             session_string: Session string from ``export_session()``.
             base_url: Optional PDS base URL. Defaults to bsky.social.
+            appview: Optional AppView URL or DID for XRPC queries/procedures.
 
         Returns:
             An authenticated Atmosphere instance.
@@ -133,9 +196,47 @@ class Atmosphere:
             >>> session = atmo.export_session()
             >>> atmo2 = Atmosphere.from_session(session)
         """
-        instance = cls(base_url=base_url)
+        instance = cls(base_url=base_url, appview=appview)
         instance._login_with_session(session_string)
         return instance
+
+    @classmethod
+    def from_env(
+        cls,
+        *,
+        base_url: Optional[str] = None,
+    ) -> Atmosphere:
+        """Create an Atmosphere client from environment variables.
+
+        Reads credentials and optional AppView URL from the environment:
+
+        - ``ATDATA_HANDLE``: Bluesky handle (required)
+        - ``ATDATA_PASSWORD``: App-specific password (required)
+        - ``ATDATA_APPVIEW``: AppView URL or DID (optional)
+        - ``ATDATA_PDS_URL``: PDS base URL (optional, overrides *base_url*)
+
+        Args:
+            base_url: Fallback PDS base URL if ``ATDATA_PDS_URL`` is not set.
+
+        Returns:
+            An authenticated Atmosphere instance.
+
+        Raises:
+            EnvironmentError: If required environment variables are missing.
+        """
+        import os
+
+        handle = os.environ.get("ATDATA_HANDLE")
+        password = os.environ.get("ATDATA_PASSWORD")
+        if not handle or not password:
+            raise EnvironmentError(
+                "ATDATA_HANDLE and ATDATA_PASSWORD environment variables are required"
+            )
+
+        pds_url = os.environ.get("ATDATA_PDS_URL", base_url)
+        appview = os.environ.get("ATDATA_APPVIEW")
+
+        return cls.login(handle, password, base_url=pds_url, appview=appview)
 
     def _login(self, handle: str, password: str) -> None:
         """Authenticate with the ATProto PDS.
@@ -215,6 +316,161 @@ class Atmosphere:
         """Raise if not authenticated."""
         if not self.is_authenticated:
             raise ValueError("Client must be authenticated to perform this operation")
+
+    # ------------------------------------------------------------------ #
+    # AppView configuration and XRPC transport
+    # ------------------------------------------------------------------ #
+
+    def _configure_appview(self, appview: str) -> None:
+        """Parse and store AppView URL/DID.
+
+        Args:
+            appview: HTTPS URL or ``did:web:`` DID string.
+        """
+        if appview.startswith("did:web:"):
+            self._appview_did = appview
+            self._appview_url = _did_web_to_url(appview)
+        elif appview.startswith("https://") or appview.startswith("http://"):
+            self._appview_url = appview.rstrip("/")
+            self._appview_did = _url_to_did_web(self._appview_url)
+        else:
+            raise ValueError(
+                f"Invalid appview value: {appview!r}. "
+                "Expected an HTTPS URL or did:web: DID."
+            )
+
+    @property
+    def has_appview(self) -> bool:
+        """Whether an AppView is configured."""
+        return self._appview_url is not None
+
+    @property
+    def appview_url(self) -> str | None:
+        """The resolved AppView base URL, or ``None``."""
+        return self._appview_url
+
+    @property
+    def appview_did(self) -> str | None:
+        """The AppView DID (``did:web:...``), or ``None``."""
+        return self._appview_did
+
+    def _get_httpx_client(self) -> Any:
+        """Return a shared httpx.Client for AppView requests."""
+        if self._httpx_client is None:
+            import httpx
+
+            self._httpx_client = httpx.Client(timeout=30.0)
+        return self._httpx_client
+
+    def xrpc_query(
+        self,
+        nsid: str,
+        params: dict | None = None,
+    ) -> dict:
+        """Call an XRPC query (GET) on the AppView.
+
+        Queries are public (no auth required) and sent directly to the
+        AppView URL.
+
+        Args:
+            nsid: The XRPC method NSID
+                (e.g., ``"science.alt.dataset.listEntries"``).
+            params: Optional query parameters.
+
+        Returns:
+            The JSON response body as a dict.
+
+        Raises:
+            AppViewRequiredError: If no AppView is configured.
+            AppViewUnavailableError: If the AppView is unreachable.
+        """
+        from .._exceptions import AppViewRequiredError, AppViewUnavailableError
+
+        if not self.has_appview:
+            raise AppViewRequiredError(nsid)
+
+        import httpx
+
+        url = f"{self._appview_url}/xrpc/{nsid}"
+        client = self._get_httpx_client()
+
+        try:
+            response = client.get(url, params=params or {})
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code >= 500:
+                raise AppViewUnavailableError(
+                    self._appview_url, f"HTTP {exc.response.status_code}"
+                ) from exc
+            raise
+        except httpx.ConnectError as exc:
+            raise AppViewUnavailableError(self._appview_url, str(exc)) from exc
+
+    def xrpc_procedure(
+        self,
+        nsid: str,
+        input: dict | None = None,
+    ) -> dict:
+        """Call an XRPC procedure (POST) via PDS proxy to the AppView.
+
+        Procedures require authentication. The request is sent to the PDS
+        with an ``atproto-proxy`` header so the PDS forwards it to the
+        AppView for validation before writing.
+
+        Args:
+            nsid: The XRPC method NSID
+                (e.g., ``"science.alt.dataset.publishSchema"``).
+            input: Optional JSON request body.
+
+        Returns:
+            The JSON response body as a dict.
+
+        Raises:
+            AppViewRequiredError: If no AppView is configured.
+            AppViewUnavailableError: If the AppView is unreachable.
+            ValueError: If not authenticated.
+        """
+        from .._exceptions import AppViewRequiredError, AppViewUnavailableError
+
+        if not self.has_appview:
+            raise AppViewRequiredError(nsid)
+        self._ensure_authenticated()
+
+        import httpx
+
+        # POST to the PDS with atproto-proxy header
+        pds_url = str(self._client._base_url).rstrip("/")
+
+        url = f"{pds_url}/xrpc/{nsid}"
+        headers = {
+            "atproto-proxy": f"{self._appview_did}#atdata_appview",
+        }
+
+        # Get the current access token from the SDK client session
+        if hasattr(self._client, "_session") and self._client._session:
+            access_jwt = getattr(self._client._session, "access_jwt", None)
+            if access_jwt:
+                headers["Authorization"] = f"Bearer {access_jwt}"
+
+        client = self._get_httpx_client()
+
+        try:
+            response = client.post(url, json=input or {}, headers=headers)
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code >= 500:
+                raise AppViewUnavailableError(
+                    self._appview_url, f"HTTP {exc.response.status_code}"
+                ) from exc
+            raise
+        except httpx.ConnectError as exc:
+            raise AppViewUnavailableError(self._appview_url, str(exc)) from exc
+
+    # ------------------------------------------------------------------ #
+    # Cross-account reads via bsky.social AppView (existing behavior)
+    # ------------------------------------------------------------------ #
 
     _APPVIEW_URL = "https://bsky.social"
 
@@ -644,3 +900,137 @@ class Atmosphere:
             List of label records.
         """
         return self._list_collection("label", repo=repo, limit=limit)
+
+    # ------------------------------------------------------------------ #
+    # AppView-only capabilities
+    # ------------------------------------------------------------------ #
+
+    def search_datasets(
+        self,
+        q: str,
+        *,
+        tags: list[str] | None = None,
+        schema_ref: str | None = None,
+        repo: str | None = None,
+        limit: int = 25,
+    ) -> list[dict]:
+        """Search datasets via the AppView full-text search.
+
+        Requires an AppView to be configured.
+
+        Args:
+            q: Search query string.
+            tags: Optional tag filter (array containment).
+            schema_ref: Optional schema AT-URI filter.
+            repo: Optional DID filter.
+            limit: Maximum results (1-100, default 25).
+
+        Returns:
+            List of matching dataset entry dicts.
+
+        Raises:
+            AppViewRequiredError: If no AppView is configured.
+        """
+        params: dict[str, Any] = {"q": q, "limit": min(limit, 100)}
+        if tags is not None:
+            params["tags"] = tags
+        if schema_ref is not None:
+            params["schemaRef"] = schema_ref
+        if repo is not None:
+            params["repo"] = repo
+
+        result = self.xrpc_query(f"{LEXICON_NAMESPACE}.searchDatasets", params=params)
+        return result.get("entries", [])
+
+    def search_lenses(
+        self,
+        *,
+        source_schema: str | None = None,
+        target_schema: str | None = None,
+        limit: int = 25,
+    ) -> list[dict]:
+        """Search lenses by source and/or target schema via the AppView.
+
+        Requires an AppView to be configured.
+
+        Args:
+            source_schema: Optional source schema AT-URI.
+            target_schema: Optional target schema AT-URI.
+            limit: Maximum results (1-100, default 25).
+
+        Returns:
+            List of matching lens record dicts.
+
+        Raises:
+            AppViewRequiredError: If no AppView is configured.
+        """
+        params: dict[str, Any] = {"limit": min(limit, 100)}
+        if source_schema is not None:
+            params["sourceSchema"] = source_schema
+        if target_schema is not None:
+            params["targetSchema"] = target_schema
+
+        result = self.xrpc_query(f"{LEXICON_NAMESPACE}.searchLenses", params=params)
+        return result.get("lenses", [])
+
+    def describe_service(self) -> dict:
+        """Get AppView service description including identity, collections, and analytics.
+
+        Requires an AppView to be configured.
+
+        Returns:
+            Service description dict with keys: ``did``,
+            ``availableCollections``, ``recordCount``, ``analytics``.
+
+        Raises:
+            AppViewRequiredError: If no AppView is configured.
+        """
+        return self.xrpc_query(f"{LEXICON_NAMESPACE}.describeService")
+
+    def get_entries(self, uris: list[str]) -> list[dict]:
+        """Batch-fetch multiple dataset entries via the AppView.
+
+        Requires an AppView to be configured.
+
+        Args:
+            uris: List of AT-URIs (max 25 per call).
+
+        Returns:
+            List of dataset entry dicts.
+
+        Raises:
+            AppViewRequiredError: If no AppView is configured.
+            ValueError: If more than 25 URIs are provided.
+        """
+        if len(uris) > 25:
+            raise ValueError("getEntries supports at most 25 URIs per call")
+
+        result = self.xrpc_query(
+            f"{LEXICON_NAMESPACE}.getEntries", params={"uris": uris}
+        )
+        return result.get("entries", [])
+
+    def get_entry_stats(
+        self,
+        uri: str,
+        period: str = "week",
+    ) -> dict:
+        """Get view/search statistics for a dataset entry.
+
+        Requires an AppView to be configured.
+
+        Args:
+            uri: AT-URI of the dataset entry.
+            period: Time period — ``"day"``, ``"week"``, or ``"month"``.
+
+        Returns:
+            Stats dict with keys: ``views``, ``searchAppearances``,
+            ``period``.
+
+        Raises:
+            AppViewRequiredError: If no AppView is configured.
+        """
+        return self.xrpc_query(
+            f"{LEXICON_NAMESPACE}.getEntryStats",
+            params={"uri": uri, "period": period},
+        )

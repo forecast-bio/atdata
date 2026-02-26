@@ -136,6 +136,43 @@ class ShardError(AtdataError):
         super().__init__(f"Failed to read shard '{shard_id}': {reason}")
 
 
+class AppViewError(AtdataError):
+    """Base exception for AppView-related errors."""
+
+
+class AppViewUnavailableError(AppViewError):
+    """AppView is configured but unreachable or returned an error.
+
+    Attributes:
+        url: The AppView URL that was unreachable.
+        reason: Description of why the AppView is unavailable.
+    """
+
+    def __init__(self, url: str, reason: str) -> None:
+        self.url = url
+        self.reason = reason
+        super().__init__(
+            f"AppView at {url} is unavailable: {reason}. "
+            f"Falling back to client-side resolution."
+        )
+
+
+class AppViewRequiredError(AppViewError):
+    """Operation requires an AppView but none is configured.
+
+    Attributes:
+        operation: The operation that requires an AppView.
+    """
+
+    def __init__(self, operation: str) -> None:
+        self.operation = operation
+        super().__init__(
+            f"Operation '{operation}' requires an AppView. "
+            f"Configure one with: Atmosphere.login(handle, password, "
+            f'appview="https://datasets.atdata.blue")'
+        )
+
+
 class PartialFailureError(AtdataError):
     """Some shards succeeded but others failed during processing.
 

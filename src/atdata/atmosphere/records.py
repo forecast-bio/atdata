@@ -101,7 +101,13 @@ class DatasetPublisher:
         content_metadata: Optional[dict] = None,
         rkey: Optional[str] = None,
     ) -> AtUri:
-        """Build a LexDatasetEntry and publish it to ATProto."""
+        """Build a LexDatasetEntry and publish it to ATProto.
+
+        When an AppView is configured, uses
+        ``science.alt.dataset.publishDataset`` for server-side validation
+        (verifies schema exists, storage type is valid). Falls back to
+        direct ``createRecord`` otherwise.
+        """
         typed_metadata: Optional[DatasetMetadata] = None
         if isinstance(metadata, DatasetMetadata):
             typed_metadata = metadata
@@ -120,12 +126,32 @@ class DatasetPublisher:
             content_metadata=content_metadata,
         )
 
+        if getattr(self.client, "has_appview", False) is True:
+            return self._publish_via_appview(dataset_entry, rkey=rkey)
+
         return self.client.create_record(
             collection=f"{LEXICON_NAMESPACE}.entry",
             record=dataset_entry.to_record(),
             rkey=rkey,
             validate=False,
         )
+
+    def _publish_via_appview(
+        self,
+        dataset_entry: LexDatasetEntry,
+        *,
+        rkey: Optional[str] = None,
+    ) -> AtUri:
+        """Publish via AppView procedure for server-side validation."""
+        body: dict = {"record": dataset_entry.to_record()}
+        if rkey is not None:
+            body["rkey"] = rkey
+
+        result = self.client.xrpc_procedure(
+            f"{LEXICON_NAMESPACE}.publishDataset",
+            input=body,
+        )
+        return AtUri.parse(result["uri"])
 
     def publish(
         self,
@@ -492,16 +518,16 @@ class DatasetPublisher:
 class DatasetLoader:
     """Loads dataset records from ATProto.
 
-    This class fetches dataset index records and can create Dataset objects
-    from them. Note that loading a dataset requires having the corresponding
-    Python class for the sample type.
+    When an AppView is configured, queries are routed through it for
+    paginated listing, batch fetching, and efficient blob URL resolution.
+    Otherwise falls back to ``com.atproto.repo`` endpoints.
 
     Examples:
         >>> atmo = Atmosphere.login("handle", "password")
         >>> loader = DatasetLoader(atmo)
         >>>
         >>> # List available datasets
-        >>> datasets = loader.list()
+        >>> datasets = loader.list_all()
         >>> for ds in datasets:
         ...     print(ds["name"], ds["schemaRef"])
         >>>
@@ -520,6 +546,10 @@ class DatasetLoader:
     def get(self, uri: str | AtUri) -> dict:
         """Fetch a dataset record by AT URI.
 
+        When an AppView is configured, uses
+        ``science.alt.dataset.getEntry`` for a hydrated view.
+        Falls back to ``com.atproto.repo.getRecord`` otherwise.
+
         Args:
             uri: The AT URI of the dataset record.
 
@@ -529,6 +559,17 @@ class DatasetLoader:
         Raises:
             ValueError: If the record is not a dataset record.
         """
+        if getattr(self.client, "has_appview", False) is True:
+            try:
+                return self._get_via_appview(uri)
+            except Exception:
+                from .._logging import get_logger
+
+                get_logger().warning(
+                    "AppView getEntry failed, falling back to client-side",
+                    exc_info=True,
+                )
+
         record = self.client.get_record(uri)
 
         expected_type = f"{LEXICON_NAMESPACE}.entry"
@@ -539,6 +580,15 @@ class DatasetLoader:
             )
 
         return record
+
+    def _get_via_appview(self, uri: str | AtUri) -> dict:
+        """Fetch a dataset entry via AppView XRPC query."""
+        uri_str = str(uri)
+        result = self.client.xrpc_query(
+            f"{LEXICON_NAMESPACE}.getEntry",
+            params={"uri": uri_str},
+        )
+        return result.get("entry", result)
 
     def get_typed(self, uri: str | AtUri) -> LexDatasetEntry:
         """Fetch a dataset record and return as a typed object.
@@ -559,10 +609,9 @@ class DatasetLoader:
     ) -> list[dict]:
         """List dataset records from a repository.
 
-        This delegates to ``com.atproto.repo.listRecords`` which returns at
-        most ``limit`` records with no automatic pagination.  Repositories
-        with more dataset records than ``limit`` will return a truncated
-        result.
+        When an AppView is configured, uses
+        ``science.alt.dataset.listEntries`` with cursor-based pagination.
+        Falls back to ``com.atproto.repo.listRecords`` otherwise.
 
         Args:
             repo: The DID of the repository. Defaults to authenticated user.
@@ -571,7 +620,48 @@ class DatasetLoader:
         Returns:
             List of dataset records.
         """
+        if getattr(self.client, "has_appview", False) is True:
+            try:
+                return self._list_via_appview(repo=repo, limit=limit)
+            except Exception:
+                from .._logging import get_logger
+
+                get_logger().warning(
+                    "AppView listEntries failed, falling back to client-side",
+                    exc_info=True,
+                )
+
         return self.client.list_datasets(repo=repo, limit=limit)
+
+    def _list_via_appview(
+        self,
+        repo: Optional[str] = None,
+        limit: int = 100,
+    ) -> list[dict]:
+        """List dataset entries via AppView with cursor pagination."""
+        results: list[dict] = []
+        cursor: Optional[str] = None
+        page_size = min(limit, 100)
+
+        while len(results) < limit:
+            params: dict[str, str | int] = {"limit": page_size}
+            if repo is not None:
+                params["repo"] = repo
+            if cursor is not None:
+                params["cursor"] = cursor
+
+            response = self.client.xrpc_query(
+                f"{LEXICON_NAMESPACE}.listEntries",
+                params=params,
+            )
+
+            entries = response.get("entries", [])
+            results.extend(entries)
+            cursor = response.get("cursor")
+            if not cursor or not entries:
+                break
+
+        return results[:limit]
 
     def get_storage_type(self, uri: str | AtUri) -> str:
         """Get the storage type of a dataset record.
@@ -694,8 +784,10 @@ class DatasetLoader:
     def get_blob_urls(self, uri: str | AtUri) -> list[str]:
         """Get fetchable URLs for blob-stored dataset shards.
 
-        This resolves the PDS endpoint and constructs URLs that can be
-        used to fetch the blob data directly.
+        When an AppView is configured, uses
+        ``science.alt.dataset.resolveBlobs`` for batch resolution (max 25
+        URIs per call) instead of individual PDS endpoint lookups.
+        Falls back to per-blob PDS resolution otherwise.
 
         Args:
             uri: The AT URI of the dataset record.
@@ -711,6 +803,17 @@ class DatasetLoader:
         else:
             parsed_uri = uri
 
+        if getattr(self.client, "has_appview", False) is True:
+            try:
+                return self._get_blob_urls_via_appview(str(parsed_uri))
+            except Exception:
+                from .._logging import get_logger
+
+                get_logger().warning(
+                    "AppView resolveBlobs failed, falling back to client-side",
+                    exc_info=True,
+                )
+
         blob_entries = self.get_blobs(uri)
         did = parsed_uri.authority
 
@@ -724,6 +827,19 @@ class DatasetLoader:
                 url = self.client.get_blob_url(did, cid)
                 urls.append(url)
 
+        return urls
+
+    def _get_blob_urls_via_appview(self, uri: str) -> list[str]:
+        """Resolve blob URLs via AppView batch endpoint."""
+        result = self.client.xrpc_query(
+            f"{LEXICON_NAMESPACE}.resolveBlobs",
+            params={"uris": [uri]},
+        )
+        urls = []
+        for blob in result.get("blobs", []):
+            url = blob.get("url")
+            if url and "error" not in blob:
+                urls.append(url)
         return urls
 
     def get_metadata(self, uri: str | AtUri) -> Optional[dict]:
