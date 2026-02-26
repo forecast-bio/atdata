@@ -32,7 +32,7 @@ from __future__ import annotations
 import hashlib
 import struct
 from io import BytesIO
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -113,7 +113,7 @@ def bytes_to_array(b: bytes) -> np.ndarray:
 # Sparse matrix serialization (requires scipy)
 
 
-def sparse_to_bytes(x: "Any") -> bytes:
+def sparse_to_bytes(x: object) -> bytes:
     """Serialize a scipy sparse matrix to bytes.
 
     Uses ``scipy.sparse.save_npz`` to write the matrix in compressed NPZ
@@ -153,7 +153,7 @@ def sparse_to_bytes(x: "Any") -> bytes:
     return buf.getvalue()
 
 
-def bytes_to_sparse(b: bytes) -> "Any":
+def bytes_to_sparse(b: bytes) -> object:
     """Deserialize bytes to a scipy sparse matrix.
 
     Args:
@@ -247,7 +247,7 @@ def bytes_to_structured(b: bytes) -> np.ndarray:
 # Arrow tensor serialization (requires pyarrow)
 
 
-def arrow_tensor_to_bytes(x: "Any") -> bytes:
+def arrow_tensor_to_bytes(x: object) -> bytes:
     """Serialize a PyArrow Tensor to bytes using Arrow IPC format.
 
     Args:
@@ -284,7 +284,7 @@ def arrow_tensor_to_bytes(x: "Any") -> bytes:
     return buf.getvalue().to_pybytes()
 
 
-def bytes_to_arrow_tensor(b: bytes) -> "Any":
+def bytes_to_arrow_tensor(b: bytes) -> object:
     """Deserialize bytes to a PyArrow Tensor.
 
     Args:
@@ -386,7 +386,7 @@ def bytes_to_safetensors(b: bytes) -> dict[str, np.ndarray]:
 # DataFrame serialization (uses pandas + parquet)
 
 
-def dataframe_to_bytes(df: "Any") -> bytes:
+def dataframe_to_bytes(df: object) -> bytes:
     """Serialize a pandas DataFrame to Parquet bytes.
 
     Args:
@@ -416,7 +416,7 @@ def dataframe_to_bytes(df: "Any") -> bytes:
     return buf.getvalue()
 
 
-def bytes_to_dataframe(b: bytes) -> "Any":
+def bytes_to_dataframe(b: bytes) -> object:
     """Deserialize Parquet bytes to a pandas DataFrame.
 
     Args:
@@ -439,7 +439,7 @@ def bytes_to_dataframe(b: bytes) -> "Any":
 
 # Dispatch table mapping format kind strings to (serialize, deserialize) pairs.
 # Used by dataset.py pipeline integration.
-FORMAT_SERIALIZERS: dict[str, tuple["Any", "Any"]] = {
+FORMAT_SERIALIZERS = {
     "ndarray": (array_to_bytes, bytes_to_array),
     "structured": (structured_to_bytes, bytes_to_structured),
     "sparse": (sparse_to_bytes, bytes_to_sparse),

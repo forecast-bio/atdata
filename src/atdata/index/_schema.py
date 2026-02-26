@@ -173,7 +173,8 @@ class SchemaFieldType:
         if self.kind == "primitive":
             result["primitive"] = self.primitive
         elif self.kind in ("ndarray", "structured"):
-            result["dtype"] = self.dtype
+            if self.dtype is not None:
+                result["dtype"] = self.dtype
             if self.shape is not None:
                 result["shape"] = self.shape
             if self.dimension_names is not None:

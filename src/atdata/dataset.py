@@ -100,10 +100,11 @@ DT = TypeVar("DT")
 
 
 def _make_packable(x: Any) -> Any:
-    """Convert numpy arrays (and other array-like types) to bytes for msgpack.
+    """Convert array-like values to bytes for msgpack serialization.
 
-    Handles dense numpy arrays, structured arrays, scipy sparse matrices,
-    pyarrow tensors, pandas DataFrames, and numpy scalars.
+    Auto-detects dense/structured numpy arrays, scipy sparse matrices,
+    pyarrow tensors, and pandas DataFrames.  Numpy scalars are coerced
+    to Python natives.  All other values pass through unchanged.
     """
     if isinstance(x, np.ndarray):
         if x.dtype.names is not None:

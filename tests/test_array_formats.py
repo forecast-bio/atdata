@@ -278,6 +278,23 @@ class TestSchemaFieldTypeExtensions:
         restored = SchemaFieldType.from_dict(d)
         assert restored.kind == kind
 
+    @pytest.mark.parametrize(
+        "kind", ["sparse", "arrow_tensor", "safetensors", "dataframe"]
+    )
+    def test_non_ndarray_kinds_omit_annotation_keys(self, kind):
+        """to_dict() must not write dtype/shape/dimensionNames for non-ndarray kinds."""
+        ft = SchemaFieldType(kind=kind)  # type: ignore[arg-type]
+        d = ft.to_dict()
+        assert "dtype" not in d
+        assert "shape" not in d
+        assert "dimensionNames" not in d
+
+    def test_ndarray_without_dtype_omits_key(self):
+        """to_dict() must not write dtype:None when dtype is unset."""
+        ft = SchemaFieldType(kind="ndarray")
+        d = ft.to_dict()
+        assert "dtype" not in d
+
     def test_ndarray_with_v11_annotations(self):
         ft = SchemaFieldType(
             kind="ndarray",
@@ -562,6 +579,21 @@ class TestMakePackableNewTypes:
         restored = bytes_to_arrow_tensor(result)
         np.testing.assert_array_equal(restored.to_numpy(), arr)
 
+    @pytest.mark.parametrize("value", ["hello", 42, [1, 2, 3], {"a": 1}])
+    def test_non_array_passthrough(self, value):
+        """Non-array values must pass through _make_packable unchanged."""
+        from atdata.dataset import _make_packable
+
+        assert _make_packable(value) is value
+
+    def test_plain_dict_not_treated_as_safetensors(self):
+        """A plain dict[str, ndarray] must NOT be auto-serialized as safetensors."""
+        from atdata.dataset import _make_packable
+
+        d = {"weight": np.array([1.0, 2.0])}
+        result = _make_packable(d)
+        assert result is d  # unchanged — not bytes
+
 
 # ---------------------------------------------------------------------------
 # Pipeline: _ensure_good with __field_formats__
@@ -619,6 +651,23 @@ class TestEnsureGoodFieldFormats:
         sample = cls(table=raw_bytes)
         assert isinstance(sample.table, pd.DataFrame)
         pd.testing.assert_frame_equal(sample.table, df)
+
+    def test_optional_field_format_with_none(self):
+        """Optional __field_formats__ field set to None must not crash."""
+        schema = {
+            "name": "OptionalFormatSample",
+            "version": "1.0.0",
+            "fields": [
+                {
+                    "name": "table",
+                    "fieldType": {"$type": "local#dataframe"},
+                    "optional": True,
+                },
+            ],
+        }
+        cls = _schema_to_type(schema, use_cache=False)
+        sample = cls(table=None)
+        assert sample.table is None
 
     def test_ndarray_field_still_works(self):
         """Existing NDArray deserialization is unaffected."""

@@ -252,29 +252,7 @@ def _json_schema_prop_to_field_type(prop: dict) -> dict:
         if "dataframe" in ref_lower:
             return {"$type": "local#dataframe"}
 
-    # NDArray v1.1 object form (no $ref, but has "data" property with byte format)
     json_type = prop.get("type", "")
-    if json_type == "object":
-        properties = prop.get("properties", {})
-        data_prop = properties.get("data", {})
-        if (
-            data_prop.get("format") == "byte"
-            or data_prop.get("contentEncoding") == "base64"
-        ):
-            result = {"$type": "local#ndarray"}
-            if "dtype" in properties:
-                result["dtype"] = properties["dtype"].get(
-                    "const", properties["dtype"].get("default")
-                )
-            if "shape" in properties:
-                result["shape"] = properties["shape"].get(
-                    "const", properties["shape"].get("default")
-                )
-            if "dimensionNames" in properties:
-                result["dimensionNames"] = properties["dimensionNames"].get(
-                    "const", properties["dimensionNames"].get("default")
-                )
-            return result
 
     if json_type == "string":
         # Check for bytes (base64-encoded)

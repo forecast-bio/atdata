@@ -16,6 +16,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Handle-based schema resolution**: `get_schema()` and `get_schema_type()` now accept `@handle/TypeName@version` format, resolving schemas by handle + name + optional semver instead of requiring raw AT-URIs (GH#61)
 
 ### Changed
+- ADR: Array format types & NDArray v1.1 annotations review (#862)
+- Clean up FORMAT_SERIALIZERS typing and redundant Any import (#867)
+- Batch: tighten test assertions and add missing edge-case coverage (#866)
+- Clean up FORMAT_SERIALIZERS typing and redundant Any import (#867)
+- Remove dead v1.1 object-form codepath in _json_schema_prop_to_field_type (#865)
+- Fix SchemaFieldType.to_dict() writing dtype:None for ndarray/structured when unset (#864)
+- Fix _make_packable docstring overclaim (says safetensors, doesn't handle them) (#863)
 - Array format types and ndarray v1.1 annotations (#842)
 - Write tests for all new formats and annotations (#856)
 - Add NDArray v1.1.0 annotation support (dtype/shape/dimensionNames) (#854)
