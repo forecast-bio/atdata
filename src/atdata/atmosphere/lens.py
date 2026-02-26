@@ -9,7 +9,7 @@ Note:
     implementations.
 """
 
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from .client import Atmosphere
 from ._types import AtUri, LEXICON_NAMESPACE
@@ -67,10 +67,12 @@ class LensPublisher:
         code_commit: str,
         getter_path: str,
         putter_path: str,
-        description: Optional[str] = None,
-        language: Optional[str] = None,
-        metadata: Optional[dict] = None,
-        rkey: Optional[str] = None,
+        description: str | None = None,
+        language: str | None = None,
+        metadata: dict | None = None,
+        source_schema_version: str | None = None,
+        target_schema_version: str | None = None,
+        rkey: str | None = None,
     ) -> AtUri:
         """Publish a lens transformation record to ATProto.
 
@@ -90,8 +92,13 @@ class LensPublisher:
             putter_path: Module path to the putter function
                 (e.g., 'mymodule.lenses:my_putter').
             description: What this transformation does.
-            language: Programming language (e.g., 'python').
+            language: Programming language (e.g., 'python'). Propagated
+                to both getter and putter code references.
             metadata: Arbitrary metadata dictionary.
+            source_schema_version: Semver version or range for source
+                schema compatibility (e.g., '1.0.0', '>=1.0.0 <2.0.0').
+            target_schema_version: Semver version or range for target
+                schema compatibility.
             rkey: Optional explicit record key.
 
         Returns:
@@ -101,11 +108,13 @@ class LensPublisher:
             repository=code_repository,
             commit=code_commit,
             path=getter_path,
+            language=language,
         )
         putter_code = LexCodeReference(
             repository=code_repository,
             commit=code_commit,
             path=putter_path,
+            language=language,
         )
 
         lens_record = LexLensRecord(
@@ -117,6 +126,8 @@ class LensPublisher:
             description=description,
             language=language,
             metadata=metadata,
+            source_schema_version=source_schema_version,
+            target_schema_version=target_schema_version,
         )
 
         if getattr(self.client, "has_appview", False) is True:
@@ -133,7 +144,7 @@ class LensPublisher:
         self,
         lens_record: LexLensRecord,
         *,
-        rkey: Optional[str] = None,
+        rkey: str | None = None,
     ) -> AtUri:
         """Publish via AppView procedure for server-side validation."""
         body: dict = {"record": lens_record.to_record()}
@@ -155,10 +166,12 @@ class LensPublisher:
         target_schema_uri: str,
         code_repository: str,
         code_commit: str,
-        description: Optional[str] = None,
-        language: Optional[str] = None,
-        metadata: Optional[dict] = None,
-        rkey: Optional[str] = None,
+        description: str | None = None,
+        language: str | None = None,
+        metadata: dict | None = None,
+        source_schema_version: str | None = None,
+        target_schema_version: str | None = None,
+        rkey: str | None = None,
     ) -> AtUri:
         """Publish a lens record from an existing Lens object.
 
@@ -173,8 +186,13 @@ class LensPublisher:
             code_repository: Git repository URL.
             code_commit: Git commit hash.
             description: What this transformation does.
-            language: Programming language (e.g., 'python').
+            language: Programming language (e.g., 'python'). Propagated
+                to both getter and putter code references.
             metadata: Arbitrary metadata dictionary.
+            source_schema_version: Semver version or range for source
+                schema compatibility.
+            target_schema_version: Semver version or range for target
+                schema compatibility.
             rkey: Optional explicit record key.
 
         Returns:
@@ -200,6 +218,8 @@ class LensPublisher:
             description=description,
             language=language,
             metadata=metadata,
+            source_schema_version=source_schema_version,
+            target_schema_version=target_schema_version,
             rkey=rkey,
         )
 
@@ -266,7 +286,7 @@ class LensLoader:
 
     def list_all(
         self,
-        repo: Optional[str] = None,
+        repo: str | None = None,
         limit: int = 100,
     ) -> list[dict]:
         """List lens records from a repository.
@@ -297,12 +317,12 @@ class LensLoader:
 
     def _list_via_appview(
         self,
-        repo: Optional[str] = None,
+        repo: str | None = None,
         limit: int = 100,
     ) -> list[dict]:
         """List lenses via AppView with cursor pagination."""
         results: list[dict] = []
-        cursor: Optional[str] = None
+        cursor: str | None = None
         page_size = min(limit, 100)
 
         while len(results) < limit:
@@ -328,8 +348,8 @@ class LensLoader:
     def find_by_schemas(
         self,
         source_schema_uri: str,
-        target_schema_uri: Optional[str] = None,
-        repo: Optional[str] = None,
+        target_schema_uri: str | None = None,
+        repo: str | None = None,
     ) -> list[dict]:
         """Find lenses that transform between specific schemas.
 
@@ -367,7 +387,7 @@ class LensLoader:
     def _find_by_schemas_via_appview(
         self,
         source_schema_uri: str,
-        target_schema_uri: Optional[str] = None,
+        target_schema_uri: str | None = None,
     ) -> list[dict]:
         """Search lenses via AppView XRPC query."""
         params: dict[str, str | int] = {"sourceSchema": source_schema_uri, "limit": 100}
@@ -375,7 +395,7 @@ class LensLoader:
             params["targetSchema"] = target_schema_uri
 
         results: list[dict] = []
-        cursor: Optional[str] = None
+        cursor: str | None = None
 
         while True:
             if cursor is not None:
@@ -397,8 +417,8 @@ class LensLoader:
     def _find_by_schemas_client_side(
         self,
         source_schema_uri: str,
-        target_schema_uri: Optional[str] = None,
-        repo: Optional[str] = None,
+        target_schema_uri: str | None = None,
+        repo: str | None = None,
     ) -> list[dict]:
         """Find lenses by paginating through all records and filtering."""
         collection = f"{LEXICON_NAMESPACE}.lens"
@@ -407,7 +427,7 @@ class LensLoader:
             repo = self.client.did
 
         matches = []
-        cursor: Optional[str] = None
+        cursor: str | None = None
         while True:
             records, cursor = self.client.list_records(
                 collection,

@@ -526,6 +526,9 @@ class LexCodeReference:
     branch: str | None = None
     """Optional branch name (commit hash is authoritative)."""
 
+    language: str | None = None
+    """Programming language of the code at this reference."""
+
     def to_record(self) -> dict[str, str]:
         """Serialize to ATProto record dict."""
         d: dict[str, str] = {
@@ -535,6 +538,8 @@ class LexCodeReference:
         }
         if self.branch is not None:
             d["branch"] = self.branch
+        if self.language is not None:
+            d["language"] = self.language
         return d
 
     @classmethod
@@ -545,6 +550,7 @@ class LexCodeReference:
             commit=d["commit"],
             path=d["path"],
             branch=d.get("branch"),
+            language=d.get("language"),
         )
 
 
@@ -792,10 +798,16 @@ class LexLensRecord:
     """What this transformation does."""
 
     language: str | None = None
-    """Programming language (e.g., 'python')."""
+    """Programming language (deprecated: use codeReference.language instead)."""
 
     metadata: dict[str, Any] | None = None
     """Arbitrary metadata."""
+
+    source_schema_version: str | None = None
+    """Semver version or range for source schema compatibility."""
+
+    target_schema_version: str | None = None
+    """Semver version or range for target schema compatibility."""
 
     def to_record(self) -> dict[str, Any]:
         """Serialize to ATProto record dict."""
@@ -814,6 +826,10 @@ class LexLensRecord:
             d["language"] = self.language
         if self.metadata is not None:
             d["metadata"] = self.metadata
+        if self.source_schema_version is not None:
+            d["sourceSchemaVersion"] = self.source_schema_version
+        if self.target_schema_version is not None:
+            d["targetSchemaVersion"] = self.target_schema_version
         return d
 
     @classmethod
@@ -829,6 +845,103 @@ class LexLensRecord:
             description=d.get("description"),
             language=d.get("language"),
             metadata=d.get("metadata"),
+            source_schema_version=d.get("sourceSchemaVersion"),
+            target_schema_version=d.get("targetSchemaVersion"),
+        )
+
+
+# ---------------------------------------------------------------------------
+# Lens verification
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class LexCodeHash:
+    """Content hash for code integrity verification.
+
+    Mirrors ``science.alt.dataset.lensVerification#codeHash``.
+    """
+
+    algorithm: str
+    """Hash algorithm identifier (e.g., 'sha256', 'blake3')."""
+
+    digest: str
+    """Hex-encoded hash digest."""
+
+    def to_record(self) -> dict[str, str]:
+        """Serialize to ATProto record dict."""
+        return {"algorithm": self.algorithm, "digest": self.digest}
+
+    @classmethod
+    def from_record(cls, d: dict[str, Any]) -> LexCodeHash:
+        """Deserialize from ATProto record dict."""
+        return cls(algorithm=d["algorithm"], digest=d["digest"])
+
+
+@dataclass
+class LexLensVerification:
+    """Verification record for a lens transformation.
+
+    Mirrors ``science.alt.dataset.lensVerification`` (main record).
+    The verifier's identity is implicit -- the DID of the repo owner
+    who writes this record.
+    """
+
+    lens: str
+    """AT-URI of the lens record being verified."""
+
+    lens_commit: str
+    """CID of the specific lens record version."""
+
+    verification_method: str
+    """What kind of verification was performed."""
+
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    """Timestamp when this verification was issued."""
+
+    code_hash: LexCodeHash | None = None
+    """Hash of the code at the referenced commit."""
+
+    proof_ref: LexCodeReference | None = None
+    """Link to proof artifact (Coq/Lean proof, test suite, etc.)."""
+
+    description: str | None = None
+    """Human-readable description of what was verified."""
+
+    def to_record(self) -> dict[str, Any]:
+        """Serialize to ATProto record dict."""
+        d: dict[str, Any] = {
+            "$type": f"{LEXICON_NAMESPACE}.lensVerification",
+            "lens": self.lens,
+            "lensCommit": self.lens_commit,
+            "verificationMethod": self.verification_method,
+            "createdAt": self.created_at.isoformat(),
+        }
+        if self.code_hash is not None:
+            d["codeHash"] = self.code_hash.to_record()
+        if self.proof_ref is not None:
+            d["proofRef"] = self.proof_ref.to_record()
+        if self.description is not None:
+            d["description"] = self.description
+        return d
+
+    @classmethod
+    def from_record(cls, d: dict[str, Any]) -> LexLensVerification:
+        """Deserialize from ATProto record dict."""
+        code_hash = None
+        if "codeHash" in d:
+            code_hash = LexCodeHash.from_record(d["codeHash"])
+        proof_ref = None
+        if "proofRef" in d:
+            proof_ref = LexCodeReference.from_record(d["proofRef"])
+        return cls(
+            lens=d["lens"],
+            lens_commit=d["lensCommit"],
+            verification_method=d["verificationMethod"],
+            created_at=datetime.fromisoformat(d["createdAt"]),
+            code_hash=code_hash,
+            proof_ref=proof_ref,
+            description=d.get("description"),
         )
 
 
@@ -906,5 +1019,7 @@ __all__ = [
     "LexSchemaRecord",
     "LexDatasetEntry",
     "LexLensRecord",
+    "LexCodeHash",
+    "LexLensVerification",
     "LexLabelRecord",
 ]

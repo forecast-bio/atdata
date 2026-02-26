@@ -14,6 +14,12 @@ Lexicons:
         Bidirectional transformations between schemas.
     science.alt.dataset.label
         Named labels pointing to dataset entries with optional versioning.
+    science.alt.dataset.lensVerification
+        Verification records for lens transformations.
+    science.alt.dataset.verificationMethod
+        Token enum for verification method identifiers.
+    science.alt.dataset.programmingLanguage
+        Token enum for programming language identifiers.
     science.alt.dataset.schemaType
         Extensible token for schema format identifiers.
     science.alt.dataset.arrayFormat
@@ -54,6 +60,9 @@ LEXICON_IDS = (
     f"{NAMESPACE}.entry",
     f"{NAMESPACE}.lens",
     f"{NAMESPACE}.label",
+    f"{NAMESPACE}.lensVerification",
+    f"{NAMESPACE}.verificationMethod",
+    f"{NAMESPACE}.programmingLanguage",
     f"{NAMESPACE}.schemaType",
     f"{NAMESPACE}.arrayFormat",
     f"{NAMESPACE}.storageHttp",

@@ -41,7 +41,7 @@ class TestNamespace:
             assert lid.startswith(NAMESPACE), f"{lid} missing namespace prefix"
 
     def test_lexicon_ids_count(self):
-        assert len(LEXICON_IDS) == 12
+        assert len(LEXICON_IDS) == 15
 
 
 @pytest.mark.skipif(not _HAS_LEXICON_FILES, reason="lexicon JSON files not found")

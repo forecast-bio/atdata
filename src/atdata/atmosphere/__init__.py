@@ -34,6 +34,7 @@ from .schema import SchemaPublisher, SchemaLoader
 from .records import DatasetPublisher, DatasetLoader
 from .lens import LensPublisher, LensLoader
 from .labels import LabelPublisher, LabelLoader
+from .verification import VerificationPublisher, VerificationLoader
 from .store import PDSBlobStore
 from ._types import AtUri, LEXICON_NAMESPACE
 from ._lexicon_types import (
@@ -43,6 +44,8 @@ from ._lexicon_types import (
     LexLensRecord,
     LexLabelRecord,
     LexCodeReference,
+    LexCodeHash,
+    LexLensVerification,
     JsonSchemaFormat,
     StorageHttp,
     StorageS3,
@@ -432,6 +435,9 @@ __all__ = [
     # Label operations
     "LabelPublisher",
     "LabelLoader",
+    # Verification operations
+    "VerificationPublisher",
+    "VerificationLoader",
     # Core types
     "AtUri",
     "LEXICON_NAMESPACE",
@@ -442,6 +448,8 @@ __all__ = [
     "LexLensRecord",
     "LexLabelRecord",
     "LexCodeReference",
+    "LexCodeHash",
+    "LexLensVerification",
     "JsonSchemaFormat",
     "StorageHttp",
     "StorageS3",

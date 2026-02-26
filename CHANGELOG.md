@@ -16,6 +16,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Handle-based schema resolution**: `get_schema()` and `get_schema_type()` now accept `@handle/TypeName@version` format, resolving schemas by handle + name + optional semver instead of requiring raw AT-URIs (GH#61)
 
 ### Changed
+- ADR: Lens verification & schema compat review (b094772) (#857)
+- Add per-reference language params to LensPublisher.publish() (#861)
+- Normalize Optional[str] to str|None in verification.py and add missing return type hints (#860)
+- Strengthen unit test assertions and round-trip coverage (#859)
+- Fix MockAtmosphere.list_records substring collision (lens vs lensVerification) (#858)
+- Lens Lexicon E2E Validation — Trust Verification & Schema Compatibility (#843)
+- Write/extend E2E integration tests (#849)
+- Write unit tests for new types and verification (#848)
+- Create VerificationPublisher/VerificationLoader (#847)
+- Update LensPublisher for schema version params (#846)
+- Add Python types for new lexicons (LexCodeHash, LexLensVerification, update LexCodeReference/LexLensRecord) (#845)
+- Sync 3 new lexicon files + updated lens.json from upstream (#844)
 - Unified Search API with Pluggable Backends (#833)
 - Phase 7: Export public API and lint/test pass (#840)
 - Phase 6: Comprehensive tests (#839)
