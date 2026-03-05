@@ -1,6 +1,13 @@
 {
   "version": 1,
-  "locks": {},
+  "locks": {
+    "1": {
+      "agent_id": "maxine--noether",
+      "branch": null,
+      "claimed_at": "2026-03-05T22:12:16.647912Z",
+      "signed_by": "SHA256:QKMuzf0V87PFAzQ5M0+rEj0m8iP5xRH3SwRjsVof24k"
+    }
+  },
   "settings": {
     "stale_lock_timeout_minutes": 60
   }
