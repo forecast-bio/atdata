@@ -1,0 +1,10 @@
+{
+  "uuid": "7ba7bc50-8285-44a3-8681-374ec6629300",
+  "issue_uuid": "6710a3c5-4e6a-458f-a432-14a169d1668c",
+  "author": "maxine--futura",
+  "content": "Migration approach: copy old chainlink db (877 issues, 682 comments, 58 deps, 9 sessions) over the fresh crosslink db, then ALTER TABLE to add crosslink's new columns (uuid, created_by, kind, author, agent_id, token_usage table). Old issue #1 is 'Write tests for atdata.local' (archived). The migration tracking issue will be re-created as #878.",
+  "created_at": "2026-03-31T19:14:05.624648Z",
+  "kind": "decision",
+  "signed_by": "SHA256:InQG/DPIFjZucG+2Pb71VgHctJAjJ45DGaewCTTlgcc",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgPyK5jFUUnT2W7kjgCilWm7CF/cjXdHxHgXokMkJ7Kz0AAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAX4lVzbQXhf6JcdXr0dodc1P1sUfbNM11zh0FjNuNeZQYMZXK9wjBzqGF0LFR6CPdsBXPdjCD51USul0oOYJCDg=="
+}
