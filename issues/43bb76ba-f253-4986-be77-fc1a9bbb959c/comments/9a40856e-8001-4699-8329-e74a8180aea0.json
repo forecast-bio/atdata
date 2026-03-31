@@ -1,0 +1,10 @@
+{
+  "uuid": "9a40856e-8001-4699-8329-e74a8180aea0",
+  "issue_uuid": "43bb76ba-f253-4986-be77-fc1a9bbb959c",
+  "author": "maxine--futura",
+  "content": "Migrated from chainlink issues #771, #772. GH Issue #62. Add optional manifests array to dataset record lexicon. Implementation: update lexicons/ac.foundation.dataset.record.json with shardManifestRef def and manifests array, add ShardManifestRef to _lexicon_types.py, add round-trip tests, update atmosphere publishers/loaders.",
+  "created_at": "2026-03-31T21:17:08.651892Z",
+  "kind": "observation",
+  "signed_by": "SHA256:InQG/DPIFjZucG+2Pb71VgHctJAjJ45DGaewCTTlgcc",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgPyK5jFUUnT2W7kjgCilWm7CF/cjXdHxHgXokMkJ7Kz0AAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAvC7mXnnOjDUfuGS07HlP2vqcrMoEbokaWs8NygY8x1HtEXYJWhouO96gGXH3TTKvnMTIchnTMfAjNdxy+OzdAw=="
+}
