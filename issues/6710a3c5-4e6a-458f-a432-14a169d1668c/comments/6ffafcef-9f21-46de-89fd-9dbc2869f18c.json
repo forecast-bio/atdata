@@ -1,0 +1,10 @@
+{
+  "uuid": "6ffafcef-9f21-46de-89fd-9dbc2869f18c",
+  "issue_uuid": "6710a3c5-4e6a-458f-a432-14a169d1668c",
+  "author": "maxine--futura",
+  "content": "Decision: migrate only the 16 open issues from chainlink to crosslink hub format. The 861 closed/archived issues stay in .chainlink.bak/ and git history. We'll create crosslink knowledge pages summarizing the development history from the old issues.",
+  "created_at": "2026-03-31T20:38:34.954979Z",
+  "kind": "decision",
+  "signed_by": "SHA256:InQG/DPIFjZucG+2Pb71VgHctJAjJ45DGaewCTTlgcc",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgPyK5jFUUnT2W7kjgCilWm7CF/cjXdHxHgXokMkJ7Kz0AAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAUlAnQI+dAHG8VslZ6UZdAhAb2ARojNT2i+Li+faeqAUx5SVB4YjSk8z4X8UZLevxlKGMg6bHFTaRE8C/vSZFBQ=="
+}
