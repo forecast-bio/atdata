@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(git *), Bash(chainlink *), Bash(uuidgen), Bash(ls *), Bash(ln *), Bash(rm *), Bash(tmux *), Bash(claude *), Bash(cat *), Bash(grep *), Bash(which *), Read, Write, Edit, Glob, Grep, Skill, Task
+allowed-tools: Bash(git *), Bash(crosslink *), Bash(uuidgen), Bash(ls *), Bash(ln *), Bash(rm *), Bash(tmux *), Bash(claude *), Bash(cat *), Bash(grep *), Bash(which *), Read, Write, Edit, Glob, Grep, Skill, Task
 description: Create a worktree and launch a background claude agent in tmux to implement a feature
 ---
 
@@ -96,7 +96,7 @@ tmux send-keys -t <session-name> "env -u CLAUDECODE claude --model opus --allowe
 - Rust project: `Bash(cargo *)`
 - Just task runner: `Bash(just *)`
 - Make task runner: `Bash(make *)`
-- Chainlink present: `Bash(chainlink *)`
+- Crosslink present: `Bash(crosslink *)`
 
 **Permission rationale:**
 - `Read`, `Write`, `Edit`, `Glob`, `Grep` — full file operations for implementation

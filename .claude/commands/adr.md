@@ -1,14 +1,14 @@
 ---
-allowed-tools: Bash(git status:*), Bash(git log:*), Bash(chainlink tree:*), Bash(chainlink comment:*), Bash(chainlink subissue:*), Bash(chainlink create:*), Bash(chainlink session:*), Bash(chainlink --help), Bash(chainlink close:*), Bash(uv run pytest:*), Bash(uv run ruff:*)
+allowed-tools: Bash(git status:*), Bash(git log:*), Bash(crosslink tree:*), Bash(crosslink comment:*), Bash(crosslink subissue:*), Bash(crosslink create:*), Bash(crosslink session:*), Bash(crosslink --help), Bash(crosslink close:*), Bash(uv run pytest:*), Bash(uv run ruff:*)
 description: Perform an adversarial review
 ---
 
 ## Context
 
-- Current issue tree: !`chainlink tree`
+- Current issue tree: !`crosslink tree`
 - Current test outputs: !`uv run pytest -v`
 - Recent commits: !`git log --oneline -10`
-- Chainlink help: !`chainlink --help`
+- Chainlink help: !`crosslink --help`
 
 ## Your task
 
@@ -19,11 +19,11 @@ description: Perform an adversarial review
     - Look through all of the source files currently in the project's main modules, and create a plan of how well-implemented, efficient, and generalizable the current implementation is, as well as whether there is adequate, too sparse, or too verbose documentation
     - Develop a plan for improvements, tweaks, or refactors that could be applied to the current codebase and its documentation
 3. Create issue and subissues
-    - Create a base issue in chainlink for this adversarial review
+    - Create a base issue in crosslink for this adversarial review
     - Create subissues for each of the plan items addressed in steps 1 and 2.
 4. Address all subissues for this adversarial review
     - Ordered by priority, address and close each of the subissues identified
-    - Provide thorough documentation of each step you take in the chainlink comments
+    - Provide thorough documentation of each step you take in the crosslink comments
 
 ## Constraints
 

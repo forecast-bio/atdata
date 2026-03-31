@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(gh *), Bash(git *), Bash(uv build*), Bash(python3 -c *), Bash(chainlink *)
+allowed-tools: Bash(gh *), Bash(git *), Bash(uv build*), Bash(python3 -c *), Bash(crosslink *)
 description: Tag, create GitHub release, and publish to PyPI after a release PR is merged
 ---
 
@@ -71,7 +71,7 @@ Perform the post-merge publish flow:
   git merge main --no-ff --no-edit
   git push origin develop
   ```
-- Close any chainlink release tracking issues
+- Close any crosslink release tracking issues
 
 ## Constraints
 

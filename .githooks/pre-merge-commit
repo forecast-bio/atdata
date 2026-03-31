@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# Auto-backup .chainlink/issues.db before a merge commit.
+# Auto-backup .crosslink/issues.db before a merge commit.
 #
 # When merging feature branches (especially from worktrees), the merge
 # may replace the real SQLite database with a symlink blob. This hook
 # snapshots the current db so it can be restored if the merge corrupts it.
 #
-# The backup is written to .chainlink/issues.db.pre-merge and kept until
+# The backup is written to .crosslink/issues.db.pre-merge and kept until
 # the next merge overwrites it.
 
-DB=".chainlink/issues.db"
-BACKUP=".chainlink/issues.db.pre-merge"
+DB=".crosslink/issues.db"
+BACKUP=".crosslink/issues.db.pre-merge"
 
 # Only protect the develop branch — that's where the authoritative db lives.
 branch=$(git branch --show-current 2>/dev/null)
@@ -29,5 +29,5 @@ fi
 filetype=$(file -b "$DB" 2>/dev/null)
 if echo "$filetype" | grep -q "SQLite"; then
     cp "$DB" "$BACKUP"
-    echo "chainlink: backed up issues.db to issues.db.pre-merge"
+    echo "crosslink: backed up issues.db to issues.db.pre-merge"
 fi

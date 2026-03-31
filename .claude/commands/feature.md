@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(git *), Bash(chainlink *)
+allowed-tools: Bash(git *), Bash(crosslink *)
 description: Create a feature branch from a human-readable description
 ---
 
@@ -23,7 +23,7 @@ The user will provide a human-readable description of the feature (e.g. "add bat
 
 ### 2. Validate preconditions
 
-- Confirm there are no uncommitted changes (other than `.chainlink/issues.db`). If there are, warn the user and ask whether to stash or abort.
+- Confirm there are no uncommitted changes (other than `.crosslink/issues.db`). If there are, warn the user and ask whether to stash or abort.
 - Identify the base branch. Default is `develop`. If the user provides a `--from <ref>` argument, use that instead.
 
 ### 3. Create the branch
@@ -32,9 +32,9 @@ The user will provide a human-readable description of the feature (e.g. "add bat
 - `git checkout -b feature/<slug>` (from the resolved base)
 - Print the created branch name so the user can confirm.
 
-### 4. Track in chainlink
+### 4. Track in crosslink
 
-- Create a chainlink issue for the feature work with the user's original description as the title.
+- Create a crosslink issue for the feature work with the user's original description as the title.
 - Set priority to `medium` (unless the user specifies otherwise).
 
 ## Constraints

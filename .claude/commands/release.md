@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(git *), Bash(gh *), Bash(uv lock*), Bash(uv run ruff*), Bash(uv run pytest*), Bash(chainlink *), Bash(uv run ruff format*)
+allowed-tools: Bash(git *), Bash(gh *), Bash(uv lock*), Bash(uv run ruff*), Bash(uv run pytest*), Bash(crosslink *), Bash(uv run ruff format*)
 description: Prepare and submit a beta release
 ---
 
@@ -37,7 +37,7 @@ Perform the full release flow:
 - Confirm all tests pass: `uv run pytest tests/ -x -q`
 - Confirm lint is clean: `uv run ruff check src/ tests/`
 - Confirm formatting is clean: `uv run ruff format --check src/ tests/` (fix with `uv run ruff format src/ tests/` if needed)
-- Confirm no uncommitted changes (other than `.chainlink/issues.db`)
+- Confirm no uncommitted changes (other than `.crosslink/issues.db`)
 - Confirm `develop` branch is up to date with `main` (merge main into develop if needed)
 
 ### 2. Create release branch from develop
@@ -56,7 +56,7 @@ Perform the full release flow:
 - Run `uv run pytest tests/ -x -q` to confirm tests pass
 
 ### 4. Commit and push
-- `git add pyproject.toml uv.lock CHANGELOG.md .chainlink/issues.db`
+- `git add pyproject.toml uv.lock CHANGELOG.md .crosslink/issues.db`
 - `git commit -m "release: prepare <version>"`
 - `git push -u origin release/<version>`
 
@@ -77,8 +77,8 @@ git push origin develop
 ```
 Remind the user to do this after merge, or do it if the PR is already merged.
 
-### 7. Track in chainlink
-- Create a chainlink issue for the release, close when PR is submitted
+### 7. Track in crosslink
+- Create a crosslink issue for the release, close when PR is submitted
 
 ## Constraints
 
@@ -87,4 +87,4 @@ Remind the user to do this after merge, or do it if the PR is already merged.
 - Always run `uv lock` after version bumps — stale lockfiles break CI
 - Always run both `ruff check` and `ruff format --check` before committing — either will fail CI
 - Never force-push to release branches
-- The CHANGELOG should follow Keep a Changelog format with proper Added/Changed/Fixed sections, not a flat list of chainlink issues
+- The CHANGELOG should follow Keep a Changelog format with proper Added/Changed/Fixed sections, not a flat list of crosslink issues
