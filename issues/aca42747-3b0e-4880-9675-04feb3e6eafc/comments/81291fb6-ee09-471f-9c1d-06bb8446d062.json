@@ -1,0 +1,10 @@
+{
+  "uuid": "81291fb6-ee09-471f-9c1d-06bb8446d062",
+  "issue_uuid": "aca42747-3b0e-4880-9675-04feb3e6eafc",
+  "author": "maxine--futura",
+  "content": "Findings from /qa review of .claude/hooks/ and .crosslink/ changes (953 insertions, 275 deletions across 10 files):\n\n**CRITICAL (3):**\n1. hook-config.json type mutations — auto_steal_stale_locks changed bool→string, reminder_drift_threshold int→string, tracker_remote set to placeholder '(text)'\n2. session-start.py has its own run_crosslink() instead of importing from crosslink_config.py — binary discovery divergence\n3. .gitignore bootstrapping paradox — .claude/hooks/ and .claude/commands/ changed from tracked to gitignored but still tracked in git\n\n**WARNING (8):**\n- session-start.py makes 12+ sequential subprocess calls (4 redundant session status calls), risks 10s hook timeout\n- build_reminder() has 10 parameters (God Function signature)\n- load_all_rules() returns bare 5-tuple instead of NamedTuple\n- build_design_context() has cyclomatic complexity ~12 with copy-paste fallback blocks\n- get_lock_file_hash() is dead code (never called)\n- estimate_prompt_chars uses hardcoded 5x multiplier — context budget feature is unreliable\n- import re inside function bodies instead of module-level\n- Unused datetime/timezone import in session-start.py\n\n**NITPICK (3):**\n- has_active_session() explicit True/False instead of idiomatic bool()\n- interval==0 semantics unclear in condensed reminder logic\n- Lint debounce logic inlined in main() instead of extracted",
+  "created_at": "2026-03-31T23:28:39.930853Z",
+  "kind": "observation",
+  "signed_by": "SHA256:InQG/DPIFjZucG+2Pb71VgHctJAjJ45DGaewCTTlgcc",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgPyK5jFUUnT2W7kjgCilWm7CF/cjXdHxHgXokMkJ7Kz0AAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAhbY+CIaj5ckxWf1wztQpvzFfqJplDRxYWU5ep2D+HiX9VptdBnSAIv+F9v2juHU9e3aMHS20V4/wU9nSiIZYAw=="
+}
