@@ -1,0 +1,17 @@
+{
+  "next_display_id": 1,
+  "next_comment_id": 1,
+  "display_id_map": {},
+  "locks": {
+    "12": {
+      "agent_id": "maxine--futura",
+      "claimed_at": "2026-03-31T22:32:34.146740Z"
+    }
+  },
+  "issues": {},
+  "watermark": {
+    "timestamp": "2026-03-31T22:32:34.146740Z",
+    "agent_id": "maxine--futura",
+    "agent_seq": 1
+  }
+}
