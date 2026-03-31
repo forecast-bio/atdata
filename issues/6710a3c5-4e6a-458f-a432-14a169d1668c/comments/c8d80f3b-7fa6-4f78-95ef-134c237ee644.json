@@ -1,0 +1,8 @@
+{
+  "uuid": "c8d80f3b-7fa6-4f78-95ef-134c237ee644",
+  "issue_uuid": "6710a3c5-4e6a-458f-a432-14a169d1668c",
+  "author": "anon-a3997c17",
+  "content": "Plan: finalize the staged migration changeset. Three cleanup items before commit: (1) stage the unstaged .gitignore fix that removes erroneous .claude/hooks/ and .claude/commands/ ignore entries added by crosslink init, (2) remove .crosslink/issues.db from .gitignore so it continues to be tracked (matching prior .chainlink/issues.db behavior per CLAUDE.md), (3) add .active-issue and .last-hydrated-ref to .crosslink/.gitignore as runtime files, then stage .crosslink/.gitignore and issues.db",
+  "created_at": "2026-03-31T05:54:32.435137Z",
+  "kind": "plan"
+}
