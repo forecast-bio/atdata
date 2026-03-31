@@ -1,0 +1,10 @@
+{
+  "uuid": "7740d113-073c-4ebf-8730-7dc6baf22106",
+  "issue_uuid": "6710a3c5-4e6a-458f-a432-14a169d1668c",
+  "author": "maxine--futura",
+  "content": "Result: Migration complete. 877 chainlink issues processed: 16 open issues deduplicated to 10 crosslink issues (#2-#11), 861 closed/archived issues preserved in .chainlink.bak/issues.db and git history. 3 knowledge pages created: development-history (full arc summary), architecture-decisions (8 key decisions), open-work-context (technical notes for active work streams). Hub sync working, agent trust configured.",
+  "created_at": "2026-03-31T21:26:02.486983Z",
+  "kind": "result",
+  "signed_by": "SHA256:InQG/DPIFjZucG+2Pb71VgHctJAjJ45DGaewCTTlgcc",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgPyK5jFUUnT2W7kjgCilWm7CF/cjXdHxHgXokMkJ7Kz0AAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAlgjp2xBqpc+EkblC6ghCcgrsZ4jWsWUI9PaaAClITcx4Ltrvz7Hf6dTKj/6Tzby9tkF8U+NG75BFtWXu5z49DA=="
+}
