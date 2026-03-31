@@ -372,15 +372,15 @@ class MyClass:
 
 ## Issue Tracking
 
-This project uses **chainlink** for issue tracking. Chainlink commands do NOT need to be prefixed with `uv run`:
+This project uses **crosslink** for issue tracking. Crosslink commands do NOT need to be prefixed with `uv run`:
 ```bash
-# Correct - run chainlink directly
-chainlink list
-chainlink close 123
-chainlink show 123
+# Correct - run crosslink directly
+crosslink issue list
+crosslink issue close 123
+crosslink issue show 123
 
 # Incorrect - don't use uv run
-uv run chainlink list  # Not needed
+uv run crosslink issue list  # Not needed
 ```
 
 ## Custom Skills
@@ -389,12 +389,12 @@ Project-level Claude Code skills are defined in `.claude/commands/`:
 
 - `/release <version>` — Full release flow: branch from previous release, merge develop, version bump, changelog, PR to `main`
 - `/publish` — Post-merge: create GitHub release, monitor PyPI publish, sync `develop`
-- `/feature <description>` — Create a feature branch from `develop` with a slugified name and chainlink issue
-- `/featree <description>` — Create a feature branch in a new git worktree (symlinks chainlink db)
+- `/feature <description>` — Create a feature branch from `develop` with a slugified name and crosslink issue
+- `/featree <description>` — Create a feature branch in a new git worktree (symlinks crosslink db)
 - `/kickoff <description>` — Create a worktree via `/featree`, write a self-contained prompt, and launch an autonomous agent in a tmux session
 - `/check [session]` — Check status of background feature agents (reads tmux panes and `.kickoff-status` sentinel files)
 - `/adr` — Adversarial review with docstring-preservation rules for quartodoc
-- `/changelog` — Generate clean CHANGELOG entry from chainlink history
+- `/changelog` — Generate clean CHANGELOG entry from crosslink history
 - `/commit` — Analyze changes and create a well-formatted commit
 
 User-level skills (in `~/.claude/commands/`) take precedence over project-level skills with the same name.
@@ -447,9 +447,9 @@ Releases follow this pattern (automated by `/release` skill):
 ### Committing Changes
 
 When using the `/commit` command or creating commits:
-- **Always include `.chainlink/issues.db`** in commits alongside code changes
+- **Always include `.crosslink/issues.db`** in commits alongside code changes
 - This ensures issue tracking history is preserved across sessions
-- The issues.db file tracks all chainlink issues, comments, and status changes
+- The issues.db file tracks all crosslink issues, comments, and status changes
 
 ### Git Hooks
 
@@ -463,20 +463,20 @@ just setup   # sets core.hooksPath to .githooks/
 - **`pre-commit`** — Blocks commits where `issues.db` is staged as a symlink (mode 120000). Prevents worktree artifacts from overwriting the real database on merge.
 - **`pre-merge-commit`** — Backs up `issues.db` to `issues.db.pre-merge` before every merge, so the database can be restored if a merge corrupts it.
 
-### Worktrees and Chainlink
+### Worktrees and Crosslink
 
-When using git worktrees (via `/featree`), the worktree's `.chainlink/issues.db`
+When using git worktrees (via `/featree`), the worktree's `.crosslink/issues.db`
 is replaced with a **symlink** to the base clone's copy. This ensures all
 worktrees share a single authoritative database on the `develop` branch.
 
 **Protection layers (in order of defense):**
-1. `/featree` adds `.chainlink/issues.db` to the worktree's `.git/info/exclude` so the symlink is never staged.
+1. `/featree` adds `.crosslink/issues.db` to the worktree's `.git/info/exclude` so the symlink is never staged.
 2. The `pre-commit` hook blocks any commit that stages `issues.db` as a symlink (mode 120000).
 3. The `pre-merge-commit` hook backs up the db before merges so it can be restored if a symlink slips through.
 
 **If the database is corrupted after a merge:**
 ```bash
-cp .chainlink/issues.db.pre-merge .chainlink/issues.db
+cp .crosslink/issues.db.pre-merge .crosslink/issues.db
 ```
 
 ### CLI Module

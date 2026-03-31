@@ -2,8 +2,8 @@
 
 .private_notes/
 
-# Chainlink pre-merge backup (created by .githooks/pre-merge-commit)
-.chainlink/issues.db.pre-merge
+# Crosslink pre-merge backup (created by .githooks/pre-merge-commit)
+.crosslink/issues.db.pre-merge
 
 # mac garbage
 **/.DS_Store
@@ -221,3 +221,33 @@ marimo/_lsp/
 __marimo__/
 testing.env
 .worktrees/
+
+# === Crosslink managed (do not edit between markers) ===
+# .crosslink/ — machine-local state (never commit)
+.crosslink/issues.db
+.crosslink/issues.db-wal
+.crosslink/issues.db-shm
+.crosslink/agent.json
+.crosslink/session.json
+.crosslink/daemon.pid
+.crosslink/daemon.log
+.crosslink/last_test_run
+.crosslink/keys/
+.crosslink/.hub-cache/
+.crosslink/.knowledge-cache/
+.crosslink/.cache/
+.crosslink/hook-config.local.json
+.crosslink/integrations/
+.crosslink/rules.local/
+
+# .crosslink/ — DO track these (project-level policy):
+#   .crosslink/hook-config.json   — shared team configuration
+#   .crosslink/rules/             — project coding standards
+#   .crosslink/.gitignore         — inner gitignore for agent files
+
+# .claude/ — this project tracks hooks/ and commands/ (project-level config)
+# .claude/mcp/ is auto-generated, don't track
+.claude/mcp/
+# .claude/settings.local.json is per-developer
+.claude/settings.local.json
+# === End crosslink managed ===

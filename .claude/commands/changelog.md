@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(git log:*), Bash(git tag:*), Bash(git diff:*), Bash(chainlink *)
+allowed-tools: Bash(git log:*), Bash(git tag:*), Bash(git diff:*), Bash(crosslink *)
 description: Generate a clean CHANGELOG entry from recent work
 ---
 
@@ -8,7 +8,7 @@ description: Generate a clean CHANGELOG entry from recent work
 - Current version: !`grep '^version' pyproject.toml`
 - Recent tags: !`git tag --sort=-creatordate | head -5`
 - CHANGELOG head: !`head -20 CHANGELOG.md`
-- Recent chainlink issues: !`chainlink list`
+- Recent crosslink issues: !`crosslink list`
 
 ## Your task
 
@@ -18,7 +18,7 @@ Generate a properly structured CHANGELOG entry for the current release, followin
 
 Identify all changes since the last release by examining:
 - `git log --oneline <last-release-tag-or-branch>..HEAD` for commit messages
-- `chainlink list` for closed issues and their descriptions
+- `crosslink list` for closed issues and their descriptions
 - `git diff --stat <last-release-tag-or-branch>..HEAD` for files changed
 
 ### 2. Categorize changes
@@ -34,12 +34,12 @@ Sort changes into Keep a Changelog sections:
 ### 3. Write the entry
 
 Follow these formatting rules:
-- Each item should be a concise, user-facing description — not a chainlink issue title
+- Each item should be a concise, user-facing description — not a crosslink issue title
 - Group related changes under bold sub-headers (e.g. **`LocalDiskStore`**: description)
 - Use nested bullets for sub-items that belong to a feature group
 - Omit internal-only changes (individual subissue closes, review assessments, investigation tickets)
 - Include GitHub issue references where relevant (e.g. `(GH#42)`)
-- Do NOT include chainlink issue numbers — these are internal tracking
+- Do NOT include crosslink issue numbers — these are internal tracking
 
 ### 4. Update CHANGELOG.md
 
@@ -50,7 +50,7 @@ Follow these formatting rules:
 ### 5. Verify
 
 - Confirm the CHANGELOG renders as valid markdown
-- Confirm no chainlink auto-appended entries leaked into existing release sections
+- Confirm no crosslink auto-appended entries leaked into existing release sections
 
 ## Constraints
 
@@ -58,4 +58,4 @@ Follow these formatting rules:
 - Write for the library's users, not for internal tracking
 - Consolidate — 5 well-written bullets are better than 30 issue titles
 - Preserve existing release sections exactly as they are
-- If chainlink has appended noise to existing sections, clean it up
+- If crosslink has appended noise to existing sections, clean it up

@@ -59,7 +59,7 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.sdist]
 exclude = [
-    ".chainlink/",
+    ".crosslink/",
     ".claude/",
 ]
 
@@ -90,4 +90,5 @@ dev = [
     "quartodoc>=0.11.1",
     "pytest-benchmark>=5.1.0",
     "ruff>=0.14.13",
+    "datasets>=4.6.1",
 ]

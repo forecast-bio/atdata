@@ -246,7 +246,7 @@ def get_test_reminder(file_path, project_root):
 
     # Check for marker file
     marker_dir = project_root or os.path.dirname(file_path)
-    marker_file = os.path.join(marker_dir, '.chainlink', 'last_test_run')
+    marker_file = os.path.join(marker_dir, '.crosslink', 'last_test_run')
 
     code_modified_after_tests = False
 
