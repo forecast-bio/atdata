@@ -1,0 +1,10 @@
+{
+  "uuid": "4573dee6-4d99-415f-b770-4ab3d2c2e6d3",
+  "issue_uuid": "83596b66-4260-437d-b6d0-040e87382bfc",
+  "author": "maxine--futura",
+  "content": "Migrated from chainlink issue #769. Root cause: anonymous Atmosphere client defaults to bsky.social AppView which doesn't index custom lexicon records (ac.foundation.dataset.*), returning 400 RecordNotFound. Authenticated client works because it routes to actual PDS. Additionally, get_record() always sends to authenticated user's PDS — cross-account resolution is broken. Fix options: (1) resolve target DID's PDS via plc.directory, (2) always use AppView for reads, (3) detect foreign DID and route through AppView.",
+  "created_at": "2026-03-31T21:17:06.096562Z",
+  "kind": "observation",
+  "signed_by": "SHA256:InQG/DPIFjZucG+2Pb71VgHctJAjJ45DGaewCTTlgcc",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgPyK5jFUUnT2W7kjgCilWm7CF/cjXdHxHgXokMkJ7Kz0AAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAjUHqgqA9KLoLVCU4ji5JOgxRiUAwLg4PSFembF0pkIWm9fXn3A/cqJeDnnWvoK/vvXakHSJ0uo3LEULnplPJAQ=="
+}
