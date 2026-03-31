@@ -1,0 +1,10 @@
+{
+  "uuid": "f4565bfe-0f34-4cf8-abe3-b9c70c66a977",
+  "issue_uuid": "65708062-5509-41c6-8da5-159837430805",
+  "author": "maxine--futura",
+  "content": "Migrated from chainlink issues #763, #777, #778, #779. Context: get_schema and get_schema_type only accept 3 ref formats (atdata://local/schema/Name@version, local://schemas/module.Class@version, at://did:plc:.../ac.foundation.dataset.schema/rkey). The @handle/TypeName@version format (e.g. @foundation.ac/MnistSample@1.0.0) would mirror the @handle/dataset-name pattern in load_dataset. Implementation: detect @handle/ prefix, resolve handle to DID via atmosphere, query schema records by name+version. Key files: src/atdata/index/_schema.py (_parse_schema_ref), src/atdata/index/_index.py (get_schema/get_schema_type), src/atdata/atmosphere/__init__.py",
+  "created_at": "2026-03-31T21:17:03.512171Z",
+  "kind": "observation",
+  "signed_by": "SHA256:InQG/DPIFjZucG+2Pb71VgHctJAjJ45DGaewCTTlgcc",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgPyK5jFUUnT2W7kjgCilWm7CF/cjXdHxHgXokMkJ7Kz0AAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABA63q6YjrEmPwHh+gsbEsPz3rpR5XsS4BK0vs1svBgh8Jfu37gIZ+tBqeat6J2xNCCzmFb6Ex0sHEX2AEhYWEaBQ=="
+}
