@@ -2,3 +2,5 @@
 # Format: <principal> <key-type> <base64-key> [comment]
 # approved by max at 2026-03-05 22:01:23 UTC
 maxine--noether@crosslink ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIObz0u5PdomT45zLgoHUPh+PjISqRdcOwriiw9XqvXnh crosslink-agent:maxine--noether@noether-4.local
+# approved by maxine at 2026-03-31 06:03:11 UTC
+maxine--futura@crosslink ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID8iuYxVFJ09lu5I4AopVpuwhf3I13R8R4F6JDJCeys9 crosslink-agent:maxine--futura@futura.local
