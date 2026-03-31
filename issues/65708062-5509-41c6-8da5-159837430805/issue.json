@@ -1,0 +1,10 @@
+{
+  "uuid": "65708062-5509-41c6-8da5-159837430805",
+  "display_id": 2,
+  "title": "Support @handle/TypeName@version format in get_schema and get_schema_type",
+  "status": "open",
+  "priority": "high",
+  "created_by": "maxine--futura",
+  "created_at": "2026-03-31T21:12:15.735974Z",
+  "updated_at": "2026-03-31T21:12:15.735974Z"
+}
