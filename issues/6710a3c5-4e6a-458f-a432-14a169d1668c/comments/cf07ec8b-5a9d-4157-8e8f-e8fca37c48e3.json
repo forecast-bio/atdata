@@ -1,0 +1,10 @@
+{
+  "uuid": "cf07ec8b-5a9d-4157-8e8f-e8fca37c48e3",
+  "issue_uuid": "6710a3c5-4e6a-458f-a432-14a169d1668c",
+  "author": "maxine--futura",
+  "content": "Observation: 16 open chainlink issues collapse to 10 unique after deduplication. Duplicates: {763,777,778,779} all @handle/TypeName@version in get_schema; {771,772} manifest property; {784,785} rename $atdataSchemaVersion. Issue #875 (release v0.7.0b1) already completed per git log.",
+  "created_at": "2026-03-31T21:09:34.490971Z",
+  "kind": "observation",
+  "signed_by": "SHA256:InQG/DPIFjZucG+2Pb71VgHctJAjJ45DGaewCTTlgcc",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgPyK5jFUUnT2W7kjgCilWm7CF/cjXdHxHgXokMkJ7Kz0AAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAxDK0xxJfkgkwTBJ2baLgT5QFMoknhtgHz+cJJdVZ2SePHTPZTGLC7DdwzDRRhsm0Vv9n6PLnoaPAK2zZ5h8ABw=="
+}
