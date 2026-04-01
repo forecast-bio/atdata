@@ -84,7 +84,7 @@ def atmosphere_index(authenticated_atmosphere_client):
     import warnings
 
     with warnings.catch_warnings():
-        warnings.simplefilter("ignore", DeprecationWarning)
+        warnings.simplefilter("ignore", FutureWarning)
         return AtmosphereIndex(authenticated_atmosphere_client)
 
 

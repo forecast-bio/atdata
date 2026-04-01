@@ -663,27 +663,24 @@ class DatasetLoader:
         Raises:
             ValueError: If the record is not a dataset record.
         """
-        if getattr(self.client, "has_appview", False) is True:
-            try:
-                return self._get_via_appview(uri)
-            except Exception:
-                from .._logging import get_logger
+        from ._appview import with_appview_fallback
 
-                get_logger().warning(
-                    "AppView getEntry failed, falling back to client-side",
-                    exc_info=True,
+        def _fallback():
+            record = self.client.get_record(uri)
+            expected_type = f"{LEXICON_NAMESPACE}.entry"
+            if record.get("$type") != expected_type:
+                raise ValueError(
+                    f"Record at {uri} is not a dataset record. "
+                    f"Expected $type='{expected_type}', got '{record.get('$type')}'"
                 )
+            return record
 
-        record = self.client.get_record(uri)
-
-        expected_type = f"{LEXICON_NAMESPACE}.entry"
-        if record.get("$type") != expected_type:
-            raise ValueError(
-                f"Record at {uri} is not a dataset record. "
-                f"Expected $type='{expected_type}', got '{record.get('$type')}'"
-            )
-
-        return record
+        return with_appview_fallback(
+            lambda: self._get_via_appview(uri),
+            _fallback,
+            client=self.client,
+            operation="getEntry",
+        )
 
     def _get_via_appview(self, uri: str | AtUri) -> dict:
         """Fetch a dataset entry via AppView XRPC query."""
@@ -724,18 +721,14 @@ class DatasetLoader:
         Returns:
             List of dataset records.
         """
-        if getattr(self.client, "has_appview", False) is True:
-            try:
-                return self._list_via_appview(repo=repo, limit=limit)
-            except Exception:
-                from .._logging import get_logger
+        from ._appview import with_appview_fallback
 
-                get_logger().warning(
-                    "AppView listEntries failed, falling back to client-side",
-                    exc_info=True,
-                )
-
-        return self.client.list_datasets(repo=repo, limit=limit)
+        return with_appview_fallback(
+            lambda: self._list_via_appview(repo=repo, limit=limit),
+            lambda: self.client.list_datasets(repo=repo, limit=limit),
+            client=self.client,
+            operation="listEntries",
+        )
 
     def _list_via_appview(
         self,
@@ -907,31 +900,27 @@ class DatasetLoader:
         else:
             parsed_uri = uri
 
-        if getattr(self.client, "has_appview", False) is True:
-            try:
-                return self._get_blob_urls_via_appview(str(parsed_uri))
-            except Exception:
-                from .._logging import get_logger
+        from ._appview import with_appview_fallback
 
-                get_logger().warning(
-                    "AppView resolveBlobs failed, falling back to client-side",
-                    exc_info=True,
-                )
+        def _fallback():
+            blob_entries = self.get_blobs(uri)
+            did = parsed_uri.authority
+            urls = []
+            for entry in blob_entries:
+                blob = entry.get("blob", entry)
+                ref = blob.get("ref", {})
+                cid = ref.get("$link") if isinstance(ref, dict) else str(ref)
+                if cid:
+                    url = self.client.get_blob_url(did, cid)
+                    urls.append(url)
+            return urls
 
-        blob_entries = self.get_blobs(uri)
-        did = parsed_uri.authority
-
-        urls = []
-        for entry in blob_entries:
-            # Handle both new blobEntry format and legacy bare blob format
-            blob = entry.get("blob", entry)
-            ref = blob.get("ref", {})
-            cid = ref.get("$link") if isinstance(ref, dict) else str(ref)
-            if cid:
-                url = self.client.get_blob_url(did, cid)
-                urls.append(url)
-
-        return urls
+        return with_appview_fallback(
+            lambda: self._get_blob_urls_via_appview(str(parsed_uri)),
+            _fallback,
+            client=self.client,
+            operation="resolveBlobs",
+        )
 
     def _get_blob_urls_via_appview(self, uri: str) -> list[str]:
         """Resolve blob URLs via AppView batch endpoint."""

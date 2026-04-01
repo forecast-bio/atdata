@@ -180,7 +180,7 @@ class TestAtmosphereBackendLabelCreation:
         assert "version" not in labels[0]
 
     def test_real_backend_initializes_label_publisher(self):
-        """_AtmosphereBackend._ensure_loaders initializes label publisher/loader."""
+        """_AtmosphereBackend eagerly initializes label publisher/loader."""
         from atdata.atmosphere.client import Atmosphere
 
         mock_sdk = MagicMock()
@@ -192,7 +192,6 @@ class TestAtmosphereBackendLabelCreation:
         atmo._login("test.social", "pass")
 
         backend = _AtmosphereBackend(atmo)
-        backend._ensure_loaders()
 
         assert backend._label_publisher is not None
         assert backend._label_loader is not None
@@ -485,7 +484,6 @@ class TestAtmosphereBackendResolveLabel:
         atmo._login("t.social", "pass")
 
         backend = _AtmosphereBackend(atmo)
-        backend._ensure_loaders()
 
         # Mock the label loader's resolve method
         backend._label_loader = MagicMock()

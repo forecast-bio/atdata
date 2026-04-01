@@ -71,53 +71,17 @@ def _extract_authority(schema_ref: Optional[str]) -> str:
     return DEFAULT_AUTHORITY
 
 
-class StubManager:
-    """Manages automatic generation of Python modules for decoded schemas.
+class _StubWriter:
+    """Shared infrastructure for writing stub modules atomically.
 
-    The StubManager handles:
-    - Determining module file paths from schema metadata
-    - Checking if modules exist and are current
-    - Generating modules atomically (write to temp, rename)
-    - Creating __init__.py files for proper package structure
-    - Importing classes from generated modules
-    - Cleaning up old modules
-
-    Modules are organized by authority (from the schema ref URI) to avoid
-    collisions between schemas with the same name from different sources::
-
-        ~/.atdata/stubs/
-            __init__.py
-            local/
-                __init__.py
-                MySample_1_0_0.py
-            alice.bsky.social/
-                __init__.py
-                MySample_1_0_0.py
-            did_plc_abc123/
-                __init__.py
-                OtherSample_2_0_0.py
-
-    Args:
-        stub_dir: Directory to write module files. Defaults to ``~/.atdata/stubs/``.
-
-    Examples:
-        >>> manager = StubManager()
-        >>> schema_dict = {"name": "MySample", "version": "1.0.0", "fields": [...]}
-        >>> SampleClass = manager.ensure_module(schema_dict)
-        >>> print(manager.stub_dir)
-        /Users/you/.atdata/stubs
+    Handles directory creation, ``__init__.py`` maintenance, and
+    atomic file writes via temp-file-then-rename.  Subclasses provide
+    the filename convention and content generation.
     """
 
-    def __init__(self, stub_dir: Optional[Union[str, Path]] = None):
-        if stub_dir is None:
-            self._stub_dir = DEFAULT_STUB_DIR
-        else:
-            self._stub_dir = Path(stub_dir)
-
+    def __init__(self, stub_dir: Path) -> None:
+        self._stub_dir = stub_dir
         self._initialized = False
-        self._first_generation = True
-        # Cache of imported classes: (authority, name, version) -> class
-        self._class_cache: dict[tuple[str, str, str], Type] = {}
 
     @property
     def stub_dir(self) -> Path:
@@ -128,68 +92,10 @@ class StubManager:
         """Create stub directory with __init__.py if it doesn't exist."""
         if not self._initialized:
             self._stub_dir.mkdir(parents=True, exist_ok=True)
-            # Create root __init__.py
             init_path = self._stub_dir / "__init__.py"
             if not init_path.exists():
                 init_path.write_text('"""Auto-generated atdata schema modules."""\n')
             self._initialized = True
-
-    def _module_filename(self, name: str, version: str) -> str:
-        """Generate module filename from schema name and version.
-
-        Replaces dots in version with underscores to avoid confusion
-        with file extensions.
-
-        Args:
-            name: Schema name (e.g., "MySample")
-            version: Schema version (e.g., "1.0.0")
-
-        Returns:
-            Filename like "MySample_1_0_0.py"
-        """
-        safe_version = version.replace(".", "_")
-        return f"{name}_{safe_version}.py"
-
-    def _module_path(
-        self, name: str, version: str, authority: str = DEFAULT_AUTHORITY
-    ) -> Path:
-        """Get full path to module file for a schema.
-
-        Args:
-            name: Schema name
-            version: Schema version
-            authority: Authority from schema ref (e.g., "local", "alice.bsky.social")
-
-        Returns:
-            Path like ~/.atdata/stubs/local/MySample_1_0_0.py
-        """
-        return self._stub_dir / authority / self._module_filename(name, version)
-
-    def _module_is_current(self, path: Path, version: str) -> bool:
-        """Check if an existing module file matches the expected version.
-
-        Reads the module docstring to extract the version and compares
-        it to the expected version.
-
-        Args:
-            path: Path to the module file
-            version: Expected schema version
-
-        Returns:
-            True if module exists and version matches
-        """
-        if not path.exists():
-            return False
-
-        try:
-            with open(path, "r", encoding="utf-8") as f:
-                content = f.read(500)  # Read first 500 chars for docstring
-                match = _VERSION_PATTERN.search(content)
-                if match:
-                    return match.group(1) == version
-            return False
-        except (OSError, IOError):
-            return False
 
     def _ensure_authority_package(self, authority: str) -> None:
         """Ensure authority subdirectory exists with __init__.py."""
@@ -218,55 +124,122 @@ class StubManager:
         # Create temp file in same directory for atomic rename
         fd, temp_path = tempfile.mkstemp(
             suffix=".py.tmp",
-            dir=path.parent,  # Use parent dir (authority subdir) for atomic rename
+            dir=path.parent,
         )
         temp_path = Path(temp_path)
 
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as f:
-                # Try to get exclusive lock (non-blocking, ignore if unavailable)
-                # File locking is best-effort - not all filesystems support it
                 try:
                     fcntl.flock(f.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
                 except (OSError, IOError):
-                    # Lock unavailable (NFS, Windows, etc.) - proceed without lock
-                    # Atomic rename provides the real protection
                     pass
 
                 f.write(content)
                 f.flush()
                 os.fsync(f.fileno())
 
-            # Atomic rename (on POSIX systems)
             temp_path.rename(path)
 
         except Exception:
-            # Clean up temp file on error - best effort, ignore failures
             try:
                 temp_path.unlink()
             except OSError:
-                pass  # Temp file cleanup failed, re-raising original error
+                pass
             raise
+
+    def _clean_empty_dirs(self) -> None:
+        """Remove empty authority directories (including lone __init__.py)."""
+        if not self._stub_dir.exists():
+            return
+        for subdir in self._stub_dir.iterdir():
+            if subdir.is_dir():
+                contents = list(subdir.iterdir())
+                if len(contents) == 0:
+                    try:
+                        subdir.rmdir()
+                    except OSError:
+                        continue
+                elif len(contents) == 1 and contents[0].name == "__init__.py":
+                    try:
+                        contents[0].unlink()
+                        subdir.rmdir()
+                    except OSError:
+                        continue
+
+
+class SchemaStubManager(_StubWriter):
+    """Manages automatic generation of Python modules for decoded schemas.
+
+    Modules are organised by authority (from the schema ref URI) to avoid
+    collisions between schemas with the same name from different sources::
+
+        ~/.atdata/stubs/
+            __init__.py
+            local/
+                __init__.py
+                MySample_1_0_0.py
+            alice.bsky.social/
+                __init__.py
+                MySample_1_0_0.py
+
+    Args:
+        stub_dir: Directory to write module files. Defaults to ``~/.atdata/stubs/``.
+
+    Examples:
+        >>> manager = SchemaStubManager()
+        >>> schema_dict = {"name": "MySample", "version": "1.0.0", "fields": [...]}
+        >>> SampleClass = manager.ensure_module(schema_dict)
+    """
+
+    def __init__(self, stub_dir: Optional[Union[str, Path]] = None):
+        super().__init__(Path(stub_dir) if stub_dir else DEFAULT_STUB_DIR)
+        self._first_generation = True
+        self._class_cache: dict[tuple[str, str, str], Type] = {}
+
+    def _module_filename(self, name: str, version: str) -> str:
+        """Generate module filename from schema name and version.
+
+        Args:
+            name: Schema name (e.g., "MySample")
+            version: Schema version (e.g., "1.0.0")
+
+        Returns:
+            Filename like "MySample_1_0_0.py"
+        """
+        safe_version = version.replace(".", "_")
+        return f"{name}_{safe_version}.py"
+
+    def _module_path(
+        self, name: str, version: str, authority: str = DEFAULT_AUTHORITY
+    ) -> Path:
+        """Get full path to module file for a schema."""
+        return self._stub_dir / authority / self._module_filename(name, version)
+
+    def _module_is_current(self, path: Path, version: str) -> bool:
+        """Check if an existing module file matches the expected version."""
+        if not path.exists():
+            return False
+
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                content = f.read(500)
+                match = _VERSION_PATTERN.search(content)
+                if match:
+                    return match.group(1) == version
+            return False
+        except (OSError, IOError):
+            return False
 
     def ensure_stub(self, schema: dict) -> Optional[Path]:
         """Ensure a module file exists for the given schema.
 
-        If a current module already exists, returns its path without
-        regenerating. Otherwise, generates the module and writes it.
-
-        Modules are namespaced by the authority from the schema's $ref URI
-        to avoid collisions between schemas with the same name from
-        different sources.
-
         Args:
             schema: Schema dict with 'name', 'version', and 'fields' keys.
-                Can also be a LocalSchemaRecord (supports dict-style access).
-                Should include '$ref' for proper namespacing.
 
         Returns:
             Path to the module file, or None if schema is missing required fields.
         """
-        # Extract schema metadata (works with dict or LocalSchemaRecord)
         name = schema.get("name") if hasattr(schema, "get") else None
         version = schema.get("version", "1.0.0") if hasattr(schema, "get") else "1.0.0"
         schema_ref = schema.get("$ref") if hasattr(schema, "get") else None
@@ -274,16 +247,12 @@ class StubManager:
         if not name:
             return None
 
-        # Extract authority from schema ref for namespacing
         authority = _extract_authority(schema_ref)
         path = self._module_path(name, version, authority)
 
-        # Skip if current module exists
         if self._module_is_current(path, version):
             return path
 
-        # Generate and write module
-        # Convert to dict if needed for generate_module
         if hasattr(schema, "to_dict"):
             schema_dict = schema.to_dict()
         else:
@@ -292,7 +261,6 @@ class StubManager:
         content = generate_module(schema_dict)
         self._write_module_atomic(path, content, authority)
 
-        # Print helpful message on first generation
         if self._first_generation:
             self._first_generation = False
             self._print_ide_hint()
@@ -302,20 +270,12 @@ class StubManager:
     def ensure_module(self, schema: dict) -> Optional[Type]:
         """Ensure a module exists and return the class from it.
 
-        This is the primary method for getting a properly-typed class from
-        a schema. It generates the module if needed, imports the class,
-        and returns it with proper type information.
-
         Args:
             schema: Schema dict with 'name', 'version', and 'fields' keys.
-                Can also be a LocalSchemaRecord (supports dict-style access).
-                Should include '$ref' for proper namespacing.
 
         Returns:
-            The PackableSample subclass from the generated module, or None
-            if schema is missing required fields.
+            The PackableSample subclass from the generated module, or None.
         """
-        # Extract schema metadata
         name = schema.get("name") if hasattr(schema, "get") else None
         version = schema.get("version", "1.0.0") if hasattr(schema, "get") else "1.0.0"
         schema_ref = schema.get("$ref") if hasattr(schema, "get") else None
@@ -325,17 +285,14 @@ class StubManager:
 
         authority = _extract_authority(schema_ref)
 
-        # Check cache first
         cache_key = (authority, name, version)
         if cache_key in self._class_cache:
             return self._class_cache[cache_key]
 
-        # Ensure module exists
         path = self.ensure_stub(schema)
         if path is None:
             return None
 
-        # Import and cache the class
         cls = self._import_class_from_module(path, name)
         if cls is not None:
             self._class_cache[cache_key] = cls
@@ -345,40 +302,20 @@ class StubManager:
     def _import_class_from_module(
         self, module_path: Path, class_name: str
     ) -> Optional[Type]:
-        """Import a class from a generated module file.
-
-        Uses importlib to dynamically load the module and extract the class.
-
-        Args:
-            module_path: Path to the .py module file
-            class_name: Name of the class to import
-
-        Returns:
-            The imported class, or None if import fails
-        """
+        """Import a class from a generated module file."""
         if not module_path.exists():
             return None
 
         try:
-            # Create a unique module name based on the path
             module_name = f"_atdata_generated_{module_path.stem}"
-
-            # Load the module spec
             spec = importlib.util.spec_from_file_location(module_name, module_path)
             if spec is None or spec.loader is None:
                 return None
-
-            # Create and execute the module
             module = importlib.util.module_from_spec(spec)
             sys.modules[module_name] = module
             spec.loader.exec_module(module)
-
-            # Get the class from the module
-            cls = getattr(module, class_name, None)
-            return cls
-
+            return getattr(module, class_name, None)
         except (ModuleNotFoundError, AttributeError, ImportError, OSError):
-            # Import failed - return None and let caller fall back to dynamic generation
             return None
 
     def _print_ide_hint(self) -> None:
@@ -397,52 +334,25 @@ class StubManager:
     def get_stub_path(
         self, name: str, version: str, authority: str = DEFAULT_AUTHORITY
     ) -> Optional[Path]:
-        """Get the path to an existing stub file.
-
-        Args:
-            name: Schema name
-            version: Schema version
-            authority: Authority namespace (default: "local")
-
-        Returns:
-            Path if stub exists, None otherwise
-        """
+        """Get the path to an existing stub file."""
         path = self._module_path(name, version, authority)
         return path if path.exists() else None
 
     def list_stubs(self, authority: Optional[str] = None) -> list[Path]:
-        """List all module files in the stub directory.
-
-        Args:
-            authority: If provided, only list modules for this authority.
-                If None, lists all modules across all authorities.
-
-        Returns:
-            List of paths to existing module files (excludes __init__.py)
-        """
+        """List all schema module files in the stub directory."""
         if not self._stub_dir.exists():
             return []
 
         if authority:
-            # List modules for specific authority
             authority_dir = self._stub_dir / authority
             if not authority_dir.exists():
                 return []
             return [p for p in authority_dir.glob("*.py") if p.name != "__init__.py"]
 
-        # List all modules across all authorities (recursive, excluding __init__.py)
         return [p for p in self._stub_dir.glob("**/*.py") if p.name != "__init__.py"]
 
     def clear_stubs(self, authority: Optional[str] = None) -> int:
-        """Remove module files from the stub directory.
-
-        Args:
-            authority: If provided, only clear modules for this authority.
-                If None, clears all modules across all authorities.
-
-        Returns:
-            Number of files removed
-        """
+        """Remove schema module files from the stub directory."""
         stubs = self.list_stubs(authority)
         removed = 0
         for path in stubs:
@@ -450,10 +360,8 @@ class StubManager:
                 path.unlink()
                 removed += 1
             except OSError:
-                # File already removed or permission denied - skip and continue
                 continue
 
-        # Clear the class cache for removed modules
         if authority:
             keys_to_remove = [k for k in self._class_cache if k[0] == authority]
         else:
@@ -461,32 +369,45 @@ class StubManager:
         for key in keys_to_remove:
             del self._class_cache[key]
 
-        # Clean up empty authority directories (including __init__.py)
-        if self._stub_dir.exists():
-            for subdir in self._stub_dir.iterdir():
-                if subdir.is_dir():
-                    # Check if only __init__.py remains
-                    contents = list(subdir.iterdir())
-                    if len(contents) == 0:
-                        try:
-                            subdir.rmdir()
-                        except OSError:
-                            continue
-                    elif len(contents) == 1 and contents[0].name == "__init__.py":
-                        try:
-                            contents[0].unlink()
-                            subdir.rmdir()
-                        except OSError:
-                            continue
-
+        self._clean_empty_dirs()
         return removed
 
-    # ------------------------------------------------------------------
-    # Lens stub management
-    # ------------------------------------------------------------------
+    def clear_stub(
+        self, name: str, version: str, authority: str = DEFAULT_AUTHORITY
+    ) -> bool:
+        """Remove a specific schema module file."""
+        path = self._module_path(name, version, authority)
+        if path.exists():
+            try:
+                path.unlink()
+                cache_key = (authority, name, version)
+                if cache_key in self._class_cache:
+                    del self._class_cache[cache_key]
+                return True
+            except OSError:
+                return False
+        return False
+
+
+class LensStubManager(_StubWriter):
+    """Manages automatic generation of Python modules for decoded lenses.
+
+    Lens stubs follow the same directory layout as schema stubs but use
+    a ``lens_`` filename prefix to avoid collisions.
+
+    Args:
+        stub_dir: Directory to write module files. Defaults to ``~/.atdata/stubs/``.
+
+    Examples:
+        >>> manager = LensStubManager()
+        >>> path = manager.ensure_lens_stub({"name": "my_lens", "version": "1.0.0"})
+    """
+
+    def __init__(self, stub_dir: Optional[Union[str, Path]] = None):
+        super().__init__(Path(stub_dir) if stub_dir else DEFAULT_STUB_DIR)
 
     def _lens_module_filename(self, name: str, version: str) -> str:
-        """Generate lens module filename from lens name and version.
+        """Generate lens module filename.
 
         Args:
             name: Lens name (e.g., "image_to_grayscale")
@@ -522,7 +443,6 @@ class StubManager:
         authority = DEFAULT_AUTHORITY
         path = self._lens_module_path(name, version, authority)
 
-        # Skip if file already exists
         if path.exists():
             return path
 
@@ -532,14 +452,7 @@ class StubManager:
         return path
 
     def list_lens_stubs(self, authority: Optional[str] = None) -> list[Path]:
-        """List all lens stub files in the stub directory.
-
-        Args:
-            authority: If provided, only list lens stubs for this authority.
-
-        Returns:
-            List of paths to lens stub files.
-        """
+        """List all lens stub files in the stub directory."""
         if not self._stub_dir.exists():
             return []
 
@@ -554,35 +467,79 @@ class StubManager:
             p for p in self._stub_dir.glob(f"**/{pattern}") if p.name != "__init__.py"
         ]
 
+
+class StubManager:
+    """Backward-compatible facade composing SchemaStubManager and LensStubManager.
+
+    New code should use ``SchemaStubManager`` or ``LensStubManager`` directly.
+
+    Args:
+        stub_dir: Directory to write module files. Defaults to ``~/.atdata/stubs/``.
+
+    Examples:
+        >>> manager = StubManager()
+        >>> schema_dict = {"name": "MySample", "version": "1.0.0", "fields": [...]}
+        >>> SampleClass = manager.ensure_module(schema_dict)
+        >>> print(manager.stub_dir)
+        /Users/you/.atdata/stubs
+    """
+
+    def __init__(self, stub_dir: Optional[Union[str, Path]] = None):
+        self._schemas = SchemaStubManager(stub_dir)
+        self._lenses = LensStubManager(stub_dir)
+
+    def __getattr__(self, name: str):
+        """Delegate attribute access to the schema sub-manager for backward compat."""
+        return getattr(self._schemas, name)
+
+    @property
+    def stub_dir(self) -> Path:
+        """The directory where module files are written."""
+        return self._schemas.stub_dir
+
+    # Schema delegation
+    def ensure_stub(self, schema: dict) -> Optional[Path]:
+        """Ensure a schema module file exists. See :meth:`SchemaStubManager.ensure_stub`."""
+        return self._schemas.ensure_stub(schema)
+
+    def ensure_module(self, schema: dict) -> Optional[Type]:
+        """Ensure a schema module exists and return the class. See :meth:`SchemaStubManager.ensure_module`."""
+        return self._schemas.ensure_module(schema)
+
+    def get_stub_path(
+        self, name: str, version: str, authority: str = DEFAULT_AUTHORITY
+    ) -> Optional[Path]:
+        """Get path to an existing schema stub."""
+        return self._schemas.get_stub_path(name, version, authority)
+
+    def list_stubs(self, authority: Optional[str] = None) -> list[Path]:
+        """List all schema module files."""
+        return self._schemas.list_stubs(authority)
+
+    def clear_stubs(self, authority: Optional[str] = None) -> int:
+        """Remove schema module files."""
+        return self._schemas.clear_stubs(authority)
+
     def clear_stub(
         self, name: str, version: str, authority: str = DEFAULT_AUTHORITY
     ) -> bool:
-        """Remove a specific module file.
+        """Remove a specific schema module file."""
+        return self._schemas.clear_stub(name, version, authority)
 
-        Args:
-            name: Schema name
-            version: Schema version
-            authority: Authority namespace (default: "local")
+    # Lens delegation
+    def ensure_lens_stub(self, record: dict) -> Optional[Path]:
+        """Ensure a lens stub file exists. See :meth:`LensStubManager.ensure_lens_stub`."""
+        return self._lenses.ensure_lens_stub(record)
 
-        Returns:
-            True if file was removed, False if it didn't exist
-        """
-        path = self._module_path(name, version, authority)
-        if path.exists():
-            try:
-                path.unlink()
-                # Clear from class cache
-                cache_key = (authority, name, version)
-                if cache_key in self._class_cache:
-                    del self._class_cache[cache_key]
-                return True
-            except OSError:
-                return False
-        return False
+    def list_lens_stubs(self, authority: Optional[str] = None) -> list[Path]:
+        """List all lens stub files."""
+        return self._lenses.list_lens_stubs(authority)
 
 
 __all__ = [
     "StubManager",
+    "SchemaStubManager",
+    "LensStubManager",
     "DEFAULT_STUB_DIR",
     "DEFAULT_AUTHORITY",
 ]

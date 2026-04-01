@@ -203,18 +203,14 @@ class LabelLoader:
         Raises:
             KeyError: If no matching label is found.
         """
-        if getattr(self.client, "has_appview", False) is True:
-            try:
-                return self._resolve_via_appview(handle_or_did, name, version)
-            except Exception:
-                from .._logging import get_logger
+        from ._appview import with_appview_fallback
 
-                get_logger().warning(
-                    "AppView label resolution failed, falling back to client-side",
-                    exc_info=True,
-                )
-
-        return self._resolve_client_side(handle_or_did, name, version)
+        return with_appview_fallback(
+            lambda: self._resolve_via_appview(handle_or_did, name, version),
+            lambda: self._resolve_client_side(handle_or_did, name, version),
+            client=self.client,
+            operation="label resolution",
+        )
 
     def _resolve_via_appview(
         self,

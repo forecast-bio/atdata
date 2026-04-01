@@ -218,7 +218,7 @@ class TestRecordDiscovery:
         assert schema["version"] == "2.0.0"
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
+@pytest.mark.filterwarnings("ignore::FutureWarning")
 class TestAtmosphereIndex:
     """Tests for AtmosphereIndex Index protocol compliance."""
 

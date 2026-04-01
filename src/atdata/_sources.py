@@ -75,7 +75,7 @@ class URLSource:
 
         warnings.warn(
             "shard_list is deprecated, use list_shards()",
-            DeprecationWarning,
+            FutureWarning,  # Removal: v1.0
             stacklevel=2,
         )
         return self.list_shards()
@@ -199,7 +199,7 @@ class S3Source:
 
         warnings.warn(
             "shard_list is deprecated, use list_shards()",
-            DeprecationWarning,
+            FutureWarning,  # Removal: v1.0
             stacklevel=2,
         )
         return self.list_shards()

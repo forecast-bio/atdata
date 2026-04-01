@@ -464,7 +464,7 @@ class Index:
 
         warnings.warn(
             "Index.load_schema() is deprecated, use Index.get_schema_type() instead",
-            DeprecationWarning,
+            FutureWarning,  # Removal: v1.0
             stacklevel=2,
         )
         return self.get_schema_type(ref, register=True)
@@ -554,15 +554,16 @@ class Index:
 
         warnings.warn(
             "Index.add_entry() is deprecated, use Index.insert_dataset()",
-            DeprecationWarning,
+            FutureWarning,  # Removal: v1.0
             stacklevel=2,
         )
-        return self._insert_dataset_to_provider(
+        repo = self._repos.get("local")
+        if repo is None:
+            raise RuntimeError("No local repository configured")
+        return repo.insert_dataset(
             ds,
             name=name,
             schema_ref=schema_ref,
-            provider=self._provider,
-            store=None,
             metadata=metadata,
         )
 
@@ -595,103 +596,6 @@ class Index:
         return self._provider.get_entry_by_name(name)
 
     # Index protocol methods
-
-    @staticmethod
-    def _ensure_schema_stored(
-        schema_ref: str,
-        sample_type: type,
-        provider: "IndexProvider",  # noqa: F821
-    ) -> None:
-        """Persist the schema definition if not already stored.
-
-        Called during dataset insertion so that ``get_schema_type()`` can
-        reconstruct the type later without the caller needing to publish
-        the schema separately.
-        """
-        schema_name, version = _parse_schema_ref(schema_ref)
-        if provider.get_schema_json(schema_name, version) is None:
-            record = _build_schema_record(sample_type, version=version)
-            provider.store_schema(schema_name, version, json.dumps(record))
-
-    def _insert_dataset_to_provider(
-        self,
-        ds: Dataset,
-        *,
-        name: str,
-        schema_ref: str | None = None,
-        provider: "IndexProvider",  # noqa: F821
-        store: AbstractDataStore | None = None,
-        **kwargs,
-    ) -> LocalDatasetEntry:
-        """Insert a dataset into a specific provider/store pair.
-
-        This is the internal implementation shared by all local and named
-        repository inserts.
-        """
-        from atdata._logging import get_logger
-
-        log = get_logger()
-        metadata = kwargs.get("metadata")
-
-        if store is not None:
-            prefix = kwargs.get("prefix", name)
-            cache_local = kwargs.get("cache_local", False)
-            log.debug(
-                "_insert_dataset_to_provider: name=%s, store=%s",
-                name,
-                type(store).__name__,
-            )
-
-            written_urls = store.write_shards(
-                ds,
-                prefix=prefix,
-                cache_local=cache_local,
-            )
-            log.info(
-                "_insert_dataset_to_provider: %d shard(s) written for %s",
-                len(written_urls),
-                name,
-            )
-
-            if schema_ref is None:
-                schema_ref = _schema_ref_from_type(ds.sample_type, version="1.0.0")
-
-            self._ensure_schema_stored(schema_ref, ds.sample_type, provider)
-
-            entry_metadata = metadata if metadata is not None else ds._metadata
-            entry_metadata = _merge_checksums(entry_metadata, written_urls)
-            entry = LocalDatasetEntry(
-                name=name,
-                schema_ref=schema_ref,
-                data_urls=written_urls,
-                metadata=entry_metadata,
-            )
-        else:
-            # No data store - just index the existing URL
-            if schema_ref is None:
-                schema_ref = _schema_ref_from_type(ds.sample_type, version="1.0.0")
-
-            self._ensure_schema_stored(schema_ref, ds.sample_type, provider)
-
-            data_urls = [ds.url]
-            entry_metadata = metadata if metadata is not None else ds._metadata
-
-            entry = LocalDatasetEntry(
-                name=name,
-                schema_ref=schema_ref,
-                data_urls=data_urls,
-                metadata=entry_metadata,
-            )
-
-        provider.store_entry(entry)
-        provider.store_label(
-            name=name,
-            cid=entry.cid,
-            version=kwargs.get("version"),
-            description=kwargs.get("description"),
-        )
-        log.debug("_insert_dataset_to_provider: entry stored for %s", name)
-        return entry
 
     def insert_dataset(
         self,
@@ -882,13 +786,11 @@ class Index:
         if repo is None:
             raise KeyError(f"Unknown repository {backend_key!r} in name {name!r}")
 
-        effective_store = data_store or repo.data_store
-        return self._insert_dataset_to_provider(
+        return repo.insert_dataset(
             ds,
             name=resolved_name,
             schema_ref=schema_ref,
-            provider=repo.provider,
-            store=effective_store,
+            store=data_store,
             metadata=metadata,
             **kwargs,
         )
@@ -1062,11 +964,7 @@ class Index:
                         ds, prefix=resolved_name
                     )
 
-                    # If write_shards returned blob refs (e.g. ShardUploadResult),
-                    # use storageBlobs so the PDS retains the uploaded blobs.
-                    # Fall back to storageExternal with AT URIs otherwise.
                     blob_refs = getattr(written_urls, "blob_refs", None) or None
-
                     shard_checksums = _extract_blob_checksums(written_urls, blob_refs)
                     effective_metadata = (
                         metadata
@@ -1089,14 +987,13 @@ class Index:
                         _checksums=shard_checksums,
                     )
 
-                # Local / named repo path
+                # Local / named repo path — delegate to Repository
                 repo = self._repos.get(backend_key)
-                if repo is not None and effective_store is not None:
-                    return self._insert_dataset_to_provider(
+                if repo is not None:
+                    return repo.insert_dataset(
                         ds,
                         name=resolved_name,
                         schema_ref=schema_ref,
-                        provider=repo.provider,
                         store=effective_store,
                         metadata=metadata,
                     )
@@ -1127,7 +1024,7 @@ class Index:
 
         warnings.warn(
             "Index.write() is deprecated, use Index.write_samples()",
-            DeprecationWarning,
+            FutureWarning,  # Removal: v1.0
             stacklevel=2,
         )
         return self.write_samples(samples, name=name, **kwargs)
@@ -1578,7 +1475,7 @@ class Index:
 
         warnings.warn(
             "Index.decode_schema() is deprecated, use Index.get_schema_type() instead",
-            DeprecationWarning,
+            FutureWarning,  # Removal: v1.0
             stacklevel=2,
         )
         return self.get_schema_type(ref, register=False)
@@ -1593,7 +1490,7 @@ class Index:
 
         warnings.warn(
             "Index.decode_schema_as() is deprecated, use Index.get_schema_type() instead",
-            DeprecationWarning,
+            FutureWarning,  # Removal: v1.0
             stacklevel=2,
         )
         from typing import cast
@@ -1652,7 +1549,7 @@ class Index:
 
         warnings.warn(
             "Index.promote_entry() is deprecated, use Index.insert_dataset()",
-            DeprecationWarning,
+            FutureWarning,  # Removal: v1.0
             stacklevel=2,
         )
         from atdata.promote import _find_or_publish_schema
@@ -1745,7 +1642,7 @@ class Index:
 
         warnings.warn(
             "Index.promote_dataset() is deprecated, use Index.insert_dataset()",
-            DeprecationWarning,
+            FutureWarning,  # Removal: v1.0
             stacklevel=2,
         )
         from atdata.promote import _find_or_publish_schema

@@ -83,7 +83,7 @@ class TestIndexProtocol:
         with pytest.raises(KeyError):
             index.get_dataset("nonexistent")
 
-    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
+    @pytest.mark.filterwarnings("ignore::FutureWarning")
     def test_atmosphere_index_has_required_methods(self):
         """AtmosphereIndex should have all required Index methods."""
         mock_client = Mock()

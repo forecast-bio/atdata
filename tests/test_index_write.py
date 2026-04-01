@@ -252,7 +252,7 @@ class TestIndexPromoteEntry:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
+@pytest.mark.filterwarnings("ignore::FutureWarning")
 class TestIndexPromoteDataset:
     """Tests for deprecated Index.promote_dataset()."""
 
@@ -750,7 +750,9 @@ class TestDeprecationWarnings:
             warnings.simplefilter("always")
             index.write(samples, name="dep-write")
 
-        dep_warnings = [x for x in w if issubclass(x.category, DeprecationWarning)]
+        dep_warnings = [
+            x for x in w if issubclass(x.category, (DeprecationWarning, FutureWarning))
+        ]
         assert any("write_samples" in str(dw.message) for dw in dep_warnings)
 
     def test_add_entry_emits_deprecation(self, index, tmp_path):
@@ -761,7 +763,9 @@ class TestDeprecationWarnings:
             warnings.simplefilter("always")
             index.add_entry(ds, name="dep-add")
 
-        dep_warnings = [x for x in w if issubclass(x.category, DeprecationWarning)]
+        dep_warnings = [
+            x for x in w if issubclass(x.category, (DeprecationWarning, FutureWarning))
+        ]
         assert any("insert_dataset" in str(dw.message) for dw in dep_warnings)
 
     def test_promote_entry_emits_deprecation(self, index):
@@ -772,7 +776,9 @@ class TestDeprecationWarnings:
             except (ValueError, KeyError):
                 pass
 
-        dep_warnings = [x for x in w if issubclass(x.category, DeprecationWarning)]
+        dep_warnings = [
+            x for x in w if issubclass(x.category, (DeprecationWarning, FutureWarning))
+        ]
         assert any("insert_dataset" in str(dw.message) for dw in dep_warnings)
 
     def test_promote_dataset_emits_deprecation(self, index):
@@ -784,5 +790,7 @@ class TestDeprecationWarnings:
             except (ValueError, KeyError):
                 pass
 
-        dep_warnings = [x for x in w if issubclass(x.category, DeprecationWarning)]
+        dep_warnings = [
+            x for x in w if issubclass(x.category, (DeprecationWarning, FutureWarning))
+        ]
         assert any("insert_dataset" in str(dw.message) for dw in dep_warnings)

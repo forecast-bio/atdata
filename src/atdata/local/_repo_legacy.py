@@ -70,7 +70,7 @@ class Repo:
             "  store = S3DataStore(credentials, bucket='my-bucket')\n"
             "  index = Index(redis=redis, data_store=store)\n"
             "  entry = index.insert_dataset(ds, name='my-dataset')",
-            DeprecationWarning,
+            FutureWarning,  # Removal: v1.0
             stacklevel=2,
         )
 

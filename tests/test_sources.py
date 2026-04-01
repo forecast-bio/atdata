@@ -36,13 +36,13 @@ class TestURLSource:
         source = URLSource("http://example.com/data.tar")
         assert isinstance(source, DataSource)
 
-    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
+    @pytest.mark.filterwarnings("ignore::FutureWarning")
     def test_shard_list_single_url(self):
         """shard_list returns single URL unchanged."""
         source = URLSource("http://example.com/data.tar")
         assert source.shard_list == ["http://example.com/data.tar"]
 
-    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
+    @pytest.mark.filterwarnings("ignore::FutureWarning")
     def test_shard_list_brace_expansion(self):
         """shard_list expands brace patterns."""
         source = URLSource("data-{000..002}.tar")
@@ -52,7 +52,7 @@ class TestURLSource:
             "data-002.tar",
         ]
 
-    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
+    @pytest.mark.filterwarnings("ignore::FutureWarning")
     def test_shard_list_complex_brace_pattern(self):
         """shard_list handles complex brace patterns."""
         source = URLSource("s3://bucket/{train,test}-{00..01}.tar")
@@ -125,7 +125,7 @@ class TestS3Source:
         source = S3Source(bucket="test", keys=["data.tar"])
         assert isinstance(source, DataSource)
 
-    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
+    @pytest.mark.filterwarnings("ignore::FutureWarning")
     def test_shard_list(self):
         """shard_list returns S3 URIs."""
         source = S3Source(bucket="my-bucket", keys=["a.tar", "b.tar"])
@@ -462,7 +462,7 @@ class TestBlobSource:
 class TestDatasetWithDataSource:
     """Integration tests for Dataset with different DataSource types."""
 
-    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
+    @pytest.mark.filterwarnings("ignore::FutureWarning")
     def test_dataset_accepts_url_source(self, tmp_path):
         """Dataset can be created with URLSource."""
         tar_path = tmp_path / "test.tar"

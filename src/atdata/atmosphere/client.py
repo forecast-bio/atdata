@@ -8,25 +8,31 @@ from __future__ import annotations
 
 from typing import Optional, Any
 
+import threading
+
 from ._types import AtUri, LEXICON_NAMESPACE
 
-# Lazy import to avoid requiring atproto if not using atmosphere features
+# Lazy import to avoid requiring atproto if not using atmosphere features.
+# Protected by double-checked locking for thread safety.
 _atproto_client_class: Optional[type] = None
+_atproto_lock = threading.Lock()
 
 
 def _get_atproto_client_class():
-    """Lazily import the atproto Client class."""
+    """Lazily import the atproto Client class (thread-safe)."""
     global _atproto_client_class
     if _atproto_client_class is None:
-        try:
-            from atproto import Client
+        with _atproto_lock:
+            if _atproto_client_class is None:
+                try:
+                    from atproto import Client
 
-            _atproto_client_class = Client
-        except ImportError as e:
-            raise ImportError(
-                "The 'atproto' package is required for ATProto integration. "
-                "Install it with: pip install atproto"
-            ) from e
+                    _atproto_client_class = Client
+                except ImportError as e:
+                    raise ImportError(
+                        "The 'atproto' package is required for ATProto integration. "
+                        "Install it with: pip install atproto"
+                    ) from e
     return _atproto_client_class
 
 
@@ -1034,3 +1040,146 @@ class Atmosphere:
             f"{LEXICON_NAMESPACE}.getEntryStats",
             params={"uri": uri, "period": period},
         )
+
+    # ------------------------------------------------------------------ #
+    # Namespaced access — power-user operations grouped by concern
+    # ------------------------------------------------------------------ #
+
+    @property
+    def records(self) -> RecordOps:
+        """Namespaced record operations (create, get, put, delete, list)."""
+        if not hasattr(self, "_records_ops"):
+            self._records_ops = RecordOps(self)
+        return self._records_ops
+
+    @property
+    def blobs(self) -> BlobOps:
+        """Namespaced blob operations (upload, get, get_url)."""
+        if not hasattr(self, "_blobs_ops"):
+            self._blobs_ops = BlobOps(self)
+        return self._blobs_ops
+
+    @property
+    def xrpc(self) -> XrpcClient:
+        """Namespaced XRPC transport (query, procedure)."""
+        if not hasattr(self, "_xrpc_client"):
+            self._xrpc_client = XrpcClient(self)
+        return self._xrpc_client
+
+
+class RecordOps:
+    """Namespaced ATProto record operations.
+
+    Accessed via ``atmo.records``. Provides create, get, put, delete,
+    and list operations on ATProto records.
+    """
+
+    __slots__ = ("_atmo",)
+
+    def __init__(self, atmo: Atmosphere) -> None:
+        self._atmo = atmo
+
+    def create(
+        self,
+        collection: str,
+        record: dict,
+        *,
+        rkey: Optional[str] = None,
+        validate: bool = False,
+    ) -> AtUri:
+        """Create a record. See :meth:`Atmosphere.create_record`."""
+        return self._atmo.create_record(
+            collection, record, rkey=rkey, validate=validate
+        )
+
+    def put(
+        self,
+        collection: str,
+        rkey: str,
+        record: dict,
+        *,
+        validate: bool = False,
+        swap_commit: Optional[str] = None,
+    ) -> AtUri:
+        """Create or update a record. See :meth:`Atmosphere.put_record`."""
+        return self._atmo.put_record(
+            collection, rkey, record, validate=validate, swap_commit=swap_commit
+        )
+
+    def get(self, uri: str | AtUri) -> dict:
+        """Fetch a record by AT URI. See :meth:`Atmosphere.get_record`."""
+        return self._atmo.get_record(uri)
+
+    def delete(
+        self,
+        uri: str | AtUri,
+        *,
+        swap_commit: Optional[str] = None,
+    ) -> None:
+        """Delete a record. See :meth:`Atmosphere.delete_record`."""
+        self._atmo.delete_record(uri, swap_commit=swap_commit)
+
+    def list(
+        self,
+        collection: str,
+        *,
+        repo: Optional[str] = None,
+        limit: int = 100,
+        cursor: Optional[str] = None,
+    ) -> tuple[list[dict], Optional[str]]:
+        """List records in a collection. See :meth:`Atmosphere.list_records`."""
+        return self._atmo.list_records(
+            collection, repo=repo, limit=limit, cursor=cursor
+        )
+
+
+class BlobOps:
+    """Namespaced ATProto blob operations.
+
+    Accessed via ``atmo.blobs``. Provides upload, download, and URL
+    generation for PDS blobs.
+    """
+
+    __slots__ = ("_atmo",)
+
+    def __init__(self, atmo: Atmosphere) -> None:
+        self._atmo = atmo
+
+    def upload(
+        self,
+        data: bytes,
+        mime_type: str = "application/octet-stream",
+        *,
+        timeout: float | None = None,
+    ) -> dict:
+        """Upload a blob. See :meth:`Atmosphere.upload_blob`."""
+        return self._atmo.upload_blob(data, mime_type, timeout=timeout)
+
+    def get(self, did: str, cid: str) -> bytes:
+        """Download a blob. See :meth:`Atmosphere.get_blob`."""
+        return self._atmo.get_blob(did, cid)
+
+    def get_url(self, did: str, cid: str) -> str:
+        """Get direct URL for a blob. See :meth:`Atmosphere.get_blob_url`."""
+        return self._atmo.get_blob_url(did, cid)
+
+
+class XrpcClient:
+    """Namespaced XRPC transport operations.
+
+    Accessed via ``atmo.xrpc``. Provides raw query (GET) and procedure
+    (POST) calls to the AppView.
+    """
+
+    __slots__ = ("_atmo",)
+
+    def __init__(self, atmo: Atmosphere) -> None:
+        self._atmo = atmo
+
+    def query(self, nsid: str, params: dict | None = None) -> dict:
+        """Call an XRPC query (GET). See :meth:`Atmosphere.xrpc_query`."""
+        return self._atmo.xrpc_query(nsid, params=params)
+
+    def procedure(self, nsid: str, input: dict | None = None) -> dict:
+        """Call an XRPC procedure (POST). See :meth:`Atmosphere.xrpc_procedure`."""
+        return self._atmo.xrpc_procedure(nsid, input=input)

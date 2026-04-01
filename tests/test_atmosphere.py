@@ -178,7 +178,7 @@ class TestAtUri:
 # =============================================================================
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
+@pytest.mark.filterwarnings("ignore::FutureWarning")
 class TestFieldType:
     """Tests for deprecated FieldType shim dataclass."""
 
@@ -229,7 +229,7 @@ class TestFieldType:
 # =============================================================================
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
+@pytest.mark.filterwarnings("ignore::FutureWarning")
 class TestFieldDef:
     """Tests for deprecated FieldDef shim dataclass."""
 
@@ -482,7 +482,7 @@ class TestLexSchemaRecord:
 # =============================================================================
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
+@pytest.mark.filterwarnings("ignore::FutureWarning")
 class TestStorageLocation:
     """Tests for deprecated StorageLocation shim dataclass."""
 
@@ -3594,7 +3594,7 @@ class TestAtmosphereIndexEntry:
         mock_resolve.assert_called_once_with("did:plc:testdid")
 
 
-@pytest.mark.filterwarnings("ignore::DeprecationWarning")
+@pytest.mark.filterwarnings("ignore::FutureWarning")
 class TestAtmosphereIndex:
     """Tests for AtmosphereIndex unified interface."""
 

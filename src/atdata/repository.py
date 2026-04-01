@@ -24,13 +24,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterator, Optional, TYPE_CHECKING
+from typing import Any, Iterable, Iterator, Optional, TYPE_CHECKING
 
 from ._protocols import AbstractDataStore
 from .dataset_meta import DatasetMeta
 
 if TYPE_CHECKING:
     from .providers._base import IndexProvider
+    from .index._entry import LocalDatasetEntry
+    from .dataset import Dataset
 
 
 @dataclass
@@ -62,6 +64,179 @@ class Repository:
 
     provider: IndexProvider
     data_store: AbstractDataStore | None = None
+
+    def insert_dataset(
+        self,
+        ds: Dataset,
+        *,
+        name: str,
+        schema_ref: str | None = None,
+        store: AbstractDataStore | None = None,
+        **kwargs: Any,
+    ) -> LocalDatasetEntry:
+        """Insert a dataset into this repository's provider/store.
+
+        Args:
+            ds: The Dataset to register.
+            name: Human-readable name for the dataset.
+            schema_ref: Optional schema reference. Auto-generated if ``None``.
+            store: Explicit data store override. Falls back to
+                ``self.data_store`` if ``None``.
+            **kwargs: Extra options forwarded to provider (metadata, version,
+                description, prefix, cache_local).
+
+        Returns:
+            LocalDatasetEntry for the inserted dataset.
+        """
+        from atdata._logging import get_logger
+        from atdata.index._schema import (
+            _schema_ref_from_type,
+        )
+        from atdata.index._entry import LocalDatasetEntry as _LDE
+
+        log = get_logger()
+        effective_store = store or self.data_store
+        metadata = kwargs.get("metadata")
+
+        if effective_store is not None:
+            prefix = kwargs.get("prefix", name)
+            cache_local = kwargs.get("cache_local", False)
+            log.debug(
+                "Repository.insert_dataset: name=%s, store=%s",
+                name,
+                type(effective_store).__name__,
+            )
+
+            written_urls = effective_store.write_shards(
+                ds,
+                prefix=prefix,
+                cache_local=cache_local,
+            )
+            log.info(
+                "Repository.insert_dataset: %d shard(s) written for %s",
+                len(written_urls),
+                name,
+            )
+
+            if schema_ref is None:
+                schema_ref = _schema_ref_from_type(ds.sample_type, version="1.0.0")
+
+            self._ensure_schema_stored(schema_ref, ds.sample_type)
+
+            entry_metadata = metadata if metadata is not None else ds._metadata
+            from atdata.index._index import _merge_checksums
+
+            entry_metadata = _merge_checksums(entry_metadata, written_urls)
+            entry = _LDE(
+                name=name,
+                schema_ref=schema_ref,
+                data_urls=written_urls,
+                metadata=entry_metadata,
+            )
+        else:
+            if schema_ref is None:
+                schema_ref = _schema_ref_from_type(ds.sample_type, version="1.0.0")
+
+            self._ensure_schema_stored(schema_ref, ds.sample_type)
+
+            data_urls = [ds.url]
+            entry_metadata = metadata if metadata is not None else ds._metadata
+
+            entry = _LDE(
+                name=name,
+                schema_ref=schema_ref,
+                data_urls=data_urls,
+                metadata=entry_metadata,
+            )
+
+        self.provider.store_entry(entry)
+        self.provider.store_label(
+            name=name,
+            cid=entry.cid,
+            version=kwargs.get("version"),
+            description=kwargs.get("description"),
+        )
+        log.debug("Repository.insert_dataset: entry stored for %s", name)
+        return entry
+
+    def write_samples(
+        self,
+        samples: Iterable,
+        *,
+        name: str,
+        schema_ref: str | None = None,
+        maxcount: int = 10_000,
+        maxsize: int | None = None,
+        manifest: bool = False,
+        data_store: AbstractDataStore | None = None,
+        metadata: dict | None = None,
+        **kwargs: Any,
+    ) -> LocalDatasetEntry:
+        """Write samples and create an index entry in one step.
+
+        Serialises samples to WebDataset tar files, writes them through
+        this repository's store, and creates an index entry.
+
+        When the repository has no ``data_store`` configured and no explicit
+        *data_store* is provided, a ``LocalDiskStore`` is created
+        automatically at ``~/.atdata/data/``.
+
+        Args:
+            samples: Iterable of ``Packable`` samples. Must be non-empty.
+            name: Dataset name.
+            schema_ref: Optional schema reference. Auto-generated if ``None``.
+            maxcount: Max samples per shard.
+            maxsize: Max bytes per shard.
+            manifest: Write per-shard manifest sidecar files.
+            data_store: Explicit data store override.
+            metadata: Optional metadata dict.
+            **kwargs: Extra options forwarded to ``insert_dataset``.
+
+        Returns:
+            LocalDatasetEntry for the created dataset.
+        """
+        import tempfile
+
+        from atdata.dataset import write_samples as _write_samples
+
+        effective_store = data_store or self.data_store
+        if effective_store is None:
+            from atdata.stores._disk import LocalDiskStore
+
+            effective_store = LocalDiskStore()
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir) / "data.tar"
+            ds = _write_samples(
+                samples,
+                tmp_path,
+                maxcount=maxcount,
+                maxsize=maxsize,
+                manifest=manifest,
+            )
+            return self.insert_dataset(
+                ds,
+                name=name,
+                schema_ref=schema_ref,
+                store=effective_store,
+                metadata=metadata,
+                **kwargs,
+            )
+
+    def _ensure_schema_stored(
+        self,
+        schema_ref: str,
+        sample_type: type,
+    ) -> None:
+        """Persist the schema definition if not already stored."""
+        import json
+
+        from atdata.index._schema import _parse_schema_ref, _build_schema_record
+
+        schema_name, version = _parse_schema_ref(schema_ref)
+        if self.provider.get_schema_json(schema_name, version) is None:
+            record = _build_schema_record(sample_type, version=version)
+            self.provider.store_schema(schema_name, version, json.dumps(record))
 
 
 def create_repository(
@@ -123,32 +298,20 @@ class _AtmosphereBackend:
         data_store: Optional[AbstractDataStore] = None,
     ) -> None:
         from .atmosphere.client import Atmosphere
+        from .atmosphere.schema import SchemaPublisher, SchemaLoader
+        from .atmosphere.records import DatasetPublisher, DatasetLoader
+        from .atmosphere.labels import LabelPublisher, LabelLoader
 
         if not isinstance(client, Atmosphere):
             raise TypeError(f"Expected Atmosphere, got {type(client).__name__}")
         self.client: Atmosphere = client
         self._data_store = data_store
-        self._schema_publisher: Any = None
-        self._schema_loader: Any = None
-        self._dataset_publisher: Any = None
-        self._dataset_loader: Any = None
-        self._label_publisher: Any = None
-        self._label_loader: Any = None
-
-    def _ensure_loaders(self) -> None:
-        """Lazily create publishers/loaders on first use."""
-        if self._schema_loader is not None:
-            return
-        from .atmosphere.schema import SchemaPublisher, SchemaLoader
-        from .atmosphere.records import DatasetPublisher, DatasetLoader
-        from .atmosphere.labels import LabelPublisher, LabelLoader
-
-        self._schema_publisher = SchemaPublisher(self.client)
-        self._schema_loader = SchemaLoader(self.client)
-        self._dataset_publisher = DatasetPublisher(self.client)
-        self._dataset_loader = DatasetLoader(self.client)
-        self._label_publisher = LabelPublisher(self.client)
-        self._label_loader = LabelLoader(self.client)
+        self._schema_publisher = SchemaPublisher(client)
+        self._schema_loader = SchemaLoader(client)
+        self._dataset_publisher = DatasetPublisher(client)
+        self._dataset_loader = DatasetLoader(client)
+        self._label_publisher = LabelPublisher(client)
+        self._label_loader = LabelLoader(client)
 
     @property
     def data_store(self) -> Optional[AbstractDataStore]:
@@ -169,7 +332,7 @@ class _AtmosphereBackend:
         Raises:
             ValueError: If record is not a dataset.
         """
-        self._ensure_loaders()
+
         from .atmosphere import AtmosphereIndexEntry
 
         record = self._dataset_loader.get(ref)
@@ -184,7 +347,7 @@ class _AtmosphereBackend:
         Returns:
             List of AtmosphereIndexEntry for each dataset.
         """
-        self._ensure_loaders()
+
         from .atmosphere import AtmosphereIndexEntry
 
         records = self._dataset_loader.list_all(repo=repo)
@@ -202,7 +365,7 @@ class _AtmosphereBackend:
         Yields:
             AtmosphereIndexEntry for each dataset.
         """
-        self._ensure_loaders()
+
         from .atmosphere import AtmosphereIndexEntry
 
         records = self._dataset_loader.list_all(repo=repo)
@@ -244,7 +407,7 @@ class _AtmosphereBackend:
         Returns:
             AtmosphereIndexEntry for the inserted dataset.
         """
-        self._ensure_loaders()
+
         from .atmosphere import AtmosphereIndexEntry
 
         # Build a DatasetMeta to pass through to publishers
@@ -350,7 +513,7 @@ class _AtmosphereBackend:
         Raises:
             KeyError: If no matching label is found.
         """
-        self._ensure_loaders()
+
         return self._label_loader.resolve(handle_or_did, name, version)
 
     # -- Schema operations --
@@ -372,7 +535,7 @@ class _AtmosphereBackend:
         Returns:
             AT URI of the schema record.
         """
-        self._ensure_loaders()
+
         uri = self._schema_publisher.publish(
             sample_type,
             version=version,
@@ -391,7 +554,7 @@ class _AtmosphereBackend:
         Returns:
             Schema record dictionary.
         """
-        self._ensure_loaders()
+
         return self._schema_loader.get(ref)
 
     def list_schemas(self, repo: str | None = None) -> list[dict]:
@@ -403,7 +566,7 @@ class _AtmosphereBackend:
         Returns:
             List of schema records as dictionaries.
         """
-        self._ensure_loaders()
+
         records = self._schema_loader.list_all(repo=repo)
         return [rec.get("value", rec) for rec in records]
 
@@ -413,7 +576,7 @@ class _AtmosphereBackend:
         Yields:
             Schema records as dictionaries.
         """
-        self._ensure_loaders()
+
         records = self._schema_loader.list_all()
         for rec in records:
             yield rec.get("value", rec)
@@ -442,7 +605,7 @@ class _AtmosphereBackend:
 
         warnings.warn(
             "Repository.decode_schema() is deprecated, use Repository.get_schema_type() instead",
-            DeprecationWarning,
+            FutureWarning,  # Removal: v1.0
             stacklevel=2,
         )
         return self.get_schema_type(ref)
