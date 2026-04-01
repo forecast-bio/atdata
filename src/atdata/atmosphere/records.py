@@ -22,6 +22,7 @@ from ._lexicon_types import (
     BlobEntry,
     ShardChecksum,
 )
+from ..dataset_meta import DatasetMeta, _resolve_meta
 
 # Import for type checking only to avoid circular imports
 from typing import TYPE_CHECKING
@@ -157,7 +158,8 @@ class DatasetPublisher:
         self,
         dataset: "Dataset[ST]",
         *,
-        name: str,
+        name: str | None = None,
+        meta: DatasetMeta | None = None,
         schema_uri: Optional[str] = None,
         description: Optional[str] = None,
         tags: Optional[list[str]] = None,
@@ -172,7 +174,11 @@ class DatasetPublisher:
 
         Args:
             dataset: The Dataset to publish.
-            name: Human-readable dataset name.
+            name: Human-readable dataset name.  Can be provided via
+                *meta* instead.
+            meta: Optional :class:`~atdata.DatasetMeta` bundling name,
+                schema_ref, description, tags, license, and metadata.
+                Explicit keyword arguments override fields in *meta*.
             schema_uri: AT URI of the schema record. If not provided and
                 auto_publish_schema is True, the schema will be published.
             description: Human-readable description.
@@ -194,7 +200,21 @@ class DatasetPublisher:
 
         Raises:
             ValueError: If schema_uri is not provided and auto_publish_schema is False.
+            TypeError: If neither *name* nor *meta* is provided.
         """
+        resolved = _resolve_meta(
+            meta,
+            name=name,
+            schema_ref=schema_uri,
+            description=description,
+            tags=tags,
+            license=license,
+        )
+        name = resolved.name
+        schema_uri = resolved.schema_ref if schema_uri is None else schema_uri
+        description = resolved.description
+        tags = resolved.tags
+        license = resolved.license
         if schema_uri is None:
             if not auto_publish_schema:
                 raise ValueError(
@@ -253,7 +273,8 @@ class DatasetPublisher:
         urls: list[str],
         schema_uri: str,
         *,
-        name: str,
+        name: str | None = None,
+        meta: DatasetMeta | None = None,
         description: Optional[str] = None,
         tags: Optional[list[str]] = None,
         license: Optional[str] = None,
@@ -272,7 +293,11 @@ class DatasetPublisher:
         Args:
             urls: List of individual shard URLs.
             schema_uri: AT URI of the schema record.
-            name: Human-readable dataset name.
+            name: Human-readable dataset name.  Can be provided via
+                *meta* instead.
+            meta: Optional :class:`~atdata.DatasetMeta` bundling name,
+                schema_ref, description, tags, license, and metadata.
+                Explicit keyword arguments override fields in *meta*.
             description: Human-readable description.
             tags: Searchable tags for discovery.
             license: SPDX license identifier.
@@ -285,7 +310,23 @@ class DatasetPublisher:
 
         Returns:
             The AT URI of the created dataset record.
+
+        Raises:
+            TypeError: If neither *name* nor *meta* is provided.
         """
+        resolved = _resolve_meta(
+            meta,
+            name=name,
+            description=description,
+            tags=tags,
+            license=license,
+            metadata=metadata,
+        )
+        name = resolved.name
+        description = resolved.description
+        tags = resolved.tags
+        license = resolved.license
+        metadata = resolved.metadata
         if checksums and len(checksums) != len(urls):
             raise ValueError(
                 f"checksums length ({len(checksums)}) must match "
@@ -319,7 +360,8 @@ class DatasetPublisher:
         keys: list[str],
         schema_uri: str,
         *,
-        name: str,
+        name: str | None = None,
+        meta: DatasetMeta | None = None,
         region: Optional[str] = None,
         endpoint: Optional[str] = None,
         description: Optional[str] = None,
@@ -337,7 +379,11 @@ class DatasetPublisher:
             bucket: S3 bucket name.
             keys: List of S3 object keys for shard files.
             schema_uri: AT URI of the schema record.
-            name: Human-readable dataset name.
+            name: Human-readable dataset name.  Can be provided via
+                *meta* instead.
+            meta: Optional :class:`~atdata.DatasetMeta` bundling name,
+                schema_ref, description, tags, license, and metadata.
+                Explicit keyword arguments override fields in *meta*.
             region: AWS region (e.g., 'us-east-1').
             endpoint: Custom S3-compatible endpoint URL.
             description: Human-readable description.
@@ -351,7 +397,23 @@ class DatasetPublisher:
 
         Returns:
             The AT URI of the created dataset record.
+
+        Raises:
+            TypeError: If neither *name* nor *meta* is provided.
         """
+        resolved = _resolve_meta(
+            meta,
+            name=name,
+            description=description,
+            tags=tags,
+            license=license,
+            metadata=metadata,
+        )
+        name = resolved.name
+        description = resolved.description
+        tags = resolved.tags
+        license = resolved.license
+        metadata = resolved.metadata
         if checksums and len(checksums) != len(keys):
             raise ValueError(
                 f"checksums length ({len(checksums)}) must match "
@@ -384,7 +446,8 @@ class DatasetPublisher:
         blob_refs: list[dict],
         schema_uri: str,
         *,
-        name: str,
+        name: str | None = None,
+        meta: DatasetMeta | None = None,
         description: Optional[str] = None,
         tags: Optional[list[str]] = None,
         license: Optional[str] = None,
@@ -406,7 +469,11 @@ class DatasetPublisher:
                 ``Atmosphere.upload_blob()``.  Each dict must contain
                 ``$type``, ``ref`` (with ``$link``), ``mimeType``, and ``size``.
             schema_uri: AT URI of the schema record.
-            name: Human-readable dataset name.
+            name: Human-readable dataset name.  Can be provided via
+                *meta* instead.
+            meta: Optional :class:`~atdata.DatasetMeta` bundling name,
+                schema_ref, description, tags, license, and metadata.
+                Explicit keyword arguments override fields in *meta*.
             description: Human-readable description.
             tags: Searchable tags for discovery.
             license: SPDX license identifier.
@@ -419,7 +486,23 @@ class DatasetPublisher:
 
         Returns:
             The AT URI of the created dataset record.
+
+        Raises:
+            TypeError: If neither *name* nor *meta* is provided.
         """
+        resolved = _resolve_meta(
+            meta,
+            name=name,
+            description=description,
+            tags=tags,
+            license=license,
+            metadata=metadata,
+        )
+        name = resolved.name
+        description = resolved.description
+        tags = resolved.tags
+        license = resolved.license
+        metadata = resolved.metadata
         if checksums and len(checksums) != len(blob_refs):
             raise ValueError(
                 f"checksums length ({len(checksums)}) must match "
@@ -452,7 +535,8 @@ class DatasetPublisher:
         blobs: list[bytes],
         schema_uri: str,
         *,
-        name: str,
+        name: str | None = None,
+        meta: DatasetMeta | None = None,
         description: Optional[str] = None,
         tags: Optional[list[str]] = None,
         license: Optional[str] = None,
@@ -471,7 +555,11 @@ class DatasetPublisher:
         Args:
             blobs: List of binary data (e.g., tar shards) to upload as blobs.
             schema_uri: AT URI of the schema record.
-            name: Human-readable dataset name.
+            name: Human-readable dataset name.  Can be provided via
+                *meta* instead.
+            meta: Optional :class:`~atdata.DatasetMeta` bundling name,
+                schema_ref, description, tags, license, and metadata.
+                Explicit keyword arguments override fields in *meta*.
             description: Human-readable description.
             tags: Searchable tags for discovery.
             license: SPDX license identifier.
@@ -484,10 +572,26 @@ class DatasetPublisher:
         Returns:
             The AT URI of the created dataset record.
 
+        Raises:
+            TypeError: If neither *name* nor *meta* is provided.
+
         Note:
             Blobs are only retained by the PDS when referenced in a committed
             record. This method handles that automatically.
         """
+        resolved = _resolve_meta(
+            meta,
+            name=name,
+            description=description,
+            tags=tags,
+            license=license,
+            metadata=metadata,
+        )
+        name = resolved.name
+        description = resolved.description
+        tags = resolved.tags
+        license = resolved.license
+        metadata = resolved.metadata
         import hashlib
 
         blob_entries = []

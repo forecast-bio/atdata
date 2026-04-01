@@ -27,6 +27,7 @@ from pathlib import Path
 from typing import Any, Iterator, Optional, TYPE_CHECKING
 
 from ._protocols import AbstractDataStore
+from .dataset_meta import DatasetMeta
 
 if TYPE_CHECKING:
     from .providers._base import IndexProvider
@@ -238,13 +239,23 @@ class _AtmosphereBackend:
                 ``PDSBlobStore``.  Takes precedence over *data_urls*.
             checksums: Per-shard ``ShardChecksum`` objects. Forwarded to the
                 publisher so each storage entry gets the correct digest.
-            **kwargs: Additional options (description, tags, license).
+            **kwargs: Additional options (description, tags, license, metadata).
 
         Returns:
             AtmosphereIndexEntry for the inserted dataset.
         """
         self._ensure_loaders()
         from .atmosphere import AtmosphereIndexEntry
+
+        # Build a DatasetMeta to pass through to publishers
+        pub_meta = DatasetMeta(
+            name=name,
+            schema_ref=schema_ref,
+            description=kwargs.get("description"),
+            tags=kwargs.get("tags"),
+            license=kwargs.get("license"),
+            metadata=kwargs.get("metadata"),
+        )
 
         if blob_refs is not None or data_urls is not None:
             # Ensure schema is published first
@@ -258,7 +269,7 @@ class _AtmosphereBackend:
                 )
                 schema_ref = str(schema_uri_obj)
 
-            metadata = kwargs.get("metadata")
+            metadata = pub_meta.metadata
             if metadata is None and hasattr(ds, "_metadata"):
                 metadata = ds._metadata
 
@@ -267,9 +278,9 @@ class _AtmosphereBackend:
                     blob_refs=blob_refs,
                     schema_uri=schema_ref,
                     name=name,
-                    description=kwargs.get("description"),
-                    tags=kwargs.get("tags"),
-                    license=kwargs.get("license"),
+                    description=pub_meta.description,
+                    tags=pub_meta.tags,
+                    license=pub_meta.license,
                     metadata=metadata,
                     checksums=checksums,
                 )
@@ -278,9 +289,9 @@ class _AtmosphereBackend:
                     urls=data_urls,
                     schema_uri=schema_ref,
                     name=name,
-                    description=kwargs.get("description"),
-                    tags=kwargs.get("tags"),
-                    license=kwargs.get("license"),
+                    description=pub_meta.description,
+                    tags=pub_meta.tags,
+                    license=pub_meta.license,
                     metadata=metadata,
                 )
         else:
@@ -288,9 +299,9 @@ class _AtmosphereBackend:
                 ds,
                 name=name,
                 schema_uri=schema_ref,
-                description=kwargs.get("description"),
-                tags=kwargs.get("tags"),
-                license=kwargs.get("license"),
+                description=pub_meta.description,
+                tags=pub_meta.tags,
+                license=pub_meta.license,
                 auto_publish_schema=(schema_ref is None),
             )
 

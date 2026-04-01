@@ -6,6 +6,7 @@ from atdata import (
     Dataset,
 )
 from atdata._protocols import AbstractDataStore, Packable
+from atdata.dataset_meta import DatasetMeta, _resolve_meta
 
 from atdata.index._entry import LocalDatasetEntry
 from atdata.index._schema import (
@@ -696,7 +697,8 @@ class Index:
         self,
         ds: Dataset,
         *,
-        name: str,
+        name: str | None = None,
+        meta: DatasetMeta | None = None,
         schema_ref: str | None = None,
         description: str | None = None,
         tags: list[str] | None = None,
@@ -729,7 +731,11 @@ class Index:
         Args:
             ds: The Dataset to register.
             name: Human-readable name for the dataset, optionally prefixed
-                with a repository name (e.g. ``"lab/mnist"``).
+                with a repository name (e.g. ``"lab/mnist"``).  Can be
+                provided via *meta* instead.
+            meta: Optional :class:`~atdata.DatasetMeta` bundling name,
+                schema_ref, description, tags, license, and metadata.
+                Explicit keyword arguments override fields in *meta*.
             schema_ref: Optional schema reference.
             description: Optional dataset description (atmosphere only).
             tags: Optional tags for discovery (atmosphere only).
@@ -750,7 +756,23 @@ class Index:
             ValueError: If atmosphere limits are exceeded (when
                 *force* is ``False``), or if a credentialed source
                 targets the atmosphere without *copy*.
+            TypeError: If neither *name* nor *meta* is provided.
         """
+        meta = _resolve_meta(
+            meta,
+            name=name,
+            schema_ref=schema_ref,
+            description=description,
+            tags=tags,
+            license=license,
+            metadata=metadata,
+        )
+        name = meta.name
+        schema_ref = meta.schema_ref
+        description = meta.description
+        tags = meta.tags
+        license = meta.license
+        metadata = meta.metadata
         from atdata.atmosphere.store import PDS_TOTAL_DATASET_LIMIT_BYTES
 
         backend_key, resolved_name, handle_or_did = self._resolve_prefix(name)
@@ -875,7 +897,8 @@ class Index:
         self,
         samples: Iterable,
         *,
-        name: str,
+        name: str | None = None,
+        meta: DatasetMeta | None = None,
         schema_ref: str | None = None,
         description: str | None = None,
         tags: list[str] | None = None,
@@ -909,7 +932,11 @@ class Index:
 
         Args:
             samples: Iterable of ``Packable`` samples. Must be non-empty.
-            name: Dataset name, optionally prefixed with target.
+            name: Dataset name, optionally prefixed with target.  Can be
+                provided via *meta* instead.
+            meta: Optional :class:`~atdata.DatasetMeta` bundling name,
+                schema_ref, description, tags, license, and metadata.
+                Explicit keyword arguments override fields in *meta*.
             schema_ref: Optional schema reference. Auto-generated if ``None``.
             description: Optional dataset description (atmosphere only).
             tags: Optional tags for discovery (atmosphere only).
@@ -933,12 +960,28 @@ class Index:
         Raises:
             ValueError: If *samples* is empty, or if atmosphere size
                 limits are exceeded (when *force* is ``False``).
+            TypeError: If neither *name* nor *meta* is provided.
 
         Examples:
             >>> index = Index()
             >>> samples = [MySample(key="0", text="hello")]
             >>> entry = index.write_samples(samples, name="my-dataset")
         """
+        meta = _resolve_meta(
+            meta,
+            name=name,
+            schema_ref=schema_ref,
+            description=description,
+            tags=tags,
+            license=license,
+            metadata=metadata,
+        )
+        name = meta.name
+        schema_ref = meta.schema_ref
+        description = meta.description
+        tags = meta.tags
+        license = meta.license
+        metadata = meta.metadata
         import tempfile
 
         from atdata.dataset import write_samples as _write_samples
