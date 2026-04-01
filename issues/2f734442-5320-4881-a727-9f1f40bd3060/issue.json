@@ -1,0 +1,11 @@
+{
+  "uuid": "2f734442-5320-4881-a727-9f1f40bd3060",
+  "display_id": null,
+  "title": "Phases 3-5 of GH #84 architectural refactoring. Work through these in order:\n\nPHASE 3 (Internal Delegation + AppView + Temporal Coupling):\n- 3a: Give Repository insert_dataset() and write_samples() methods. Move logic from Index.insert_dataset (lines 695-872) and Index.write_samples (lines 874-1069) into Repository and _AtmosphereBackend. Index methods become ~20-line dispatchers. Delete _insert_dataset_to_provider.\n- 3b: Extract with_appview_fallback() helper to atmosphere/_appview.py. Narrow except Exception to (httpx.HTTPStatusError, httpx.ConnectError, httpx.TimeoutException). Replace all 8 fallback sites in schema.py, records.py, lens.py, labels.py.\n- 3c: Switch _AtmosphereBackend._ensure_loaders() to eager initialization in __init__. Remove all _ensure_loaders() calls from public methods.\n\nPHASE 4 (Provider Fixes — independent, can do in any order):\n- 4a: Fix Redis label resolution bug in providers/_redis.py:159-181. Add created_at field to store_label. Sort by created_at in get_label when no version specified. No backfill — old labels without created_at sort last.\n- 4b: Fix Redis N+1 query in iter_entries (providers/_redis.py:74-79). Use Redis pipeline for batch retrieval.\n- 4c: Add SQLite indexes in providers/_sqlite.py for schema (name, version) and labels (name, created_at DESC).\n\nPHASE 5 (Atmosphere Namespacing + Cleanup):\n- 5a: Create RecordOps, BlobOps, XrpcClient classes. Expose as atmo.records, atmo.blobs, atmo.xrpc lazy properties. Common ops (list_datasets, search_datasets, auth) stay on root. Flat power-user methods get FutureWarning deprecation.\n- 5b: Switch all 18 DeprecationWarning sites to FutureWarning. Add '# Removal: v1.0' comments.\n- 5c: Fix thread-safety of _atproto_client_class lazy init with threading.Lock double-check.\n- 5d: Split StubManager into SchemaStubManager/LensStubManager or extract shared StubWriter base.\n\nSee .design/084-architectural-refactoring.md for full spec and design decisions.",
+  "description": "Created by crosslink kickoff",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "maxine--futura",
+  "created_at": "2026-04-01T21:52:19.997601Z",
+  "updated_at": "2026-04-01T21:52:19.997601Z"
+}
