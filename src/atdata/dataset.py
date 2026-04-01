@@ -1137,9 +1137,7 @@ class Dataset(Generic[ST]):
             # not raw WDS dicts — default collation expects dicts.
             stages.append(wds.filters.batched(batch_size, collation_fn=None))
             stages.append(
-                wds.filters.map(
-                    lambda samples: SampleBatch[self.sample_type](samples)
-                )
+                wds.filters.map(lambda samples: SampleBatch[self.sample_type](samples))
             )
 
         return wds.pipeline.DataPipeline(*stages)
