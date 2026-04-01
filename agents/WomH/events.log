@@ -1,1 +1,2 @@
 {"agent_id":"WomH","agent_seq":1,"timestamp":"2026-04-01T21:52:59.724968Z","event":{"type":"LockClaimed","issue_display_id":-5}}
+{"agent_id":"WomH","agent_seq":2,"timestamp":"2026-04-01T22:22:10.426396Z","event":{"type":"LockReleased","issue_display_id":-5}}
