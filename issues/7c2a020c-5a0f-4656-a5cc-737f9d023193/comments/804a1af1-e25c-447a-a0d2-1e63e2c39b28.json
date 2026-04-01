@@ -1,0 +1,8 @@
+{
+  "uuid": "804a1af1-e25c-447a-a0d2-1e63e2c39b28",
+  "issue_uuid": "7c2a020c-5a0f-4656-a5cc-737f9d023193",
+  "author": "1wJG",
+  "content": "Completed: Phase 2 DatasetMeta dataclass. New module src/atdata/dataset_meta.py with DatasetMeta and _resolve_meta(). Updated Index.insert_dataset, Index.write_samples, all DatasetPublisher.publish* methods, and _AtmosphereBackend to accept meta= kwarg. 23 new tests, full suite green (1758 passed). PR #86 to develop.",
+  "created_at": "2026-04-01T21:51:59.277256Z",
+  "kind": "handoff"
+}
