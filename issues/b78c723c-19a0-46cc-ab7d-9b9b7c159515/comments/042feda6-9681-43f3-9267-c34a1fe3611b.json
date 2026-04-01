@@ -1,0 +1,8 @@
+{
+  "uuid": "042feda6-9681-43f3-9267-c34a1fe3611b",
+  "issue_uuid": "b78c723c-19a0-46cc-ab7d-9b9b7c159515",
+  "author": "SN7C",
+  "content": "Plan: Extract _build_pipeline() from ordered()/shuffled() to eliminate 4x duplication. Fix bug where batched paths skip _post_wrap_stages(), dropping filter/map. Apply filter/map before batching.",
+  "created_at": "2026-04-01T19:44:57.222555Z",
+  "kind": "plan"
+}
