@@ -1,0 +1,10 @@
+{
+  "uuid": "ebce139c-a334-4bb0-91df-07b0bb3fdcad",
+  "issue_uuid": "9e38112e-a60e-47d3-908c-437e8c1450eb",
+  "author": "maxine--futura",
+  "content": "Design document written: .design/084-architectural-refactoring.md\n\nKey discovery during design: batched iteration (ordered/shuffled with batch_size) silently drops filter/map stages — _post_wrap_stages() is only applied in unbatched paths. This is a correctness bug, added to Phase 1.\n\n5 phases proposed:\n- Phase 1: Dataset pipeline extraction + batched filter bug fix (independent)\n- Phase 2: DatasetMeta parameter objects (independent)\n- Phase 3: Index internal delegation + AppView fallback + temporal coupling (depends on P2)\n- Phase 4: Redis label bug + N+1 query + SQLite indexes (independent)\n- Phase 5: Atmosphere namespacing + deprecation cleanup + thread safety + StubManager split (depends on P3)\n\nPhases 1, 2, 4 can be worked in parallel.",
+  "created_at": "2026-04-01T05:47:56.333757Z",
+  "kind": "plan",
+  "signed_by": "SHA256:InQG/DPIFjZucG+2Pb71VgHctJAjJ45DGaewCTTlgcc",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgPyK5jFUUnT2W7kjgCilWm7CF/cjXdHxHgXokMkJ7Kz0AAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABA0eN06Fjwu7oajpskPcPwLunGvaIOnPmwBRKZ2TEQd1Kk29kOyEIrOfWU+U3Cy4kP05bhCIcj/W2a9W5z1UztDw=="
+}
