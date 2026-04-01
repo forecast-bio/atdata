@@ -105,7 +105,7 @@ def __getattr__(name: str) -> Any:
         new_name, hint = _DEPRECATED_ALIASES[name]
         warnings.warn(
             f"{name} is deprecated: {hint}.",
-            DeprecationWarning,
+            FutureWarning,  # Removal: v1.0
             stacklevel=2,
         )
         from . import _lexicon_types

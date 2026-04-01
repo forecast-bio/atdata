@@ -597,7 +597,7 @@ def test_index_list_datasets(clean_redis):
 # Note: Repo is deprecated; these tests verify backwards compatibility
 
 
-@pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
+@pytest.mark.filterwarnings("ignore:Repo is deprecated:FutureWarning")
 def test_repo_init_no_s3():
     """Test creating a Repo without S3 credentials."""
     repo = atlocal.Repo()
@@ -610,7 +610,7 @@ def test_repo_init_no_s3():
     assert isinstance(repo.index, atlocal.Index)
 
 
-@pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
+@pytest.mark.filterwarnings("ignore:Repo is deprecated:FutureWarning")
 def test_repo_init_with_s3_dict():
     """Test creating a Repo with S3 credentials as a dictionary."""
     creds = {
@@ -628,7 +628,7 @@ def test_repo_init_with_s3_dict():
     assert repo.hive_bucket == "test-bucket"
 
 
-@pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
+@pytest.mark.filterwarnings("ignore:Repo is deprecated:FutureWarning")
 def test_repo_init_with_s3_path(tmp_path):
     """Test creating a Repo with S3 credentials from a .env file."""
     env_file = tmp_path / ".env"
@@ -647,7 +647,7 @@ def test_repo_init_with_s3_path(tmp_path):
     assert repo.hive_bucket == "test-bucket"
 
 
-@pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
+@pytest.mark.filterwarnings("ignore:Repo is deprecated:FutureWarning")
 def test_repo_init_s3_without_hive_path():
     """Test that creating a Repo with S3 but no hive_path raises ValueError."""
     creds = {
@@ -660,7 +660,7 @@ def test_repo_init_s3_without_hive_path():
         atlocal.Repo(s3_credentials=creds)
 
 
-@pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
+@pytest.mark.filterwarnings("ignore:Repo is deprecated:FutureWarning")
 def test_repo_init_hive_path_parsing():
     """Test that hive_path is correctly parsed to extract bucket name."""
     creds = {
@@ -675,7 +675,7 @@ def test_repo_init_hive_path_parsing():
     assert repo.hive_path == Path("my-bucket/path/to/datasets")
 
 
-@pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
+@pytest.mark.filterwarnings("ignore:Repo is deprecated:FutureWarning")
 def test_repo_init_with_custom_redis():
     """Test creating a Repo with a custom Redis connection."""
     custom_redis = Redis()
@@ -688,7 +688,7 @@ def test_repo_init_with_custom_redis():
 # Repo tests - Insert functionality
 
 
-@pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
+@pytest.mark.filterwarnings("ignore:Repo is deprecated:FutureWarning")
 def test_repo_insert_without_s3():
     """Test that inserting a dataset without S3 configured raises ValueError."""
     repo = atlocal.Repo()
@@ -700,7 +700,7 @@ def test_repo_insert_without_s3():
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
-@pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
+@pytest.mark.filterwarnings("ignore:Repo is deprecated:FutureWarning")
 def test_repo_insert_single_shard(mock_s3, clean_redis, sample_dataset):
     """Test inserting a small dataset that fits in a single shard."""
     repo = atlocal.Repo(
@@ -726,7 +726,7 @@ def test_repo_insert_single_shard(mock_s3, clean_redis, sample_dataset):
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
-@pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
+@pytest.mark.filterwarnings("ignore:Repo is deprecated:FutureWarning")
 def test_repo_insert_multiple_shards(mock_s3, clean_redis, tmp_path):
     """Test inserting a large dataset that spans multiple shards."""
     ds = make_simple_dataset(tmp_path, num_samples=50, name="large")
@@ -747,7 +747,7 @@ def test_repo_insert_multiple_shards(mock_s3, clean_redis, tmp_path):
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
-@pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
+@pytest.mark.filterwarnings("ignore:Repo is deprecated:FutureWarning")
 def test_repo_insert_with_metadata(mock_s3, clean_redis, tmp_path):
     """Test inserting a dataset with metadata."""
     ds = make_simple_dataset(tmp_path, num_samples=5)
@@ -768,7 +768,7 @@ def test_repo_insert_with_metadata(mock_s3, clean_redis, tmp_path):
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
-@pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
+@pytest.mark.filterwarnings("ignore:Repo is deprecated:FutureWarning")
 def test_repo_insert_without_metadata(mock_s3, clean_redis, tmp_path):
     """Test inserting a dataset without metadata."""
     ds = make_simple_dataset(tmp_path, num_samples=5)
@@ -786,7 +786,7 @@ def test_repo_insert_without_metadata(mock_s3, clean_redis, tmp_path):
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
-@pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
+@pytest.mark.filterwarnings("ignore:Repo is deprecated:FutureWarning")
 def test_repo_insert_cache_local_false(mock_s3, clean_redis, sample_dataset):
     """Test inserting with cache_local=False (direct S3 write)."""
     repo = atlocal.Repo(
@@ -806,7 +806,7 @@ def test_repo_insert_cache_local_false(mock_s3, clean_redis, sample_dataset):
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
-@pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
+@pytest.mark.filterwarnings("ignore:Repo is deprecated:FutureWarning")
 def test_repo_insert_cache_local_true(mock_s3, clean_redis, sample_dataset):
     """Test inserting with cache_local=True (local cache then copy)."""
     repo = atlocal.Repo(
@@ -826,7 +826,7 @@ def test_repo_insert_cache_local_true(mock_s3, clean_redis, sample_dataset):
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
-@pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
+@pytest.mark.filterwarnings("ignore:Repo is deprecated:FutureWarning")
 def test_repo_insert_creates_index_entry(mock_s3, clean_redis, sample_dataset):
     """Test that insert() creates a valid index entry."""
     repo = atlocal.Repo(
@@ -848,7 +848,7 @@ def test_repo_insert_creates_index_entry(mock_s3, clean_redis, sample_dataset):
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
-@pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
+@pytest.mark.filterwarnings("ignore:Repo is deprecated:FutureWarning")
 def test_repo_insert_cid_generation(mock_s3, clean_redis, sample_dataset):
     """Test that insert() generates unique CIDs for each dataset."""
     repo = atlocal.Repo(
@@ -867,7 +867,7 @@ def test_repo_insert_cid_generation(mock_s3, clean_redis, sample_dataset):
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
-@pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
+@pytest.mark.filterwarnings("ignore:Repo is deprecated:FutureWarning")
 def test_repo_insert_empty_dataset(mock_s3, clean_redis, tmp_path):
     """Test inserting an empty dataset."""
     dataset_path = tmp_path / "empty-dataset-000000.tar"
@@ -889,7 +889,7 @@ def test_repo_insert_empty_dataset(mock_s3, clean_redis, tmp_path):
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
-@pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
+@pytest.mark.filterwarnings("ignore:Repo is deprecated:FutureWarning")
 def test_repo_insert_preserves_sample_type(mock_s3, clean_redis, sample_dataset):
     """Test that the returned Dataset preserves the original sample type."""
     repo = atlocal.Repo(
@@ -906,7 +906,7 @@ def test_repo_insert_preserves_sample_type(mock_s3, clean_redis, sample_dataset)
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
-@pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
+@pytest.mark.filterwarnings("ignore:Repo is deprecated:FutureWarning")
 def test_repo_insert_with_shard_writer_kwargs(mock_s3, clean_redis, tmp_path):
     """Test that insert() passes additional kwargs to ShardWriter."""
     ds = make_simple_dataset(tmp_path, num_samples=30, name="large")
@@ -923,7 +923,7 @@ def test_repo_insert_with_shard_writer_kwargs(mock_s3, clean_redis, tmp_path):
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
-@pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
+@pytest.mark.filterwarnings("ignore:Repo is deprecated:FutureWarning")
 def test_repo_insert_numpy_arrays(mock_s3, clean_redis, tmp_path):
     """Test inserting a dataset containing samples with numpy arrays."""
     ds = make_array_dataset(tmp_path, num_samples=3, array_shape=(10, 10))
@@ -945,7 +945,7 @@ def test_repo_insert_numpy_arrays(mock_s3, clean_redis, tmp_path):
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
-@pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
+@pytest.mark.filterwarnings("ignore:Repo is deprecated:FutureWarning")
 def test_repo_index_integration(mock_s3, clean_redis, sample_dataset):
     """Test that Repo and Index work together correctly."""
     repo = atlocal.Repo(
@@ -964,7 +964,7 @@ def test_repo_index_integration(mock_s3, clean_redis, sample_dataset):
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
-@pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
+@pytest.mark.filterwarnings("ignore:Repo is deprecated:FutureWarning")
 def test_multiple_datasets_same_type(mock_s3, clean_redis, sample_dataset):
     """Test inserting multiple datasets of the same sample type."""
     repo = atlocal.Repo(
@@ -989,7 +989,7 @@ def test_multiple_datasets_same_type(mock_s3, clean_redis, sample_dataset):
 
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.filterwarnings("ignore:coroutine.*was never awaited:RuntimeWarning")
-@pytest.mark.filterwarnings("ignore:Repo is deprecated:DeprecationWarning")
+@pytest.mark.filterwarnings("ignore:Repo is deprecated:FutureWarning")
 def test_multiple_datasets_different_types(mock_s3, clean_redis, tmp_path):
     """Test inserting datasets with different sample types."""
     simple_ds = make_simple_dataset(tmp_path, num_samples=3, name="simple")

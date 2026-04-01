@@ -59,6 +59,12 @@ CREATE TABLE IF NOT EXISTS labels (
 
 CREATE INDEX IF NOT EXISTS idx_labels_cid
     ON labels(cid);
+
+CREATE INDEX IF NOT EXISTS idx_schemas_name_version
+    ON schemas(name, version);
+
+CREATE INDEX IF NOT EXISTS idx_labels_name_created
+    ON labels(name, created_at DESC);
 """
 
 

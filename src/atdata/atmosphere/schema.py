@@ -341,18 +341,14 @@ class SchemaLoader:
         Raises:
             KeyError: If no matching schema is found.
         """
-        if getattr(self.client, "has_appview", False) is True:
-            try:
-                return self._resolve_via_appview(handle_or_did, schema_id, version)
-            except Exception:
-                from .._logging import get_logger
+        from ._appview import with_appview_fallback
 
-                get_logger().warning(
-                    "AppView schema resolution failed, falling back to client-side",
-                    exc_info=True,
-                )
-
-        return self._resolve_client_side(handle_or_did, schema_id, version)
+        return with_appview_fallback(
+            lambda: self._resolve_via_appview(handle_or_did, schema_id, version),
+            lambda: self._resolve_client_side(handle_or_did, schema_id, version),
+            client=self.client,
+            operation="schema resolution",
+        )
 
     def _resolve_via_appview(
         self,
@@ -447,18 +443,14 @@ class SchemaLoader:
         Returns:
             List of schema records.
         """
-        if getattr(self.client, "has_appview", False) is True:
-            try:
-                return self._list_via_appview(repo=repo, limit=limit)
-            except Exception:
-                from .._logging import get_logger
+        from ._appview import with_appview_fallback
 
-                get_logger().warning(
-                    "AppView schema listing failed, falling back to client-side",
-                    exc_info=True,
-                )
-
-        return self.client.list_schemas(repo=repo, limit=limit)
+        return with_appview_fallback(
+            lambda: self._list_via_appview(repo=repo, limit=limit),
+            lambda: self.client.list_schemas(repo=repo, limit=limit),
+            client=self.client,
+            operation="schema listing",
+        )
 
     def _list_via_appview(
         self,

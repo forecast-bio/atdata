@@ -218,7 +218,7 @@ class AtmosphereIndex:
         warnings.warn(
             "AtmosphereIndex is deprecated. Use atdata.Index(atmosphere=client) "
             "instead for unified index access.",
-            DeprecationWarning,
+            FutureWarning,  # Removal: v1.0
             stacklevel=2,
         )
         self.client = client
@@ -405,7 +405,7 @@ class AtmosphereIndex:
 
         warnings.warn(
             "Atmosphere.decode_schema() is deprecated, use Atmosphere.get_schema_type() instead",
-            DeprecationWarning,
+            FutureWarning,  # Removal: v1.0
             stacklevel=2,
         )
         return self.get_schema_type(ref)

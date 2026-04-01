@@ -375,5 +375,5 @@ class TestAtmosphereIndexDeprecation:
         mock_client.is_authenticated = True
         mock_client.did = "did:plc:test"
 
-        with pytest.warns(DeprecationWarning, match="AtmosphereIndex is deprecated"):
+        with pytest.warns(FutureWarning, match="AtmosphereIndex is deprecated"):
             AtmosphereIndex(mock_client)

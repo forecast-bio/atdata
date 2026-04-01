@@ -64,32 +64,18 @@ def test_atmosphere_backend_data_store_none(backend) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_ensure_loaders_lazy_init(backend) -> None:
-    """Loaders/publishers are None until _ensure_loaders is called."""
-    assert backend._schema_loader is None
-    assert backend._dataset_loader is None
-    assert backend._label_publisher is None
-    assert backend._label_loader is None
+def test_eager_init_creates_loaders(backend) -> None:
+    """All publishers/loaders are created eagerly in __init__."""
+    from atdata.atmosphere.schema import SchemaPublisher, SchemaLoader
+    from atdata.atmosphere.records import DatasetPublisher, DatasetLoader
+    from atdata.atmosphere.labels import LabelPublisher, LabelLoader
 
-    with (
-        patch("atdata.atmosphere.schema.SchemaPublisher") as MockSP,
-        patch("atdata.atmosphere.schema.SchemaLoader") as MockSL,
-        patch("atdata.atmosphere.records.DatasetPublisher") as MockDP,
-        patch("atdata.atmosphere.records.DatasetLoader") as MockDL,
-        patch("atdata.atmosphere.labels.LabelPublisher") as MockLP,
-        patch("atdata.atmosphere.labels.LabelLoader") as MockLL,
-    ):
-        backend._ensure_loaders()
-
-        MockSP.assert_called_once_with(backend.client)
-        MockSL.assert_called_once_with(backend.client)
-        MockDP.assert_called_once_with(backend.client)
-        MockDL.assert_called_once_with(backend.client)
-        MockLP.assert_called_once_with(backend.client)
-        MockLL.assert_called_once_with(backend.client)
-
-    # Second call is a no-op (already initialised)
-    backend._ensure_loaders()
+    assert isinstance(backend._schema_publisher, SchemaPublisher)
+    assert isinstance(backend._schema_loader, SchemaLoader)
+    assert isinstance(backend._dataset_publisher, DatasetPublisher)
+    assert isinstance(backend._dataset_loader, DatasetLoader)
+    assert isinstance(backend._label_publisher, LabelPublisher)
+    assert isinstance(backend._label_loader, LabelLoader)
 
 
 # ---------------------------------------------------------------------------
@@ -98,7 +84,7 @@ def test_ensure_loaders_lazy_init(backend) -> None:
 
 
 def _patch_loaders(backend):
-    """Patch _ensure_loaders to inject mocks directly."""
+    """Replace eagerly-created loaders with mocks."""
     backend._schema_publisher = MagicMock()
     backend._schema_loader = MagicMock()
     backend._dataset_publisher = MagicMock()

@@ -626,7 +626,7 @@ class Dataset(Generic[ST]):
 
         warnings.warn(
             "shard_list is deprecated, use list_shards() instead",
-            DeprecationWarning,
+            FutureWarning,  # Removal: v1.0
             stacklevel=2,
         )
         return self.list_shards()

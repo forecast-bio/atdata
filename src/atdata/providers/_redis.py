@@ -7,6 +7,7 @@ standalone ``IndexProvider`` implementation.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Iterator
 
 import msgpack
@@ -73,10 +74,24 @@ class RedisProvider(IndexProvider):
 
     def iter_entries(self) -> Iterator["LocalDatasetEntry"]:  # noqa: F821
         prefix = f"{_KEY_DATASET_ENTRY}:"
+        # Collect keys first, then batch-fetch with a pipeline to avoid
+        # N+1 round-trips (one per entry).
+        keys: list[str] = []
         for key in self._redis.scan_iter(match=f"{prefix}*"):
             key_str = key.decode("utf-8") if isinstance(key, bytes) else key
-            cid = key_str[len(prefix) :]
-            yield self.get_entry_by_cid(cid)
+            keys.append(key_str)
+
+        if not keys:
+            return
+
+        pipe = self._redis.pipeline(transaction=False)
+        for key_str in keys:
+            pipe.hgetall(key_str)
+        results = pipe.execute()
+
+        for raw_data in results:
+            if raw_data:
+                yield _entry_from_redis_hash(raw_data)
 
     # ------------------------------------------------------------------
     # Schema operations
@@ -135,7 +150,12 @@ class RedisProvider(IndexProvider):
     ) -> None:
         ver_key = version or ""
         redis_key = f"Label:{name}@{ver_key}"
-        data: dict[str, str] = {"cid": cid, "name": name, "version": ver_key}
+        data: dict[str, str] = {
+            "cid": cid,
+            "name": name,
+            "version": ver_key,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
         if description is not None:
             data["description"] = description
         self._redis.hset(redis_key, mapping=data)  # type: ignore[arg-type]
@@ -156,10 +176,13 @@ class RedisProvider(IndexProvider):
             }
             return (raw_typed["cid"], version)
 
-        # No version specified — scan for all labels with this name, pick latest
+        # No version specified — scan for all labels with this name,
+        # pick the most recently created one (by created_at timestamp).
+        # Old labels without created_at sort last.
         prefix = f"Label:{name}@"
         best_cid: str | None = None
         best_ver: str | None = None
+        best_ts: str = ""
         for key in self._redis.scan_iter(match=f"{prefix}*"):
             raw = self._redis.hgetall(key)
             if not raw:
@@ -170,11 +193,12 @@ class RedisProvider(IndexProvider):
                 )
                 for k, v in raw.items()
             }
-            # Pick any match; Redis doesn't have created_at ordering so we
-            # just return the last one found (consistent with scan order).
-            best_cid = raw_typed["cid"]
-            ver = raw_typed.get("version", "")
-            best_ver = ver if ver else None
+            ts = raw_typed.get("created_at", "")
+            if best_cid is None or ts > best_ts:
+                best_cid = raw_typed["cid"]
+                ver = raw_typed.get("version", "")
+                best_ver = ver if ver else None
+                best_ts = ts
 
         if best_cid is None:
             raise KeyError(f"No label with name: {name!r}")

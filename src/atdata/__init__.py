@@ -155,7 +155,7 @@ def __getattr__(name: str):
         warnings.warn(
             "atdata.AbstractIndex is deprecated. Use atdata.Index directly "
             "as the type annotation instead.",
-            DeprecationWarning,
+            FutureWarning,  # Removal: v1.0
             stacklevel=2,
         )
         from ._protocols import AbstractIndex
@@ -174,7 +174,7 @@ def schema_to_type(schema: dict, *, use_cache: bool = True):
 
     warnings.warn(
         "atdata.schema_to_type() is deprecated, use index.get_schema_type() instead",
-        DeprecationWarning,
+        FutureWarning,  # Removal: v1.0
         stacklevel=2,
     )
     return _schema_to_type(schema, use_cache=use_cache)

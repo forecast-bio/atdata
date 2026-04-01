@@ -302,18 +302,14 @@ class LensLoader:
         Returns:
             List of lens records.
         """
-        if getattr(self.client, "has_appview", False) is True:
-            try:
-                return self._list_via_appview(repo=repo, limit=limit)
-            except Exception:
-                from .._logging import get_logger
+        from ._appview import with_appview_fallback
 
-                get_logger().warning(
-                    "AppView listLenses failed, falling back to client-side",
-                    exc_info=True,
-                )
-
-        return self.client.list_lenses(repo=repo, limit=limit)
+        return with_appview_fallback(
+            lambda: self._list_via_appview(repo=repo, limit=limit),
+            lambda: self.client.list_lenses(repo=repo, limit=limit),
+            client=self.client,
+            operation="listLenses",
+        )
 
     def _list_via_appview(
         self,
@@ -367,21 +363,17 @@ class LensLoader:
         Returns:
             List of matching lens records.
         """
-        if getattr(self.client, "has_appview", False) is True:
-            try:
-                return self._find_by_schemas_via_appview(
-                    source_schema_uri, target_schema_uri
-                )
-            except Exception:
-                from .._logging import get_logger
+        from ._appview import with_appview_fallback
 
-                get_logger().warning(
-                    "AppView searchLenses failed, falling back to client-side",
-                    exc_info=True,
-                )
-
-        return self._find_by_schemas_client_side(
-            source_schema_uri, target_schema_uri, repo
+        return with_appview_fallback(
+            lambda: self._find_by_schemas_via_appview(
+                source_schema_uri, target_schema_uri
+            ),
+            lambda: self._find_by_schemas_client_side(
+                source_schema_uri, target_schema_uri, repo
+            ),
+            client=self.client,
+            operation="searchLenses",
         )
 
     def _find_by_schemas_via_appview(

@@ -684,7 +684,7 @@ def schema_to_type(
 
     warnings.warn(
         "schema_to_type() is deprecated, use index.get_schema_type() instead",
-        DeprecationWarning,
+        FutureWarning,  # Removal: v1.0
         stacklevel=2,
     )
     return _schema_to_type(schema, use_cache=use_cache)
