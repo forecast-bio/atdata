@@ -1088,7 +1088,9 @@ class RecordOps:
         validate: bool = False,
     ) -> AtUri:
         """Create a record. See :meth:`Atmosphere.create_record`."""
-        return self._atmo.create_record(collection, record, rkey=rkey, validate=validate)
+        return self._atmo.create_record(
+            collection, record, rkey=rkey, validate=validate
+        )
 
     def put(
         self,
@@ -1126,7 +1128,9 @@ class RecordOps:
         cursor: Optional[str] = None,
     ) -> tuple[list[dict], Optional[str]]:
         """List records in a collection. See :meth:`Atmosphere.list_records`."""
-        return self._atmo.list_records(collection, repo=repo, limit=limit, cursor=cursor)
+        return self._atmo.list_records(
+            collection, repo=repo, limit=limit, cursor=cursor
+        )
 
 
 class BlobOps:
