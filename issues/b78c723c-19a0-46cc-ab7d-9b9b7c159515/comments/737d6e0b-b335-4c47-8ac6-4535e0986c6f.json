@@ -1,0 +1,8 @@
+{
+  "uuid": "737d6e0b-b335-4c47-8ac6-4535e0986c6f",
+  "issue_uuid": "b78c723c-19a0-46cc-ab7d-9b9b7c159515",
+  "author": "SN7C",
+  "content": "Decision: In _build_pipeline, apply wrap->filter/map->batch (not batch->wrap_batch). This means batched paths now use collation_fn=None (since items are typed samples, not raw WDS dicts) and a simple SampleBatch constructor instead of wrap_batch. Added explicit ValueError for batch_size<1 instead of relying on cryptic IndexError from WDS internals.",
+  "created_at": "2026-04-01T20:02:48.724098Z",
+  "kind": "decision"
+}
