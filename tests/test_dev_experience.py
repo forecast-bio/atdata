@@ -279,6 +279,26 @@ class TestDatasetFilter:
         assert len(result) == 5
         assert all(10 <= s.value < 15 for s in result)
 
+    def test_filter_with_batched_ordered(self, dev_tar):
+        """filter() is applied before batching in ordered iteration."""
+        url, _ = dev_tar
+        ds = Dataset[DevSample](url)
+        filtered = ds.filter(lambda s: s.value >= 15)
+        batches = list(filtered.ordered(batch_size=3))
+        all_samples = [s for batch in batches for s in batch.samples]
+        assert len(all_samples) == 5
+        assert all(s.value >= 15 for s in all_samples)
+
+    def test_filter_with_batched_shuffled(self, dev_tar):
+        """filter() is applied before batching in shuffled iteration."""
+        url, _ = dev_tar
+        ds = Dataset[DevSample](url)
+        filtered = ds.filter(lambda s: s.value >= 15)
+        batches = list(filtered.shuffled(batch_size=3))
+        all_samples = [s for batch in batches for s in batch.samples]
+        assert len(all_samples) == 5
+        assert all(s.value >= 15 for s in all_samples)
+
 
 class TestDatasetMap:
     def test_map(self, dev_tar):
@@ -289,6 +309,29 @@ class TestDatasetMap:
         assert len(result) == 20
         assert all(isinstance(r, str) for r in result)
         assert result[0] == "s000"
+
+    def test_map_with_batched_ordered(self, dev_tar):
+        """map() is applied before batching in ordered iteration."""
+        url, _ = dev_tar
+        ds = Dataset[DevSample](url)
+        mapped = ds.map(lambda s: DevSample(name=s.name, value=s.value * 10))
+        batches = list(mapped.ordered(batch_size=5))
+        all_samples = [s for batch in batches for s in batch.samples]
+        assert len(all_samples) == 20
+        assert all_samples[0].value == 0
+        assert all_samples[1].value == 10
+
+    def test_filter_and_map_with_batched(self, dev_tar):
+        """filter() + map() both applied before batching."""
+        url, _ = dev_tar
+        ds = Dataset[DevSample](url)
+        result = ds.filter(lambda s: s.value >= 10).map(
+            lambda s: DevSample(name=s.name, value=s.value * 2)
+        )
+        batches = list(result.ordered(batch_size=5))
+        all_samples = [s for batch in batches for s in batch.samples]
+        assert len(all_samples) == 10
+        assert all(s.value >= 20 for s in all_samples)
 
 
 class TestDatasetSelect:

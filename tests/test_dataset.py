@@ -727,10 +727,9 @@ def test_dataset_invalid_batch_size(tmp_path):
 
     dataset = atdata.Dataset[BatchSizeSample](wds_filename)
 
-    # batch_size=0 produces empty batches, causing IndexError in webdataset's
-    # batched() when it tries to inspect the first element of an empty group
-    with pytest.raises(IndexError):
-        list(dataset.ordered(batch_size=0))
+    # batch_size=0 is invalid — _build_pipeline validates eagerly
+    with pytest.raises(ValueError, match="batch_size must be >= 1"):
+        dataset.ordered(batch_size=0)
 
 
 ##
