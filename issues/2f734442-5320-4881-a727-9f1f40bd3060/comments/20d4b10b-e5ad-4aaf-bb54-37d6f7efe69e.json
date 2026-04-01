@@ -1,0 +1,8 @@
+{
+  "uuid": "20d4b10b-e5ad-4aaf-bb54-37d6f7efe69e",
+  "issue_uuid": "2f734442-5320-4881-a727-9f1f40bd3060",
+  "author": "WomH",
+  "content": "[action] Starting Phase 4: Provider fixes (Redis labels, Redis N+1, SQLite indexes)",
+  "created_at": "2026-04-01T22:00:41.239933Z",
+  "kind": "note"
+}
