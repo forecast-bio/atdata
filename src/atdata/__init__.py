@@ -100,6 +100,10 @@ from .repository import (
     create_repository as create_repository,
 )
 
+from .dataset_meta import (
+    DatasetMeta as DatasetMeta,
+)
+
 from .index import (
     Index as Index,
 )
