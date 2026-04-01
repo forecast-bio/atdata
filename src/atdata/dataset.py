@@ -1089,6 +1089,61 @@ class Dataset(Generic[ST]):
             stages.append(wds.filters.map(map_fn))
         return stages
 
+    def _build_pipeline(
+        self,
+        *,
+        shuffle_shards: int | None = None,
+        shuffle_samples: int | None = None,
+        batch_size: int | None = None,
+    ) -> wds.pipeline.DataPipeline:
+        """Build the WebDataset pipeline with all configured stages.
+
+        This is the single source of truth for pipeline construction.
+        ``ordered()`` and ``shuffled()`` delegate here instead of
+        duplicating the stage list.
+
+        Args:
+            shuffle_shards: If set, shuffle shards with this buffer size.
+            shuffle_samples: If set, shuffle samples with this buffer size.
+            batch_size: If set, batch samples into groups of this size.
+
+        Returns:
+            A fully-configured ``DataPipeline``.
+        """
+        stages: list = [_ShardListStage(self._source)]
+
+        if shuffle_shards is not None:
+            stages.append(wds.filters.shuffle(shuffle_shards))
+
+        stages += [
+            wds.shardlists.split_by_worker,
+            _StreamOpenerStage(self._source),
+            wds.tariterators.tar_file_expander,
+            wds.tariterators.group_by_keys,
+        ]
+
+        if shuffle_samples is not None:
+            stages.append(wds.filters.shuffle(shuffle_samples))
+
+        # Wrap raw WDS dicts into typed samples, then apply filter/map.
+        # Filter/map are always applied per-sample, before any batching.
+        stages.append(wds.filters.map(self.wrap))
+        stages += self._post_wrap_stages()
+
+        if batch_size is not None:
+            if batch_size < 1:
+                raise ValueError(f"batch_size must be >= 1, got {batch_size}")
+            # collation_fn=None because items are already typed samples,
+            # not raw WDS dicts — default collation expects dicts.
+            stages.append(wds.filters.batched(batch_size, collation_fn=None))
+            stages.append(
+                wds.filters.map(
+                    lambda samples: SampleBatch[self.sample_type](samples)
+                )
+            )
+
+        return wds.pipeline.DataPipeline(*stages)
+
     @overload
     def ordered(
         self,
@@ -1124,26 +1179,7 @@ class Dataset(Generic[ST]):
             >>> for batch in ds.ordered(batch_size=32):
             ...     process(batch)  # batch is SampleBatch[ST]
         """
-        if batch_size is None:
-            return wds.pipeline.DataPipeline(
-                _ShardListStage(self._source),
-                wds.shardlists.split_by_worker,
-                _StreamOpenerStage(self._source),
-                wds.tariterators.tar_file_expander,
-                wds.tariterators.group_by_keys,
-                wds.filters.map(self.wrap),
-                *self._post_wrap_stages(),
-            )
-
-        return wds.pipeline.DataPipeline(
-            _ShardListStage(self._source),
-            wds.shardlists.split_by_worker,
-            _StreamOpenerStage(self._source),
-            wds.tariterators.tar_file_expander,
-            wds.tariterators.group_by_keys,
-            wds.filters.batched(batch_size),
-            wds.filters.map(self.wrap_batch),
-        )
+        return self._build_pipeline(batch_size=batch_size)
 
     @overload
     def shuffled(
@@ -1193,29 +1229,10 @@ class Dataset(Generic[ST]):
             >>> for batch in ds.shuffled(batch_size=32):
             ...     process(batch)  # batch is SampleBatch[ST]
         """
-        if batch_size is None:
-            return wds.pipeline.DataPipeline(
-                _ShardListStage(self._source),
-                wds.filters.shuffle(buffer_shards),
-                wds.shardlists.split_by_worker,
-                _StreamOpenerStage(self._source),
-                wds.tariterators.tar_file_expander,
-                wds.tariterators.group_by_keys,
-                wds.filters.shuffle(buffer_samples),
-                wds.filters.map(self.wrap),
-                *self._post_wrap_stages(),
-            )
-
-        return wds.pipeline.DataPipeline(
-            _ShardListStage(self._source),
-            wds.filters.shuffle(buffer_shards),
-            wds.shardlists.split_by_worker,
-            _StreamOpenerStage(self._source),
-            wds.tariterators.tar_file_expander,
-            wds.tariterators.group_by_keys,
-            wds.filters.shuffle(buffer_samples),
-            wds.filters.batched(batch_size),
-            wds.filters.map(self.wrap_batch),
+        return self._build_pipeline(
+            shuffle_shards=buffer_shards,
+            shuffle_samples=buffer_samples,
+            batch_size=batch_size,
         )
 
     # Design note: Uses pandas for parquet export. Could be replaced with
