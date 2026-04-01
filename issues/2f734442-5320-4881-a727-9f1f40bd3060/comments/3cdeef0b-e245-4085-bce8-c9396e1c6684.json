@@ -1,0 +1,8 @@
+{
+  "uuid": "3cdeef0b-e245-4085-bce8-c9396e1c6684",
+  "issue_uuid": "2f734442-5320-4881-a727-9f1f40bd3060",
+  "author": "WomH",
+  "content": "Plan: Working through phases 3-5 in order. Phase 3: (a) Move insert_dataset/write_samples logic to Repository, (b) Extract with_appview_fallback() to atmosphere/_appview.py, (c) Eager init for _AtmosphereBackend. Phase 4: (a) Redis label created_at, (b) Redis pipeline, (c) SQLite indexes. Phase 5: (a) RecordOps/BlobOps/XrpcClient, (b) FutureWarning, (c) thread-safety, (d) StubManager split.",
+  "created_at": "2026-04-01T21:54:37.430145Z",
+  "kind": "note"
+}
