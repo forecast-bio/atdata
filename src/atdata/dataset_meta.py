@@ -73,9 +73,7 @@ def _resolve_meta(
     """
     if meta is None:
         if name is None:
-            raise TypeError(
-                "Either 'meta' or 'name' must be provided."
-            )
+            raise TypeError("Either 'meta' or 'name' must be provided.")
         return DatasetMeta(
             name=name,
             schema_ref=schema_ref,
