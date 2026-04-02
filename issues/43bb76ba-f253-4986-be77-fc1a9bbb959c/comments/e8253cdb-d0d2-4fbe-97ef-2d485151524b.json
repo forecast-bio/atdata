@@ -1,0 +1,10 @@
+{
+  "uuid": "e8253cdb-d0d2-4fbe-97ef-2d485151524b",
+  "issue_uuid": "43bb76ba-f253-4986-be77-fc1a9bbb959c",
+  "author": "maxine--futura",
+  "content": "Python implementation complete: ShardManifestRef class and manifests: list[ShardManifestRef] | None field exist in _lexicon_types.py. Remaining work: update entry.json lexicon to add the manifests property so ATProto validation is consistent with the Python types.",
+  "created_at": "2026-04-02T20:30:00.977380Z",
+  "kind": "note",
+  "signed_by": "SHA256:InQG/DPIFjZucG+2Pb71VgHctJAjJ45DGaewCTTlgcc",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgPyK5jFUUnT2W7kjgCilWm7CF/cjXdHxHgXokMkJ7Kz0AAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAljyW3+2ZiOoAcP7yanYw3KF4RXkjcrvwhmOFLBgqufE8WXlvGtlDIsnbtJk72+ENfyrRUA8jNOAwxLz6lZJ4AQ=="
+}
