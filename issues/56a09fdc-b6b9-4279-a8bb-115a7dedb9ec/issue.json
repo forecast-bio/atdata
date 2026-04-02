@@ -2,11 +2,12 @@
   "uuid": "56a09fdc-b6b9-4279-a8bb-115a7dedb9ec",
   "display_id": 9,
   "title": "Write tests for AppView integration",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "created_by": "maxine--futura",
   "created_at": "2026-03-31T21:12:51.162453Z",
-  "updated_at": "2026-03-31T21:12:53.277344Z",
+  "updated_at": "2026-04-02T20:29:43.288440Z",
+  "closed_at": "2026-04-02T20:29:43.288440Z",
   "labels": [
     "enhancement"
   ]
