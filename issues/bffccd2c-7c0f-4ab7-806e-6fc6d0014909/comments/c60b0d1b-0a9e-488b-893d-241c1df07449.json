@@ -1,0 +1,10 @@
+{
+  "uuid": "c60b0d1b-0a9e-488b-893d-241c1df07449",
+  "issue_uuid": "bffccd2c-7c0f-4ab7-806e-6fc6d0014909",
+  "author": "maxine--futura",
+  "content": "Namespace rename is done (science.alt.dataset used everywhere). Remaining work: establish atdata-lexicon as an external repo and wire it as a source-of-truth for the bundled lexicons in src/atdata/lexicons/.",
+  "created_at": "2026-04-02T20:30:01.084940Z",
+  "kind": "note",
+  "signed_by": "SHA256:InQG/DPIFjZucG+2Pb71VgHctJAjJ45DGaewCTTlgcc",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgPyK5jFUUnT2W7kjgCilWm7CF/cjXdHxHgXokMkJ7Kz0AAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAqRiKhBWDSKIsUz+0C0c16Gjk4uQDhtzB8M4I1FNUtLgrXpMiGHh4MoyLZ5oNRD8jSAAAJ+O8OkrYEX8ifTfMDg=="
+}
