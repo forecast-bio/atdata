@@ -78,7 +78,41 @@
           "contentMetadata": {
             "type": "unknown",
             "description": "Dataset-level content metadata (e.g., instrument settings, acquisition parameters). Structure is validated against the schema referenced by metadataSchemaRef when present. Stored as an open JSON object."
+          },
+          "manifests": {
+            "type": "array",
+            "description": "Per-shard manifest references for query-based access. Each entry pairs a shard with its manifest header blob and optional Parquet samples blob.",
+            "items": {
+              "type": "ref",
+              "ref": "#shardManifestRef"
+            },
+            "maxLength": 10000
           }
+        }
+      }
+    },
+    "shardManifestRef": {
+      "type": "object",
+      "description": "References to manifest sidecar data for a single shard. The header contains schema info, sample count, and per-field aggregates. The samples file is a Parquet table with per-sample metadata for query-based access.",
+      "required": [
+        "header"
+      ],
+      "properties": {
+        "header": {
+          "type": "blob",
+          "description": "Manifest JSON header blob containing shard-level metadata (schema, sample count, field aggregates)",
+          "accept": [
+            "application/json"
+          ],
+          "maxSize": 1048576
+        },
+        "samples": {
+          "type": "blob",
+          "description": "Optional Parquet file with per-sample metadata for query-based filtering",
+          "accept": [
+            "application/octet-stream"
+          ],
+          "maxSize": 104857600
         }
       }
     },

@@ -4,14 +4,55 @@ setup:
     git config core.hooksPath .githooks
     @echo "Git hooks activated from .githooks/"
 
-sync-lexicons:
-    cp lexicons/*.json src/atdata/lexicons/
+# Fetch latest lexicons from atdata-lexicon repo and sync to both local copies.
+# Uses gh CLI to download a tarball — no clone needed.
+# Pass ref=<branch/tag> to pin a specific version (default: main).
+sync-lexicons ref="main":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    REPO="forecast-bio/atdata-lexicon"
+    VENDOR="lexicons/science/alt/dataset"
+    PKG="src/atdata/lexicons/science/alt/dataset"
+    TMPDIR=$(mktemp -d)
+    trap 'rm -rf "$TMPDIR"' EXIT
+    echo "Fetching lexicons from $REPO@{{ref}}..."
+    gh api "repos/$REPO/tarball/{{ref}}" > "$TMPDIR/archive.tar.gz"
+    tar xzf "$TMPDIR/archive.tar.gz" -C "$TMPDIR" --strip-components=1
+    # Copy NSID lexicons to both vendor and package directories
+    for f in "$TMPDIR/lexicons/science/alt/dataset/"*.json; do
+        name=$(basename "$f")
+        cp "$f" "$VENDOR/$name"
+        cp "$f" "$PKG/$name"
+        echo "  synced $name"
+    done
+    echo "Lexicons synced from $REPO@{{ref}}"
+    # Also sync top-level shim files if they exist upstream
+    for f in "$TMPDIR/lexicons/"*.json; do
+        [ -f "$f" ] || continue
+        name=$(basename "$f")
+        cp "$f" "lexicons/$name"
+        [ -f "src/atdata/lexicons/$name" ] && cp "$f" "src/atdata/lexicons/$name"
+    done
+
+# Sync local vendored lexicons → package (no network, for offline use)
+sync-lexicons-local:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for f in lexicons/science/alt/dataset/*.json; do
+        name=$(basename "$f")
+        cp "$f" "src/atdata/lexicons/science/alt/dataset/$name"
+    done
+    for f in lexicons/*.json; do
+        name=$(basename "$f")
+        [ -f "src/atdata/lexicons/$name" ] && cp "$f" "src/atdata/lexicons/$name"
+    done
+    echo "Local lexicon sync complete"
 
 gen-lexicon-docs:
     uv run python scripts/gen_lexicon_docs.py
 
 test *args:
-    just sync-lexicons
+    just sync-lexicons-local
     uv run pytest {{args}}
 
 lint:
