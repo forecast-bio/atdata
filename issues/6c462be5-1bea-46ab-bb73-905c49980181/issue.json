@@ -2,11 +2,12 @@
   "uuid": "6c462be5-1bea-46ab-bb73-905c49980181",
   "display_id": 12,
   "title": "Remove stale crosslink-agent-prompt MCP entry",
-  "status": "open",
+  "status": "closed",
   "priority": "low",
   "created_by": "maxine--futura",
   "created_at": "2026-03-31T22:32:27.198892Z",
-  "updated_at": "2026-03-31T22:32:29.076233Z",
+  "updated_at": "2026-04-04T01:44:36.673807Z",
+  "closed_at": "2026-04-04T01:44:36.673807Z",
   "labels": [
     "chore"
   ]
