@@ -14,10 +14,6 @@
     "-1": {
       "agent_id": "maxine--futura",
       "claimed_at": "2026-03-31T23:28:30.240244Z"
-    },
-    "12": {
-      "agent_id": "maxine--futura",
-      "claimed_at": "2026-03-31T22:32:34.146740Z"
     }
   },
   "issues": {},
@@ -54,8 +50,8 @@
     }
   ],
   "watermark": {
-    "timestamp": "2026-04-04T01:28:29.027783Z",
+    "timestamp": "2026-04-04T01:44:38.562641Z",
     "agent_id": "maxine--futura",
-    "agent_seq": 4
+    "agent_seq": 5
   }
 }
