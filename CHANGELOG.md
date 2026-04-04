@@ -9,9 +9,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.7.0b1] - 2026-02-26
 
 ### Added
+- Add lens lexicon E2E validation with trust verification and schema compat (#11)
+- Add unified search API with pluggable backends (#10)
+- Write tests for AppView integration (#9)
+- Add client-side AppView integration (#8)
+- Switch CI Redis image from Docker Hub to ghcr.io to avoid rate limits (#7)
+- Rename atdataSchemaVersion field to remove dollar prefix (#5)
+- Support @handle/TypeName@version format in get_schema and get_schema_type (#2)
 - **Client-side AppView integration**: `Atmosphere` client now supports XRPC queries (`xrpc_query()`) and procedures (`xrpc_procedure()`) routed through a configurable AppView service. Schema, lens, label, and record loaders automatically use AppView for listing, search, and resolution when available, falling back to client-side pagination otherwise. New `has_appview` property and `AppViewRequiredError`/`AppViewUnavailableError` exceptions for clean error handling (GH#74)
 
 ### Fixed
+- Fix get_schema failure when resolving records across accounts (#3)
 - **Blob URL parameter bug**: Fixed incorrect parameter passing in blob URL construction within atmosphere record publishing
 - **Fallback logging**: Improved diagnostic logging when AppView is unavailable and client-side fallback is used
 

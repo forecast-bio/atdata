@@ -6,8 +6,8 @@ description: Create a feature branch from a human-readable description
 ## Context
 
 - Current branch: !`git branch --show-current`
-- Recent release branches: !`git branch --list 'release/*' | tail -5`
-- Existing feature branches: !`git branch --list 'feature/*' | tail -10`
+- Recent release branches: !`git branch --list 'release/*'`
+- Existing feature branches: !`git branch --list 'feature/*'`
 - Working tree status: !`git status --short`
 - Remotes: !`git remote -v`
 
@@ -24,11 +24,10 @@ The user will provide a human-readable description of the feature (e.g. "add bat
 ### 2. Validate preconditions
 
 - Confirm there are no uncommitted changes (other than `.crosslink/issues.db`). If there are, warn the user and ask whether to stash or abort.
-- Identify the base branch. Default is `develop`. If the user provides a `--from <ref>` argument, use that instead.
+- Identify the base branch. Default to the current branch. If the user provides a `--from <ref>` argument, use that instead.
 
 ### 3. Create the branch
 
-- If not already on the base branch, `git checkout <base>` first.
 - `git checkout -b feature/<slug>` (from the resolved base)
 - Print the created branch name so the user can confirm.
 
@@ -36,6 +35,7 @@ The user will provide a human-readable description of the feature (e.g. "add bat
 
 - Create a crosslink issue for the feature work with the user's original description as the title.
 - Set priority to `medium` (unless the user specifies otherwise).
+- Use: `crosslink issue create "<description>" -p medium --label feature`
 
 ## Constraints
 

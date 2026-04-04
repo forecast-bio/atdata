@@ -47,7 +47,7 @@
     "pwd",
     "echo"
   ],
-  "auto_steal_stale_locks": false,
+  "auto_steal_stale_locks": 5,
   "blocked_git_commands": [
     "git push",
     "git merge",
@@ -65,15 +65,15 @@
     "git branch -D",
     "git branch -m"
   ],
-  "comment_discipline": "encouraged",
+  "comment_discipline": "required",
   "cpitd_auto_install": true,
   "gated_git_commands": [
     "git commit"
   ],
   "intervention_tracking": true,
-  "kickoff_verification": "local",
-  "reminder_drift_threshold": 3,
+  "kickoff_verification": "ci",
+  "reminder_drift_threshold": 0,
   "signing_enforcement": "audit",
-  "tracker_remote": "origin",
+  "tracker_remote": null,
   "tracking_mode": "strict"
 }

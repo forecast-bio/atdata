@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(git *), Bash(crosslink *), Bash(uuidgen), Bash(ls *), Bash(ln *), Bash(rm *), Skill
+allowed-tools: Bash(git *), Bash(uuidgen), Bash(ls *), Bash(ln *), Bash(rm *), Bash(test *), Bash(mkdir *), Bash(grep *), Bash(echo *), Bash(crosslink *), Skill
 description: Create a feature branch and move it to a new git worktree
 ---
 
@@ -17,38 +17,45 @@ The user provides a human-readable feature description (e.g. "add batch retry lo
 ### 1. Create the feature branch
 
 - Invoke the `/feature` skill with the user's description as the argument.
-- This creates the `feature/<slug>` branch and a crosslink issue.
+- This creates the `feature/<slug>` branch.
 - Note the branch name that was created.
 
 ### 2. Generate worktree path
 
-- Generate a short random suffix using `uuidgen | cut -c1-8` (8-char hex).
-- The worktree path is `<repo-root>--<suffix>` as a sibling of the current repo directory.
-  - Example: if repo root is `/Users/max/git-forecast/atdata`, the worktree is `/Users/max/git-forecast/atdata--a1b2c3d4`.
+- The worktree directory is `<repo-root>/.worktrees/<slug>` (inside the repo, gitignored).
+- Extract the slug from the branch name by stripping the `feature/` prefix.
+- Create the `.worktrees` directory if it doesn't exist: `mkdir -p <repo-root>/.worktrees`
+- Ensure `.worktrees/` is gitignored: check if it's already in `.gitignore`, and if not, append it.
 
 ### 3. Create the worktree
 
 - Switch back to the previous branch (the one we were on before `/feature` created the new branch): `git checkout -`
 - Create the worktree pointing at the feature branch: `git worktree add <worktree-path> feature/<slug>`
 
-### 4. Symlink crosslink issues database
+### 4. Initialize crosslink in the worktree
 
-Replace the worktree's issues database with a symlink to the base clone's copy so all worktrees share a single authoritative crosslink database (the one on `develop`):
-
-```bash
-rm <worktree-path>/.crosslink/issues.db
-ln -s <repo-root>/.crosslink/issues.db <worktree-path>/.crosslink/issues.db
-```
-
-### 5. Exclude symlink from git staging
-
-Prevent the symlink from being accidentally committed and merged (which would overwrite the real SQLite database on the target branch):
+After creating the worktree, initialize crosslink so the child agent has proper hooks, skills, and access to shared state:
 
 ```bash
-echo ".crosslink/issues.db" >> <worktree-path>/.git/info/exclude
+# In the worktree directory:
+cd <worktree-path>
+
+# Set up crosslink hooks and skills in the worktree
+crosslink init --force
+
+# Initialize agent identity for this worktree
+# Format: <parent-agent>--<feature-slug>
+crosslink agent init <parent-agent>--<feature-slug>
+
+# Sync latest issues from the coordination branch
+crosslink sync
 ```
 
-### 6. Report to user
+The agent ID should be derived from the parent agent name and the feature slug. For example, if the parent agent is `m1` and the feature slug is `add-retry`, the agent ID would be `m1--add-retry`.
+
+To get the parent agent name, check `crosslink agent status --json` in the parent repo, or default to the machine hostname.
+
+### 5. Report to user
 
 Print a summary:
 ```
@@ -63,3 +70,4 @@ To start working:
 
 - Never force-push or delete branches.
 - Do not push the branch to a remote — the user will do that when ready.
+- Worktrees MUST be placed inside `<repo-root>/.worktrees/` to inherit the project's Claude Code trust scope and settings hierarchy.
