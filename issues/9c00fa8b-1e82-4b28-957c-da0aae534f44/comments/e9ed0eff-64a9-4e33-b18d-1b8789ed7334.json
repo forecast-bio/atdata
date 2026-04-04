@@ -1,0 +1,10 @@
+{
+  "uuid": "e9ed0eff-64a9-4e33-b18d-1b8789ed7334",
+  "issue_uuid": "9c00fa8b-1e82-4b28-957c-da0aae534f44",
+  "author": "maxine--futura",
+  "content": "Reverted: lexicon JSON changes belong in atdata-lexicon repo first, then synced here. This issue is blocked by #6 (establishing the atdata-lexicon sync flow). Python types are already correct — only the lexicon JSON is missing the manifests definition.",
+  "created_at": "2026-04-04T02:12:16.456455Z",
+  "kind": "decision",
+  "signed_by": "SHA256:InQG/DPIFjZucG+2Pb71VgHctJAjJ45DGaewCTTlgcc",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgPyK5jFUUnT2W7kjgCilWm7CF/cjXdHxHgXokMkJ7Kz0AAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAfvYTTgtIm20kwGyXCNj+Zdl7wDF7EJFeW6t7D1meX9+oN//olT4anTb+ld71zLfxBBn63GQudETCJgX6sPQaDA=="
+}
