@@ -1,0 +1,10 @@
+{
+  "uuid": "d06ce821-e31a-4c79-91c1-674570361fcd",
+  "issue_uuid": "5b8da22e-5d34-46db-951d-f9b6776ab01a",
+  "author": "maxine--futura",
+  "content": "Plan: Add a just sync-lexicons recipe that fetches the latest lexicons from forecast-bio/atdata-lexicon and copies them to both lexicons/ (vendored) and src/atdata/lexicons/ (package). The atdata-lexicon repo has the same directory structure (lexicons/science/alt/dataset/*.json). Will use gh API or git archive to avoid cloning. Also need to push the manifests change upstream to atdata-lexicon.",
+  "created_at": "2026-04-04T02:36:29.751965Z",
+  "kind": "plan",
+  "signed_by": "SHA256:InQG/DPIFjZucG+2Pb71VgHctJAjJ45DGaewCTTlgcc",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgPyK5jFUUnT2W7kjgCilWm7CF/cjXdHxHgXokMkJ7Kz0AAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAtGl4PR3iEXswgQj8aU1XX3T7by4KkG1OFn8ER4etA4IYKyu9pDPZaahZUeCq7UuGQ/+Jzf2w0dP88xExjMAJAQ=="
+}
