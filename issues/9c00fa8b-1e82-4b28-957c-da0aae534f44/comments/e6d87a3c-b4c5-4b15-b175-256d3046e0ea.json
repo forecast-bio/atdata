@@ -1,0 +1,10 @@
+{
+  "uuid": "e6d87a3c-b4c5-4b15-b175-256d3046e0ea",
+  "issue_uuid": "9c00fa8b-1e82-4b28-957c-da0aae534f44",
+  "author": "maxine--futura",
+  "content": "Delivered: added shardManifestRef def and manifests array property to entry.json lexicon. Both vendored and package copies synced. 25 lexicon tests + 221 atmosphere tests pass.",
+  "created_at": "2026-04-04T02:16:31.083485Z",
+  "kind": "result",
+  "signed_by": "SHA256:InQG/DPIFjZucG+2Pb71VgHctJAjJ45DGaewCTTlgcc",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgPyK5jFUUnT2W7kjgCilWm7CF/cjXdHxHgXokMkJ7Kz0AAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAAsD7iGmchV1TnAG91e3qFS9gf1Ccfwl7sIwY5tGZ3bGnapNQdjFPU3Jrvxx/LV+cTtuo5Eq8hs7PAO8rhTtnAw=="
+}
