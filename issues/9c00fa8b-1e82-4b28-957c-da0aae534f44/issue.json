@@ -2,11 +2,12 @@
   "uuid": "9c00fa8b-1e82-4b28-957c-da0aae534f44",
   "display_id": 13,
   "title": "Add manifests property to dataset entry lexicon JSON",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "created_by": "maxine--futura",
   "created_at": "2026-04-04T01:51:45.930675Z",
-  "updated_at": "2026-04-04T01:51:48.200153Z",
+  "updated_at": "2026-04-04T02:16:36.398676Z",
+  "closed_at": "2026-04-04T02:16:36.398676Z",
   "labels": [
     "feature"
   ]
