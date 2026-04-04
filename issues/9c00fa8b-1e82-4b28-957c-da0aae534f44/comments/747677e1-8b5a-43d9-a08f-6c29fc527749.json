@@ -1,0 +1,10 @@
+{
+  "uuid": "747677e1-8b5a-43d9-a08f-6c29fc527749",
+  "issue_uuid": "9c00fa8b-1e82-4b28-957c-da0aae534f44",
+  "author": "maxine--futura",
+  "content": "Plan: The Python types in _lexicon_types.py already have ShardManifestRef (line 121) and manifests: list[ShardManifestRef] | None (line 703) on DatasetEntryRecord. The lexicon JSON entry.json is missing the manifests property. Need to: 1) Add shardManifestRef def to entry.json, 2) Add optional manifests array referencing it, 3) Verify round-trip with existing tests.",
+  "created_at": "2026-04-04T01:54:40.181616Z",
+  "kind": "plan",
+  "signed_by": "SHA256:InQG/DPIFjZucG+2Pb71VgHctJAjJ45DGaewCTTlgcc",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgPyK5jFUUnT2W7kjgCilWm7CF/cjXdHxHgXokMkJ7Kz0AAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAT1qDAFilyp6DAdaFncmArGws6OmDfw8nmVxX3C6OLfAcKxc55qKEhMbzh1RRiXq1PlxcfLF/e1zX+C+pNA85AQ=="
+}
