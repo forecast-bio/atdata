@@ -2,11 +2,12 @@
   "uuid": "bffccd2c-7c0f-4ab7-806e-6fc6d0014909",
   "display_id": 6,
   "title": "Consume lexicons from atdata-lexicon repo and rename namespace to science.alt.dataset",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "created_by": "maxine--futura",
   "created_at": "2026-03-31T21:12:34.713244Z",
-  "updated_at": "2026-03-31T21:12:37.305644Z",
+  "updated_at": "2026-04-04T06:04:24.526301Z",
+  "closed_at": "2026-04-04T06:04:24.526301Z",
   "labels": [
     "enhancement"
   ]
