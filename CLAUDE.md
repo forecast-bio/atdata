@@ -51,6 +51,9 @@ just test              # Run all tests with coverage
 just test tests/test_dataset.py  # Run specific test file
 just lint              # Run ruff check + format check
 just docs              # Build documentation (runs quartodoc + quarto)
+just sync-lexicons     # Fetch latest lexicons from atdata-lexicon repo
+just sync-lexicons ref=v1.0  # Pin to a specific tag/branch
+just sync-lexicons-local  # Sync vendored → package (offline, no fetch)
 just bench             # Run full benchmark suite
 just bench-io          # Run I/O benchmarks only
 just bench-index       # Run index provider benchmarks
