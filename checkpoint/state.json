@@ -3,6 +3,10 @@
   "next_comment_id": 1,
   "display_id_map": {},
   "locks": {
+    "-6": {
+      "agent_id": "maxine--futura",
+      "claimed_at": "2026-04-04T01:28:29.027783Z"
+    },
     "-2": {
       "agent_id": "maxine--futura",
       "claimed_at": "2026-04-01T01:27:42.188245Z"
@@ -50,8 +54,8 @@
     }
   ],
   "watermark": {
-    "timestamp": "2026-04-01T22:22:10.426396Z",
-    "agent_id": "WomH",
-    "agent_seq": 2
+    "timestamp": "2026-04-04T01:28:29.027783Z",
+    "agent_id": "maxine--futura",
+    "agent_seq": 4
   }
 }
