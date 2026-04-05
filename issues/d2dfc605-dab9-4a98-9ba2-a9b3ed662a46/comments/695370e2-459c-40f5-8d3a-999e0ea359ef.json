@@ -1,0 +1,10 @@
+{
+  "uuid": "695370e2-459c-40f5-8d3a-999e0ea359ef",
+  "issue_uuid": "d2dfc605-dab9-4a98-9ba2-a9b3ed662a46",
+  "author": "maxine--futura",
+  "content": "Plan: This is Work Package 3 (WP3) of the ecosystem coordination design (.design/ecosystem-coordination.md). Work happens in ~/code/forecast/atdata-rs repo.\n\nScope:\n1. Implement three-tier XRPC routing in atdata/src/atmosphere/client.rs:\n   - Tier 1: Configurable generic AppView (ATDATA_GENERIC_APPVIEW env, default bsky.social) for unauthenticated reads (getRecord on foreign DIDs, resolveHandle)\n   - Tier 2: User PDS for authenticated ops (already done)\n   - Tier 3: Configurable atdata AppView (ATDATA_APPVIEW env, already plumbed but unused) for custom science.alt.dataset.* XRPC endpoints. Start with routing infrastructure, not full endpoint implementation.\n2. Add lexicon drift-detection test: parse entry.json (and other lexicon files synced via submodule), extract all property names, assert each has a corresponding field in atmosphere/lexicon.rs structs.\n3. Add test vector runner: read test-vectors/ from synced lexicons, implement Rust test cases that validate shard roundtrip against expected outputs.\n4. Create .atdata-ecosystem.json declaring role=sdk, language=rust, lexicon_sync method/ref, capabilities list.\n5. Create .github/workflows/compat-check.yml triggered by repository_dispatch (event: lexicon-compat-check). Updates submodule ref, runs cargo test.\n\nAcceptance criteria: AC-2, AC-3 (Rust), AC-4 (Rust runner), AC-5 (Rust), AC-7 (Rust).\nBlocked by: #16 (need test vectors to exist first).",
+  "created_at": "2026-04-05T23:03:29.242454Z",
+  "kind": "plan",
+  "signed_by": "SHA256:InQG/DPIFjZucG+2Pb71VgHctJAjJ45DGaewCTTlgcc",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgPyK5jFUUnT2W7kjgCilWm7CF/cjXdHxHgXokMkJ7Kz0AAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAAxl2AbyRt1lT/t+zlw5bbrvYLfTA+WgGJOzfv+LsvpyApPkaGEL/MjFyL1A5qkWIO3EjhHtce+iRyKCkGQmaBA=="
+}
