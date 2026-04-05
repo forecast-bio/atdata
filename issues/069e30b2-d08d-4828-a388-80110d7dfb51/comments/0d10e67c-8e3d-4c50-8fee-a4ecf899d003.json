@@ -1,0 +1,10 @@
+{
+  "uuid": "0d10e67c-8e3d-4c50-8fee-a4ecf899d003",
+  "issue_uuid": "069e30b2-d08d-4828-a388-80110d7dfb51",
+  "author": "maxine--futura",
+  "content": "Plan: This is Work Package 4 (WP4) of the ecosystem coordination design (.design/ecosystem-coordination.md). Work happens in ~/code/forecast/atdata-app repo.\n\nScope:\n1. Add lexicon drift-detection test: parse entry.json (and other lexicon files from submodule), extract all property names, assert each has a corresponding column/field in database.py upsert functions and models.py serializers.\n2. Create .atdata-ecosystem.json declaring role=appview, language=python, lexicon_sync method/ref, capabilities list.\n3. Create .github/workflows/compat-check.yml triggered by repository_dispatch (event: lexicon-compat-check). Updates submodule ref, runs pytest.\n\nAcceptance criteria: AC-3 (AppView), AC-5 (AppView), AC-7 (AppView).\nBlocked by: #16 (need test vectors for future vector running, though AppView doesn't run shard vectors).\n\nNote: This is the lightest work package. The AppView doesn't run shard test vectors (it doesn't read/write shards), but it does need the drift test to catch missing lexicon fields in its record handlers.",
+  "created_at": "2026-04-05T23:03:38.502730Z",
+  "kind": "plan",
+  "signed_by": "SHA256:InQG/DPIFjZucG+2Pb71VgHctJAjJ45DGaewCTTlgcc",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgPyK5jFUUnT2W7kjgCilWm7CF/cjXdHxHgXokMkJ7Kz0AAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAnnXRyyMn9E4QG9Smv3lcpRXs5SnlpLv8Hci/M0pFNolYcK8JWRFmoWZEYtnPzs/X6uf+0FcHNRN32ogvdiP8Bw=="
+}
