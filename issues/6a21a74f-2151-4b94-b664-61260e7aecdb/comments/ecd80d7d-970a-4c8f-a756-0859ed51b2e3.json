@@ -1,0 +1,10 @@
+{
+  "uuid": "ecd80d7d-970a-4c8f-a756-0859ed51b2e3",
+  "issue_uuid": "6a21a74f-2151-4b94-b664-61260e7aecdb",
+  "author": "maxine--futura",
+  "content": "Plan: This is Work Package 1 (WP1) of the ecosystem coordination design (.design/ecosystem-coordination.md). Work happens in ~/code/forecast/atdata-lexicon repo.\n\nScope:\n1. Create test-vectors/ directory with shard-roundtrip vectors (simple-100.json, numpy-arrays.json, metadata-samples.json). Each vector is a self-contained JSON file specifying input samples and expected output (keys, values, shapes, dtypes).\n2. Create .atdata-ecosystem.json declaring role=contract, capabilities list.\n3. Create .github/workflows/dispatch-consumers.yml that fires repository_dispatch to forecast-bio/atdata, forecast-bio/atdata-rs, forecast-bio/atdata-app on PRs to develop/main. Event type: lexicon-compat-check. Payload includes lexicon_ref.\n4. Create .github/workflows/ecosystem-status.yml (weekly scheduled) that fetches .atdata-ecosystem.json from each consumer via gh api and publishes ecosystem-status.json as workflow artifact.\n\nAcceptance criteria: AC-4 (vectors), AC-5 (ecosystem json), AC-6 (dispatch), AC-8 (aggregator).",
+  "created_at": "2026-04-05T23:03:06.438402Z",
+  "kind": "plan",
+  "signed_by": "SHA256:InQG/DPIFjZucG+2Pb71VgHctJAjJ45DGaewCTTlgcc",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgPyK5jFUUnT2W7kjgCilWm7CF/cjXdHxHgXokMkJ7Kz0AAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABA5FLVkPhrUcWJfikvGWsg2eq3LqvgvLVD30X9lgtntw9EwK5Gt1l2QXj0i5HB0O8fwTdrfsSVUvolEhVsSuGWCg=="
+}
