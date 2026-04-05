@@ -1,0 +1,10 @@
+{
+  "uuid": "7ee6cba7-a6f9-4d38-bd15-9d3147589b70",
+  "issue_uuid": "d4bf41a3-486b-4f36-9e61-e5205c56583d",
+  "author": "maxine--futura",
+  "content": "Created 4 work package subissues (#16-#19) with detailed plans, blocking relationships (WP1 blocks WP2-4), and stored workplan as crosslink knowledge page 'ecosystem-coordination-workplan'. Ready for kickoff.",
+  "created_at": "2026-04-05T23:04:37.690101Z",
+  "kind": "plan",
+  "signed_by": "SHA256:InQG/DPIFjZucG+2Pb71VgHctJAjJ45DGaewCTTlgcc",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgPyK5jFUUnT2W7kjgCilWm7CF/cjXdHxHgXokMkJ7Kz0AAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAN2i2EJTP/7BynyLn+qy/Ur+qdk9TeNsuXX1vg8IQ3FHJ3UbvzVutaFuTci0xsruIvLv7U1q/XpXAl9i59y53Ag=="
+}
