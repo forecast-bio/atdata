@@ -6,5 +6,8 @@
   "priority": "high",
   "created_by": "maxine--futura",
   "created_at": "2026-04-05T23:00:30.146268Z",
-  "updated_at": "2026-04-05T23:00:30.146268Z"
+  "updated_at": "2026-04-05T23:00:31.788575Z",
+  "labels": [
+    "feature"
+  ]
 }
