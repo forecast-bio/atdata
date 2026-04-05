@@ -1,0 +1,10 @@
+{
+  "uuid": "4dc29e2f-0bff-45cb-88ed-8f4824262321",
+  "issue_uuid": "e742cea1-35d1-4cc9-ad50-978af3cb43e2",
+  "author": "maxine--futura",
+  "content": "Plan: This is Work Package 2 (WP2) of the ecosystem coordination design (.design/ecosystem-coordination.md). Work happens in ~/code/forecast/atdata repo.\n\nScope:\n1. Make _APPVIEW_URL in src/atdata/atmosphere/client.py configurable via ATDATA_GENERIC_APPVIEW env var (default: bsky.social). This is the Tier 1 generic AppView for unauthenticated cross-account reads.\n2. Add lexicon drift-detection test: parse entry.json (and other lexicon files), extract all property names, assert each has a corresponding field in _lexicon_types.py types. Test fails if a property is missing.\n3. Add test vector runner: glob test-vectors/ from synced lexicons, parametrize pytest over vector files, validate shard roundtrip against expected outputs.\n4. Create .atdata-ecosystem.json declaring role=sdk, language=python, lexicon_sync method/ref, capabilities list.\n5. Create .github/workflows/compat-check.yml triggered by repository_dispatch (event: lexicon-compat-check). Syncs the dispatched lexicon ref via just sync-lexicons, runs full test suite.\n\nAcceptance criteria: AC-1, AC-3 (Python), AC-4 (Python runner), AC-5 (Python), AC-7 (Python).\nBlocked by: #16 (need test vectors to exist first).",
+  "created_at": "2026-04-05T23:03:18.032778Z",
+  "kind": "plan",
+  "signed_by": "SHA256:InQG/DPIFjZucG+2Pb71VgHctJAjJ45DGaewCTTlgcc",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgPyK5jFUUnT2W7kjgCilWm7CF/cjXdHxHgXokMkJ7Kz0AAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAD4bGIQByM6+AUlCzdkq0G0r7AtKkxc96au/+l1ihm8J3THjUVckl27QQjmLBI7GgY/ErUK2Zk2gvAl+ZR8aaBQ=="
+}
