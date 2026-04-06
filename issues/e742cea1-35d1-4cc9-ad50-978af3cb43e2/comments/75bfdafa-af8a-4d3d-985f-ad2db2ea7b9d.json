@@ -1,0 +1,8 @@
+{
+  "uuid": "75bfdafa-af8a-4d3d-985f-ad2db2ea7b9d",
+  "issue_uuid": "e742cea1-35d1-4cc9-ad50-978af3cb43e2",
+  "author": "anon-a24ee7d7",
+  "content": "Delivered: configurable generic AppView (ATDATA_GENERIC_APPVIEW env var), lexicon drift test (5 record types), test vector runner (skips gracefully), .atdata-ecosystem.json, compat-check.yml. All 1767 tests pass. Committed as edb7d79.",
+  "created_at": "2026-04-06T00:15:55.570705Z",
+  "kind": "result"
+}
