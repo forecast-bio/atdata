@@ -1,0 +1,8 @@
+{
+  "uuid": "3eb742d9-897e-4392-8a7b-e8b6f735413c",
+  "issue_uuid": "d2dfc605-dab9-4a98-9ba2-a9b3ed662a46",
+  "author": "anon-a24ee7d7",
+  "content": "Delivered: Tier 1 generic AppView (ATDATA_GENERIC_APPVIEW), Tier 3 xrpc_query/xrpc_procedure methods, lexicon drift test, test vector runner (skips when no submodule), .atdata-ecosystem.json, compat-check.yml. All cargo tests pass. Committed as 66c238c.",
+  "created_at": "2026-04-06T01:47:54.516098Z",
+  "kind": "result"
+}
