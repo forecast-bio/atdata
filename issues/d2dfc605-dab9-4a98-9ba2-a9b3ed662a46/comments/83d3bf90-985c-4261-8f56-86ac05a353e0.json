@@ -1,0 +1,8 @@
+{
+  "uuid": "83d3bf90-985c-4261-8f56-86ac05a353e0",
+  "issue_uuid": "d2dfc605-dab9-4a98-9ba2-a9b3ed662a46",
+  "author": "anon-a24ee7d7",
+  "content": "CI lint failure: rustfmt formatting differences in lexicon_drift.rs and test_vectors.rs. Running cargo fmt.",
+  "created_at": "2026-04-06T20:40:35.295020Z",
+  "kind": "observation"
+}
