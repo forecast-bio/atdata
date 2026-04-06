@@ -1,0 +1,8 @@
+{
+  "uuid": "56a6e10c-2fe1-4d03-b796-efa6fbd771b2",
+  "issue_uuid": "e742cea1-35d1-4cc9-ad50-978af3cb43e2",
+  "author": "anon-a24ee7d7",
+  "content": "Starting WP2: (a) Make generic AppView URL configurable via ATDATA_GENERIC_APPVIEW env var, (b) Add lexicon drift-detection test, (c) Add test vector runner, (d) Create .atdata-ecosystem.json, (e) Create compat-check workflow",
+  "created_at": "2026-04-06T00:12:28.750504Z",
+  "kind": "plan"
+}
