@@ -24,8 +24,16 @@ import atdata
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 _CANDIDATE_PATHS = [
     _REPO_ROOT / "test-vectors" / "shard-roundtrip",
-    _REPO_ROOT / "src" / "atdata" / "lexicons" / ".." / ".." / ".." / ".."
-    / "test-vectors" / "shard-roundtrip",
+    _REPO_ROOT
+    / "src"
+    / "atdata"
+    / "lexicons"
+    / ".."
+    / ".."
+    / ".."
+    / ".."
+    / "test-vectors"
+    / "shard-roundtrip",
 ]
 
 VECTORS_DIR: Path | None = None
@@ -87,9 +95,7 @@ def _make_sample(cls: type, sample_data: dict[str, Any], schema_def: dict) -> An
     return cls(**kwargs)
 
 
-def _check_field_value(
-    actual: Any, expected: Any, field_name: str, key: str
-) -> None:
+def _check_field_value(actual: Any, expected: Any, field_name: str, key: str) -> None:
     """Assert a single field value matches the expected value."""
     if isinstance(expected, dict) and "dtype" in expected and "values" in expected:
         # NDArray check
@@ -132,8 +138,7 @@ def test_shard_roundtrip_vector(vector_path: Path, tmp_path: Path) -> None:
 
     # Create sample instances
     samples = [
-        _make_sample(sample_cls, s, schema_def)
-        for s in vector["inputs"]["samples"]
+        _make_sample(sample_cls, s, schema_def) for s in vector["inputs"]["samples"]
     ]
 
     # Write to shard

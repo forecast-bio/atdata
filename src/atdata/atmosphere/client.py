@@ -503,9 +503,7 @@ class Atmosphere:
         """
         if not hasattr(self, "_appview_client") or self._appview_client is None:
             Client = _get_atproto_client_class()
-            self._appview_client = Client(
-                base_url=self._get_generic_appview_url()
-            )
+            self._appview_client = Client(base_url=self._get_generic_appview_url())
         return self._appview_client
 
     # Low-level record operations
