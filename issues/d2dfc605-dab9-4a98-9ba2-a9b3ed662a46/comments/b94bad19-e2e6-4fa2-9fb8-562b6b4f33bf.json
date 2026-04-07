@@ -1,0 +1,8 @@
+{
+  "uuid": "b94bad19-e2e6-4fa2-9fb8-562b6b4f33bf",
+  "issue_uuid": "d2dfc605-dab9-4a98-9ba2-a9b3ed662a46",
+  "author": "anon-a24ee7d7",
+  "content": "CI clippy failure: unnecessary_map_or lint in test_vectors.rs. Fixing with is_some_and.",
+  "created_at": "2026-04-07T18:07:45.792260Z",
+  "kind": "observation"
+}
