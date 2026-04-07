@@ -1,0 +1,8 @@
+{
+  "uuid": "8dbf9da5-c524-43c6-b0ff-613ed2c20464",
+  "issue_uuid": "e742cea1-35d1-4cc9-ad50-978af3cb43e2",
+  "author": "anon-a24ee7d7",
+  "content": "CI format failure: ruff format wants reformatting on client.py and test_vectors.py. Applying.",
+  "created_at": "2026-04-07T18:03:51.761043Z",
+  "kind": "observation"
+}
