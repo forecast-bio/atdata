@@ -475,10 +475,25 @@ class Atmosphere:
             raise AppViewUnavailableError(self._appview_url, str(exc)) from exc
 
     # ------------------------------------------------------------------ #
-    # Cross-account reads via bsky.social AppView (existing behavior)
+    # Cross-account reads via generic AppView (Tier 1)
     # ------------------------------------------------------------------ #
 
-    _APPVIEW_URL = "https://bsky.social"
+    _GENERIC_APPVIEW_URL: str | None = None
+
+    @classmethod
+    def _get_generic_appview_url(cls) -> str:
+        """Return the generic AppView URL for unauthenticated cross-account reads.
+
+        Reads from the ``ATDATA_GENERIC_APPVIEW`` environment variable,
+        falling back to ``https://bsky.social``.
+        """
+        if cls._GENERIC_APPVIEW_URL is None:
+            import os
+
+            cls._GENERIC_APPVIEW_URL = os.environ.get(
+                "ATDATA_GENERIC_APPVIEW", "https://bsky.social"
+            )
+        return cls._GENERIC_APPVIEW_URL
 
     def _get_appview_client(self) -> Any:
         """Return a shared, unauthenticated client pointed at the public AppView.
@@ -488,7 +503,7 @@ class Atmosphere:
         """
         if not hasattr(self, "_appview_client") or self._appview_client is None:
             Client = _get_atproto_client_class()
-            self._appview_client = Client(base_url=self._APPVIEW_URL)
+            self._appview_client = Client(base_url=self._get_generic_appview_url())
         return self._appview_client
 
     # Low-level record operations

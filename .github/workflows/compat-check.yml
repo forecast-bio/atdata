@@ -1,0 +1,32 @@
+# Lexicon compatibility check.
+#
+# Triggered by atdata-lexicon's dispatch-consumers workflow when a PR
+# proposes lexicon changes.  Syncs lexicons to the proposed ref and runs
+# the full test suite to detect breaking changes.
+
+name: Lexicon Compat Check
+
+on:
+  repository_dispatch:
+    types: [lexicon-compat-check]
+
+jobs:
+  compat:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Sync lexicons to proposed ref
+        run: just sync-lexicons ref=${{ github.event.client_payload.lexicon_ref }}
+
+      - name: Run tests
+        run: uv run pytest tests/

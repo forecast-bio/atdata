@@ -1,0 +1,17 @@
+{
+  "role": "sdk",
+  "language": "python",
+  "lexicon_sync": {"method": "tarball", "ref": "v1.2.0"},
+  "capabilities": [
+    "shard_read_write",
+    "schema_publish",
+    "schema_resolve_xrpc",
+    "dataset_search_xrpc",
+    "lens_transforms",
+    "manifest_queries",
+    "load_dataset_hf_api",
+    "atmosphere_crud",
+    "label_resolve_xrpc",
+    "blob_resolve_xrpc"
+  ]
+}
