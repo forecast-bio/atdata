@@ -1,0 +1,8 @@
+{
+  "uuid": "f970239c-b648-4b65-b723-61e375183f56",
+  "issue_uuid": "d2dfc605-dab9-4a98-9ba2-a9b3ed662a46",
+  "author": "anon-a24ee7d7",
+  "content": "CI runs clippy with --features atmosphere,index-sqlite. reqwest missing json feature for .json() method. Also .send().await has type inference issues without json feature. Fixing Cargo.toml and client.rs.",
+  "created_at": "2026-04-07T18:16:00.524213Z",
+  "kind": "observation"
+}
